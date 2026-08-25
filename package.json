@@ -1,0 +1,14 @@
+{
+  "name": "aenao",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ÆNAO, an in-development occult arcade roguelike and local PvP browser game.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check main.js && node --check controller.js && node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,154 @@
+:root {
+  --occult-border-opacity: 0.68;
+  --occult-border-inset: -4px;
+  --occult-ui-black: #030303;
+}
+
+/* Add one of the three frame classes to an existing panel. */
+.occult-frame,
+.occult-card,
+.occult-frantic,
+.occult-button,
+.occult-progress,
+.occult-circle {
+  position: relative;
+}
+
+.occult-frame::before,
+.occult-card::before,
+.occult-frantic::before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  inset: var(--occult-border-inset);
+  z-index: 3;
+  pointer-events: none;
+  border-style: solid;
+  border-color: transparent;
+  border-image-repeat: stretch;
+  opacity: var(--occult-border-opacity);
+}
+
+/* Large containers: arena, shop, artifact panel, seal inventory. */
+.occult-frame {
+  --occult-border-opacity: 0.52;
+  --occult-border-inset: -5px;
+}
+
+.occult-frame::before {
+  border-width: 18px;
+  border-image-source: url("assets/border-outer.png");
+  border-image-slice: 14% fill;
+  border-image-width: 18px;
+}
+
+/* Repeated information cards and ordinary stat boxes. */
+.occult-card {
+  --occult-border-opacity: 0.64;
+  --occult-border-inset: -4px;
+}
+
+.occult-card::before {
+  border-width: 15px;
+  border-image-source: url("assets/border-card.png");
+  border-image-slice: 14% fill;
+  border-image-width: 15px;
+}
+
+/* Clickable, dangerous, selected, or high-attention elements. */
+.occult-frantic {
+  --occult-border-opacity: 0.78;
+  --occult-border-inset: -5px;
+}
+
+.occult-frantic::before {
+  border-width: 17px;
+  border-image-source: url("assets/border-frantic.png");
+  border-image-slice: 15% fill;
+  border-image-width: 17px;
+}
+
+.occult-frantic:is(:hover, :focus-within)::before,
+button.occult-button:is(:hover, :focus-visible)::before {
+  opacity: 1;
+}
+
+/* Long, low buttons such as Guess, Buy, Reroll, Seal, and Pause. */
+.occult-button {
+  border: 0;
+  background: var(--occult-ui-black);
+}
+
+.occult-button::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: 3;
+  pointer-events: none;
+  background: url("assets/button-frame.png") center / 100% 100% no-repeat;
+  opacity: 0.76;
+}
+
+/* Keep your existing fill element inside this wrapper. */
+.occult-progress {
+  min-height: 10px;
+}
+
+.occult-progress::before {
+  content: "";
+  position: absolute;
+  inset: -7px -6px;
+  z-index: 3;
+  pointer-events: none;
+  background: url("assets/progress-frame.png") center / 100% 100% no-repeat;
+  opacity: 0.68;
+}
+
+/* Use A/B/C on neighboring cards to avoid obvious repetition. */
+.occult-divider-h {
+  width: 100%;
+  height: 12px;
+  background: var(--occult-divider-image, url("assets/divider-horizontal-a.png")) center / 100% 100% no-repeat;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.occult-divider-v {
+  width: 12px;
+  height: 100%;
+  background: var(--occult-divider-image, url("assets/divider-vertical-a.png")) center / 100% 100% no-repeat;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.occult-variant-b { --occult-divider-image: url("assets/divider-horizontal-b.png"); }
+.occult-variant-c { --occult-divider-image: url("assets/divider-horizontal-c.png"); }
+.occult-divider-v.occult-variant-b { --occult-divider-image: url("assets/divider-vertical-b.png"); }
+.occult-divider-v.occult-variant-c { --occult-divider-image: url("assets/divider-vertical-c.png"); }
+
+/* Place this class on the seal/portrait wrapper, not the image itself. */
+.occult-circle::before {
+  content: "";
+  position: absolute;
+  inset: -9%;
+  z-index: 3;
+  pointer-events: none;
+  background: url("assets/circle-frame.png") center / contain no-repeat;
+  opacity: 0.78;
+}
+
+/* Optional utility: retain color accents from the current interface. */
+.occult-border-cyan::before {
+  filter: brightness(0) saturate(100%) invert(88%) sepia(17%) saturate(1047%) hue-rotate(125deg) brightness(97%);
+}
+
+.occult-border-gold::before {
+  filter: brightness(0) saturate(100%) invert(70%) sepia(83%) saturate(640%) hue-rotate(359deg) brightness(91%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .occult-frantic::before,
+  .occult-button::before {
+    transition: opacity 90ms linear, filter 90ms linear;
+  }
+}
