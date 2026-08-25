@@ -27,6 +27,7 @@ const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
 const READY_SFX_SRC = "assets/audio/Ready.mp3";
 const GUESS_SFX_VOLUME = 0.9;
 const READY_SFX_VOLUME = 0.2;
+const MAIN_MENU_LOGO_SRC = "assets/ui/AENAOLOGO1.png";
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -854,7 +855,13 @@ const UNIQUE_BOSS_SPECS = {
 const UNIQUE_BOSS_KEYS = Object.keys(UNIQUE_BOSS_SPECS);
 
 const state = {
-  mode: "arcade",
+  mode: "menu",
+  menuScreen: "main",
+  sound: {
+    musicVolume: SOUNDTRACK_VOLUME,
+    sfxVolume: 1,
+    muted: false
+  },
   pauseOpen: false,
   round: 1,
   stage: "guess",
@@ -901,12 +908,27 @@ let sealPurchaseSfx = null;
 let guessSfx = null;
 let readySfx = null;
 
+function musicVolume() {
+  return state.sound.muted ? 0 : clamp(state.sound.musicVolume, 0, 1);
+}
+
+function sfxVolume(baseVolume) {
+  return state.sound.muted ? 0 : clamp(baseVolume * state.sound.sfxVolume, 0, 1);
+}
+
+function applySoundSettings() {
+  if (soundtrackAudio) soundtrackAudio.volume = musicVolume();
+  if (sealPurchaseSfx) sealPurchaseSfx.volume = sfxVolume(SEAL_PURCHASE_SFX_VOLUME);
+  if (guessSfx) guessSfx.volume = sfxVolume(GUESS_SFX_VOLUME);
+  if (readySfx) readySfx.volume = sfxVolume(READY_SFX_VOLUME);
+}
+
 function ensureSoundtrack() {
   if (soundtrackAudio) return soundtrackAudio;
   soundtrackAudio = new Audio(SOUNDTRACK_SRC);
   soundtrackAudio.loop = true;
   soundtrackAudio.preload = "auto";
-  soundtrackAudio.volume = SOUNDTRACK_VOLUME;
+  soundtrackAudio.volume = musicVolume();
   return soundtrackAudio;
 }
 
@@ -929,7 +951,7 @@ function ensureSealPurchaseSfx() {
   if (sealPurchaseSfx) return sealPurchaseSfx;
   sealPurchaseSfx = new Audio(SEAL_PURCHASE_SFX_SRC);
   sealPurchaseSfx.preload = "auto";
-  sealPurchaseSfx.volume = SEAL_PURCHASE_SFX_VOLUME;
+  sealPurchaseSfx.volume = sfxVolume(SEAL_PURCHASE_SFX_VOLUME);
   return sealPurchaseSfx;
 }
 
@@ -938,7 +960,7 @@ function ensureButtonSfx(kind) {
     if (!guessSfx) {
       guessSfx = new Audio(GUESS_SFX_SRC);
       guessSfx.preload = "auto";
-      guessSfx.volume = GUESS_SFX_VOLUME;
+      guessSfx.volume = sfxVolume(GUESS_SFX_VOLUME);
     }
     return guessSfx;
   }
@@ -946,7 +968,7 @@ function ensureButtonSfx(kind) {
   if (!readySfx) {
     readySfx = new Audio(READY_SFX_SRC);
     readySfx.preload = "auto";
-    readySfx.volume = READY_SFX_VOLUME;
+    readySfx.volume = sfxVolume(READY_SFX_VOLUME);
   }
   return readySfx;
 }
@@ -4776,9 +4798,74 @@ function pvpImportRemoteInputs(players) {
 
 function render() {
   const app = document.querySelector("#app");
-  app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""}`;
-  app.innerHTML = state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
+  app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
+  app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
   bindEvents();
+}
+
+function renderMenuApp() {
+  const screen = state.menuScreen || "main";
+  return `
+    <main class="main-menu" aria-label="Main menu">
+      <img class="main-menu-logo" src="${MAIN_MENU_LOGO_SRC}" alt="Aenao" />
+      <section class="main-menu-panel">
+        ${screen === "play" ? renderPlayMenu() : screen === "options" ? renderOptionsMenu() : screen === "quit" ? renderQuitMenu() : renderMainMenu()}
+      </section>
+    </main>
+  `;
+}
+
+function renderMainMenu() {
+  return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="play">Play</button>
+      <button class="menu-button" data-menu-action="options">Options</button>
+      <button class="menu-button" data-menu-action="quit">Quit</button>
+    </div>
+  `;
+}
+
+function renderPlayMenu() {
+  return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="arcade">Arcade</button>
+      <button class="menu-button" data-menu-action="pvp">PvP</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderOptionsMenu() {
+  const musicValue = Math.round(state.sound.musicVolume * 100);
+  const sfxValue = Math.round(state.sound.sfxVolume * 100);
+  return `
+    <div class="options-menu">
+      <div class="sound-setting">
+        <label for="musicVolume">Music</label>
+        <input id="musicVolume" class="sound-slider" type="range" min="0" max="100" step="1" value="${musicValue}" />
+        <strong id="musicVolumeValue">${musicValue}%</strong>
+      </div>
+      <div class="sound-setting">
+        <label for="sfxVolume">SFX</label>
+        <input id="sfxVolume" class="sound-slider" type="range" min="0" max="100" step="1" value="${sfxValue}" />
+        <strong id="sfxVolumeValue">${sfxValue}%</strong>
+      </div>
+      <label class="sound-toggle">
+        <input id="soundMuted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
+        <span>Mute Sound</span>
+      </label>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderQuitMenu() {
+  return `
+    <div class="main-menu-actions">
+      <div class="quit-copy">Close the tab to leave the table.</div>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
 }
 
 function renderArcadeApp() {
@@ -4848,6 +4935,7 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="resume">Resume</button>
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="${modeAction}">${modeButton}</button>
+          <button class="primary-button" data-pause-action="menu">Main Menu</button>
         </div>
       </section>
     </div>
@@ -5638,6 +5726,58 @@ function renderPentakillPopup() {
   return `<div class="pentakill-popup" aria-live="polite">PENTAKILL</div>`;
 }
 
+function showMainMenu(screen = "main") {
+  pvpClearAutoTimer();
+  pvpStopHostPolling();
+  state.mode = "menu";
+  state.menuScreen = screen;
+  state.pauseOpen = false;
+  state.mobileOfferingsOpen = false;
+  render();
+}
+
+function handleMenuAction(action) {
+  resumeSoundtrack();
+  if (action === "play") {
+    state.menuScreen = "play";
+    render();
+    return;
+  }
+  if (action === "options") {
+    state.menuScreen = "options";
+    render();
+    return;
+  }
+  if (action === "back") {
+    state.menuScreen = "main";
+    render();
+    return;
+  }
+  if (action === "arcade") {
+    startGame();
+    return;
+  }
+  if (action === "pvp") {
+    startPvpMode();
+    return;
+  }
+  if (action === "quit") {
+    state.menuScreen = "quit";
+    render();
+    window.close();
+  }
+}
+
+function updateSoundSetting(key, value, renderAfter = true) {
+  if (key === "muted") {
+    state.sound.muted = Boolean(value);
+  } else if (key in state.sound) {
+    state.sound[key] = clamp(Number(value) / 100, 0, 1);
+  }
+  applySoundSettings();
+  if (renderAfter) render();
+}
+
 function handlePauseAction(action) {
   if (action === "resume") {
     state.pauseOpen = false;
@@ -5655,6 +5795,10 @@ function handlePauseAction(action) {
   }
   if (action === "arcade") {
     switchToArcadeMode();
+    return;
+  }
+  if (action === "menu") {
+    showMainMenu();
   }
 }
 
@@ -5725,6 +5869,33 @@ function bindPvpEvents() {
 }
 
 function bindEvents() {
+  document.querySelectorAll("[data-menu-action]").forEach((button) => {
+    button.addEventListener("click", () => handleMenuAction(button.dataset.menuAction));
+  });
+
+  const musicVolume = document.querySelector("#musicVolume");
+  if (musicVolume) {
+    musicVolume.addEventListener("input", () => {
+      updateSoundSetting("musicVolume", musicVolume.value, false);
+      const valueLabel = document.querySelector("#musicVolumeValue");
+      if (valueLabel) valueLabel.textContent = `${musicVolume.value}%`;
+    });
+  }
+
+  const sfxVolume = document.querySelector("#sfxVolume");
+  if (sfxVolume) {
+    sfxVolume.addEventListener("input", () => {
+      updateSoundSetting("sfxVolume", sfxVolume.value, false);
+      const valueLabel = document.querySelector("#sfxVolumeValue");
+      if (valueLabel) valueLabel.textContent = `${sfxVolume.value}%`;
+    });
+  }
+
+  const soundMuted = document.querySelector("#soundMuted");
+  if (soundMuted) {
+    soundMuted.addEventListener("change", () => updateSoundSetting("muted", soundMuted.checked));
+  }
+
   const pauseButton = document.querySelector("#pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -5839,4 +6010,4 @@ function bindEvents() {
 }
 
 installSoundtrack();
-startGame();
+showMainMenu();

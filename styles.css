@@ -3339,3 +3339,167 @@ body.mobile-arcade .credit-wrap .stat-value {
   border-color: #ef6f61 !important;
   box-shadow: 0 0 0 2px rgba(239, 111, 97, 0.22) !important;
 }
+
+body:has(.menu-app) {
+  min-width: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.app.menu-app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  background: #000;
+}
+
+.main-menu {
+  display: grid;
+  grid-template-rows: minmax(210px, 44vh) auto minmax(24px, 1fr);
+  justify-items: center;
+  min-height: 100%;
+  padding: clamp(22px, 4vh, 54px) clamp(16px, 5vw, 72px);
+  background: #000;
+  color: #fff;
+}
+
+.main-menu-logo {
+  align-self: end;
+  width: min(82vw, 980px);
+  max-height: 40vh;
+  object-fit: contain;
+  margin-bottom: clamp(18px, 4vh, 46px);
+  user-select: none;
+}
+
+.main-menu-panel {
+  display: grid;
+  justify-items: center;
+  width: min(360px, 88vw);
+}
+
+.main-menu-actions,
+.options-menu {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.menu-button {
+  min-height: 54px;
+  width: 100%;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 7px;
+  background: #000;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.menu-button:hover:not(:disabled) {
+  border-color: #fff;
+  background: #0a0a0a;
+}
+
+.secondary-menu-button {
+  font-size: 20px;
+}
+
+.sound-setting {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sound-slider {
+  width: 100%;
+  accent-color: #fff;
+}
+
+.sound-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 42px;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sound-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #fff;
+}
+
+.quit-copy {
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .main-menu {
+    grid-template-rows: minmax(160px, 38vh) auto minmax(18px, 1fr);
+  }
+
+  .main-menu-logo {
+    width: min(90vw, 720px);
+    max-height: 34vh;
+  }
+
+  .menu-button {
+    min-height: 48px;
+    font-size: 20px;
+  }
+}
+
+/* Menu scale and solid healthbar outlines. */
+.main-menu {
+  grid-template-rows: minmax(260px, 56vh) auto minmax(18px, 1fr);
+}
+
+.main-menu-logo {
+  width: min(94vw, 1320px);
+  max-height: 52vh;
+  margin-bottom: clamp(8px, 2vh, 26px);
+}
+
+.menu-button,
+.menu-button:hover:not(:disabled),
+.secondary-menu-button {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.health-bar,
+body.mobile-arcade .health-bar {
+  border-color: #fff !important;
+}
+
+@media (max-width: 800px) {
+  .main-menu {
+    grid-template-rows: minmax(190px, 46vh) auto minmax(18px, 1fr);
+  }
+
+  .main-menu-logo {
+    width: min(96vw, 860px);
+    max-height: 43vh;
+  }
+}
