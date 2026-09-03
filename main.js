@@ -28,6 +28,8 @@ const READY_SFX_SRC = "assets/audio/Ready.mp3";
 const GUESS_SFX_VOLUME = 0.9;
 const READY_SFX_VOLUME = 0.2;
 const MAIN_MENU_LOGO_SRC = "assets/ui/AENAOLOGO1.png";
+const MAIN_MENU_JESUS_SRC = "assets/ui/jesus.png";
+const MAIN_MENU_DEVIL_SRC = "assets/ui/devil.png";
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -255,7 +257,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 10,
-    description: "For every 2 SIN you spend in a round, deal 1 damage to the highest-health non-boss bot."
+    description: "For every 2 SIN you spend in a round, deal 1% max-health damage to the highest-health non-boss SINNER. ELITE levels add +1%."
   },
   p30: {
     id: "p30",
@@ -311,7 +313,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Malphas",
     price: 9,
-    description: "When you take 4 or less total damage in a round, gain 4 SIN."
+    description: "When you take 4 or less total damage in a round, gain 4 SIN and heal 3. ELITE adds SIN instead of more healing."
   },
   p38: {
     id: "p38",
@@ -402,7 +404,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Agares",
     price: 9,
-    description: "When selling an item, gain no SIN. Instead, every bot gains SIN equal to 33% of that item's sell value."
+    description: "When selling an item, gain no SIN. Instead, every SINNER gains SIN equal to 33% of that item's buy value."
   },
   p51: {
     id: "p51",
@@ -435,14 +437,14 @@ const ITEMS = {
   a27: {
     id: "a27",
     type: "active",
-    name: "The Infernal Treasury",
+    name: "The Bath Curse Tablets",
     price: 4,
     description: "One use. Gain 15 SIN and permanently lose 10 max health."
   },
   a28: {
     id: "a28",
     type: "active",
-    name: "The Number of the Beast",
+    name: "Demon Bowl - Incantation Bowl",
     price: 4,
     description: "One use. Pick a non-boss bot. It gains 6 memory, 6 SIN, and 6 max health."
   },
@@ -563,7 +565,7 @@ const ITEMS = {
     type: "active",
     name: "The Hand of Glory",
     price: 3,
-    description: "One use. Pick a bot and eliminate it with no SIN and no KO count."
+    description: "Arm the next Devil's Offerings reroll: the Seal slot has double ELITE chance."
   },
   a25: {
     id: "a25",
@@ -675,7 +677,9 @@ const ARTIFACT_ICONS = {
   a23: "a23.png",
   a24: "a24.png",
   a25: "a25.png",
-  a26: "a26.png"
+  a26: "a26.png",
+  a27: "occult-new-9/bath-curse-tablets.png",
+  a28: "occult-new-9/demon-bowl-incantation-bowl.png"
 };
 const SEAL_SIGILS = {
   p1: "068_Vassago.png",
@@ -730,6 +734,62 @@ const SEAL_SIGILS = {
   p53: "058_Samigina.png",
   p54: "072_Zepar.png"
 };
+
+const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
+const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
+  p1: "03-vassago.png",
+  p2: "09-paimon.png",
+  p3: "52-alloces.png",
+  p4: "63-andras.png",
+  p5: "64-haures-flauros.png",
+  p6: "59-orias.png",
+  p7: "25-glasya-labolas.png",
+  p8: "10-buer.png",
+  p9: "05-marbas.png",
+  p11: "06-valefor.png",
+  p12: "68-belial.png",
+  p13: "26-bune-bime.png",
+  p14: "14-leraje.png",
+  p16: "01-bael.png",
+  p17: "71-dantalion.png",
+  p18: "28-berith.png",
+  p19: "43-sabnock.png",
+  p20: "48-haagenti.png",
+  p21: "44-shax.png",
+  p23: "70-seere-seir.png",
+  p24: "55-orobas.png",
+  p25: "62-valac-ualac.png",
+  p26: "67-amdusias.png",
+  p27: "61-zagan.png",
+  p28: "57-ose.png",
+  p29: "34-furfur.png",
+  p30: "65-andrealphus.png",
+  p31: "54-murmur.png",
+  p32: "31-foras.png",
+  p33: "35-marchosias.png",
+  p34: "56-gremory-gamori.png",
+  p35: "30-forneus.png",
+  p36: "32-asmoday.png",
+  p37: "39-malphas.png",
+  p38: "29-astaroth.png",
+  p39: "20-purson.png",
+  p40: "41-focalor.png",
+  p41: "46-bifrons.png",
+  p42: "36-stolas.png",
+  p43: "40-raum.png",
+  p44: "72-andromalius.png",
+  p45: "49-crocell.png",
+  p46: "08-barbatos.png",
+  p47: "27-ronove.png",
+  p48: "66-cimejes-kimaris.png",
+  p49: "37-phenex-phoenix.png",
+  p50: "02-agares.png",
+  p51: "21-marax-morax.png",
+  p52: "69-decarabia.png",
+  p53: "04-samigina-gamigin.png",
+  p54: "16-zepar.png"
+};
+const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id]);
 const BOSS_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
@@ -813,6 +873,7 @@ const UNIQUE_BOSS_SPECS = {
   zilon: {
     key: "zilon",
     name: "Zilon",
+    image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
     personality: "Caller",
     modifierOverride: 1.5,
     descriptions: [
@@ -823,6 +884,7 @@ const UNIQUE_BOSS_SPECS = {
   dantre: {
     key: "dantre",
     name: "Dantre",
+    image: "assets/bots/occult-stickmen-pack/boss-dantre.png",
     personality: "Stubborn",
     modifierOverride: 0.5,
     eliminationDamage: 3,
@@ -834,6 +896,7 @@ const UNIQUE_BOSS_SPECS = {
   pyros: {
     key: "pyros",
     name: "Pyros",
+    image: "assets/bots/occult-stickmen-pack/boss-pyros.png",
     personality: "Analyst",
     modifierOverride: 1,
     grantsBuffs: true,
@@ -845,6 +908,7 @@ const UNIQUE_BOSS_SPECS = {
   threon: {
     key: "threon",
     name: "Threon",
+    image: "assets/bots/occult-stickmen-pack/boss-threon.png",
     personality: "Drifter",
     descriptions: [
       "Each round, Threon applies a hidden mystery target modifier from 0.7 to 1.3.",
@@ -895,6 +959,7 @@ const state = {
   bossSpawnCount: 0,
   uniqueBossQueue: [],
   bossQueued: false,
+  eliteBoostedNextReroll: false,
   pendingActive: null,
   playtestInfiniteMoney: false,
   gameOver: false,
@@ -1048,6 +1113,15 @@ function directPassiveStack(id) {
   return passiveEntry(id)?.stack || 0;
 }
 
+function suppressingBossForSeal(id) {
+  if (!id || !state.bots?.length) return null;
+  return state.bots.find((bot) => bot.isBoss && bot.goeticPassiveId === id && bot.hp > 0 && !bot.eliminated) || null;
+}
+
+function isSealSuppressed(id) {
+  return Boolean(suppressingBossForSeal(id));
+}
+
 function mimicEntry() {
   return passiveEntry("p28");
 }
@@ -1060,12 +1134,14 @@ function mimicTargetEntry() {
 
 function mimicContributionFor(id) {
   if (id === "p28") return 0;
+  if (isSealSuppressed("p28") || isSealSuppressed(id)) return 0;
   const mimic = mimicEntry();
   const target = mimicTargetEntry();
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
 function passiveStack(id) {
+  if (isSealSuppressed(id)) return 0;
   return directPassiveStack(id) + mimicContributionFor(id);
 }
 
@@ -1274,6 +1350,11 @@ function sweepDividendCredits(idOrItem) {
   return scaledPassiveValue(idOrItem, 5);
 }
 
+function furfurDamagePercent(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? 0.01 + eliteLevels(idOrItem) * 0.01 : 0;
+}
+
 function baseEditionBonus(idOrItem) {
   return simpleStackCount(idOrItem) * 2;
 }
@@ -1317,9 +1398,10 @@ function orderedPassiveEntries() {
   return passives
     .map((item, index) => {
       if (!item) return null;
+      if (isSealSuppressed(item.id)) return null;
       if (item.id === "p28") {
         const target = passives.slice(index + 1).find((candidate) => candidate && candidate.id !== "p28");
-        if (!target) return null;
+        if (!target || isSealSuppressed(target.id)) return null;
         return {
           id: target.id,
           item,
@@ -1344,7 +1426,7 @@ function orderedPassiveEntries() {
 
 function orderedPassiveEffectEntries(ids) {
   const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
-  return orderedPassiveEntries().filter((entry) => idSet.has(entry.id));
+  return orderedPassiveEntries().filter((entry) => idSet.has(entry.id) && !isSealSuppressed(entry.id));
 }
 
 function passiveEntryPower(entry, eliteStep = 0.2) {
@@ -1462,7 +1544,7 @@ function itemDescription(item) {
   if (item.id === "p25") return `Gain +${baseEditionBonus(item)} Artifact uses per round and +${baseEditionBonus(item)} Artifact inventory slots.`;
   if (item.id === "p26") return `Using two matching Artifacts in a round deals ${Math.round(twinDetonatorPercent(item) * 100)}% health damage to all bots, capped at 50%.`;
   if (item.id === "p27") return `Every Artifact triggers one outcome: heal ${reactiveWarrantyHeal(item)}, deal ${reactiveWarrantyDamage(item)} damage to a random bot, or refund its purchase cost.${passiveHealCreditText(item, 3)}`;
-  if (item.id === "p29") return `For every 2 SIN spent this round, deal 1 damage to the highest-health non-boss bot. ELITE scales the total damage by ${Math.round(100 * passivePower(item))}%.`;
+  if (item.id === "p29") return `For every 2 SIN spent this round, deal ${Math.round(furfurDamagePercent(item) * 100)}% max-health damage to the highest-health non-boss SINNER. ELITE levels add +1%.`;
   if (item.id === "p30") return `Every SINNER elimination deals ${Math.round(andrealphusPercent(item) * 100)}% of that SINNER's max health as damage to the SINNER on its left and right.`;
   if (item.id === "p31") return `At end of round, two random bots take ${Math.round(100 * passivePower(item))}% of their bounty as damage, or half if a target is a boss.`;
   if (item.id === "p32") return `Every bot death gives each other living bot +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} bounty.`;
@@ -1470,7 +1552,7 @@ function itemDescription(item) {
   if (item.id === "p34") return `When a bot with 6 or more bounty dies, heal ${passiveBaseHeal(item, 2)} and gain ${scaledPassiveValueForItem(item, 4)} SIN.${passiveHealCreditText(item, 2)}`;
   if (item.id === "p35") return `At end of round, every living bot gains +1 bounty. ELITE adds a chance for extra bounty.`;
   if (item.id === "p36") return `Your damage and bounty SIN are x${(1.5 * passivePower(item)).toFixed(1)} against non-bosses. At end of round, living non-bosses are erased without SIN or KO count.`;
-  if (item.id === "p37") return `If you take 4 or less total damage in a round, gain ${scaledPassiveValueForItem(item, 4)} SIN.`;
+  if (item.id === "p37") return `If you take 4 or less total damage in a round, gain ${scaledPassiveValueForItem(item, 4)} SIN and heal ${passiveBaseHeal(item, 3)}.${passiveHealCreditText(item, 3)}`;
   if (item.id === "p38") return `Start each round by marking a bot. If it dies, its payout becomes at least ${scaledPassiveValueForItem(item, 6)} SIN or ${Math.round(200 * passivePower(item))}% bounty, and you heal ${passiveBaseHeal(item, 5)}.${passiveHealCreditText(item, 5)}`;
   if (item.id === "p40") return `At end of round, deal ${Math.round(50 * passivePower(item, 0.1))}% of living non-boss bounty to every enemy.`;
   if (item.id === "p41") return `Whenever you sell a Seal, deal its sell value as ${Math.round(100 * passivePower(item))}% strength max-health damage to all bots. Seals cost ${3 * stack} SIN less.`;
@@ -1482,7 +1564,7 @@ function itemDescription(item) {
   if (item.id === "p47") return `At end of round, ${stack} non-boss bot${stack === 1 ? "" : "s"} lose half their SIN and you gain the amount lost.`;
   if (item.id === "p48") return `At start of round, all living bot SIN is redistributed evenly. Bots take ${Math.round(100 * passivePower(item))}% damage for each SIN lost this way.`;
   if (item.id === "p49") return `Using an Artifact that targets bots gives each target +${scaledPassiveValueForItem(item, 4)} SIN.`;
-  if (item.id === "p50") return `When selling an item, gain no SIN. Instead, every bot gains ${Math.round(33 * passivePower(item))}% of that item's sell value.`;
+  if (item.id === "p50") return `When selling an item, gain no SIN. Instead, every SINNER gains ${Math.round(33 * passivePower(item))}% of that item's buy value.`;
   if (item.id === "p51") return `Once each round per bot, when that bot has taken more than 40 damage, it gains +${scaledPassiveValueForItem(item, 4)} SIN.`;
   if (item.id === "p52") return `Non-boss bots take ${Math.round(10 * passivePower(item))}% more damage for every memory they have.`;
   if (item.id === "p53") return `When a non-boss bot is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its memory.`;
@@ -1551,6 +1633,7 @@ function botPassiveSummary(bot) {
   if (!bot) return "";
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.goeticPassiveId) names.push(`${bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "Seal"} Lock`);
   bot.passiveKeys?.forEach((key) => names.push(BOSS_PASSIVES[key].name));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${BOSS_PASSIVES[bot.buffPassiveKey].name}`);
   return names.join(" + ") || "No Seal";
@@ -1560,6 +1643,10 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  if (bot.isBoss && bot.goeticPassiveId) {
+    const sealName = bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "this Seal";
+    descriptions.push(`While ${bot.name} is alive, your ${sealName} cannot trigger and appears darkened.`);
+  }
   bot.passiveKeys?.forEach((key) => descriptions.push(BOSS_PASSIVES[key].description));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${BOSS_PASSIVES[bot.buffPassiveKey].description}`);
   return descriptions.join(" ");
@@ -2075,6 +2162,31 @@ function randomBossPassiveKeys(count) {
   return shuffled(BOSS_PASSIVE_KEYS).slice(0, count);
 }
 
+function sealEntityName(passiveId) {
+  return (ITEMS[passiveId]?.name || "PandoriumBeast").replace(/^Seal of\s+/i, "");
+}
+
+function goeticBossImagePath(passiveId) {
+  const file = GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[passiveId];
+  return file ? `${GOETIC_BOSS_IMAGE_ROOT}/${file}` : randomBotImage();
+}
+
+function randomGoeticBossSpec() {
+  const aliveGoeticSeals = new Set(
+    state.bots
+      .filter((bot) => bot.isBoss && bot.goeticPassiveId && bot.hp > 0 && !bot.eliminated)
+      .map((bot) => bot.goeticPassiveId)
+  );
+  const choices = GOETIC_BOSS_PASSIVE_IDS.filter((id) => !aliveGoeticSeals.has(id));
+  const passiveId = randomFrom(choices.length ? choices : GOETIC_BOSS_PASSIVE_IDS);
+  return {
+    passiveId,
+    name: sealEntityName(passiveId),
+    sealName: ITEMS[passiveId]?.name || "Seal",
+    image: goeticBossImagePath(passiveId)
+  };
+}
+
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
@@ -2110,6 +2222,7 @@ function createBot(options = {}) {
   const archetype = uniqueSpec ? archetypeByType(uniqueSpec.personality) : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
+  const goeticSpec = isEndlessBoss ? randomGoeticBossSpec() : null;
   const bossBaseHp = 80 + state.bossSpawnCount * 20;
   const maxHp = isBoss ? bossBaseHp * (state.bossSpawnCount >= 4 ? 2 : 1) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
@@ -2124,12 +2237,12 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "Boss",
     type: isBoss ? "Boss" : archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: randomBotImage(),
+    image: uniqueSpec?.image || goeticSpec?.image || randomBotImage(),
     anchor: clamp(archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? Math.min(0.75, archetype.aggression + 0.12) : archetype.aggression,
     noise: isBoss ? Math.max(7, archetype.noise - 1) : archetype.noise,
@@ -2139,6 +2252,8 @@ function createBot(options = {}) {
     isBoss,
     bossOrder,
     uniqueKey: uniqueSpec?.key || null,
+    goeticPassiveId: goeticSpec?.passiveId || null,
+    goeticSealName: goeticSpec?.sealName || null,
     modifierOverride: uniqueSpec?.modifierOverride ?? endlessModifier,
     shopTax: uniqueSpec?.shopTax || 0,
     eliminationDamage: uniqueSpec?.eliminationDamage || 0,
@@ -2189,7 +2304,10 @@ function applyPyrosBuffs() {
 }
 
 function rerollShop() {
-  state.shop = [drawShopItem(PASSIVE_IDS), drawShopItem(ACTIVE_IDS), drawShopItem(ACTIVE_IDS)];
+  const eliteBoosted = state.eliteBoostedNextReroll;
+  state.eliteBoostedNextReroll = false;
+  state.shop = [drawPassiveShopItem(eliteBoosted), drawShopItem(ACTIVE_IDS), drawShopItem(ACTIVE_IDS)];
+  if (eliteBoosted) addLog("The Hand of Glory doubled this Seal reroll's ELITE chance.");
   syncShopSlotCount();
 }
 
@@ -2200,21 +2318,18 @@ function syncShopSlotCount() {
 }
 
 function drawShopItem(pool) {
-  let choices = pool;
-  if (pool.every((id) => ITEMS[id]?.type === "passive")) {
-    const freshPassives = pool.filter((id) => directPassiveStack(id) === 0);
-    const ownedPassives = pool.filter((id) => directPassiveStack(id) > 0);
-    if (state.bossKills >= 4) {
-      choices = pool;
-    } else if (freshPassives.length && ownedPassives.length) {
-      const eliteChance = 0.1;
-      choices = Math.random() < eliteChance ? ownedPassives : freshPassives;
-    } else {
-      choices = freshPassives.length ? freshPassives : ownedPassives;
-    }
-  }
-  const id = randomFrom(choices);
+  const id = randomFrom(pool);
   return { item: itemCopy(id), sold: false };
+}
+
+function drawPassiveShopItem(eliteBoosted = false) {
+  if (!eliteBoosted) return drawShopItem(PASSIVE_IDS);
+  const ownedPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) > 0);
+  const freshPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) === 0);
+  if (!ownedPassives.length || !freshPassives.length) return drawShopItem(PASSIVE_IDS);
+  const eliteChance = Math.min(1, (ownedPassives.length / PASSIVE_IDS.length) * 2);
+  const choices = Math.random() < eliteChance ? ownedPassives : freshPassives;
+  return { item: itemCopy(randomFrom(choices)), sold: false };
 }
 
 function playtestMoneyModeActive() {
@@ -2286,19 +2401,20 @@ function applyCreditLashSpent(amount) {
   const round = state.roundState;
   if (!round || !passiveStack("p29")) return;
   round.creditsSpentThisRound += Math.max(0, Math.ceil(amount));
-  const totalBaseDamage = Math.floor(round.creditsSpentThisRound / 2);
-  const totalScaledDamage = Math.ceil(totalBaseDamage * passivePower("p29"));
-  const damage = totalScaledDamage - (round.creditLashDamageApplied || 0);
-  if (damage <= 0) return;
+  const totalTicks = Math.floor(round.creditsSpentThisRound / 2);
+  const ticks = totalTicks - (round.creditLashDamageApplied || 0);
+  if (ticks <= 0) return;
   markPassiveTriggered("p29");
-  let dealt = 0;
-  for (let tick = 0; tick < damage; tick += 1) {
+  const percent = furfurDamagePercent("p29");
+  let appliedTicks = 0;
+  for (let tick = 0; tick < ticks; tick += 1) {
     const target = highestHealthNonBossBot();
     if (!target) break;
-    damageBot(target, 1, `Seal of Furfur dealt 1 damage to ${target.name}.`, "Seal of Furfur");
-    dealt += 1;
+    const damage = Math.ceil(target.maxHp * percent);
+    damageBot(target, damage, `Seal of Furfur dealt ${damage} damage to ${target.name}.`, "Seal of Furfur");
+    appliedTicks += 1;
   }
-  round.creditLashDamageApplied = (round.creditLashDamageApplied || 0) + dealt;
+  round.creditLashDamageApplied = (round.creditLashDamageApplied || 0) + appliedTicks;
 }
 
 function recordShopItemBought(itemId) {
@@ -2315,6 +2431,12 @@ function recordShopItemBought(itemId) {
 function activePurchaseCost(item) {
   if (!item || item.freeLoot) return 0;
   return Math.max(0, Math.ceil(item.purchaseCost ?? item.price ?? 0));
+}
+
+function itemBuyValue(item) {
+  if (!item) return 0;
+  if (item.type === "active") return Math.max(0, Math.ceil(Math.max(item.purchaseCost ?? 0, item.price ?? 0)));
+  return Math.max(0, Math.ceil((item.price || 0) * (item.stack || 1)));
 }
 
 function applyActiveUsePassives(item) {
@@ -2420,6 +2542,7 @@ function startGame() {
   state.bossSpawnCount = 0;
   state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
   state.bossQueued = false;
+  state.eliteBoostedNextReroll = false;
   resetBotsForRun();
   rerollShop();
   beginRound();
@@ -2569,7 +2692,108 @@ function projectedMemoryTarget(
   return Number.isFinite(memoryEntry.target) ? memoryEntry.target : null;
 }
 
+function memoryRawAverage(memoryEntry) {
+  if (!memoryEntry) return null;
+  if (Number.isFinite(memoryEntry.tableAverage)) return memoryEntry.tableAverage;
+  if (Number.isFinite(memoryEntry.target) && Number.isFinite(memoryEntry.targetModifier) && memoryEntry.targetModifier !== 0) {
+    const previousOffset = Number.isFinite(memoryEntry.targetOffset) ? memoryEntry.targetOffset : 0;
+    return (memoryEntry.target - previousOffset) / memoryEntry.targetModifier;
+  }
+  return null;
+}
+
+function weightedMemoryAverage(entries, readValue) {
+  let weighted = 0;
+  let totalWeight = 0;
+  entries.forEach((entry, index) => {
+    const value = readValue(entry);
+    if (!Number.isFinite(value)) return;
+    const weight = index + 1;
+    weighted += value * weight;
+    totalWeight += weight;
+  });
+  return totalWeight ? weighted / totalWeight : null;
+}
+
+function selfConsistentBossGuess(otherAverage, participantCount, modifier, offset) {
+  const count = Math.max(2, participantCount);
+  const others = Math.max(1, count - 1);
+  const denominator = 1 - modifier / count;
+  if (denominator <= 0.05) return otherAverage * modifier + offset;
+  return (modifier * otherAverage * others / count + offset) / denominator;
+}
+
+function planBossGuess(bot) {
+  const memory = bot.memory || [];
+  const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const currentOffset = state.roundState?.targetOffset ?? 0;
+  const participantCount = Math.max(2, activeBots().length + 1);
+  const recent = memory.slice(-Math.min(8, memory.length));
+  const assumedOpeningAverage = bot.anchor * 0.28 + 50 * 0.72;
+
+  if (!recent.length) {
+    const openingGuess = selfConsistentBossGuess(assumedOpeningAverage, participantCount, currentModifier, currentOffset);
+    return Math.ceil(clamp(openingGuess + randomInt(-4, 4), 0, 100));
+  }
+
+  const estimatedOtherAverage =
+    weightedMemoryAverage(recent, (entry) => {
+      const rawAverage = memoryRawAverage(entry);
+      if (!Number.isFinite(rawAverage)) return null;
+      if (Number.isFinite(entry.ownGuess) && participantCount > 1) {
+        return (rawAverage * participantCount - entry.ownGuess) / (participantCount - 1);
+      }
+      return rawAverage;
+    }) ?? assumedOpeningAverage;
+  const selfConsistentGuess = selfConsistentBossGuess(
+    clamp(estimatedOtherAverage, 0, 100),
+    participantCount,
+    currentModifier,
+    currentOffset
+  );
+  const projectedTarget = weightedMemoryAverage(recent, (entry) => projectedMemoryTarget(entry, currentModifier, currentOffset));
+  const last = recent[recent.length - 1];
+  const prev = recent[recent.length - 2] || last;
+  const lastTarget = projectedMemoryTarget(last, currentModifier, currentOffset) ?? projectedTarget ?? selfConsistentGuess;
+  const prevTarget = projectedMemoryTarget(prev, currentModifier, currentOffset) ?? lastTarget;
+  const trendTarget = lastTarget + (lastTarget - prevTarget) * 0.35;
+  const playerPull = weightedMemoryAverage(recent, (entry) => entry.playerGuess);
+  const targetPlan = projectedTarget ?? lastTarget;
+  let guess;
+
+  if (bot.type === "Analyst") {
+    guess = selfConsistentGuess * 0.72 + trendTarget * 0.28;
+  } else if (bot.type === "Follower") {
+    guess = selfConsistentGuess * 0.78 + (playerPull ?? targetPlan) * 0.22;
+  } else if (bot.type === "Stubborn") {
+    guess = selfConsistentGuess * 0.7 + bot.anchor * 0.3;
+  } else if (bot.type === "Drifter") {
+    const sample = projectedMemoryTarget(randomFrom(recent), currentModifier, currentOffset) ?? targetPlan;
+    guess = selfConsistentGuess * 0.66 + sample * 0.34;
+  } else if (bot.type === "Caller") {
+    guess = selfConsistentGuess * 0.74 + targetPlan * 0.26;
+  } else {
+    guess = selfConsistentGuess * 0.76 + bot.anchor * 0.24;
+  }
+
+  const smartNoise = Math.max(2, Math.ceil(bot.noise * 0.45));
+  const pressured = bot.hp <= bot.maxHp * 0.35;
+  guess += randomInt(-smartNoise, smartNoise);
+
+  if (!pressured && Math.random() < bot.aggression * 0.14) {
+    guess += randomFrom([-1, 1]) * randomInt(4, 10);
+  }
+
+  if (!pressured && Math.random() < bot.aggression * 0.025) {
+    guess = selfConsistentGuess + randomFrom([-1, 1]) * randomInt(10, 18);
+  }
+
+  return Math.ceil(clamp(guess, 0, 100));
+}
+
 function planBotGuess(bot) {
+  if (bot.isBoss) return planBossGuess(bot);
+
   const memory = bot.memory;
   const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
   let guess;
@@ -3377,8 +3601,9 @@ function applyLowProfileReward() {
   if ((state.playerLastDamage || 0) > 4) return;
   const credits = scaledPassiveValue("p37", 4);
   const gained = gainCredits(credits, true, "Seal of Malphas");
+  const { healed } = applyPassivePlayerHeal("p37", 3, "Seal of Malphas");
   markPassiveTriggered("p37");
-  state.roundState.roundEvents.push(`Seal of Malphas paid ${gained} SIN for taking ${state.playerLastDamage || 0} damage.`);
+  state.roundState.roundEvents.push(`Seal of Malphas paid ${gained} SIN and healed ${healed} for taking ${state.playerLastDamage || 0} damage.`);
 }
 
 function applyPursonReward() {
@@ -3596,20 +3821,21 @@ function applyPassiveSaleDamage(item, sale, entries = orderedPassiveEffectEntrie
   return totalDamage;
 }
 
-function applySaleSinRedirect(item, sale, entries = orderedPassiveEffectEntries("p50")) {
+function applySaleSinRedirect(item, _sale, entries = orderedPassiveEffectEntries("p50")) {
   if (!item || !entries.length) return 0;
+  const buyValue = itemBuyValue(item);
   let totalGained = 0;
   entries.forEach((entry) => {
-    const amount = Math.ceil(sale * 0.33 * passiveEntryPower(entry));
+    const amount = Math.ceil(buyValue * 0.33 * passiveEntryPower(entry));
     if (amount <= 0) return;
     markPassiveEntryTriggered(entry);
     totalGained += increaseAllBotSin(
       amount,
-      (bot, increase) => `Seal of Agares gave ${bot.name} +${increase} SIN instead of selling ${item.name} for player SIN.`
+      (bot, increase) => `Seal of Agares gave ${bot.name} +${increase} SIN from ${item.name}'s buy value.`
     );
   });
   if (totalGained > 0) {
-    state.roundState?.roundEvents.push(`Seal of Agares redirected the sale into ${totalGained} total bot SIN.`);
+    state.roundState?.roundEvents.push(`Seal of Agares redirected ${buyValue} buy value into ${totalGained} total bot SIN.`);
   }
   return totalGained;
 }
@@ -3705,14 +3931,20 @@ function useActive(index) {
   }
 
   if (item.id === "a27") {
-    const gained = gainCredits(15, true, "The Infernal Treasury");
+    const gained = gainCredits(15, true, item.name);
     state.player.maxHp = Math.max(1, playerMaxHp() - 10);
     state.player.hp = Math.min(state.player.hp, playerMaxHp());
-    consumeActive(index, `The Infernal Treasury gained ${gained} SIN and burned 10 max health.`, item.uid);
+    consumeActive(index, `${item.name} gained ${gained} SIN and burned 10 max health.`, item.uid);
     return;
   }
 
-  if (["a7", "a8", "a9", "a15", "a23", "a25", "a26", "a28"].includes(item.id)) {
+  if (item.id === "a23") {
+    state.eliteBoostedNextReroll = true;
+    consumeActive(index, "The Hand of Glory marked the next reroll. Seal ELITE chance will be doubled.", item.uid);
+    return;
+  }
+
+  if (["a7", "a8", "a9", "a15", "a25", "a26", "a28"].includes(item.id)) {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot" };
     addLog("Pick a bot to resolve the Artifact.");
     render();
@@ -3950,26 +4182,18 @@ function chooseBot(botId) {
     return;
   }
 
-  if (id === "a23") {
-    applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Hand of Glory erased ${bot.name}.`, state.pendingActive.uid, false);
-    eraseBotWithoutReward(bot, `The Hand of Glory eliminated ${bot.name} without SIN or KO count.`);
-    render();
-    return;
-  }
-
   if (id === "a28") {
     if (bot.isBoss) {
-      addLog("The Number of the Beast cannot target bosses.");
+      addLog(`${item.name} cannot target bosses.`);
       render();
       return;
     }
-    addBotMemory(bot, 6, `The Number of the Beast gave ${bot.name} +6 memory.`);
-    changeBotSin(bot, 6, `The Number of the Beast gave ${bot.name} +6 SIN.`, { triggerLossDamage: false });
+    addBotMemory(bot, 6, `${item.name} gave ${bot.name} +6 memory.`);
+    changeBotSin(bot, 6, `${item.name} gave ${bot.name} +6 SIN.`, { triggerLossDamage: false });
     bot.maxHp += 6;
     bot.hp += 6;
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Number of the Beast gave ${bot.name} +6 memory, +6 SIN, and +6 health.`);
+    consumeActive(index, `${item.name} gave ${bot.name} +6 memory, +6 SIN, and +6 health.`);
     return;
   }
 
@@ -4806,7 +5030,9 @@ function render() {
 function renderMenuApp() {
   const screen = state.menuScreen || "main";
   return `
-    <main class="main-menu" aria-label="Main menu">
+    <main class="main-menu" aria-label="main menu">
+      <img class="menu-figure menu-figure-jesus" src="${MAIN_MENU_JESUS_SRC}" alt="" aria-hidden="true" />
+      <img class="menu-figure menu-figure-devil" src="${MAIN_MENU_DEVIL_SRC}" alt="" aria-hidden="true" />
       <img class="main-menu-logo" src="${MAIN_MENU_LOGO_SRC}" alt="Aenao" />
       <section class="main-menu-panel">
         ${screen === "play" ? renderPlayMenu() : screen === "options" ? renderOptionsMenu() : screen === "quit" ? renderQuitMenu() : renderMainMenu()}
@@ -4829,7 +5055,7 @@ function renderPlayMenu() {
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="arcade">Arcade</button>
-      <button class="menu-button" data-menu-action="pvp">PvP</button>
+      <button class="menu-button" data-menu-action="pvp">Pvp</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -4846,7 +5072,7 @@ function renderOptionsMenu() {
         <strong id="musicVolumeValue">${musicValue}%</strong>
       </div>
       <div class="sound-setting">
-        <label for="sfxVolume">SFX</label>
+        <label for="sfxVolume">Sfx</label>
         <input id="sfxVolume" class="sound-slider" type="range" min="0" max="100" step="1" value="${sfxValue}" />
         <strong id="sfxVolumeValue">${sfxValue}%</strong>
       </div>
@@ -4862,7 +5088,7 @@ function renderOptionsMenu() {
 function renderQuitMenu() {
   return `
     <div class="main-menu-actions">
-      <div class="quit-copy">Close the tab to leave the table.</div>
+      <div class="quit-copy">Close The Tab To Leave The Table.</div>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -5567,11 +5793,10 @@ function renderPendingText() {
   if (state.pendingActive.id === "a6") return "The Tablet of Destinies adds 20 to the target.";
   if (state.pendingActive.id === "a14") return "The Blasting Rod reduces the target by 10.";
   if (state.pendingActive.id === "a15") return "The Magical Sword of Solomon: pick a target. Non-bosses take 20%, bosses take 10%.";
-  if (state.pendingActive.id === "a23") return "The Hand of Glory: pick a bot to erase without rewards or KO count.";
   if (state.pendingActive.id === "a25") return "The Brazen Vessel of Solomon: pick a bot to heal to full and give +9 bounty.";
   if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return "Grandier's Pact: pick a bot to receive the drained bounty.";
   if (state.pendingActive.id === "a26") return "Grandier's Pact: pick a bot to drain up to 5 bounty.";
-  if (state.pendingActive.id === "a28") return "The Number of the Beast: pick a non-boss bot to gain +6 memory, +6 SIN, and +6 health.";
+  if (state.pendingActive.id === "a28") return "Demon Bowl - Incantation Bowl: pick a non-boss bot to gain +6 memory, +6 SIN, and +6 health.";
   if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
     return "The White-Hilted Knife: pick a different bot to heal for 20.";
   }
@@ -5692,12 +5917,15 @@ function renderPassives() {
     const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
     const displayName = passiveDisplayName(item);
     const description = itemDescription(item);
-    const tooltip = `${displayName}\n${description}\nSell ${sale} SIN`;
+    const suppressedBy = suppressingBossForSeal(item.id);
+    const disabledNotice = suppressedBy ? `Disabled while ${suppressedBy.name} is alive.\n` : "";
+    const tooltip = `${displayName}\n${disabledNotice}${description}\nSell ${sale} SIN`;
     const triggeredClass = state.roundState?.triggeredPassiveIds?.has(item.id) ? "triggered" : "";
+    const suppressedClass = suppressedBy ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
     const sealImage = renderSealSigil(item, "equipped-seal-sigil");
     slots.push(`
-      <article class="passive-slot ${triggeredClass}" data-tooltip="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${triggeredClass} ${suppressedClass}" data-tooltip="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}">Sell</button>

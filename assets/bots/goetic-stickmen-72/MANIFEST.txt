@@ -1,0 +1,76 @@
+ARS GOETIA STICKMEN — 72 CHARACTER SET
+Palette: vivid coral-red (#FF7468) on pure black
+Style: frantic hand-painted occult stick figures
+
+01 Bael — three-faced head and crown
+02 Agares — elderly rider, crocodile, hawk
+03 Vassago — hooded seer, eye, pendulum
+04 Samigina (Gamigin) — horse head, scroll, souls
+05 Marbas — lion head, gear, healing serpent
+06 Valefor — donkey-lion head, stolen key
+07 Amon — wolf head, serpent tail, flame
+08 Barbatos — hunter's bow and bird
+09 Paimon — crowned camel rider and trumpet
+10 Buer — five-limbed wheel and healing herb
+11 Gusion — canine head and joined rings
+12 Sitri — leopard head, wings, flame-heart
+13 Beleth — crowned horse rider and trumpet
+14 Leraje — wounded archer
+15 Eligos — knight's lance, banner, serpent
+16 Zepar — soldier, sword, thorned rose
+17 Botis — horned serpent body and sword
+18 Bathin — gem, travel staff, serpent tail
+19 Sallos — crowned crocodile rider, heart shield
+20 Purson — crowned lion, bear, viper
+21 Marax (Morax) — bull head, stars, herb
+22 Ipos — lion head, goose feet, hare tail
+23 Aim (Haborym) — three faces, viper, torch
+24 Naberius — crane head, quill, scroll
+25 Glasya-Labolas — winged dog, quill, hidden dagger
+26 Bune (Bime) — three heads, coin, soul, dragon tail
+27 Ronove — hooded orator and book
+28 Berith — crowned alchemist and forked tongue
+29 Astaroth — fallen-angel wings, viper, dragon tail
+30 Forneus — sea-monster head, fish tail, scroll
+31 Foras — herb, stone, hidden eye
+32 Asmoday — bull/man/ram heads, serpent tail, lance
+33 Gaap — portal, compass, four crowns
+34 Furfur — winged stag, lightning, flame-tail
+35 Marchosias — winged wolf warrior and serpent tail
+36 Stolas — owl head, stars, herb
+37 Phenex (Phoenix) — phoenix head, flame wings, lyre
+38 Halphas — dove head and tower shield
+39 Malphas — crow builder, trowel, broken tower
+40 Raum — crow thief, coin, fallen crown
+41 Focalor — wings, wave, broken boat
+42 Vepar — mermaid form and sea spear
+43 Sabnock — lion warrior, tower shield, spear
+44 Shax — eyeless stork thief and coin
+45 Vine — crowned lion, viper, broken wall
+46 Bifrons — star chart, grave lantern, tombstone
+47 Vual (Uvall) — camel head and heart-hourglass
+48 Haagenti — winged bull alchemist
+49 Crocell — angel, geometry compass, heated water
+50 Furcas — bearded elder, spear-staff, philosophy book
+51 Balam — three heads, serpent tail, hawk
+52 Alloces — lion soldier, sword, star globe
+53 Caim (Camio) — bird head, sword, burning coals
+54 Murmur — crowned griffin, trumpet, souls
+55 Orobas — crowned horse head, oath, hourglass
+56 Gremory (Gamori) — heart-key and camel charm
+57 Ose — leopard head and cracked human mask
+58 Amy (Avnas) — flame form and star globe
+59 Orias — crowned lion, two vipers, serpent tail
+60 Vapula (Naphula) — winged lion, gear, book
+61 Zagan — winged bull, cup, coins
+62 Valac (Ualac) — winged child and two-headed dragon
+63 Andras — winged bird warrior, sword, wolf skull
+64 Haures (Flauros) — leopard and ring of fire
+65 Andrealphus — peacock fan and geometry compass
+66 Cimejes (Kimaris) — mounted warrior and book
+67 Amdusias — unicorn, tuning fork, bending trees
+68 Belial — crowned angel and chariot of fire
+69 Decarabia — star form, bird, stone
+70 Seere (Seir) — swift winged-horse rider and coin
+71 Dantalion — many faces and book
+72 Andromalius — great serpent and recovered pouch

@@ -2973,6 +2973,22 @@ body.mobile-arcade .floating-tooltip .tooltip-elite-line {
   filter: none !important;
 }
 
+.passive-slot.suppressed,
+body.mobile-arcade .passive-slot.suppressed {
+  opacity: 0.58;
+}
+
+.passive-slot.suppressed .equipped-seal-sigil,
+body.mobile-arcade .passive-slot.suppressed .equipped-seal-sigil {
+  filter: grayscale(1) brightness(38%) contrast(1.12) !important;
+  opacity: 0.72;
+}
+
+.passive-slot.suppressed .equipped-seal-sigil.recolored-sigil,
+body.mobile-arcade .passive-slot.suppressed .equipped-seal-sigil.recolored-sigil {
+  filter: grayscale(1) brightness(38%) contrast(1.12) !important;
+}
+
 .bounty-badge {
   position: absolute;
   z-index: 11;
@@ -3389,16 +3405,15 @@ body:has(.menu-app) {
 }
 
 .menu-button {
-  min-height: 54px;
+  min-height: 62px;
   width: 100%;
   border: 2px solid rgba(255, 255, 255, 0.72);
   border-radius: 7px;
   background: #000;
   color: #fff;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 900;
-  text-transform: uppercase;
 }
 
 .menu-button:hover:not(:disabled) {
@@ -3407,18 +3422,18 @@ body:has(.menu-app) {
 }
 
 .secondary-menu-button {
-  font-size: 20px;
+  font-size: 25px;
 }
 
 .sound-setting {
   display: grid;
-  grid-template-columns: 82px minmax(0, 1fr) 58px;
+  grid-template-columns: 98px minmax(0, 1fr) 70px;
   align-items: center;
   gap: 10px;
   width: 100%;
   color: #fff;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 900;
 }
 
@@ -3435,7 +3450,7 @@ body:has(.menu-app) {
   min-height: 42px;
   color: #fff;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 900;
 }
 
@@ -3448,7 +3463,7 @@ body:has(.menu-app) {
 .quit-copy {
   color: #fff;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.25;
   text-align: center;
 }
@@ -3464,20 +3479,52 @@ body:has(.menu-app) {
   }
 
   .menu-button {
-    min-height: 48px;
-    font-size: 20px;
+    min-height: 54px;
+    font-size: 24px;
   }
 }
 
 /* Menu scale and solid healthbar outlines. */
 .main-menu {
   grid-template-rows: minmax(260px, 56vh) auto minmax(18px, 1fr);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .main-menu-logo {
+  position: relative;
+  z-index: 2;
   width: min(94vw, 1320px);
   max-height: 52vh;
   margin-bottom: clamp(8px, 2vh, 26px);
+}
+
+.menu-figure {
+  position: absolute;
+  z-index: 1;
+  bottom: clamp(24px, 4vh, 58px);
+  width: min(42vw, 690px);
+  height: min(88vh, 940px);
+  object-fit: contain;
+  opacity: 0.92;
+  pointer-events: none;
+  user-select: none;
+}
+
+.menu-figure-jesus {
+  left: clamp(12px, 2.5vw, 54px);
+  object-position: left bottom;
+}
+
+.menu-figure-devil {
+  right: clamp(12px, 2.5vw, 54px);
+  object-position: right bottom;
+}
+
+.main-menu-panel {
+  position: relative;
+  z-index: 2;
 }
 
 .menu-button,
@@ -3501,5 +3548,20 @@ body.mobile-arcade .health-bar {
   .main-menu-logo {
     width: min(96vw, 860px);
     max-height: 43vh;
+  }
+
+  .menu-figure {
+    bottom: 2vh;
+    width: 46vw;
+    height: 70vh;
+    opacity: 0.72;
+  }
+
+  .menu-figure-jesus {
+    left: 1vw;
+  }
+
+  .menu-figure-devil {
+    right: 1vw;
   }
 }
