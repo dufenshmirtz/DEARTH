@@ -194,6 +194,20 @@ button:disabled {
   overflow: visible;
 }
 
+.round-wrap {
+  position: relative;
+}
+
+.round-skip-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  min-width: 44px;
+  min-height: 24px;
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
 .player-damage-badge,
 .player-heal-badge,
 .player-credit-badge {
@@ -330,6 +344,11 @@ button:disabled {
 
 .bot-grid.picking {
   z-index: 40;
+}
+
+.bot-grid.final-boss-grid {
+  grid-template-columns: repeat(2, minmax(190px, 280px));
+  justify-content: center;
 }
 
 .pvp-grid {
@@ -956,6 +975,19 @@ button:disabled {
   overflow: visible;
 }
 
+.shop-lock-message {
+  display: grid;
+  min-height: 118px;
+  place-items: center;
+  padding: 18px;
+  border: 1px solid rgba(239, 111, 97, 0.7);
+  border-radius: 6px;
+  color: #ef6f61;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .active-list {
   max-height: none;
 }
@@ -1420,7 +1452,6 @@ select {
 
 button:hover:not(:disabled),
 .item-card:hover,
-.passive-slot:hover,
 .bot-card.pickable,
 .pvp-active-option.selected .small-button,
 .pvp-active-option.cast .small-button,
@@ -2007,6 +2038,7 @@ select {
 .player-heal-badge,
 .player-credit-badge,
 .bot-reward,
+.bounty-badge,
 .death-badge,
 .death-badge.contract-badge,
 .mark-badge,
@@ -2282,6 +2314,18 @@ select {
 .bot-health .pvp-damage-badge {
   top: 5px !important;
   right: 6px !important;
+  min-width: 34px;
+  max-width: 78px;
+  padding: 2px 6px;
+  font-size: 12px !important;
+  animation: damage-pop-still 900ms ease-out both !important;
+  box-shadow: none !important;
+}
+
+.bot-health .heal-badge {
+  top: calc(100% + 6px) !important;
+  right: 6px !important;
+  bottom: auto !important;
   min-width: 34px;
   max-width: 78px;
   padding: 2px 6px;
@@ -2589,6 +2633,18 @@ body.mobile-arcade .bot-health .pvp-damage-badge {
   max-width: 50px;
   padding: 1px 4px;
   font-size: 10px !important;
+}
+
+body.mobile-arcade .bot-health .heal-badge {
+  top: calc(100% + 4px) !important;
+  right: 4px !important;
+  bottom: auto !important;
+  min-width: 26px;
+  max-width: 50px;
+  padding: 1px 4px;
+  font-size: 10px !important;
+  animation: damage-pop-still 900ms ease-out both !important;
+  box-shadow: none !important;
 }
 
 body.mobile-arcade .center-console {
@@ -2959,6 +3015,53 @@ body.mobile-arcade .floating-tooltip .tooltip-elite-line {
   font-size: 0.82em;
 }
 
+.passive-slot:nth-child(1) {
+  --seal-trigger-filter: sepia(100%) saturate(380%) hue-rotate(330deg) brightness(94%) contrast(112%);
+}
+
+.passive-slot:nth-child(2) {
+  --seal-trigger-filter: sepia(100%) saturate(360%) hue-rotate(28deg) brightness(98%) contrast(112%);
+}
+
+.passive-slot:nth-child(3) {
+  --seal-trigger-filter: sepia(100%) saturate(320%) hue-rotate(78deg) brightness(90%) contrast(110%);
+}
+
+.passive-slot:nth-child(4) {
+  --seal-trigger-filter: sepia(100%) saturate(330%) hue-rotate(145deg) brightness(92%) contrast(110%);
+}
+
+.passive-slot:nth-child(5) {
+  --seal-trigger-filter: sepia(100%) saturate(360%) hue-rotate(190deg) brightness(96%) contrast(112%);
+}
+
+.passive-slot:nth-child(6) {
+  --seal-trigger-filter: sepia(100%) saturate(340%) hue-rotate(236deg) brightness(98%) contrast(112%);
+}
+
+.passive-slot:nth-child(7) {
+  --seal-trigger-filter: sepia(100%) saturate(330%) hue-rotate(276deg) brightness(100%) contrast(112%);
+}
+
+.passive-slot:nth-child(8) {
+  --seal-trigger-filter: sepia(100%) saturate(340%) hue-rotate(304deg) brightness(96%) contrast(112%);
+}
+
+.passive-slot:hover,
+body.mobile-arcade .passive-slot:hover {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.passive-slot:not(.suppressed):hover .equipped-seal-sigil {
+  filter: var(--seal-trigger-filter, sepia(100%) saturate(480%) hue-rotate(56deg) brightness(84%) contrast(110%)) !important;
+}
+
+.passive-slot.triggered:not(.suppressed):hover .equipped-seal-sigil {
+  filter: none !important;
+}
+
 .passive-slot.triggered {
   background: transparent !important;
   border-color: transparent !important;
@@ -2991,29 +3094,31 @@ body.mobile-arcade .passive-slot.suppressed .equipped-seal-sigil.recolored-sigil
 
 .bounty-badge {
   position: absolute;
-  z-index: 11;
-  top: 26px;
+  z-index: 12;
+  top: 32px;
   right: 8px;
-  min-width: 38px;
-  max-width: 82px;
-  padding: 2px 6px;
+  min-width: 46px;
+  max-width: calc(100% - 16px);
+  padding: 2px 7px;
   border: 1px solid rgba(225, 184, 76, 0.82);
   border-radius: 999px;
   background: #000;
   color: #ffe29a !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
+  overflow: visible;
   white-space: nowrap;
   animation: damage-pop-still 900ms ease-out both;
+  box-shadow: none !important;
 }
 
 body.mobile-arcade .bounty-badge {
-  top: 17px;
+  top: 25px;
   right: 4px;
-  min-width: 28px;
-  max-width: 54px;
+  min-width: 34px;
+  max-width: calc(100% - 8px);
   padding: 1px 4px;
   font-size: 9px !important;
 }
@@ -3332,11 +3437,256 @@ body.mobile-arcade .target-panel .target-value strong {
   font-weight: 900;
 }
 
+/* Target detail colors: labels stay white; only the numbers keep accents. */
+.target-panel .target-detail,
+.target-panel .target-previous,
+.target-panel .target-modifier,
+.target-calc-line,
+.target-calc-line strong,
+.target-calc-average,
+body.mobile-arcade .target-panel .target-detail,
+body.mobile-arcade .target-panel .target-previous,
+body.mobile-arcade .target-panel .target-modifier,
+body.mobile-arcade .target-calc-line,
+body.mobile-arcade .target-calc-line strong,
+body.mobile-arcade .target-calc-average {
+  color: #fff !important;
+}
+
+.target-panel .target-previous strong,
+body.mobile-arcade .target-panel .target-previous strong {
+  color: #c891ff !important;
+}
+
+.target-panel .target-modifier strong,
+body.mobile-arcade .target-panel .target-modifier strong {
+  color: #7fb7ff !important;
+}
+
+.target-panel .target-value .stat-label,
+body.mobile-arcade .target-panel .target-value .stat-label {
+  color: #fff !important;
+}
+
 .credit-wrap .stat-label,
 .credit-wrap .stat-value,
 body.mobile-arcade .credit-wrap .stat-label,
 body.mobile-arcade .credit-wrap .stat-value {
   color: #fff !important;
+}
+
+/* Arcade top panel order: Target, Health, Round, KOs, SIN. */
+.arena:not(.pvp-arena) .topbar {
+  right: 14px;
+  display: grid;
+  grid-template-columns:
+    minmax(282px, 1.08fr)
+    minmax(172px, 1.22fr)
+    repeat(3, minmax(118px, 1fr));
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.arena:not(.pvp-arena) .topbar > .target-panel {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.arena:not(.pvp-arena) .topbar > .stat-card {
+  min-width: 0;
+}
+
+.arena:not(.pvp-arena) .topbar > .health-wrap {
+  flex-basis: auto;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .arena:not(.pvp-arena) .topbar {
+    right: 12px;
+    left: 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .arena:not(.pvp-arena) .topbar > .target-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+body.mobile-arcade .arena:not(.pvp-arena) .topbar {
+  right: 5px !important;
+  left: 5px !important;
+  grid-template-columns:
+    minmax(156px, 1.45fr)
+    minmax(100px, 0.95fr)
+    minmax(54px, 0.55fr)
+    minmax(74px, 0.7fr)
+    minmax(58px, 0.6fr) !important;
+}
+
+body.mobile-arcade .arena:not(.pvp-arena) .topbar > .target-panel {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  min-width: 0;
+  grid-column: auto !important;
+}
+
+/* Desktop fullscreen alignment: lower Sinner cards and lift Seals inside the taller Seal tray. */
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .center-console {
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  display: grid;
+  width: auto;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  transform: none;
+  pointer-events: none;
+}
+
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .console-row {
+  grid-column: 2;
+  display: grid;
+  width: auto;
+  grid-template-columns: clamp(320px, 24vw, 460px) clamp(132px, 10vw, 170px);
+  gap: 10px;
+  pointer-events: auto;
+}
+
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .guess-input,
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .center-console .primary-button,
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .pause-button {
+  min-height: 46px;
+}
+
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .console-hint {
+  position: static;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  width: min(100%, 430px);
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px !important;
+  line-height: 1.2;
+  margin: 0 !important;
+  text-align: left;
+  pointer-events: none;
+}
+
+body:not(.mobile-arcade) .arena:not(.pvp-arena) .pending-panel {
+  position: static;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: start;
+  width: min(100%, 430px);
+  min-height: 42px;
+  padding: 7px 10px;
+  border-width: 2px;
+  font-size: 15px !important;
+  line-height: 1.2;
+  margin: 0 !important;
+  pointer-events: auto;
+}
+
+body.fullscreen-layout:not(.mobile-arcade) .arena:not(.pvp-arena) .center-console {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 640px) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: 4px;
+}
+
+body.fullscreen-layout:not(.mobile-arcade) .arena:not(.pvp-arena) .console-row {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: stretch;
+  width: 100%;
+}
+
+body.fullscreen-layout:not(.mobile-arcade) .arena:not(.pvp-arena) .console-hint {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: start;
+  width: 100%;
+}
+
+body.fullscreen-layout:not(.mobile-arcade) .arena:not(.pvp-arena) .pending-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: stretch;
+  width: 100%;
+}
+
+body:not(.mobile-arcade) .passive-bar {
+  grid-auto-rows: minmax(0, 1fr) !important;
+  padding-block: 10px 12px !important;
+}
+
+body:not(.mobile-arcade) .passive-slot,
+body:not(.mobile-arcade) .passive-slot.empty,
+body:not(.mobile-arcade) .passive-slot.triggered {
+  align-self: stretch !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-block: 4px !important;
+}
+
+body:not(.mobile-arcade) .passive-slot:not(.empty) {
+  display: grid !important;
+  align-content: center !important;
+  align-items: center !important;
+  justify-items: center !important;
+  padding: 8px !important;
+}
+
+body:not(.mobile-arcade) .passive-slot .equipped-seal-sigil {
+  align-self: center;
+  justify-self: center;
+  width: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
+  height: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
+  transform: none;
+}
+
+body:not(.mobile-arcade) .passive-slot .seal-sell-button {
+  position: absolute !important;
+  right: 5px !important;
+  bottom: 5px !important;
+  justify-self: auto;
+  min-width: 42px !important;
+  min-height: 22px !important;
+  margin-top: 0;
+  padding: 0 6px;
+  font-size: 11px !important;
+  line-height: normal;
+}
+
+@media (min-height: 850px) {
+  body:not(.mobile-arcade) .arena:not(.pvp-arena) .bot-grid {
+    inset: 166px 36px 132px;
+    align-content: center;
+    align-items: center;
+  }
+}
+
+@media (min-height: 1040px) {
+  body:not(.mobile-arcade) .arena:not(.pvp-arena) .bot-grid {
+    inset: 166px 36px 124px;
+  }
 }
 
 .guess-closeness-number,
@@ -3349,6 +3699,11 @@ body.mobile-arcade .credit-wrap .stat-value {
   color: #ef6f61 !important;
   text-decoration: none !important;
   text-decoration-line: none !important;
+}
+
+.mini-stat span.critical-guess-label,
+body.mobile-arcade .mini-stat span.critical-guess-label {
+  color: #ef6f61 !important;
 }
 
 .guess-input.critical-guess {

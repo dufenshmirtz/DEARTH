@@ -1,0 +1,2225 @@
+{
+  "source": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad",
+  "storyId": "659b388d366efbc6ae6a49ad",
+  "startedAt": "2026-09-05T09:49:24.127Z",
+  "updatedAt": "2026-09-05T10:12:09.480Z",
+  "totalItems": 101,
+  "items": [
+    {
+      "id": "673794c2951631028850bb99",
+      "module": "Manuscript",
+      "name": "Ανισορροπία",
+      "order": 0,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/manuscript/manuscript-section/673794c2951631028850bb99"
+    },
+    {
+      "id": "659b38b3366efbc6ae6a9cc5",
+      "module": "Characters",
+      "name": "Θρέων",
+      "order": 1,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659b38b3366efbc6ae6a9cc5"
+    },
+    {
+      "id": "659b3c5813eeadd14142333c",
+      "module": "Characters",
+      "name": "Πύρος",
+      "order": 2,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659b3c5813eeadd14142333c"
+    },
+    {
+      "id": "659b5d9913eeadd14183bfec",
+      "module": "Characters",
+      "name": "Ζήλων",
+      "order": 3,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659b5d9913eeadd14183bfec"
+    },
+    {
+      "id": "659b5f8aab4b96b7da08590c",
+      "module": "Characters",
+      "name": "Ντάντρε",
+      "order": 4,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659b5f8aab4b96b7da08590c"
+    },
+    {
+      "id": "659b3c4313eeadd14141fd72",
+      "module": "Characters",
+      "name": "Σεραφείμ",
+      "order": 5,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659b3c4313eeadd14141fd72"
+    },
+    {
+      "id": "65b06b3e8053872caac4b899",
+      "module": "Characters",
+      "name": "Πάντμα",
+      "order": 6,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/65b06b3e8053872caac4b899"
+    },
+    {
+      "id": "659d6f10366efbc6aece9e2a",
+      "module": "Characters",
+      "name": "Πέτρος",
+      "order": 7,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659d6f10366efbc6aece9e2a"
+    },
+    {
+      "id": "65bc35dc7db24fdd707840dd",
+      "module": "Characters",
+      "name": "Παύλος",
+      "order": 8,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/65bc35dc7db24fdd707840dd"
+    },
+    {
+      "id": "6751e9f3579b2f60d20a2e5c",
+      "module": "Characters",
+      "name": "Μηνάς",
+      "order": 9,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/6751e9f3579b2f60d20a2e5c"
+    },
+    {
+      "id": "694ae16b70c842e6f53923d2",
+      "module": "Characters",
+      "name": "Αβιέλα",
+      "order": 10,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ae16b70c842e6f53923d2"
+    },
+    {
+      "id": "675214bd9abe86dc2baa1939",
+      "module": "Characters",
+      "name": "Έκτορας",
+      "order": 11,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/675214bd9abe86dc2baa1939"
+    },
+    {
+      "id": "659d6ef2b9ea2157dd0c334c",
+      "module": "Characters",
+      "name": "Βαλές",
+      "order": 12,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/659d6ef2b9ea2157dd0c334c"
+    },
+    {
+      "id": "675214ad2843a07c4ec9fafd",
+      "module": "Characters",
+      "name": "Ιάσονας",
+      "order": 13,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/675214ad2843a07c4ec9fafd"
+    },
+    {
+      "id": "675c3aff159531dc35b9d3c1",
+      "module": "Characters",
+      "name": "Θαλής",
+      "order": 14,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/675c3aff159531dc35b9d3c1"
+    },
+    {
+      "id": "694ac649a74af4495da0d55d",
+      "module": "Characters",
+      "name": "Κλειώ",
+      "order": 15,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ac649a74af4495da0d55d"
+    },
+    {
+      "id": "679190a99957bbadc5e988a4",
+      "module": "Characters",
+      "name": "Σαμψών",
+      "order": 16,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/679190a99957bbadc5e988a4"
+    },
+    {
+      "id": "694ad122a3cd515e0f86bd1e",
+      "module": "Characters",
+      "name": "Ηλέκτρα",
+      "order": 17,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ad122a3cd515e0f86bd1e"
+    },
+    {
+      "id": "694ad12da3cd515e0f87abdf",
+      "module": "Characters",
+      "name": "Ζαφείρης",
+      "order": 18,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ad12da3cd515e0f87abdf"
+    },
+    {
+      "id": "675214d82843a07c4ecac743",
+      "module": "Characters",
+      "name": "Δούκας",
+      "order": 19,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/675214d82843a07c4ecac743"
+    },
+    {
+      "id": "675214e5f87fb8c549e91207",
+      "module": "Characters",
+      "name": "Ευδοκία",
+      "order": 20,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/675214e5f87fb8c549e91207"
+    },
+    {
+      "id": "6791908a9957bbadc5e58440",
+      "module": "Characters",
+      "name": "Κάλχα",
+      "order": 21,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/6791908a9957bbadc5e58440"
+    },
+    {
+      "id": "694ad057a6c5bfb96af16e89",
+      "module": "Characters",
+      "name": "Σημεών",
+      "order": 22,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ad057a6c5bfb96af16e89"
+    },
+    {
+      "id": "694ad384a6c5bfb96a5f1f5b",
+      "module": "Characters",
+      "name": "Γκαμπριγέλ",
+      "order": 23,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ad384a6c5bfb96a5f1f5b"
+    },
+    {
+      "id": "694ae32ea48f00e6cff00863",
+      "module": "Characters",
+      "name": "Ηλέκτρα",
+      "order": 24,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694ae32ea48f00e6cff00863"
+    },
+    {
+      "id": "694bc476a48f00e6cf2db5eb",
+      "module": "Characters",
+      "name": "Ρούτση",
+      "order": 25,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/characters/character/694bc476a48f00e6cf2db5eb"
+    },
+    {
+      "id": "6751f74d8cc3bbd0a7e94804",
+      "module": "Locations",
+      "name": "Κασλάρ",
+      "order": 26,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751f74d8cc3bbd0a7e94804"
+    },
+    {
+      "id": "659c1189fa4e38037cf9d574",
+      "module": "Locations",
+      "name": "Νησι της Βολκανα",
+      "order": 27,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/659c1189fa4e38037cf9d574"
+    },
+    {
+      "id": "659b5c7313eeadd14180d8a5",
+      "module": "Locations",
+      "name": "Ζώνη 1",
+      "order": 28,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/659b5c7313eeadd14180d8a5"
+    },
+    {
+      "id": "659b5d5e185f79b1fd375fa5",
+      "module": "Locations",
+      "name": "Ζώνη 2",
+      "order": 29,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/659b5d5e185f79b1fd375fa5"
+    },
+    {
+      "id": "659b5d71fa4e38037c27a966",
+      "module": "Locations",
+      "name": "Ζώνη 3",
+      "order": 30,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/659b5d71fa4e38037c27a966"
+    },
+    {
+      "id": "659b5d8291621ec30da2c475",
+      "module": "Locations",
+      "name": "Ζώνη 4",
+      "order": 31,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/659b5d8291621ec30da2c475"
+    },
+    {
+      "id": "6751eba9f87fb8c549cfb85f",
+      "module": "Locations",
+      "name": "Βόρειο Τέταρτο",
+      "order": 32,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751eba9f87fb8c549cfb85f"
+    },
+    {
+      "id": "6751ebce579b2f60d2181105",
+      "module": "Locations",
+      "name": "Ανατολικό Τέταρτο",
+      "order": 33,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751ebce579b2f60d2181105"
+    },
+    {
+      "id": "6751ebe4579b2f60d2188155",
+      "module": "Locations",
+      "name": "Δυτικό Τέταρτο",
+      "order": 34,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751ebe4579b2f60d2188155"
+    },
+    {
+      "id": "6751ec119719bb4a45a3d536",
+      "module": "Locations",
+      "name": "Νασράη",
+      "order": 35,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751ec119719bb4a45a3d536"
+    },
+    {
+      "id": "6751eb7a2843a07c4e9cff2d",
+      "module": "Locations",
+      "name": "Χάλκινη Συνοικία",
+      "order": 36,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751eb7a2843a07c4e9cff2d"
+    },
+    {
+      "id": "6751eb942843a07c4e9d84de",
+      "module": "Locations",
+      "name": "Στενοφάναρα",
+      "order": 37,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751eb942843a07c4e9d84de"
+    },
+    {
+      "id": "6751f5c88cc3bbd0a7d72c70",
+      "module": "Locations",
+      "name": "Καπερβάζι",
+      "order": 38,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/6751f5c88cc3bbd0a7d72c70"
+    },
+    {
+      "id": "675212c80f6b0f1268915cd7",
+      "module": "Locations",
+      "name": "Το Αμπάρι",
+      "order": 39,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/675212c80f6b0f1268915cd7"
+    },
+    {
+      "id": "675212e4f87fb8c549cf618c",
+      "module": "Locations",
+      "name": "Η Στοά",
+      "order": 40,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/675212e4f87fb8c549cf618c"
+    },
+    {
+      "id": "675213289abe86dc2b9388d6",
+      "module": "Locations",
+      "name": "Αυλή Ιζουμρούνδη",
+      "order": 41,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/675213289abe86dc2b9388d6"
+    },
+    {
+      "id": "675d989784a575d51e82ac54",
+      "module": "Locations",
+      "name": "Δυτικό Τμήμα",
+      "order": 42,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/675d989784a575d51e82ac54"
+    },
+    {
+      "id": "694ac75e337c92b431def6bf",
+      "module": "Locations",
+      "name": "Ανατολικός Ναός του Ήλιου",
+      "order": 43,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ac75e337c92b431def6bf"
+    },
+    {
+      "id": "694ac7b4a74af4495df5a702",
+      "module": "Locations",
+      "name": "6ο Πανεπιστήμιο της Βολκάνα",
+      "order": 44,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ac7b4a74af4495df5a702"
+    },
+    {
+      "id": "694acbcba6c5bfb96a335c0c",
+      "module": "Locations",
+      "name": "Σχίσμα",
+      "order": 45,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694acbcba6c5bfb96a335c0c"
+    },
+    {
+      "id": "694acbfba48f00e6cf59e2a9",
+      "module": "Locations",
+      "name": "Μελανή Συνοικία",
+      "order": 46,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694acbfba48f00e6cf59e2a9"
+    },
+    {
+      "id": "694acc29a6c5bfb96a415089",
+      "module": "Locations",
+      "name": "Νέα βιομηχανική Ζώνη της Νασράη",
+      "order": 47,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694acc29a6c5bfb96a415089"
+    },
+    {
+      "id": "694acc3fa74af4495db3a379",
+      "module": "Locations",
+      "name": "Κυψέλη",
+      "order": 48,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694acc3fa74af4495db3a379"
+    },
+    {
+      "id": "694ad15911dcc4a1abe46a9c",
+      "module": "Locations",
+      "name": "Το καφενείο της Εύας",
+      "order": 49,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ad15911dcc4a1abe46a9c"
+    },
+    {
+      "id": "694ad175a74af4495d84ed6c",
+      "module": "Locations",
+      "name": "Υπόγεια Γέφυρα",
+      "order": 50,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ad175a74af4495d84ed6c"
+    },
+    {
+      "id": "694ad36e11dcc4a1ab42e8c1",
+      "module": "Locations",
+      "name": "Γυάλινος Τρούλος",
+      "order": 51,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ad36e11dcc4a1ab42e8c1"
+    },
+    {
+      "id": "694ad3aea3cd515e0faf2801",
+      "module": "Locations",
+      "name": "Πανδοχείο",
+      "order": 52,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/694ad3aea3cd515e0faf2801"
+    },
+    {
+      "id": "696003e508739479a9cff8dc",
+      "module": "Locations",
+      "name": "Το κυρτό κτήριο",
+      "order": 53,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/locations/location/696003e508739479a9cff8dc"
+    },
+    {
+      "id": "66e1758577d0839118fec14c",
+      "module": "Maps",
+      "name": "Βολκάνα",
+      "order": 54,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/maps/map/66e1758577d0839118fec14c"
+    },
+    {
+      "id": "07c26370-ae0a-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Ίδρυση της Βολκάνα-Εκδίωξη Βαπτιστών",
+      "order": 55,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/07c26370-ae0a-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "5af67650-ae12-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Ο Πύρος και ο Ζήλων αποδρούν από το Κασλάρ",
+      "order": 56,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/5af67650-ae12-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "6d1728b0-ae13-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Ο Πύρος βρίσκει αποδοτικό τρόπο επεξεργασίας του πανδωρίου, και οργανώνουν εταιρία με τον Ζήλων",
+      "order": 57,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/6d1728b0-ae13-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "aaf57a10-ae13-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Η εταιρία τους αποκτά τεράστιες διαστάσεις σε όλη τη Βολκάνα",
+      "order": 58,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/aaf57a10-ae13-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "153e2fc0-ae14-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Ρίξη της σχέσης Πύρου και Ζήλων",
+      "order": 59,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/153e2fc0-ae14-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "61866280-ae14-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Οι Νασρήτες απαγάγουν Θρέων και Ντάντρε για να τους πάνε πίσω στη Νασράη ως εργάτες/Διάσωση του Ντάντρε από το τάγμα του ρόμβου",
+      "order": 60,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/61866280-ae14-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "94918dd0-ae14-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Η κόρη του Μηνά σκοτώνεται. Ο Ντάντρε μπαίνει στο τάγμα του ρόμβου. Ο Μηνάς πηγαίνει με τους Ισορροπιστές",
+      "order": 61,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/94918dd0-ae14-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "b9142c30-ae14-11ee-8377-43ca0674d6ec",
+      "module": "Timeline",
+      "name": "Ο Θρέων δραπετεύει από τη Νασράη και φτάνει στη ζώνη 2",
+      "order": 62,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/b9142c30-ae14-11ee-8377-43ca0674d6ec"
+    },
+    {
+      "id": "6f0ff0c0-aeea-11ee-b328-b321147484d8",
+      "module": "Timeline",
+      "name": "Η διαφθορά του πανδωρίου αρχίζει να έχει καταστρεπτικές συνέπειες για τη Βολκάνα",
+      "order": 63,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/6f0ff0c0-aeea-11ee-b328-b321147484d8"
+    },
+    {
+      "id": "724b1e90-aeea-11ee-b328-b321147484d8",
+      "module": "Timeline",
+      "name": "Δημιουργούνται τα τάγματα της αντίστασης",
+      "order": 64,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/724b1e90-aeea-11ee-b328-b321147484d8"
+    },
+    {
+      "id": "e78ebc10-e0bc-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Ο Μηνάς δημιουργεί το Μυστικό Τάγμα",
+      "order": 65,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/e78ebc10-e0bc-11f0-a199-110361d65db7"
+    },
+    {
+      "id": "5eb31200-e0bd-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Ο Καμάλ στήνει ενέδρα στον Μηνά και το Μυστικό Τάγμα διαλύεται οριστικά",
+      "order": 66,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/5eb31200-e0bd-11f0-a199-110361d65db7"
+    },
+    {
+      "id": "ebfe7cd0-e0bd-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Η Πάντμα φυγαδεύεται στην Ιζουμρούνδη μετά τη δολοφονία των γονιών της",
+      "order": 67,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/ebfe7cd0-e0bd-11f0-a199-110361d65db7"
+    },
+    {
+      "id": "659b5d9913eeadd14183bfec",
+      "module": "Arcs",
+      "name": "Ζήλων",
+      "order": 68,
+      "routable": true,
+      "sameIdIndex": 1,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/arcs/arc/659b5d9913eeadd14183bfec"
+    },
+    {
+      "id": "659fc206774232d7f15fa82f",
+      "module": "Relationships",
+      "name": "Relationship Web",
+      "order": 69,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/relationships/relationship-web/659fc206774232d7f15fa82f"
+    },
+    {
+      "id": "659b4cb2366efbc6ae8ad9f3",
+      "module": "Encyclopedia",
+      "name": "Πανδώριο",
+      "order": 70,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659b4cb2366efbc6ae8ad9f3"
+    },
+    {
+      "id": "659d6e93fa4e38037c55bb97",
+      "module": "Encyclopedia",
+      "name": "Ηφαίστειο της Πανδώρας",
+      "order": 71,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e93fa4e38037c55bb97"
+    },
+    {
+      "id": "659d6e65fa4e38037c54ee94",
+      "module": "Encyclopedia",
+      "name": "Αντίσταση",
+      "order": 72,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e65fa4e38037c54ee94"
+    },
+    {
+      "id": "675d886dad225c61865abb57",
+      "module": "Encyclopedia",
+      "name": "Το Σχίσμα",
+      "order": 73,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/675d886dad225c61865abb57"
+    },
+    {
+      "id": "694acfd070c842e6f5efb8cd",
+      "module": "Encyclopedia",
+      "name": "Πορτοκαλί Κρύσταλλοι",
+      "order": 74,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694acfd070c842e6f5efb8cd"
+    },
+    {
+      "id": "694ad070a48f00e6cf3b0cec",
+      "module": "Encyclopedia",
+      "name": "Συμμορίες του Ανατολικού Τετάρτου",
+      "order": 75,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad070a48f00e6cf3b0cec"
+    },
+    {
+      "id": "694ad07fa48f00e6cf3cb4cf",
+      "module": "Encyclopedia",
+      "name": "Ζαχά",
+      "order": 76,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad07fa48f00e6cf3cb4cf"
+    },
+    {
+      "id": "694ad094a3cd515e0f7453ca",
+      "module": "Encyclopedia",
+      "name": "Κοράκια",
+      "order": 77,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad094a3cd515e0f7453ca"
+    },
+    {
+      "id": "694ad0c4a6c5bfb96a0d2494",
+      "module": "Encyclopedia",
+      "name": "Βαπτιστές",
+      "order": 78,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad0c4a6c5bfb96a0d2494"
+    },
+    {
+      "id": "694ad19570c842e6f53671aa",
+      "module": "Encyclopedia",
+      "name": "Λασποβάτες",
+      "order": 79,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad19570c842e6f53671aa"
+    },
+    {
+      "id": "694ad1d8a3cd515e0f8f58c1",
+      "module": "Encyclopedia",
+      "name": "Φύλακες",
+      "order": 80,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad1d8a3cd515e0f8f58c1"
+    },
+    {
+      "id": "694ad42670c842e6f585812a",
+      "module": "Encyclopedia",
+      "name": "Το Ανώνυμο Τάγμα του Μηνά",
+      "order": 81,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad42670c842e6f585812a"
+    },
+    {
+      "id": "694ad47611dcc4a1ab507c0a",
+      "module": "Encyclopedia",
+      "name": "Αδέσποτοι",
+      "order": 82,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad47611dcc4a1ab507c0a"
+    },
+    {
+      "id": "659d2e5db9ea2157dd018cc3",
+      "module": "Magic",
+      "name": "policia",
+      "order": 83,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/magic/magic/659d2e5db9ea2157dd018cc3"
+    },
+    {
+      "id": "6751f6c1f87fb8c54917a7f0",
+      "module": "Species",
+      "name": "Έλουρη",
+      "order": 84,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/6751f6c1f87fb8c54917a7f0"
+    },
+    {
+      "id": "675b6cb862247c6db92e2449",
+      "module": "Species",
+      "name": "Τερράκαπρος",
+      "order": 85,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675b6cb862247c6db92e2449"
+    },
+    {
+      "id": "675c2b0d159531dc3534b6ad",
+      "module": "Species",
+      "name": "Γίγαντας",
+      "order": 86,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675c2b0d159531dc3534b6ad"
+    },
+    {
+      "id": "675d4827ad225c61864d1304",
+      "module": "Species",
+      "name": "Ξ Ε Ρ Ξ Η Σ",
+      "order": 87,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d4827ad225c61864d1304"
+    },
+    {
+      "id": "675d486eb745e0a09d5a9421",
+      "module": "Species",
+      "name": "Άγγελος/Αγγελομάνα",
+      "order": 88,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d486eb745e0a09d5a9421"
+    },
+    {
+      "id": "675d489d84a575d51e1dcac8",
+      "module": "Species",
+      "name": "Γλόμπος",
+      "order": 89,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d489d84a575d51e1dcac8"
+    },
+    {
+      "id": "68191cbe58c4c5ce9f10eddb",
+      "module": "Species",
+      "name": "Σαφίρ",
+      "order": 90,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/68191cbe58c4c5ce9f10eddb"
+    },
+    {
+      "id": "69ed1fe8c9a3ea9ca6bd1292",
+      "module": "Species",
+      "name": "Βρώσιμο",
+      "order": 91,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/69ed1fe8c9a3ea9ca6bd1292"
+    },
+    {
+      "id": "6a4cd8251bbf8c883a0b32f1",
+      "module": "Species",
+      "name": "Χετέρι",
+      "order": 92,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/6a4cd8251bbf8c883a0b32f1"
+    },
+    {
+      "id": "6769f498052c6721894925bd",
+      "module": "Items",
+      "name": "Μαχαίρια του Θρέωνα",
+      "order": 93,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/items/item/6769f498052c6721894925bd"
+    },
+    {
+      "id": "6769f4ba2769dd90a96a1196",
+      "module": "Items",
+      "name": "Κάρτα Αγοράς Χάλκινης Συνοικίας",
+      "order": 94,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/items/item/6769f4ba2769dd90a96a1196"
+    },
+    {
+      "id": "6769f4dc603806f092f94082",
+      "module": "Items",
+      "name": "Μαχαίρια του Θρέωνα",
+      "order": 95,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/items/item/6769f4dc603806f092f94082"
+    },
+    {
+      "id": "6769f4f0052c67218949b9d3",
+      "module": "Items",
+      "name": "Βαλίστρα του Πέτρου",
+      "order": 96,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/items/item/6769f4f0052c67218949b9d3"
+    },
+    {
+      "id": "694ad0eaa48f00e6cf53a1d8",
+      "module": "Items",
+      "name": "Αναπτήρας του Καμάλ",
+      "order": 97,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/items/item/694ad0eaa48f00e6cf53a1d8"
+    },
+    {
+      "id": "6751f5fe579b2f60d255984e",
+      "module": "Systems",
+      "name": "Location System",
+      "order": 98,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/systems/system/6751f5fe579b2f60d255984e"
+    },
+    {
+      "id": "65a7fab9239647c5703271e3",
+      "module": "Religions",
+      "name": "Το Δόγμα",
+      "order": 99,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/religions/religion/65a7fab9239647c5703271e3"
+    },
+    {
+      "id": "65c4b0436d49492ab8de2aee",
+      "module": "Religions",
+      "name": "Ισορροπισμός",
+      "order": 100,
+      "routable": true,
+      "sameIdIndex": 0,
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/religions/religion/65c4b0436d49492ab8de2aee"
+    }
+  ],
+  "captures": [
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/e78ebc10-e0bc-11f0-a199-110361d65db7",
+      "capturedAt": "2026-09-05T09:49:38.185Z",
+      "capturedName": "Campfire: Where Stories Come to Life",
+      "childrenCount": 0,
+      "detailText": "Bookshop Cart\nYour cart is empty\nBrowse books under the Read tab, or check out our recommendations below!\nKraken's Guide to The House Witch\nThe World of Tea Princess Chronicles\nFaerie Fruit\nAphelion\nThe Never-Ending End of the World\nThe Lord of Crows\nKeeper's Reign\nA New World For You\nFind More Books",
+      "documentTitle": "Campfire: Where Stories Come to Life",
+      "expanded": false,
+      "fullTextLength": 301,
+      "id": "e78ebc10-e0bc-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Ο Μηνάς δημιουργεί το Μυστικό Τάγμα",
+      "navigation": {
+        "method": "timeline-direct-url"
+      },
+      "order": 65,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {
+        "lines": [
+          "Bookshop Cart",
+          "Your cart is empty",
+          "Browse books under the Read tab, or check out our recommendations below!",
+          "Kraken's Guide to The House Witch",
+          "The World of Tea Princess Chronicles",
+          "Faerie Fruit",
+          "Aphelion",
+          "The Never-Ending End of the World",
+          "The Lord of Crows",
+          "Keeper's Reign",
+          "A New World For You",
+          "Find More Books"
+        ]
+      },
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/e78ebc10-e0bc-11f0-a199-110361d65db7",
+      "captureWarning": "No useful detail text or panels detected."
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/5eb31200-e0bd-11f0-a199-110361d65db7",
+      "capturedAt": "2026-09-05T09:49:45.219Z",
+      "capturedName": "Ο Καμάλ στήνει ενέδρα στον Μηνά και το Μυστικό Τάγμα διαλύεται οριστικά",
+      "childrenCount": 0,
+      "detailText": "Color Key\nManage Colors\nConnection\nFeb 2, 795 CE\nUse panels to detail events in your story. Organize and connect events by clicking \"View Canvas\" in your sidebar.\nAdd Panel",
+      "documentTitle": "Ο Καμάλ στήνει ενέδρα στον Μηνά και το Μυστικό Τάγμα διαλύεται οριστικά (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 3319,
+      "id": "5eb31200-e0bd-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Ο Καμάλ στήνει ενέδρα στον Μηνά και το Μυστικό Τάγμα διαλύεται οριστικά",
+      "navigation": {
+        "method": "timeline-direct-url"
+      },
+      "order": 66,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {
+        "connectionDate": "Feb 2, 795 CE",
+        "lines": [
+          "Color Key",
+          "Manage Colors",
+          "Connection",
+          "Feb 2, 795 CE",
+          "Use panels to detail events in your story. Organize and connect events by clicking \"View Canvas\" in your sidebar.",
+          "Add Panel"
+        ]
+      },
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/5eb31200-e0bd-11f0-a199-110361d65db7"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/ebfe7cd0-e0bd-11f0-a199-110361d65db7",
+      "capturedAt": "2026-09-05T09:49:52.204Z",
+      "capturedName": "Η Πάντμα φυγαδεύεται στην Ιζουμρούνδη μετά τη δολοφονία των γονιών της",
+      "childrenCount": 0,
+      "detailText": "Color Key\nManage Colors\nConnection\nSep 27, 806 CE\nUse panels to detail events in your story. Organize and connect events by clicking \"View Canvas\" in your sidebar.\nAdd Panel",
+      "documentTitle": "Η Πάντμα φυγαδεύεται στην Ιζουμρούνδη μετά τη δολοφονία των γονιών της (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 3319,
+      "id": "ebfe7cd0-e0bd-11f0-a199-110361d65db7",
+      "module": "Timeline",
+      "name": "Η Πάντμα φυγαδεύεται στην Ιζουμρούνδη μετά τη δολοφονία των γονιών της",
+      "navigation": {
+        "method": "timeline-direct-url"
+      },
+      "order": 67,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {
+        "connectionDate": "Sep 27, 806 CE",
+        "lines": [
+          "Color Key",
+          "Manage Colors",
+          "Connection",
+          "Sep 27, 806 CE",
+          "Use panels to detail events in your story. Organize and connect events by clicking \"View Canvas\" in your sidebar.",
+          "Add Panel"
+        ]
+      },
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/timeline/event/ebfe7cd0-e0bd-11f0-a199-110361d65db7"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/relationships/relationship-web/659fc206774232d7f15fa82f",
+      "capturedAt": "2026-09-05T09:50:19.039Z",
+      "capturedName": "Campfire: Where Stories Come to Life",
+      "childrenCount": 0,
+      "detailText": "Bookshop Cart\nYour cart is empty\nBrowse books under the Read tab, or check out our recommendations below!\nKraken's Guide to The House Witch\nThe World of Tea Princess Chronicles\nFaerie Fruit\nAphelion\nThe Never-Ending End of the World\nThe Lord of Crows\nKeeper's Reign\nA New World For You\nFind More Books",
+      "documentTitle": "Campfire: Where Stories Come to Life",
+      "expanded": false,
+      "fullTextLength": 301,
+      "id": "659fc206774232d7f15fa82f",
+      "module": "Relationships",
+      "name": "Relationship Web",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 69,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/relationships/relationship-web/659fc206774232d7f15fa82f",
+      "captureWarning": "No useful detail text or panels detected."
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659b4cb2366efbc6ae8ad9f3",
+      "capturedAt": "2026-09-05T09:50:41.615Z",
+      "capturedName": "Campfire: Where Stories Come to Life",
+      "childrenCount": 0,
+      "detailText": "Bookshop Cart\nYour cart is empty\nBrowse books under the Read tab, or check out our recommendations below!\nKraken's Guide to The House Witch\nThe World of Tea Princess Chronicles\nFaerie Fruit\nAphelion\nThe Never-Ending End of the World\nThe Lord of Crows\nKeeper's Reign\nA New World For You\nFind More Books",
+      "documentTitle": "Campfire: Where Stories Come to Life",
+      "expanded": false,
+      "fullTextLength": 301,
+      "id": "659b4cb2366efbc6ae8ad9f3",
+      "module": "Encyclopedia",
+      "name": "Πανδώριο",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 70,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659b4cb2366efbc6ae8ad9f3",
+      "captureWarning": "No useful detail text or panels detected."
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e93fa4e38037c55bb97",
+      "capturedAt": "2026-09-05T09:52:12.514Z",
+      "capturedName": "Encyclopedia",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nDashboard\nManuscript\nYou're here to write, right? Use the Manuscript module to craft your novel or short story, all while referencing the other elements in your project.\nCharacters\nOften considered the life of a good story, it’s important to keep track of your characters! Use this module to organize their information.\nLocations\nWhat’s a strong character without a humble hometown, a bustling spaceport, or a shadowy old castle? Put the details about your locations here.\nMaps\nUpload maps of your world, pin story elements to them, and add notes, labels, interactive zones, and more.\nResearch\nEvery story requires research of some kind. Use the Research module to store your PDFs, webpages, images, videos, and notes.\nTimeline\nUse the timeline to create sequences of events to help plot your story or detail the events that lead up to it.\nCalendar\nKeep track of the dates and events in your world with the Calendar module.\nArcs\nCharacters and other story elements transform as a story develops, and Campfire has a way to track those changes by using Arcs.\nRelationships\nVisualize the relationships between your characters, like family trees, social hierarchies and friendship webs.\nEncyclopedia\nThe Encyclopedia is a highly customizable place to store information about your project that doesn't fit perfectly into one of the other sections.\nMagic\nIs your magic system hard or soft? What kinds of spells, potions, or other components are there? Put all the details about it here.\nSpecies\nThe flora and fauna of your world can add a lot to a story. Create them here.\nCultures\nCulture permeates every aspect of a society. Define the cultures of your world here.\nItems\nHere you can store notable items, be they magical artifacts, cybernetics, or something of sentimental value to your characters.\nSystems\nVisually map the hierarchies and structures of your world with a flowchart, and add more information with panels.\nLanguages\nNeed a fictional language for your world? Define the phonetics, dictionary, grammar, and pragmatics of that language here.\nReligions\nCreate or detail your world’s religions and religious movements here.\nPhilosophies\nDoes your setting have an analogue to Socrates or Plato—and if so, what did they teach? Create new philosophies here.\nYou're using the Free Version of Encyclopedia.\n0 / 5 Articles Left\nUpgrade\nMy Projects\nFile\nEdit\nView\nHelp",
+      "documentTitle": "Encyclopedia (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 2686,
+      "id": "659d6e93fa4e38037c55bb97",
+      "module": "Encyclopedia",
+      "name": "Ηφαίστειο της Πανδώρας",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"659d6e93fa4e38037c55bb97\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"659d6e93fa4e38037c55bb97\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 71,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e93fa4e38037c55bb97"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e65fa4e38037c54ee94",
+      "capturedAt": "2026-09-05T09:52:31.641Z",
+      "capturedName": "Αντίσταση",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Αντίσταση\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nAdd Block\nArticle Summary\n\n\tΗ Αντισταση αποτελειται απο τρεις ξεχωριστες και ανεξαρτητες οργανωσεις οι οποιες , αν και παρουσιαζουν πολυ σημαντικες ιδεολογικες διαφορες , συνεργαζονται και συχνα δουλευουν απο κοινου λογω των τριων βασικων κοινων τους αναγκων. Να ανατρεψουν την κυβερνηση,το Δόγμα και να εξαλειψουν το πανδωριο. Ετσι δημιουργησαν τον “Συνασπισμο της Αντιστασης” ο οποιος συντονιζεται απο ενα συμβουλιο αντιπροσωπων της καθε οργανωσης. Ο αμεσος σκοπος του συνασπισμου ειναι η αποκτηση πληρους ελεγχου της ζωνης 2 και η καταστολη του πανδωριου ιδιαιτερα στη ζωνη αυτη.\n\nΟι κυριες δρασεις τους ειναι η κατασκοπεια,ο ελεγχος της μαυρης αγορας της ζωνης 2, οι ληστειες για αποκτηση προμηθειων (οταν δεν ειναι δυνατη η προσβαση της ζωνης 3 και 4 δεν δυσταζουν να το κανουν και στη 2) , ενω συχνα πραγματοποιουνται συμπλοκες μεταξυ αυτων και της αστυνομιας.\n\n\tΟι τρεις οργανωσεις παρουσιαζουν αναλογη δομη. Ενα συνολο απο αυτονομες μεραρχιες οι οποιες αν και μοιραζονται ιδεολογικο πυρηνα παρουσιαζουν και μεταξυ τους  παρεκκλισεις, και αποτελουνται απο τον επικεφαλης ο οποιος αποτελει εκπροσωπο της μεραρχιας του στο συμβουλιο,τα απλα μελη που αποβλεπουν στον ελεγχο της Ζωνης 2 και στην αποκτηση πορων, και τους “καθαριστες”. Οι “καθαριστες” αποτελουνται απο τα πιο παρατολμα και σκληρα μελη της αντιστασης, τα οποια καταπολεμανε με αυταπαρνηση το πανδωριο (με καποιους τροπους που θα πρεπει να σκεφτουμε) στις πιο επικινδυνες περιοχες της Βολκανα, με μεγαλο ποσοστο απωλειων.\n\n\tΗ καθε οργανωση εχει ως εμβλημα της ενα σχημα που συμβολιζει εμμεσα την κεντρικη ιδεολογια του.\n\n▽\tΗ ενωση του τριγωνου επιθυμει την καθαιρεση της κυβερνησης και της αστικης ταξης, και την εγκαθιδρυση μιας νεας κυβερνησης αποτελουμενης απο τους εκπροσωπους του συνασπισμου,απο εκπροσωπους της εκκλησιας του Ισορροπισμού που θα αντικαταστησει το Δογμα, και τους εκπροσώπους της Νασράη με την οποια θα λειτουργούν πια ως ενα κρατος.Σκοπεύουν να ορίσουν τα εργοστασια πανδωριου,τις βιομηχανιες και τα μεσα παραγωγης ως δημοσια περιουσια (οπως υποτηθεται οτι ισχυει στη Νασράη). Οι γωνιες του τριγωνου συμβολιζουν την τριμερη νεα κυβερνητικη αρχη.\n\nΤο τάγμα του τριγώνου συνεργαζεται με τους Ισορρποιστές Βαρονους και μοιράζουν Ζαχά στη ζώνη 2, ετσι μαλιστα χρηματοδοτουνται.\n\n◇\tΗ ενωση του ρομβου επιθυμει αναδιαμοιρασμο του πλουτου και ανεξαρτητοποιηση της ζωνης 2 η οποια θα εχει δικη της κυβερνηση.Σκοπευουν να την χωρισουν σε 4 υποζωνες για την καλυτερη οργανωση και ελεγχο της.Οι τεσσερις γωνιες του ρομβου συμβολιζουν την τετραπλη συνεργατικη εξουσια συμβουλιων στο βορριο,νοτιο,ανατολικο και δυτικο σκελος της νεας ανεξαρτητης ζωνης 2.\n\nＯ\tΗ ενωση του κυκλου επιθυμει οριστικη καθαιρεση του θεσμου της κυβερνησης και του οικονομικου συστηματος την καταστροφη των εργοστασιων πανδωριου,και τη διανομη αγαθων συμφωνα με την εργασια που παρεχει το ατομο σε τοπικο επιπεδο αυτονομων ορισμενων περιοχων. Ο κυκλος συμβολιζει την ελλειψη οποιασδηποτε αρχης. Βασικη τους επιθυμια ειναι να περασει ολος ο λαος της ζωνης 2 περα απο το σχισμα στη ζωνη 3, αλλα και η εξαλειψη της εκκλησιας ως θεσμου οποιουδηποτε ειδους.\n\nΕτσι το συμβολο του Συνασπισμου προκυπτει απο την συνενωση των τριων σχηματων των ενωσεων.\n\nΣυντελειται απο τρεις ανεξαρτητες οργανωσεις:\n\nΤάγμα του Τριγωνου\n\nΤάγμα του Ρομβου\n\nΤάγμα του Κυκλου",
+      "documentTitle": "Αντίσταση (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 3746,
+      "id": "659d6e65fa4e38037c54ee94",
+      "module": "Encyclopedia",
+      "name": "Αντίσταση",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"659d6e65fa4e38037c54ee94\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"659d6e65fa4e38037c54ee94\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 72,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/659d6e65fa4e38037c54ee94"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/675d886dad225c61865abb57",
+      "capturedAt": "2026-09-05T09:52:57.800Z",
+      "capturedName": "Το Σχίσμα",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Το Σχίσμα\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nAdd Block\nArticle Summary\n\nΤο Σχίσμα είνα μια τεράστια τάφρος που ανοίχτηκε με εντολή της κυβέρνησης της Βολκάνα (και του Ζήλων) όταν η καταστρεπτική επίδραση του πανδωρίου άρχισε να δημιουργεί ανησυχίες για την εξάπλωση του. χωριζει τη ζωνη 2 και 3 (σταματάει στα συνορα της Νασράη). Ο σκόπος ηταν να περάσουν ολοι οι κατοικοι της Βολκάνα απο την αλλη πλευρα του σχίσματος καθώς το σχισμα καθυστερει σημαντικα την εξαπλωση του πανδωρίου. Βέβαια οι εξαντλημένοι υλικοί πόροι του νησιού δεν καθιστούσαν δυνατή την δημιουργία καταλληλων υποδομων για την μετακίνηση τόσο μεγάλου πληθισμού ενω η ανακύκλωση υλών από τη ζώνη 2 θεωρούταν επικίνδυνη λογω πιθανής μολυνσης απο το πανδώριο.  Το μεγάλο αυτο έργο ξεκίνησε απο το 38 και ολοκληρώθηκε το 43. Αποτέλεσε τον λογο τερματισμού της συνεργασίας και της σχέσης του Ζήλων με τον Πύρο, καθως ο Πυρος καταλαβε οτι ο Ζηλων ηξερε εξαρχης οτι δεν θα μπορουσε να μεταφερει τον πληθισμο στη ζωνη 3 αλλα εφτιαξε το σχίσμα ουτως ή αλλως.\n\nΤάφρος μεταξυ Ζωνης 2 και 3",
+      "documentTitle": "Το Σχίσμα (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 1487,
+      "id": "675d886dad225c61865abb57",
+      "module": "Encyclopedia",
+      "name": "Το Σχίσμα",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"675d886dad225c61865abb57\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"675d886dad225c61865abb57\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 73,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/675d886dad225c61865abb57"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694acfd070c842e6f5efb8cd",
+      "capturedAt": "2026-09-05T09:53:33.591Z",
+      "capturedName": "Πορτοκαλί Κρύσταλλοι",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Πορτοκαλί Κρύσταλλοι\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nAdd Block\nArticle Summary\nAdd blocks to get started!\nThis is the main body of your article. Use blocks to add content like text, images, and more.\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Πορτοκαλί Κρύσταλλοι (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 863,
+      "id": "694acfd070c842e6f5efb8cd",
+      "module": "Encyclopedia",
+      "name": "Πορτοκαλί Κρύσταλλοι",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 74,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694acfd070c842e6f5efb8cd"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad07fa48f00e6cf3cb4cf",
+      "capturedAt": "2026-09-05T09:54:11.053Z",
+      "capturedName": "Ζαχά",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Ζαχά\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Ζαχά (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 707,
+      "id": "694ad07fa48f00e6cf3cb4cf",
+      "module": "Encyclopedia",
+      "name": "Ζαχά",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"694ad07fa48f00e6cf3cb4cf\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"694ad07fa48f00e6cf3cb4cf\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 76,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad07fa48f00e6cf3cb4cf"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad094a3cd515e0f7453ca",
+      "capturedAt": "2026-09-05T09:54:29.727Z",
+      "capturedName": "Κοράκια",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Κοράκια\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Κοράκια (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 710,
+      "id": "694ad094a3cd515e0f7453ca",
+      "module": "Encyclopedia",
+      "name": "Κοράκια",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"694ad094a3cd515e0f7453ca\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"694ad094a3cd515e0f7453ca\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 77,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad094a3cd515e0f7453ca"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad0c4a6c5bfb96a0d2494",
+      "capturedAt": "2026-09-05T09:54:47.371Z",
+      "capturedName": "Βαπτιστές",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Βαπτιστές\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Βαπτιστές (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 712,
+      "id": "694ad0c4a6c5bfb96a0d2494",
+      "module": "Encyclopedia",
+      "name": "Βαπτιστές",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"694ad0c4a6c5bfb96a0d2494\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"694ad0c4a6c5bfb96a0d2494\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 78,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad0c4a6c5bfb96a0d2494"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad19570c842e6f53671aa",
+      "capturedAt": "2026-09-05T09:55:23.211Z",
+      "capturedName": "Λασποβάτες",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Λασποβάτες (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 690,
+      "id": "694ad19570c842e6f53671aa",
+      "module": "Encyclopedia",
+      "name": "Λασποβάτες",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 79,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad19570c842e6f53671aa"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad1d8a3cd515e0f8f58c1",
+      "capturedAt": "2026-09-05T09:55:41.027Z",
+      "capturedName": "Φύλακες",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Φύλακες (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 690,
+      "id": "694ad1d8a3cd515e0f8f58c1",
+      "module": "Encyclopedia",
+      "name": "Φύλακες",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"694ad1d8a3cd515e0f8f58c1\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"694ad1d8a3cd515e0f8f58c1\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 80,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad1d8a3cd515e0f8f58c1"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad42670c842e6f585812a",
+      "capturedAt": "2026-09-05T09:56:12.267Z",
+      "capturedName": "Το Ανώνυμο Τάγμα του Μηνά",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Το Ανώνυμο Τάγμα του Μηνά\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Το Ανώνυμο Τάγμα του Μηνά (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 728,
+      "id": "694ad42670c842e6f585812a",
+      "module": "Encyclopedia",
+      "name": "Το Ανώνυμο Τάγμα του Μηνά",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 81,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad42670c842e6f585812a"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad47611dcc4a1ab507c0a",
+      "capturedAt": "2026-09-05T09:56:36.279Z",
+      "capturedName": "Αδέσποτοι",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / Αδέσποτοι\n\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nThis section is empty.\nWhen blocks are added to this section, they will appear here.\nSummary\n\nUse this summary box to add quick facts about your article.\n\nThese\n\nCan be\n\nBullet points\n\nIt's a great wiki-style sidebar!\n\nYou can also click the dropdown at the top right of this sidebar and choose \"Add Images\" - give it a try!",
+      "documentTitle": "Αδέσποτοι (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 712,
+      "id": "694ad47611dcc4a1ab507c0a",
+      "module": "Encyclopedia",
+      "name": "Αδέσποτοι",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 82,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad47611dcc4a1ab507c0a"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/magic/magic/659d2e5db9ea2157dd018cc3",
+      "capturedAt": "2026-09-05T09:57:02.953Z",
+      "capturedName": "policia",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nPandorium / policia\nDashboard\nManuscript\nΑνισορροπία\nCharacters\nΘρέων\nΠύρος\nΖήλων\nΝτάντρε\nΣεραφείμ\nΠάντμα\nΠέτρος\nΠαύλος\nΜηνάς\nΑβιέλα\nΈκτορας\nΒαλές\nΙάσονας\nΘαλής\nΚλειώ\nΣαμψών\nΗλέκτρα\nΖαφείρης\nΔούκας\nΕυδοκία\nΚάλχα\nΣημεών\nΓκαμπριγέλ\nΗλέκτρα\nΡούτση\nLocations\nΚασλάρ\nΝησι της Βολκανα\nΖώνη 1\nΖώνη 2\nΖώνη 3\nΖώνη 4\nΒόρειο Τέταρτο\nΑνατολικό Τέταρτο\nΔυτικό Τέταρτο\nΝασράη\nΧάλκινη Συνοικία\nΣτενοφάναρα\nΚαπερβάζι\nΤο Αμπάρι\nΗ Στοά\nΑυλή Ιζουμρούνδη\nΔυτικό Τμήμα\nΑνατολικός Ναός του Ήλιου\n6ο Πανεπιστήμιο της Βολκάνα\nΣχίσμα\nΜελανή Συνοικία\nΝέα βιομηχανική Ζώνη της Νασράη\nΚυψέλη\nΤο καφενείο της Εύας\nΥπόγεια Γέφυρα\nΓυάλινος Τρούλος\nΠανδοχείο\nΤο κυρτό κτήριο\nMaps\nΒολκάνα\nResearch\nEvery story requires research of some kind. Use the Research module to store your PDFs, webpages, images, videos, and notes.\nTimeline\nΊδρυση της Βολκάνα-Εκδίωξη Βαπτιστών\nΟ Πύρος και ο Ζήλων αποδρούν από το Κασλάρ\nΟ Πύρος βρίσκει αποδοτικό τρόπο επεξεργασίας του πανδωρίου, και οργανώνουν εταιρία με τον Ζήλων\nΗ εταιρία τους αποκτά τεράστιες διαστάσεις σε όλη τη Βολκάνα\nΡίξη της σχέσης Πύρου και Ζήλων\nΟι Νασρήτες απαγάγουν Θρέων και Ντάντρε για να τους πάνε πίσω στη Νασράη ως εργάτες/Διάσωση του Ντάντρε από το τάγμα του ρόμβου\nΗ κόρη του Μηνά σκοτώνεται. Ο Ντάντρε μπαίνει στο τάγμα του ρόμβου. Ο Μηνάς πηγαίνει με τους Ισορροπιστές\nΟ Θρέων δραπετεύει από τη Νασράη και φτάνει στη ζώνη 2\nΗ διαφθορά του πανδωρίου αρχίζει να έχει καταστρεπτικές συνέπειες για τη Βολκάνα\nΔημιουργούνται τα τάγματα της αντίστασης\nΟ Μηνάς δημιουργεί το Μυστικό Τάγμα\nΟ Καμάλ στήνει ενέδρα στον Μηνά και το Μυστικό Τάγμα διαλύεται οριστικά\nΗ Πάντμα φυγαδεύεται στην Ιζουμρούνδη μετά τη δολοφονία των γονιών της\nCalendar\nKeep track of the dates and events in your world with the Calendar module.\nArcs\nΖήλων\nRelationships\nRelationship Web\nEncyclopedia\nΠανδώριο\nΗφαίστειο της Πανδώρας\nΑντίσταση\nΤο Σχίσμα\nΠορτοκαλί Κρύσταλλοι\nΣυμμορίες του Ανατολικού Τετάρτου\nΖαχά\nΚοράκια\nΒαπτιστές\nΛασποβάτες\nΦύλακες\nΤο Ανώνυμο Τάγμα του Μηνά\nΑδέσποτοι\nMagic\npolicia\nSpecies\nΈλουρη\nGh\nΓίγαντας\nΞ Ε Ρ Ξ Η Σ\nΆγγελος/Αγγελομάνα\nΓλόμπος\nNew Species\nNew Species\nNew Species\nCultures\nCulture permeates every aspect of a society. Define the cultures of your world here.\nItems\nΜαχαίρια του Θρέωνα\nΚάρτα Αγοράς Χάλκινης Συνοικίας\nΜαχαίρια του Θρέωνα\nΒαλίστρα του Πέτρου\nΑναπτήρας του Καμάλ\nSystems\nLocation System\nLanguages\nNeed a fictional language for your world? Define the phonetics, dictionary, grammar, and pragmatics of that language here.\nReligions\nΤο Δόγμα\nΙσορροπισμός\nPhilosophies\nDoes your setting have an analogue to Socrates or Plato—and if so, what did they teach? Create new philosophies here.\nYou're using the Free Version of Magic.\n0 / 1 Magic Systems Left\nUpgrade\nMy Projects\nFile\nEdit\nView\nPublish\nHelp\nAuto\nAdd Panel\nGuidebook\nBasics\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\n\nΖώνη 2\n\nΖώνη 2\n\nΖώνη 3\n\nΣεραφείμ",
+      "documentTitle": "policia (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 3494,
+      "id": "659d2e5db9ea2157dd018cc3",
+      "module": "Magic",
+      "name": "policia",
+      "navigation": {
+        "method": "fresh-project-sidebar-click"
+      },
+      "order": 83,
+      "panels": [
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 354,
+                "x": 1094,
+                "y": 124
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Source"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 0,
+          "rect": {
+            "h": 328,
+            "w": 448,
+            "x": 1080,
+            "y": 110
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "Source"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 426,
+                "x": 38,
+                "y": 468
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Costs"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 1,
+          "rect": {
+            "h": 328,
+            "w": 520,
+            "x": 24,
+            "y": 454
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "Costs"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 410,
+                "x": 574,
+                "y": 468
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Limitations"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 2,
+          "rect": {
+            "h": 328,
+            "w": 504,
+            "x": 560,
+            "y": 454
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "Limitations"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Text Panel",
+              "rect": {
+                "h": 24,
+                "w": 1410,
+                "x": 38,
+                "y": 812
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "History"
+            },
+            {
+              "aria": null,
+              "index": 1,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 1467,
+                "x": 42,
+                "y": 848
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "Text",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 3,
+          "rect": {
+            "h": 328,
+            "w": 1504,
+            "x": 24,
+            "y": 798
+          },
+          "sections": [],
+          "text": "",
+          "title": "History"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Text Panel",
+              "rect": {
+                "h": 24,
+                "w": 946,
+                "x": 38,
+                "y": 124
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Overview"
+            },
+            {
+              "aria": null,
+              "index": 1,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 1003,
+                "x": 42,
+                "y": 160
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "Text",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 4,
+          "rect": {
+            "h": 328,
+            "w": 1040,
+            "x": 24,
+            "y": 110
+          },
+          "sections": [],
+          "text": "",
+          "title": "Overview"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Links Panel",
+              "rect": {
+                "h": 24,
+                "w": 354,
+                "x": 1094,
+                "y": 468
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Magical People & Places"
+            },
+            {
+              "aria": null,
+              "index": 1,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 400,
+                "x": 1102,
+                "y": 536
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            },
+            {
+              "aria": null,
+              "index": 2,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 400,
+                "x": 1102,
+                "y": 616
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            },
+            {
+              "aria": null,
+              "index": 3,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 400,
+                "x": 1102,
+                "y": 696
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            },
+            {
+              "aria": null,
+              "index": 4,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 400,
+                "x": 1102,
+                "y": 776
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "",
+              "type": null,
+              "value": ""
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "Links",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 5,
+          "rect": {
+            "h": 328,
+            "w": 448,
+            "x": 1080,
+            "y": 454
+          },
+          "sections": [],
+          "text": "Ζώνη 2\n\nΖώνη 2\n\nΖώνη 3\n\nΣεραφείμ",
+          "title": "Magical People & Places"
+        }
+      ],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/magic/magic/659d2e5db9ea2157dd018cc3"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/6751f6c1f87fb8c54917a7f0",
+      "capturedAt": "2026-09-05T09:57:32.745Z",
+      "capturedName": "Έλουρη",
+      "childrenCount": 0,
+      "detailText": "Elements\nDetails\nMy Projects\nFile\nEdit\nView\nHelp\nAuto\nStart by adding some panels!\nAdd Panel",
+      "documentTitle": "Έλουρη (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 394,
+      "id": "6751f6c1f87fb8c54917a7f0",
+      "module": "Species",
+      "name": "Έλουρη",
+      "navigation": {
+        "clickError": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"6751f6c1f87fb8c54917a7f0\"] .rc-tree-title >> nth=0: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"6751f6c1f87fb8c54917a7f0\"] .rc-tree-title >> nth=0\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-tree",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 84,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/6751f6c1f87fb8c54917a7f0"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675b6cb862247c6db92e2449",
+      "capturedAt": "2026-09-05T09:58:08.963Z",
+      "capturedName": "Τερράκαπρος",
+      "childrenCount": 0,
+      "detailText": "Common Name: GH\n\nScientific Name:\n\nStrengths:\nΑκραίο μέγεθος\nWeaknesses:\nτυφλό\nOrigin:\nΜετάλλαξη πανδωριου\nNative Habitat:\nΖώνη 1\nAvg. Height:\n15\nMeter\nAvg. Weight:\n200\nΤόνοι\nPopulation:\n5\nEndangerment:\nNear Threatened\nUpload new images or choose from your\n Image Gallery!\nClick\n Select Images below to get started.\nSelect Images\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\nLists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item\n\nΖει σε κάποιες από τις πιο επικίνδυνες της ζώνης 1 , όπου το πανδωριο έχει διαστρεβλώσει την γη στην μορφή αμέτρητων πυργίσκωμ από πέτρα χώμα , ξεραμένο πανδωριο και ένας θεός ξέρει τι άλλο .\n\nΤο πρόσωπο του θυμίζει στο πάνω τμήμα ένα τραβηγμένο απ' τις άκρες κρανίο κατσίκας ενώ το άλλο μισό μοιάζει σχεδόν αποκοσμα ανθρώπινο με ένα μεγάλο στωμα το οποίο ανοίγει μόνο για να βγάλει ήχους . Στο πηγούνι και ίσως στις άκρες των κερατων συνήθως δημιουργούνται μάζες τρίχες που δεν φαίνονται να έχουν κάποια πρακτική χρήση αρχικά όμως λειτουργούν ως αισθητήρες ώστε το πλάσμα να αντιλαμβάνεται καλύτερα σεισμικές δονήσεις καθώς είναι εντελώς τυφλό . Τα μάτια του είναι τίποτα παρά δύο τρύπες , απομεινάρια από το αρχικό του είδος  πριν διαστρεβλωθει από το πανδωριο .  Έχει 6 πόδια τρία στην κάθε πλευρά με πελώριες μαύρες οπλές , διπλάσιες σε μέγεθος από το κάθε ήδη τεράστιο πόδι του έτσι ώστε να συγκρατεί το βάρος του.\n\nΠερνάει τον περισσότερο χρόνο του ημιβυθσμενο στο έδαφος με το μόνο χαρακτηριστικό του που διακρίνεται να είναι το πελώριο βουνό από πέτρα , χώμα και πανδωριο, το οποίο βοηθάει ως καμουφλάζ ( όχι ότι κινδυνεύει πολύ από άλλα πλάσματα χάρις στο μέγεθος του αλλά και του γεγονότος ότι αποτελείται κατά κύριο λόγο από μάζες πανδωριου και οστά που δεν αποφέρουν κάποια θρεπτική αξία)** και επίσης και γαμάτο battlefield, δλδ ενώ πολεμάνε κάτι αυτιστικοι πάνω σε απόκρημνους λόφους ξαφνικά οι λόφοι τιτλραρουν και αρχίζουν να περπατάνε .**\n\nΠερνάει τόσο χρόνο θαμμένο καθώς ο κυρίως τρόπος με τον οποίο τρέφεται είναι με το να απορροφά πανδωριο από το έδαφος, με την κάτω πλευρά του να μοιάζει σαν ένα μεγάλο κοκκαλινο θώρακα ο οποίος κρατάει το μαύρο πέτρινο πανδωριο που φαίνεται να αποτελεί το υπόλοιπο σώμα του",
+      "documentTitle": "Τερράκαπρος (Pandorium)",
+      "expanded": false,
+      "fullTextLength": 2837,
+      "id": "675b6cb862247c6db92e2449",
+      "module": "Species",
+      "name": "Gh",
+      "navigation": {
+        "clickError": "Click did not select expected item.",
+        "method": "direct-url-after-click-fail"
+      },
+      "order": 85,
+      "panels": [
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Attributes Panel",
+              "rect": {
+                "h": 24,
+                "w": 370,
+                "x": 30,
+                "y": 116
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Basic Information"
+            },
+            {
+              "aria": null,
+              "index": 1,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 427,
+                "x": 35,
+                "y": 154
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "Common Name: GH",
+              "type": null,
+              "value": ""
+            },
+            {
+              "aria": null,
+              "index": 2,
+              "placeholder": null,
+              "rect": {
+                "h": 25,
+                "w": 427,
+                "x": 35,
+                "y": 187
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "Scientific Name:",
+              "type": null,
+              "value": ""
+            }
+          ],
+          "fields": [
+            {
+              "label": "Common Name",
+              "value": "GH"
+            },
+            {
+              "label": "Scientific Name",
+              "value": ""
+            },
+            {
+              "label": "Strengths",
+              "value": "Ακραίο μέγεθος"
+            },
+            {
+              "label": "Weaknesses",
+              "value": "τυφλό"
+            },
+            {
+              "label": "Origin",
+              "value": "Μετάλλαξη πανδωριου"
+            },
+            {
+              "label": "Native Habitat",
+              "value": "Ζώνη 1"
+            },
+            {
+              "label": "Avg. Height",
+              "value": "15"
+            },
+            {
+              "label": "Avg. Weight",
+              "value": "200"
+            },
+            {
+              "label": "Population",
+              "value": "5"
+            },
+            {
+              "label": "Endangerment",
+              "value": "Near Threatened"
+            }
+          ],
+          "images": [],
+          "kind": "Attributes",
+          "links": [],
+          "looseItems": [
+            "Common Name: GH",
+            "Scientific Name:"
+          ],
+          "panelIndex": 0,
+          "rect": {
+            "h": 1496,
+            "w": 464,
+            "x": 16,
+            "y": 102
+          },
+          "sections": [],
+          "text": "Common Name: GH\n\nScientific Name:\n\nStrengths:\nΑκραίο μέγεθος\nWeaknesses:\nτυφλό\nOrigin:\nΜετάλλαξη πανδωριου\nNative Habitat:\nΖώνη 1\nAvg. Height:\n15\nMeter\nAvg. Weight:\n200\nΤόνοι\nPopulation:\n5\nEndangerment:\nNear Threatened",
+          "title": "Basic Information"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Image Panel",
+              "rect": {
+                "h": 24,
+                "w": 442,
+                "x": 1062,
+                "y": 116
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Image"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "Image",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 1,
+          "rect": {
+            "h": 456,
+            "w": 536,
+            "x": 1048,
+            "y": 102
+          },
+          "sections": [],
+          "text": "Upload new images or choose from your\n Image Gallery!\nClick\n Select Images below to get started.\nSelect Images",
+          "title": "Image"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 442,
+                "x": 1062,
+                "y": 588
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Behavior & Reproduction"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 2,
+          "rect": {
+            "h": 456,
+            "w": 536,
+            "x": 1048,
+            "y": 574
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "Behavior & Reproduction"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 442,
+                "x": 510,
+                "y": 588
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Ecology, Diet, & Predators"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 3,
+          "rect": {
+            "h": 456,
+            "w": 536,
+            "x": 496,
+            "y": 574
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "Ecology, Diet, & Predators"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New List Panel",
+              "rect": {
+                "h": 24,
+                "w": 994,
+                "x": 510,
+                "y": 1060
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "History & Interactions"
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "List",
+          "links": [],
+          "looseItems": [],
+          "panelIndex": 4,
+          "rect": {
+            "h": 552,
+            "w": 1088,
+            "x": 496,
+            "y": 1046
+          },
+          "sections": [],
+          "text": "Lists help organize your work. Organize list items by adding sections.\nClick\n Add List Item below to begin.\nAdd List Item",
+          "title": "History & Interactions"
+        },
+        {
+          "controls": [
+            {
+              "aria": null,
+              "index": 0,
+              "placeholder": "New Text Panel",
+              "rect": {
+                "h": 24,
+                "w": 442,
+                "x": 510,
+                "y": 116
+              },
+              "role": null,
+              "tag": "TEXTAREA",
+              "text": "",
+              "type": null,
+              "value": "Description"
+            },
+            {
+              "aria": null,
+              "index": 1,
+              "placeholder": null,
+              "rect": {
+                "h": 670,
+                "w": 493,
+                "x": 514,
+                "y": 152
+              },
+              "role": "textbox",
+              "tag": "DIV",
+              "text": "Ζει σε κάποιες από τις πιο επικίνδυνες της ζώνης 1 , όπου το πανδωριο έχει διαστρεβλώσει την γη στην μορφή αμέτρητων πυργίσκωμ από πέτρα χώμα , ξεραμένο πανδωριο και ένας θεός ξέρει τι άλλο .\n\nΤο πρόσωπο του θυμίζει στο πάνω τμήμα ένα τραβηγμένο απ' τις άκρες κρανίο κατσίκας ενώ το άλλο μισό μοιάζει σχεδόν αποκοσμα ανθρώπινο με ένα μεγάλο στωμα το οποίο ανοίγει μόνο για να βγάλει ήχους . Στο πηγούνι και ίσως στις άκρες των κερατων συνήθως δημιουργούνται μάζες τρίχες που δεν φαίνονται να έχουν κάποια πρακτική χρήση αρχικά όμως λειτουργούν ως αισθητήρες ώστε το πλάσμα να αντιλαμβάνεται καλύτερα σεισμικές δονήσεις καθώς είναι εντελώς τυφλό . Τα μάτια του είναι τίποτα παρά δύο τρύπες , απομεινάρια από το αρχικό του είδος  πριν διαστρεβλωθει από το πανδωριο .  Έχει 6 πόδια τρία στην κάθε πλευρά με πελώριες μαύρες οπλές , διπλάσιες σε μέγεθος από το κάθε ήδη τεράστιο πόδι του έτσι ώστε να συγκρατεί το βάρος του.\n\nΠερνάει τον περισσότερο χρόνο του ημιβυθσμενο στο έδαφος με το μόνο χαρακτηριστικό του που διακρίνεται να είναι το πελώριο βουνό από πέτρα , χώμα και πανδωριο, το οποίο βοηθάει ως καμουφλάζ ( όχι ότι κινδυνεύει πολύ από άλλα πλάσματα χάρις στο μέγεθος του αλλά και του γεγονότος ότι αποτελείται κατά κύριο λόγο από μάζες πανδωριου και οστά που δεν αποφέρουν κάποια θρεπτική αξία)** και επίσης και γαμάτο battlefield, δλδ ενώ πολεμάνε κάτι αυτιστικοι πάνω σε απόκρημνους λόφους ξαφνικά οι λόφοι τιτλραρουν και αρχίζουν να περπατάνε .**\n\nΠερνάει τόσο χρόνο θαμμένο καθώς ο κυρίως τρόπος με τον οποίο τρέφεται είναι με το να απορροφά πανδωριο από το έδαφος, με την κάτω πλευρά του να μοιάζει σαν ένα μεγάλο κοκκαλινο θώρακα ο οποίος κρατάει το μαύρο πέτρινο πανδωριο που φαίνεται να αποτελεί το υπόλοιπο σώμα του",
+              "type": null,
+              "value": ""
+            }
+          ],
+          "fields": [],
+          "images": [],
+          "kind": "Text",
+          "links": [],
+          "looseItems": [
+            "Ζει σε κάποιες από τις πιο επικίνδυνες της ζώνης 1 , όπου το πανδωριο έχει διαστρεβλώσει την γη στην μορφή αμέτρητων πυργίσκωμ από πέτρα χώμα , ξεραμένο πανδωριο και ένας θεός ξέρει τι άλλο .\n\nΤο πρόσωπο του θυμίζει στο πάνω τμήμα ένα τραβηγμένο απ' τις άκρες κρανίο κατσίκας ενώ το άλλο μισό μοιάζει σχεδόν αποκοσμα ανθρώπινο με ένα μεγάλο στωμα το οποίο ανοίγει μόνο για να βγάλει ήχους . Στο πηγούνι και ίσως στις άκρες των κερατων συνήθως δημιουργούνται μάζες τρίχες που δεν φαίνονται να έχουν κάποια πρακτική χρήση αρχικά όμως λειτουργούν ως αισθητήρες ώστε το πλάσμα να αντιλαμβάνεται καλύτερα σεισμικές δονήσεις καθώς είναι εντελώς τυφλό . Τα μάτια του είναι τίποτα παρά δύο τρύπες , απομεινάρια από το αρχικό του είδος  πριν διαστρεβλωθει από το πανδωριο .  Έχει 6 πόδια τρία στην κάθε πλευρά με πελώριες μαύρες οπλές , διπλάσιες σε μέγεθος από το κάθε ήδη τεράστιο πόδι του έτσι ώστε να συγκρατεί το βάρος του.\n\nΠερνάει τον περισσότερο χρόνο του ημιβυθσμενο στο έδαφος με το μόνο χαρακτηριστικό του που διακρίνεται να είναι το πελώριο βουνό από πέτρα , χώμα και πανδωριο, το οποίο βοηθάει ως καμουφλάζ ( όχι ότι κινδυνεύει πολύ από άλλα πλάσματα χάρις στο μέγεθος του αλλά και του γεγονότος ότι αποτελείται κατά κύριο λόγο από μάζες πανδωριου και οστά που δεν αποφέρουν κάποια θρεπτική αξία)** και επίσης και γαμάτο battlefield, δλδ ενώ πολεμάνε κάτι αυτιστικοι πάνω σε απόκρημνους λόφους ξαφνικά οι λόφοι τιτλραρουν και αρχίζουν να περπατάνε .**\n\nΠερνάει τόσο χρόνο θαμμένο καθώς ο κυρίως τρόπος με τον οποίο τρέφεται είναι με το να απορροφά πανδωριο από το έδαφος, με την κάτω πλευρά του να μοιάζει σαν ένα μεγάλο κοκκαλινο θώρακα ο οποίος κρατάει το μαύρο πέτρινο πανδωριο που φαίνεται να αποτελεί το υπόλοιπο σώμα του"
+          ],
+          "panelIndex": 5,
+          "rect": {
+            "h": 456,
+            "w": 536,
+            "x": 496,
+            "y": 102
+          },
+          "sections": [],
+          "text": "Ζει σε κάποιες από τις πιο επικίνδυνες της ζώνης 1 , όπου το πανδωριο έχει διαστρεβλώσει την γη στην μορφή αμέτρητων πυργίσκωμ από πέτρα χώμα , ξεραμένο πανδωριο και ένας θεός ξέρει τι άλλο .\n\nΤο πρόσωπο του θυμίζει στο πάνω τμήμα ένα τραβηγμένο απ' τις άκρες κρανίο κατσίκας ενώ το άλλο μισό μοιάζει σχεδόν αποκοσμα ανθρώπινο με ένα μεγάλο στωμα το οποίο ανοίγει μόνο για να βγάλει ήχους . Στο πηγούνι και ίσως στις άκρες των κερατων συνήθως δημιουργούνται μάζες τρίχες που δεν φαίνονται να έχουν κάποια πρακτική χρήση αρχικά όμως λειτουργούν ως αισθητήρες ώστε το πλάσμα να αντιλαμβάνεται καλύτερα σεισμικές δονήσεις καθώς είναι εντελώς τυφλό . Τα μάτια του είναι τίποτα παρά δύο τρύπες , απομεινάρια από το αρχικό του είδος  πριν διαστρεβλωθει από το πανδωριο .  Έχει 6 πόδια τρία στην κάθε πλευρά με πελώριες μαύρες οπλές , διπλάσιες σε μέγεθος από το κάθε ήδη τεράστιο πόδι του έτσι ώστε να συγκρατεί το βάρος του.\n\nΠερνάει τον περισσότερο χρόνο του ημιβυθσμενο στο έδαφος με το μόνο χαρακτηριστικό του που διακρίνεται να είναι το πελώριο βουνό από πέτρα , χώμα και πανδωριο, το οποίο βοηθάει ως καμουφλάζ ( όχι ότι κινδυνεύει πολύ από άλλα πλάσματα χάρις στο μέγεθος του αλλά και του γεγονότος ότι αποτελείται κατά κύριο λόγο από μάζες πανδωριου και οστά που δεν αποφέρουν κάποια θρεπτική αξία)** και επίσης και γαμάτο battlefield, δλδ ενώ πολεμάνε κάτι αυτιστικοι πάνω σε απόκρημνους λόφους ξαφνικά οι λόφοι τιτλραρουν και αρχίζουν να περπατάνε .**\n\nΠερνάει τόσο χρόνο θαμμένο καθώς ο κυρίως τρόπος με τον οποίο τρέφεται είναι με το να απορροφά πανδωριο από το έδαφος, με την κάτω πλευρά του να μοιάζει σαν ένα μεγάλο κοκκαλινο θώρακα ο οποίος κρατάει το μαύρο πέτρινο πανδωριο που φαίνεται να αποτελεί το υπόλοιπο σώμα του",
+          "title": "Description"
+        }
+      ],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675b6cb862247c6db92e2449"
+    },
+    {
+      "actualUrl": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675c2b0d159531dc3534b6ad",
+      "capturedAt": "2026-09-05T10:00:57.403Z",
+      "capturedName": "Campfire: Where Stories Come to Life",
+      "childrenCount": 0,
+      "detailText": "Bookshop Cart\nYour cart is empty\nBrowse books under the Read tab, or check out our recommendations below!\nKraken's Guide to The House Witch\nThe World of Tea Princess Chronicles\nFaerie Fruit\nAphelion\nThe Never-Ending End of the World\nThe Lord of Crows\nKeeper's Reign\nA New World For You\nFind More Books",
+      "documentTitle": "Campfire: Where Stories Come to Life",
+      "expanded": false,
+      "fullTextLength": 301,
+      "id": "675c2b0d159531dc3534b6ad",
+      "module": "Species",
+      "name": "Γίγαντας",
+      "navigation": {
+        "method": "direct-url"
+      },
+      "order": 86,
+      "panels": [],
+      "routable": true,
+      "sameIdIndex": 0,
+      "timeline": {},
+      "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675c2b0d159531dc3534b6ad",
+      "captureWarning": "No useful detail text or panels detected."
+    }
+  ],
+  "errors": [
+    {
+      "order": 68,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "659b5d9913eeadd14183bfec",
+        "module": "Arcs",
+        "name": "Ζήλων",
+        "order": 68,
+        "sameIdIndex": 1,
+        "url": null,
+        "routable": false
+      },
+      "error": "Error: Timed out after 3000ms waiting for selector .rc-tree-treenode[data-element-id=\"659b5d9913eeadd14183bfec\"] .rc-tree-title >> nth=1: Timed out running CDP command \"Runtime.evaluate\" for tab 13\nwaiting on click for selector .rc-tree-treenode[data-element-id=\"659b5d9913eeadd14183bfec\"] .rc-tree-title >> nth=1\nLocator diagnostics: {\"kind\":\"action_failed\",\"action\":\"click\",\"locator\":\".rc-tree-treenode[data-element-id=\\\"659b5d9913eeadd14183bfec\\\"] .rc-tree-title >> nth=1\",\"matchCount\":1,\"matches\":[{\"ariaLabel\":null,\"disabled\":false,\"role\":null,\"tag\":\"span\",\"text\":\"Ζήλων\",\"type\":null,\"visible\":true}],\"visibleCount\":1,\"truncated\":false}",
+      "capturedAt": "2026-09-05T09:49:55.745Z"
+    },
+    {
+      "order": 75,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "694ad070a48f00e6cf3b0cec",
+        "module": "Encyclopedia",
+        "name": "Συμμορίες του Ανατολικού Τετάρτου",
+        "order": 75,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/encyclopedia/article/694ad070a48f00e6cf3b0cec",
+        "routable": true
+      },
+      "error": "Timed out running CDP command \"Page.createIsolatedWorld\" for tab 13",
+      "capturedAt": "2026-09-05T09:53:43.028Z"
+    },
+    {
+      "order": 86,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675c2b0d159531dc3534b6ad",
+        "module": "Species",
+        "name": "Γίγαντας",
+        "order": 86,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675c2b0d159531dc3534b6ad",
+        "routable": true
+      },
+      "error": "Timed out running CDP command \"Page.getFrameTree\" for tab 13",
+      "capturedAt": "2026-09-05T09:58:47.127Z"
+    },
+    {
+      "order": 87,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d4827ad225c61864d1304",
+        "module": "Species",
+        "name": "Ξ Ε Ρ Ξ Η Σ",
+        "order": 87,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d4827ad225c61864d1304",
+        "routable": true
+      },
+      "error": "Timed out running CDP command \"Page.createIsolatedWorld\" for tab 13",
+      "capturedAt": "2026-09-05T09:58:57.306Z"
+    },
+    {
+      "order": 88,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d486eb745e0a09d5a9421",
+        "module": "Species",
+        "name": "Άγγελος/Αγγελομάνα",
+        "order": 88,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d486eb745e0a09d5a9421",
+        "routable": true
+      },
+      "error": "Timed out running CDP command \"Page.createIsolatedWorld\" for tab 13",
+      "capturedAt": "2026-09-05T09:59:07.481Z"
+    },
+    {
+      "order": 89,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d489d84a575d51e1dcac8",
+        "module": "Species",
+        "name": "Γλόμπος",
+        "order": 89,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d489d84a575d51e1dcac8",
+        "routable": true
+      },
+      "error": "Project sidebar unavailable: {\"rowCount\":0,\"title\":\"Project\",\"url\":\"https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/project\"}",
+      "capturedAt": "2026-09-05T09:59:26.452Z"
+    },
+    {
+      "order": 90,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "68191cbe58c4c5ce9f10eddb",
+        "module": "Species",
+        "name": "New Species",
+        "order": 90,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/68191cbe58c4c5ce9f10eddb",
+        "routable": true
+      },
+      "error": "Project sidebar unavailable: {\"rowCount\":0,\"title\":\"Project\",\"url\":\"https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/project\"}",
+      "capturedAt": "2026-09-05T09:59:44.413Z"
+    },
+    {
+      "order": 87,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d4827ad225c61864d1304",
+        "module": "Species",
+        "name": "Ξ Ε Ρ Ξ Η Σ",
+        "order": 87,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d4827ad225c61864d1304",
+        "routable": true
+      },
+      "error": "Timed out running CDP command \"Page.getFrameTree\" for tab 13",
+      "capturedAt": "2026-09-05T10:01:08.057Z",
+      "mode": "direct"
+    },
+    {
+      "order": 88,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d486eb745e0a09d5a9421",
+        "module": "Species",
+        "name": "Άγγελος/Αγγελομάνα",
+        "order": 88,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d486eb745e0a09d5a9421",
+        "routable": true
+      },
+      "error": "Blocked browser navigation by Browser Use URL policy: data:text/html;charset=utf-8,%3C!DOCTYPE%20html%3E%0A%3Chtml%20dir%3D%22ltr%22%20lang%3D%22en-US%22%3E%0A%3Chead%3E%0A%20%20%3Cmeta%20charset%3D%22utf-8%22%3E%0A%20%20%3Cmeta%20name%3D%22color-scheme%22%20content%3D%22light%20dark%22%3E%0A%20%20%3Cmeta%20name%3D%22theme-color%22%20content%3D%22%23fff%22%3E%0A%20%20%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1.0%2C%20maximum-scale%3D1.0%2C%20user-scalable%3Dno%22%3E%0A%20%20%3Ctitle%3EThis%20page%20crashed%3C%2Ftitle%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20body%20%7B%0A%20%20%20%20%20%20--background-color%3A%20%23fff%3B%0A%20%20%20%20%20%20--error-code-color%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-blue-300%3A%20rgb(138%2C%20180%2C%20248)%3B%0A%20%20%20%20%20%20--google-gray-300%3A%20rgb(218%2C%20220%2C%20224)%3B%0A%20%20%20%20%20%20--google-gray-500%3A%20rgb(154%2C%20160%2C%20166)%3B%0A%20%20%20%20%20%20--google-gray-700%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-gray-900%3A%20rgb(32%2C%2033%2C%2036)%3B%0A%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20--link-color%3A%20rgb(88%2C%2088%2C%2088)%3B%0A%20%20%20%20%20%20--button-fill-color%3A%20rgb(26%2028%2031%20%2F%205%25)%3B%0A%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(26%2028%2031%20%2F%2010%25)%3B%0A%20%20%20%20%20%20--button-text-color%3A%20%231a1c1f%3B%0A%20%20%20%20%20%20--text-color%3A%20var(--google-gray-700)%3B%0A%20%20%20%20%20%20background%3A%20var(--background-color)%3B%0A%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20font-family%3A%20system-ui%2C%20sans-serif%3B%0A%20%20%20%20%20%20font-size%3A%2070%25%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20overflow-wrap%3A%20break-word%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20body%20%7B%0A%20%20%20%20%20%20%20%20--background-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20%20%20--error-code-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--link-color%3A%20var(--google-blue-300)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color%3A%20rgb(255%20255%20255%20%2F%205%25)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(255%20255%20255%20%2F%2010%25)%3B%0A%20%20%20%20%20%20%20%20--button-text-color%3A%20%23fff%3B%0A%20%20%20%20%20%20%20%20--text-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20html%20%7B%0A%20%20%20%20%20%20-webkit-text-size-adjust%3A%20100%25%3B%0A%20%20%20%20%20%20font-size%3A%20125%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20a%20%7B%0A%20%20%20%20%20%20color%3A%20var(--link-color)%3B%0A%20%20%20%20%20%20text-decoration%3A%20none%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%20%7B%0A%20%20%20%20%20%20align-items%3A%20center%3B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color)%3B%0A%20%20%20%20%20%20border%3A%201px%20solid%20transparent%3B%0A%20%20%20%20%20%20border-radius%3A%208px%3B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20color%3A%20var(--button-text-color)%3B%0A%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20display%3A%20inline-flex%3B%0A%20%20%20%20%20%20font-family%3A%20inherit%3B%0A%20%20%20%20%20%20font-size%3A%2013px%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20justify-content%3A%20center%3B%0A%20%20%20%20%20%20line-height%3A%2018px%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20min-height%3A%2028px%3B%0A%20%20%20%20%20%20padding%3A%200%208px%3B%0A%20%20%20%20%20%20user-select%3A%20none%3B%0A%20%20%20%20%20%20white-space%3A%20nowrap%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Aactive%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Ahover%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%20%20line-height%3A%201.6em%3B%0A%20%20%20%20%20%20margin%3A%2020vh%20auto%200%3B%0A%20%20%20%20%20%20max-width%3A%20600px%3B%0A%20%20%20%20%20%20width%3A%20100%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20-webkit-user-select%3A%20none%3B%0A%20%20%20%20%20%20animation%3A%20icon-spin%203s%20linear%20infinite%3B%0A%20%20%20%20%20%20background-image%3A%20image-set(url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABoAAAAcCAYAAAB%2FE6%2FTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOPSURBVHgBpVZdUhpBEO6eXQ1v4QZZTyCW%2Bpz1BOIJAg%2BpEitVkhMIJwBe1DfwBJoTuHkVKfAEIScIeQu4O52enZ3dWViUmK4Cdufv66%2F76x4Q%2FtWa4%2FLW4tmTQnhR6Ezgem%2B6yTZ3k0VbZw%2BVCJxjAqrCPKqEIAAiAMRoQgB7m5zxMtDp2OPD%2BiGBD0AFC7AMG9paIHE2uiCKWkvDM%2F4EzOw7kJhBSdzBhoYrI5wDnEe3%2FORbowERtaHkTqC7N4M3mLsCsoju%2BamSjMzY%2BzZcHXbhPy0HJBayQ2RAcEokjtapqtQce2EYeihp9ry9NX2NaRo653RUk0j9l0DcL0M%2FivACNOPy0kkTAdiLtjlvBaAaKFaX5JCRp16JnJ0cSHHe1vk%2BFQjt6HJ%2FkHNSfQkMqwToaRDOiQ2inJgrJ8Cz9gWI8MSrZ3oP7vJPVU%2BRJwn6rNoP8nK%2FnQMiEOe6TnAKJSeXeBTMhAyICqmsw%2FVhsFJV7BBAWEOMQ6scbonG8LdMhIRJ3O%2FjF8QBe1E3e3N54xzQtnP0qrx5D6a5ZtWSs6ciJGSUShmklDf2Hino3DyTdE5sENWWlJOaiWXX%2BwMuia%2FJW1l1FvUggDBbWHKn6TMLAIzUib7ZeeP4c1sSYxUJPuiHaIw68XpjOlxB8uarOVakJdNudpgbhilTTnxgO83xr%2BbegZpiLi%2FsMQR2zjg2D2sC1lgoaW0uWAh1Bu%2FpELGAEjCblSQ364OIHocOsgObVrxVtacH43EO6ergTl4eNFWIBEEqYfiTRSFf7PieQ0fpgLOQfjqnEx8kb5z0oQ9F7AR8hA1M2BQlUc7zuHiNT4i3ztmoZs87jccqr0nGOIRcX%2BkkqzJbKX%2BKhKJZUM3JVRVmBlZmR%2FrYePzFn3v1KwFuU6dA9nIMCP2MAE6E9hxvMs%2Bjjr2BwVo2M9DN1AerqcbzS1eJ7jYJU86pVh0Xmap8w4pbR3MVzNlRStPsldJwGiuP6EjN59jw7WwatCmN7Ib9%2FFBBV4xTZixd%2BYYLT%2F8FoJZhY66b%2FFXOTBCwk4FhV5LobfSXSlU%2FF21cT4lxvZ2osOmzlu102DId2HjF9AdSiptCQAWwkOfMQgFYecN6nJLU6SJj2WpmOs42KI8xsAoJ8aFYWV2jOjad5KS%2BFihmZu4X8angsCJTAD1uzN31V%2FlrxneMQPIJYTe5BJMQxWENJMkneOcOXrqr%2FgLOd9dS8TJZjQAAAABJRU5ErkJggg%3D%3D%22)%201x%2C%20url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAA4CAYAAACyutuQAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAbPSURBVHgB3Vpdcts2EF5ASuK36gZVThB5ovQ18gnqnqDOQ2dstzOWTxD5BIlfbM%2F0Ic4J4pygymttj5QTRDlB1bfEIbHdBSSaIRcgRDFNJt%2BMLIsEQC6wP98uAPCdQcGXxnDSuXPzqWug1UMwXQD94%2BLBb9KTh%2BfQML6IQO0%2FLgfG6MeIOKCfPfp0QHw4HprTR8%2BhQTQnEK2EvjEHiLADgN3IXjM87d%2BHBtGGdbE76WptnuLHdBs9KxHAHBpGfYF4RT6SIJAOaVVqgVTyNTSMWiqn969YtUaw8oqoGYkxU0rNDDkF%2BOpOwdnJM5rZncgeYwRaBYQpbLSn8HyzcRUrIl4gshWlzF%2FVBq9miOYlCfD8%2FxCgiDgb%2Bu3vnlIpCRNSMSvIEzjrj%2BErologFqatQ8LMSa2O4LTfaDypi7DKWTVLJ%2BAXZozYolXZnME3Av8KZTYjC0OO4QjOHo3gG4NXIKXTV%2BSdutI9UrFDEmZ1FcvzOjQd0o%2BOAj0DjXNtzOzTyU9TWBOiyun966e0AiPpHqIiFYuPH7e8LpoSjbVSL1Ojx3VUuSyQs5t3UuNV1IwFSVP1lP4dQE1QAD6nyThaRbCSQGrv6hV9bYuDnzx8AlVwE%2FIC1hBEfHakYDr%2Fg2cVBGE4xpi7%2BhAq0Nq72l54xQE0CGYm1kHR%2BFVtPxNooSLlAdkJVER95nfEz3h1I%2Fkd8zr%2BxDJu7JI6vWL7Do6a%2FbdPART1pNQgQtUWZLXK6y14XfuipDrk%2FeBD0tNabZPT%2BbnKedA7jeidjsR7ty91%2FUIinRQ47wd11zGJCYQEcc5kDLHYvRwopV%2BEBPNlu5lAau%2F6nTDAmDLKLfCBZlZ9NBPPgxeUaI0Ue%2B9yqMCagS%2B4bxUnytqQcwbll0KKBxAAp9xeYRKzBevWC6g%2FacjmwtZKsKvI6pp%2FJ%2F5jEiV7j1ACRu7ZG3xZmD%2FXj%2FoWpO6IeksWCrucNeevWIFQwQNhqDEE0AIzkK5be2lKmCVYqCT9RXwe4JAnd%2Fl7yeV6xYZkdK9DpQKj8QBKDWgWz%2FqjQDdHhVJ6ntI0iea90mqaJq1pZdCkScK9y0OyqWfFW1qnQwoZQ%2FfeHqojGVwG6wzSf4qXg3W2iow3lg14nNcc75E3plip2%2B2kK%2FYkBuwbtJ0kPem6UTj29bHsPeCGMzaQUx%2BxHQf5MjqtG2P9gPb2DFB5qzJlzEN96E16UAl0q1jwXJ%2FhtH8BArsg7X%2FM3xoT3YVVocS4UEVhxhAF8lw3yTDUQiGUwgmtcMUKNQybqt%2B63jlNytQXX4j%2BHIRWiRyDpAkdW2ZTbTMTe4UGNFrq0w2qCrve04f3mUqxAeNJf9P9RomTZTYhIQVK%2FiRQNqwT4zX%2Bjn9AzyR8SKrthL1Ynrm7hFGwCfSPteFRb9RdDXfvzKR7NEMD8A7YnkovQa73AOpBUCH1g7e1J5VpKdXRi5urzZDrI%2BnxNjNlWBWik8F%2FYUWkSMWWxYDj0nDo3KAPHt13hLEiluRhibHg0o1s%2BA6%2B8ZcCKcQ3wu0eGbnckeFYxFgYtRsTIJcvlqac9wgwHsMneMnARnvm2DZnkQIoHuxAAL5VckKlE5suewRr7V7vBKhQsIRljFizmJMpzHIJ3hVXSYsNM44EPuxejsgZBPN8fkHeE1r%2BWARBrxetypLV%2FtVEUFObjGaBldm10LdTFbXZ7UqRu4ABc7XlB4LCYJig8oqjnB3wdyaQudc%2BB8nbVURt2%2Fesv%2BNXv3jEFDJ5P1e6vjSbW%2BpDaqUUHgttOVWQDTcPehFbJvbQmQrMF%2FXyUbCVy5J3hDuZzX3G5cxd2nWTSea2poIFVIFq3pwuY8oUP0owmkQ4tnWDiPrDoiJbQr72Ua5tu0rLM7FjKOmTQEFWa7YfxSn%2BUm1ZiPfGUJzZ0Bex25b%2BDQRlOWL2S%2Brs8Xj2ZVBRAeSk4ZpBBVq%2FT341Jj2X7tHqPMkXc8T0oUD18%2BhQdTWqxtwUQsJw2l6sTMn5kC0dGV%2F5txNTY24C%2FAyfMHYDgWsQxasQgo3mGPBwytXMmt5jrd6SmVtHIjy3%2BpxCpVBu6VuQHq%2B9pZgdt8GQR52HCplxBy943weAhQoGWE6rNajjlbYTSYhWknKtjnOpQUXreVVV9gucJMmGnlHbKa3uW7sxnIPbMNYPbM4VVQ1y48Wo9%2BpnfT6kIyod181Ma4Fys2PYaI1iYla9A4C8Wm7bP3J262J53CY%2BmK93otHZVozurwayRSRbrHP8rJkjmvZUYzq01cv6q8aU6KUxeLESvSqg%2BUO0nK%2BotKcVczjapuECiDuRkvOQ5DAUzrlgaNC8tefp1hAij%2F8AdVGeeUgR1GkAAAAASUVORK5CYII%3D%22)%202x)%3B%0A%20%20%20%20%20%20background-repeat%3A%20no-repeat%3B%0A%20%20%20%20%20%20background-size%3A%2026px%2028px%3B%0A%20%20%20%20%20%20display%3A%20inline-block%3B%0A%20%20%20%20%20%20height%3A%2028px%3B%0A%20%20%20%20%20%20margin%3A%200%200%2024px%3B%0A%20%20%20%20%20%20transform-origin%3A%2050%25%2050%25%3B%0A%20%20%20%20%20%20width%3A%2026px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40keyframes%20icon-spin%20%7B%0A%20%20%20%20%20%20100%25%20%7B%0A%20%20%20%20%20%20%20%20transform%3A%20rotate(360deg)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20color%3A%20var(--heading-color)%3B%0A%20%20%20%20%20%20font-size%3A%201.2em%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20line-height%3A%201.2em%3B%0A%20%20%20%20%20%20margin%3A%200%200%2012px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-message%20%3E%20p%20%7B%0A%20%20%20%20%20%20display%3A%20inline%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20p%20%7B%0A%20%20%20%20%20%20margin-block-end%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20ul%20%7B%0A%20%20%20%20%20%20margin-top%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.error-code%20%7B%0A%20%20%20%20%20%20color%3A%20var(--error-code-color)%3B%0A%20%20%20%20%20%20font-size%3A%20.8em%3B%0A%20%20%20%20%20%20margin-top%3A%2024px%3B%0A%20%20%20%20%20%20text-transform%3A%20uppercase%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20gap%3A%208px%3B%0A%20%20%20%20%20%20justify-content%3A%20flex-start%3B%0A%20%20%20%20%20%20margin-top%3A%2051px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%5Bdir%3D%22rtl%22%5D%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper-end%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20none%3B%0A%20%20%20%20%20%20margin%3A%200%200%2050px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-frame-error.showing-details%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20block%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestions%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-header%20%7B%0A%20%20%20%20%20%20font-weight%3A%20bold%3B%0A%20%20%20%20%20%20margin-bottom%3A%204px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20color%3A%20%23777%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20%20%20filter%3A%20brightness(1.2)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20700px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20padding%3A%200%2010%25%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20420px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%207vh%20auto%2012px%3B%0A%20%20%20%20%20%20%20%20padding%3A%200%2024px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin-top%3A%2030px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%2020px%200%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20%20%20font-size%3A%201.5em%3B%0A%20%20%20%20%20%20%20%20margin-bottom%3A%208px%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%20class%3D%22neterror%22%3E%0A%20%20%3Cdiv%20id%3D%22main-frame-error%22%20class%3D%22interstitial-wrapper%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22main-content%22%3E%0A%20%20%20%20%20%20%3Cdiv%20class%3D%22icon%22%20aria-hidden%3D%22true%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22main-message%22%3E%0A%20%20%20%20%20%20%20%20%3Ch1%3EThis%20page%20crashed%3C%2Fh1%3E%0A%20%20%20%20%20%20%20%20%3Cp%3Ewww.campfirewriting.com%20crashed%20unexpectedly%3C%2Fp%3E%0A%0A%0A%20%20%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22buttons%22%20class%3D%22nav-wrapper%20nav-wrapper-end%22%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22open-in-browser-button%22%20type%3D%22button%22%3EOpen%20in%20external%20browser%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22reload-button%22%20type%3D%22button%22%3EReload%3C%2Fbutton%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22details%22%3E%0A%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cscript%3E%0A%20%20%20%20(()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20failedUrl%20%3D%20%22https%3A%2F%2Fwww.campfirewriting.com%2Fwrite%2Fstory%2F659b388d366efbc6ae6a49ad%2Fspecies%2Fspecies%2F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20externalBrowserActionUrl%20%3D%20%22codex-browser-sidebar%3A%2F%2Fopen-external%3Furl%3Dhttps%253A%252F%252Fwww.campfirewriting.com%252Fwrite%252Fstory%252F659b388d366efbc6ae6a49ad%252Fspecies%252Fspecies%252F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20main%20%3D%20document.getElementById(%22main-frame-error%22)%3B%0A%20%20%20%20%20%20const%20details%20%3D%20document.getElementById(%22details%22)%3B%0A%20%20%20%20%20%20const%20detailsLink%20%3D%20document.getElementById(%22details-link%22)%3B%0A%20%20%20%20%20%20const%20openInBrowserButton%20%3D%20document.getElementById(%22open-in-browser-button%22)%3B%0A%20%20%20%20%20%20const%20reloadButton%20%3D%20document.getElementById(%22reload-button%22)%3B%0A%20%20%20%20%20%20const%20setDetailsVisible%20%3D%20(visible)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20main.classList.toggle(%22showing-details%22%2C%20visible)%3B%0A%20%20%20%20%20%20%20%20detailsLink%3F.setAttribute(%22aria-expanded%22%2C%20String(visible))%3B%0A%20%20%20%20%20%20%20%20if%20(visible)%20%7B%0A%20%20%20%20%20%20%20%20%20%20details.setAttribute(%22tabindex%22%2C%20%22-1%22)%3B%0A%20%20%20%20%20%20%20%20%20%20details.focus()%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20detailsLink%3F.addEventListener(%22click%22%2C%20(event)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20event.preventDefault()%3B%0A%20%20%20%20%20%20%20%20setDetailsVisible(!main.classList.contains(%22showing-details%22))%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20reloadButton.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20failedUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20openInBrowserButton%3F.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20externalBrowserActionUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D)()%3B%0A%20%20%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E",
+      "capturedAt": "2026-09-05T10:01:22.678Z",
+      "mode": "direct"
+    },
+    {
+      "order": 89,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "675d489d84a575d51e1dcac8",
+        "module": "Species",
+        "name": "Γλόμπος",
+        "order": 89,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/675d489d84a575d51e1dcac8",
+        "routable": true
+      },
+      "error": "Blocked browser navigation by Browser Use URL policy: data:text/html;charset=utf-8,%3C!DOCTYPE%20html%3E%0A%3Chtml%20dir%3D%22ltr%22%20lang%3D%22en-US%22%3E%0A%3Chead%3E%0A%20%20%3Cmeta%20charset%3D%22utf-8%22%3E%0A%20%20%3Cmeta%20name%3D%22color-scheme%22%20content%3D%22light%20dark%22%3E%0A%20%20%3Cmeta%20name%3D%22theme-color%22%20content%3D%22%23fff%22%3E%0A%20%20%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1.0%2C%20maximum-scale%3D1.0%2C%20user-scalable%3Dno%22%3E%0A%20%20%3Ctitle%3EThis%20page%20crashed%3C%2Ftitle%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20body%20%7B%0A%20%20%20%20%20%20--background-color%3A%20%23fff%3B%0A%20%20%20%20%20%20--error-code-color%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-blue-300%3A%20rgb(138%2C%20180%2C%20248)%3B%0A%20%20%20%20%20%20--google-gray-300%3A%20rgb(218%2C%20220%2C%20224)%3B%0A%20%20%20%20%20%20--google-gray-500%3A%20rgb(154%2C%20160%2C%20166)%3B%0A%20%20%20%20%20%20--google-gray-700%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-gray-900%3A%20rgb(32%2C%2033%2C%2036)%3B%0A%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20--link-color%3A%20rgb(88%2C%2088%2C%2088)%3B%0A%20%20%20%20%20%20--button-fill-color%3A%20rgb(26%2028%2031%20%2F%205%25)%3B%0A%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(26%2028%2031%20%2F%2010%25)%3B%0A%20%20%20%20%20%20--button-text-color%3A%20%231a1c1f%3B%0A%20%20%20%20%20%20--text-color%3A%20var(--google-gray-700)%3B%0A%20%20%20%20%20%20background%3A%20var(--background-color)%3B%0A%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20font-family%3A%20system-ui%2C%20sans-serif%3B%0A%20%20%20%20%20%20font-size%3A%2070%25%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20overflow-wrap%3A%20break-word%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20body%20%7B%0A%20%20%20%20%20%20%20%20--background-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20%20%20--error-code-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--link-color%3A%20var(--google-blue-300)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color%3A%20rgb(255%20255%20255%20%2F%205%25)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(255%20255%20255%20%2F%2010%25)%3B%0A%20%20%20%20%20%20%20%20--button-text-color%3A%20%23fff%3B%0A%20%20%20%20%20%20%20%20--text-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20html%20%7B%0A%20%20%20%20%20%20-webkit-text-size-adjust%3A%20100%25%3B%0A%20%20%20%20%20%20font-size%3A%20125%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20a%20%7B%0A%20%20%20%20%20%20color%3A%20var(--link-color)%3B%0A%20%20%20%20%20%20text-decoration%3A%20none%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%20%7B%0A%20%20%20%20%20%20align-items%3A%20center%3B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color)%3B%0A%20%20%20%20%20%20border%3A%201px%20solid%20transparent%3B%0A%20%20%20%20%20%20border-radius%3A%208px%3B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20color%3A%20var(--button-text-color)%3B%0A%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20display%3A%20inline-flex%3B%0A%20%20%20%20%20%20font-family%3A%20inherit%3B%0A%20%20%20%20%20%20font-size%3A%2013px%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20justify-content%3A%20center%3B%0A%20%20%20%20%20%20line-height%3A%2018px%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20min-height%3A%2028px%3B%0A%20%20%20%20%20%20padding%3A%200%208px%3B%0A%20%20%20%20%20%20user-select%3A%20none%3B%0A%20%20%20%20%20%20white-space%3A%20nowrap%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Aactive%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Ahover%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%20%20line-height%3A%201.6em%3B%0A%20%20%20%20%20%20margin%3A%2020vh%20auto%200%3B%0A%20%20%20%20%20%20max-width%3A%20600px%3B%0A%20%20%20%20%20%20width%3A%20100%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20-webkit-user-select%3A%20none%3B%0A%20%20%20%20%20%20animation%3A%20icon-spin%203s%20linear%20infinite%3B%0A%20%20%20%20%20%20background-image%3A%20image-set(url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABoAAAAcCAYAAAB%2FE6%2FTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOPSURBVHgBpVZdUhpBEO6eXQ1v4QZZTyCW%2Bpz1BOIJAg%2BpEitVkhMIJwBe1DfwBJoTuHkVKfAEIScIeQu4O52enZ3dWViUmK4Cdufv66%2F76x4Q%2FtWa4%2FLW4tmTQnhR6Ezgem%2B6yTZ3k0VbZw%2BVCJxjAqrCPKqEIAAiAMRoQgB7m5zxMtDp2OPD%2BiGBD0AFC7AMG9paIHE2uiCKWkvDM%2F4EzOw7kJhBSdzBhoYrI5wDnEe3%2FORbowERtaHkTqC7N4M3mLsCsoju%2BamSjMzY%2BzZcHXbhPy0HJBayQ2RAcEokjtapqtQce2EYeihp9ry9NX2NaRo653RUk0j9l0DcL0M%2FivACNOPy0kkTAdiLtjlvBaAaKFaX5JCRp16JnJ0cSHHe1vk%2BFQjt6HJ%2FkHNSfQkMqwToaRDOiQ2inJgrJ8Cz9gWI8MSrZ3oP7vJPVU%2BRJwn6rNoP8nK%2FnQMiEOe6TnAKJSeXeBTMhAyICqmsw%2FVhsFJV7BBAWEOMQ6scbonG8LdMhIRJ3O%2FjF8QBe1E3e3N54xzQtnP0qrx5D6a5ZtWSs6ciJGSUShmklDf2Hino3DyTdE5sENWWlJOaiWXX%2BwMuia%2FJW1l1FvUggDBbWHKn6TMLAIzUib7ZeeP4c1sSYxUJPuiHaIw68XpjOlxB8uarOVakJdNudpgbhilTTnxgO83xr%2BbegZpiLi%2FsMQR2zjg2D2sC1lgoaW0uWAh1Bu%2FpELGAEjCblSQ364OIHocOsgObVrxVtacH43EO6ergTl4eNFWIBEEqYfiTRSFf7PieQ0fpgLOQfjqnEx8kb5z0oQ9F7AR8hA1M2BQlUc7zuHiNT4i3ztmoZs87jccqr0nGOIRcX%2BkkqzJbKX%2BKhKJZUM3JVRVmBlZmR%2FrYePzFn3v1KwFuU6dA9nIMCP2MAE6E9hxvMs%2Bjjr2BwVo2M9DN1AerqcbzS1eJ7jYJU86pVh0Xmap8w4pbR3MVzNlRStPsldJwGiuP6EjN59jw7WwatCmN7Ib9%2FFBBV4xTZixd%2BYYLT%2F8FoJZhY66b%2FFXOTBCwk4FhV5LobfSXSlU%2FF21cT4lxvZ2osOmzlu102DId2HjF9AdSiptCQAWwkOfMQgFYecN6nJLU6SJj2WpmOs42KI8xsAoJ8aFYWV2jOjad5KS%2BFihmZu4X8angsCJTAD1uzN31V%2FlrxneMQPIJYTe5BJMQxWENJMkneOcOXrqr%2FgLOd9dS8TJZjQAAAABJRU5ErkJggg%3D%3D%22)%201x%2C%20url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAA4CAYAAACyutuQAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAbPSURBVHgB3Vpdcts2EF5ASuK36gZVThB5ovQ18gnqnqDOQ2dstzOWTxD5BIlfbM%2F0Ic4J4pygymttj5QTRDlB1bfEIbHdBSSaIRcgRDFNJt%2BMLIsEQC6wP98uAPCdQcGXxnDSuXPzqWug1UMwXQD94%2BLBb9KTh%2BfQML6IQO0%2FLgfG6MeIOKCfPfp0QHw4HprTR8%2BhQTQnEK2EvjEHiLADgN3IXjM87d%2BHBtGGdbE76WptnuLHdBs9KxHAHBpGfYF4RT6SIJAOaVVqgVTyNTSMWiqn969YtUaw8oqoGYkxU0rNDDkF%2BOpOwdnJM5rZncgeYwRaBYQpbLSn8HyzcRUrIl4gshWlzF%2FVBq9miOYlCfD8%2FxCgiDgb%2Bu3vnlIpCRNSMSvIEzjrj%2BErologFqatQ8LMSa2O4LTfaDypi7DKWTVLJ%2BAXZozYolXZnME3Av8KZTYjC0OO4QjOHo3gG4NXIKXTV%2BSdutI9UrFDEmZ1FcvzOjQd0o%2BOAj0DjXNtzOzTyU9TWBOiyun966e0AiPpHqIiFYuPH7e8LpoSjbVSL1Ojx3VUuSyQs5t3UuNV1IwFSVP1lP4dQE1QAD6nyThaRbCSQGrv6hV9bYuDnzx8AlVwE%2FIC1hBEfHakYDr%2Fg2cVBGE4xpi7%2BhAq0Nq72l54xQE0CGYm1kHR%2BFVtPxNooSLlAdkJVER95nfEz3h1I%2Fkd8zr%2BxDJu7JI6vWL7Do6a%2FbdPART1pNQgQtUWZLXK6y14XfuipDrk%2FeBD0tNabZPT%2BbnKedA7jeidjsR7ty91%2FUIinRQ47wd11zGJCYQEcc5kDLHYvRwopV%2BEBPNlu5lAau%2F6nTDAmDLKLfCBZlZ9NBPPgxeUaI0Ue%2B9yqMCagS%2B4bxUnytqQcwbll0KKBxAAp9xeYRKzBevWC6g%2FacjmwtZKsKvI6pp%2FJ%2F5jEiV7j1ACRu7ZG3xZmD%2FXj%2FoWpO6IeksWCrucNeevWIFQwQNhqDEE0AIzkK5be2lKmCVYqCT9RXwe4JAnd%2Fl7yeV6xYZkdK9DpQKj8QBKDWgWz%2FqjQDdHhVJ6ntI0iea90mqaJq1pZdCkScK9y0OyqWfFW1qnQwoZQ%2FfeHqojGVwG6wzSf4qXg3W2iow3lg14nNcc75E3plip2%2B2kK%2FYkBuwbtJ0kPem6UTj29bHsPeCGMzaQUx%2BxHQf5MjqtG2P9gPb2DFB5qzJlzEN96E16UAl0q1jwXJ%2FhtH8BArsg7X%2FM3xoT3YVVocS4UEVhxhAF8lw3yTDUQiGUwgmtcMUKNQybqt%2B63jlNytQXX4j%2BHIRWiRyDpAkdW2ZTbTMTe4UGNFrq0w2qCrve04f3mUqxAeNJf9P9RomTZTYhIQVK%2FiRQNqwT4zX%2Bjn9AzyR8SKrthL1Ynrm7hFGwCfSPteFRb9RdDXfvzKR7NEMD8A7YnkovQa73AOpBUCH1g7e1J5VpKdXRi5urzZDrI%2BnxNjNlWBWik8F%2FYUWkSMWWxYDj0nDo3KAPHt13hLEiluRhibHg0o1s%2BA6%2B8ZcCKcQ3wu0eGbnckeFYxFgYtRsTIJcvlqac9wgwHsMneMnARnvm2DZnkQIoHuxAAL5VckKlE5suewRr7V7vBKhQsIRljFizmJMpzHIJ3hVXSYsNM44EPuxejsgZBPN8fkHeE1r%2BWARBrxetypLV%2FtVEUFObjGaBldm10LdTFbXZ7UqRu4ABc7XlB4LCYJig8oqjnB3wdyaQudc%2BB8nbVURt2%2Fesv%2BNXv3jEFDJ5P1e6vjSbW%2BpDaqUUHgttOVWQDTcPehFbJvbQmQrMF%2FXyUbCVy5J3hDuZzX3G5cxd2nWTSea2poIFVIFq3pwuY8oUP0owmkQ4tnWDiPrDoiJbQr72Ua5tu0rLM7FjKOmTQEFWa7YfxSn%2BUm1ZiPfGUJzZ0Bex25b%2BDQRlOWL2S%2Brs8Xj2ZVBRAeSk4ZpBBVq%2FT341Jj2X7tHqPMkXc8T0oUD18%2BhQdTWqxtwUQsJw2l6sTMn5kC0dGV%2F5txNTY24C%2FAyfMHYDgWsQxasQgo3mGPBwytXMmt5jrd6SmVtHIjy3%2BpxCpVBu6VuQHq%2B9pZgdt8GQR52HCplxBy943weAhQoGWE6rNajjlbYTSYhWknKtjnOpQUXreVVV9gucJMmGnlHbKa3uW7sxnIPbMNYPbM4VVQ1y48Wo9%2BpnfT6kIyod181Ma4Fys2PYaI1iYla9A4C8Wm7bP3J262J53CY%2BmK93otHZVozurwayRSRbrHP8rJkjmvZUYzq01cv6q8aU6KUxeLESvSqg%2BUO0nK%2BotKcVczjapuECiDuRkvOQ5DAUzrlgaNC8tefp1hAij%2F8AdVGeeUgR1GkAAAAASUVORK5CYII%3D%22)%202x)%3B%0A%20%20%20%20%20%20background-repeat%3A%20no-repeat%3B%0A%20%20%20%20%20%20background-size%3A%2026px%2028px%3B%0A%20%20%20%20%20%20display%3A%20inline-block%3B%0A%20%20%20%20%20%20height%3A%2028px%3B%0A%20%20%20%20%20%20margin%3A%200%200%2024px%3B%0A%20%20%20%20%20%20transform-origin%3A%2050%25%2050%25%3B%0A%20%20%20%20%20%20width%3A%2026px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40keyframes%20icon-spin%20%7B%0A%20%20%20%20%20%20100%25%20%7B%0A%20%20%20%20%20%20%20%20transform%3A%20rotate(360deg)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20color%3A%20var(--heading-color)%3B%0A%20%20%20%20%20%20font-size%3A%201.2em%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20line-height%3A%201.2em%3B%0A%20%20%20%20%20%20margin%3A%200%200%2012px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-message%20%3E%20p%20%7B%0A%20%20%20%20%20%20display%3A%20inline%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20p%20%7B%0A%20%20%20%20%20%20margin-block-end%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20ul%20%7B%0A%20%20%20%20%20%20margin-top%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.error-code%20%7B%0A%20%20%20%20%20%20color%3A%20var(--error-code-color)%3B%0A%20%20%20%20%20%20font-size%3A%20.8em%3B%0A%20%20%20%20%20%20margin-top%3A%2024px%3B%0A%20%20%20%20%20%20text-transform%3A%20uppercase%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20gap%3A%208px%3B%0A%20%20%20%20%20%20justify-content%3A%20flex-start%3B%0A%20%20%20%20%20%20margin-top%3A%2051px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%5Bdir%3D%22rtl%22%5D%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper-end%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20none%3B%0A%20%20%20%20%20%20margin%3A%200%200%2050px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-frame-error.showing-details%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20block%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestions%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-header%20%7B%0A%20%20%20%20%20%20font-weight%3A%20bold%3B%0A%20%20%20%20%20%20margin-bottom%3A%204px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20color%3A%20%23777%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20%20%20filter%3A%20brightness(1.2)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20700px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20padding%3A%200%2010%25%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20420px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%207vh%20auto%2012px%3B%0A%20%20%20%20%20%20%20%20padding%3A%200%2024px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin-top%3A%2030px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%2020px%200%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20%20%20font-size%3A%201.5em%3B%0A%20%20%20%20%20%20%20%20margin-bottom%3A%208px%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%20class%3D%22neterror%22%3E%0A%20%20%3Cdiv%20id%3D%22main-frame-error%22%20class%3D%22interstitial-wrapper%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22main-content%22%3E%0A%20%20%20%20%20%20%3Cdiv%20class%3D%22icon%22%20aria-hidden%3D%22true%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22main-message%22%3E%0A%20%20%20%20%20%20%20%20%3Ch1%3EThis%20page%20crashed%3C%2Fh1%3E%0A%20%20%20%20%20%20%20%20%3Cp%3Ewww.campfirewriting.com%20crashed%20unexpectedly%3C%2Fp%3E%0A%0A%0A%20%20%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22buttons%22%20class%3D%22nav-wrapper%20nav-wrapper-end%22%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22open-in-browser-button%22%20type%3D%22button%22%3EOpen%20in%20external%20browser%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22reload-button%22%20type%3D%22button%22%3EReload%3C%2Fbutton%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22details%22%3E%0A%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cscript%3E%0A%20%20%20%20(()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20failedUrl%20%3D%20%22https%3A%2F%2Fwww.campfirewriting.com%2Fwrite%2Fstory%2F659b388d366efbc6ae6a49ad%2Fspecies%2Fspecies%2F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20externalBrowserActionUrl%20%3D%20%22codex-browser-sidebar%3A%2F%2Fopen-external%3Furl%3Dhttps%253A%252F%252Fwww.campfirewriting.com%252Fwrite%252Fstory%252F659b388d366efbc6ae6a49ad%252Fspecies%252Fspecies%252F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20main%20%3D%20document.getElementById(%22main-frame-error%22)%3B%0A%20%20%20%20%20%20const%20details%20%3D%20document.getElementById(%22details%22)%3B%0A%20%20%20%20%20%20const%20detailsLink%20%3D%20document.getElementById(%22details-link%22)%3B%0A%20%20%20%20%20%20const%20openInBrowserButton%20%3D%20document.getElementById(%22open-in-browser-button%22)%3B%0A%20%20%20%20%20%20const%20reloadButton%20%3D%20document.getElementById(%22reload-button%22)%3B%0A%20%20%20%20%20%20const%20setDetailsVisible%20%3D%20(visible)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20main.classList.toggle(%22showing-details%22%2C%20visible)%3B%0A%20%20%20%20%20%20%20%20detailsLink%3F.setAttribute(%22aria-expanded%22%2C%20String(visible))%3B%0A%20%20%20%20%20%20%20%20if%20(visible)%20%7B%0A%20%20%20%20%20%20%20%20%20%20details.setAttribute(%22tabindex%22%2C%20%22-1%22)%3B%0A%20%20%20%20%20%20%20%20%20%20details.focus()%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20detailsLink%3F.addEventListener(%22click%22%2C%20(event)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20event.preventDefault()%3B%0A%20%20%20%20%20%20%20%20setDetailsVisible(!main.classList.contains(%22showing-details%22))%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20reloadButton.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20failedUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20openInBrowserButton%3F.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20externalBrowserActionUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D)()%3B%0A%20%20%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E",
+      "capturedAt": "2026-09-05T10:01:22.707Z",
+      "mode": "direct"
+    },
+    {
+      "order": 90,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "68191cbe58c4c5ce9f10eddb",
+        "module": "Species",
+        "name": "New Species",
+        "order": 90,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/68191cbe58c4c5ce9f10eddb",
+        "routable": true
+      },
+      "error": "Blocked browser navigation by Browser Use URL policy: data:text/html;charset=utf-8,%3C!DOCTYPE%20html%3E%0A%3Chtml%20dir%3D%22ltr%22%20lang%3D%22en-US%22%3E%0A%3Chead%3E%0A%20%20%3Cmeta%20charset%3D%22utf-8%22%3E%0A%20%20%3Cmeta%20name%3D%22color-scheme%22%20content%3D%22light%20dark%22%3E%0A%20%20%3Cmeta%20name%3D%22theme-color%22%20content%3D%22%23fff%22%3E%0A%20%20%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1.0%2C%20maximum-scale%3D1.0%2C%20user-scalable%3Dno%22%3E%0A%20%20%3Ctitle%3EThis%20page%20crashed%3C%2Ftitle%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20body%20%7B%0A%20%20%20%20%20%20--background-color%3A%20%23fff%3B%0A%20%20%20%20%20%20--error-code-color%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-blue-300%3A%20rgb(138%2C%20180%2C%20248)%3B%0A%20%20%20%20%20%20--google-gray-300%3A%20rgb(218%2C%20220%2C%20224)%3B%0A%20%20%20%20%20%20--google-gray-500%3A%20rgb(154%2C%20160%2C%20166)%3B%0A%20%20%20%20%20%20--google-gray-700%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-gray-900%3A%20rgb(32%2C%2033%2C%2036)%3B%0A%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20--link-color%3A%20rgb(88%2C%2088%2C%2088)%3B%0A%20%20%20%20%20%20--button-fill-color%3A%20rgb(26%2028%2031%20%2F%205%25)%3B%0A%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(26%2028%2031%20%2F%2010%25)%3B%0A%20%20%20%20%20%20--button-text-color%3A%20%231a1c1f%3B%0A%20%20%20%20%20%20--text-color%3A%20var(--google-gray-700)%3B%0A%20%20%20%20%20%20background%3A%20var(--background-color)%3B%0A%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20font-family%3A%20system-ui%2C%20sans-serif%3B%0A%20%20%20%20%20%20font-size%3A%2070%25%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20overflow-wrap%3A%20break-word%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20body%20%7B%0A%20%20%20%20%20%20%20%20--background-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20%20%20--error-code-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--link-color%3A%20var(--google-blue-300)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color%3A%20rgb(255%20255%20255%20%2F%205%25)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(255%20255%20255%20%2F%2010%25)%3B%0A%20%20%20%20%20%20%20%20--button-text-color%3A%20%23fff%3B%0A%20%20%20%20%20%20%20%20--text-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20html%20%7B%0A%20%20%20%20%20%20-webkit-text-size-adjust%3A%20100%25%3B%0A%20%20%20%20%20%20font-size%3A%20125%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20a%20%7B%0A%20%20%20%20%20%20color%3A%20var(--link-color)%3B%0A%20%20%20%20%20%20text-decoration%3A%20none%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%20%7B%0A%20%20%20%20%20%20align-items%3A%20center%3B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color)%3B%0A%20%20%20%20%20%20border%3A%201px%20solid%20transparent%3B%0A%20%20%20%20%20%20border-radius%3A%208px%3B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20color%3A%20var(--button-text-color)%3B%0A%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20display%3A%20inline-flex%3B%0A%20%20%20%20%20%20font-family%3A%20inherit%3B%0A%20%20%20%20%20%20font-size%3A%2013px%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20justify-content%3A%20center%3B%0A%20%20%20%20%20%20line-height%3A%2018px%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20min-height%3A%2028px%3B%0A%20%20%20%20%20%20padding%3A%200%208px%3B%0A%20%20%20%20%20%20user-select%3A%20none%3B%0A%20%20%20%20%20%20white-space%3A%20nowrap%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Aactive%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Ahover%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%20%20line-height%3A%201.6em%3B%0A%20%20%20%20%20%20margin%3A%2020vh%20auto%200%3B%0A%20%20%20%20%20%20max-width%3A%20600px%3B%0A%20%20%20%20%20%20width%3A%20100%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20-webkit-user-select%3A%20none%3B%0A%20%20%20%20%20%20animation%3A%20icon-spin%203s%20linear%20infinite%3B%0A%20%20%20%20%20%20background-image%3A%20image-set(url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABoAAAAcCAYAAAB%2FE6%2FTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOPSURBVHgBpVZdUhpBEO6eXQ1v4QZZTyCW%2Bpz1BOIJAg%2BpEitVkhMIJwBe1DfwBJoTuHkVKfAEIScIeQu4O52enZ3dWViUmK4Cdufv66%2F76x4Q%2FtWa4%2FLW4tmTQnhR6Ezgem%2B6yTZ3k0VbZw%2BVCJxjAqrCPKqEIAAiAMRoQgB7m5zxMtDp2OPD%2BiGBD0AFC7AMG9paIHE2uiCKWkvDM%2F4EzOw7kJhBSdzBhoYrI5wDnEe3%2FORbowERtaHkTqC7N4M3mLsCsoju%2BamSjMzY%2BzZcHXbhPy0HJBayQ2RAcEokjtapqtQce2EYeihp9ry9NX2NaRo653RUk0j9l0DcL0M%2FivACNOPy0kkTAdiLtjlvBaAaKFaX5JCRp16JnJ0cSHHe1vk%2BFQjt6HJ%2FkHNSfQkMqwToaRDOiQ2inJgrJ8Cz9gWI8MSrZ3oP7vJPVU%2BRJwn6rNoP8nK%2FnQMiEOe6TnAKJSeXeBTMhAyICqmsw%2FVhsFJV7BBAWEOMQ6scbonG8LdMhIRJ3O%2FjF8QBe1E3e3N54xzQtnP0qrx5D6a5ZtWSs6ciJGSUShmklDf2Hino3DyTdE5sENWWlJOaiWXX%2BwMuia%2FJW1l1FvUggDBbWHKn6TMLAIzUib7ZeeP4c1sSYxUJPuiHaIw68XpjOlxB8uarOVakJdNudpgbhilTTnxgO83xr%2BbegZpiLi%2FsMQR2zjg2D2sC1lgoaW0uWAh1Bu%2FpELGAEjCblSQ364OIHocOsgObVrxVtacH43EO6ergTl4eNFWIBEEqYfiTRSFf7PieQ0fpgLOQfjqnEx8kb5z0oQ9F7AR8hA1M2BQlUc7zuHiNT4i3ztmoZs87jccqr0nGOIRcX%2BkkqzJbKX%2BKhKJZUM3JVRVmBlZmR%2FrYePzFn3v1KwFuU6dA9nIMCP2MAE6E9hxvMs%2Bjjr2BwVo2M9DN1AerqcbzS1eJ7jYJU86pVh0Xmap8w4pbR3MVzNlRStPsldJwGiuP6EjN59jw7WwatCmN7Ib9%2FFBBV4xTZixd%2BYYLT%2F8FoJZhY66b%2FFXOTBCwk4FhV5LobfSXSlU%2FF21cT4lxvZ2osOmzlu102DId2HjF9AdSiptCQAWwkOfMQgFYecN6nJLU6SJj2WpmOs42KI8xsAoJ8aFYWV2jOjad5KS%2BFihmZu4X8angsCJTAD1uzN31V%2FlrxneMQPIJYTe5BJMQxWENJMkneOcOXrqr%2FgLOd9dS8TJZjQAAAABJRU5ErkJggg%3D%3D%22)%201x%2C%20url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAA4CAYAAACyutuQAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAbPSURBVHgB3Vpdcts2EF5ASuK36gZVThB5ovQ18gnqnqDOQ2dstzOWTxD5BIlfbM%2F0Ic4J4pygymttj5QTRDlB1bfEIbHdBSSaIRcgRDFNJt%2BMLIsEQC6wP98uAPCdQcGXxnDSuXPzqWug1UMwXQD94%2BLBb9KTh%2BfQML6IQO0%2FLgfG6MeIOKCfPfp0QHw4HprTR8%2BhQTQnEK2EvjEHiLADgN3IXjM87d%2BHBtGGdbE76WptnuLHdBs9KxHAHBpGfYF4RT6SIJAOaVVqgVTyNTSMWiqn969YtUaw8oqoGYkxU0rNDDkF%2BOpOwdnJM5rZncgeYwRaBYQpbLSn8HyzcRUrIl4gshWlzF%2FVBq9miOYlCfD8%2FxCgiDgb%2Bu3vnlIpCRNSMSvIEzjrj%2BErologFqatQ8LMSa2O4LTfaDypi7DKWTVLJ%2BAXZozYolXZnME3Av8KZTYjC0OO4QjOHo3gG4NXIKXTV%2BSdutI9UrFDEmZ1FcvzOjQd0o%2BOAj0DjXNtzOzTyU9TWBOiyun966e0AiPpHqIiFYuPH7e8LpoSjbVSL1Ojx3VUuSyQs5t3UuNV1IwFSVP1lP4dQE1QAD6nyThaRbCSQGrv6hV9bYuDnzx8AlVwE%2FIC1hBEfHakYDr%2Fg2cVBGE4xpi7%2BhAq0Nq72l54xQE0CGYm1kHR%2BFVtPxNooSLlAdkJVER95nfEz3h1I%2Fkd8zr%2BxDJu7JI6vWL7Do6a%2FbdPART1pNQgQtUWZLXK6y14XfuipDrk%2FeBD0tNabZPT%2BbnKedA7jeidjsR7ty91%2FUIinRQ47wd11zGJCYQEcc5kDLHYvRwopV%2BEBPNlu5lAau%2F6nTDAmDLKLfCBZlZ9NBPPgxeUaI0Ue%2B9yqMCagS%2B4bxUnytqQcwbll0KKBxAAp9xeYRKzBevWC6g%2FacjmwtZKsKvI6pp%2FJ%2F5jEiV7j1ACRu7ZG3xZmD%2FXj%2FoWpO6IeksWCrucNeevWIFQwQNhqDEE0AIzkK5be2lKmCVYqCT9RXwe4JAnd%2Fl7yeV6xYZkdK9DpQKj8QBKDWgWz%2FqjQDdHhVJ6ntI0iea90mqaJq1pZdCkScK9y0OyqWfFW1qnQwoZQ%2FfeHqojGVwG6wzSf4qXg3W2iow3lg14nNcc75E3plip2%2B2kK%2FYkBuwbtJ0kPem6UTj29bHsPeCGMzaQUx%2BxHQf5MjqtG2P9gPb2DFB5qzJlzEN96E16UAl0q1jwXJ%2FhtH8BArsg7X%2FM3xoT3YVVocS4UEVhxhAF8lw3yTDUQiGUwgmtcMUKNQybqt%2B63jlNytQXX4j%2BHIRWiRyDpAkdW2ZTbTMTe4UGNFrq0w2qCrve04f3mUqxAeNJf9P9RomTZTYhIQVK%2FiRQNqwT4zX%2Bjn9AzyR8SKrthL1Ynrm7hFGwCfSPteFRb9RdDXfvzKR7NEMD8A7YnkovQa73AOpBUCH1g7e1J5VpKdXRi5urzZDrI%2BnxNjNlWBWik8F%2FYUWkSMWWxYDj0nDo3KAPHt13hLEiluRhibHg0o1s%2BA6%2B8ZcCKcQ3wu0eGbnckeFYxFgYtRsTIJcvlqac9wgwHsMneMnARnvm2DZnkQIoHuxAAL5VckKlE5suewRr7V7vBKhQsIRljFizmJMpzHIJ3hVXSYsNM44EPuxejsgZBPN8fkHeE1r%2BWARBrxetypLV%2FtVEUFObjGaBldm10LdTFbXZ7UqRu4ABc7XlB4LCYJig8oqjnB3wdyaQudc%2BB8nbVURt2%2Fesv%2BNXv3jEFDJ5P1e6vjSbW%2BpDaqUUHgttOVWQDTcPehFbJvbQmQrMF%2FXyUbCVy5J3hDuZzX3G5cxd2nWTSea2poIFVIFq3pwuY8oUP0owmkQ4tnWDiPrDoiJbQr72Ua5tu0rLM7FjKOmTQEFWa7YfxSn%2BUm1ZiPfGUJzZ0Bex25b%2BDQRlOWL2S%2Brs8Xj2ZVBRAeSk4ZpBBVq%2FT341Jj2X7tHqPMkXc8T0oUD18%2BhQdTWqxtwUQsJw2l6sTMn5kC0dGV%2F5txNTY24C%2FAyfMHYDgWsQxasQgo3mGPBwytXMmt5jrd6SmVtHIjy3%2BpxCpVBu6VuQHq%2B9pZgdt8GQR52HCplxBy943weAhQoGWE6rNajjlbYTSYhWknKtjnOpQUXreVVV9gucJMmGnlHbKa3uW7sxnIPbMNYPbM4VVQ1y48Wo9%2BpnfT6kIyod181Ma4Fys2PYaI1iYla9A4C8Wm7bP3J262J53CY%2BmK93otHZVozurwayRSRbrHP8rJkjmvZUYzq01cv6q8aU6KUxeLESvSqg%2BUO0nK%2BotKcVczjapuECiDuRkvOQ5DAUzrlgaNC8tefp1hAij%2F8AdVGeeUgR1GkAAAAASUVORK5CYII%3D%22)%202x)%3B%0A%20%20%20%20%20%20background-repeat%3A%20no-repeat%3B%0A%20%20%20%20%20%20background-size%3A%2026px%2028px%3B%0A%20%20%20%20%20%20display%3A%20inline-block%3B%0A%20%20%20%20%20%20height%3A%2028px%3B%0A%20%20%20%20%20%20margin%3A%200%200%2024px%3B%0A%20%20%20%20%20%20transform-origin%3A%2050%25%2050%25%3B%0A%20%20%20%20%20%20width%3A%2026px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40keyframes%20icon-spin%20%7B%0A%20%20%20%20%20%20100%25%20%7B%0A%20%20%20%20%20%20%20%20transform%3A%20rotate(360deg)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20color%3A%20var(--heading-color)%3B%0A%20%20%20%20%20%20font-size%3A%201.2em%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20line-height%3A%201.2em%3B%0A%20%20%20%20%20%20margin%3A%200%200%2012px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-message%20%3E%20p%20%7B%0A%20%20%20%20%20%20display%3A%20inline%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20p%20%7B%0A%20%20%20%20%20%20margin-block-end%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20ul%20%7B%0A%20%20%20%20%20%20margin-top%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.error-code%20%7B%0A%20%20%20%20%20%20color%3A%20var(--error-code-color)%3B%0A%20%20%20%20%20%20font-size%3A%20.8em%3B%0A%20%20%20%20%20%20margin-top%3A%2024px%3B%0A%20%20%20%20%20%20text-transform%3A%20uppercase%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20gap%3A%208px%3B%0A%20%20%20%20%20%20justify-content%3A%20flex-start%3B%0A%20%20%20%20%20%20margin-top%3A%2051px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%5Bdir%3D%22rtl%22%5D%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper-end%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20none%3B%0A%20%20%20%20%20%20margin%3A%200%200%2050px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-frame-error.showing-details%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20block%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestions%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-header%20%7B%0A%20%20%20%20%20%20font-weight%3A%20bold%3B%0A%20%20%20%20%20%20margin-bottom%3A%204px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20color%3A%20%23777%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20%20%20filter%3A%20brightness(1.2)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20700px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20padding%3A%200%2010%25%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20420px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%207vh%20auto%2012px%3B%0A%20%20%20%20%20%20%20%20padding%3A%200%2024px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin-top%3A%2030px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%2020px%200%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20%20%20font-size%3A%201.5em%3B%0A%20%20%20%20%20%20%20%20margin-bottom%3A%208px%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%20class%3D%22neterror%22%3E%0A%20%20%3Cdiv%20id%3D%22main-frame-error%22%20class%3D%22interstitial-wrapper%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22main-content%22%3E%0A%20%20%20%20%20%20%3Cdiv%20class%3D%22icon%22%20aria-hidden%3D%22true%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22main-message%22%3E%0A%20%20%20%20%20%20%20%20%3Ch1%3EThis%20page%20crashed%3C%2Fh1%3E%0A%20%20%20%20%20%20%20%20%3Cp%3Ewww.campfirewriting.com%20crashed%20unexpectedly%3C%2Fp%3E%0A%0A%0A%20%20%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22buttons%22%20class%3D%22nav-wrapper%20nav-wrapper-end%22%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22open-in-browser-button%22%20type%3D%22button%22%3EOpen%20in%20external%20browser%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22reload-button%22%20type%3D%22button%22%3EReload%3C%2Fbutton%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22details%22%3E%0A%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cscript%3E%0A%20%20%20%20(()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20failedUrl%20%3D%20%22https%3A%2F%2Fwww.campfirewriting.com%2Fwrite%2Fstory%2F659b388d366efbc6ae6a49ad%2Fspecies%2Fspecies%2F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20externalBrowserActionUrl%20%3D%20%22codex-browser-sidebar%3A%2F%2Fopen-external%3Furl%3Dhttps%253A%252F%252Fwww.campfirewriting.com%252Fwrite%252Fstory%252F659b388d366efbc6ae6a49ad%252Fspecies%252Fspecies%252F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20main%20%3D%20document.getElementById(%22main-frame-error%22)%3B%0A%20%20%20%20%20%20const%20details%20%3D%20document.getElementById(%22details%22)%3B%0A%20%20%20%20%20%20const%20detailsLink%20%3D%20document.getElementById(%22details-link%22)%3B%0A%20%20%20%20%20%20const%20openInBrowserButton%20%3D%20document.getElementById(%22open-in-browser-button%22)%3B%0A%20%20%20%20%20%20const%20reloadButton%20%3D%20document.getElementById(%22reload-button%22)%3B%0A%20%20%20%20%20%20const%20setDetailsVisible%20%3D%20(visible)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20main.classList.toggle(%22showing-details%22%2C%20visible)%3B%0A%20%20%20%20%20%20%20%20detailsLink%3F.setAttribute(%22aria-expanded%22%2C%20String(visible))%3B%0A%20%20%20%20%20%20%20%20if%20(visible)%20%7B%0A%20%20%20%20%20%20%20%20%20%20details.setAttribute(%22tabindex%22%2C%20%22-1%22)%3B%0A%20%20%20%20%20%20%20%20%20%20details.focus()%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20detailsLink%3F.addEventListener(%22click%22%2C%20(event)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20event.preventDefault()%3B%0A%20%20%20%20%20%20%20%20setDetailsVisible(!main.classList.contains(%22showing-details%22))%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20reloadButton.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20failedUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20openInBrowserButton%3F.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20externalBrowserActionUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D)()%3B%0A%20%20%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E",
+      "capturedAt": "2026-09-05T10:01:22.771Z",
+      "mode": "direct"
+    },
+    {
+      "order": 91,
+      "item": {
+        "childrenCount": 0,
+        "expanded": false,
+        "id": "69ed1fe8c9a3ea9ca6bd1292",
+        "module": "Species",
+        "name": "New Species",
+        "order": 91,
+        "sameIdIndex": 0,
+        "url": "https://www.campfirewriting.com/write/story/659b388d366efbc6ae6a49ad/species/species/69ed1fe8c9a3ea9ca6bd1292",
+        "routable": true
+      },
+      "error": "Blocked browser navigation by Browser Use URL policy: data:text/html;charset=utf-8,%3C!DOCTYPE%20html%3E%0A%3Chtml%20dir%3D%22ltr%22%20lang%3D%22en-US%22%3E%0A%3Chead%3E%0A%20%20%3Cmeta%20charset%3D%22utf-8%22%3E%0A%20%20%3Cmeta%20name%3D%22color-scheme%22%20content%3D%22light%20dark%22%3E%0A%20%20%3Cmeta%20name%3D%22theme-color%22%20content%3D%22%23fff%22%3E%0A%20%20%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1.0%2C%20maximum-scale%3D1.0%2C%20user-scalable%3Dno%22%3E%0A%20%20%3Ctitle%3EThis%20page%20crashed%3C%2Ftitle%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20body%20%7B%0A%20%20%20%20%20%20--background-color%3A%20%23fff%3B%0A%20%20%20%20%20%20--error-code-color%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-blue-300%3A%20rgb(138%2C%20180%2C%20248)%3B%0A%20%20%20%20%20%20--google-gray-300%3A%20rgb(218%2C%20220%2C%20224)%3B%0A%20%20%20%20%20%20--google-gray-500%3A%20rgb(154%2C%20160%2C%20166)%3B%0A%20%20%20%20%20%20--google-gray-700%3A%20rgb(95%2C%2099%2C%20104)%3B%0A%20%20%20%20%20%20--google-gray-900%3A%20rgb(32%2C%2033%2C%2036)%3B%0A%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20--link-color%3A%20rgb(88%2C%2088%2C%2088)%3B%0A%20%20%20%20%20%20--button-fill-color%3A%20rgb(26%2028%2031%20%2F%205%25)%3B%0A%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(26%2028%2031%20%2F%2010%25)%3B%0A%20%20%20%20%20%20--button-text-color%3A%20%231a1c1f%3B%0A%20%20%20%20%20%20--text-color%3A%20var(--google-gray-700)%3B%0A%20%20%20%20%20%20background%3A%20var(--background-color)%3B%0A%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20font-family%3A%20system-ui%2C%20sans-serif%3B%0A%20%20%20%20%20%20font-size%3A%2070%25%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20overflow-wrap%3A%20break-word%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20body%20%7B%0A%20%20%20%20%20%20%20%20--background-color%3A%20var(--google-gray-900)%3B%0A%20%20%20%20%20%20%20%20--error-code-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--heading-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%20%20--link-color%3A%20var(--google-blue-300)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color%3A%20rgb(255%20255%20255%20%2F%205%25)%3B%0A%20%20%20%20%20%20%20%20--button-fill-color-active%3A%20rgb(255%20255%20255%20%2F%2010%25)%3B%0A%20%20%20%20%20%20%20%20--button-text-color%3A%20%23fff%3B%0A%20%20%20%20%20%20%20%20--text-color%3A%20var(--google-gray-500)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20html%20%7B%0A%20%20%20%20%20%20-webkit-text-size-adjust%3A%20100%25%3B%0A%20%20%20%20%20%20font-size%3A%20125%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20a%20%7B%0A%20%20%20%20%20%20color%3A%20var(--link-color)%3B%0A%20%20%20%20%20%20text-decoration%3A%20none%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%20%7B%0A%20%20%20%20%20%20align-items%3A%20center%3B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color)%3B%0A%20%20%20%20%20%20border%3A%201px%20solid%20transparent%3B%0A%20%20%20%20%20%20border-radius%3A%208px%3B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20color%3A%20var(--button-text-color)%3B%0A%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20display%3A%20inline-flex%3B%0A%20%20%20%20%20%20font-family%3A%20inherit%3B%0A%20%20%20%20%20%20font-size%3A%2013px%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20justify-content%3A%20center%3B%0A%20%20%20%20%20%20line-height%3A%2018px%3B%0A%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20min-height%3A%2028px%3B%0A%20%20%20%20%20%20padding%3A%200%208px%3B%0A%20%20%20%20%20%20user-select%3A%20none%3B%0A%20%20%20%20%20%20white-space%3A%20nowrap%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Aactive%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20button%3Ahover%20%7B%0A%20%20%20%20%20%20background%3A%20var(--button-fill-color-active)%3B%0A%20%20%20%20%20%20outline%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20box-sizing%3A%20border-box%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%20%20line-height%3A%201.6em%3B%0A%20%20%20%20%20%20margin%3A%2020vh%20auto%200%3B%0A%20%20%20%20%20%20max-width%3A%20600px%3B%0A%20%20%20%20%20%20width%3A%20100%25%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20-webkit-user-select%3A%20none%3B%0A%20%20%20%20%20%20animation%3A%20icon-spin%203s%20linear%20infinite%3B%0A%20%20%20%20%20%20background-image%3A%20image-set(url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABoAAAAcCAYAAAB%2FE6%2FTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOPSURBVHgBpVZdUhpBEO6eXQ1v4QZZTyCW%2Bpz1BOIJAg%2BpEitVkhMIJwBe1DfwBJoTuHkVKfAEIScIeQu4O52enZ3dWViUmK4Cdufv66%2F76x4Q%2FtWa4%2FLW4tmTQnhR6Ezgem%2B6yTZ3k0VbZw%2BVCJxjAqrCPKqEIAAiAMRoQgB7m5zxMtDp2OPD%2BiGBD0AFC7AMG9paIHE2uiCKWkvDM%2F4EzOw7kJhBSdzBhoYrI5wDnEe3%2FORbowERtaHkTqC7N4M3mLsCsoju%2BamSjMzY%2BzZcHXbhPy0HJBayQ2RAcEokjtapqtQce2EYeihp9ry9NX2NaRo653RUk0j9l0DcL0M%2FivACNOPy0kkTAdiLtjlvBaAaKFaX5JCRp16JnJ0cSHHe1vk%2BFQjt6HJ%2FkHNSfQkMqwToaRDOiQ2inJgrJ8Cz9gWI8MSrZ3oP7vJPVU%2BRJwn6rNoP8nK%2FnQMiEOe6TnAKJSeXeBTMhAyICqmsw%2FVhsFJV7BBAWEOMQ6scbonG8LdMhIRJ3O%2FjF8QBe1E3e3N54xzQtnP0qrx5D6a5ZtWSs6ciJGSUShmklDf2Hino3DyTdE5sENWWlJOaiWXX%2BwMuia%2FJW1l1FvUggDBbWHKn6TMLAIzUib7ZeeP4c1sSYxUJPuiHaIw68XpjOlxB8uarOVakJdNudpgbhilTTnxgO83xr%2BbegZpiLi%2FsMQR2zjg2D2sC1lgoaW0uWAh1Bu%2FpELGAEjCblSQ364OIHocOsgObVrxVtacH43EO6ergTl4eNFWIBEEqYfiTRSFf7PieQ0fpgLOQfjqnEx8kb5z0oQ9F7AR8hA1M2BQlUc7zuHiNT4i3ztmoZs87jccqr0nGOIRcX%2BkkqzJbKX%2BKhKJZUM3JVRVmBlZmR%2FrYePzFn3v1KwFuU6dA9nIMCP2MAE6E9hxvMs%2Bjjr2BwVo2M9DN1AerqcbzS1eJ7jYJU86pVh0Xmap8w4pbR3MVzNlRStPsldJwGiuP6EjN59jw7WwatCmN7Ib9%2FFBBV4xTZixd%2BYYLT%2F8FoJZhY66b%2FFXOTBCwk4FhV5LobfSXSlU%2FF21cT4lxvZ2osOmzlu102DId2HjF9AdSiptCQAWwkOfMQgFYecN6nJLU6SJj2WpmOs42KI8xsAoJ8aFYWV2jOjad5KS%2BFihmZu4X8angsCJTAD1uzN31V%2FlrxneMQPIJYTe5BJMQxWENJMkneOcOXrqr%2FgLOd9dS8TJZjQAAAABJRU5ErkJggg%3D%3D%22)%201x%2C%20url(%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAA4CAYAAACyutuQAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAbPSURBVHgB3Vpdcts2EF5ASuK36gZVThB5ovQ18gnqnqDOQ2dstzOWTxD5BIlfbM%2F0Ic4J4pygymttj5QTRDlB1bfEIbHdBSSaIRcgRDFNJt%2BMLIsEQC6wP98uAPCdQcGXxnDSuXPzqWug1UMwXQD94%2BLBb9KTh%2BfQML6IQO0%2FLgfG6MeIOKCfPfp0QHw4HprTR8%2BhQTQnEK2EvjEHiLADgN3IXjM87d%2BHBtGGdbE76WptnuLHdBs9KxHAHBpGfYF4RT6SIJAOaVVqgVTyNTSMWiqn969YtUaw8oqoGYkxU0rNDDkF%2BOpOwdnJM5rZncgeYwRaBYQpbLSn8HyzcRUrIl4gshWlzF%2FVBq9miOYlCfD8%2FxCgiDgb%2Bu3vnlIpCRNSMSvIEzjrj%2BErologFqatQ8LMSa2O4LTfaDypi7DKWTVLJ%2BAXZozYolXZnME3Av8KZTYjC0OO4QjOHo3gG4NXIKXTV%2BSdutI9UrFDEmZ1FcvzOjQd0o%2BOAj0DjXNtzOzTyU9TWBOiyun966e0AiPpHqIiFYuPH7e8LpoSjbVSL1Ojx3VUuSyQs5t3UuNV1IwFSVP1lP4dQE1QAD6nyThaRbCSQGrv6hV9bYuDnzx8AlVwE%2FIC1hBEfHakYDr%2Fg2cVBGE4xpi7%2BhAq0Nq72l54xQE0CGYm1kHR%2BFVtPxNooSLlAdkJVER95nfEz3h1I%2Fkd8zr%2BxDJu7JI6vWL7Do6a%2FbdPART1pNQgQtUWZLXK6y14XfuipDrk%2FeBD0tNabZPT%2BbnKedA7jeidjsR7ty91%2FUIinRQ47wd11zGJCYQEcc5kDLHYvRwopV%2BEBPNlu5lAau%2F6nTDAmDLKLfCBZlZ9NBPPgxeUaI0Ue%2B9yqMCagS%2B4bxUnytqQcwbll0KKBxAAp9xeYRKzBevWC6g%2FacjmwtZKsKvI6pp%2FJ%2F5jEiV7j1ACRu7ZG3xZmD%2FXj%2FoWpO6IeksWCrucNeevWIFQwQNhqDEE0AIzkK5be2lKmCVYqCT9RXwe4JAnd%2Fl7yeV6xYZkdK9DpQKj8QBKDWgWz%2FqjQDdHhVJ6ntI0iea90mqaJq1pZdCkScK9y0OyqWfFW1qnQwoZQ%2FfeHqojGVwG6wzSf4qXg3W2iow3lg14nNcc75E3plip2%2B2kK%2FYkBuwbtJ0kPem6UTj29bHsPeCGMzaQUx%2BxHQf5MjqtG2P9gPb2DFB5qzJlzEN96E16UAl0q1jwXJ%2FhtH8BArsg7X%2FM3xoT3YVVocS4UEVhxhAF8lw3yTDUQiGUwgmtcMUKNQybqt%2B63jlNytQXX4j%2BHIRWiRyDpAkdW2ZTbTMTe4UGNFrq0w2qCrve04f3mUqxAeNJf9P9RomTZTYhIQVK%2FiRQNqwT4zX%2Bjn9AzyR8SKrthL1Ynrm7hFGwCfSPteFRb9RdDXfvzKR7NEMD8A7YnkovQa73AOpBUCH1g7e1J5VpKdXRi5urzZDrI%2BnxNjNlWBWik8F%2FYUWkSMWWxYDj0nDo3KAPHt13hLEiluRhibHg0o1s%2BA6%2B8ZcCKcQ3wu0eGbnckeFYxFgYtRsTIJcvlqac9wgwHsMneMnARnvm2DZnkQIoHuxAAL5VckKlE5suewRr7V7vBKhQsIRljFizmJMpzHIJ3hVXSYsNM44EPuxejsgZBPN8fkHeE1r%2BWARBrxetypLV%2FtVEUFObjGaBldm10LdTFbXZ7UqRu4ABc7XlB4LCYJig8oqjnB3wdyaQudc%2BB8nbVURt2%2Fesv%2BNXv3jEFDJ5P1e6vjSbW%2BpDaqUUHgttOVWQDTcPehFbJvbQmQrMF%2FXyUbCVy5J3hDuZzX3G5cxd2nWTSea2poIFVIFq3pwuY8oUP0owmkQ4tnWDiPrDoiJbQr72Ua5tu0rLM7FjKOmTQEFWa7YfxSn%2BUm1ZiPfGUJzZ0Bex25b%2BDQRlOWL2S%2Brs8Xj2ZVBRAeSk4ZpBBVq%2FT341Jj2X7tHqPMkXc8T0oUD18%2BhQdTWqxtwUQsJw2l6sTMn5kC0dGV%2F5txNTY24C%2FAyfMHYDgWsQxasQgo3mGPBwytXMmt5jrd6SmVtHIjy3%2BpxCpVBu6VuQHq%2B9pZgdt8GQR52HCplxBy943weAhQoGWE6rNajjlbYTSYhWknKtjnOpQUXreVVV9gucJMmGnlHbKa3uW7sxnIPbMNYPbM4VVQ1y48Wo9%2BpnfT6kIyod181Ma4Fys2PYaI1iYla9A4C8Wm7bP3J262J53CY%2BmK93otHZVozurwayRSRbrHP8rJkjmvZUYzq01cv6q8aU6KUxeLESvSqg%2BUO0nK%2BotKcVczjapuECiDuRkvOQ5DAUzrlgaNC8tefp1hAij%2F8AdVGeeUgR1GkAAAAASUVORK5CYII%3D%22)%202x)%3B%0A%20%20%20%20%20%20background-repeat%3A%20no-repeat%3B%0A%20%20%20%20%20%20background-size%3A%2026px%2028px%3B%0A%20%20%20%20%20%20display%3A%20inline-block%3B%0A%20%20%20%20%20%20height%3A%2028px%3B%0A%20%20%20%20%20%20margin%3A%200%200%2024px%3B%0A%20%20%20%20%20%20transform-origin%3A%2050%25%2050%25%3B%0A%20%20%20%20%20%20width%3A%2026px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40keyframes%20icon-spin%20%7B%0A%20%20%20%20%20%20100%25%20%7B%0A%20%20%20%20%20%20%20%20transform%3A%20rotate(360deg)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20color%3A%20var(--heading-color)%3B%0A%20%20%20%20%20%20font-size%3A%201.2em%3B%0A%20%20%20%20%20%20font-weight%3A%20500%3B%0A%20%20%20%20%20%20line-height%3A%201.2em%3B%0A%20%20%20%20%20%20margin%3A%200%200%2012px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-message%20%3E%20p%20%7B%0A%20%20%20%20%20%20display%3A%20inline%3B%0A%20%20%20%20%20%20font-size%3A%201em%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20p%20%7B%0A%20%20%20%20%20%20margin-block-end%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23suggestions-list%20ul%20%7B%0A%20%20%20%20%20%20margin-top%3A%200%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.error-code%20%7B%0A%20%20%20%20%20%20color%3A%20var(--error-code-color)%3B%0A%20%20%20%20%20%20font-size%3A%20.8em%3B%0A%20%20%20%20%20%20margin-top%3A%2024px%3B%0A%20%20%20%20%20%20text-transform%3A%20uppercase%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20gap%3A%208px%3B%0A%20%20%20%20%20%20justify-content%3A%20flex-start%3B%0A%20%20%20%20%20%20margin-top%3A%2051px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%5Bdir%3D%22rtl%22%5D%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.nav-wrapper-end%20%7B%0A%20%20%20%20%20%20justify-content%3A%20flex-end%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20none%3B%0A%20%20%20%20%20%20margin%3A%200%200%2050px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%23main-frame-error.showing-details%20%23details%20%7B%0A%20%20%20%20%20%20display%3A%20block%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestions%20%7B%0A%20%20%20%20%20%20margin-top%3A%2018px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-header%20%7B%0A%20%20%20%20%20%20font-weight%3A%20bold%3B%0A%20%20%20%20%20%20margin-bottom%3A%204px%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20color%3A%20%23777%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(prefers-color-scheme%3A%20dark)%20%7B%0A%20%20%20%20%20%20.icon%20%7B%0A%20%20%20%20%20%20%20%20filter%3A%20brightness(1.2)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.suggestion-body%20%7B%0A%20%20%20%20%20%20%20%20color%3A%20var(--text-color)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20700px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20padding%3A%200%2010%25%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%40media%20(max-width%3A%20420px)%20%7B%0A%20%20%20%20%20%20.interstitial-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%207vh%20auto%2012px%3B%0A%20%20%20%20%20%20%20%20padding%3A%200%2024px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20.nav-wrapper%20%7B%0A%20%20%20%20%20%20%20%20margin-top%3A%2030px%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%23details%20%7B%0A%20%20%20%20%20%20%20%20margin%3A%2020px%200%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20h1%20%7B%0A%20%20%20%20%20%20%20%20font-size%3A%201.5em%3B%0A%20%20%20%20%20%20%20%20margin-bottom%3A%208px%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%20class%3D%22neterror%22%3E%0A%20%20%3Cdiv%20id%3D%22main-frame-error%22%20class%3D%22interstitial-wrapper%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22main-content%22%3E%0A%20%20%20%20%20%20%3Cdiv%20class%3D%22icon%22%20aria-hidden%3D%22true%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22main-message%22%3E%0A%20%20%20%20%20%20%20%20%3Ch1%3EThis%20page%20crashed%3C%2Fh1%3E%0A%20%20%20%20%20%20%20%20%3Cp%3Ewww.campfirewriting.com%20crashed%20unexpectedly%3C%2Fp%3E%0A%0A%0A%20%20%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22buttons%22%20class%3D%22nav-wrapper%20nav-wrapper-end%22%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22open-in-browser-button%22%20type%3D%22button%22%3EOpen%20in%20external%20browser%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20id%3D%22reload-button%22%20type%3D%22button%22%3EReload%3C%2Fbutton%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22details%22%3E%0A%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cscript%3E%0A%20%20%20%20(()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20failedUrl%20%3D%20%22https%3A%2F%2Fwww.campfirewriting.com%2Fwrite%2Fstory%2F659b388d366efbc6ae6a49ad%2Fspecies%2Fspecies%2F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20externalBrowserActionUrl%20%3D%20%22codex-browser-sidebar%3A%2F%2Fopen-external%3Furl%3Dhttps%253A%252F%252Fwww.campfirewriting.com%252Fwrite%252Fstory%252F659b388d366efbc6ae6a49ad%252Fspecies%252Fspecies%252F675d4827ad225c61864d1304%22%3B%0A%20%20%20%20%20%20const%20main%20%3D%20document.getElementById(%22main-frame-error%22)%3B%0A%20%20%20%20%20%20const%20details%20%3D%20document.getElementById(%22details%22)%3B%0A%20%20%20%20%20%20const%20detailsLink%20%3D%20document.getElementById(%22details-link%22)%3B%0A%20%20%20%20%20%20const%20openInBrowserButton%20%3D%20document.getElementById(%22open-in-browser-button%22)%3B%0A%20%20%20%20%20%20const%20reloadButton%20%3D%20document.getElementById(%22reload-button%22)%3B%0A%20%20%20%20%20%20const%20setDetailsVisible%20%3D%20(visible)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20main.classList.toggle(%22showing-details%22%2C%20visible)%3B%0A%20%20%20%20%20%20%20%20detailsLink%3F.setAttribute(%22aria-expanded%22%2C%20String(visible))%3B%0A%20%20%20%20%20%20%20%20if%20(visible)%20%7B%0A%20%20%20%20%20%20%20%20%20%20details.setAttribute(%22tabindex%22%2C%20%22-1%22)%3B%0A%20%20%20%20%20%20%20%20%20%20details.focus()%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20detailsLink%3F.addEventListener(%22click%22%2C%20(event)%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20event.preventDefault()%3B%0A%20%20%20%20%20%20%20%20setDetailsVisible(!main.classList.contains(%22showing-details%22))%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20reloadButton.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20failedUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20openInBrowserButton%3F.addEventListener(%22click%22%2C%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20window.location.href%20%3D%20externalBrowserActionUrl%3B%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D)()%3B%0A%20%20%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E",
+      "capturedAt": "2026-09-05T10:01:22.800Z",
+      "mode": "direct"
+    }
+  ]
+}
