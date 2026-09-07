@@ -174,6 +174,13 @@ const ITEMS = {
     price: 8,
     description: "At the start of each round, deal 20 damage to a random SINNER. If this kills, heal 5. ELITE doubles the damage each level, while healing stays fixed."
   },
+  p15: {
+    id: "p15",
+    type: "passive",
+    name: "Seal of Bathin",
+    price: 8,
+    description: "Whenever memory is added to a SINNER, each memory has a 50% chance to heal you for 1 health. ELITE adds SIN instead of more healing."
+  },
   p16: {
     id: "p16",
     type: "passive",
@@ -575,6 +582,7 @@ const PASSIVE_IDS = [
   "p12",
   "p13",
   "p14",
+  "p15",
   "p16",
   "p17",
   "p18",
@@ -668,6 +676,7 @@ const SEAL_SIGILS = {
   p12: "018_Belial.png",
   p13: "023_Bune.png",
   p14: "042_Leraje.png",
+  p15: "016_Bathin.png",
   p16: "013_Bael.png",
   p17: "028_Dantalion.png",
   p18: "019_Benith.png",
@@ -723,6 +732,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p12: "68-belial.png",
   p13: "26-bune-bime.png",
   p14: "14-leraje.png",
+  p15: "18-bathin.png",
   p16: "01-bael.png",
   p17: "71-dantalion.png",
   p18: "28-berith.png",
@@ -780,7 +790,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "eligos", name: "Eligos", image: "15-eligos.png" },
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
   { key: "botis", name: "Botis", image: "17-botis.png" },
-  { key: "bathin", name: "Bathin", image: "18-bathin.png" },
+  { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
   { key: "sallos", name: "Sallos", image: "19-sallos.png" },
   { key: "purson", name: "Purson", image: "20-purson.png", passiveId: "p39" },
   { key: "marax", name: "Marax", image: "21-marax-morax.png", passiveId: "p51" },
@@ -1377,15 +1387,35 @@ function memoryEntryForBot(bot) {
   };
 }
 
+function applyMemoryAddedHealing(bot, amount) {
+  const memoriesAdded = Math.max(0, Math.ceil(amount));
+  if (!state.roundState || !bot || bot.eliminated || memoriesAdded <= 0 || state.player.hp <= 0) return;
+  orderedPassiveEffectEntries("p15").forEach((entry) => {
+    let heals = 0;
+    for (let index = 0; index < memoriesAdded; index += 1) {
+      if (Math.random() < 0.5) heals += 1;
+    }
+    if (!heals) return;
+    markPassiveEntryTriggered(entry);
+    healPlayer(heals, `Seal of Bathin healed you from ${bot.name}'s memory growth.`, "Seal of Bathin");
+    const creditBonus = passiveEntryHealEliteCredits(entry, 1) * heals;
+    if (!creditBonus) return;
+    const gained = gainCredits(creditBonus, true, "Seal of Bathin ELITE");
+    addRoundEvent(`Seal of Bathin ELITE converted memory healing into ${gained} SIN.`);
+  });
+}
+
 function addBotMemory(bot, count, reason = "") {
   if (!bot || bot.eliminated || count <= 0) return 0;
+  const added = Math.ceil(count);
   const entry = memoryEntryForBot(bot);
-  for (let index = 0; index < count; index += 1) {
+  for (let index = 0; index < added; index += 1) {
     bot.memory.push({ ...entry });
   }
   if (!bot.isBoss) bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
+  applyMemoryAddedHealing(bot, added);
   if (reason) state.roundState?.roundEvents.push(reason);
-  return count;
+  return added;
 }
 
 function initialMemoryEntries(count) {
@@ -1740,6 +1770,7 @@ function itemDescription(item) {
   if (item.id === "p14") {
     return `At the start of each round, deal ${flatDamageValue(item, 20)} damage to a random SINNER. If this kills, heal ${passiveBaseHeal(item, 5)}.${passiveHealCreditText(item, 5)}`;
   }
+  if (item.id === "p15") return `Whenever memory is added to a SINNER, each memory has a 50% chance to heal you for 1.${passiveHealCreditText(item, 1)}`;
   if (item.id === "p16") return `Your guess has x${tripleBallotWeight(item)} weight when calculating the target average.`;
   if (item.id === "p17") {
     return `At end of round, deal ${flatDamagePower(item)}x the total active memory to one random SINNER. If bosses are active, hit all bosses instead and exclude boss memory from the sum.`;
@@ -4220,6 +4251,7 @@ function rememberRound() {
         ...memoryEntry
       });
     }
+    applyMemoryAddedHealing(bot, memoryGain);
     if (!bot.isBoss) {
       bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
       if (memoryGrowthEntries.length && bot.memory.length >= ZEPAR_MEMORY_THRESHOLD) {

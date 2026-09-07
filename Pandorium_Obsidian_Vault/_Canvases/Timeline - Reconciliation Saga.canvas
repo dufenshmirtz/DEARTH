@@ -1,6 +1,0 @@
-{
-	"nodes":[
-		{"id":"group-ReconciliationSaga","type":"group","x":-90,"y":-60,"width":5100,"height":570,"label":"Reconciliation Saga","color":"4"}
-	],
-	"edges":[]
-}

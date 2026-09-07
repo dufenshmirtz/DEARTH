@@ -42,6 +42,10 @@ Seal of Barbatos (12 SIN)
 SINNERS with 6 or more SIN take 1.5x damage.
 ELITE levels: The damage multiplier scales by +20% per ELITE level.
 
+Seal of Bathin (8 SIN)
+Whenever memory is added to a SINNER, each memory has a 50% chance to heal you for 1 health.
+ELITE levels: Healing stays 1; each ELITE level gives +1 SIN whenever this heal triggers.
+
 Seal of Belial (11 SIN)
 At end of round, for every 10 SIN you have, deal 2 damage to every SINNER.
 ELITE levels: Each ELITE level doubles the damage per 10 SIN.
