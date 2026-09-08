@@ -12,6 +12,11 @@ const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;
 const BASE_TARGET_MODIFIER = 0.8;
 const FINAL_BOSS_TARGET_MODIFIER = 0.666;
+const SCALING_BREAKPOINT_BOSSES = 4;
+const BOT_HP_BONUS_PER_BOSS = 5;
+const BOT_HP_BONUS_PER_BOSS_LATE = 8;
+const BOSS_HP_BONUS_PER_SPAWN = 20;
+const BOSS_HP_BONUS_PER_SPAWN_LATE = 30;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 const ENDLESS_BOSS_INTERVAL = 8;
@@ -30,9 +35,7 @@ const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
 const READY_SFX_SRC = "assets/audio/Ready.mp3";
 const GUESS_SFX_VOLUME = 0.9;
 const READY_SFX_VOLUME = 0.2;
-const MAIN_MENU_LOGO_SRC = "assets/ui/nterth-logo.png";
-const MAIN_MENU_JESUS_SRC = "assets/ui/jesus.png";
-const MAIN_MENU_DEVIL_SRC = "assets/ui/satanikois.png";
+const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.2;
@@ -200,7 +203,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantalion",
     price: 12,
-    description: "At end of round, deal damage equal to the total memory of active SINNERS to one random SINNER. If any bosses are active, hit all bosses instead and exclude boss memory from the sum. ELITE doubles the damage each level."
+    description: "At end of round, deal damage equal to the total memory of all SINNERS on the board, including dead ones, to one random living SINNER. If any bosses are active, hit all active bosses instead and exclude boss memory from the sum. ELITE doubles the damage each level."
   },
   p18: {
     id: "p18",
@@ -1072,6 +1075,7 @@ const state = {
   playerDamageSources: [],
   playerHealSources: [],
   playerCreditSources: [],
+  sealStats: {},
   gameMemory: [],
   nextBotId: 1,
   nextItemUid: 1,
@@ -1116,6 +1120,23 @@ function applySoundSettings() {
   if (sealPurchaseSfx) sealPurchaseSfx.volume = sfxVolume(SEAL_PURCHASE_SFX_VOLUME);
   if (guessSfx) guessSfx.volume = sfxVolume(GUESS_SFX_VOLUME);
   if (readySfx) readySfx.volume = sfxVolume(READY_SFX_VOLUME);
+}
+
+function loadSoundSettings() {
+  try {
+    const raw = window.localStorage?.getItem(SOUND_SETTINGS_STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.musicVolume)) state.sound.musicVolume = clamp(saved.musicVolume, 0, 1);
+    if (Number.isFinite(saved.sfxVolume)) state.sound.sfxVolume = clamp(saved.sfxVolume, 0, 1);
+    if (typeof saved.muted === "boolean") state.sound.muted = saved.muted;
+  } catch (error) {}
+}
+
+function saveSoundSettings() {
+  try {
+    window.localStorage?.setItem(SOUND_SETTINGS_STORAGE_KEY, JSON.stringify(state.sound));
+  } catch (error) {}
 }
 
 function ensureSoundtrack() {
@@ -1358,6 +1379,13 @@ function botSin(bot) {
   if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
   if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
   return Math.max(0, Math.ceil(bot?.reward || 0));
+}
+
+function scalingBonus(progress, earlyStep, lateStep) {
+  const count = Math.max(0, Math.ceil(progress || 0));
+  const early = Math.min(count, SCALING_BREAKPOINT_BOSSES);
+  const late = Math.max(0, count - SCALING_BREAKPOINT_BOSSES);
+  return early * earlyStep + late * lateStep;
 }
 
 function botBossBounty(bot) {
@@ -1767,8 +1795,12 @@ function nonBossDamageMultiplier(bot, playerDealt = true) {
 }
 
 function scaledBotDamage(bot, amount, playerDealt = true) {
+  return scaledBotDamageDetails(bot, amount, playerDealt).damage;
+}
+
+function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   const damage = Math.max(0, Math.ceil(amount));
-  if (!damage) return 0;
+  if (!damage) return { damage: 0, baseDamage: 0, decarabiaDamage: 0 };
   let multiplier = nonBossDamageMultiplier(bot, playerDealt);
   if (multiplier > 1) markPassiveTriggered("p36");
 
@@ -1777,13 +1809,36 @@ function scaledBotDamage(bot, amount, playerDealt = true) {
     markPassiveTriggered("p46");
   }
 
+  const baseDamage = Math.ceil(damage * multiplier);
+  let finalDamage = baseDamage;
+  let decarabiaDamage = 0;
+
   if (bot && bot.memory?.length && passiveStack("p52")) {
     const memoryDamageRate = bot.isBoss ? 0.03 : 0.1;
-    multiplier *= 1 + bot.memory.length * memoryDamageRate * passivePower("p52");
-    markPassiveTriggered("p52");
+    const decarabiaMultiplier = 1 + bot.memory.length * memoryDamageRate * passivePower("p52");
+    finalDamage = Math.ceil(damage * multiplier * decarabiaMultiplier);
+    decarabiaDamage = Math.max(0, finalDamage - baseDamage);
+    if (decarabiaDamage > 0) markPassiveTriggered("p52");
   }
 
-  return Math.ceil(damage * multiplier);
+  return {
+    damage: finalDamage,
+    baseDamage: Math.max(0, finalDamage - decarabiaDamage),
+    decarabiaDamage
+  };
+}
+
+function scaledBotDamageSourceEntries(details, source) {
+  const entries = [];
+  const baseDamage = Math.max(0, Math.ceil(details?.baseDamage || 0));
+  const decarabiaDamage = Math.max(0, Math.ceil(details?.decarabiaDamage || 0));
+  if (baseDamage > 0) entries.push({ amount: baseDamage, source });
+  if (decarabiaDamage > 0) entries.push({ amount: decarabiaDamage, source: "Seal of Decarabia" });
+  return entries;
+}
+
+function recordScaledBotDamageSources(bot, details, source) {
+  scaledBotDamageSourceEntries(details, source).forEach((entry) => recordBotDamageSource(bot, entry.amount, entry.source));
 }
 
 function highestHealthNonBossBot() {
@@ -1847,7 +1902,7 @@ function itemDescription(item) {
   if (item.id === "p15") return `Whenever memory is added to a SINNER, each memory has a 50% chance to heal you for 1.${passiveHealCreditText(item, 1)}`;
   if (item.id === "p16") return `Your guess has x${tripleBallotWeight(item)} weight when calculating the target average.`;
   if (item.id === "p17") {
-    return `At end of round, deal ${flatDamagePower(item)}x the total active memory to one random SINNER. If bosses are active, hit all bosses instead and exclude boss memory from the sum.`;
+    return `At end of round, deal ${flatDamagePower(item)}x the total memory of all SINNERS on the board, including dead ones, to one random living SINNER. If bosses are active, hit all active bosses instead and exclude boss memory from the sum.`;
   }
   if (item.id === "p18") return `At end of round, this Seal's sell value increases by ${scaledPassiveValueForItem(item, 3)}.`;
   if (item.id === "p19") return `Every time a SINNER dies, deal ${flatDamageValue(item, 5)} damage to every other SINNER.`;
@@ -1895,10 +1950,7 @@ function markPassiveTriggered(id) {
 }
 
 function passiveLimit() {
-  let limit = BASE_PASSIVE_LIMIT;
-  if (state.bossKills >= 2) limit += 1;
-  if (state.bossKills >= 4) limit += 2;
-  return Math.min(MAX_PASSIVE_LIMIT, limit);
+  return Math.min(MAX_PASSIVE_LIMIT, BASE_PASSIVE_LIMIT + Math.floor(state.bossKills / 2));
 }
 
 function rerollCost() {
@@ -1995,6 +2047,22 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value);
+}
+
+function htmlWithLineBreaks(value) {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function renderSealTooltipHtml(item, displayName, description, disabledNotice, sale) {
+  const contribution = sealContributionSummary(item);
+  return `
+    <div class="tooltip-title">${escapeHtml(displayName)}</div>
+    <div class="tooltip-body">${htmlWithLineBreaks(`${disabledNotice || ""}${description}`)}</div>
+    <div class="seal-tooltip-footer">
+      <span>${contribution ? escapeHtml(contribution) : ""}</span>
+      <span>Sell ${sale} SIN</span>
+    </div>
+  `;
 }
 
 function sealSigilPath(item) {
@@ -2128,6 +2196,7 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Agares", "Seal of Agares"],
     ["Seal of Phenex", "Seal of Phenex"],
     ["Seal of Marax", "Seal of Marax"],
+    ["Seal of Decarabia", "Seal of Decarabia"],
     ["Seal of Belial", "Seal of Belial"],
     ["Seal of Dantalion", "Seal of Dantalion"],
     ["Seal of Sabnock", "Seal of Sabnock"],
@@ -2203,6 +2272,36 @@ function sourceTooltip(sources, kind = "damage") {
     .join("\n");
 }
 
+function sealIdFromStatSource(source) {
+  const sourceText = String(source || "").trim();
+  if (!sourceText) return "";
+  return (
+    PASSIVE_IDS.find((id) => {
+      const name = ITEMS[id]?.name;
+      return name && (sourceText === name || sourceText.startsWith(`${name} `));
+    }) || ""
+  );
+}
+
+function recordSealStatFromSource(kind, amount, source) {
+  const value = Math.max(0, Math.ceil(amount));
+  const id = sealIdFromStatSource(source);
+  if (!id || value <= 0) return;
+  const stats = state.sealStats[id] || { damage: 0, healing: 0, credits: 0 };
+  stats[kind] = (stats[kind] || 0) + value;
+  state.sealStats[id] = stats;
+}
+
+function sealContributionSummary(item) {
+  const stats = state.sealStats?.[item?.id];
+  if (!stats) return "";
+  const parts = [];
+  if (stats.damage > 0) parts.push(`${stats.damage} damage`);
+  if (stats.healing > 0) parts.push(`${stats.healing} healing`);
+  if (stats.credits > 0) parts.push(`${stats.credits} SIN`);
+  return parts.length ? `Total: ${parts.join(" / ")}` : "";
+}
+
 function recordPlayerDamageSource(amount, source) {
   const damage = Math.max(0, Math.ceil(amount));
   if (damage <= 0 || !source) return;
@@ -2215,6 +2314,7 @@ function recordPlayerHealSource(amount, source) {
   if (healed <= 0 || !source) return;
   state.playerHealSources = state.playerHealSources || [];
   state.playerHealSources.push({ amount: healed, source });
+  recordSealStatFromSource("healing", healed, source);
 }
 
 function recordPlayerCreditSource(amount, source) {
@@ -2222,6 +2322,7 @@ function recordPlayerCreditSource(amount, source) {
   if (credits <= 0 || !source) return;
   state.playerCreditSources = state.playerCreditSources || [];
   state.playerCreditSources.push({ amount: credits, source });
+  recordSealStatFromSource("credits", credits, source);
 }
 
 function recordBotSinSource(bot, amount, source) {
@@ -2239,6 +2340,7 @@ function recordBotDamageSource(bot, amount, source) {
   if (!source) return;
   bot.damageSources = bot.damageSources || [];
   bot.damageSources.push({ amount: damage, source });
+  recordSealStatFromSource("damage", damage, source);
 }
 
 function recordBotRoundDamage(bot, amount) {
@@ -2274,15 +2376,17 @@ function recordBotHealSource(bot, amount, source) {
   if (!bot || healed <= 0 || !source) return;
   bot.healSources = bot.healSources || [];
   bot.healSources.push({ amount: healed, source });
+  recordSealStatFromSource("healing", healed, source);
 }
 
 function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, playerDealt = true) {
-  const damage = scaledBotDamage(bot, amount, playerDealt);
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
   if (!bot || damage <= 0) return;
   botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
   if (botDamageSources) {
     const sources = botDamageSources.get(bot.id) || [];
-    sources.push({ amount: damage, source: source || "Unknown" });
+    sources.push(...scaledBotDamageSourceEntries(damageDetails, source || "Unknown"));
     botDamageSources.set(bot.id, sources);
   }
 }
@@ -2463,7 +2567,11 @@ function botReward(bot) {
 }
 
 function botHealthBonus() {
-  return state.bossKills * 5;
+  return scalingBonus(state.bossKills, BOT_HP_BONUS_PER_BOSS, BOT_HP_BONUS_PER_BOSS_LATE);
+}
+
+function bossHealthBonus() {
+  return scalingBonus(state.bossSpawnCount, BOSS_HP_BONUS_PER_SPAWN, BOSS_HP_BONUS_PER_SPAWN_LATE);
 }
 
 function randomBotHealth() {
@@ -2505,11 +2613,12 @@ function activeBots() {
 
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
-  const damage = scaledBotDamage(bot, amount, playerDealt);
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
   if (!bot || bot.eliminated || damage <= 0) return 0;
   bot.lastDamage = (bot.lastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
-  recordBotDamageSource(bot, damage, sourceLabel);
+  recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
   if (bot.immortal) {
     bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
     if (reason) {
@@ -2527,14 +2636,15 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
 
 function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
-  const damage = scaledBotDamage(bot, amount, playerDealt);
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
   if (!bot || bot.eliminated || bot.hp <= 1 || damage <= 0) return 0;
   if (bot.immortal) {
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
     const reasonText = typeof reason === "function" ? reason(bot, damage) : reason;
     const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reasonText, "Damage");
-    recordBotDamageSource(bot, damage, sourceLabel);
+    recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
     if (reasonText) addRoundEvent(reasonText);
     return damage;
   }
@@ -2544,7 +2654,9 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   const dealt = before - bot.hp;
   const reasonText = typeof reason === "function" ? reason(bot, dealt) : reason;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reasonText, "Damage");
-  recordBotDamageSource(bot, dealt, sourceLabel);
+  scaleSourceEntries(scaledBotDamageSourceEntries(damageDetails, sourceLabel), dealt).forEach((entry) =>
+    recordBotDamageSource(bot, entry.amount, entry.source)
+  );
   if (reasonText && dealt > 0) {
     addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${dealt} non-lethal damage to ${bot.name}.` : reasonText);
   }
@@ -2554,7 +2666,8 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
 function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
   const eliminated = [];
   bots.forEach((bot) => {
-    const damage = scaledBotDamage(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damage = damageDetails.damage;
     if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
@@ -2564,7 +2677,7 @@ function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, play
         : typeof sourceFactory === "function"
           ? sourceFactory(bot, damage)
           : sourceFactory || sourceLabelFromReason(reason, "Damage");
-    recordBotDamageSource(bot, damage, source);
+    recordScaledBotDamageSources(bot, damageDetails, source);
     if (bot.immortal) {
       bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
       if (reason) addRoundEvent(reason);
@@ -2785,7 +2898,7 @@ function createBot(options = {}) {
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
   const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
-  const bossBaseHp = 80 + state.bossSpawnCount * 20;
+  const bossBaseHp = 80 + bossHealthBonus();
   const maxHp = isBoss ? bossBaseHp * (state.bossSpawnCount >= 4 ? 2 : 1) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
@@ -3139,6 +3252,7 @@ function startGame() {
   state.playerDamageSources = [];
   state.playerHealSources = [];
   state.playerCreditSources = [];
+  state.sealStats = {};
   state.gameMemory = [];
   state.pendingActive = null;
   state.gameOver = false;
@@ -3706,21 +3820,11 @@ function applyPenalties() {
     return;
   }
 
-  rememberRound();
-
-  if (state.player.hp <= 0) {
-    state.gameOver = true;
-    state.stage = "ended";
-    addLog("Game over. The table solved you first.");
-    return;
-  }
-
   state.stage = "summary";
   addLog("Penalties applied. Advance when ready.");
 }
 
 function finishGameOverRound() {
-  rememberRound();
   state.gameOver = true;
   state.stage = "ended";
   addLog("Game over. The table solved you first.");
@@ -4100,7 +4204,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const living = activeBots();
       const bosses = living.filter((bot) => bot.isBoss);
       const targets = bosses.length ? bosses : shuffled(living).slice(0, 1);
-      const memorySources = bosses.length ? living.filter((bot) => !bot.isBoss) : living;
+      const memorySources = bosses.length ? state.bots.filter((bot) => !bot.isBoss) : state.bots;
       const memorySum = memorySources.reduce((sum, bot) => sum + (bot.memory?.length || 0), 0);
       const damage = passiveEntryFlatDamage(entry, memorySum);
       if (!targets.length || damage <= 0) return;
@@ -4334,6 +4438,14 @@ function clearMarkedProspects() {
 
 function advanceAfterSummary() {
   if (state.stage !== "summary") return;
+  rememberRound();
+  if (state.player.hp <= 0) {
+    state.gameOver = true;
+    state.stage = "ended";
+    addLog("Game over. The table solved you first.");
+    render();
+    return;
+  }
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
@@ -5702,9 +5814,6 @@ function renderMenuApp() {
   const screen = state.menuScreen || "main";
   return `
     <main class="main-menu" aria-label="main menu">
-      <img class="menu-figure menu-figure-jesus" src="${MAIN_MENU_JESUS_SRC}" alt="" aria-hidden="true" />
-      <img class="menu-figure menu-figure-devil" src="${MAIN_MENU_DEVIL_SRC}" alt="" aria-hidden="true" />
-      <img class="main-menu-logo" src="${MAIN_MENU_LOGO_SRC}" alt="Aenao" />
       <section class="main-menu-panel">
         ${screen === "play" ? renderPlayMenu() : screen === "options" ? renderOptionsMenu() : screen === "quit" ? renderQuitMenu() : renderMainMenu()}
       </section>
@@ -5733,26 +5842,35 @@ function renderPlayMenu() {
 }
 
 function renderOptionsMenu() {
-  const musicValue = Math.round(state.sound.musicVolume * 100);
-  const sfxValue = Math.round(state.sound.sfxVolume * 100);
   return `
     <div class="options-menu">
-      <div class="sound-setting">
-        <label for="musicVolume">Music</label>
-        <input id="musicVolume" class="sound-slider" type="range" min="0" max="100" step="1" value="${musicValue}" />
-        <strong id="musicVolumeValue">${musicValue}%</strong>
-      </div>
-      <div class="sound-setting">
-        <label for="sfxVolume">Sfx</label>
-        <input id="sfxVolume" class="sound-slider" type="range" min="0" max="100" step="1" value="${sfxValue}" />
-        <strong id="sfxVolumeValue">${sfxValue}%</strong>
-      </div>
-      <label class="sound-toggle">
-        <input id="soundMuted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
-        <span>Mute Sound</span>
-      </label>
+      ${renderSoundSettings("menu")}
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
+  `;
+}
+
+function renderSoundSettings(prefix) {
+  const musicValue = Math.round(state.sound.musicVolume * 100);
+  const sfxValue = Math.round(state.sound.sfxVolume * 100);
+  const musicId = `${prefix}MusicVolume`;
+  const sfxId = `${prefix}SfxVolume`;
+  const muteId = `${prefix}SoundMuted`;
+  return `
+      <div class="sound-setting">
+        <label for="${musicId}">Music</label>
+        <input id="${musicId}" class="sound-slider" data-sound-setting="musicVolume" type="range" min="0" max="100" step="1" value="${musicValue}" />
+        <strong data-sound-value="musicVolume">${musicValue}%</strong>
+      </div>
+      <div class="sound-setting">
+        <label for="${sfxId}">Sfx</label>
+        <input id="${sfxId}" class="sound-slider" data-sound-setting="sfxVolume" type="range" min="0" max="100" step="1" value="${sfxValue}" />
+        <strong data-sound-value="sfxVolume">${sfxValue}%</strong>
+      </div>
+      <label class="sound-toggle">
+        <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
+        <span>Mute Sound</span>
+      </label>
   `;
 }
 
@@ -5832,6 +5950,9 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="${modeAction}">${modeButton}</button>
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
+        </div>
+        <div class="pause-sound-settings">
+          ${renderSoundSettings("pause")}
         </div>
       </section>
     </div>
@@ -6613,13 +6734,13 @@ function renderPassives() {
     const description = itemDescription(item);
     const suppressedBy = suppressingBossForSeal(item.id);
     const disabledNotice = suppressedBy ? `Disabled while ${suppressedBy.name} is alive.\n` : "";
-    const tooltip = `${displayName}\n${disabledNotice}${description}\nSell ${sale} SIN`;
+    const tooltip = renderSealTooltipHtml(item, displayName, description, disabledNotice, sale);
     const triggeredClass = state.roundState?.triggeredPassiveIds?.has(item.id) ? "triggered" : "";
     const suppressedClass = suppressedBy ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
     const sealImage = renderSealSigil(item, "equipped-seal-sigil");
     slots.push(`
-      <article class="passive-slot ${triggeredClass} ${suppressedClass}" data-tooltip="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${triggeredClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}">Sell</button>
@@ -6696,6 +6817,7 @@ function updateSoundSetting(key, value, renderAfter = true) {
   } else if (key in state.sound) {
     state.sound[key] = clamp(Number(value) / 100, 0, 1);
   }
+  saveSoundSettings();
   applySoundSettings();
   if (renderAfter) render();
 }
@@ -6795,28 +6917,19 @@ function bindEvents() {
     button.addEventListener("click", () => handleMenuAction(button.dataset.menuAction));
   });
 
-  const musicVolume = document.querySelector("#musicVolume");
-  if (musicVolume) {
-    musicVolume.addEventListener("input", () => {
-      updateSoundSetting("musicVolume", musicVolume.value, false);
-      const valueLabel = document.querySelector("#musicVolumeValue");
-      if (valueLabel) valueLabel.textContent = `${musicVolume.value}%`;
+  document.querySelectorAll("[data-sound-setting]").forEach((control) => {
+    const key = control.dataset.soundSetting;
+    if (key === "muted") {
+      control.addEventListener("change", () => updateSoundSetting(key, control.checked));
+      return;
+    }
+    control.addEventListener("input", () => {
+      updateSoundSetting(key, control.value, false);
+      document.querySelectorAll(`[data-sound-value="${key}"]`).forEach((valueLabel) => {
+        valueLabel.textContent = `${control.value}%`;
+      });
     });
-  }
-
-  const sfxVolume = document.querySelector("#sfxVolume");
-  if (sfxVolume) {
-    sfxVolume.addEventListener("input", () => {
-      updateSoundSetting("sfxVolume", sfxVolume.value, false);
-      const valueLabel = document.querySelector("#sfxVolumeValue");
-      if (valueLabel) valueLabel.textContent = `${sfxVolume.value}%`;
-    });
-  }
-
-  const soundMuted = document.querySelector("#soundMuted");
-  if (soundMuted) {
-    soundMuted.addEventListener("change", () => updateSoundSetting("muted", soundMuted.checked));
-  }
+  });
 
   const pauseButton = document.querySelector("#pauseButton");
   if (pauseButton) {
@@ -6908,9 +7021,13 @@ function bindEvents() {
 
   const floatingTooltip = document.querySelector("#floatingTooltip");
   if (floatingTooltip) {
-    document.querySelectorAll("[data-tooltip]").forEach((element) => {
+    document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
       element.addEventListener("mouseenter", (event) => {
-        floatingTooltip.textContent = element.dataset.tooltip;
+        if (element.dataset.tooltipHtml) {
+          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
+        } else {
+          floatingTooltip.textContent = element.dataset.tooltip;
+        }
         floatingTooltip.classList.add("visible");
         positionFloatingTooltip(event, floatingTooltip);
       });
@@ -6919,6 +7036,7 @@ function bindEvents() {
       });
       element.addEventListener("mouseleave", () => {
         floatingTooltip.classList.remove("visible");
+        floatingTooltip.textContent = "";
       });
     });
   }
@@ -6937,6 +7055,7 @@ function bindEvents() {
 window.addEventListener("resize", updateFullscreenLayoutClass);
 document.addEventListener("fullscreenchange", updateFullscreenLayoutClass);
 
+loadSoundSettings();
 installSoundtrack();
 updateFullscreenLayoutClass();
 showMainMenu();

@@ -75,7 +75,7 @@ SINNERS with 3 or less bounty pay double bounty SIN when eliminated.
 ELITE levels: The payout multiplier scales by +20% per ELITE level.
 
 Seal of Dantalion (12 SIN)
-At end of round, deal damage equal to the total memory of active SINNERS to one random SINNER. If any bosses are active, hit all bosses instead and exclude boss memory from the sum.
+At end of round, deal damage equal to the total memory of all SINNERS on the board, including dead ones, to one random living SINNER. If any bosses are active, hit all active bosses instead and exclude boss memory from the sum.
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Decarabia (12 SIN)

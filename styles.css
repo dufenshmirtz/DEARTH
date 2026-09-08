@@ -118,13 +118,22 @@ button:disabled {
 }
 
 .pause-card {
-  width: min(360px, 90vw);
+  width: min(430px, 90vw);
 }
 
 .pause-actions {
   display: grid;
   gap: 10px;
   margin-top: 18px;
+}
+
+.pause-sound-settings {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .arena::before {
@@ -3006,6 +3015,23 @@ body.mobile-arcade .floating-tooltip {
   opacity: 0.86;
 }
 
+.floating-tooltip .seal-tooltip-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 9px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+  font-weight: 800;
+}
+
+.floating-tooltip .seal-tooltip-footer span:last-child {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
 body.mobile-arcade .floating-tooltip {
   width: min(300px, 88vw);
   font-size: 11px !important;
@@ -3737,17 +3763,9 @@ body:has(.menu-app) {
   color: #fff;
 }
 
-.main-menu-logo {
-  align-self: end;
-  width: min(82vw, 980px);
-  max-height: 40vh;
-  object-fit: contain;
-  margin-bottom: clamp(18px, 4vh, 46px);
-  user-select: none;
-}
-
 .main-menu-panel {
   display: grid;
+  grid-row: 2;
   justify-items: center;
   width: min(360px, 88vw);
 }
@@ -3764,7 +3782,7 @@ body:has(.menu-app) {
   width: 100%;
   border: 2px solid rgba(255, 255, 255, 0.72);
   border-radius: 7px;
-  background: #000;
+  background: transparent;
   color: #fff;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 30px;
@@ -3773,7 +3791,7 @@ body:has(.menu-app) {
 
 .menu-button:hover:not(:disabled) {
   border-color: #fff;
-  background: #0a0a0a;
+  background: transparent;
 }
 
 .secondary-menu-button {
@@ -3828,11 +3846,6 @@ body:has(.menu-app) {
     grid-template-rows: minmax(160px, 38vh) auto minmax(18px, 1fr);
   }
 
-  .main-menu-logo {
-    width: min(90vw, 720px);
-    max-height: 34vh;
-  }
-
   .menu-button {
     min-height: 54px;
     font-size: 24px;
@@ -3845,36 +3858,7 @@ body:has(.menu-app) {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-}
-
-.main-menu-logo {
-  position: relative;
-  z-index: 2;
-  width: min(94vw, 1320px);
-  max-height: 52vh;
-  margin-bottom: clamp(8px, 2vh, 26px);
-}
-
-.menu-figure {
-  position: absolute;
-  z-index: 1;
-  bottom: clamp(24px, 4vh, 58px);
-  width: min(42vw, 690px);
-  height: min(88vh, 940px);
-  object-fit: contain;
-  opacity: 0.92;
-  pointer-events: none;
-  user-select: none;
-}
-
-.menu-figure-jesus {
-  left: clamp(12px, 2.5vw, 54px);
-  object-position: left bottom;
-}
-
-.menu-figure-devil {
-  right: clamp(12px, 2.5vw, 54px);
-  object-position: right bottom;
+  background: #000 url("assets/ui/concept-menu.png") center / cover no-repeat;
 }
 
 .main-menu-panel {
@@ -3886,6 +3870,7 @@ body:has(.menu-app) {
 .menu-button:hover:not(:disabled),
 .secondary-menu-button {
   border-color: transparent !important;
+  background: transparent !important;
   box-shadow: none !important;
   outline: none;
 }
@@ -3898,25 +3883,5 @@ body.mobile-arcade .health-bar {
 @media (max-width: 800px) {
   .main-menu {
     grid-template-rows: minmax(190px, 46vh) auto minmax(18px, 1fr);
-  }
-
-  .main-menu-logo {
-    width: min(96vw, 860px);
-    max-height: 43vh;
-  }
-
-  .menu-figure {
-    bottom: 2vh;
-    width: 46vw;
-    height: 70vh;
-    opacity: 0.72;
-  }
-
-  .menu-figure-jesus {
-    left: 1vw;
-  }
-
-  .menu-figure-devil {
-    right: 1vw;
   }
 }
