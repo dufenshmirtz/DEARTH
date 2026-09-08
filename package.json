@@ -1,8 +1,8 @@
 {
-  "name": "aenao",
+  "name": "dearth",
   "version": "0.1.0",
   "private": true,
-  "description": "ÆNAO, an in-development occult arcade roguelike and local PvP browser game.",
+  "description": "DEARTH, an in-development occult arcade roguelike and local PvP browser game.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

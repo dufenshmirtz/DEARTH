@@ -1,5 +1,5 @@
-const STORAGE_ID = "aenaoPvpPlayerId";
-const STORAGE_NAME = "aenaoPvpPlayerName";
+const STORAGE_ID = "dearthPvpPlayerId";
+const STORAGE_NAME = "dearthPvpPlayerName";
 const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
 const READY_SFX_SRC = "assets/audio/Ready.mp3";
 const GUESS_SFX_VOLUME = 0.9;
@@ -241,7 +241,7 @@ function renderHeader() {
       : "";
   return `
     <section class="panel">
-      <h1>ÆNAO PvP</h1>
+      <h1>DEARTH PvP</h1>
       <p class="muted">${escapeHtml(controllerState.player?.name || "Phone controller")}</p>
       <div class="stat-row">
         <div class="stat"><span>Previous</span><strong>${host?.previousTarget ?? "?"}</strong></div>
@@ -261,7 +261,7 @@ function renderHeader() {
 function renderJoin() {
   return `
     <section class="panel">
-      <h1>ÆNAO PvP</h1>
+      <h1>DEARTH PvP</h1>
       <p class="muted">Enter your name to take one of the five table slots.</p>
       <input id="joinName" type="text" maxlength="16" placeholder="Your name" value="${escapeAttr(controllerState.draftName)}" />
       <button id="joinButton">Join</button>

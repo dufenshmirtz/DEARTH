@@ -1,6 +1,6 @@
-# ÆNAO
+# DEARTH
 
-ÆNAO is an in-development browser game built around occult arcade strategy: a target-guessing battle loop, escalating roguelike item synergies, and a local PvP mode where phones can join as controllers.
+DEARTH is an in-development browser game built around occult arcade strategy: a target-guessing battle loop, escalating roguelike item synergies, and a local PvP mode where phones can join as controllers.
 
 The project began as a rapid prototype and is being shaped into a portfolio-ready game. It is playable, but still under active development. Balance, UX, content, architecture, and asset licensing notes may change before a formal release.
 
@@ -56,6 +56,6 @@ Runs syntax checks for the browser game, phone controller, and local server scri
 
 ## Status And License
 
-ÆNAO is public for portfolio and development review. It is not a finished commercial release.
+DEARTH is public for portfolio and development review. It is not a finished commercial release.
 
 No open-source license is currently granted. Source code and original assets are all rights reserved unless a future license is added. Third-party assets remain the property of their respective owners and are included here only as part of the in-development prototype pending a final asset audit.

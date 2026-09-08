@@ -196,7 +196,7 @@ function listen(port) {
   });
   server.listen(port, "0.0.0.0", () => {
     const ips = localIpAddresses();
-    console.log(`ÆNAO host: http://localhost:${port}`);
+    console.log(`DEARTH host: http://localhost:${port}`);
     if (ips.length) {
       ips.forEach((ip) => console.log(`Phone URL: http://${ip}:${port}/controller.html`));
     } else {
