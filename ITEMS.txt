@@ -3,7 +3,7 @@ DEARTH SEAL AND ARTIFACT CATALOG
 Player Seals
 
 Seal of Agares (9 SIN)
-At end of round, 10% of SIN earned this round spreads equally among SINNERS, with leftover SIN going first to the highest regular-bounty SINNERS. Whenever a SINNER gains SIN, it takes 5 damage per SIN gained.
+At end of round, 10% of SIN earned this round spreads equally among SINNERS, with leftover SIN going first to the highest bounty SINNERS. Whenever a SINNER gains SIN, it takes 5 damage per SIN gained.
 ELITE levels: Each ELITE level doubles the damage per SIN gained.
 
 Seal of Alloces (7 SIN)
@@ -23,15 +23,15 @@ Every time a SINNER is eliminated, deal 10 damage to the SINNER on its left and 
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Andromalius (13 SIN)
-At end of round, any SINNER with 2 or less regular bounty is eliminated. Its SIN goes to the living SINNER with the highest regular bounty instead of paying you.
+At end of round, any SINNER with 2 or less bounty is eliminated. Its SIN goes to the living SINNER with the highest bounty instead of paying you.
 ELITE levels: The low-SIN elimination threshold does not change.
 
 Seal of Asmoday (15 SIN)
-You deal 2x damage to non-bosses and get 1.5x regular bounty SIN. At end of round, all living non-bosses are erased without SIN or KO count, and Dantre does not trigger from those erasures.
+You deal 2x damage to non-bosses and get 1.5x bounty SIN. At end of round, all living non-bosses are erased without SIN or KO count, and Dantre does not trigger from those erasures.
 ELITE levels: The damage and bounty multipliers scale by +20% per ELITE level; the end-round erasure does not change.
 
 Seal of Astaroth (12 SIN)
-At the start of each round, mark a SINNER until round end. If the marked SINNER dies, its regular bounty payout becomes double bounty or 6 SIN, whichever is greater, and you heal 5.
+At the start of each round, mark a SINNER until round end. If the marked SINNER dies, its bounty payout becomes double bounty or 6 SIN, whichever is greater, and you heal 5.
 ELITE levels: The payout bonus scales by +20% per ELITE level; healing stays 5, and each ELITE level gives +1 SIN whenever this heal triggers.
 
 Seal of Bael (10 SIN)
@@ -54,6 +54,10 @@ Seal of Berith (8 SIN)
 At end of round, this Seal's sell value increases by 3.
 ELITE levels: The sell-value growth scales by +20% per ELITE level.
 
+Seal of Botis (14 SIN)
+Avoid 20% of damage you would take in a round and convert the avoided damage into memory for the living SINNER with the most memory.
+ELITE levels: The avoided damage stays 20%; each ELITE level doubles only the memory added.
+
 Seal of Buer (7 SIN)
 Heal 5 health at the end of every round.
 ELITE levels: Healing stays 5; each ELITE level gives +1 SIN whenever this heal triggers.
@@ -63,11 +67,11 @@ If you make more than one elimination in a round, heal 5 and gain 5 SIN.
 ELITE levels: The SIN reward scales by +20% per ELITE level; healing stays 5, and each ELITE level gives +1 SIN whenever this heal triggers.
 
 Seal of Cimejes (14 SIN)
-At start of round, double a random SINNER's regular bounty for 1 round.
+At start of round, double a random SINNER's bounty for 1 round.
 ELITE levels: Each ELITE level doubles one extra random SINNER for the round.
 
 Seal of Crocell (9 SIN)
-SINNERS with 3 or less regular bounty pay double regular bounty SIN when eliminated.
+SINNERS with 3 or less bounty pay double bounty SIN when eliminated.
 ELITE levels: The payout multiplier scales by +20% per ELITE level.
 
 Seal of Dantalion (12 SIN)
@@ -79,15 +83,15 @@ SINNERS take 10% more damage for every memory they have. Bosses take 3% more dam
 ELITE levels: The per-memory damage bonus scales by +20% per ELITE level.
 
 Seal of Focalor (14 SIN)
-At end of round, deal half the total regular bounty of living SINNERS to every enemy.
+At end of round, deal half the total bounty of living SINNERS to every enemy.
 ELITE levels: Each ELITE level doubles this bounty-based damage.
 
 Seal of Foras (11 SIN)
-Every time a SINNER dies, all other living SINNERS gain +1 or +2 regular bounty.
+Every time a SINNER dies, all other living SINNERS gain +1 or +2 bounty.
 ELITE levels: Bounty gain scales by +20% per ELITE level, rounded up.
 
 Seal of Forneus (8 SIN)
-At end of round, the two highest regular-bounty SINNERS gain +1 regular bounty.
+At end of round, the two highest bounty SINNERS gain +1 bounty.
 ELITE levels: Each ELITE level adds +1 bounty.
 
 Seal of Furfur (10 SIN)
@@ -99,8 +103,12 @@ When you hit CRITICAL, it deals 30 damage to everyone else.
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Gremory (12 SIN)
-Whenever a SINNER with 6 or more regular bounty dies, heal 2 and gain 4 SIN.
+Whenever a SINNER with 6 or more bounty dies, heal 2 and gain 4 SIN.
 ELITE levels: The SIN reward scales by +20% per ELITE level; healing stays 2, and each ELITE level gives +1 SIN whenever this heal triggers.
+
+Seal of Gusion (15 SIN)
+Whenever a SINNER gains memory, it gains that much bounty too. Whenever a SINNER gains bounty, it gains that much memory too.
+ELITE levels: Each point of memory or bounty gained adds +2 to the other value at ELITE, +3 at ELITE +2, and so on.
 
 Seal of Haagenti (11 SIN)
 Devil's Offerings has one more Artifact slot. Whenever you use an Artifact, all SINNERS take damage equal to that Artifact's purchase cost.
@@ -127,11 +135,11 @@ Every SINNER elimination heals you for 3 health.
 ELITE levels: Healing stays 3; each ELITE level gives +1 SIN whenever this heal triggers.
 
 Seal of Marchosias (13 SIN)
-Every time a SINNER is eliminated, all other living SINNERS take damage equal to the eliminated SINNER's regular bounty.
+Every time a SINNER is eliminated, all other living SINNERS take damage equal to the eliminated SINNER's bounty.
 ELITE levels: Each ELITE level doubles this bounty-based damage.
 
 Seal of Murmur (10 SIN)
-At end of round, two random SINNERS take damage equal to their regular bounty.
+At end of round, two random SINNERS take damage equal to their bounty.
 ELITE levels: Each ELITE level doubles this bounty-based damage.
 
 Seal of Orias (13 SIN)
@@ -147,11 +155,11 @@ Copies a random Seal you own and keeps copying it. If the copied Seal is sold, O
 ELITE levels: Each ELITE level makes the copied Seal resolve one level stronger, based on Seal of Ose's own ELITE level.
 
 Seal of Paimon (6 SIN)
-If your final guess is within +/-5 of the target, all SINNERS take 10 damage.
-ELITE levels: Each ELITE level doubles this damage.
+If your final guess is close to the target, all SINNERS take ladder damage: 2 at +/-9, rising by 1 per step closer through 9 at +/-2. On CRITICAL, this deals only 1 damage.
+ELITE levels: Each ELITE level doubles all ladder and CRITICAL damage.
 
 Seal of Phenex (10 SIN)
-Using an Artifact that targets one or more SINNERS increases those SINNERS' regular bounty by 4.
+Using an Artifact that targets one or more SINNERS increases those SINNERS' bounty by 4.
 ELITE levels: The SIN gain scales by +20% per ELITE level.
 
 Seal of Purson (10 SIN)
@@ -163,7 +171,7 @@ Whenever a SINNER loses SIN, it takes 20 damage. At end of round, all SINNERS lo
 ELITE levels: Each ELITE level doubles this damage; the end-round SIN loss stays 1.
 
 Seal of Ronove (10 SIN)
-At end of round, a SINNER loses half its regular bounty and you gain SIN equal to the amount lost.
+At end of round, a SINNER loses half its bounty and you gain SIN equal to the amount lost.
 ELITE levels: Each ELITE level adds one more SINNER target.
 
 Seal of Sabnock (13 SIN)
@@ -175,7 +183,7 @@ When a non-boss SINNER is eliminated, gain bonus SIN equal to its memory.
 ELITE levels: The memory payout scales by +20% per ELITE level.
 
 Seal of Seere (9 SIN)
-New non-boss SINNERS have a 33% chance to spawn with +6 regular bounty.
+New non-boss SINNERS have a 33% chance to spawn with +6 bounty.
 ELITE levels: The spawn chance scales by +20% per ELITE level, capped at 100%.
 
 Seal of Valac (13 SIN)

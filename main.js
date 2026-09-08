@@ -95,7 +95,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Paimon",
     price: 6,
-    description: "If your final guess is within +/-5 of the target, all SINNERS take 10 damage. ELITE doubles the damage each level."
+    description: "If your final guess is close to the target, all SINNERS take ladder damage: 2 at +/-9, rising by 1 per step closer through 9 at +/-2. On CRITICAL, this deals only 1 damage. ELITE doubles all damage."
   },
   p3: {
     id: "p3",
@@ -145,6 +145,13 @@ const ITEMS = {
     name: "Seal of Marbas",
     price: 14,
     description: "Every sinner elimination heals you for 3 health. ELITE adds SIN instead of more healing."
+  },
+  p10: {
+    id: "p10",
+    type: "passive",
+    name: "Seal of Gusion",
+    price: 15,
+    description: "Whenever a SINNER gains memory, it gains that much bounty too. Whenever a SINNER gains bounty, it gains that much memory too. ELITE makes each point add +2, +3, and so on."
   },
   p11: {
     id: "p11",
@@ -216,12 +223,19 @@ const ITEMS = {
     price: 11,
     description: "Devil's Offerings has one more Artifact slot. Whenever you use an Artifact, all SINNERS take damage equal to that Artifact's purchase cost. ELITE doubles the damage each level."
   },
+  p22: {
+    id: "p22",
+    type: "passive",
+    name: "Seal of Botis",
+    price: 14,
+    description: "Avoid 20% of damage you would take in a round and convert the avoided damage into memory for the living SINNER with the most memory. ELITE doubles only the memory added each level."
+  },
   p23: {
     id: "p23",
     type: "passive",
     name: "Seal of Seere",
     price: 9,
-    description: "New non-boss SINNERS have a 33% chance to spawn with +6 regular bounty."
+    description: "New non-boss SINNERS have a 33% chance to spawn with +6 bounty."
   },
   p24: {
     id: "p24",
@@ -277,42 +291,42 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Murmur",
     price: 10,
-    description: "At end of round, two random SINNERS take damage equal to their regular bounty. ELITE doubles the damage each level."
+    description: "At end of round, two random SINNERS take damage equal to their bounty. ELITE doubles the damage each level."
   },
   p32: {
     id: "p32",
     type: "passive",
     name: "Seal of Foras",
     price: 11,
-    description: "Every time a SINNER dies, all other SINNERS gain +1 or +2 regular bounty."
+    description: "Every time a SINNER dies, all other SINNERS gain +1 or +2 bounty."
   },
   p33: {
     id: "p33",
     type: "passive",
     name: "Seal of Marchosias",
     price: 13,
-    description: "Every time a SINNER is eliminated, all other SINNERS take damage equal to that SINNER's regular bounty. ELITE doubles the damage each level."
+    description: "Every time a SINNER is eliminated, all other SINNERS take damage equal to that SINNER's bounty. ELITE doubles the damage each level."
   },
   p34: {
     id: "p34",
     type: "passive",
     name: "Seal of Gremory",
     price: 12,
-    description: "Whenever a SINNER with 6 or more regular bounty dies, heal 2 and gain 4 SIN. ELITE adds SIN instead of more healing."
+    description: "Whenever a SINNER with 6 or more bounty dies, heal 2 and gain 4 SIN. ELITE adds SIN instead of more healing."
   },
   p35: {
     id: "p35",
     type: "passive",
     name: "Seal of Forneus",
     price: 8,
-    description: "At end of round, the two highest regular-bounty SINNERS gain +1 regular bounty. ELITE levels add +1 bounty."
+    description: "At end of round, the two highest bounty SINNERS gain +1 bounty. ELITE levels add +1 bounty."
   },
   p36: {
     id: "p36",
     type: "passive",
     name: "Seal of Asmoday",
     price: 15,
-    description: "You deal 2x damage to non-bosses and get 1.5x regular bounty SIN. At end of round, all living non-bosses are erased without SIN or KO count."
+    description: "You deal 2x damage to non-bosses and get 1.5x bounty SIN. At end of round, all living non-bosses are erased without SIN or KO count."
   },
   p37: {
     id: "p37",
@@ -326,7 +340,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Astaroth",
     price: 12,
-    description: "At the start of each round, mark a SINNER until round end. If the marked SINNER dies, its regular bounty payout becomes double bounty or 6 SIN, whichever is greater, and heals 5."
+    description: "At the start of each round, mark a SINNER until round end. If the marked SINNER dies, its bounty payout becomes double bounty or 6 SIN, whichever is greater, and heals 5."
   },
   p39: {
     id: "p39",
@@ -340,7 +354,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Focalor",
     price: 14,
-    description: "At end of round, deal half the total regular bounty of living SINNERS to every enemy. ELITE doubles the damage each level."
+    description: "At end of round, deal half the total bounty of living SINNERS to every enemy. ELITE doubles the damage each level."
   },
   p43: {
     id: "p43",
@@ -354,56 +368,56 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Andromalius",
     price: 13,
-    description: "At end of round, any SINNER with 2 or less regular bounty is eliminated. Its SIN goes to the living SINNER with the highest regular bounty instead of paying you."
+    description: "At end of round, any SINNER with 2 or less bounty is eliminated. Its SIN goes to the living SINNER with the highest bounty instead of paying you."
   },
   p45: {
     id: "p45",
     type: "passive",
     name: "Seal of Crocell",
     price: 9,
-    description: "SINNERS with 3 or less regular bounty pay double regular bounty SIN when eliminated."
+    description: "SINNERS with 3 or less bounty pay double bounty SIN when eliminated."
   },
   p46: {
     id: "p46",
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "SINNERS with 6 or more regular bounty take 1.5x damage."
+    description: "SINNERS with 6 or more bounty take 1.5x damage."
   },
   p47: {
     id: "p47",
     type: "passive",
     name: "Seal of Ronove",
     price: 10,
-    description: "At end of round, a SINNER loses half its regular bounty and you gain SIN equal to the amount lost."
+    description: "At end of round, a SINNER loses half its bounty and you gain SIN equal to the amount lost."
   },
   p48: {
     id: "p48",
     type: "passive",
     name: "Seal of Cimejes",
     price: 14,
-    description: "At start of round, double a random SINNER's regular bounty for 1 round. ELITE levels double one extra random SINNER."
+    description: "At start of round, double a random SINNER's bounty for 1 round. ELITE levels double one extra random SINNER."
   },
   p49: {
     id: "p49",
     type: "passive",
     name: "Seal of Phenex",
     price: 10,
-    description: "Using an Artifact that targets one or more SINNERS increases those SINNERS' regular bounty by 4."
+    description: "Using an Artifact that targets one or more SINNERS increases those SINNERS' bounty by 4."
   },
   p50: {
     id: "p50",
     type: "passive",
     name: "Seal of Agares",
     price: 9,
-    description: "At end of round, 10% of SIN earned this round spreads among SINNERS, prioritizing highest regular bounties. Whenever a SINNER gains SIN, they take 5 damage per SIN. ELITE doubles the damage each level."
+    description: "At end of round, 10% of SIN earned this round spreads among SINNERS, prioritizing highest bounties. Whenever a SINNER gains SIN, they take 5 damage per SIN. ELITE doubles the damage each level."
   },
   p51: {
     id: "p51",
     type: "passive",
     name: "Seal of Marax",
     price: 11,
-    description: "Once each round per SINNER, when that SINNER has taken more than 40 damage, its regular bounty increases by 4."
+    description: "Once each round per SINNER, when that SINNER has taken more than 40 damage, its bounty increases by 4."
   },
   p52: {
     id: "p52",
@@ -578,6 +592,7 @@ const PASSIVE_IDS = [
   "p7",
   "p8",
   "p9",
+  "p10",
   "p11",
   "p12",
   "p13",
@@ -588,6 +603,7 @@ const PASSIVE_IDS = [
   "p18",
   "p19",
   "p20",
+  "p22",
   "p23",
   "p24",
   "p25",
@@ -672,6 +688,7 @@ const SEAL_SIGILS = {
   p7: "035_Glasya-Labolas.png",
   p8: "022_Buer.png",
   p9: "045_Marbas.png",
+  p10: "037_Guison.png",
   p11: "065_Valfor.png",
   p12: "018_Belial.png",
   p13: "023_Bune.png",
@@ -683,6 +700,7 @@ const SEAL_SIGILS = {
   p19: "056_Sabnock.png",
   p20: "038_Haagenti.png",
   p21: "060_Shax.png",
+  p22: "021_Botis.png",
   p23: "059_Seere.png",
   p24: "049_Orobas.png",
   p25: "070_Volac.png",
@@ -728,6 +746,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p7: "25-glasya-labolas.png",
   p8: "10-buer.png",
   p9: "05-marbas.png",
+  p10: "11-gusion.png",
   p11: "06-valefor.png",
   p12: "68-belial.png",
   p13: "26-bune-bime.png",
@@ -739,6 +758,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p19: "43-sabnock.png",
   p20: "48-haagenti.png",
   p21: "44-shax.png",
+  p22: "17-botis.png",
   p23: "70-seere-seir.png",
   p24: "55-orobas.png",
   p25: "62-valac-ualac.png",
@@ -783,13 +803,13 @@ const GOETIC_BOSS_SPECS = [
   { key: "barbatos", name: "Barbatos", image: "08-barbatos.png", passiveId: "p46" },
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
   { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p8" },
-  { key: "gusion", name: "Gusion", image: "11-gusion.png" },
+  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
   { key: "sitri", name: "Sitri", image: "12-sitri.png" },
   { key: "beleth", name: "Beleth", image: "13-beleth.png" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
   { key: "eligos", name: "Eligos", image: "15-eligos.png" },
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
-  { key: "botis", name: "Botis", image: "17-botis.png" },
+  { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p22" },
   { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
   { key: "sallos", name: "Sallos", image: "19-sallos.png" },
   { key: "purson", name: "Purson", image: "20-purson.png", passiveId: "p39" },
@@ -1405,15 +1425,47 @@ function applyMemoryAddedHealing(bot, amount) {
   });
 }
 
-function addBotMemory(bot, count, reason = "") {
+function applyMemoryToBountyMirror(bot, amount, options = {}) {
+  const memoriesAdded = Math.max(0, Math.ceil(amount));
+  if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || memoriesAdded <= 0) return;
+  orderedPassiveEffectEntries("p10").forEach((entry) => {
+    if (bot.eliminated) return;
+    const bounty = memoriesAdded * stackLinearMultiplier(entry);
+    if (bounty <= 0) return;
+    markPassiveEntryTriggered(entry);
+    changeBotSin(bot, bounty, `Seal of Gusion gave ${bot.name} +${bounty} bounty from memory growth.`, {
+      source: "Seal of Gusion",
+      triggerMemoryBountyMirror: false
+    });
+  });
+}
+
+function applyBountyToMemoryMirror(bot, amount, options = {}) {
+  const bountyGained = Math.max(0, Math.ceil(amount));
+  if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || bountyGained <= 0) return;
+  orderedPassiveEffectEntries("p10").forEach((entry) => {
+    if (bot.eliminated) return;
+    const memory = bountyGained * stackLinearMultiplier(entry);
+    if (memory <= 0) return;
+    markPassiveEntryTriggered(entry);
+    addBotMemory(bot, memory, `Seal of Gusion gave ${bot.name} +${memory} memory from bounty growth.`, {
+      triggerMemoryBountyMirror: false
+    });
+  });
+}
+
+function addBotMemory(bot, count, reason = "", options = {}) {
   if (!bot || bot.eliminated || count <= 0) return 0;
   const added = Math.ceil(count);
+  const beforeMemory = bot.memory?.length || 0;
   const entry = memoryEntryForBot(bot);
   for (let index = 0; index < added; index += 1) {
     bot.memory.push({ ...entry });
   }
   if (!bot.isBoss) bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
+  const actualIncrease = Math.max(0, (bot.memory?.length || 0) - beforeMemory);
   applyMemoryAddedHealing(bot, added);
+  applyMemoryToBountyMirror(bot, actualIncrease, options);
   if (reason) state.roundState?.roundEvents.push(reason);
   return added;
 }
@@ -1493,6 +1545,9 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
   if (lost > 0 && options.triggerLossDamage !== false) {
     applyBotSinLossDamage(bot, lost, options.extraDamagePerSin || 0, options.extraDamageSource || "");
   }
+  if (gained > 0) {
+    applyBountyToMemoryMirror(bot, gained, options);
+  }
   if (gained > 0 && options.triggerGainDamage !== false) {
     applyBotSinGainDamage(bot, gained);
   }
@@ -1571,6 +1626,20 @@ function criticalCalipersWindow(idOrItem) {
 
 function pressureSpikeDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
+}
+
+function paimonBaseDamage(round = state.roundState) {
+  if (!round) return 0;
+  const distance = Math.ceil(Math.abs((round.playerEffectiveGuess ?? 0) - (round.target ?? 0)));
+  if (!Number.isFinite(distance) || distance > 9) return 0;
+  if (round.criticalHitKeys?.has("player")) return 1;
+  if (distance <= 1) return 10;
+  return 11 - distance;
+}
+
+function paimonDamage(idOrItem, round = state.roundState) {
+  const baseDamage = paimonBaseDamage(round);
+  return baseDamage ? flatDamageValue(idOrItem, baseDamage) : 0;
 }
 
 function slowRepairHeal(idOrItem) {
@@ -1684,6 +1753,10 @@ function passiveEntryHealEliteCredits(entry, baseHeal) {
   return levels ? Math.ceil(baseHeal / 5) * levels : 0;
 }
 
+function stackLinearMultiplier(entry) {
+  return Math.max(1, entry?.stack || 1);
+}
+
 function markPassiveEntryTriggered(entry) {
   if (!state.roundState || !entry) return;
   state.roundState.triggeredPassiveIds.add(entry.sourceId || entry.id);
@@ -1753,7 +1826,7 @@ function itemDescription(item) {
   if (stack <= 1) return item.description;
   if (item.id === "p1") return `New non-boss SINNERS arrive with 5 memory. At end of round, each SINNER takes ${flatDamageValue(item, 1)} damage per memory.`;
   if (item.id === "p2") {
-    return `If your final guess is within +/-5 of the target, all SINNERS take ${flatDamageValue(item, 10)} damage.`;
+    return `Close guesses damage all SINNERS: ${flatDamageValue(item, 2)} at +/-9, rising by ${flatDamagePower(item)} per step closer through ${flatDamageValue(item, 9)} at +/-2. On CRITICAL, it deals ${flatDamageValue(item, 1)}.`;
   }
   if (item.id === "p3") return `If the rounded target is a multiple of 3, all SINNERS take ${divisibleVerdictDamage(item)} extra damage.`;
   if (item.id === "p4") return `If your final effective guess is 0, 50, or 100, SINNER penalty damage is x${edgeGambitMultiplier(item).toFixed(2)} this round.`;
@@ -1762,6 +1835,7 @@ function itemDescription(item) {
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `Heal ${slowRepairHeal(item)} health at the end of every round.${passiveHealCreditText(item, 5)}`;
   if (item.id === "p9") return `Every SINNER elimination heals you for ${victoryPatchHeal(item)} health.${passiveHealCreditText(item, 3)}`;
+  if (item.id === "p10") return `Memory gained adds ${stackLinearMultiplier(item)}x that much bounty. Bounty gained adds ${stackLinearMultiplier(item)}x that much memory.`;
   if (item.id === "p11") {
     return `When a SINNER dies, gain ${stack} random Artifact${stack === 1 ? "" : "s"} if you have room. Lottery Artifacts keep their normal sell value.`;
   }
@@ -1779,32 +1853,33 @@ function itemDescription(item) {
   if (item.id === "p19") return `Every time a SINNER dies, deal ${flatDamageValue(item, 5)} damage to every other SINNER.`;
   if (item.id === "p20") return `Devil's Offerings has ${shopSlotCountForItem(item)} slots. Whenever you use an Artifact, all SINNERS take ${flatDamagePower(item)}x that Artifact's purchase cost as damage.`;
   if (item.id === "p21") return "This Seal is reserved and is not currently obtainable.";
-  if (item.id === "p23") return `New non-boss SINNERS have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 regular bounty.`;
+  if (item.id === "p22") return `Avoid 20% of damage you would take in a round. The avoided damage becomes ${flatDamagePower(item)}x memory for the living SINNER with the most memory.`;
+  if (item.id === "p23") return `New non-boss SINNERS have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 bounty.`;
   if (item.id === "p24") return `You can use only one Artifact per round. All SINNERS pay ${bountyOathMultiplierForItem(item).toFixed(1)}x SIN when eliminated.`;
   if (item.id === "p25") return `Gain +${baseEditionBonus(item)} Artifact uses per round and +${baseEditionBonus(item)} Artifact inventory slots.`;
   if (item.id === "p26") return `Using two matching Artifacts in a round deals ${twinDetonatorDamage(item)} damage to all SINNERS.`;
   if (item.id === "p27") return `Every Artifact triggers one outcome: heal ${reactiveWarrantyHeal(item)}, deal ${reactiveWarrantyDamage(item)} damage to a random SINNER, or refund its purchase cost.${passiveHealCreditText(item, 3)}`;
   if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-health non-boss SINNER.`;
   if (item.id === "p30") return `Every SINNER elimination deals ${andrealphusDamage(item)} damage to the SINNER on its left and right.`;
-  if (item.id === "p31") return `At end of round, two random SINNERS take ${flatDamagePower(item)}x their regular bounty as damage.`;
-  if (item.id === "p32") return `Every SINNER death gives each other living SINNER +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} regular bounty.`;
-  if (item.id === "p33") return `Every SINNER elimination makes all other SINNERS take ${flatDamagePower(item)}x that SINNER's regular bounty as damage.`;
-  if (item.id === "p34") return `When a SINNER with 6 or more regular bounty dies, heal ${passiveBaseHeal(item, 2)} and gain ${scaledPassiveValueForItem(item, 4)} SIN.${passiveHealCreditText(item, 2)}`;
-  if (item.id === "p35") return `At end of round, the two highest regular-bounty SINNERS gain +${stack} regular bounty.`;
-  if (item.id === "p36") return `Your damage is x${(2 * passivePower(item)).toFixed(1)} against non-bosses and regular bounty SIN is x${(1.5 * passivePower(item)).toFixed(1)}. At end of round, living non-bosses are erased without SIN or KO count.`;
+  if (item.id === "p31") return `At end of round, two random SINNERS take ${flatDamagePower(item)}x their bounty as damage.`;
+  if (item.id === "p32") return `Every SINNER death gives each other living SINNER +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} bounty.`;
+  if (item.id === "p33") return `Every SINNER elimination makes all other SINNERS take ${flatDamagePower(item)}x that SINNER's bounty as damage.`;
+  if (item.id === "p34") return `When a SINNER with 6 or more bounty dies, heal ${passiveBaseHeal(item, 2)} and gain ${scaledPassiveValueForItem(item, 4)} SIN.${passiveHealCreditText(item, 2)}`;
+  if (item.id === "p35") return `At end of round, the two highest bounty SINNERS gain +${stack} bounty.`;
+  if (item.id === "p36") return `Your damage is x${(2 * passivePower(item)).toFixed(1)} against non-bosses and bounty SIN is x${(1.5 * passivePower(item)).toFixed(1)}. At end of round, living non-bosses are erased without SIN or KO count.`;
   if (item.id === "p37") return `If you take 4 or less total damage in a round, gain ${scaledPassiveValueForItem(item, 4)} SIN and heal ${passiveBaseHeal(item, 3)}.${passiveHealCreditText(item, 3)}`;
-  if (item.id === "p38") return `Start each round by marking a SINNER. If it dies, its regular bounty payout becomes at least ${scaledPassiveValueForItem(item, 6)} SIN or ${Math.round(200 * passivePower(item))}% bounty, and you heal ${passiveBaseHeal(item, 5)}.${passiveHealCreditText(item, 5)}`;
-  if (item.id === "p40") return `At end of round, deal ${flatDamagePower(item)}x half the total regular bounty of living SINNERS to every enemy.`;
+  if (item.id === "p38") return `Start each round by marking a SINNER. If it dies, its bounty payout becomes at least ${scaledPassiveValueForItem(item, 6)} SIN or ${Math.round(200 * passivePower(item))}% bounty, and you heal ${passiveBaseHeal(item, 5)}.${passiveHealCreditText(item, 5)}`;
+  if (item.id === "p40") return `At end of round, deal ${flatDamagePower(item)}x half the total bounty of living SINNERS to every enemy.`;
   if (item.id === "p41" || item.id === "p42") return "This Seal is reserved and is not currently obtainable.";
   if (item.id === "p43") return `Whenever a SINNER loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all SINNERS lose 1 SIN.`;
-  if (item.id === "p44") return `At end of round, SINNERS with 2 or less regular bounty are eliminated. Their SIN goes to the living SINNER with the highest regular bounty instead of paying you.`;
-  if (item.id === "p45") return `SINNERS with 3 or less regular bounty pay ${Math.round(200 * passivePower(item))}% regular bounty SIN when eliminated.`;
-  if (item.id === "p46") return `SINNERS with 6 or more regular bounty take ${(1.5 * passivePower(item)).toFixed(1)}x damage.`;
-  if (item.id === "p47") return `At end of round, ${stack} SINNER${stack === 1 ? "" : "s"} lose half their regular bounty and you gain the amount lost.`;
-  if (item.id === "p48") return `At start of round, double ${stack} random SINNER regular ${stack === 1 ? "bounty" : "bounties"} for 1 round.`;
-  if (item.id === "p49") return `Using an Artifact that targets SINNERS gives each target +${scaledPassiveValueForItem(item, 4)} regular bounty.`;
-  if (item.id === "p50") return `At end of round, 10% of SIN earned this round spreads among SINNERS, prioritizing highest regular bounties. Whenever a SINNER gains SIN, it takes ${agaresDamagePerSin(item)} damage per SIN.`;
-  if (item.id === "p51") return `Once each round per SINNER, when that SINNER has taken more than 40 damage, it gains +${scaledPassiveValueForItem(item, 4)} regular bounty.`;
+  if (item.id === "p44") return `At end of round, SINNERS with 2 or less bounty are eliminated. Their SIN goes to the living SINNER with the highest bounty instead of paying you.`;
+  if (item.id === "p45") return `SINNERS with 3 or less bounty pay ${Math.round(200 * passivePower(item))}% bounty SIN when eliminated.`;
+  if (item.id === "p46") return `SINNERS with 6 or more bounty take ${(1.5 * passivePower(item)).toFixed(1)}x damage.`;
+  if (item.id === "p47") return `At end of round, ${stack} SINNER${stack === 1 ? "" : "s"} lose half their bounty and you gain the amount lost.`;
+  if (item.id === "p48") return `At start of round, double ${stack} random SINNER ${stack === 1 ? "bounty" : "bounties"} for 1 round.`;
+  if (item.id === "p49") return `Using an Artifact that targets SINNERS gives each target +${scaledPassiveValueForItem(item, 4)} bounty.`;
+  if (item.id === "p50") return `At end of round, 10% of SIN earned this round spreads among SINNERS, prioritizing highest bounties. Whenever a SINNER gains SIN, it takes ${agaresDamagePerSin(item)} damage per SIN.`;
+  if (item.id === "p51") return `Once each round per SINNER, when that SINNER has taken more than 40 damage, it gains +${scaledPassiveValueForItem(item, 4)} bounty.`;
   if (item.id === "p52") {
     return `SINNERS take ${Math.round(10 * passivePower(item))}% more damage per memory. Bosses take ${Math.round(3 * passivePower(item))}% more damage per memory instead.`;
   }
@@ -2060,6 +2135,8 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Marbas", "Seal of Marbas"],
     ["Seal of Buer", "Seal of Buer"],
     ["Seal of Bathin", "Seal of Bathin"],
+    ["Seal of Botis", "Seal of Botis"],
+    ["Seal of Gusion", "Seal of Gusion"],
     ["Seal of Amon", "Seal of Amon"],
     ["Seal of Raum", "Seal of Raum"],
     ["Seal of Ronove", "Seal of Ronove"],
@@ -2258,12 +2335,56 @@ function scaleSourceEntries(sources, total) {
   return scaled.filter((entry) => entry.amount > 0).map(({ source, amount }) => ({ source, amount }));
 }
 
-function damagePlayer(amount, reason, echo = true, respectReduction = true, source = undefined) {
+function highestMemorySinner() {
+  return activeBots()
+    .slice()
+    .sort((left, right) => (right.memory?.length || 0) - (left.memory?.length || 0) || right.hp - left.hp || left.id - right.id)[0];
+}
+
+function applyPlayerDamageMemoryConversion(amount) {
+  let damage = Math.max(0, Math.ceil(amount));
+  const conversions = [];
+  if (!state.roundState || damage <= 0) return { damage, conversions };
+
+  orderedPassiveEffectEntries("p22").forEach((entry) => {
+    if (damage <= 0) return;
+    const avoided = Math.min(damage, Math.ceil(damage * 0.2));
+    if (avoided <= 0) return;
+    damage -= avoided;
+    conversions.push({
+      entry,
+      avoided,
+      memory: passiveEntryFlatDamage(entry, avoided)
+    });
+    markPassiveEntryTriggered(entry);
+  });
+
+  return { damage, conversions };
+}
+
+function resolvePlayerDamageMemoryConversions(conversions = []) {
+  conversions.forEach(({ avoided, memory }) => {
+    const target = highestMemorySinner();
+    if (!target || memory <= 0) {
+      addRoundEvent(`Seal of Botis avoided ${avoided} damage, but no SINNER could receive memory.`);
+      return;
+    }
+    const added = addBotMemory(target, memory);
+    addRoundEvent(`Seal of Botis avoided ${avoided} damage and gave ${target.name} +${added} memory.`);
+  });
+}
+
+function damagePlayer(amount, reason, echo = true, respectReduction = true, source = undefined, applySealConversion = true) {
   let damage = Math.max(0, Math.ceil(amount));
   if (respectReduction && state.roundState?.playerDamageReduction) {
     damage = Math.ceil(damage * (1 - state.roundState.playerDamageReduction));
   }
-  if (damage <= 0) return 0;
+  const conversion = applySealConversion ? applyPlayerDamageMemoryConversion(damage) : { damage, conversions: [] };
+  damage = conversion.damage;
+  if (damage <= 0) {
+    resolvePlayerDamageMemoryConversions(conversion.conversions);
+    return 0;
+  }
   state.player.hp = Math.max(0, state.player.hp - damage);
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
@@ -2271,6 +2392,7 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
   if (reason) addRoundEvent(reason);
   if (echo) applySpiteCircuitDamage(damage);
   if (echo) applyPainEchoDamage(damage);
+  resolvePlayerDamageMemoryConversions(conversion.conversions);
   return damage;
 }
 
@@ -3432,8 +3554,8 @@ function applyOrderedPenaltyPassiveDamage(activeBotList, botDamages, botDamageSo
   const round = state.roundState;
   orderedPassiveEffectEntries(["p2", "p3"]).forEach((entry) => {
     if (entry.id === "p2") {
-      if (Math.abs(round.playerEffectiveGuess - round.target) > 5) return;
-      const damage = passiveEntryFlatDamage(entry, 10);
+      const damage = paimonDamage(entry, round);
+      if (damage <= 0) return;
       activeBotList.forEach((bot) => {
         addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Paimon");
       });
@@ -3545,9 +3667,11 @@ function applyPenalties() {
       round.roundEvents.push(`The Philosopher's Stone reduced damage from ${beforeReduction} to ${playerDamage}.`);
     }
   }
+  const memoryConversion = applyPlayerDamageMemoryConversion(playerDamage);
+  playerDamage = memoryConversion.damage;
   playerDamageSources = scaleSourceEntries(playerDamageSources, playerDamage);
 
-  const appliedPlayerDamage = damagePlayer(playerDamage, null, false, false, null);
+  const appliedPlayerDamage = damagePlayer(playerDamage, null, false, false, null, false);
   if (appliedPlayerDamage > 0) {
     playerDamageSources.forEach((entry) => recordPlayerDamageSource(entry.amount, entry.source));
     round.roundEvents.push(`You took ${appliedPlayerDamage} damage.`);
@@ -3559,6 +3683,7 @@ function applyPenalties() {
 
   applyPendingBotDamageBatch(targetBotDamages, targetBotDamageSources, state.bots);
   applyPendingBotDamageBatch(reactionBotDamages, reactionBotDamageSources, state.bots);
+  resolvePlayerDamageMemoryConversions(memoryConversion.conversions);
 
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -4245,6 +4370,7 @@ function rememberRound() {
       if (bot.isBoss) bot.memory = state.gameMemory.slice();
       return;
     }
+    const beforeMemory = bot.memory?.length || 0;
     for (let copy = 0; copy < memoryGain; copy += 1) {
       bot.memory.push({
         ownGuess,
@@ -4254,12 +4380,16 @@ function rememberRound() {
     applyMemoryAddedHealing(bot, memoryGain);
     if (!bot.isBoss) {
       bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
+      applyMemoryToBountyMirror(bot, Math.max(0, bot.memory.length - beforeMemory));
+      if (bot.eliminated || bot.hp <= 0) return;
       if (memoryGrowthEntries.length && bot.memory.length >= ZEPAR_MEMORY_THRESHOLD) {
         bot.hp = 0;
         bot.deathCause = "memory-overload";
         memoryEliminations.push(bot);
         round.roundEvents.push(`Seal of Zepar eliminated ${bot.name} at ${bot.memory.length} memory.`);
       }
+    } else {
+      applyMemoryToBountyMirror(bot, Math.max(0, bot.memory.length - beforeMemory));
     }
   });
 
