@@ -685,6 +685,7 @@ button:disabled {
 }
 
 .mini-stat {
+  position: relative;
   min-width: 0;
   padding: 7px;
   border: 1px solid var(--line-soft);
@@ -708,6 +709,28 @@ button:disabled {
   margin-top: 3px;
   color: var(--text);
   font-size: 14px;
+}
+
+.memory-badge {
+  position: absolute;
+  z-index: 12;
+  top: 5px;
+  right: 6px;
+  min-width: 30px;
+  max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  border: 1px solid rgba(170, 126, 255, 0.82);
+  border-radius: 999px;
+  background: #000;
+  color: #d9c6ff !important;
+  font-size: 12px !important;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  overflow: visible;
+  white-space: nowrap;
+  animation: damage-pop-still 900ms ease-out both;
+  box-shadow: none !important;
 }
 
 .critical-guess {
@@ -2998,7 +3021,7 @@ body.mobile-arcade .floating-tooltip {
 
 .floating-tooltip .tooltip-title {
   margin-bottom: 7px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 900;
   line-height: 1.15;
 }
@@ -3140,10 +3163,25 @@ body.mobile-arcade .passive-slot.suppressed .equipped-seal-sigil.recolored-sigil
   box-shadow: none !important;
 }
 
+.memory-badge {
+  border-color: rgba(170, 126, 255, 0.82) !important;
+  background: #000 !important;
+  color: #d9c6ff !important;
+}
+
 body.mobile-arcade .bounty-badge {
   top: 25px;
   right: 4px;
   min-width: 34px;
+  max-width: calc(100% - 8px);
+  padding: 1px 4px;
+  font-size: 9px !important;
+}
+
+body.mobile-arcade .memory-badge {
+  top: 4px;
+  right: 4px;
+  min-width: 24px;
   max-width: calc(100% - 8px);
   padding: 1px 4px;
   font-size: 9px !important;

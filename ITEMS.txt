@@ -15,8 +15,8 @@ Once per Artifact type each round, when you use two matching Artifacts, deal 30 
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Andras (12 SIN)
-If your final effective guess is 0, 50, or 100, SINNER target-difference damage is doubled this round.
-ELITE levels: Each ELITE level multiplies this damage bonus by x1.5.
+If your final effective guess is 0, 50, or 100, SINNER target-difference damage is doubled this round and you are immune to worst guess penalty damage.
+ELITE levels: Each ELITE level multiplies the damage bonus by x1.5. Worst guess penalty immunity does not scale.
 
 Seal of Andrealphus (9 SIN)
 Every time a SINNER is eliminated, deal 10 damage to the SINNER on its left and right.
@@ -37,6 +37,10 @@ ELITE levels: The payout bonus scales by +20% per ELITE level; healing stays 5, 
 Seal of Bael (10 SIN)
 Your guess counts five times when calculating the target average.
 ELITE levels: Each ELITE level adds +2 more guess weight.
+
+Seal of Balam (15 SIN)
+If a non-boss SINNER has 10+ memory and 10+ bounty, it is instantly eliminated. Its max health becomes damage spread to other SINNERS; if bosses are active, bosses take the damage instead.
+ELITE levels: ELITE does not change this effect.
 
 Seal of Barbatos (12 SIN)
 SINNERS with 6 or more SIN take 1.5x damage.
@@ -103,8 +107,8 @@ When you hit CRITICAL, it deals 30 damage to everyone else.
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Gremory (12 SIN)
-Whenever a SINNER with 6 or more bounty dies, heal 2 and gain 4 SIN.
-ELITE levels: The SIN reward scales by +20% per ELITE level; healing stays 2, and each ELITE level gives +1 SIN whenever this heal triggers.
+Whenever a SINNER with 6 or more bounty dies, heal 2 and deal 10 damage to the highest-health enemy.
+ELITE levels: Each ELITE level doubles only the damage; healing stays 2 and this Seal gives no SIN.
 
 Seal of Gusion (15 SIN)
 Whenever a SINNER gains memory, it gains that much bounty too. Whenever a SINNER gains bounty, it gains that much memory too.
@@ -114,9 +118,17 @@ Seal of Haagenti (11 SIN)
 Devil's Offerings has one more Artifact slot. Whenever you use an Artifact, all SINNERS take damage equal to that Artifact's purchase cost.
 ELITE levels: The extra shop slot does not stack; each ELITE level doubles Artifact-use damage.
 
+Seal of Halphas (12 SIN)
+At end of round, deal round x bosses defeated total damage, spread randomly among enemies.
+ELITE levels: Damage does not scale; each ELITE level gives +2 SIN at end of every round.
+
 Seal of Haures (9 SIN)
 Whenever you take damage, all SINNERS take that much extra damage.
 ELITE levels: Each ELITE level doubles the echoed damage.
+
+Seal of Ipos (13 SIN)
+The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, and the next two take 10.
+ELITE levels: Each ELITE level doubles both damage values.
 
 Seal of Leraje (8 SIN)
 At the start of each round, deal 20 damage to a random SINNER. If this kills, heal 5 health.
@@ -127,7 +139,7 @@ When you take 4 or less total damage in a round, gain 4 SIN and heal 3.
 ELITE levels: The SIN reward scales by +20% per ELITE level; healing stays 3, and each ELITE level gives +1 SIN whenever this heal triggers.
 
 Seal of Marax (11 SIN)
-Once each round per SINNER, when that SINNER has taken more than 40 damage, its SIN increases by 4.
+Once each round per SINNER, when that SINNER has taken more than 30% max-health damage, its SIN increases by 4.
 ELITE levels: The SIN gain scales by +20% per ELITE level.
 
 Seal of Marbas (14 SIN)
@@ -155,8 +167,8 @@ Copies a random Seal you own and keeps copying it. If the copied Seal is sold, O
 ELITE levels: Each ELITE level makes the copied Seal resolve one level stronger, based on Seal of Ose's own ELITE level.
 
 Seal of Paimon (6 SIN)
-If your final guess is close to the target, all SINNERS take ladder damage: 2 at +/-9, rising by 1 per step closer through 9 at +/-2. On CRITICAL, this deals only 1 damage.
-ELITE levels: Each ELITE level doubles all ladder and CRITICAL damage.
+If your final guess is close to the target, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact target, gain 10 SIN.
+ELITE levels: Each ELITE level doubles all SIN gained.
 
 Seal of Phenex (10 SIN)
 Using an Artifact that targets one or more SINNERS increases those SINNERS' bounty by 4.
@@ -171,7 +183,7 @@ Whenever a SINNER loses SIN, it takes 20 damage. At end of round, all SINNERS lo
 ELITE levels: Each ELITE level doubles this damage; the end-round SIN loss stays 1.
 
 Seal of Ronove (10 SIN)
-At end of round, a SINNER loses half its bounty and you gain SIN equal to the amount lost.
+At end of round, a SINNER loses half its bounty and you gain double the SIN removed.
 ELITE levels: Each ELITE level adds one more SINNER target.
 
 Seal of Sabnock (13 SIN)
@@ -185,6 +197,10 @@ ELITE levels: The memory payout scales by +20% per ELITE level.
 Seal of Seere (9 SIN)
 New non-boss SINNERS have a 33% chance to spawn with +6 bounty.
 ELITE levels: The spawn chance scales by +20% per ELITE level, capped at 100%.
+
+Seal of Sitri (11 SIN)
+If your final guess is within 5 of the target, deal 5 damage to every SINNER and heal 2. If it is outside 5, take 5 damage.
+ELITE levels: Only the damage you deal doubles each ELITE level; the heal and miss penalty stay fixed.
 
 Seal of Valac (13 SIN)
 Gain +2 Artifact uses per round and +2 Artifact inventory slots.
@@ -216,6 +232,8 @@ For every Seal with healing, the base heal stays fixed when upgraded. Each ELITE
 Core Round Rules
 Damage from target difference is calculated last. Seal damage resolves from the leftmost equipped Seal slot to the rightmost equipped Seal slot.
 After normal penalties are calculated, whoever is furthest from the target takes 10 extra damage. If several participants tie for worst guess, all tied participants take the damage.
+Seal of Ipos changes this so the 3 furthest guesses are punished instead, with the furthest taking double damage.
+Seal of Balam instantly eliminates non-boss SINNERS that reach both 10+ memory and 10+ bounty.
 If all 5 opponents are eliminated in 1 round, a random owned Seal is upgraded. If you have no Seal yet, a random Seal enters your Seals instead.
 Healing cannot revive you from 0 HP. If total round damage drops you to 0, later healing effects do not keep you alive.
 
@@ -318,7 +336,7 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for Artifacts and +6 SIN for Seals while Zilon is alive, and the target modifier becomes 1.5.
 
 Boss Scaling
-The first four bosses are Zilon, Dantre, Pyros, and Threon, and bosses arrive strictly after every 8 KOs unless Witch Bottle calls one sooner. After the fourth boss, all later bosses are Goetic bosses named after one of the playable Seals. They use the matching Goetic boss image, roll one fixed target modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and have double boss health.
+The first four bosses are Zilon, Dantre, Pyros, and Threon, and bosses arrive strictly after every 8 KOs unless Witch Bottle calls one sooner. After the fourth boss, all later bosses are Goetic bosses named after one of the playable Seals. They use the matching Goetic boss image, roll one fixed target modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, have double boss health, and deal 1 damage to you at end of round just by existing.
 
 Goetic Boss Seal Lock
 While a Goetic boss is alive, the matching player Seal cannot trigger. The disabled Seal appears darker in your Seal bar until that boss dies.
