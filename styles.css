@@ -324,6 +324,17 @@ button:disabled {
   font-weight: 1000;
 }
 
+.target-diff-damage {
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: right;
+}
+
 .target-previous {
   color: #7fb7ff;
   font-weight: 900;
@@ -1323,6 +1334,13 @@ button:disabled {
 .end-copy {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.end-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
 }
 
 @media (max-width: 1180px) {
@@ -3552,7 +3570,7 @@ body.mobile-arcade .credit-wrap .stat-value {
 }
 
 .arena:not(.pvp-arena) .topbar > .target-panel {
-  position: static !important;
+  position: relative !important;
   inset: auto !important;
   width: auto !important;
   min-width: 0;
@@ -3592,7 +3610,7 @@ body.mobile-arcade .arena:not(.pvp-arena) .topbar {
 }
 
 body.mobile-arcade .arena:not(.pvp-arena) .topbar > .target-panel {
-  position: static !important;
+  position: relative !important;
   inset: auto !important;
   width: auto !important;
   min-width: 0;

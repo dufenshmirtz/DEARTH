@@ -14,12 +14,17 @@ const BASE_TARGET_MODIFIER = 0.8;
 const FINAL_BOSS_TARGET_MODIFIER = 0.666;
 const SCALING_BREAKPOINT_BOSSES = 4;
 const BOT_HP_BONUS_PER_BOSS = 5;
-const BOT_HP_BONUS_PER_BOSS_LATE = 8;
+const BOT_HP_BONUS_PER_BOSS_LATE = 10;
 const BOSS_HP_BONUS_PER_SPAWN = 20;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 30;
+const ARTIFACT_SCALE_BOSS_INTERVAL = 4;
+const ARTIFACT_SCALE_STEP = 0.2;
+const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 const ENDLESS_BOSS_INTERVAL = 8;
+const TARGET_DIFF_DAMAGE_BOSS_INTERVAL = 8;
+const TARGET_DIFF_DAMAGE_STEP = 1.5;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -1060,9 +1065,73 @@ const UNIQUE_BOSS_SPECS = {
       "Each round, Threon applies a hidden mystery target modifier from 0.7 to 1.3.",
       "Every Artifact you use has a 50% chance to malfunction, do nothing, and deal 5 damage to you."
     ]
+  },
+  kalha: {
+    key: "kalha",
+    name: "Kalha",
+    image: "assets/bots/new-red-bosses-5/Kalha-vibrant.png",
+    personality: "Drifter",
+    modifierOverride: 1.2,
+    descriptions: [
+      "Each round, one random equipped Seal is deactivated until the round ends.",
+      "The target modifier becomes 1.2 while Kalha is alive."
+    ]
+  },
+  serafim: {
+    key: "serafim",
+    name: "Serafim",
+    image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
+    personality: "Caller",
+    modifierOverride: 0.7,
+    descriptions: [
+      "When Serafim enters play, you lose half your SIN; Serafim gains that SIN and twice that amount as health.",
+      "Each round, you lose up to 5 SIN and Serafim gains the amount lost.",
+      "The target modifier becomes 0.7 while Serafim is alive."
+    ]
+  },
+  padma: {
+    key: "padma",
+    name: "Padma",
+    image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
+    personality: "Stubborn",
+    modifierOverride: 0.6,
+    descriptions: [
+      "While Padma is alive, you cannot recover health in any way.",
+      "At the start of every round, Padma heals every other SINNER for 5 health.",
+      "The target modifier becomes 0.6 while Padma is alive."
+    ]
+  },
+  petros: {
+    key: "petros",
+    name: "Petros",
+    image: "assets/bots/new-red-bosses-5/Petros-vibrant.png",
+    personality: "Anchor",
+    statFactor: 0.5,
+    bossBountyFactor: 0.5,
+    descriptions: [
+      "Petros enters with Pavlos. Each twin has half boss health and half boss SIN.",
+      "Each twin borrows one other special boss ability.",
+      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+    ]
+  },
+  pavlos: {
+    key: "pavlos",
+    name: "Pavlos",
+    image: "assets/bots/new-red-bosses-5/Pavlos-vibrant.png",
+    personality: "Anchor",
+    statFactor: 0.5,
+    bossBountyFactor: 0.5,
+    countsAsBossProgress: false,
+    countsAsBossSpawn: false,
+    descriptions: [
+      "Pavlos enters with Petros. Each twin has half boss health and half boss SIN.",
+      "Each twin borrows one other special boss ability.",
+      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+    ]
   }
 };
-const UNIQUE_BOSS_KEYS = Object.keys(UNIQUE_BOSS_SPECS);
+const UNIQUE_BOSS_KEYS = ["zilon", "dantre", "pyros", "threon", "kalha", "serafim", "padma", "petros"];
+const PETROS_PAVLOS_POWER_KEYS = UNIQUE_BOSS_KEYS.filter((key) => key !== "petros");
 
 const FINAL_BOSS_SPECS = {
   jesus: {
@@ -1133,6 +1202,7 @@ const state = {
   goeticBossQueue: [],
   goeticBossKills: 0,
   killsSinceBossSpawn: 0,
+  nextBossPairId: 1,
   finalBossPhase: false,
   finalBossQueued: false,
   bossQueued: false,
@@ -1140,6 +1210,7 @@ const state = {
   pendingActive: null,
   playtestInfiniteMoney: false,
   gameOver: false,
+  inspectingGameOver: false,
   pvp: null
 };
 
@@ -1358,8 +1429,24 @@ function suppressingBossForSeal(id) {
   );
 }
 
+function kalhaSuppressionForSeal(id) {
+  const round = state.roundState;
+  if (!id || !round || round.kalhaSuppressedPassiveId !== id) return null;
+  return state.bots.find((bot) => bot.id === round.kalhaSuppressedById && bot.hp > 0 && !bot.eliminated) || {
+    name: "Kalha"
+  };
+}
+
 function isSealSuppressed(id) {
-  return Boolean(suppressingBossForSeal(id));
+  return Boolean(suppressingBossForSeal(id) || kalhaSuppressionForSeal(id));
+}
+
+function sealSuppressionNotice(id) {
+  const goeticBoss = suppressingBossForSeal(id);
+  if (goeticBoss) return `Disabled while ${goeticBoss.name} is alive.\n`;
+  const kalhaBoss = kalhaSuppressionForSeal(id);
+  if (kalhaBoss) return `Disabled by ${kalhaBoss.name} this round.\n`;
+  return "";
 }
 
 function mimicEntry() {
@@ -1468,9 +1555,44 @@ function scalingBonus(progress, earlyStep, lateStep) {
   return early * earlyStep + late * lateStep;
 }
 
+function artifactScaleSteps() {
+  return Math.max(0, Math.floor((state.bossKills || 0) / ARTIFACT_SCALE_BOSS_INTERVAL));
+}
+
+function artifactScaleFactor() {
+  return 1 + artifactScaleSteps() * ARTIFACT_SCALE_STEP;
+}
+
+function artifactValue(baseValue) {
+  const sign = Math.sign(baseValue || 0);
+  const scaled = Math.floor(Math.abs(baseValue || 0) * artifactScaleFactor());
+  return sign * scaled;
+}
+
+function artifactPercentValue(basePercent) {
+  return clamp(artifactValue(basePercent), 0, 100);
+}
+
+function artifactPercent(basePercent) {
+  return artifactPercentValue(basePercent) / 100;
+}
+
+function artifactCount(baseValue) {
+  return Math.max(1, artifactValue(baseValue));
+}
+
+function artifactMultiplier(baseValue) {
+  return Math.max(0, Math.floor((baseValue || 0) * artifactScaleFactor() * 10) / 10);
+}
+
+function formatArtifactMultiplier(value) {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+}
+
 function botBossBounty(bot) {
   if (!bot?.isBoss || bot?.immortal) return 0;
-  return Math.max(0, Math.ceil(10 + state.bossKills * 5));
+  const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
+  return Math.max(0, Math.ceil((10 + state.bossKills * 5) * factor));
 }
 
 function botRegularBounty(bot) {
@@ -1521,6 +1643,12 @@ function wealthWeightBonus() {
 
 function passiveShopDiscount() {
   return 0;
+}
+
+function sinPricePressureMultiplier() {
+  const credits = Number.isFinite(state.player.credits) ? Math.max(0, state.player.credits) : 0;
+  if (credits <= SIN_PRICE_PRESSURE_INTERVAL) return 1;
+  return 2 ** Math.ceil((credits - SIN_PRICE_PRESSURE_INTERVAL) / SIN_PRICE_PRESSURE_INTERVAL);
 }
 
 function memoryEntryForBot(bot) {
@@ -2070,8 +2198,56 @@ function applyPassivePlayerHealForEntry(entry, baseHeal, reason) {
   return { healed, credits: gained };
 }
 
+function artifactDescription(item) {
+  if (!item) return "";
+  if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the target.`;
+  if (item.id === "a7") return "Pick a non-boss SINNER and swap your effective guess with theirs.";
+  if (item.id === "a8") return `Pick a SINNER; their guess counts ${artifactCount(5)} times for the target average.`;
+  if (item.id === "a9") return "Pick a SINNER; remove their guess from the target average, though they still take damage.";
+  if (item.id === "a10") {
+    return `Multiplies SIN gained this round by x${formatArtifactMultiplier(artifactMultiplier(2))}. Multiple uses stack multiplicatively.`;
+  }
+  if (item.id === "a11") {
+    return `Heal ${artifactValue(20)}. There is a ${artifactPercentValue(33)}% chance the next elimination spawns a boss.`;
+  }
+  if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage.`;
+  if (item.id === "a13") {
+    const value = artifactValue(20);
+    return `Deal ${value} non-lethal damage to one SINNER, then heal another already-damaged SINNER for ${value}.`;
+  }
+  if (item.id === "a14") return `During reveal, reduce the target by ${artifactValue(10)}. The target can go below zero.`;
+  if (item.id === "a15") {
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-health damage to non-boss SINNERS, or ${artifactPercentValue(10)}% to bosses.`;
+  }
+  if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
+  if (item.id === "a18") {
+    const copies = artifactCount(1);
+    return `Add ${copies === 1 ? "a copy" : `${copies} copies`} of random other Artifacts in your inventory.`;
+  }
+  if (item.id === "a21") {
+    return `This round, SINNERS take x${formatArtifactMultiplier(artifactMultiplier(2))} the damage you take.`;
+  }
+  if (item.id === "a22") {
+    return `10% take ${artifactValue(20)} damage, 20% take ${artifactValue(10)} damage, 30% gain ${artifactValue(6)} SIN, 20% gain ${artifactValue(12)} SIN, 10% gain ${artifactValue(15)} SIN and deal ${artifactValue(20)} damage to each SINNER. The remaining 10% fizzles.`;
+  }
+  if (item.id === "a23") {
+    return `Arm the next Devil's Offerings reroll: the Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`;
+  }
+  if (item.id === "a25") return `Pick a SINNER, heal it to full, and increase its bounty by ${artifactValue(9)}.`;
+  if (item.id === "a26") {
+    return `Drain up to ${artifactValue(5)} bounty from one SINNER, then give the removed bounty to another SINNER.`;
+  }
+  if (item.id === "a28") {
+    const value = artifactValue(6);
+    return `Pick a non-boss SINNER. It gains ${value} memory, ${value} SIN, and ${value} max health.`;
+  }
+  return (item.description || "").replace(/^One use\.\s*/i, "").replace(/\bbots?\b/gi, "SINNERS");
+}
+
 function itemDescription(item) {
-  if (!item || item.type !== "passive") return (item?.description || "").replace(/^One use\.\s*/i, "");
+  if (!item) return "";
+  if (item.type === "active") return artifactDescription(item);
+  if (item.type !== "passive") return (item.description || "").replace(/^One use\.\s*/i, "");
   const stack = item.stack || 1;
   if (item.id === "p28") {
     const target = mimicTargetEntry();
@@ -2185,8 +2361,18 @@ function hasBossPassive(key) {
   return state.bots.some((bot) => bot.hp > 0 && botHasPassive(bot, key));
 }
 
+function botHasUniquePower(bot, key) {
+  return Boolean(bot && (bot.uniqueKey === key || bot.copiedUniqueKey === key));
+}
+
+function activeBossesWithPower(key, excludedIds = new Set()) {
+  return state.bots.filter(
+    (bot) => bot.isBoss && botHasUniquePower(bot, key) && !excludedIds.has(bot.id) && bot.hp > 0 && !bot.eliminated
+  );
+}
+
 function aliveUniqueBoss(key, excludedIds = new Set()) {
-  return state.bots.some((bot) => bot.isBoss && bot.uniqueKey === key && !excludedIds.has(bot.id) && bot.hp > 0 && !bot.eliminated);
+  return activeBossesWithPower(key, excludedIds).length > 0;
 }
 
 function aliveFinalBoss(key) {
@@ -2218,13 +2404,15 @@ function shopPrice(item) {
   const duplicateMultiplier = item.type === "passive" ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
-  return item.type === "passive" ? Math.max(0, taxedPrice - passiveShopDiscount()) : taxedPrice;
+  const discountedPrice = item.type === "passive" ? Math.max(0, taxedPrice - passiveShopDiscount()) : taxedPrice;
+  return Math.ceil(discountedPrice * sinPricePressureMultiplier());
 }
 
 function botPassiveSummary(bot) {
   if (!bot) return "";
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.goeticPassiveId) names.push(`${bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "Seal"} Lock`);
   bot.passiveKeys?.forEach((key) => names.push(BOSS_PASSIVES[key].name));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${BOSS_PASSIVES[bot.buffPassiveKey].name}`);
@@ -2235,6 +2423,14 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  if (bot.isBoss && bot.copiedUniqueKey) {
+    const copiedSpec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
+    const borrowedText = copiedSpec.descriptions
+      .join(" ")
+      .replaceAll(copiedSpec.name, bot.name)
+      .replaceAll(`${copiedSpec.name}'s`, `${bot.name}'s`);
+    descriptions.push(`Borrowed power: ${borrowedText}`);
+  }
   if (bot.isBoss && bot.goeticPassiveId) {
     const sealName = bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "this Seal";
     descriptions.push(`While ${bot.name} is alive, your ${sealName} cannot trigger and appears darkened.`);
@@ -2319,6 +2515,18 @@ function formatModifier(value) {
   return Number.isInteger(value * 10)
     ? value.toFixed(1)
     : value.toFixed(3).replace(/0+$/u, "").replace(/\.$/u, "");
+}
+
+function targetDifferenceDamageTier() {
+  return Math.max(0, Math.floor((state.bossKills || 0) / TARGET_DIFF_DAMAGE_BOSS_INTERVAL));
+}
+
+function targetDifferenceDamageMultiplier() {
+  return Math.pow(TARGET_DIFF_DAMAGE_STEP, targetDifferenceDamageTier());
+}
+
+function targetDifferenceDamagePercent() {
+  return Math.ceil(targetDifferenceDamageMultiplier() * 100);
 }
 
 function guessClosenessColor(guess, target) {
@@ -2643,8 +2851,10 @@ function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, 
 
 function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZero = false } = {}) {
   const eliminated = [];
+  maybeActivatePavlosProtection(botDamages);
   bots.forEach((bot) => {
     if (!bot || bot.eliminated || bot.hp <= 0) return;
+    if (pavlosDamageBlocked(bot)) return;
     const damage = botDamages.get(bot.id) || 0;
     if (damage <= 0) {
       if (logZero) state.roundState.roundEvents.push(`${bot.name} took 0 damage.`);
@@ -2795,7 +3005,8 @@ function applySpiteCircuitDamage(playerDamage, pendingBotDamages = null, pending
 function applyPainEchoDamage(playerDamage, pendingBotDamages = null, pendingBotSources = null) {
   const round = state.roundState;
   if (!round?.painEcho || playerDamage <= 0) return;
-  const echoDamage = Math.ceil(playerDamage * 2);
+  const multiplier = Number(round.painEcho) || 2;
+  const echoDamage = Math.ceil(playerDamage * multiplier);
   const targets = activeBots();
   if (!targets.length) return;
   if (pendingBotDamages) {
@@ -2811,11 +3022,16 @@ function applyPainEchoDamage(playerDamage, pendingBotDamages = null, pendingBotS
 function healPlayer(amount, reason, source = undefined) {
   if (state.player.hp <= 0) return 0;
   amount = Math.ceil(amount);
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
+  const healingBlocker = padmaHealingBlocker();
+  if (healingBlocker) {
+    if (sourceLabel) addRoundEvent(`${healingBlocker.name} prevented ${sourceLabel} from healing you.`);
+    return 0;
+  }
   const before = state.player.hp;
   state.player.hp = Math.min(playerMaxHp(), state.player.hp + amount);
   const healed = state.player.hp - before;
   if (healed > 0) state.playerLastHeal = (state.playerLastHeal || 0) + healed;
-  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
   recordPlayerHealSource(healed, sourceLabel);
   if (healed > 0 && reason) addRoundEvent(`${reason} healed you for ${healed}.`);
   return healed;
@@ -2896,11 +3112,34 @@ function activeBots() {
   return state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
 }
 
+function activeBossByOwnKey(key) {
+  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.hp > 0 && !bot.eliminated) || null;
+}
+
+function maybeActivatePavlosProtection(incomingDamageById) {
+  const round = state.roundState;
+  if (!round || round.pavlosProtectedBotId) return null;
+  const petros = activeBossByOwnKey("petros");
+  const pavlos = activeBossByOwnKey("pavlos");
+  if (!petros || !pavlos || petros.pairGroupId !== pavlos.pairGroupId) return null;
+  const petrosDamage = Math.max(0, Math.ceil(incomingDamageById.get(petros.id) || 0));
+  const pavlosDamage = Math.max(0, Math.ceil(incomingDamageById.get(pavlos.id) || 0));
+  if (petrosDamage < petros.hp || pavlosDamage < pavlos.hp) return null;
+  round.pavlosProtectedBotId = pavlos.id;
+  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
+  return pavlos.id;
+}
+
+function pavlosDamageBlocked(bot) {
+  return Boolean(bot && state.roundState?.pavlosProtectedBotId === bot.id);
+}
+
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (!bot || bot.eliminated || damage <= 0) return 0;
+  if (pavlosDamageBlocked(bot)) return 0;
   bot.lastDamage = (bot.lastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
@@ -2924,6 +3163,7 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (!bot || bot.eliminated || bot.hp <= 1 || damage <= 0) return 0;
+  if (pavlosDamageBlocked(bot)) return 0;
   if (bot.immortal) {
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
@@ -2950,10 +3190,14 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
 
 function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
   const eliminated = [];
-  bots.forEach((bot) => {
+  const planned = bots.map((bot) => {
     const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
     const damage = damageDetails.damage;
-    if (!bot || bot.eliminated || damage <= 0) return;
+    return { bot, damageDetails, damage };
+  });
+  maybeActivatePavlosProtection(new Map(planned.map(({ bot, damage }) => [bot?.id, damage])));
+  planned.forEach(({ bot, damageDetails, damage }) => {
+    if (!bot || bot.eliminated || damage <= 0 || pavlosDamageBlocked(bot)) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
@@ -3019,6 +3263,22 @@ function goeticBossSpecFromKey(key) {
   };
 }
 
+function uniqueBossSpecFromKey(key) {
+  if (key !== "petros") return { uniqueKey: key };
+  const groupId = `petros-pavlos-${state.nextBossPairId++}`;
+  const powers = shuffled(PETROS_PAVLOS_POWER_KEYS);
+  return {
+    uniqueKey: "petros",
+    pairGroupId: groupId,
+    copiedUniqueKey: powers[0] || "zilon",
+    pairedBossSpec: {
+      uniqueKey: "pavlos",
+      pairGroupId: groupId,
+      copiedUniqueKey: powers[1] || powers[0] || "dantre"
+    }
+  };
+}
+
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
@@ -3051,6 +3311,75 @@ function botSinDisplay(bot) {
   if (bot?.finalKey === "jesus") return "-∞ SIN";
   if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
   return `${botReward(bot)} SIN`;
+}
+
+function stealPlayerSinToBoss(bot, amount, source) {
+  if (!bot || bot.eliminated || bot.immortal) return 0;
+  const available = Math.max(0, Math.ceil(state.player.credits || 0));
+  const stolen = Math.min(available, Math.max(0, Math.ceil(amount)));
+  if (stolen <= 0) return 0;
+  state.player.credits = Math.max(0, state.player.credits - stolen);
+  changeBotSin(bot, stolen, "", {
+    triggerLossDamage: false,
+    triggerGainDamage: false,
+    triggerMemoryBountyMirror: false,
+    source
+  });
+  return stolen;
+}
+
+function uniquePowerSourceName(bot, key) {
+  const spec = UNIQUE_BOSS_SPECS[key];
+  if (!bot || bot.uniqueKey === key) return `${spec?.name || key}'s Seal`;
+  return `${bot.name}'s borrowed ${spec?.name || key} Seal`;
+}
+
+function applySerafimEntrySteal(bot) {
+  const stolen = stealPlayerSinToBoss(
+    bot,
+    Math.ceil(Math.max(0, state.player.credits || 0) / 2),
+    uniquePowerSourceName(bot, "serafim")
+  );
+  if (stolen <= 0) return;
+  const hpGain = stolen * 2;
+  bot.maxHp += hpGain;
+  bot.hp += hpGain;
+  addLog(`${bot.name} stole ${stolen} SIN and gained ${hpGain} health.`);
+}
+
+function applySerafimRoundSteal() {
+  const bosses = activeBossesWithPower("serafim");
+  if (!bosses.length) return;
+  bosses.forEach((bot) => {
+    const stolen = stealPlayerSinToBoss(bot, 5, uniquePowerSourceName(bot, "serafim"));
+    if (stolen > 0) state.roundState.roundEvents.push(`${bot.name} stole ${stolen} SIN.`);
+  });
+}
+
+function padmaHealingBlocker() {
+  return activeBossesWithPower("padma")[0] || null;
+}
+
+function applyPadmaStartHealing() {
+  const padmas = activeBossesWithPower("padma");
+  if (!padmas.length) return;
+  padmas.forEach((padma) => {
+    const source = uniquePowerSourceName(padma, "padma");
+    activeBots()
+      .filter((bot) => bot.id !== padma.id)
+      .forEach((bot) => healBot(bot, 5, source, source));
+  });
+}
+
+function applyKalhaSealSuppression() {
+  const kalhas = activeBossesWithPower("kalha");
+  const choices = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !suppressingBossForSeal(item.id));
+  if (!kalhas.length || !choices.length || !state.roundState) return;
+  const boss = randomFrom(kalhas);
+  const seal = randomFrom(choices);
+  state.roundState.kalhaSuppressedPassiveId = seal.id;
+  state.roundState.kalhaSuppressedById = boss.id;
+  state.roundState.roundEvents.push(`${boss.name} deactivated ${passiveDisplayName(seal)} for this round.`);
 }
 
 function createFinalBoss(key) {
@@ -3144,7 +3473,7 @@ function skipToFirstGoeticBoss() {
   state.rerollBaseCost = 1;
   rerollShop();
   beginRound();
-  addLog("SKIP: jumped to the first Goetic Seal boss.");
+  addLog("SKIP: jumped past the eight special bosses to the first Goetic Seal boss.");
   render();
 }
 
@@ -3163,7 +3492,7 @@ function skipToFinalBosses() {
 }
 
 function skipArcadeProgression() {
-  if (state.mode !== "arcade") return;
+  if (arcadeActionLocked()) return;
   if (state.finalBossPhase) {
     addLog("SKIP: final phase is already active.");
     render();
@@ -3180,13 +3509,17 @@ function createBot(options = {}) {
   const isBoss = Boolean(options.boss);
   const bossSpec = options.bossSpec || null;
   const uniqueSpec = bossSpec?.uniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.uniqueKey] : null;
+  const copiedUniqueSpec = bossSpec?.copiedUniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.copiedUniqueKey] : null;
+  const powerSpec = copiedUniqueSpec || uniqueSpec;
   const profile = isBoss ? null : randomBotProfile();
-  const archetype = uniqueSpec ? archetypeByType(uniqueSpec.personality) : randomFrom(BOT_ARCHETYPES);
+  const archetype = uniqueSpec ? archetypeByType((powerSpec || uniqueSpec).personality) : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
   const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
-  const maxHp = isBoss ? bossBaseHp * (state.bossSpawnCount >= 4 ? 2 : 1) : randomBotHealth();
+  const bossHealthMultiplier = state.bossSpawnCount >= SCALING_BREAKPOINT_BOSSES ? 2 : 1;
+  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
+  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthMultiplier * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
     ? uniqueSpec
@@ -3214,13 +3547,18 @@ function createBot(options = {}) {
     isBoss,
     bossOrder,
     uniqueKey: uniqueSpec?.key || null,
+    copiedUniqueKey: copiedUniqueSpec?.key || null,
+    pairGroupId: bossSpec?.pairGroupId || null,
     goeticKey: goeticSpec?.key || null,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
-    modifierOverride: uniqueSpec?.modifierOverride ?? endlessModifier,
+    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
     shopTax: uniqueSpec?.shopTax || 0,
-    eliminationDamage: uniqueSpec?.eliminationDamage || 0,
-    grantsBuffs: Boolean(uniqueSpec?.grantsBuffs),
+    eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
+    grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
+    bossBountyFactor: uniqueSpec?.bossBountyFactor ?? bossSpec?.bossBountyFactor ?? 1,
+    countsAsBossProgress: uniqueSpec?.countsAsBossProgress !== false && bossSpec?.countsAsBossProgress !== false,
+    countsAsBossSpawn: uniqueSpec?.countsAsBossSpawn !== false && bossSpec?.countsAsBossSpawn !== false,
     passiveKeys,
     buffPassiveKey: null,
     uniqueDescriptions: uniqueSpec?.descriptions || [],
@@ -3243,8 +3581,9 @@ function createBot(options = {}) {
     revealedByPassive: false,
     fresh: true
   };
+  if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
   seedNewBotMemoryFromVassago(bot);
-  if (isBoss) state.bossSpawnCount += 1;
+  if (isBoss && bot.countsAsBossSpawn !== false) state.bossSpawnCount += 1;
   return bot;
 }
 
@@ -3260,7 +3599,8 @@ function resetBotsForRun() {
 }
 
 function applyPyrosBuffs() {
-  if (!aliveUniqueBoss("pyros") || state.roundState?.pyrosGiftGranted) return;
+  const pyrosSource = activeBossesWithPower("pyros")[0];
+  if (!pyrosSource || state.roundState?.pyrosGiftGranted) return;
   const candidates = activeBots();
   if (!candidates.length) return;
   const target = randomFrom(candidates);
@@ -3268,7 +3608,7 @@ function applyPyrosBuffs() {
   if (!key) return;
   if (state.roundState) {
     state.roundState.pyrosGiftGranted = true;
-    state.roundState.roundEvents.push(`Pyros gave ${target.name} ${BOSS_PASSIVES[key].name}.`);
+    state.roundState.roundEvents.push(`${pyrosSource.name} gave ${target.name} ${BOSS_PASSIVES[key].name}.`);
   }
 }
 
@@ -3280,7 +3620,7 @@ function rerollShop() {
   const eliteBoosted = state.eliteBoostedNextReroll;
   state.eliteBoostedNextReroll = false;
   state.shop = [drawPassiveShopItem(eliteBoosted), drawShopItem(ACTIVE_IDS), drawShopItem(ACTIVE_IDS)];
-  if (eliteBoosted) addLog("The Hand of Glory set this Seal reroll's ELITE chance to 50%.");
+  if (eliteBoosted) addLog(`The Hand of Glory set this Seal reroll's ELITE chance to ${artifactPercentValue(50)}%.`);
   syncShopSlotCount();
 }
 
@@ -3302,7 +3642,7 @@ function drawShopItem(pool) {
 function drawPassiveShopItem(eliteBoosted = false) {
   const ownedPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) > 0);
   const freshPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) === 0);
-  const eliteChance = eliteBoosted ? 0.5 : SHOP_ELITE_CHANCE;
+  const eliteChance = eliteBoosted ? artifactPercent(50) : SHOP_ELITE_CHANCE;
   const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
   if (!choices.length) return drawShopItem(PASSIVE_IDS);
@@ -3334,6 +3674,7 @@ function resetNegativePlaytestSin() {
 }
 
 function togglePlaytestMoneyMode() {
+  if (arcadeActionLocked()) return;
   state.playtestInfiniteMoney = !state.playtestInfiniteMoney;
   if (!state.playtestInfiniteMoney) resetNegativePlaytestSin();
   addLog(`Playtest SIN debt ${state.playtestInfiniteMoney ? "enabled" : "disabled"}.`);
@@ -3462,6 +3803,10 @@ function activePurchaseCost(item) {
   return Math.max(0, Math.ceil(item.purchaseCost ?? item.price ?? 0));
 }
 
+function arcadeActionLocked() {
+  return state.mode !== "arcade" || state.gameOver;
+}
+
 function itemBuyValue(item) {
   if (!item) return 0;
   if (item.type === "active") return Math.max(0, Math.ceil(Math.max(item.purchaseCost ?? 0, item.price ?? 0)));
@@ -3560,6 +3905,7 @@ function startGame() {
   state.gameMemory = [];
   state.pendingActive = null;
   state.gameOver = false;
+  state.inspectingGameOver = false;
   state.nextBotId = 1;
   state.nextItemUid = 1;
   state.eliminations = 0;
@@ -3572,6 +3918,7 @@ function startGame() {
   state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
   state.goeticBossKills = 0;
+  state.nextBossPairId = 1;
   state.finalBossPhase = false;
   state.finalBossQueued = false;
   state.bossQueued = false;
@@ -3633,6 +3980,9 @@ function beginRound() {
     revealedBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
+    kalhaSuppressedPassiveId: null,
+    kalhaSuppressedById: null,
+    pavlosProtectedBotId: null,
     pyrosGiftGranted: false,
     triggeredPassiveIds: new Set(),
     penaltiesApplied: false,
@@ -3656,6 +4006,9 @@ function beginRound() {
     bot.revealedByPassive = false;
   });
 
+  applyKalhaSealSuppression();
+  applySerafimRoundSteal();
+  applyPadmaStartHealing();
   applyPyrosBuffs();
   applyMarkedProspect();
   applyGuessReveals();
@@ -4128,7 +4481,15 @@ function applyPenalties() {
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyPendingBotDamageBatch(botDamages, botDamageSources, activeBots);
 
-  addPlayerDamage(Math.ceil(Math.abs(round.playerEffectiveGuess - round.target)), "Target difference");
+  const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
+  const playerTargetDiffMultiplier = targetDifferenceDamageMultiplier();
+  const playerTargetDiffDamage = Math.ceil(playerTargetDiffBaseDamage * playerTargetDiffMultiplier);
+  addPlayerDamage(
+    playerTargetDiffDamage,
+    playerTargetDiffMultiplier > 1
+      ? `Target difference x${targetDifferenceDamagePercent()}%`
+      : "Target difference"
+  );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
   const reactionBotDamages = new Map();
@@ -4207,8 +4568,11 @@ function applyPenalties() {
 }
 
 function finishGameOverRound() {
+  if (state.gameOver && state.stage === "ended") return;
   state.gameOver = true;
+  state.inspectingGameOver = false;
   state.stage = "ended";
+  state.pendingActive = null;
   addLog("Game over. The table solved you first.");
 }
 
@@ -4278,7 +4642,8 @@ function findCriticalHits() {
 function resolveEliminatedBots(eliminated) {
   const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
   if (!freshEliminations.length) return;
-  const dantreAlive = aliveUniqueBoss("dantre", new Set(freshEliminations.map((bot) => bot.id)));
+  const eliminatedIds = new Set(freshEliminations.map((bot) => bot.id));
+  const dantreSources = activeBossesWithPower("dantre", eliminatedIds);
 
   freshEliminations.forEach((bot) => {
     const rewardDetails = bot.skipEliminationReward ? { amount: 0, sourceEntries: [] } : botRewardDetails(bot, true);
@@ -4293,14 +4658,16 @@ function resolveEliminatedBots(eliminated) {
       reward > 0 ? `${bot.name} was eliminated. +${reward} SIN.` : `${bot.name} was eliminated. No SIN paid.`
     );
 
-    if (dantreAlive) {
-      const dantreDamage = damagePlayer(3, "Dantre dealt damage for the elimination.");
-      if (dantreDamage > 0) state.roundState.roundEvents.push(`Dantre dealt ${dantreDamage} damage for the elimination.`);
-    }
+    dantreSources.forEach((dantre) => {
+      const dantreDamage = damagePlayer(3, `${dantre.name} dealt damage for the elimination.`);
+      if (dantreDamage > 0) state.roundState.roundEvents.push(`${dantre.name} dealt ${dantreDamage} damage for the elimination.`);
+    });
+
+    applyKillRuleHealing(bot);
 
     if (bot.isBoss) {
       const previousPassiveLimit = passiveLimit();
-      state.bossKills += 1;
+      if (bot.countsAsBossProgress !== false) state.bossKills += 1;
       if (bot.goeticKey) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
@@ -4395,21 +4762,46 @@ function upgradeRandomSealFromPentakill() {
   return { item, message: `PENTAKILL! ${item.name} entered your Seals.` };
 }
 
+function applyKillRuleHealing(bot) {
+  const heal = bot?.isBoss ? 8 : 1;
+  const source = bot?.isBoss ? "Boss kill" : "SINNER kill";
+  const healed = healPlayer(heal, null, source);
+  state.roundState.roundEvents.push(
+    healed > 0 ? `${source} healed you for ${healed}.` : `${source} tried to heal you, but no health was recovered.`
+  );
+}
+
 function replacePendingEliminations() {
   if (state.finalBossQueued) {
     enterFinalBossPhase();
     return;
   }
-  let spawnedBoss = false;
-  state.bots = state.bots.map((bot) => {
+  const pairedBossSpecs = [];
+  const normalReplacementIndexes = [];
+  state.bots = state.bots.map((bot, index) => {
     if (!bot.eliminated) return bot;
     const bossSpec = bot.pendingReplacementSpec;
     const replacement = createBot({ boss: Boolean(bossSpec), bossSpec });
     if (bossSpec) {
-      spawnedBoss = true;
       addLog(`${replacement.name} enters as a boss with ${botPassiveSummary(replacement)}.`);
+      if (bossSpec.pairedBossSpec) pairedBossSpecs.push(bossSpec.pairedBossSpec);
+    } else {
+      normalReplacementIndexes.push(index);
     }
     return replacement;
+  });
+  pairedBossSpecs.forEach((bossSpec) => {
+    const slotIndex =
+      normalReplacementIndexes.shift() ??
+      state.bots.findIndex((bot) => bot && !bot.isBoss && !bot.eliminated) ??
+      -1;
+    const replacement = createBot({ boss: true, bossSpec });
+    if (slotIndex >= 0) {
+      state.bots[slotIndex] = replacement;
+    } else {
+      state.bots.push(replacement);
+    }
+    addLog(`${replacement.name} enters beside Petros with ${botPassiveSummary(replacement)}.`);
   });
 }
 
@@ -4444,7 +4836,7 @@ function nextBossSpecIfNeeded() {
 
 function takeNextBossSpec() {
   if (state.uniqueBossQueue.length) {
-    return { uniqueKey: state.uniqueBossQueue.shift() };
+    return uniqueBossSpecFromKey(state.uniqueBossQueue.shift());
   }
   if (state.goeticBossQueue.length) {
     return { goeticKey: state.goeticBossQueue.shift() };
@@ -4856,9 +5248,7 @@ function advanceAfterSummary() {
   if (state.stage !== "summary") return;
   rememberRound();
   if (state.player.hp <= 0) {
-    state.gameOver = true;
-    state.stage = "ended";
-    addLog("Game over. The table solved you first.");
+    finishGameOverRound();
     render();
     return;
   }
@@ -4933,6 +5323,7 @@ function rememberRound() {
 }
 
 function buyShopItem(slotIndex) {
+  if (arcadeActionLocked()) return;
   if (shopDisabledBySatan()) {
     addLog("Satan has disabled Devil's Offerings.");
     render();
@@ -4997,6 +5388,7 @@ function buyShopItem(slotIndex) {
 }
 
 function rerollShopClick() {
+  if (arcadeActionLocked()) return;
   if (shopDisabledBySatan()) {
     addLog("Satan has disabled Devil's Offerings.");
     render();
@@ -5016,6 +5408,7 @@ function rerollShopClick() {
 }
 
 function sellPassive(index) {
+  if (arcadeActionLocked()) return;
   const item = state.player.passives[index];
   if (!item) return;
   const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
@@ -5028,6 +5421,7 @@ function sellPassive(index) {
 }
 
 function sellActive(index) {
+  if (arcadeActionLocked()) return;
   const item = state.player.actives[index];
   if (!item) return;
   const sale = Math.floor(item.price / 2);
@@ -5069,6 +5463,7 @@ function positionFloatingTooltip(event, tooltip) {
 
 function canUseActive() {
   return (
+    !arcadeActionLocked() &&
     state.stage === "active" &&
     state.roundState &&
     !state.roundState.penaltiesApplied &&
@@ -5077,6 +5472,7 @@ function canUseActive() {
 }
 
 function useActive(index) {
+  if (arcadeActionLocked()) return;
   if (!canUseActive()) {
     addLog("Artifacts can be used only during the reveal stage.");
     render();
@@ -5105,32 +5501,40 @@ function useActive(index) {
   mirrorSpiteBots.forEach((bot) => {
     damagePlayer(3, `${bot.name}'s Seal of Botis dealt 3 damage to you.`);
   });
-  if (state.gameOver) {
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
     render();
     return;
   }
 
-  if (aliveUniqueBoss("threon") && Math.random() < 0.5) {
-    damagePlayer(5, `${item.name} malfunction dealt 5 damage to you.`);
-    consumeActive(index, `${item.name} malfunctioned and did nothing.`, item.uid);
+  const threonSource = activeBossesWithPower("threon")[0];
+  if (threonSource && Math.random() < 0.5) {
+    damagePlayer(5, `${threonSource.name} made ${item.name} malfunction for 5 damage.`);
+    consumeActive(index, `${threonSource.name} made ${item.name} malfunction and do nothing.`, item.uid);
     return;
   }
 
   if (item.id === "a6") {
-    state.roundState.targetOffset += 20;
-    consumeActive(index, "The Tablet of Destinies added 20 to the target.", item.uid);
+    const value = artifactValue(20);
+    state.roundState.targetOffset += value;
+    consumeActive(index, `The Tablet of Destinies added ${value} to the target.`, item.uid);
     return;
   }
 
   if (item.id === "a14") {
-    state.roundState.targetOffset -= 10;
-    consumeActive(index, "The Blasting Rod reduced the target by 10.", item.uid);
+    const value = artifactValue(10);
+    state.roundState.targetOffset -= value;
+    consumeActive(index, `The Blasting Rod reduced the target by ${value}.`, item.uid);
     return;
   }
 
   if (item.id === "a23") {
     state.eliteBoostedNextReroll = true;
-    consumeActive(index, "The Hand of Glory marked the next reroll. The Seal slot has a 50% ELITE chance.", item.uid);
+    consumeActive(
+      index,
+      `The Hand of Glory marked the next reroll. The Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`,
+      item.uid
+    );
     return;
   }
 
@@ -5142,15 +5546,21 @@ function useActive(index) {
   }
 
   if (item.id === "a10") {
-    state.roundState.bountyMultiplier *= 2;
-    consumeActive(index, `The Thirty Pieces of Silver armed: SIN gains pay x${state.roundState.bountyMultiplier} this round.`, item.uid);
+    const multiplier = artifactMultiplier(2);
+    state.roundState.bountyMultiplier *= multiplier;
+    consumeActive(
+      index,
+      `The Thirty Pieces of Silver armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`,
+      item.uid
+    );
     return;
   }
 
   if (item.id === "a11") {
-    const healed = healPlayer(20, null, "Witch Bottle");
+    const heal = artifactValue(20);
+    const healed = healPlayer(heal, null, "Witch Bottle");
     let message = `Witch Bottle healed you for ${healed}.`;
-    if (Math.random() < 0.33) {
+    if (Math.random() < artifactPercent(33)) {
       state.bossQueued = true;
       message += " A boss is queued for the next elimination.";
     }
@@ -5159,9 +5569,9 @@ function useActive(index) {
   }
 
   if (item.id === "a12") {
-    state.roundState.playerDamageReduction = Math.max(state.roundState.playerDamageReduction, 0.5);
+    state.roundState.playerDamageReduction = Math.max(state.roundState.playerDamageReduction, artifactPercent(50));
     state.roundState.playerDamageReductionSource = item.name;
-    consumeActive(index, "The Philosopher's Stone armed: you take 50% less damage this round.", item.uid);
+    consumeActive(index, `The Philosopher's Stone armed: you take ${artifactPercentValue(50)}% less damage this round.`, item.uid);
     return;
   }
 
@@ -5173,7 +5583,7 @@ function useActive(index) {
   }
 
   if (item.id === "a16") {
-    const credits = randomInt(3, 9);
+    const credits = randomInt(artifactValue(3), artifactValue(9));
     const gained = gainCredits(credits, true, "Dr Dee's Gold Disc");
     consumeActive(index, `Dr Dee's Gold Disc gained ${gained} SIN.`, item.uid);
     return;
@@ -5186,17 +5596,23 @@ function useActive(index) {
       render();
       return;
     }
-    const copied = randomFrom(copyOptions);
-    const duplicate = itemCopy(copied.id);
-    duplicate.purchaseCost = 0;
-    state.player.actives.push(duplicate);
-    consumeActive(index, `The Emerald Tablet copied ${copied.name}.`, item.uid);
+    const copies = Math.min(artifactCount(1), Math.max(0, activeInventoryLimit() - (state.player.actives.length - 1)));
+    const copiedNames = [];
+    for (let copy = 0; copy < copies; copy += 1) {
+      const copied = randomFrom(copyOptions);
+      const duplicate = itemCopy(copied.id);
+      duplicate.purchaseCost = 0;
+      state.player.actives.push(duplicate);
+      copiedNames.push(copied.name);
+    }
+    consumeActive(index, `The Emerald Tablet copied ${copiedNames.join(", ")}.`, item.uid);
     return;
   }
 
   if (item.id === "a21") {
-    state.roundState.painEcho = true;
-    consumeActive(index, "Amulet of Pazuzu armed: bots take double the damage you take this round.", item.uid);
+    const multiplier = artifactMultiplier(2);
+    state.roundState.painEcho = Math.max(Number(state.roundState.painEcho) || 0, multiplier);
+    consumeActive(index, `Amulet of Pazuzu armed: SINNERS take x${formatArtifactMultiplier(multiplier)} the damage you take this round.`, item.uid);
     return;
   }
 
@@ -5209,6 +5625,7 @@ function useActive(index) {
 }
 
 function cancelPendingActive() {
+  if (arcadeActionLocked()) return;
   const pending = state.pendingActive;
   if (!pending) return;
   const item = state.player.actives.find((active) => active.uid === pending.uid);
@@ -5251,9 +5668,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   recalculateTarget();
   normalizeActiveCarouselIndex();
   if (state.player.hp <= 0) {
-    state.gameOver = true;
-    state.stage = "ended";
-    addLog("Game over. The table solved you first.");
+    finishGameOverRound();
   }
   if (renderAfter) render();
 }
@@ -5261,22 +5676,24 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
 function resolvePandoraRoll(index, uid) {
   const roll = Math.random();
   if (roll < 0.1) {
-    damagePlayer(20, "The Necklace of Harmonia dealt 20 damage to you.");
+    const damage = artifactValue(20);
+    damagePlayer(damage, `The Necklace of Harmonia dealt ${damage} damage to you.`);
     consumeActive(index, "The Necklace of Harmonia backfired.", uid);
     return;
   }
   if (roll < 0.3) {
-    damagePlayer(10, "The Necklace of Harmonia dealt 10 damage to you.");
+    const damage = artifactValue(10);
+    damagePlayer(damage, `The Necklace of Harmonia dealt ${damage} damage to you.`);
     consumeActive(index, "The Necklace of Harmonia stung you.", uid);
     return;
   }
   if (roll < 0.6) {
-    const gained = gainCredits(6, true, "The Necklace of Harmonia");
+    const gained = gainCredits(artifactValue(6), true, "The Necklace of Harmonia");
     consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN.`, uid);
     return;
   }
   if (roll < 0.8) {
-    const gained = gainCredits(12, true, "The Necklace of Harmonia");
+    const gained = gainCredits(artifactValue(12), true, "The Necklace of Harmonia");
     consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN.`, uid);
     return;
   }
@@ -5284,12 +5701,14 @@ function resolvePandoraRoll(index, uid) {
     consumeActive(index, "The Necklace of Harmonia flickered and did nothing.", uid);
     return;
   }
-  const gained = gainCredits(15, true, "The Necklace of Harmonia");
-  damageBots(activeBots(), 20, (bot, damage) => `The Necklace of Harmonia dealt ${damage} damage to ${bot.name}.`);
+  const gained = gainCredits(artifactValue(15), true, "The Necklace of Harmonia");
+  const damage = artifactValue(20);
+  damageBots(activeBots(), damage, (bot, dealt) => `The Necklace of Harmonia dealt ${dealt} damage to ${bot.name}.`);
   consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN and struck every bot.`, uid);
 }
 
 function chooseBot(botId) {
+  if (arcadeActionLocked()) return;
   if (!state.pendingActive || state.pendingActive.mode !== "bot") return;
   const { id, index } = state.pendingActive;
   const bot = state.bots.find((candidate) => candidate.id === botId);
@@ -5326,11 +5745,12 @@ function chooseBot(botId) {
 
   if (id === "a8") {
     const guess = round.botEffectiveGuesses.get(bot.id);
-    for (let copy = 0; copy < 4; copy += 1) {
+    const count = artifactCount(5);
+    for (let copy = 0; copy < count - 1; copy += 1) {
       round.extraAverageGuesses.push({ botId: bot.id, guess });
     }
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Ring of Solomon counted ${bot.name}'s guess five times.`);
+    consumeActive(index, `The Ring of Solomon counted ${bot.name}'s guess ${count} times.`);
     return;
   }
 
@@ -5343,19 +5763,21 @@ function chooseBot(botId) {
 
   if (id === "a15") {
     const uid = state.pendingActive.uid;
-    const damage = Math.ceil(bot.maxHp * (bot.isBoss ? 0.1 : 0.2));
+    const damage = Math.ceil(bot.maxHp * artifactPercent(bot.isBoss ? 10 : 20));
     applyTargetedItemSinGain(item, [bot]);
     consumeActive(index, `The Magical Sword of Solomon hit ${bot.name} for ${damage}.`, uid, false);
     damageBot(bot, damage, `The Magical Sword of Solomon dealt ${damage} damage to ${bot.name}.`);
+    if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;
   }
 
   if (id === "a25") {
-    changeBotSin(bot, 9, "", { triggerLossDamage: false, source: "The Brazen Vessel of Solomon" });
+    const bounty = artifactValue(9);
+    changeBotSin(bot, bounty, "", { triggerLossDamage: false, source: "The Brazen Vessel of Solomon" });
     const healed = healBot(bot, bot.maxHp, "The Brazen Vessel of Solomon");
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Brazen Vessel of Solomon healed ${bot.name} for ${healed} and added +9 bounty.`);
+    consumeActive(index, `The Brazen Vessel of Solomon healed ${bot.name} for ${healed} and added +${bounty} bounty.`);
     return;
   }
 
@@ -5367,7 +5789,8 @@ function chooseBot(botId) {
       consumeActive(index, `Grandier's Pact moved ${pending.removedBounty || 0} bounty to ${bot.name}.`);
       return;
     }
-    const removed = Math.min(5, botSin(bot));
+    const maxDrain = artifactValue(5);
+    const removed = Math.min(maxDrain, botSin(bot));
     changeBotSin(bot, -removed, `Grandier's Pact drained ${removed} bounty from ${bot.name}.`);
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "give";
@@ -5384,12 +5807,13 @@ function chooseBot(botId) {
       render();
       return;
     }
-    addBotMemory(bot, 6, `${item.name} gave ${bot.name} +6 memory.`);
-    changeBotSin(bot, 6, `${item.name} gave ${bot.name} +6 SIN.`, { triggerLossDamage: false });
-    bot.maxHp += 6;
-    bot.hp += 6;
+    const value = artifactValue(6);
+    addBotMemory(bot, value, `${item.name} gave ${bot.name} +${value} memory.`);
+    changeBotSin(bot, value, `${item.name} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
+    bot.maxHp += value;
+    bot.hp += value;
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `${item.name} gave ${bot.name} +6 memory, +6 SIN, and +6 health.`);
+    consumeActive(index, `${item.name} gave ${bot.name} +${value} memory, +${value} SIN, and +${value} health.`);
     return;
   }
 
@@ -5410,16 +5834,17 @@ function resolveTriageBeam(bot) {
       render();
       return;
     }
+    const value = artifactValue(20);
     const dealt = damageBotNonLethal(
       bot,
-      20,
+      value,
       (target, damage) => `The White-Hilted Knife dealt ${damage} non-lethal damage to ${target.name}.`,
       "The White-Hilted Knife"
     );
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
     pending.damageBotId = bot.id;
-    addLog("Now pick another bot to heal for 20.");
+    addLog(`Now pick another bot to heal for ${value}.`);
     render();
     return;
   }
@@ -5435,9 +5860,9 @@ function resolveTriageBeam(bot) {
       render();
       return;
     }
-    healBot(bot, 20, "The White-Hilted Knife");
+    const healed = healBot(bot, artifactValue(20), "The White-Hilted Knife");
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(pending.index, `The White-Hilted Knife healed ${bot.name}.`);
+    consumeActive(pending.index, `The White-Hilted Knife healed ${bot.name} for ${healed}.`);
   }
 }
 
@@ -6791,7 +7216,8 @@ function renderTopbar() {
     ? "Final phase is already active"
     : activeGoeticBoss() || state.goeticBossKills > 0
       ? "Skip to Jesus and Satan"
-      : "Skip to the first Goetic Seal boss";
+      : "Skip past the eight special bosses";
+  const arcadeLocked = arcadeActionLocked();
   return `
     <section class="topbar" aria-label="Run status">
       ${renderTargetPanel()}
@@ -6809,7 +7235,7 @@ function renderTopbar() {
       <div class="stat-card round-wrap">
         <span class="stat-label">Round</span>
         <span class="stat-value">${state.round}</span>
-        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(skipTitle)}" ${state.finalBossPhase ? "disabled" : ""}>SKIP</button>
+        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(skipTitle)}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
       </div>
       <div class="stat-card">
         <span class="stat-label">KOs / Boss</span>
@@ -6819,7 +7245,7 @@ function renderTopbar() {
         ${playerCreditBadge}
         <span class="stat-label">SIN</span>
         <span class="stat-value">${state.player.credits}</span>
-        <button class="small-button ${playtestButtonClass}" id="playtestMoney">INF</button>
+        <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
       </div>
     </section>
   `;
@@ -6849,6 +7275,7 @@ function renderTargetPanel() {
         <div class="target-line target-modifier">Modifier: <strong>${modifier}</strong></div>
         <div class="target-calc-line">Calc: ${calculation}</div>
       </div>
+      <div class="target-diff-damage">diff dmg: ${targetDifferenceDamagePercent()}%</div>
     </section>
   `;
 }
@@ -6993,7 +7420,7 @@ function renderConsole() {
   } else if (state.stage === "ended") {
     buttonText = "Restart";
     inputDisabled = "disabled";
-    hint = "Run ended.";
+    hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {
     hint = `Pick a number between 0 and ${maxGuess}`;
   }
@@ -7035,21 +7462,27 @@ function renderPendingText() {
   if (!state.pendingActive) return "";
   const item = state.player.actives.find((active) => active.uid === state.pendingActive.uid);
   if (!item) return "";
-  if (state.pendingActive.id === "a6") return "The Tablet of Destinies adds 20 to the target.";
-  if (state.pendingActive.id === "a14") return "The Blasting Rod reduces the target by 10.";
-  if (state.pendingActive.id === "a15") return "The Magical Sword of Solomon: pick a target. Non-bosses take 20%, bosses take 10%.";
-  if (state.pendingActive.id === "a25") return "The Brazen Vessel of Solomon: pick a bot to heal to full and give +9 bounty.";
+  if (state.pendingActive.id === "a6") return `The Tablet of Destinies adds ${artifactValue(20)} to the target.`;
+  if (state.pendingActive.id === "a14") return `The Blasting Rod reduces the target by ${artifactValue(10)}.`;
+  if (state.pendingActive.id === "a15") {
+    return `The Magical Sword of Solomon: pick a target. Non-bosses take ${artifactPercentValue(20)}%, bosses take ${artifactPercentValue(10)}%.`;
+  }
+  if (state.pendingActive.id === "a25") return `The Brazen Vessel of Solomon: pick a bot to heal to full and give +${artifactValue(9)} bounty.`;
   if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return "Grandier's Pact: pick a bot to receive the drained bounty.";
-  if (state.pendingActive.id === "a26") return "Grandier's Pact: pick a bot to drain up to 5 bounty.";
-  if (state.pendingActive.id === "a28") return "Demon Bowl - Incantation Bowl: pick a non-boss bot to gain +6 memory, +6 SIN, and +6 health.";
+  if (state.pendingActive.id === "a26") return `Grandier's Pact: pick a bot to drain up to ${artifactValue(5)} bounty.`;
+  if (state.pendingActive.id === "a28") {
+    const value = artifactValue(6);
+    return `Demon Bowl - Incantation Bowl: pick a non-boss bot to gain +${value} memory, +${value} SIN, and +${value} health.`;
+  }
   if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
-    return "The White-Hilted Knife: pick a different bot to heal for 20.";
+    return `The White-Hilted Knife: pick a different bot to heal for ${artifactValue(20)}.`;
   }
   return `${item.name}: pick a bot card to resolve it.`;
 }
 
 function renderShop() {
   const locked = shopDisabledBySatan();
+  const actionsLocked = arcadeActionLocked();
   return `
     <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
       <div class="panel-header">
@@ -7058,7 +7491,7 @@ function renderShop() {
         </div>
         <div class="reroll-control">
           <span class="reroll-cost">${currentRerollCost()} SIN</span>
-          <button class="small-button" id="rerollShop" ${locked ? "disabled" : ""}>Reroll</button>
+          <button class="small-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll</button>
         </div>
       </div>
       <div class="shop-slots">
@@ -7080,7 +7513,7 @@ function renderShopSlot(slot, index) {
     item.type === "passive"
       ? passiveCopies === 0 && state.player.passives.length >= passiveLimit()
       : state.player.actives.length >= activeInventoryLimit();
-  const disabled = shopDisabledBySatan() || !canSpendCredits(cost) || full ? "disabled" : "";
+  const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full ? "disabled" : "";
   const buttonText = passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
   const previewItem = passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
@@ -7130,7 +7563,7 @@ function renderActives() {
 function renderActiveItem(item, index) {
   const actionLocked = Boolean(state.pendingActive);
   const useDisabled = canUseActive() && !actionLocked ? "" : "disabled";
-  const sellDisabled = actionLocked ? "disabled" : "";
+  const sellDisabled = actionLocked || arcadeActionLocked() ? "disabled" : "";
   const sale = Math.floor(item.price / 2);
   const description = itemDescription(item);
   const itemImage = renderArtifactIcon(item, "inventory-artifact-icon");
@@ -7163,18 +7596,18 @@ function renderPassives() {
     const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
     const displayName = passiveDisplayName(item);
     const description = itemDescription(item);
-    const suppressedBy = suppressingBossForSeal(item.id);
-    const disabledNotice = suppressedBy ? `Disabled while ${suppressedBy.name} is alive.\n` : "";
+    const disabledNotice = sealSuppressionNotice(item.id);
     const tooltip = renderSealTooltipHtml(item, displayName, description, disabledNotice, sale);
     const triggeredClass = state.roundState?.triggeredPassiveIds?.has(item.id) ? "triggered" : "";
-    const suppressedClass = suppressedBy ? "suppressed" : "";
+    const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
     const sealImage = renderSealSigil(item, "equipped-seal-sigil");
+    const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     slots.push(`
       <article class="passive-slot ${triggeredClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
-        <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}">Sell</button>
+        <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>
       </article>
     `);
   }
@@ -7183,13 +7616,16 @@ function renderPassives() {
 }
 
 function renderOverlay() {
-  if (!state.gameOver) return `<div class="overlay"></div>`;
+  if (!state.gameOver || state.inspectingGameOver) return `<div class="overlay"></div>`;
   return `
     <div class="overlay visible">
       <section class="end-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">You reached round ${state.round} with ${state.eliminations} eliminations.</p>
-        <button class="primary-button" id="restartGame">Restart</button>
+        <div class="end-actions">
+          <button class="primary-button" id="inspectGame">Inspect</button>
+          <button class="primary-button" id="restartGame">Restart</button>
+        </div>
       </section>
     </div>
   `;
@@ -7481,6 +7917,14 @@ function bindEvents() {
 
   const restartButton = document.querySelector("#restartGame");
   if (restartButton) restartButton.addEventListener("click", startGame);
+
+  const inspectButton = document.querySelector("#inspectGame");
+  if (inspectButton) {
+    inspectButton.addEventListener("click", () => {
+      state.inspectingGameOver = true;
+      render();
+    });
+  }
 }
 
 window.addEventListener("resize", updateFullscreenLayoutClass);

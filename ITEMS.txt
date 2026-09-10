@@ -235,9 +235,15 @@ After normal penalties are calculated, whoever is furthest from the target takes
 Seal of Ipos changes this so the 3 furthest guesses are punished instead, with the furthest taking double damage.
 Seal of Balam instantly eliminates non-boss SINNERS that reach both 10+ memory and 10+ bounty.
 If all 5 opponents are eliminated in 1 round, a random owned Seal is upgraded. If you have no Seal yet, a random Seal enters your Seals instead.
+Every normal SINNER elimination heals you for 1. Every boss elimination heals you for 8.
+For every 8 boss eliminations, your target-difference damage is multiplied by x1.5 again. This is shown in the Target panel as diff dmg.
 Healing cannot revive you from 0 HP. If total round damage drops you to 0, later healing effects do not keep you alive.
+If you have more than 150 SIN, Devil's Offerings item prices double. For every additional 150 SIN above that, item prices double again. When your SIN falls back below a threshold, prices immediately fall back too.
 
 Player Artifacts
+
+Artifact Scaling Rule
+All numeric Artifact effect values increase by 20% for every 4 bosses defeated, rounded down. Artifact prices do not scale. The listed Artifact values below are base values before this scaling.
 
 Amulet of Pazuzu (4 SIN)
 This round, SINNERS take double the damage you take.
@@ -323,6 +329,18 @@ If it casts, you take 50% less damage this round.
 
 Unique Boss Seals
 
+Kalha's Seal
+Kalha has Drifter personality. Each round, one random equipped Seal is deactivated until round end, and the target modifier becomes 1.2.
+
+Padma's Seal
+Padma has Stubborn personality. While Padma is alive, you cannot recover health in any way. At the start of every round, Padma heals every other SINNER for 5 health, and the target modifier becomes 0.6.
+
+Petros and Pavlos's Seal
+Petros and Pavlos enter together as one special boss event. Each twin has half boss health and half boss SIN, and each borrows one other special boss ability. If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round.
+
+Serafim's Seal
+Serafim has Caller personality. When Serafim enters play, you lose half your SIN; Serafim gains that SIN and twice that amount as health. Each round, you lose up to 5 SIN and Serafim gains the amount lost. The target modifier becomes 0.7.
+
 Dantre's Seal
 Dantre has Stubborn personality. Every elimination deals 3 damage to you while Dantre is alive, and the target modifier becomes 0.5.
 
@@ -336,7 +354,7 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for Artifacts and +6 SIN for Seals while Zilon is alive, and the target modifier becomes 1.5.
 
 Boss Scaling
-The first four bosses are Zilon, Dantre, Pyros, and Threon, and bosses arrive strictly after every 8 KOs unless Witch Bottle calls one sooner. After the fourth boss, all later bosses are Goetic bosses named after one of the playable Seals. They use the matching Goetic boss image, roll one fixed target modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, have double boss health, and deal 1 damage to you at end of round just by existing.
+The first eight special boss events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. Bosses arrive strictly after every 8 KOs unless Witch Bottle calls one sooner. The SKIP button jumps past those eight special boss events and starts the ninth boss event, the Goetic/infinite phase. Normal SINNERS start at 20-60 HP, gain +5 HP to both limits after each of the first four boss kills, then gain +10 HP to both limits after each later boss kill. After the eight special boss events, later bosses are Goetic bosses named after one of the playable Seals. They use the matching Goetic boss image, roll one fixed target modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, have double boss health, and deal 1 damage to you at end of round just by existing.
 
 Goetic Boss Seal Lock
 While a Goetic boss is alive, the matching player Seal cannot trigger. The disabled Seal appears darker in your Seal bar until that boss dies.
