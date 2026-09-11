@@ -64,6 +64,22 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function normalizeGameText(value) {
+  return String(value ?? "")
+    .replace(/\bnon-bosses\b/gi, "non-boss DAMNED")
+    .replace(/\bnon-boss\b/gi, "non-boss")
+    .replace(/\bsinners\b/gi, "DAMNED")
+    .replace(/\bsinner\b/gi, "DAMNED")
+    .replace(/\bbots\b/gi, "DAMNED")
+    .replace(/\bbot\b/gi, "DAMNED")
+    .replace(/\bbosses\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "bosses" : "BOSSES"))
+    .replace(/\bboss\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "boss" : "BOSS"))
+    .replace(/\bartifacts\b/gi, "ARTIFACTS")
+    .replace(/\bartifact\b/gi, "ARTIFACT")
+    .replace(/\bseals\b/gi, "SEALS")
+    .replace(/\bseal\b/gi, "SEAL");
+}
+
 async function postJson(url, body) {
   const response = await fetch(url, {
     method: "POST",
@@ -103,7 +119,7 @@ function playerActiveName(player) {
 
 function activeCastText(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
-  if (player.activeChoiceId === "skip") return "skipped Artifact use";
+  if (player.activeChoiceId === "skip") return "skipped ARTIFACT use";
   return player.activeCast ? `${playerActiveName(player)} cast` : `${playerActiveName(player)} failed`;
 }
 
@@ -121,7 +137,7 @@ function mergeSourceEntries(sources) {
 function sourceTooltip(sources, kind = "damage") {
   const sign = kind === "heal" ? "+" : "-";
   return mergeSourceEntries(sources)
-    .map((entry) => `${sign}${entry.amount} health from ${entry.source}`)
+    .map((entry) => normalizeGameText(`${sign}${entry.amount} health from ${entry.source}`))
     .join("\n");
 }
 
@@ -222,7 +238,7 @@ async function submitActive(activeId) {
       activeTargetId: targetId,
       activeRound: host.round
     });
-    controllerState.message = `${active?.name || "Artifact"} sent.`;
+    controllerState.message = `${active?.name || "ARTIFACT"} sent.`;
     await pollRoom();
   } catch (error) {
     controllerState.message = error.message;
@@ -245,15 +261,15 @@ function renderHeader() {
       <p class="muted">${escapeHtml(controllerState.player?.name || "Phone controller")}</p>
       <div class="stat-row">
         <div class="stat"><span>Previous</span><strong>${host?.previousTarget ?? "?"}</strong></div>
-        <div class="stat health-stat">${damageBadge}<span>Health</span><strong>${player ? player.hp : "-"}</strong></div>
+        <div class="stat health-stat">${damageBadge}<span>HEALTH</span><strong>${player ? player.hp : "-"}</strong></div>
         <div class="stat"><span>Modifier</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
-        <div class="stat"><span>Target</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
+        <div class="stat"><span>TARGET</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
       </div>
       ${host?.waitForHost ? `<p class="warning">Host wait is on.</p>` : ""}
-      ${player?.activeGuaranteeThisRound ? `<p class="cast">Skip bonus ready: your Artifact will cast for sure.</p>` : ""}
+      ${player?.activeGuaranteeThisRound ? `<p class="cast">Skip bonus ready: your ARTIFACT will cast for sure.</p>` : ""}
       ${player?.activeGuaranteeNextRound ? `<p class="cast">Skip bonus armed for next round.</p>` : ""}
       ${castText ? `<p class="${player.activeCast ? "active-cast" : "muted"}">${escapeHtml(castText)}</p>` : ""}
-      ${controllerState.message ? `<p class="cast">${escapeHtml(controllerState.message)}</p>` : ""}
+      ${controllerState.message ? `<p class="cast">${escapeHtml(normalizeGameText(controllerState.message))}</p>` : ""}
     </section>
   `;
 }
@@ -308,7 +324,7 @@ function renderActiveChoice(active, submitted) {
   const targetSelect = active.needsTarget
     ? `
       <select id="target-${active.id}" ${submitted ? "disabled" : ""}>
-        <option value="">Target</option>
+        <option value="">target</option>
         ${targets
           .map((target) => {
             const guess = Number.isFinite(target.guess) ? ` - Guess ${target.guess}` : "";
@@ -321,7 +337,7 @@ function renderActiveChoice(active, submitted) {
   return `
     <div class="choice ${selected ? "selected-choice" : ""} ${castClass}">
       <h2>${escapeHtml(active.name)}</h2>
-      <p class="muted">${escapeHtml(active.description)}</p>
+      <p class="muted">${escapeHtml(normalizeGameText(active.description))}</p>
       ${targetSelect}
       <button class="activeButton" data-active-id="${escapeAttr(active.id)}" ${submitted ? "disabled" : ""}>Choose</button>
     </div>
@@ -343,8 +359,8 @@ function renderActive() {
     return `
       ${renderHeader()}
       <section class="panel">
-        <h2>Artifact Phase</h2>
-        <p class="muted">${host.waitForHost ? "Ready. Waiting for the host." : "Ready. Artifacts resolve automatically when everyone is ready."}</p>
+        <h2>ARTIFACT Phase</h2>
+        <p class="muted">${host.waitForHost ? "Ready. Waiting for the host." : "Ready. ARTIFACTS resolve automatically when everyone is ready."}</p>
         <button disabled>Ready</button>
       </section>
     `;
@@ -352,8 +368,8 @@ function renderActive() {
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>Artifact Phase</h2>
-      <p class="muted">${host.waitForHost ? "Choose one Artifact. The host will resolve when ready." : "Choose one Artifact. The phase resolves automatically when everyone chooses."}</p>
+      <h2>ARTIFACT Phase</h2>
+      <p class="muted">${host.waitForHost ? "Choose one ARTIFACT. The host will resolve when ready." : "Choose one ARTIFACT. The phase resolves automatically when everyone chooses."}</p>
       ${player.activeOptions.map((active) => renderActiveChoice(active, submitted)).join("")}
       ${submitted ? `<p class="cast">Choice sent. Watch the host screen to see if it casts.</p>` : ""}
     </section>
@@ -374,7 +390,7 @@ function renderResults() {
       ${host?.winner ? `<p class="cast">Winner: ${escapeHtml(host.winner)}</p>` : `<p class="muted">${host?.waitForHost ? "Waiting for host signal." : "Next round starts automatically after 10 seconds."}</p>`}
       <div class="results">
         ${castRows}
-        ${results.map((result) => `<div>${escapeHtml(result)}</div>`).join("")}
+        ${results.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}
       </div>
     </section>
   `;

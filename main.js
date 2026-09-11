@@ -55,13 +55,13 @@ const PVP_ACTIVES = [
   {
     id: "rise",
     name: "Sigillum Dei Aemeth",
-    description: "If it casts, change the final target by +5.",
+    description: "If it casts, change the final TARGET by +5.",
     needsTarget: false
   },
   {
     id: "sink",
     name: "John Dee's Obsidian Mirror",
-    description: "If it casts, change the final target by -5.",
+    description: "If it casts, change the final TARGET by -5.",
     needsTarget: false
   },
   {
@@ -73,13 +73,13 @@ const PVP_ACTIVES = [
   {
     id: "markBest",
     name: "The Black-Hilted Knife",
-    description: "If it casts, deal 5 damage to every player tied closest to the first target.",
+    description: "If it casts, deal 5 damage to every player tied closest to the first TARGET.",
     needsTarget: false
   },
   {
     id: "jam",
     name: "Null Vote",
-    description: "If it casts, pick a player whose guess does not count for the final target.",
+    description: "If it casts, pick a player whose guess does not count for the final TARGET.",
     needsTarget: true
   }
 ];
@@ -482,70 +482,70 @@ const ITEMS = {
   a28: {
     id: "a28",
     type: "active",
-    name: "Demon Bowl - Incantation Bowl",
+    name: "Engraved Skull",
     price: 4,
-    description: "One use. Pick a non-boss bot. It gains 6 memory, 6 SIN, and 6 max health."
+    description: "Pick a non-boss bot. It gains 6 memory, 6 SIN, and 6 max health."
   },
   a14: {
     id: "a14",
     type: "active",
-    name: "The Blasting Rod",
+    name: "Black Candle",
     price: 4,
-    description: "One use. During reveal, reduce the target by 10."
+    description: "During reveal, reduce the target by 10."
   },
   a15: {
     id: "a15",
     type: "active",
-    name: "The Magical Sword of Solomon",
+    name: "Sacrificial Dagger",
     price: 4,
-    description: "One use. Pick a target. Deal 20% max-health damage to non-boss bots, or 10% to bosses."
+    description: "Pick a target. Deal 20% max-health damage to non-boss bots, or 10% to bosses."
   },
   a6: {
     id: "a6",
     type: "active",
-    name: "The Tablet of Destinies",
+    name: "Ceremonial Altar",
     price: 4,
-    description: "One use. During reveal, add 20 to the target."
+    description: "During reveal, add 20 to the target."
   },
   a7: {
     id: "a7",
     type: "active",
-    name: "The Ring of Gyges",
+    name: "Demonic Idol",
     price: 6,
-    description: "One use. Pick a non-boss bot and swap your effective guess with theirs."
+    description: "Pick a non-boss bot and swap your effective guess with theirs."
   },
   a8: {
     id: "a8",
     type: "active",
-    name: "The Ring of Solomon",
+    name: "Goat Head",
     price: 3,
-    description: "One use. Pick a bot; their guess counts five times for the target average."
+    description: "Pick a bot; their guess counts five times for the target average."
   },
   a9: {
     id: "a9",
     type: "active",
-    name: "The Key of the Bottomless Pit",
+    name: "Inverted Cross",
     price: 3,
-    description: "One use. Pick a bot; remove their guess from the target average, though they still take damage."
+    description: "Pick a bot; remove their guess from the target average, though they still take damage."
   },
   a10: {
     id: "a10",
     type: "active",
-    name: "The Thirty Pieces of Silver",
+    name: "Funeral Coin",
     price: 6,
-    description: "One use. Doubles SIN gained for this round. Multiple uses stack multiplicatively."
+    description: "Doubles SIN gained for this round. Multiple uses stack multiplicatively."
   },
   a11: {
     id: "a11",
     type: "active",
-    name: "Witch Bottle",
+    name: "Vial of Blood",
     price: 4,
     description: "Heal 20. There is a 33% chance the next elimination spawns a boss."
   },
   a12: {
     id: "a12",
     type: "active",
-    name: "The Philosopher's Stone",
+    name: "Dark Talisman",
     price: 2,
     description: "You take 50% less damage this round, including CRITICAL damage."
   },
@@ -573,9 +573,9 @@ const ITEMS = {
   a18: {
     id: "a18",
     type: "active",
-    name: "The Emerald Tablet",
+    name: "Corrupted Crystal",
     price: 4,
-    description: "One use. Add a copy of a random other Artifact in your inventory."
+    description: "Instantly copy the effect of a random other Artifact in your inventory. The copied Artifact is not duplicated or consumed."
   },
   a24: {
     id: "a24",
@@ -587,37 +587,37 @@ const ITEMS = {
   a21: {
     id: "a21",
     type: "active",
-    name: "Amulet of Pazuzu",
+    name: "Voodoo Doll",
     price: 4,
-    description: "One use. This round, bots take double the damage you take."
+    description: "This round, bots take double the damage you take."
   },
   a22: {
     id: "a22",
     type: "active",
-    name: "The Necklace of Harmonia",
+    name: "Cursed Chalice",
     price: 4,
-    description: "One use. 10% take 20 damage, 20% take 10 damage, 30% gain 6 SIN, 20% gain 12 SIN, 10% gain 15 SIN and deal 20 damage to each bot. The remaining 10% fizzles."
+    description: "10% take 20 damage, 20% take 10 damage, 30% gain 6 SIN, 20% gain 12 SIN, 10% gain 15 SIN and deal 20 damage to each bot. The remaining 10% fizzles."
   },
   a23: {
     id: "a23",
     type: "active",
-    name: "The Hand of Glory",
+    name: "Satanic Bible",
     price: 3,
     description: "Arm the next Devil's Offerings reroll: the Seal slot has a 50% ELITE chance."
   },
   a25: {
     id: "a25",
     type: "active",
-    name: "The Brazen Vessel of Solomon",
+    name: "Mummified Lamb",
     price: 4,
-    description: "One use. Pick a bot, heal it to full, and increase its bounty by 9."
+    description: "Pick a bot, heal it to full, and increase its bounty by 9."
   },
   a26: {
     id: "a26",
     type: "active",
-    name: "Grandier's Pact",
+    name: "Spirit Board",
     price: 3,
-    description: "One use. Drain up to 5 bounty from one bot, then give the removed bounty to another bot."
+    description: "Drain up to 5 bounty from one bot, then give the removed bounty to another bot."
   }
 };
 
@@ -698,28 +698,29 @@ const ACTIVE_IDS = [
   "a28"
 ];
 const RESERVED_ARTIFACT_IDS = ["a13", "a16", "a17", "a24", "a27"];
+const TARGETED_ARTIFACT_IDS = new Set(["a7", "a8", "a9", "a15", "a25", "a26", "a28"]);
 const ARTIFACT_ICONS = {
-  a6: "a6.png",
-  a7: "a7.png",
-  a8: "a8.png",
-  a9: "a9.png",
-  a10: "a10.png",
-  a11: "a11.png",
-  a12: "a12.png",
+  a6: "occult-items-17/17 CEREMONIAL ALTAR.png",
+  a7: "occult-items-17/12 DEMONIC IDOL.png",
+  a8: "occult-items-17/04 GOAT HEAD.png",
+  a9: "occult-items-17/11 INVERTED CROSS.png",
+  a10: "occult-items-17/07 FUNERAL COIN.png",
+  a11: "occult-items-17/05 VIAL OF BLOOD.png",
+  a12: "occult-items-17/16 DARK TALISMAN.png",
   a13: "a13.png",
-  a14: "a14.png",
-  a15: "a15.png",
+  a14: "occult-items-17/02 BLACK CANDLE.png",
+  a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
   a16: "a16.png",
   a17: "a17.png",
-  a18: "a18.png",
-  a21: "a21.png",
-  a22: "a22.png",
-  a23: "a23.png",
+  a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
+  a21: "occult-items-17/08 VOODOO DOLL.png",
+  a22: "occult-items-17/06 CURSED CHALICE.png",
+  a23: "occult-items-17/09 SATANIC BIBLE.png",
   a24: "a24.png",
-  a25: "a25.png",
-  a26: "a26.png",
+  a25: "occult-items-17/15 MUMMIFIED LAMB.png",
+  a26: "occult-items-17/13 SPIRIT BOARD.png",
   a27: "occult-new-9/bath-curse-tablets.png",
-  a28: "occult-new-9/demon-bowl-incantation-bowl.png"
+  a28: "occult-items-17/03 ENGRAVED SKULL.png"
 };
 const SEAL_SIGILS = {
   p1: "068_Vassago.png",
@@ -1085,7 +1086,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 0.7,
     descriptions: [
       "When Serafim enters play, you lose half your SIN; Serafim gains that SIN and twice that amount as health.",
-      "Each round, you lose up to 5 SIN and Serafim gains the amount lost.",
+      "Each round, you lose up to 2 SIN and Serafim gains the amount lost.",
       "The target modifier becomes 0.7 while Serafim is alive."
     ]
   },
@@ -1111,6 +1112,7 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Petros enters with Pavlos. Each twin has half boss health and half boss SIN.",
       "Each twin borrows one other special boss ability.",
+      "While either twin is alive, the target modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
       "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
     ]
   },
@@ -1126,12 +1128,14 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Pavlos enters with Petros. Each twin has half boss health and half boss SIN.",
       "Each twin borrows one other special boss ability.",
+      "While either twin is alive, the target modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
       "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
     ]
   }
 };
 const UNIQUE_BOSS_KEYS = ["zilon", "dantre", "pyros", "threon", "kalha", "serafim", "padma", "petros"];
 const PETROS_PAVLOS_POWER_KEYS = UNIQUE_BOSS_KEYS.filter((key) => key !== "petros");
+const PETROS_PAVLOS_MODIFIERS = [0.9, 1.1];
 
 const FINAL_BOSS_SPECS = {
   jesus: {
@@ -2200,29 +2204,28 @@ function applyPassivePlayerHealForEntry(entry, baseHeal, reason) {
 
 function artifactDescription(item) {
   if (!item) return "";
-  if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the target.`;
-  if (item.id === "a7") return "Pick a non-boss SINNER and swap your effective guess with theirs.";
-  if (item.id === "a8") return `Pick a SINNER; their guess counts ${artifactCount(5)} times for the target average.`;
-  if (item.id === "a9") return "Pick a SINNER; remove their guess from the target average, though they still take damage.";
+  if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the TARGET.`;
+  if (item.id === "a7") return "Pick a non-boss DAMNED and swap your effective guess with theirs.";
+  if (item.id === "a8") return `Pick a DAMNED; their guess counts ${artifactCount(5)} times for the TARGET average.`;
+  if (item.id === "a9") return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
   if (item.id === "a10") {
     return `Multiplies SIN gained this round by x${formatArtifactMultiplier(artifactMultiplier(2))}. Multiple uses stack multiplicatively.`;
   }
   if (item.id === "a11") {
-    return `Heal ${artifactValue(20)}. There is a ${artifactPercentValue(33)}% chance the next elimination spawns a boss.`;
+    return `Heal ${artifactValue(20)}. There is a ${artifactPercentValue(33)}% chance the next elimination spawns a BOSS.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage.`;
   if (item.id === "a13") {
     const value = artifactValue(20);
     return `Deal ${value} non-lethal damage to one SINNER, then heal another already-damaged SINNER for ${value}.`;
   }
-  if (item.id === "a14") return `During reveal, reduce the target by ${artifactValue(10)}. The target can go below zero.`;
+  if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
   if (item.id === "a15") {
-    return `Pick a target. Deal ${artifactPercentValue(20)}% max-health damage to non-boss SINNERS, or ${artifactPercentValue(10)}% to bosses.`;
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-HEALTH damage to non-boss DAMNED, or ${artifactPercentValue(10)}% to BOSSES.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
   if (item.id === "a18") {
-    const copies = artifactCount(1);
-    return `Add ${copies === 1 ? "a copy" : `${copies} copies`} of random other Artifacts in your inventory.`;
+    return "Instantly copy the effect of a random other Artifact in your inventory. The copied Artifact is not duplicated or consumed.";
   }
   if (item.id === "a21") {
     return `This round, SINNERS take x${formatArtifactMultiplier(artifactMultiplier(2))} the damage you take.`;
@@ -2233,13 +2236,13 @@ function artifactDescription(item) {
   if (item.id === "a23") {
     return `Arm the next Devil's Offerings reroll: the Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`;
   }
-  if (item.id === "a25") return `Pick a SINNER, heal it to full, and increase its bounty by ${artifactValue(9)}.`;
+  if (item.id === "a25") return `Pick a DAMNED, heal it to full, and increase its BOUNTY by ${artifactValue(9)}.`;
   if (item.id === "a26") {
-    return `Drain up to ${artifactValue(5)} bounty from one SINNER, then give the removed bounty to another SINNER.`;
+    return `Drain up to ${artifactValue(5)} BOUNTY from one DAMNED, then give the removed BOUNTY to another DAMNED.`;
   }
   if (item.id === "a28") {
     const value = artifactValue(6);
-    return `Pick a non-boss SINNER. It gains ${value} memory, ${value} SIN, and ${value} max health.`;
+    return `Pick a non-boss DAMNED. It gains ${value} MEMORY, ${value} SIN, and ${value} max HEALTH.`;
   }
   return (item.description || "").replace(/^One use\.\s*/i, "").replace(/\bbots?\b/gi, "SINNERS");
 }
@@ -2383,8 +2386,24 @@ function shopDisabledBySatan() {
   return state.finalBossPhase && aliveFinalBoss("satan");
 }
 
+function activePetrosPavlosBosses() {
+  return state.bots.filter(
+    (bot) => bot.isBoss && ["petros", "pavlos"].includes(bot.uniqueKey) && bot.hp > 0 && !bot.eliminated
+  );
+}
+
+function petrosPavlosRoundModifier() {
+  const twins = activePetrosPavlosBosses();
+  if (!twins.length) return null;
+  const startRound = twins.reduce((earliest, bot) => Math.min(earliest, bot.modifierCycleStartRound || state.round), state.round);
+  const cycleIndex = Math.max(0, state.round - startRound) % PETROS_PAVLOS_MODIFIERS.length;
+  return PETROS_PAVLOS_MODIFIERS[cycleIndex];
+}
+
 function currentTargetModifier() {
   if (state.finalBossPhase) return FINAL_BOSS_TARGET_MODIFIER;
+  const twinModifier = petrosPavlosRoundModifier();
+  if (twinModifier !== null) return twinModifier;
   const modifierBosses = state.bots
     .filter((bot) => bot.isBoss && bot.hp > 0 && !bot.eliminated && bot.modifierOverride !== null && bot.modifierOverride !== undefined)
     .sort((left, right) => right.bossOrder - left.bossOrder);
@@ -2461,15 +2480,59 @@ function escapeAttr(value) {
   return escapeHtml(value);
 }
 
+function normalizeGameText(value) {
+  return String(value)
+    .replace(/\bnon-bosses\b/gi, "non-boss DAMNED")
+    .replace(/\bnon-boss\b/gi, "non-boss")
+    .replace(/\bsinners\b/gi, "DAMNED")
+    .replace(/\bsinner\b/gi, "DAMNED")
+    .replace(/\bbots\b/gi, "DAMNED")
+    .replace(/\bbot\b/gi, "DAMNED")
+    .replace(/\bbosses\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "bosses" : "BOSSES"))
+    .replace(/\bboss\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "boss" : "BOSS"))
+    .replace(/\bartifacts\b/gi, "ARTIFACTS")
+    .replace(/\bartifact\b/gi, "ARTIFACT")
+    .replace(/\bseals\b/gi, "SEALS")
+    .replace(/\bseal\b/gi, "SEAL");
+}
+
 function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function descriptionHtml(value) {
+  const protectedPhrases = [];
+  const plainTargetText = normalizeGameText(value);
+  const protectedText = [
+    /\bpick a target\b/gi,
+    /\beach target\b/gi,
+    /\bchoose a target\b/gi,
+    /\bneeds a target\b/gi,
+    /\bheal target\b/gi,
+    /\bdamage target\b/gi
+  ].reduce((text, pattern) => text.replace(pattern, (match) => {
+    const token = `__PLAIN_TARGET_${protectedPhrases.length}__`;
+    protectedPhrases.push(match);
+    return token;
+  }), plainTargetText);
+  let html = htmlWithLineBreaks(protectedText).replace(
+    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|HEALTH|MEMORY|BOUNTY)\b/gi,
+    (keyword, _whole, offset, fullText) => {
+      if (/^boss(?:es)?$/i.test(keyword) && fullText[offset - 1] === "-") return keyword.toLowerCase();
+      return `<span class="tooltip-keyword">${keyword.toUpperCase()}</span>`;
+    }
+  );
+  protectedPhrases.forEach((phrase, index) => {
+    html = html.replace(`__PLAIN_TARGET_${index}__`, escapeHtml(phrase));
+  });
+  return html;
 }
 
 function renderSealTooltipHtml(item, displayName, description, disabledNotice, sale) {
   const contribution = sealContributionSummary(item);
   return `
     <div class="tooltip-title">${escapeHtml(displayName)}</div>
-    <div class="tooltip-body">${htmlWithLineBreaks(`${disabledNotice || ""}${description}`)}</div>
+    <div class="tooltip-body">${descriptionHtml(`${disabledNotice || ""}${description}`)}</div>
     <div class="seal-tooltip-footer">
       <span>${contribution ? escapeHtml(contribution) : ""}</span>
       <span>Sell ${sale} SIN</span>
@@ -2563,7 +2626,7 @@ function freeActiveCopy(id) {
 }
 
 function addLog(message) {
-  state.log.unshift(message);
+  state.log.unshift(normalizeGameText(message));
   state.log = state.log.slice(0, 5);
 }
 
@@ -2576,7 +2639,7 @@ function showInvalidGuessPopup() {
 }
 
 function addRoundEvent(message) {
-  if (state.roundState) state.roundState.roundEvents.push(message);
+  if (state.roundState) state.roundState.roundEvents.push(normalizeGameText(message));
 }
 
 function sourceLabelFromReason(reason, fallback) {
@@ -2585,6 +2648,22 @@ function sourceLabelFromReason(reason, fallback) {
   const knownSources = [
     ["FINAL CRITICAL", "Final CRITICAL"],
     ["CRITICAL", "CRITICAL"],
+    ["Sacrificial Dagger", "Sacrificial Dagger"],
+    ["Engraved Skull", "Engraved Skull"],
+    ["Black Candle", "Black Candle"],
+    ["Ceremonial Altar", "Ceremonial Altar"],
+    ["Demonic Idol", "Demonic Idol"],
+    ["Goat Head", "Goat Head"],
+    ["Inverted Cross", "Inverted Cross"],
+    ["Funeral Coin", "Funeral Coin"],
+    ["Vial of Blood", "Vial of Blood"],
+    ["Dark Talisman", "Dark Talisman"],
+    ["Corrupted Crystal", "Corrupted Crystal"],
+    ["Voodoo Doll", "Voodoo Doll"],
+    ["Cursed Chalice", "Cursed Chalice"],
+    ["Satanic Bible", "Satanic Bible"],
+    ["Mummified Lamb", "Mummified Lamb"],
+    ["Spirit Board", "Spirit Board"],
     ["The Magical Sword of Solomon", "The Magical Sword of Solomon"],
     ["Demon Bowl", "Demon Bowl"],
     ["The Black-Hilted Knife", "The Black-Hilted Knife"],
@@ -3005,18 +3084,19 @@ function applySpiteCircuitDamage(playerDamage, pendingBotDamages = null, pending
 function applyPainEchoDamage(playerDamage, pendingBotDamages = null, pendingBotSources = null) {
   const round = state.roundState;
   if (!round?.painEcho || playerDamage <= 0) return;
+  const source = ITEMS.a21?.name || "Voodoo Doll";
   const multiplier = Number(round.painEcho) || 2;
   const echoDamage = Math.ceil(playerDamage * multiplier);
   const targets = activeBots();
   if (!targets.length) return;
   if (pendingBotDamages) {
     targets.forEach((bot) => {
-      addPendingBotDamage(pendingBotDamages, pendingBotSources, bot, echoDamage, "Amulet of Pazuzu");
+      addPendingBotDamage(pendingBotDamages, pendingBotSources, bot, echoDamage, source);
     });
-    round.roundEvents.push(`Amulet of Pazuzu adds ${echoDamage} damage to every bot.`);
+    round.roundEvents.push(`${source} adds ${echoDamage} damage to every bot.`);
     return;
   }
-  damageBots(targets, echoDamage, (bot, damage) => `Amulet of Pazuzu dealt ${damage} damage to ${bot.name}.`, "Amulet of Pazuzu");
+  damageBots(targets, echoDamage, (bot, damage) => `${source} dealt ${damage} damage to ${bot.name}.`, source);
 }
 
 function healPlayer(amount, reason, source = undefined) {
@@ -3116,6 +3196,79 @@ function activeBossByOwnKey(key) {
   return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.hp > 0 && !bot.eliminated) || null;
 }
 
+function pairedBossByKey(key, pairGroupId) {
+  if (!pairGroupId) return null;
+  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.pairGroupId === pairGroupId) || null;
+}
+
+function restoreProtectedPavlos(pavlos) {
+  const round = state.roundState;
+  if (!round || !pavlos || round.pavlosProtectedBotId === pavlos.id) return false;
+  const startingHp = round.pavlosStartHpById?.get(pavlos.id);
+  round.pavlosDeferredBotIds?.delete(pavlos.id);
+  pavlos.eliminated = false;
+  pavlos.hp = Math.max(1, Math.ceil(startingHp || pavlos.hp || pavlos.maxHp / 2 || 1));
+  pavlos.lastDamage = 0;
+  pavlos.damageSources = [];
+  pavlos.deathCause = null;
+  pavlos.deathNotice = null;
+  pavlos.pendingReplacementSpec = null;
+  round.pavlosProtectedBotId = pavlos.id;
+  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
+  return true;
+}
+
+function protectPavlosAcrossRound(freshEliminations) {
+  const round = state.roundState;
+  if (!round || round.pavlosProtectedBotId) return freshEliminations;
+  if (round.resolvingDeferredPavlos) return freshEliminations;
+  const fallingIds = new Set(freshEliminations.map((bot) => bot.id));
+
+  const protectedEliminations = freshEliminations.filter((bot) => {
+    if (bot.uniqueKey !== "pavlos") return true;
+    const petros = pairedBossByKey("petros", bot.pairGroupId);
+    const petrosFalling = petros && (fallingIds.has(petros.id) || petros.eliminated || petros.hp <= 0);
+    if (!petrosFalling && petros && !petros.eliminated && petros.hp > 0) {
+      round.pavlosDeferredBotIds?.add(bot.id);
+      bot.hp = 1;
+      return false;
+    }
+    if (!petrosFalling) return true;
+    restoreProtectedPavlos(bot);
+    return false;
+  });
+
+  freshEliminations.forEach((bot) => {
+    if (bot.uniqueKey !== "petros") return;
+    const pavlos = pairedBossByKey("pavlos", bot.pairGroupId);
+    if (pavlos && (pavlos.eliminated || pavlos.hp <= 0 || round.pavlosDeferredBotIds?.has(pavlos.id))) {
+      restoreProtectedPavlos(pavlos);
+    }
+  });
+
+  return protectedEliminations;
+}
+
+function resolveDeferredPavlosEliminations() {
+  const round = state.roundState;
+  const deferredIds = Array.from(round?.pavlosDeferredBotIds || []);
+  if (!round || !deferredIds.length) return;
+  round.pavlosDeferredBotIds.clear();
+  deferredIds.forEach((id) => {
+    const pavlos = state.bots.find((bot) => bot.id === id && bot.uniqueKey === "pavlos");
+    if (!pavlos || pavlos.eliminated || round.pavlosProtectedBotId === pavlos.id) return;
+    const petros = pairedBossByKey("petros", pavlos.pairGroupId);
+    if (!petros || petros.eliminated || petros.hp <= 0) {
+      restoreProtectedPavlos(pavlos);
+      return;
+    }
+    round.resolvingDeferredPavlos = true;
+    pavlos.hp = 0;
+    resolveEliminatedBots([pavlos]);
+    round.resolvingDeferredPavlos = false;
+  });
+}
+
 function maybeActivatePavlosProtection(incomingDamageById) {
   const round = state.roundState;
   if (!round || round.pavlosProtectedBotId) return null;
@@ -3131,7 +3284,10 @@ function maybeActivatePavlosProtection(incomingDamageById) {
 }
 
 function pavlosDamageBlocked(bot) {
-  return Boolean(bot && state.roundState?.pavlosProtectedBotId === bot.id);
+  return Boolean(
+    bot &&
+      (state.roundState?.pavlosProtectedBotId === bot.id || state.roundState?.pavlosDeferredBotIds?.has(bot.id))
+  );
 }
 
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
@@ -3351,7 +3507,7 @@ function applySerafimRoundSteal() {
   const bosses = activeBossesWithPower("serafim");
   if (!bosses.length) return;
   bosses.forEach((bot) => {
-    const stolen = stealPlayerSinToBoss(bot, 5, uniquePowerSourceName(bot, "serafim"));
+    const stolen = stealPlayerSinToBoss(bot, 2, uniquePowerSourceName(bot, "serafim"));
     if (stolen > 0) state.roundState.roundEvents.push(`${bot.name} stole ${stolen} SIN.`);
   });
 }
@@ -3534,8 +3690,8 @@ function createBot(options = {}) {
     id: state.nextBotId++,
     name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
-    country: profile?.country || "Boss",
-    type: isBoss ? "Boss" : archetype.type,
+    country: profile?.country || "BOSS",
+    type: isBoss ? "BOSS" : archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
     image: uniqueSpec?.image || goeticSpec?.image || randomBotImage(),
     anchor: clamp(archetype.anchor + randomInt(-8, 8), 0, 100),
@@ -3549,6 +3705,7 @@ function createBot(options = {}) {
     uniqueKey: uniqueSpec?.key || null,
     copiedUniqueKey: copiedUniqueSpec?.key || null,
     pairGroupId: bossSpec?.pairGroupId || null,
+    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
     goeticKey: goeticSpec?.key || null,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
@@ -3620,7 +3777,7 @@ function rerollShop() {
   const eliteBoosted = state.eliteBoostedNextReroll;
   state.eliteBoostedNextReroll = false;
   state.shop = [drawPassiveShopItem(eliteBoosted), drawShopItem(ACTIVE_IDS), drawShopItem(ACTIVE_IDS)];
-  if (eliteBoosted) addLog(`The Hand of Glory set this Seal reroll's ELITE chance to ${artifactPercentValue(50)}%.`);
+  if (eliteBoosted) addLog(`${activeName("a23")} set this Seal reroll's ELITE chance to ${artifactPercentValue(50)}%.`);
   syncShopSlotCount();
 }
 
@@ -3693,7 +3850,7 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
     const multiplierBonus = Math.max(0, gained - base);
     if (multiplierBonus > 0) {
-      recordPlayerCreditSource(multiplierBonus, ITEMS.a10?.name || "The Thirty Pieces of Silver");
+      recordPlayerCreditSource(multiplierBonus, ITEMS.a10?.name || "Funeral Coin");
     }
   }
   return gained;
@@ -3941,14 +4098,15 @@ function beginRound() {
   state.playerDamageSources = [];
   state.playerHealSources = [];
   state.playerCreditSources = [];
+  const twinModifier = petrosPavlosRoundModifier();
   const threonMystery = aliveUniqueBoss("threon");
   state.roundState = {
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
     botSubmittedGuesses: new Map(),
     botEffectiveGuesses: new Map(),
-    targetModifier: threonMystery ? randomInt(7, 13) / 10 : currentTargetModifier(),
-    mysteryModifier: threonMystery,
+    targetModifier: twinModifier ?? (threonMystery ? randomInt(7, 13) / 10 : currentTargetModifier()),
+    mysteryModifier: twinModifier === null && threonMystery,
     targetOffset: 0,
     target: null,
     criticalInteger: null,
@@ -3983,6 +4141,9 @@ function beginRound() {
     kalhaSuppressedPassiveId: null,
     kalhaSuppressedById: null,
     pavlosProtectedBotId: null,
+    pavlosStartHpById: new Map(),
+    pavlosDeferredBotIds: new Set(),
+    resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
     triggeredPassiveIds: new Set(),
     penaltiesApplied: false,
@@ -4004,6 +4165,7 @@ function beginRound() {
     bot.markedByPlayer = false;
     bot.plannedGuess = planBotGuess(bot);
     bot.revealedByPassive = false;
+    if (bot.uniqueKey === "pavlos") state.roundState.pavlosStartHpById.set(bot.id, bot.hp);
   });
 
   applyKalhaSealSuppression();
@@ -4511,7 +4673,7 @@ function applyPenalties() {
         source: round.playerDamageReductionSource || "Damage reduction",
         kind: "saved"
       });
-      round.roundEvents.push(`The Philosopher's Stone reduced damage from ${beforeReduction} to ${playerDamage}.`);
+      round.roundEvents.push(`${round.playerDamageReductionSource || "Damage reduction"} reduced damage from ${beforeReduction} to ${playerDamage}.`);
     }
   }
   const memoryConversion = applyPlayerDamageMemoryConversion(playerDamage);
@@ -4557,6 +4719,7 @@ function applyPenalties() {
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   clearTemporaryBotSinBonuses();
+  resolveDeferredPavlosEliminations();
 
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -4640,7 +4803,9 @@ function findCriticalHits() {
 }
 
 function resolveEliminatedBots(eliminated) {
-  const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
+  const freshEliminations = protectPavlosAcrossRound(
+    eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated)
+  );
   if (!freshEliminations.length) return;
   const eliminatedIds = new Set(freshEliminations.map((bot) => bot.id));
   const dantreSources = activeBossesWithPower("dantre", eliminatedIds);
@@ -4739,27 +4904,9 @@ function checkRoundPentakillBonus() {
   if (!round || round.pentakillAwarded || round.eliminationsThisRound < BOT_COUNT) return;
   round.pentakillAwarded = true;
   round.pentakillPopup = true;
-  const result = upgradeRandomSealFromPentakill();
-  round.roundEvents.push(result.message);
-}
-
-function upgradeRandomSealFromPentakill() {
-  const upgradeTargets = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id));
-  if (upgradeTargets.length) {
-    const target = randomFrom(upgradeTargets);
-    target.stack = (target.stack || 1) + 1;
-    return { item: target, message: `PENTAKILL! ${target.name} upgraded to ${passiveDisplayName(target)}.` };
-  }
-
-  if (state.player.passives.length >= passiveLimit()) {
-    return { item: null, message: "PENTAKILL! No Seal slot was available for the upgrade." };
-  }
-
-  const item = itemCopy(randomFrom(PASSIVE_IDS));
-  state.player.passives.push(item);
-  refreshMimicTarget();
-  syncShopSlotCount();
-  return { item, message: `PENTAKILL! ${item.name} entered your Seals.` };
+  const healed = healPlayer(8, null, "PENTAKILL");
+  const gained = gainCredits(8, false, "PENTAKILL");
+  round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
 }
 
 function applyKillRuleHealing(bot) {
@@ -4791,10 +4938,9 @@ function replacePendingEliminations() {
     return replacement;
   });
   pairedBossSpecs.forEach((bossSpec) => {
-    const slotIndex =
-      normalReplacementIndexes.shift() ??
-      state.bots.findIndex((bot) => bot && !bot.isBoss && !bot.eliminated) ??
-      -1;
+    const replacementIndex = normalReplacementIndexes.shift();
+    const fallbackIndex = state.bots.findIndex((bot) => bot && !bot.isBoss && !bot.eliminated);
+    const slotIndex = replacementIndex !== undefined ? replacementIndex : fallbackIndex;
     const replacement = createBot({ boss: true, bossSpec });
     if (slotIndex >= 0) {
       state.bots[slotIndex] = replacement;
@@ -5471,6 +5617,137 @@ function canUseActive() {
   );
 }
 
+function activeName(id) {
+  return ITEMS[id]?.name || "Artifact";
+}
+
+function pendingArtifactItem() {
+  const pending = state.pendingActive;
+  if (!pending) return null;
+  return pending.copiedItem || state.player.actives.find((active) => active.uid === pending.uid) || null;
+}
+
+function copiedEffectItem(sourceItem) {
+  const copy = itemCopy(sourceItem.id);
+  copy.purchaseCost = sourceItem.purchaseCost ?? sourceItem.price ?? ITEMS[sourceItem.id]?.price ?? 0;
+  return copy;
+}
+
+function recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter = true) {
+  const text = `${copierName} copied ${copiedItem?.name || "Artifact"}: ${message}`;
+  state.roundState.roundEvents.push(text);
+  addLog(text);
+  recalculateTarget();
+  if (state.player.hp <= 0) finishGameOverRound();
+  if (renderAfter) render();
+}
+
+function finishActiveResolution(index, message, uid = state.pendingActive?.uid, renderAfter = true) {
+  const pending = state.pendingActive;
+  if (pending?.copiedItem) {
+    const copiedItem = pending.copiedItem;
+    const copierName = pending.copiedByName || activeName("a18");
+    state.pendingActive = null;
+    recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter);
+    return;
+  }
+  consumeActive(index, message, uid, renderAfter);
+}
+
+function beginCopiedArtifactEffect(sourceItem, copierName) {
+  const item = copiedEffectItem(sourceItem);
+  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a13") {
+    state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
+    if (item.id === "a13") state.pendingActive.step = "damage";
+    addLog(`${copierName} copied ${item.name}. Pick a bot to resolve the copied effect.`);
+    render();
+    return;
+  }
+
+  if (item.id === "a6") {
+    const value = artifactValue(20);
+    state.roundState.targetOffset += value;
+    recordCopiedArtifactResolution(copierName, item, `${item.name} added ${value} to the target.`);
+    return;
+  }
+
+  if (item.id === "a14") {
+    const value = artifactValue(10);
+    state.roundState.targetOffset -= value;
+    recordCopiedArtifactResolution(copierName, item, `${item.name} reduced the target by ${value}.`);
+    return;
+  }
+
+  if (item.id === "a23") {
+    state.eliteBoostedNextReroll = true;
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} marked the next reroll. The Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`
+    );
+    return;
+  }
+
+  if (item.id === "a10") {
+    const multiplier = artifactMultiplier(2);
+    state.roundState.bountyMultiplier *= multiplier;
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`
+    );
+    return;
+  }
+
+  if (item.id === "a11") {
+    const heal = artifactValue(20);
+    const healed = healPlayer(heal, null, item.name);
+    let message = `${item.name} healed you for ${healed}.`;
+    if (Math.random() < artifactPercent(33)) {
+      state.bossQueued = true;
+      message += " A boss is queued for the next elimination.";
+    }
+    recordCopiedArtifactResolution(copierName, item, message);
+    return;
+  }
+
+  if (item.id === "a12") {
+    state.roundState.playerDamageReduction = Math.max(state.roundState.playerDamageReduction, artifactPercent(50));
+    state.roundState.playerDamageReductionSource = item.name;
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} armed: you take ${artifactPercentValue(50)}% less damage this round.`
+    );
+    return;
+  }
+
+  if (item.id === "a16") {
+    const credits = randomInt(artifactValue(3), artifactValue(9));
+    const gained = gainCredits(credits, true, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} gained ${gained} SIN.`);
+    return;
+  }
+
+  if (item.id === "a21") {
+    const multiplier = artifactMultiplier(2);
+    state.roundState.painEcho = Math.max(Number(state.roundState.painEcho) || 0, multiplier);
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} armed: SINNERS take x${formatArtifactMultiplier(multiplier)} the damage you take this round.`
+    );
+    return;
+  }
+
+  if (item.id === "a22") {
+    resolvePandoraRollEffect(item, (message) => recordCopiedArtifactResolution(copierName, item, message));
+    return;
+  }
+
+  recordCopiedArtifactResolution(copierName, item, `${item.name} has no current effect.`);
+}
+
 function useActive(index) {
   if (arcadeActionLocked()) return;
   if (!canUseActive()) {
@@ -5491,7 +5768,7 @@ function useActive(index) {
   if (item.id === "a13") {
     const damagedHealTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.hp < bot.maxHp);
     if (!damagedHealTargets.length) {
-      addLog("The White-Hilted Knife needs a damaged bot to heal.");
+      addLog(`${item.name} needs a damaged bot to heal.`);
       render();
       return;
     }
@@ -5517,14 +5794,14 @@ function useActive(index) {
   if (item.id === "a6") {
     const value = artifactValue(20);
     state.roundState.targetOffset += value;
-    consumeActive(index, `The Tablet of Destinies added ${value} to the target.`, item.uid);
+    consumeActive(index, `${item.name} added ${value} to the target.`, item.uid);
     return;
   }
 
   if (item.id === "a14") {
     const value = artifactValue(10);
     state.roundState.targetOffset -= value;
-    consumeActive(index, `The Blasting Rod reduced the target by ${value}.`, item.uid);
+    consumeActive(index, `${item.name} reduced the target by ${value}.`, item.uid);
     return;
   }
 
@@ -5532,13 +5809,13 @@ function useActive(index) {
     state.eliteBoostedNextReroll = true;
     consumeActive(
       index,
-      `The Hand of Glory marked the next reroll. The Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`,
+      `${item.name} marked the next reroll. The Seal slot has a ${artifactPercentValue(50)}% ELITE chance.`,
       item.uid
     );
     return;
   }
 
-  if (["a7", "a8", "a9", "a15", "a25", "a26", "a28"].includes(item.id)) {
+  if (TARGETED_ARTIFACT_IDS.has(item.id)) {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot" };
     addLog("Pick a bot to resolve the Artifact.");
     render();
@@ -5550,7 +5827,7 @@ function useActive(index) {
     state.roundState.bountyMultiplier *= multiplier;
     consumeActive(
       index,
-      `The Thirty Pieces of Silver armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`,
+      `${item.name} armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`,
       item.uid
     );
     return;
@@ -5558,8 +5835,8 @@ function useActive(index) {
 
   if (item.id === "a11") {
     const heal = artifactValue(20);
-    const healed = healPlayer(heal, null, "Witch Bottle");
-    let message = `Witch Bottle healed you for ${healed}.`;
+    const healed = healPlayer(heal, null, item.name);
+    let message = `${item.name} healed you for ${healed}.`;
     if (Math.random() < artifactPercent(33)) {
       state.bossQueued = true;
       message += " A boss is queued for the next elimination.";
@@ -5571,7 +5848,7 @@ function useActive(index) {
   if (item.id === "a12") {
     state.roundState.playerDamageReduction = Math.max(state.roundState.playerDamageReduction, artifactPercent(50));
     state.roundState.playerDamageReductionSource = item.name;
-    consumeActive(index, `The Philosopher's Stone armed: you take ${artifactPercentValue(50)}% less damage this round.`, item.uid);
+    consumeActive(index, `${item.name} armed: you take ${artifactPercentValue(50)}% less damage this round.`, item.uid);
     return;
   }
 
@@ -5584,35 +5861,32 @@ function useActive(index) {
 
   if (item.id === "a16") {
     const credits = randomInt(artifactValue(3), artifactValue(9));
-    const gained = gainCredits(credits, true, "Dr Dee's Gold Disc");
-    consumeActive(index, `Dr Dee's Gold Disc gained ${gained} SIN.`, item.uid);
+    const gained = gainCredits(credits, true, item.name);
+    consumeActive(index, `${item.name} gained ${gained} SIN.`, item.uid);
     return;
   }
 
   if (item.id === "a18") {
-    const copyOptions = state.player.actives.filter((active, activeIndex) => activeIndex !== index);
+    const copyOptions = state.player.actives.filter((active, activeIndex) => activeIndex !== index && active.id !== item.id);
     if (!copyOptions.length) {
-      addLog("The Emerald Tablet needs another Artifact to copy.");
+      addLog(`${item.name} needs another non-copier Artifact to copy.`);
       render();
       return;
     }
-    const copies = Math.min(artifactCount(1), Math.max(0, activeInventoryLimit() - (state.player.actives.length - 1)));
-    const copiedNames = [];
-    for (let copy = 0; copy < copies; copy += 1) {
-      const copied = randomFrom(copyOptions);
-      const duplicate = itemCopy(copied.id);
-      duplicate.purchaseCost = 0;
-      state.player.actives.push(duplicate);
-      copiedNames.push(copied.name);
+    const copied = randomFrom(copyOptions);
+    consumeActive(index, `${item.name} shattered into ${copied.name}.`, item.uid, false);
+    if (state.player.hp <= 0) {
+      render();
+      return;
     }
-    consumeActive(index, `The Emerald Tablet copied ${copiedNames.join(", ")}.`, item.uid);
+    beginCopiedArtifactEffect(copied, item.name);
     return;
   }
 
   if (item.id === "a21") {
     const multiplier = artifactMultiplier(2);
     state.roundState.painEcho = Math.max(Number(state.roundState.painEcho) || 0, multiplier);
-    consumeActive(index, `Amulet of Pazuzu armed: SINNERS take x${formatArtifactMultiplier(multiplier)} the damage you take this round.`, item.uid);
+    consumeActive(index, `${item.name} armed: SINNERS take x${formatArtifactMultiplier(multiplier)} the damage you take this round.`, item.uid);
     return;
   }
 
@@ -5628,9 +5902,10 @@ function cancelPendingActive() {
   if (arcadeActionLocked()) return;
   const pending = state.pendingActive;
   if (!pending) return;
-  const item = state.player.actives.find((active) => active.uid === pending.uid);
+  const item = pendingArtifactItem();
+  const itemName = item?.name || "Artifact";
   if (pending.id === "a13" && pending.step === "heal") {
-    addLog("The White-Hilted Knife has already hit; choose a heal target to finish it.");
+    addLog(`${itemName} has already hit; choose a heal target to finish it.`);
     render();
     return;
   }
@@ -5639,12 +5914,14 @@ function cancelPendingActive() {
     if (source) {
       changeBotSin(source, pending.removedBounty || 0, "", {
         triggerLossDamage: false,
-        source: "Grandier's Pact canceled"
+        source: `${itemName} canceled`
       });
     }
-    addLog("Grandier's Pact canceled and restored the drained bounty.");
+    addLog(`${itemName} canceled and restored the drained bounty.`);
+  } else if (pending.copiedItem) {
+    addLog(`${pending.copiedByName || activeName("a18")} copied ${itemName}, but the copied effect was canceled.`);
   } else {
-    addLog(`${item?.name || "Artifact"} canceled.`);
+    addLog(`${itemName} canceled.`);
   }
   state.pendingActive = null;
   render();
@@ -5673,44 +5950,51 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (renderAfter) render();
 }
 
-function resolvePandoraRoll(index, uid) {
+function resolvePandoraRollEffect(item, finish) {
+  const name = item?.name || activeName("a22");
   const roll = Math.random();
   if (roll < 0.1) {
     const damage = artifactValue(20);
-    damagePlayer(damage, `The Necklace of Harmonia dealt ${damage} damage to you.`);
-    consumeActive(index, "The Necklace of Harmonia backfired.", uid);
+    damagePlayer(damage, `${name} dealt ${damage} damage to you.`, true, true, name);
+    finish(`${name} backfired.`);
     return;
   }
   if (roll < 0.3) {
     const damage = artifactValue(10);
-    damagePlayer(damage, `The Necklace of Harmonia dealt ${damage} damage to you.`);
-    consumeActive(index, "The Necklace of Harmonia stung you.", uid);
+    damagePlayer(damage, `${name} dealt ${damage} damage to you.`, true, true, name);
+    finish(`${name} stung you.`);
     return;
   }
   if (roll < 0.6) {
-    const gained = gainCredits(artifactValue(6), true, "The Necklace of Harmonia");
-    consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN.`, uid);
+    const gained = gainCredits(artifactValue(6), true, name);
+    finish(`${name} gained ${gained} SIN.`);
     return;
   }
   if (roll < 0.8) {
-    const gained = gainCredits(artifactValue(12), true, "The Necklace of Harmonia");
-    consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN.`, uid);
+    const gained = gainCredits(artifactValue(12), true, name);
+    finish(`${name} gained ${gained} SIN.`);
     return;
   }
   if (roll >= 0.9) {
-    consumeActive(index, "The Necklace of Harmonia flickered and did nothing.", uid);
+    finish(`${name} flickered and did nothing.`);
     return;
   }
-  const gained = gainCredits(artifactValue(15), true, "The Necklace of Harmonia");
+  const gained = gainCredits(artifactValue(15), true, name);
   const damage = artifactValue(20);
-  damageBots(activeBots(), damage, (bot, dealt) => `The Necklace of Harmonia dealt ${dealt} damage to ${bot.name}.`);
-  consumeActive(index, `The Necklace of Harmonia gained ${gained} SIN and struck every bot.`, uid);
+  damageBots(activeBots(), damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name}.`, name);
+  finish(`${name} gained ${gained} SIN and struck every bot.`);
+}
+
+function resolvePandoraRoll(index, uid) {
+  const item = state.player.actives.find((active) => active.uid === uid) || ITEMS.a22;
+  resolvePandoraRollEffect(item, (message) => consumeActive(index, message, uid));
 }
 
 function chooseBot(botId) {
   if (arcadeActionLocked()) return;
   if (!state.pendingActive || state.pendingActive.mode !== "bot") return;
-  const { id, index } = state.pendingActive;
+  const pending = state.pendingActive;
+  const { id, index } = pending;
   const bot = state.bots.find((candidate) => candidate.id === botId);
   if (!bot) return;
   if (bot.hp <= 0) {
@@ -5724,11 +6008,12 @@ function chooseBot(botId) {
     return;
   }
   const round = state.roundState;
-  const item = state.player.actives.find((active) => active.uid === state.pendingActive.uid);
+  const item = pendingArtifactItem();
+  const itemName = item?.name || activeName(id);
 
   if (id === "a7") {
     if (bot.isBoss) {
-      addLog("The Ring of Gyges cannot target bosses.");
+      addLog(`${itemName} cannot target bosses.`);
       render();
       return;
     }
@@ -5739,7 +6024,7 @@ function chooseBot(botId) {
     round.botEffectiveGuesses.set(bot.id, playerGuess);
     round.botSubmittedGuesses.set(bot.id, playerGuess);
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Ring of Gyges traded guesses with ${bot.name}.`);
+    finishActiveResolution(index, `${itemName} traded guesses with ${bot.name}.`);
     return;
   }
 
@@ -5750,23 +6035,23 @@ function chooseBot(botId) {
       round.extraAverageGuesses.push({ botId: bot.id, guess });
     }
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Ring of Solomon counted ${bot.name}'s guess ${count} times.`);
+    finishActiveResolution(index, `${itemName} counted ${bot.name}'s guess ${count} times.`);
     return;
   }
 
   if (id === "a9") {
     round.removedBotIds.add(bot.id);
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Key of the Bottomless Pit removed ${bot.name} from the average.`);
+    finishActiveResolution(index, `${itemName} removed ${bot.name} from the average.`);
     return;
   }
 
   if (id === "a15") {
-    const uid = state.pendingActive.uid;
+    const uid = pending.uid;
     const damage = Math.ceil(bot.maxHp * artifactPercent(bot.isBoss ? 10 : 20));
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Magical Sword of Solomon hit ${bot.name} for ${damage}.`, uid, false);
-    damageBot(bot, damage, `The Magical Sword of Solomon dealt ${damage} damage to ${bot.name}.`);
+    finishActiveResolution(index, `${itemName} hit ${bot.name} for ${damage}.`, uid, false);
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
     if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;
@@ -5774,46 +6059,45 @@ function chooseBot(botId) {
 
   if (id === "a25") {
     const bounty = artifactValue(9);
-    changeBotSin(bot, bounty, "", { triggerLossDamage: false, source: "The Brazen Vessel of Solomon" });
-    const healed = healBot(bot, bot.maxHp, "The Brazen Vessel of Solomon");
+    changeBotSin(bot, bounty, "", { triggerLossDamage: false, source: itemName });
+    const healed = healBot(bot, bot.maxHp, itemName);
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `The Brazen Vessel of Solomon healed ${bot.name} for ${healed} and added +${bounty} bounty.`);
+    finishActiveResolution(index, `${itemName} healed ${bot.name} for ${healed} and added +${bounty} bounty.`);
     return;
   }
 
   if (id === "a26") {
-    const pending = state.pendingActive;
     if (pending.step === "give") {
-      changeBotSin(bot, pending.removedBounty || 0, "", { triggerLossDamage: false, source: "Grandier's Pact" });
+      changeBotSin(bot, pending.removedBounty || 0, "", { triggerLossDamage: false, source: itemName });
       applyTargetedItemSinGain(item, [bot]);
-      consumeActive(index, `Grandier's Pact moved ${pending.removedBounty || 0} bounty to ${bot.name}.`);
+      finishActiveResolution(index, `${itemName} moved ${pending.removedBounty || 0} bounty to ${bot.name}.`);
       return;
     }
     const maxDrain = artifactValue(5);
     const removed = Math.min(maxDrain, botSin(bot));
-    changeBotSin(bot, -removed, `Grandier's Pact drained ${removed} bounty from ${bot.name}.`);
+    changeBotSin(bot, -removed, `${itemName} drained ${removed} bounty from ${bot.name}.`);
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "give";
     pending.sourceBotId = bot.id;
     pending.removedBounty = removed;
-    addLog(`Grandier's Pact drained ${removed} bounty from ${bot.name}. Pick a bot to receive it.`);
+    addLog(`${itemName} drained ${removed} bounty from ${bot.name}. Pick a bot to receive it.`);
     render();
     return;
   }
 
   if (id === "a28") {
     if (bot.isBoss) {
-      addLog(`${item.name} cannot target bosses.`);
+      addLog(`${itemName} cannot target bosses.`);
       render();
       return;
     }
     const value = artifactValue(6);
-    addBotMemory(bot, value, `${item.name} gave ${bot.name} +${value} memory.`);
-    changeBotSin(bot, value, `${item.name} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
+    addBotMemory(bot, value, `${itemName} gave ${bot.name} +${value} memory.`);
+    changeBotSin(bot, value, `${itemName} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
     bot.maxHp += value;
     bot.hp += value;
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(index, `${item.name} gave ${bot.name} +${value} memory, +${value} SIN, and +${value} health.`);
+    finishActiveResolution(index, `${itemName} gave ${bot.name} +${value} memory, +${value} SIN, and +${value} health.`);
     return;
   }
 
@@ -5824,7 +6108,8 @@ function chooseBot(botId) {
 
 function resolveTriageBeam(bot) {
   const pending = state.pendingActive;
-  const item = state.player.actives.find((active) => active.uid === pending.uid);
+  const item = pendingArtifactItem();
+  const itemName = item?.name || activeName("a13");
   if (pending.step === "damage") {
     const possibleHealTargets = state.bots.filter(
       (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && candidate.hp < candidate.maxHp
@@ -5838,8 +6123,8 @@ function resolveTriageBeam(bot) {
     const dealt = damageBotNonLethal(
       bot,
       value,
-      (target, damage) => `The White-Hilted Knife dealt ${damage} non-lethal damage to ${target.name}.`,
-      "The White-Hilted Knife"
+      (target, damage) => `${itemName} dealt ${damage} non-lethal damage to ${target.name}.`,
+      itemName
     );
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
@@ -5856,13 +6141,13 @@ function resolveTriageBeam(bot) {
       return;
     }
     if (bot.hp >= bot.maxHp) {
-      addLog("The White-Hilted Knife can only heal a damaged bot.");
+      addLog(`${itemName} can only heal a damaged bot.`);
       render();
       return;
     }
-    const healed = healBot(bot, artifactValue(20), "The White-Hilted Knife");
+    const healed = healBot(bot, artifactValue(20), itemName);
     applyTargetedItemSinGain(item, [bot]);
-    consumeActive(pending.index, `The White-Hilted Knife healed ${bot.name} for ${healed}.`);
+    finishActiveResolution(pending.index, `${itemName} healed ${bot.name} for ${healed}.`);
   }
 }
 
@@ -5955,7 +6240,7 @@ function pvpHumanParticipants() {
 
 function pvpAddLog(message) {
   if (!state.pvp) return;
-  state.pvp.log.unshift(message);
+  state.pvp.log.unshift(normalizeGameText(message));
   state.pvp.log = state.pvp.log.slice(0, 8);
 }
 
@@ -6125,7 +6410,7 @@ function pvpFillBotsAndStart() {
   }
   state.pvp.slots = state.pvp.slots.map((participant, slot) => participant || pvpBot(slot));
   pvpNormalizeSlots();
-  pvpAddLog("Empty slots filled with bots.");
+  pvpAddLog("Empty slots filled with DAMNED.");
   pvpStartRound();
 }
 
@@ -6518,7 +6803,7 @@ function pvpPublicState() {
             activeOptions: pvpSelectableActives(participant).map((active) => ({
               id: active.id,
               name: active.name,
-              description: active.description,
+              description: normalizeGameText(active.description),
               needsTarget: active.needsTarget
             })),
             activeSubmitted: Boolean(participant.activeChoiceId),
@@ -6533,7 +6818,7 @@ function pvpPublicState() {
           }
         : null
     ),
-    activeResults: state.pvp.activeResults,
+    activeResults: state.pvp.activeResults.map((result) => normalizeGameText(result)),
     winner: state.pvp.winner
   };
 }
@@ -6890,7 +7175,7 @@ function renderPvpSlot(participant, slot) {
         <div class="bot-face empty-face"><span class="bot-mouth"></span></div>
         <div class="bot-title"><div class="bot-name">Empty Slot ${slot + 1}</div></div>
         <div class="bot-type">Waiting for phone player</div>
-        <div class="empty-state">Becomes a bot when Ready is pressed</div>
+        <div class="empty-state">Becomes DAMNED when Ready is pressed</div>
         ${removeButton}
       </article>
     `;
@@ -6940,14 +7225,14 @@ function renderPvpSlot(participant, slot) {
       <div class="bot-title">
         <div class="bot-name" title="${escapeAttr(participant.name)}">${participant.name}</div>
       </div>
-      <div class="bot-type">${participant.human ? "Phone Player" : "Bot"}</div>
+      <div class="bot-type">${participant.human ? "Phone Player" : "DAMNED"}</div>
       <div class="bot-stats">
         <div class="mini-stat">
           <span>${guessLabel}</span>
           <strong class="${guessClass}"${guessCloseness.style}>${guessText}</strong>
         </div>
         <div class="mini-stat">
-          <span>Artifact</span>
+          <span>ARTIFACT</span>
           <strong class="${activeClass}">${activeText}</strong>
         </div>
         <div class="mini-stat bot-health">
@@ -7122,7 +7407,7 @@ function renderPvpActiveOption(participant, active, targets) {
   const targetSelect = active.needsTarget
     ? `
       <select class="pvp-target-select" data-pvp-target-for="${participant.slot}-${active.id}">
-        <option value="">Target</option>
+        <option value="">target</option>
         ${targets
           .filter((target) => target.id !== participant.id)
           .map((target) => {
@@ -7185,12 +7470,12 @@ function renderPvpEndedConsole() {
 
 function renderPvpResults() {
   if (!state.pvp.activeResults.length) return "";
-  return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(result)}</div>`).join("")}</div>`;
+  return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}</div>`;
 }
 
 function renderPvpLog() {
   if (!state.pvp.log.length) return "";
-  return `<div class="pvp-log">${state.pvp.log.map((entry) => `<div>${escapeHtml(entry)}</div>`).join("")}</div>`;
+  return `<div class="pvp-log">${state.pvp.log.map((entry) => `<div>${escapeHtml(normalizeGameText(entry))}</div>`).join("")}</div>`;
 }
 
 function renderTopbar() {
@@ -7235,10 +7520,10 @@ function renderTopbar() {
       <div class="stat-card round-wrap">
         <span class="stat-label">Round</span>
         <span class="stat-value">${state.round}</span>
-        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(skipTitle)}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
+        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
       </div>
       <div class="stat-card">
-        <span class="stat-label">KOs / Boss</span>
+        <span class="stat-label">KOs / BOSS</span>
         <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
       </div>
       <div class="stat-card credit-wrap">
@@ -7283,7 +7568,7 @@ function renderTargetPanel() {
 function renderBots() {
   const pendingPick = state.pendingActive && state.pendingActive.mode === "bot";
   return `
-    <section class="bot-grid ${pendingPick ? "picking" : ""} ${state.finalBossPhase ? "final-boss-grid" : ""}" aria-label="Bot players">
+    <section class="bot-grid ${pendingPick ? "picking" : ""} ${state.finalBossPhase ? "final-boss-grid" : ""}" aria-label="DAMNED">
       ${state.bots.map((bot) => renderBot(bot, pendingPick)).join("")}
     </section>
   `;
@@ -7312,7 +7597,7 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  const typeLabel = hasVisiblePassive ? `${bot.isBoss ? "Boss" : bot.type}: ${passiveSummary}` : bot.type;
+  const typeLabel = normalizeGameText(hasVisiblePassive ? `${bot.isBoss ? "BOSS" : bot.type}: ${passiveSummary}` : bot.type);
   const passiveDescription = hasVisiblePassive ? botPassiveDescription(bot) : "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
@@ -7347,13 +7632,13 @@ function renderBot(bot, pendingPick) {
   const flagHtml = bot.isBoss
     ? ""
     : `<span class="bot-flag" aria-label="${escapeAttr(bot.country)}" title="${escapeAttr(bot.country)}">${bot.flag}</span>`;
-  const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `Health ${bot.hp}/${bot.maxHp}`;
+  const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
   const healthPercent = bot.immortal ? 100 : (bot.hp / bot.maxHp) * 100;
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
   const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
   const pickButton = pendingPick
-    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "Boss" : shieldBlocked ? "Seal" : "Pick"}</button>`
+    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
   const faceInner = isDown
@@ -7369,7 +7654,7 @@ function renderBot(bot, pendingPick) {
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
-        <div class="bot-name" title="${escapeAttr(`${bot.name} (${bot.country})`)}">${bot.name}</div>
+        <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${bot.country})`))}">${bot.name}</div>
         <div class="bot-reward" title="SIN">${rewardLabel}</div>
         ${sinBadge}
       </div>
@@ -7410,7 +7695,7 @@ function renderConsole() {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
-    hint = `${round.activeUses}/${activeUseLimit()} Artifacts used. Ready applies penalties.`;
+    hint = `${round.activeUses}/${activeUseLimit()} ARTIFACTS used. Ready applies penalties.`;
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
@@ -7435,7 +7720,7 @@ function renderConsole() {
 
   return `
     <section class="center-console" aria-label="Player action">
-      ${hint ? `<div class="console-hint">${hint}</div>` : ""}
+      ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row">
         <input
           id="guessInput"
@@ -7451,7 +7736,7 @@ function renderConsole() {
         <button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>
       </div>
       <div class="pending-panel ${state.pendingActive ? "visible" : ""}">
-        <span>${pendingText}</span>
+        <span>${escapeHtml(normalizeGameText(pendingText))}</span>
         ${pendingCancel}
       </div>
     </section>
@@ -7460,24 +7745,24 @@ function renderConsole() {
 
 function renderPendingText() {
   if (!state.pendingActive) return "";
-  const item = state.player.actives.find((active) => active.uid === state.pendingActive.uid);
+  const item = pendingArtifactItem();
   if (!item) return "";
-  if (state.pendingActive.id === "a6") return `The Tablet of Destinies adds ${artifactValue(20)} to the target.`;
-  if (state.pendingActive.id === "a14") return `The Blasting Rod reduces the target by ${artifactValue(10)}.`;
+  if (state.pendingActive.id === "a6") return `${item.name} adds ${artifactValue(20)} to the TARGET.`;
+  if (state.pendingActive.id === "a14") return `${item.name} reduces the TARGET by ${artifactValue(10)}.`;
   if (state.pendingActive.id === "a15") {
-    return `The Magical Sword of Solomon: pick a target. Non-bosses take ${artifactPercentValue(20)}%, bosses take ${artifactPercentValue(10)}%.`;
+    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(10)}%.`;
   }
-  if (state.pendingActive.id === "a25") return `The Brazen Vessel of Solomon: pick a bot to heal to full and give +${artifactValue(9)} bounty.`;
-  if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return "Grandier's Pact: pick a bot to receive the drained bounty.";
-  if (state.pendingActive.id === "a26") return `Grandier's Pact: pick a bot to drain up to ${artifactValue(5)} bounty.`;
+  if (state.pendingActive.id === "a25") return `${item.name}: pick DAMNED to heal to full and give +${artifactValue(9)} BOUNTY.`;
+  if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return `${item.name}: pick DAMNED to receive the drained BOUNTY.`;
+  if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
     const value = artifactValue(6);
-    return `Demon Bowl - Incantation Bowl: pick a non-boss bot to gain +${value} memory, +${value} SIN, and +${value} health.`;
+    return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and +${value} HEALTH.`;
   }
   if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
-    return `The White-Hilted Knife: pick a different bot to heal for ${artifactValue(20)}.`;
+    return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
   }
-  return `${item.name}: pick a bot card to resolve it.`;
+  return `${item.name}: pick a DAMNED card to resolve it.`;
 }
 
 function renderShop() {
@@ -7529,7 +7814,7 @@ function renderShopSlot(slot, index) {
         <div>
           <div class="item-name">${displayName}</div>
         </div>
-        <span class="item-kind">${item.type === "passive" ? "Seal" : "Artifact"}</span>
+        <span class="item-kind">${item.type === "passive" ? "SEAL" : "ARTIFACT"}</span>
       </div>
       <div class="item-actions one">
         <button class="small-button shop-buy-button" data-buy="${index}" ${disabled}>${buttonText}</button>
@@ -7543,15 +7828,16 @@ function renderActives() {
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
   const subtitle = count >= limit ? `${count}/${limit} FULL` : `${count}/${limit}`;
+  const readyClass = canUseActive() && count > 0 && !state.pendingActive ? "artifact-panel-ready" : "";
   const activeCards = count
     ? state.player.actives.map((item, index) => renderActiveItem(item, index)).join("")
-    : `<div class="empty-state">No Artifacts</div>`;
+    : `<div class="empty-state">No ARTIFACTS</div>`;
 
   return `
-    <section class="panel active-panel" aria-label="Artifacts">
+    <section class="panel active-panel ${readyClass}" aria-label="ARTIFACTS">
       <div class="panel-header">
         <div>
-          <div class="panel-title">Artifacts</div>
+          <div class="panel-title">ARTIFACTS</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
       </div>
@@ -7575,7 +7861,7 @@ function renderActiveItem(item, index) {
           <div class="item-name">${item.name}</div>
           <div class="price">Sell ${sale} SIN</div>
         </div>
-        <span class="item-kind">Artifact</span>
+        <span class="item-kind">ARTIFACT</span>
       </div>
       <div class="item-actions">
         <button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
@@ -7590,7 +7876,7 @@ function renderPassives() {
   for (let index = 0; index < passiveLimit(); index += 1) {
     const item = state.player.passives[index];
     if (!item) {
-      slots.push(`<div class="passive-slot empty">Empty Seal slot</div>`);
+      slots.push(`<div class="passive-slot empty">Empty SEAL slot</div>`);
       continue;
     }
     const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
@@ -7612,7 +7898,7 @@ function renderPassives() {
     `);
   }
 
-  return `<footer class="passive-bar" aria-label="Seals">${slots.join("")}</footer>`;
+  return `<footer class="passive-bar" aria-label="SEALS">${slots.join("")}</footer>`;
 }
 
 function renderOverlay() {
@@ -7893,7 +8179,7 @@ function bindEvents() {
         if (element.dataset.tooltipHtml) {
           floatingTooltip.innerHTML = element.dataset.tooltipHtml;
         } else {
-          floatingTooltip.textContent = element.dataset.tooltip;
+          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
         }
         floatingTooltip.classList.add("visible");
         positionFloatingTooltip(event, floatingTooltip);
@@ -7903,7 +8189,7 @@ function bindEvents() {
       });
       element.addEventListener("mouseleave", () => {
         floatingTooltip.classList.remove("visible");
-        floatingTooltip.textContent = "";
+        floatingTooltip.innerHTML = "";
       });
     });
   }

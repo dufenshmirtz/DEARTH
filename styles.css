@@ -3027,6 +3027,7 @@ body.mobile-arcade .floating-tooltip {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
+.tooltip .tooltip-keyword,
 .floating-tooltip .tooltip-keyword {
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
   font-weight: 900;
@@ -3311,6 +3312,11 @@ body.mobile-arcade .active-panel,
 body.mobile-arcade .active-panel .item-card,
 body.mobile-arcade .shop-panel .item-card.active {
   border-color: rgba(255, 255, 255, 0.58) !important;
+}
+
+.active-panel.artifact-panel-ready,
+body.mobile-arcade .active-panel.artifact-panel-ready {
+  border-color: #fff !important;
 }
 
 button,
