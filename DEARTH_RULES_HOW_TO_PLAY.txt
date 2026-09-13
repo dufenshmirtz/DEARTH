@@ -1,0 +1,522 @@
+DEARTH
+Rules and How to Play
+
+
+1. What Dearth Is
+
+Dearth is a number-guessing survival game set around a cursed table in purgatory.
+You are trying to survive God's endless guessing game while the Devil offers help
+through SEALS and ARTIFACTS. Every enemy at the table is one of the DAMNED.
+Eliminating DAMNED sends them away and earns SIN, which is used to buy more power.
+
+There are two main modes:
+
+Arcade
+The main roguelike mode. You play alone against five DAMNED controlled by the game.
+The run continues until you die. Bosses appear throughout the run, then the game
+eventually reaches the Jesus and Satan final phase after the Goetic boss sequence.
+
+PvP
+A party mode hosted on the PC. Other players join from phones, take the DAMNED slots,
+and play a stripped-down last-player-standing version of the guessing game.
+
+
+2. Core Guessing Rule
+
+Every living participant secretly chooses an integer guess.
+
+In Arcade, the player normally guesses from 0 to 100.
+In PvP, every living player guesses from 0 to 100.
+
+After guesses are submitted, the TARGET is calculated:
+
+TARGET = rounded up average of counted guesses x current modifier + target changes
+
+The default Arcade modifier is 0.8, but BOSSES, ARTIFACTS, and some rules can change it.
+The PvP modifier is one of 0.7, 0.8, 0.9, 1.0, 1.1, or 1.2.
+
+All important numbers are rounded up to whole integers.
+
+After the TARGET is known, each participant eventually takes TARGET-difference damage:
+
+Damage = absolute difference between that participant's final guess and the TARGET
+
+Example:
+If the TARGET is 47 and your final guess is 40, your TARGET-difference damage is 7.
+
+In Arcade, TARGET-difference damage is always calculated last, after SEALS,
+ARTIFACTS, CRITICAL damage, worst guess damage, and other special effects.
+
+
+3. Arcade Mode Goal
+
+Stay alive as long as possible.
+
+You start with:
+
+100 HEALTH
+8 SIN
+3 SEAL slots
+5 ARTIFACT inventory slots
+2 ARTIFACT uses per round
+
+The board starts with five non-boss DAMNED.
+If your HEALTH reaches 0, you lose. Healing cannot save you after you have already
+reached 0 from the total damage of a round. On Game Over, you can restart or inspect
+the final board state.
+
+
+4. Arcade Round Flow
+
+Each round follows this order:
+
+1. Start of round effects happen.
+   Some SEALS, BOSS abilities, reveals, poison, MEMORY effects, and marked effects
+   happen at the start of the round.
+
+2. You see any revealed guesses.
+   You always know one random non-boss DAMNED guess. Some SEALS reveal more.
+   Normally BOSSES cannot have their guesses revealed unless a SEAL says otherwise.
+
+3. You choose your guess.
+   Enter a number and press Guess. Invalid guesses show a popup.
+
+4. Guesses and TARGET are revealed.
+   The DAMNED guesses, your guess, the average, the modifier, and the TARGET are locked
+   in for the round. Damage is not applied yet.
+
+5. ARTIFACT phase.
+   You may use ARTIFACTS before penalties are applied. Some ARTIFACTS need you to pick
+   a DAMNED. You can cancel a target pick if you change your mind. When finished,
+   press Ready.
+
+6. Damage and rewards resolve.
+   CRITICAL hits, worst guess penalties, SEALS, ARTIFACT effects, and finally
+   TARGET-difference damage are applied. Dead DAMNED stay visible until Next Round.
+
+7. Next Round.
+   Press Next Round to replace eliminated DAMNED, reroll Devil's Offerings, update
+   bot MEMORY, and begin the next round.
+
+
+5. Arcade CRITICAL Rule
+
+If a participant's guess exactly matches the right integer TARGET, that participant
+hits CRITICAL.
+
+In Arcade, CRITICAL normally deals 10 damage to everyone else.
+
+SEALS can change this. For example:
+
+Seal of Orias expands your CRITICAL window.
+Seal of Glasya-Labolas makes your CRITICAL deal extra damage.
+Seal of Eligos can mirror DAMNED CRITICAL hits for you and protect you from DAMNED
+CRITICAL damage.
+
+When a DAMNED hits CRITICAL, the guess label and guess number turn red.
+
+
+6. Worst Guess Penalty
+
+After normal calculations, whoever is furthest from the TARGET takes 10 extra damage.
+If several participants are tied for worst guess, all of them take the penalty.
+
+Seal of Ipos changes this rule so the three furthest guesses are punished instead.
+With Ipos, the furthest takes 20 damage and the next two take 10 damage. Its ELITE
+levels double those damage values.
+
+Seal of Andras makes you immune to worst guess penalty damage when it triggers.
+
+
+7. SEALS
+
+SEALS are passive items.
+
+They stay equipped and trigger automatically when their condition is met.
+You can sell a SEAL for part of its value.
+SEALS resolve from the leftmost equipped SEAL slot to the rightmost equipped SEAL slot.
+
+You begin with 3 SEAL slots.
+You can eventually reach 6 SEAL slots.
+The current rule gives you +1 SEAL slot every 2 BOSS kills, up to the cap of 6.
+
+If you buy a SEAL that you already own, it does not take a new slot. It upgrades the
+existing SEAL into ELITE instead.
+
+Devil's Offerings has a fixed 20% chance to offer an ELITE upgrade for a SEAL you own.
+If you own no SEALS, the ELITE chance is 0.
+
+Satanic Bible changes the next SEAL reroll to a 50% ELITE chance.
+
+Most flat damage SEALS scale strongly with ELITE levels. In the current rules, flat
+damage effects generally double each ELITE level unless the SEAL description says
+otherwise.
+
+Some SEALS track their lifetime contribution. Hover a SEAL slot to see its name,
+description, sell price, and any tracked total such as damage dealt, SIN gained, or
+healing done.
+
+
+8. ARTIFACTS
+
+ARTIFACTS are active items.
+
+They are consumed when used.
+You can hold up to 5 ARTIFACTS by default.
+You can use 2 ARTIFACTS per round by default.
+Some SEALS can change both limits.
+
+ARTIFACT values scale as the run progresses:
+
+Every 4 BOSS kills, numeric ARTIFACT effects increase by 20%, rounded down.
+
+Example:
+A 10 damage ARTIFACT becomes 12 after 4 BOSS kills.
+
+Some ARTIFACTS target a DAMNED. If you do not want to finish choosing a target,
+you can cancel the ARTIFACT selection.
+
+
+9. Devil's Offerings
+
+Devil's Offerings is the shop.
+
+It normally contains:
+
+1 SEAL
+2 ARTIFACTS
+
+Some SEALS can add more shop slots.
+
+You can reroll the shop for SIN.
+Reroll cost starts at 1 SIN each round and increases by 1 after each manual reroll
+that round. The cost resets when the next round begins.
+
+The shop automatically rerolls every round.
+
+If you have more than 150 SIN, shop prices double.
+For every additional 150 SIN, prices double again.
+If your SIN falls back below a threshold, prices fall back too.
+
+While Satan is alive in the final phase, Devil's Offerings is disabled.
+
+
+10. SIN, BOUNTY, and Rewards
+
+SIN is your money.
+
+DAMNED have BOUNTY values shown on their cards. When a DAMNED dies, you usually gain
+SIN based on its displayed BOUNTY and any active payout multipliers.
+
+BOSSES show split bounty, such as:
+
+20+5 SIN
+
+The first number is the BOSS bounty.
+The second number is the regular bounty side. BOUNTY-related SEALS use the regular
+bounty side unless their description says otherwise.
+
+Killing a normal DAMNED heals you for 1.
+Killing a BOSS heals you for 8.
+
+If all five enemies are eliminated in the same round, PENTAKILL triggers.
+PENTAKILL shows a popup, heals you for 8, and gives you 8 SIN.
+
+The game shows popups for damage, healing, SIN changes, BOUNTY changes, and special
+sources. Hovering these popups shows a source breakdown when available.
+
+
+11. MEMORY
+
+DAMNED remember previous rounds.
+
+At Next Round, each living DAMNED gains MEMORY of the round that just ended.
+Normal non-boss DAMNED have limited MEMORY.
+BOSSES remember the whole game up to that point.
+
+MEMORY includes things like:
+
+The DAMNED's own guess
+Your guess
+The TARGET
+The modifier
+The table average
+The DAMNED average
+
+DAMNED use MEMORY to guess more intelligently. They also pay attention to the current
+modifier, so they do not blindly copy a previous TARGET that was created under a
+different modifier.
+
+Some SEALS create, punish, reward, or convert MEMORY.
+
+
+12. DAMNED Personalities
+
+Each normal DAMNED has a personality that influences its guesses.
+
+Analyst
+Uses previous TARGET movement and table behavior. Analysts are the most pattern-based.
+
+Follower
+Pays attention to your previous guesses and drifts toward the recent TARGET.
+
+Stubborn
+Has a preferred anchor number and resists moving too far away from it.
+
+Drifter
+Uses the recent TARGET and table average but swings more than stable personalities.
+
+Caller
+Watches the DAMNED average and tries to pull with the group.
+
+Anchor
+Uses a more fixed internal number and adapts more slowly.
+
+BOSSES use personalities too, but they play somewhat smarter than normal DAMNED.
+
+
+13. Boss Progression
+
+BOSSES arrive strictly after every 8 KOs, unless Vial of Blood causes an early BOSS.
+
+The first eight special BOSS events happen in random order:
+
+Zilon
+Dantre
+Pyros
+Threon
+Kalha
+Serafim
+Padma
+Petros and Pavlos
+
+After those eight, the game enters the Goetic BOSS phase.
+Goetic BOSSES are named after SEALS. When a Goetic BOSS is alive, the matching player
+SEAL is disabled and appears darker in your SEAL bar.
+
+After the Goetic BOSS sequence, the final Jesus and Satan phase begins.
+Only Jesus and Satan are on the board.
+They have infinite HEALTH, so damage dealt to them is tracked instead of killing them.
+The final phase modifier is 0.666.
+Jesus's guess counts three times for the TARGET average.
+Satan disables Devil's Offerings.
+Satan has infinite SIN and Jesus has negative infinite SIN.
+
+The SKIP button in the round panel is a testing/progression button:
+
+First press jumps past the eight special BOSSES into the first Goetic BOSS.
+Second press jumps to the Jesus and Satan phase.
+
+
+14. Scaling
+
+Normal DAMNED begin with HP in the 20 to 60 range.
+
+After each of the first 4 BOSS kills, normal DAMNED HP limits increase by 5.
+After each of the next 4 BOSS kills, normal DAMNED HP limits increase by 10.
+After the first 8 BOSS kills, normal DAMNED HP limits increase by 20 per later
+BOSS kill.
+
+BOSS HEALTH also scales as the run progresses.
+Each prior BOSS spawn adds +20 BOSS HEALTH through the fourth BOSS, +30 through
+the eighth BOSS, and +60 after the first 8 BOSSES. BOSS HEALTH is doubled from
+the fifth BOSS onward.
+
+After the first 8 BOSSES, later BOSSES deal 1 damage to you at the end of each
+round just by existing.
+
+Every 8 BOSS kills, your TARGET-difference damage multiplier increases by x1.5.
+The current TARGET-difference damage percentage appears in the TARGET panel as
+diff dmg.
+
+
+15. Special Bosses
+
+Zilon
+Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS.
+The TARGET modifier becomes 1.5.
+Personality: Caller.
+
+Dantre
+Every elimination deals 3 damage to you.
+The TARGET modifier becomes 0.5.
+Personality: Stubborn.
+
+Pyros
+At the start of each round, one DAMNED receives a random BOSS-variant SEAL.
+The TARGET modifier becomes 1.0.
+Personality: Analyst.
+
+Threon
+Each round, Threon applies a mystery TARGET modifier from 0.7 to 1.3.
+Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal
+5 damage to you.
+Personality: Drifter.
+
+Kalha
+Each round, one random equipped SEAL is deactivated until the round ends.
+The TARGET modifier becomes 1.2.
+Personality: Drifter.
+
+Serafim
+When Serafim enters, you lose half your SIN. Serafim gains that SIN and gains twice
+that amount as HEALTH. Each round after that, you lose up to 2 SIN and Serafim gains
+the amount lost.
+The TARGET modifier becomes 0.7.
+Personality: Caller.
+
+Padma
+You cannot recover HEALTH while Padma is alive. Padma heals every other DAMNED for
+10% max HEALTH at the start of each round.
+The TARGET modifier becomes 0.6.
+Personality: Stubborn.
+
+Petros and Pavlos
+They enter together as one BOSS event. Each has half BOSS HEALTH and half BOSS SIN.
+Each twin borrows another special BOSS ability.
+While either twin is alive, the modifier alternates each round between 0.9 and 1.1,
+starting at 0.9.
+If both twins would take lethal damage in the same round, Pavlos takes no damage for
+the rest of that round.
+
+
+16. PvP Mode
+
+PvP is hosted on the PC.
+Players join from phones, enter names, and take slots.
+Before the game starts, the host can add or remove slots.
+When the host starts, empty slots become bot-controlled DAMNED.
+
+PvP has no SEALS, no shop, no MEMORY economy, and no BOUNTY economy.
+Everyone starts with 100 HEALTH.
+Dead players are eliminated and do not participate anymore.
+Last player standing wins.
+
+If everyone dies in the same round, the winner is the player who had the least HEALTH
+at the start of that round.
+
+
+17. PvP Round Flow
+
+1. Guess phase.
+   Every living player submits a secret guess. Submitted guesses are not shown yet.
+   A player is only marked Ready.
+
+2. Automatic reveal.
+   When everyone is ready, the host automatically reveals the first TARGET unless
+   Wait is turned on.
+
+3. ARTIFACT choice.
+   Every living player gets two random ARTIFACTS plus Skip. They choose one.
+   Choices stay hidden until everyone is ready.
+
+4. Automatic resolution.
+   When everyone is ready, ARTIFACTS resolve automatically unless Wait is turned on.
+
+5. Summary.
+   The host can press Next Round, or the game starts the next round automatically
+   after 10 seconds unless Wait is on.
+
+
+18. PvP Modifier Rule
+
+The PvP modifier changes on round 1 and then every 3 rounds.
+If a TARGET reaches or passes 100, the modifier changes again next round and the
+round counter for the next modifier change resets.
+
+Possible modifiers:
+
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+
+After a modifier of 1.0, 1.1, or 1.2, the next modifier must be below 1.0.
+After a modifier below 1.0, the next modifier must be randomly higher than the current
+one.
+The same modifier should not be picked twice in a row.
+
+
+19. PvP CRITICAL Rule
+
+PvP has two CRITICAL checks.
+
+First CRITICAL
+After the first TARGET is revealed, anyone who guessed the exact first TARGET hits
+CRITICAL and deals 5 damage to every enemy.
+
+Final CRITICAL
+After ARTIFACTS alter the round and the final TARGET is calculated, anyone who guessed
+the exact final TARGET hits FINAL CRITICAL and deals 5 damage to every enemy.
+
+Then normal TARGET-difference damage is applied.
+
+
+20. PvP ARTIFACTS
+
+Each PvP ARTIFACT has a 50% chance to fail.
+If a player skipped ARTIFACT use last round, their ARTIFACT this round casts for sure.
+
+Current PvP ARTIFACTS:
+
+Demon Bowl
+If it casts, deal 3 damage to everyone else.
+
+Sigillum Dei Aemeth
+If it casts, change the final TARGET by +5.
+
+John Dee's Obsidian Mirror
+If it casts, change the final TARGET by -5.
+
+Witch in a Bottle
+If it casts, you take 50% less damage this round.
+
+The Black-Hilted Knife
+If it casts, deal 5 damage to every player tied closest to the first TARGET.
+
+Null Vote
+If it casts, pick a player whose guess does not count for the final TARGET.
+The log says who Null Vote was cast on.
+
+Skip
+Use no ARTIFACT this round. Your next round ARTIFACT casts for sure.
+
+
+21. Interface Tips
+
+Hover SEALS, ARTIFACTS, BOSS passives, damage bubbles, healing bubbles, MEMORY bubbles,
+and SIN bubbles to see detailed descriptions and sources.
+
+The TARGET panel shows the current TARGET, previous TARGET, modifier, calculation,
+and TARGET-difference damage multiplier.
+
+The pause menu can resume, restart, switch modes, return to the main menu, and change
+sound settings.
+
+The sound settings are saved during the session.
+
+On mobile Arcade, hold the phone horizontally. The mobile layout focuses on the board,
+SEALS, top indicators, and a button for Devil's Offerings.
+
+
+22. Quick Beginner Strategy
+
+Watch the revealed guess and the previous TARGET.
+
+If the modifier is low, the TARGET tends to sit below the raw average.
+If the modifier is high, the TARGET can jump above what the table seems to be saying.
+
+Use ARTIFACTS before pressing Ready if they can move the TARGET closer to your guess
+or push DAMNED away from it.
+
+Do not hoard too much SIN forever. Above 150 SIN, shop prices start doubling.
+
+SEALS that trigger often are usually better early.
+SEALS with damage scaling, MEMORY scaling, or BOUNTY scaling become stronger later.
+
+BOSSES change the rules hard. Hover them as soon as they appear.
+
+If the table looks lethal, remember that hitting 0 HEALTH cannot be undone by healing
+later in the same round.

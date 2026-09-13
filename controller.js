@@ -2,11 +2,19 @@ const STORAGE_ID = "dearthPvpPlayerId";
 const STORAGE_NAME = "dearthPvpPlayerName";
 const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
 const READY_SFX_SRC = "assets/audio/Ready.mp3";
+const CLOCK_TICK_SFX_SRCS = [
+  "assets/audio/tickinclock_RdeIBkld.mp3",
+  "assets/audio/tickinclock_N3shRVgw.mp3"
+];
 const GUESS_SFX_VOLUME = 0.9;
 const READY_SFX_VOLUME = 0.2;
+const CLOCK_TICK_SFX_VOLUME = 0.154;
 
 let guessSfx = null;
 let readySfx = null;
+let clockTickSfx = [];
+let nextClockTickIndex = 0;
+const activeClockTickInstances = new Set();
 
 function ensureButtonSfx() {
   if (!guessSfx) {
@@ -19,13 +27,38 @@ function ensureButtonSfx() {
     readySfx.preload = "auto";
     readySfx.volume = READY_SFX_VOLUME;
   }
+  CLOCK_TICK_SFX_SRCS.forEach((src, index) => {
+    if (!clockTickSfx[index]) {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      audio.volume = CLOCK_TICK_SFX_VOLUME;
+      try {
+        audio.load();
+      } catch (error) {}
+      clockTickSfx[index] = audio;
+    }
+  });
 }
 
-function playOneShot(audio) {
+function playOneShot(audio, startOffset = 0) {
   if (!audio) return;
-  audio.currentTime = 0;
+  audio.currentTime = Math.max(0, startOffset);
   const playback = audio.play();
   if (playback && typeof playback.catch === "function") playback.catch(() => {});
+}
+
+function playClonedOneShot(audio, volume) {
+  if (!audio) return;
+  try {
+    const instance = audio.cloneNode(true);
+    instance.volume = volume;
+    activeClockTickInstances.add(instance);
+    const cleanup = () => activeClockTickInstances.delete(instance);
+    instance.addEventListener("ended", cleanup, { once: true });
+    instance.addEventListener("error", cleanup, { once: true });
+    const playback = instance.play();
+    if (playback && typeof playback.catch === "function") playback.catch(cleanup);
+  } catch (error) {}
 }
 
 function playGuessSfx() {
@@ -36,6 +69,13 @@ function playGuessSfx() {
 function playReadySfx() {
   ensureButtonSfx();
   playOneShot(readySfx);
+}
+
+function playClockTickSfx() {
+  ensureButtonSfx();
+  const tickIndex = nextClockTickIndex % CLOCK_TICK_SFX_SRCS.length;
+  nextClockTickIndex = (nextClockTickIndex + 1) % CLOCK_TICK_SFX_SRCS.length;
+  playClonedOneShot(clockTickSfx[tickIndex], CLOCK_TICK_SFX_VOLUME);
 }
 
 const controllerState = {
@@ -198,8 +238,9 @@ async function joinRoom() {
 async function submitGuess() {
   const input = document.querySelector("#guessValue");
   const host = hostState();
-  const guess = Math.ceil(Number(input?.value || controllerState.draftGuess));
-  if (!host || !Number.isFinite(guess) || guess < 0 || guess > 100) {
+  const rawGuess = (input ? input.value : controllerState.draftGuess || "").trim();
+  const guess = Math.ceil(Number(rawGuess));
+  if (!host || !rawGuess || !Number.isFinite(guess) || guess < 0 || guess > 100) {
     controllerState.message = "Enter a number from 0 to 100.";
     render(true);
     return;
@@ -471,6 +512,16 @@ function isTypingDraft() {
   const id = document.activeElement?.id;
   return id === "joinName" || id === "guessValue" || id?.startsWith("target-");
 }
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const button = event.target?.closest?.("button");
+    if (!button || button.disabled) return;
+    playClockTickSfx();
+  },
+  true
+);
 
 render(true);
 pollRoom();
