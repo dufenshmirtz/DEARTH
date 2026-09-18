@@ -528,6 +528,15 @@ button:disabled {
   border-color: rgba(127, 196, 123, 0.72);
 }
 
+.bot-card.diff-marked {
+  border-color: rgba(92, 168, 255, 0.9);
+}
+
+.bot-card.diff-marked .bot-name,
+.bot-card.diff-marked .bot-type {
+  color: #8dc6ff;
+}
+
 .bot-face {
   position: relative;
   width: 62px;
@@ -3940,6 +3949,13 @@ body:has(.menu-app) {
 .health-bar,
 body.mobile-arcade .health-bar {
   border-color: #fff !important;
+}
+
+.bot-card.diff-marked,
+.bot-card.boss.diff-marked,
+body.mobile-arcade .bot-card.diff-marked,
+body.mobile-arcade .bot-card.boss.diff-marked {
+  border-color: rgba(92, 168, 255, 0.9) !important;
 }
 
 @media (max-width: 800px) {

@@ -166,12 +166,10 @@ You can hold up to 5 ARTIFACTS by default.
 You can use 2 ARTIFACTS per round by default.
 Some SEALS can change both limits.
 
-ARTIFACT values scale as the run progresses:
+ARTIFACT effect values stay fixed throughout the run.
 
-Every 4 BOSS kills, numeric ARTIFACT effects increase by 20%, rounded down.
-
-Example:
-A 10 damage ARTIFACT becomes 12 after 4 BOSS kills.
+ARTIFACT prices can still change from price rules, but the effects themselves do
+not scale with BOSS kills.
 
 Some ARTIFACTS target a DAMNED. If you do not want to finish choosing a target,
 you can cancel the ARTIFACT selection.
@@ -315,15 +313,14 @@ Normal DAMNED begin with HP in the 20 to 60 range.
 After each of the first 4 BOSS kills, normal DAMNED HP limits increase by 5.
 After each of the next 4 BOSS kills, normal DAMNED HP limits increase by 10.
 After the first 8 BOSS kills, normal DAMNED HP limits increase by 20 per later
-BOSS kill.
+BOSS kill. After those first 8 BOSS kills, the resulting HP range is also
+multiplied by 1.08 for every 3 later BOSS kills.
 
 BOSS HEALTH also scales as the run progresses.
 Each prior BOSS spawn adds +20 BOSS HEALTH through the fourth BOSS, +30 through
 the eighth BOSS, and +60 after the first 8 BOSSES. BOSS HEALTH is doubled from
-the fifth BOSS onward.
-
-After the first 8 BOSSES, later BOSSES deal 1 damage to you at the end of each
-round just by existing.
+the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also
+multiplied by 1.08 for every 3 BOSS numbers after BOSS 9.
 
 Every 8 BOSS kills, your TARGET-difference damage multiplier increases by x1.5.
 The current TARGET-difference damage percentage appears in the TARGET panel as

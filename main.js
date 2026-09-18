@@ -6,7 +6,6 @@ const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
 const NON_BOSS_MEMORY_LIMIT = 13;
-const ZEPAR_MEMORY_THRESHOLD = 10;
 const BOT_MIN_HP = 20;
 const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;
@@ -20,8 +19,8 @@ const BOT_HP_BONUS_PER_BOSS_ENDLESS = 20;
 const BOSS_HP_BONUS_PER_SPAWN = 20;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 30;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 60;
-const ARTIFACT_SCALE_BOSS_INTERVAL = 4;
-const ARTIFACT_SCALE_STEP = 0.2;
+const HP_EXPONENTIAL_RATE = 1.08;
+const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
@@ -54,7 +53,7 @@ const GUESS_SFX_START_OFFSET = 0.12;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
-const SHOP_ELITE_CHANCE = 0.2;
+const SHOP_ELITE_CHANCE = 0.08;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -128,7 +127,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Andras",
     price: 12,
-    description: "If your final effective guess is 0, 50, or 100, DAMNED TARGET-difference damage is doubled this round and you are immune to worst guess penalty damage."
+    description: "If your final effective guess is 0, 50, or 100, deal 10 damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage."
   },
   p5: {
     id: "p5",
@@ -242,6 +241,13 @@ const ITEMS = {
     price: 11,
     description: "Devil's Offerings has one more ARTIFACT slot. Whenever you use an ARTIFACT, all DAMNED take damage equal to that ARTIFACT's purchase cost. ELITE doubles the damage each level."
   },
+  p21: {
+    id: "p21",
+    type: "passive",
+    name: "Seal of Shax",
+    price: 10,
+    description: "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round. ELITE doubles the damage each level."
+  },
   p22: {
     id: "p22",
     type: "passive",
@@ -343,9 +349,9 @@ const ITEMS = {
   p36: {
     id: "p36",
     type: "passive",
-    name: "Seal of Asmoday",
+    name: "Pandorium Contract",
     price: 15,
-    description: "You deal 2x damage to non-boss DAMNED and get 1.5x BOUNTY SIN. At end of round, all living non-boss DAMNED are erased without SIN or KO count."
+    description: "Removed."
   },
   p37: {
     id: "p37",
@@ -375,6 +381,20 @@ const ITEMS = {
     price: 14,
     description: "At end of round, deal half the total BOUNTY of living DAMNED to every enemy. ELITE doubles the damage each level."
   },
+  p41: {
+    id: "p41",
+    type: "passive",
+    name: "Seal of Bifrons",
+    price: 15,
+    description: "If the rounded TARGET is a multiple of 7, gain SIN equal to your current SIN. ELITE increases the paid SIN by +20%."
+  },
+  p42: {
+    id: "p42",
+    type: "passive",
+    name: "Seal of Stolas",
+    price: 13,
+    description: "Removed."
+  },
   p43: {
     id: "p43",
     type: "passive",
@@ -401,7 +421,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "DAMNED with 6 or more BOUNTY take 1.5x damage."
+    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage."
   },
   p47: {
     id: "p47",
@@ -443,7 +463,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Decarabia",
     price: 12,
-    description: "DAMNED take 10% more damage for every MEMORY they have. BOSSES take 3% more damage per MEMORY."
+    description: "Whenever a DAMNED takes damage, it takes 3 extra damage per MEMORY. BOSSES take 1 extra damage per MEMORY instead."
   },
   p53: {
     id: "p53",
@@ -456,8 +476,8 @@ const ITEMS = {
     id: "p54",
     type: "passive",
     name: "Seal of Zepar",
-    price: 13,
-    description: "At end of round, living DAMNED gain 2 MEMORY. Non-boss DAMNED with 10 or more MEMORY are eliminated."
+    price: 12,
+    description: "Every round, one DAMNED is marked blue. When it takes TARGET-difference damage, each adjacent DAMNED takes that much damage too."
   },
   p55: {
     id: "p55",
@@ -517,14 +537,14 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "DAMNED at full HEALTH take 1.5x damage. ELITE increases the multiplier by +20%."
+    description: "The first time each full-HEALTH DAMNED takes damage in a round, it takes 10 extra damage."
   },
   p63: {
     id: "p63",
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "One extra DAMNED is revealed. Revealed DAMNED take 1.3x damage. ELITE reveals +1 more and raises the multiplier by +20%."
+    description: "One extra DAMNED is revealed. Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE reveals +1 more DAMNED."
   },
   p64: {
     id: "p64",
@@ -546,7 +566,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aim",
     price: 15,
-    description: "On round numbers that are multiples of 5, DAMNED take double damage. ELITE increases the multiplier by +20%."
+    description: "On round numbers that are multiples of 5, eliminate one random non-boss DAMNED. If a BOSS is active, deal 30 damage to each active BOSS. ELITE doubles only the BOSS damage."
   },
   p67: {
     id: "p67",
@@ -561,7 +581,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "DAMNED with 8 or more MEMORY take 1.5x damage. DAMNED with more than 12 MEMORY take 2x damage. ELITE increases both multipliers by +20%."
+      "Whenever a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 20 extra damage."
   },
   p69: {
     id: "p69",
@@ -578,6 +598,78 @@ const ITEMS = {
     price: 12,
     description:
       "Sacrificial Dagger deals 20% max-HEALTH damage to BOSSES too and appears twice as often in Devil's Offerings. ELITE adds +2% BOSS damage and one more shop weight."
+  },
+  p71: {
+    id: "p71",
+    type: "passive",
+    name: "Seal of Sallos",
+    price: 14,
+    description:
+      "Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level."
+  },
+  p72: {
+    id: "p72",
+    type: "passive",
+    name: "Seal of Furcas",
+    price: 12,
+    description:
+      "Every round, if the previous TARGET was below 40, one random non-boss DAMNED guess becomes 100. If it was above 40, one random DAMNED guess becomes 0. ELITE deals 5 damage per level to the selected DAMNED."
+  },
+  p73: {
+    id: "p73",
+    type: "passive",
+    name: "Seal of Asmoday",
+    price: 12,
+    description: "When a DAMNED dies from excess damage, split that excess damage equally among the other living enemies. ELITE doubles the excess damage split each level."
+  },
+  p74: {
+    id: "p74",
+    type: "passive",
+    name: "Seal of the White Horse",
+    price: 30,
+    description: "For every 2 SIN a DAMNED has, it takes x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
+  },
+  p75: {
+    id: "p75",
+    type: "passive",
+    name: "Seal of the Red Horse",
+    price: 30,
+    description: "For each ARTIFACT used on a DAMNED this round, it takes x1.5 damage from all sources until round end. ELITE adds +0.1 to the multiplier."
+  },
+  p76: {
+    id: "p76",
+    type: "passive",
+    name: "Seal of the Black Horse",
+    price: 30,
+    description: "For every 2 MEMORY a DAMNED has, it takes x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
+  },
+  p77: {
+    id: "p77",
+    type: "passive",
+    name: "Seal of the Pale Horse",
+    price: 30,
+    description: "If you score CRITICAL this round, DAMNED take x2 damage from all sources next round. ELITE adds +0.1 to the multiplier."
+  },
+  p78: {
+    id: "p78",
+    type: "passive",
+    name: "Seal of the Souls of Martyrs",
+    price: 30,
+    description: "For every DAMNED eliminated in the previous round, DAMNED take x1.15 damage from all sources. ELITE adds +0.1 to the multiplier."
+  },
+  p79: {
+    id: "p79",
+    type: "passive",
+    name: "Seal of Creation Uncreated",
+    price: 30,
+    description: "Revealed DAMNED take x2 damage from all sources, and BOSSES can have their guesses revealed. ELITE adds +0.1 to the multiplier."
+  },
+  p80: {
+    id: "p80",
+    type: "passive",
+    name: "Seal of Silence in Heaven",
+    price: 30,
+    description: "DAMNED take x1.5 TARGET-difference damage. Worst guess damage counts as TARGET-difference damage. ELITE adds +0.1 to the multiplier."
   },
   a28: {
     id: "a28",
@@ -632,8 +724,8 @@ const ITEMS = {
     id: "a10",
     type: "active",
     name: "Funeral Coin",
-    price: 6,
-    description: "Doubles SIN gained for this round. Multiple uses stack multiplicatively."
+    price: 4,
+    description: "Gain 3 to 10 SIN."
   },
   a11: {
     id: "a11",
@@ -668,7 +760,7 @@ const ITEMS = {
     type: "active",
     name: "Defixio",
     price: 4,
-    description: "Choose 3, 5, or 7 at random and move the TARGET to the closest multiple of that number."
+    description: "Move the TARGET to the closest multiple of 3, 5, or 7."
   },
   a18: {
     id: "a18",
@@ -729,38 +821,31 @@ const PASSIVE_IDS = [
   "p5",
   "p6",
   "p7",
-  "p8",
-  "p9",
   "p10",
   "p11",
   "p12",
   "p13",
-  "p14",
-  "p15",
   "p16",
   "p17",
   "p18",
   "p19",
   "p20",
+  "p21",
   "p22",
   "p23",
   "p24",
   "p25",
   "p26",
-  "p27",
   "p28",
   "p29",
   "p30",
   "p31",
   "p32",
   "p33",
-  "p34",
   "p35",
-  "p36",
-  "p37",
-  "p38",
   "p39",
   "p40",
+  "p41",
   "p43",
   "p44",
   "p45",
@@ -772,7 +857,7 @@ const PASSIVE_IDS = [
   "p51",
   "p52",
   "p53",
-  "p55",
+  "p54",
   "p56",
   "p57",
   "p58",
@@ -787,9 +872,19 @@ const PASSIVE_IDS = [
   "p67",
   "p68",
   "p69",
-  "p70"
+  "p70",
+  "p71",
+  "p72",
+  "p73",
+  "p74",
+  "p75",
+  "p76",
+  "p77",
+  "p78",
+  "p79",
+  "p80"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p21", "p41", "p42", "p54"]);
+const REMOVED_PASSIVE_IDS = new Set(["p8", "p9", "p14", "p15", "p27", "p34", "p36", "p37", "p38", "p42", "p55"]);
 const ACTIVE_IDS = [
   "a6",
   "a7",
@@ -903,7 +998,17 @@ const SEAL_SIGILS = {
   p67: "024_Caim.png",
   p68: "067_Vapula.png",
   p69: "001_Abigor.png",
-  p70: "006_Amy.png"
+  p70: "006_Amy.png",
+  p71: "057_Sallos.png",
+  p72: "031_Forcas.png",
+  p73: "011_Asmodeus.png",
+  p74: "013_Bael.png",
+  p75: "008_Andras.png",
+  p76: "029_Decarabia.png",
+  p77: "072_Zepar.png",
+  p78: "028_Dantalion.png",
+  p79: "035_Glasya-Labolas.png",
+  p80: "061_Stolas.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -977,7 +1082,10 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p67: "53-caim-camio.png",
   p68: "60-vapula-naphula.png",
   p69: "15-eligos.png",
-  p70: "58-amy-avnas.png"
+  p70: "58-amy-avnas.png",
+  p71: "19-sallos.png",
+  p72: "50-furcas.png",
+  p73: "32-asmoday.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -998,7 +1106,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
   { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p22" },
   { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
-  { key: "sallos", name: "Sallos", image: "19-sallos.png" },
+  { key: "sallos", name: "Sallos", image: "19-sallos.png", passiveId: "p71" },
   { key: "purson", name: "Purson", image: "20-purson.png", passiveId: "p39" },
   { key: "marax", name: "Marax", image: "21-marax-morax.png", passiveId: "p51" },
   { key: "ipos", name: "Ipos", image: "22-ipos.png", passiveId: "p58" },
@@ -1011,7 +1119,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "astaroth", name: "Astaroth", image: "29-astaroth.png", passiveId: "p38" },
   { key: "forneus", name: "Forneus", image: "30-forneus.png", passiveId: "p35" },
   { key: "foras", name: "Foras", image: "31-foras.png", passiveId: "p32" },
-  { key: "asmoday", name: "Asmoday", image: "32-asmoday.png", passiveId: "p36" },
+  { key: "asmoday", name: "Asmoday", image: "32-asmoday.png", passiveId: "p73" },
   { key: "gaap", name: "Gaap", image: "33-gaap.png", passiveId: "p60" },
   { key: "furfur", name: "Furfur", image: "34-furfur.png", passiveId: "p29" },
   { key: "marchosias", name: "Marchosias", image: "35-marchosias.png", passiveId: "p33" },
@@ -1029,7 +1137,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "vual", name: "Vual", image: "47-vual-uvall.png", passiveId: "p63" },
   { key: "haagenti", name: "Haagenti", image: "48-haagenti.png", passiveId: "p20" },
   { key: "crocell", name: "Crocell", image: "49-crocell.png", passiveId: "p45" },
-  { key: "furcas", name: "Furcas", image: "50-furcas.png" },
+  { key: "furcas", name: "Furcas", image: "50-furcas.png", passiveId: "p72" },
   { key: "balam", name: "Balam", image: "51-balam.png", passiveId: "p57" },
   { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p3" },
   { key: "caim", name: "Caim", image: "53-caim-camio.png", passiveId: "p67" },
@@ -1209,7 +1317,7 @@ const UNIQUE_BOSS_SPECS = {
     personality: "Drifter",
     modifierOverride: 1.2,
     descriptions: [
-      "Each round, one random equipped SEAL is deactivated until the round ends.",
+      "Each round, half your equipped SEALS rounded down are deactivated until the round ends.",
       "The TARGET modifier becomes 1.2 while Kalha is alive."
     ]
   },
@@ -1346,6 +1454,8 @@ const state = {
   finalBossQueued: false,
   bossQueued: false,
   eliteBoostedNextReroll: false,
+  paleHorseBoostArmed: false,
+  previousRoundEliminationsForMartyrs: 0,
   pendingActive: null,
   playtestInfiniteMoney: false,
   gameOver: false,
@@ -1621,6 +1731,17 @@ function nearestMultiple(value, divisor) {
   return Math.ceil(Math.round(number / step) * step);
 }
 
+function nearestMultipleFromDivisors(value, divisors) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return { value: 0, divisor: 1 };
+  return divisors
+    .map((divisor) => {
+      const snapped = nearestMultiple(number, divisor);
+      return { divisor, value: snapped, distance: Math.abs(snapped - number) };
+    })
+    .sort((left, right) => left.distance - right.distance || left.value - right.value || left.divisor - right.divisor)[0];
+}
+
 function hasPassive(id) {
   return passiveStack(id) > 0;
 }
@@ -1631,6 +1752,16 @@ function passiveEntry(id) {
 
 function directPassiveStack(id) {
   return passiveEntry(id)?.stack || 0;
+}
+
+function ownedSealSlotCount() {
+  return state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
+}
+
+function pruneRemovedPassives() {
+  const before = state.player.passives.length;
+  state.player.passives = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id));
+  if (state.player.passives.length !== before) refreshMimicTarget();
 }
 
 function suppressingBossForSeal(id) {
@@ -1649,7 +1780,7 @@ function suppressingBossForSeal(id) {
 
 function kalhaSuppressionForSeal(id) {
   const round = state.roundState;
-  if (!id || !round || round.kalhaSuppressedPassiveId !== id) return null;
+  if (!id || !round || !round.kalhaSuppressedPassiveIds?.has(id)) return null;
   return state.bots.find((bot) => bot.id === round.kalhaSuppressedById && bot.hp > 0 && !bot.eliminated) || {
     name: "Kalha"
   };
@@ -1777,12 +1908,8 @@ function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
   return early * earlyStep + mid * lateStep + endless * endlessStep;
 }
 
-function artifactScaleSteps() {
-  return Math.max(0, Math.floor((state.bossKills || 0) / ARTIFACT_SCALE_BOSS_INTERVAL));
-}
-
 function artifactScaleFactor() {
-  return 1 + artifactScaleSteps() * ARTIFACT_SCALE_STEP;
+  return 1;
 }
 
 function artifactValue(baseValue) {
@@ -1814,7 +1941,8 @@ function formatArtifactMultiplier(value) {
 function botBossBounty(bot) {
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
-  return Math.max(0, Math.ceil((10 + state.bossKills * 5) * factor));
+  const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
+  return Math.max(0, Math.ceil((10 + state.bossKills * 5) * factor) + bonus);
 }
 
 function botRegularBounty(bot) {
@@ -2102,9 +2230,16 @@ function increaseAllBotSin(amount, reasonFactory) {
 }
 
 function applyTargetedItemSinGain(item, targets) {
-  const entries = orderedPassiveEffectEntries("p49");
   const uniqueTargets = Array.from(new Set((targets || []).filter((bot) => bot && !bot.eliminated)));
-  if (!item || !entries.length || !uniqueTargets.length) return;
+  if (!item || !uniqueTargets.length) return;
+  if (state.roundState?.artifactTargetCountsByBotId) {
+    uniqueTargets.forEach((bot) => {
+      const previous = state.roundState.artifactTargetCountsByBotId.get(bot.id) || 0;
+      state.roundState.artifactTargetCountsByBotId.set(bot.id, previous + 1);
+    });
+  }
+  const entries = orderedPassiveEffectEntries("p49");
+  if (!entries.length) return;
   entries.forEach((entry) => {
     const amount = passiveEntryScaledValue(entry, 4);
     if (amount <= 0) return;
@@ -2142,6 +2277,10 @@ function divisibleVerdictDamage(idOrItem) {
 function edgeGambitMultiplier(idOrItem) {
   const stack = simpleStackCount(idOrItem);
   return stack ? 2 * Math.pow(1.5, stack - 1) : 1;
+}
+
+function edgeGambitDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
 }
 
 function spiteCircuitDamage(playerDamage) {
@@ -2183,6 +2322,11 @@ function paimonSinReward(idOrItem, round = state.roundState) {
   return baseSin ? flatDamageValue(idOrItem, baseSin) : 0;
 }
 
+function bifronsSinReward(entry) {
+  const currentSin = Math.max(0, Math.ceil(state.player.credits || 0));
+  return passiveEntryScaledValue(entry, currentSin);
+}
+
 function playerTargetDistance(round = state.roundState) {
   if (!round) return Number.POSITIVE_INFINITY;
   const guess = round.playerEffectiveGuess;
@@ -2191,12 +2335,68 @@ function playerTargetDistance(round = state.roundState) {
   return Math.ceil(Math.abs(guess - target));
 }
 
+function shaxRerollDamage(entry, spent) {
+  return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
+}
+
+function sallosShiftValues(entry) {
+  const max = 5 + Math.max(0, (entry?.stack || 1) - 1);
+  return Array.from({ length: Math.max(1, max - 1) }, (_, index) => index + 2);
+}
+
 function sitriCloseGuessDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-function revealedDamageMultiplier(idOrItem) {
-  return 1.3 * passivePower(idOrItem);
+function barbatosDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 5);
+}
+
+function fullHealthExtraDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function revealedExtraDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
+function aimBossDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 30);
+}
+
+function vapulaMemoryExtraDamage(idOrItem, memoryCount) {
+  if (memoryCount > 12) return flatDamageValue(idOrItem, 20);
+  if (memoryCount >= 8) return flatDamageValue(idOrItem, 10);
+  return 0;
+}
+
+function decarabiaMemoryExtraDamage(idOrItem, bot) {
+  const memory = bot?.memory?.length || 0;
+  if (!memory) return 0;
+  const perMemory = bot?.isBoss ? 1 : 3;
+  return flatDamageValue(idOrItem, memory * perMemory);
+}
+
+function furcasSelectedDamage(idOrItem) {
+  return eliteLevels(idOrItem) * 5;
+}
+
+function specialSealBaseMultiplier(idOrItem, baseMultiplier) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 1;
+  return baseMultiplier + eliteLevels(idOrItem) * 0.1;
+}
+
+function specialSealStackedMultiplier(entry, baseMultiplier, count) {
+  const steps = Math.max(0, Math.floor(count || 0));
+  if (!steps) return 1;
+  return Math.pow(specialSealBaseMultiplier(entry, baseMultiplier), steps);
+}
+
+function apocalypseSealDescription(id, baseMultiplier, phrase) {
+  const item = typeof id === "string" ? passiveEntry(id) || ITEMS[id] : id;
+  const multiplier = specialSealBaseMultiplier(item, baseMultiplier);
+  return `${phrase} x${multiplier.toFixed(2)} damage from all sources.`;
 }
 
 function revealedBountyMultiplier(idOrItem) {
@@ -2384,7 +2584,7 @@ function markPassiveEntryTriggered(entry) {
 }
 
 function nonBossDamageMultiplier(bot, playerDealt = true) {
-  return playerDealt && bot && !bot.isBoss && hasPassive("p36") ? 2 * passivePower("p36") : 1;
+  return 1;
 }
 
 function scaledBotDamage(bot, amount, playerDealt = true) {
@@ -2397,44 +2597,88 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   let exactDamage = damage;
   let roundedDamage = damage;
   const modifierEntries = [];
-  const applyMultiplier = (multiplier, source, triggerId) => {
+  const applyFlatBonus = (bonus, source, entry) => {
+    const extra = Math.max(0, Math.ceil(bonus || 0));
+    if (extra <= 0 || roundedDamage <= 0) return;
+    exactDamage += extra;
+    roundedDamage += extra;
+    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    markPassiveEntryTriggered(entry);
+  };
+  const applyMultiplier = (multiplier, source, entry) => {
     if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
     const before = roundedDamage;
     exactDamage *= multiplier;
     roundedDamage = Math.ceil(exactDamage);
     const extra = Math.max(0, roundedDamage - before);
     if (extra <= 0) return;
-    modifierEntries.push({ amount: extra, source });
-    if (triggerId) markPassiveTriggered(triggerId);
+    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    markPassiveEntryTriggered(entry);
   };
 
-  if (playerDealt && bot && !bot.isBoss && hasPassive("p36")) {
-    applyMultiplier(2 * passivePower("p36"), ITEMS.p36?.name || "Seal of Asmoday", "p36");
-  }
+  if (bot) {
+    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68", "p52"]).forEach((entry) => {
+      if (entry.id === "p46" && botSin(bot) >= 6) {
+        applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
+        return;
+      }
 
-  if (bot && botSin(bot) >= 6 && passiveStack("p46")) {
-    applyMultiplier(1.5 * passivePower("p46"), ITEMS.p46?.name || "Seal of Barbatos", "p46");
-  }
+      if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
+        applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
+        state.roundState?.belethTriggeredBotIds?.add(bot.id);
+        return;
+      }
 
-  if (bot && bot.hp >= bot.maxHp && passiveStack("p62")) {
-    applyMultiplier(fullHealthDamageMultiplier("p62"), ITEMS.p62?.name || "Seal of Beleth", "p62");
-  }
+      if (entry.id === "p63" && bot.revealedByPassive) {
+        applyFlatBonus(revealedExtraDamage(entry), ITEMS.p63?.name || "Seal of Vual", entry);
+        return;
+      }
 
-  if (bot && bot.revealedByPassive && passiveStack("p63")) {
-    applyMultiplier(revealedDamageMultiplier("p63"), ITEMS.p63?.name || "Seal of Vual", "p63");
-  }
+      if (entry.id === "p68") {
+        applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry);
+        return;
+      }
 
-  if (state.round % 5 === 0 && passiveStack("p66")) {
-    applyMultiplier(fifthRoundDamageMultiplier("p66"), ITEMS.p66?.name || "Seal of Aim", "p66");
-  }
+      if (entry.id === "p52") {
+        applyFlatBonus(decarabiaMemoryExtraDamage(entry, bot), ITEMS.p52?.name || "Seal of Decarabia", entry);
+      }
+    });
 
-  if (bot && (bot.memory?.length || 0) >= 8 && passiveStack("p68")) {
-    applyMultiplier(memoryDamageMultiplier("p68", bot.memory.length), ITEMS.p68?.name || "Seal of Vapula", "p68");
-  }
+    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
+      if (entry.id === "p74") {
+        applyMultiplier(specialSealStackedMultiplier(entry, 1.1, Math.floor(botSin(bot) / 2)), ITEMS.p74?.name, entry);
+        return;
+      }
 
-  if (bot && bot.memory?.length && passiveStack("p52")) {
-    const memoryDamageRate = bot.isBoss ? 0.03 : 0.1;
-    applyMultiplier(1 + bot.memory.length * memoryDamageRate * passivePower("p52"), ITEMS.p52?.name || "Seal of Decarabia", "p52");
+      if (entry.id === "p75") {
+        const targetCount = state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0;
+        applyMultiplier(specialSealStackedMultiplier(entry, 1.5, targetCount), ITEMS.p75?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p76") {
+        applyMultiplier(specialSealStackedMultiplier(entry, 1.1, Math.floor((bot.memory?.length || 0) / 2)), ITEMS.p76?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p77" && state.roundState?.paleHorseDamageBoostActive) {
+        applyMultiplier(specialSealBaseMultiplier(entry, 2), ITEMS.p77?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p78") {
+        applyMultiplier(
+          specialSealStackedMultiplier(entry, 1.15, state.roundState?.previousRoundEliminationsForMartyrs || 0),
+          ITEMS.p78?.name,
+          entry
+        );
+        return;
+      }
+
+      if (entry.id === "p79" && bot.revealedByPassive) {
+        applyMultiplier(specialSealBaseMultiplier(entry, 2), ITEMS.p79?.name, entry);
+      }
+    });
   }
 
   return {
@@ -2492,7 +2736,7 @@ function artifactDescription(item) {
   if (item.id === "a8") return `Pick a DAMNED; their guess counts ${artifactCount(5)} times for the TARGET average.`;
   if (item.id === "a9") return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
   if (item.id === "a10") {
-    return `Multiplies SIN gained this round by x${formatArtifactMultiplier(artifactMultiplier(2))}. Multiple uses stack multiplicatively.`;
+    return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
     return `Heal ${artifactValue(10)}. There is a ${artifactPercentValue(33)}% chance the next elimination spawns a BOSS.`;
@@ -2507,7 +2751,7 @@ function artifactDescription(item) {
     return `Pick a target. Deal ${artifactPercentValue(20)}% max-HEALTH damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
-  if (item.id === "a17") return "Choose 3, 5, or 7 at random and move the TARGET to the closest multiple of that number.";
+  if (item.id === "a17") return "Move the TARGET to the closest multiple of 3, 5, or 7.";
   if (item.id === "a18") {
     return "Instantly copy a random other ARTIFACT effect in your inventory.";
   }
@@ -2549,7 +2793,9 @@ function itemDescription(item) {
     return `Close guesses pay SIN: ${flatDamageValue(item, 1)} at +/-5, adding ${flatDamageValue(item, 1)} per step closer through ${flatDamageValue(item, 5)} at +/-1. On exact TARGET, gain ${flatDamageValue(item, 10)} SIN.`;
   }
   if (item.id === "p3") return `If the rounded TARGET is a multiple of 3, all DAMNED take ${divisibleVerdictDamage(item)} extra damage.`;
-  if (item.id === "p4") return `If your final effective guess is 0, 50, or 100, DAMNED TARGET-difference damage is x${edgeGambitMultiplier(item).toFixed(2)} this round and you are immune to worst guess penalty damage.`;
+  if (item.id === "p4") {
+    return `If your final effective guess is 0, 50, or 100, deal ${edgeGambitDamage(item)} damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage.`;
+  }
   if (item.id === "p5") return `Whenever you take damage, all DAMNED take ${flatDamagePower(item)}x that damage as extra damage.`;
   if (item.id === "p6") return `Your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer.`;
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
@@ -2572,7 +2818,7 @@ function itemDescription(item) {
   if (item.id === "p18") return `At end of round, this SEAL's sell value increases by ${scaledPassiveValueForItem(item, 3)}.`;
   if (item.id === "p19") return `Every time a DAMNED dies, deal ${flatDamageValue(item, 5)} damage to every other DAMNED.`;
   if (item.id === "p20") return `Devil's Offerings has ${shopSlotCountForItem(item)} slots. Whenever you use an ARTIFACT, all DAMNED take ${flatDamagePower(item)}x that ARTIFACT's purchase cost as damage.`;
-  if (item.id === "p21") return "This SEAL is reserved and is not currently obtainable.";
+  if (item.id === "p21") return `Every reroll makes all DAMNED take ${shaxRerollDamage(item, 1)} damage per SIN spent at end of round.`;
   if (item.id === "p22") return `Avoid 20% of damage you would take in a round. The avoided damage becomes ${flatDamagePower(item)}x MEMORY for the living DAMNED with the most MEMORY.`;
   if (item.id === "p23") return `New non-boss DAMNED have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 BOUNTY.`;
   if (item.id === "p24") return `You can use only one ARTIFACT per round. All DAMNED pay ${bountyOathMultiplierForItem(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
@@ -2588,25 +2834,26 @@ function itemDescription(item) {
     return `When a DAMNED with 6 or more BOUNTY dies, gain ${passiveConvertedSin(item, 2)} SIN and deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy.`;
   }
   if (item.id === "p35") return `At end of round, the two highest BOUNTY DAMNED gain +${stack} BOUNTY.`;
-  if (item.id === "p36") return `Your damage is x${(2 * passivePower(item)).toFixed(1)} against non-boss DAMNED and BOUNTY SIN is x${(1.5 * passivePower(item)).toFixed(1)}. At end of round, living non-boss DAMNED are erased without SIN or KO count.`;
+  if (item.id === "p36") return "Removed.";
   if (item.id === "p37") return `If you take 4 or less total damage in a round, gain ${lowProfileRewardSin(item)} SIN.`;
   if (item.id === "p38") return `Start each round by marking a DAMNED. If it dies, its BOUNTY payout becomes at least ${scaledPassiveValueForItem(item, 6)} SIN or ${Math.round(200 * passivePower(item))}% BOUNTY, and you gain ${passiveConvertedSin(item, 5)} SIN.`;
   if (item.id === "p40") return `At end of round, deal ${flatDamagePower(item)}x half the total BOUNTY of living DAMNED to every enemy.`;
-  if (item.id === "p41" || item.id === "p42") return "This SEAL is reserved and is not currently obtainable.";
+  if (item.id === "p41") return `If the rounded TARGET is a multiple of 7, gain SIN equal to ${Math.round(passivePower(item) * 100)}% of your current SIN.`;
+  if (item.id === "p42") return "Removed.";
   if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
   if (item.id === "p44") return `At end of round, DAMNED with 2 or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
-  if (item.id === "p46") return `DAMNED with 6 or more BOUNTY take ${(1.5 * passivePower(item)).toFixed(1)}x damage.`;
+  if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
   if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
   if (item.id === "p50") return `At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, it takes ${agaresDamagePerSin(item)} damage per SIN.`;
   if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
   if (item.id === "p52") {
-    return `DAMNED take ${Math.round(10 * passivePower(item))}% more damage per MEMORY. BOSSES take ${Math.round(3 * passivePower(item))}% more damage per MEMORY.`;
+    return `Whenever a DAMNED takes damage, it takes ${flatDamageValue(item, 3)} extra damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} extra damage per MEMORY instead.`;
   }
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
-  if (item.id === "p54") return `At end of round, living DAMNED gain ${1 + stack} MEMORY. Non-boss DAMNED with ${ZEPAR_MEMORY_THRESHOLD} or more MEMORY are eliminated.`;
+  if (item.id === "p54") return "Every round, one DAMNED is marked blue. When it takes TARGET-difference damage, each adjacent DAMNED takes that much damage too.";
   if (item.id === "p55") {
     return `If your final guess is within 5 of the TARGET, deal ${sitriCloseGuessDamage(item)} damage to every DAMNED and gain ${passiveConvertedSin(item, 2)} SIN. If outside 5, take 5 damage.`;
   }
@@ -2626,24 +2873,43 @@ function itemDescription(item) {
   if (item.id === "p61") {
     return `BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals ${poisonPercentPerCounter(item)}% max-HEALTH damage.`;
   }
-  if (item.id === "p62") return `DAMNED at full HEALTH take ${fullHealthDamageMultiplier(item).toFixed(1)}x damage.`;
+  if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
-    return `${stack} extra DAMNED ${stack === 1 ? "is" : "are"} revealed. Revealed DAMNED take ${revealedDamageMultiplier(item).toFixed(1)}x damage.`;
+    return `${stack} extra DAMNED ${stack === 1 ? "is" : "are"} revealed. Revealed DAMNED take ${revealedExtraDamage(item)} extra damage.`;
   }
   if (item.id === "p64") {
     return `${stack} extra DAMNED ${stack === 1 ? "is" : "are"} revealed. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
   if (item.id === "p65") return `At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
-  if (item.id === "p66") return `On round numbers that are multiples of 5, DAMNED take ${fifthRoundDamageMultiplier(item).toFixed(1)}x damage.`;
+  if (item.id === "p66") return `On round numbers that are multiples of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `DAMNED with 8 or more MEMORY take ${memoryDamageMultiplier(item, 8).toFixed(1)}x damage. DAMNED with more than 12 MEMORY take ${memoryDamageMultiplier(item, 13).toFixed(1)}x damage.`;
+    return `DAMNED with 8 or more MEMORY take ${vapulaMemoryExtraDamage(item, 8)} extra damage. DAMNED with more than 12 MEMORY take ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
   if (item.id === "p69") {
     return "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET.";
   }
   if (item.id === "p70") {
     return `Sacrificial Dagger deals ${artifactPercentValue(sacrificialDaggerBossPercent(item))}% max-HEALTH damage to BOSSES too and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
+  }
+  if (item.id === "p71") {
+    const values = sallosShiftValues(item);
+    return `Before damage calculation, all DAMNED guesses shift away from the TARGET by random ${values.join(", ")} without changing the average.`;
+  }
+  if (item.id === "p72") {
+    return `Previous TARGET below 40 sets one non-boss DAMNED guess to 100; above 40 sets one DAMNED guess to 0. ELITE deals ${furcasSelectedDamage(item)} damage to the selected DAMNED.`;
+  }
+  if (item.id === "p73") {
+    return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
+  }
+  if (item.id === "p74") return apocalypseSealDescription(item, 1.1, "For every 2 SIN a DAMNED has, it takes");
+  if (item.id === "p75") return apocalypseSealDescription(item, 1.5, "For each ARTIFACT used on a DAMNED this round, it takes");
+  if (item.id === "p76") return apocalypseSealDescription(item, 1.1, "For every 2 MEMORY a DAMNED has, it takes");
+  if (item.id === "p77") return apocalypseSealDescription(item, 2, "If you scored CRITICAL last round, DAMNED take");
+  if (item.id === "p78") return apocalypseSealDescription(item, 1.15, "For each DAMNED eliminated in the previous round, DAMNED take");
+  if (item.id === "p79") return `${apocalypseSealDescription(item, 2, "Revealed DAMNED take")} BOSSES can have their guesses revealed.`;
+  if (item.id === "p80") {
+    return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.`;
   }
   return item.description;
 }
@@ -3000,6 +3266,8 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Astaroth", "Seal of Astaroth"],
     ["Seal of Purson", "Seal of Purson"],
     ["Seal of Focalor", "Seal of Focalor"],
+    ["Seal of Bifrons", "Seal of Bifrons"],
+    ["Seal of Stolas", "Seal of Stolas"],
     ["Grandier's Pact", "Grandier's Pact"],
     ["Seal of Haures", "Seal of Haures"],
     ["Seal of Vassago", "Seal of Vassago"],
@@ -3041,8 +3309,16 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Eligos", "Seal of Eligos"],
     ["Seal of Amy", "Seal of Amy"],
     ["Seal of Ipos", "Seal of Ipos"],
+    ["Seal of Zepar", "Seal of Zepar"],
     ["Seal of Sallos", "Seal of Sallos"],
-    ["Seal of Sallos", "Seal of Sallos"],
+    ["Seal of Furcas", "Seal of Furcas"],
+    ["Seal of the White Horse", "Seal of the White Horse"],
+    ["Seal of the Red Horse", "Seal of the Red Horse"],
+    ["Seal of the Black Horse", "Seal of the Black Horse"],
+    ["Seal of the Pale Horse", "Seal of the Pale Horse"],
+    ["Seal of the Souls of Martyrs", "Seal of the Souls of Martyrs"],
+    ["Seal of Creation Uncreated", "Seal of Creation Uncreated"],
+    ["Seal of Silence in Heaven", "Seal of Silence in Heaven"],
     ["Seal of Bathin", "Seal of Bathin"],
     ["The White-Hilted Knife", "The White-Hilted Knife"],
     ["The Philosopher's Stone", "The Philosopher's Stone"],
@@ -3251,6 +3527,62 @@ function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, 
   }
 }
 
+function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
+  const baseDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
+  let exactDamage = baseDamage;
+  let roundedDamage = baseDamage;
+  const modifierEntries = [];
+  const applyMultiplier = (multiplier, source, entry) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    const before = roundedDamage;
+    exactDamage *= multiplier;
+    roundedDamage = Math.ceil(exactDamage);
+    const extra = Math.max(0, roundedDamage - before);
+    if (extra <= 0) return;
+    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    markPassiveEntryTriggered(entry);
+  };
+
+  targetDiffEntries.forEach((entry) => {
+    if (entry.id === "p80") applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
+  });
+
+  return { damage: roundedDamage, baseDamage, modifierEntries };
+}
+
+function addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, amount, source, targetDiffEntries) {
+  if (!bot || amount <= 0) return 0;
+  const targetDetails = targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries);
+  if (targetDetails.damage <= 0) return 0;
+  const scaledDetails = scaledBotDamageDetails(bot, targetDetails.damage, false);
+  const damage = scaledDetails.damage;
+  if (damage <= 0) return 0;
+  botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
+  const sourceEntries = [
+    { amount: targetDetails.baseDamage, source: source || "Target difference" },
+    ...targetDetails.modifierEntries,
+    ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
+  ];
+  if (botDamageSources) {
+    const sources = botDamageSources.get(bot.id) || [];
+    sources.push(...sourceEntries);
+    botDamageSources.set(bot.id, sources);
+  }
+  const round = state.roundState;
+  if (round) {
+    round.targetDifferenceDamageByBotId.set(bot.id, (round.targetDifferenceDamageByBotId.get(bot.id) || 0) + damage);
+  }
+  return damage;
+}
+
+function recordBotExcessDamage(bot, damage, hpBefore) {
+  if (!state.roundState || !bot || bot.immortal) return;
+  const excess = Math.max(0, Math.ceil(damage || 0) - Math.max(0, Math.ceil(hpBefore || 0)));
+  if (excess <= 0) return;
+  bot.excessDamage = (bot.excessDamage || 0) + excess;
+}
+
 function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZero = false } = {}) {
   const eliminated = [];
   maybeActivatePavlosProtection(botDamages);
@@ -3271,9 +3603,13 @@ function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZer
       state.roundState.roundEvents.push(`${bot.name} took ${damage} damage. Total: ${bot.damageTakenTotal}.`);
       return;
     }
+    const hpBefore = bot.hp;
     bot.hp = Math.max(0, bot.hp - damage);
     state.roundState.roundEvents.push(`${bot.name} took ${damage} damage.`);
-    if (bot.hp <= 0) eliminated.push(bot);
+    if (bot.hp <= 0) {
+      recordBotExcessDamage(bot, damage, hpBefore);
+      eliminated.push(bot);
+    }
   });
   if (eliminated.length) resolveEliminatedBots(eliminated);
   return eliminated;
@@ -3507,13 +3843,27 @@ function bossHealthBonus() {
   );
 }
 
+function hpExponentialFactor(progressAfterFirstEight) {
+  const progress = Math.max(0, progressAfterFirstEight || 0);
+  return Math.pow(HP_EXPONENTIAL_RATE, progress / HP_EXPONENTIAL_STEP_BOSSES);
+}
+
+function botHealthScaleFactor() {
+  return hpExponentialFactor((state.bossKills || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+}
+
+function bossHealthScaleFactor() {
+  return hpExponentialFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+}
+
 function randomBotHealth() {
   return randomBotHealthValue();
 }
 
 function randomBotHealthValue() {
   const bonus = botHealthBonus();
-  return randomInt(BOT_MIN_HP + bonus, BOT_MAX_HP + bonus);
+  const factor = botHealthScaleFactor();
+  return randomInt(Math.ceil((BOT_MIN_HP + bonus) * factor), Math.ceil((BOT_MAX_HP + bonus) * factor));
 }
 
 function shopSlotCount() {
@@ -3658,11 +4008,15 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
     }
     return damage;
   }
+  const hpBefore = bot.hp;
   bot.hp = Math.max(0, bot.hp - damage);
   if (reason) {
     addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
   }
-  if (bot.hp <= 0) resolveEliminatedBots([bot]);
+  if (bot.hp <= 0) {
+    recordBotExcessDamage(bot, damage, hpBefore);
+    resolveEliminatedBots([bot]);
+  }
   return damage;
 }
 
@@ -3720,9 +4074,13 @@ function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, play
       if (reason) addRoundEvent(reason);
       return;
     }
+    const hpBefore = bot.hp;
     bot.hp = Math.max(0, bot.hp - damage);
     if (reason) addRoundEvent(reason);
-    if (bot.hp <= 0) eliminated.push(bot);
+    if (bot.hp <= 0) {
+      recordBotExcessDamage(bot, damage, hpBefore);
+      eliminated.push(bot);
+    }
   });
   if (eliminated.length) resolveEliminatedBots(eliminated);
   return eliminated;
@@ -3827,12 +4185,7 @@ function stealPlayerSinToBoss(bot, amount, source) {
   const stolen = Math.min(available, Math.max(0, Math.ceil(amount)));
   if (stolen <= 0) return 0;
   state.player.credits = Math.max(0, state.player.credits - stolen);
-  changeBotSin(bot, stolen, "", {
-    triggerLossDamage: false,
-    triggerGainDamage: false,
-    triggerMemoryBountyMirror: false,
-    source
-  });
+  bot.bossBountyBonus = (bot.bossBountyBonus || 0) + stolen;
   return stolen;
 }
 
@@ -3884,10 +4237,14 @@ function applyKalhaSealSuppression() {
   const choices = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !suppressingBossForSeal(item.id));
   if (!kalhas.length || !choices.length || !state.roundState) return;
   const boss = randomFrom(kalhas);
-  const seal = randomFrom(choices);
-  state.roundState.kalhaSuppressedPassiveId = seal.id;
+  const count = Math.floor(choices.length / 2);
+  if (count <= 0) return;
+  const seals = shuffled(choices).slice(0, count);
+  state.roundState.kalhaSuppressedPassiveIds = new Set(seals.map((seal) => seal.id));
   state.roundState.kalhaSuppressedById = boss.id;
-  state.roundState.roundEvents.push(`${boss.name} deactivated ${passiveDisplayName(seal)} for this round.`);
+  state.roundState.roundEvents.push(
+    `${boss.name} deactivated ${seals.map((seal) => passiveDisplayName(seal)).join(", ")} for this round.`
+  );
 }
 
 function createFinalBoss(key) {
@@ -4028,7 +4385,7 @@ function createBot(options = {}) {
   const bossBaseHp = 80 + bossHealthBonus();
   const bossHealthMultiplier = state.bossSpawnCount >= SCALING_BREAKPOINT_BOSSES ? 2 : 1;
   const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
-  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthMultiplier * statFactor) : randomBotHealth();
+  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthMultiplier * bossHealthScaleFactor() * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
     ? uniqueSpec
@@ -4067,6 +4424,7 @@ function createBot(options = {}) {
     eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
     grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
     bossBountyFactor: uniqueSpec?.bossBountyFactor ?? bossSpec?.bossBountyFactor ?? 1,
+    bossBountyBonus: 0,
     countsAsBossProgress: uniqueSpec?.countsAsBossProgress !== false && bossSpec?.countsAsBossProgress !== false,
     countsAsBossSpawn: uniqueSpec?.countsAsBossSpawn !== false && bossSpec?.countsAsBossSpawn !== false,
     passiveKeys,
@@ -4146,7 +4504,8 @@ function syncShopSlotCount() {
 }
 
 function drawShopItem(pool) {
-  const id = randomFrom(pool);
+  const availablePool = pool.filter((id) => !REMOVED_PASSIVE_IDS.has(id));
+  const id = randomFrom(availablePool.length ? availablePool : pool);
   return { item: itemCopy(id), sold: false };
 }
 
@@ -4169,12 +4528,13 @@ function drawActiveShopItem() {
 }
 
 function drawPassiveShopItem(eliteBoosted = false) {
-  const ownedPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) > 0);
-  const freshPassives = PASSIVE_IDS.filter((id) => directPassiveStack(id) === 0);
+  const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id));
+  const ownedPassives = passivePool.filter((id) => directPassiveStack(id) > 0);
+  const freshPassives = passivePool.filter((id) => directPassiveStack(id) === 0);
   const eliteChance = eliteBoosted ? artifactPercent(50) : SHOP_ELITE_CHANCE;
   const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
-  if (!choices.length) return drawShopItem(PASSIVE_IDS);
+  if (!choices.length) return drawShopItem(passivePool);
   return { item: itemCopy(randomFrom(choices)), sold: false };
 }
 
@@ -4481,6 +4841,8 @@ function startGame() {
   state.bossQueued = false;
   state.killsSinceBossSpawn = 0;
   state.eliteBoostedNextReroll = false;
+  state.paleHorseBoostArmed = false;
+  state.previousRoundEliminationsForMartyrs = 0;
   resetBotsForRun();
   rerollShop();
   beginRound();
@@ -4490,6 +4852,7 @@ function startGame() {
 
 function beginRound() {
   resetNegativePlaytestSin();
+  pruneRemovedPassives();
   state.stage = "guess";
   state.pendingActive = null;
   state.playerLastDamage = 0;
@@ -4500,6 +4863,8 @@ function beginRound() {
   state.playerCreditSources = [];
   const twinModifier = petrosPavlosRoundModifier();
   const threonMystery = aliveUniqueBoss("threon");
+  const paleHorseDamageBoostActive = Boolean(state.paleHorseBoostArmed);
+  state.paleHorseBoostArmed = false;
   state.roundState = {
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
@@ -4515,6 +4880,7 @@ function beginRound() {
     removedBotIds: new Set(),
     activeUses: 0,
     activeUseItemCounts: new Map(),
+    artifactTargetCountsByBotId: new Map(),
     twinDetonatorTriggeredIds: new Set(),
     painEcho: false,
     bountyMultiplier: 1,
@@ -4523,6 +4889,7 @@ function beginRound() {
     playerDamageReductionSource: "",
     creditsSpentThisRound: 0,
     earnedSinThisRound: 0,
+    rerollSinSpentThisRound: 0,
     agaresSpreadApplied: false,
     creditLashDamageApplied: 0,
     temporaryBotSinBonuses: [],
@@ -4536,15 +4903,19 @@ function beginRound() {
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
+    targetDifferenceDamageByBotId: new Map(),
+    belethTriggeredBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
-    kalhaSuppressedPassiveId: null,
+    kalhaSuppressedPassiveIds: new Set(),
     kalhaSuppressedById: null,
     pavlosProtectedBotId: null,
     pavlosStartHpById: new Map(),
     pavlosDeferredBotIds: new Set(),
     resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
+    paleHorseDamageBoostActive,
+    previousRoundEliminationsForMartyrs: state.previousRoundEliminationsForMartyrs || 0,
     triggeredPassiveIds: new Set(),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
@@ -4563,6 +4934,7 @@ function beginRound() {
     bot.deathCause = null;
     bot.deathNotice = null;
     bot.markedByPlayer = false;
+    bot.diffMarkedByPlayer = false;
     bot.plannedGuess = planBotGuess(bot);
     bot.revealedByPassive = false;
     if (bot.uniqueKey === "pavlos") state.roundState.pavlosStartHpById.set(bot.id, bot.hp);
@@ -4573,6 +4945,7 @@ function beginRound() {
   applyPadmaStartHealing();
   applyPyrosBuffs();
   applyMarkedProspect();
+  applyZeparTargetDifferenceMark();
   applyGuessReveals();
   applyStartOfRoundPassives();
   applyGuessReveals();
@@ -4587,6 +4960,18 @@ function applyMarkedProspect() {
   target.markedByPlayer = true;
   markPassiveTriggered("p38");
   state.roundState.roundEvents.push(`Seal of Astaroth marked ${target.name}.`);
+}
+
+function applyZeparTargetDifferenceMark() {
+  const entries = orderedPassiveEffectEntries("p54");
+  if (!entries.length) return;
+  const targets = activeBots();
+  if (!targets.length) return;
+  const target = randomFrom(targets);
+  target.diffMarkedByPlayer = true;
+  state.roundState.zeparMarkedBotId = target.id;
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+  state.roundState.roundEvents.push(`Seal of Zepar marked ${target.name}; adjacent DAMNED echo its TARGET-difference damage.`);
 }
 
 function applyStartOfRoundSinRedistribution() {
@@ -4641,6 +5026,66 @@ function projectedMemoryTarget(
     return Math.ceil(((memoryEntry.target - previousOffset) / memoryEntry.targetModifier) * modifier + offset);
   }
   return Number.isFinite(memoryEntry.target) ? memoryEntry.target : null;
+}
+
+function applyFurcasLastTargetGuessSet() {
+  const entries = orderedPassiveEffectEntries("p72");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(state.previousTarget)) return;
+  const previous = Math.ceil(state.previousTarget);
+  if (previous === 40) return;
+  entries.forEach((entry) => {
+    const targets = previous < 40 ? activeBots().filter((bot) => !bot.isBoss) : activeBots();
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    const guess = previous < 40 ? 100 : 0;
+    round.botSubmittedGuesses.set(target.id, guess);
+    round.botEffectiveGuesses.set(target.id, guess);
+    target.plannedGuess = guess;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Furcas set ${target.name}'s guess to ${guess} because the previous TARGET was ${previous}.`);
+    const damage = furcasSelectedDamage(entry);
+    if (damage > 0) {
+      damageBot(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
+    }
+  });
+}
+
+function applySallosGuessShiftAwayFromTarget() {
+  const entries = orderedPassiveEffectEntries("p71");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(round.target)) return;
+  entries.forEach((entry) => {
+    const values = sallosShiftValues(entry);
+    let shifted = 0;
+    activeBots().forEach((bot) => {
+      const current = round.botEffectiveGuesses.get(bot.id);
+      if (!Number.isFinite(current)) return;
+      const direction = current === round.target ? randomFrom([-1, 1]) : current > round.target ? 1 : -1;
+      const amount = randomFrom(values);
+      const next = Math.ceil(clamp(current + direction * amount, 0, 100));
+      if (next === current) return;
+      round.botEffectiveGuesses.set(bot.id, next);
+      shifted += 1;
+    });
+    if (!shifted) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Sallos shifted ${shifted} DAMNED guesses away from the TARGET without changing the average.`);
+  });
+}
+
+function applyBifronsTargetSevenSin() {
+  const entries = orderedPassiveEffectEntries("p41");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(round.criticalInteger)) return;
+  if (round.criticalInteger % 7 !== 0) return;
+  entries.forEach((entry) => {
+    const sin = bifronsSinReward(entry);
+    if (sin <= 0) return;
+    const gained = gainCredits(sin, true, "Seal of Bifrons");
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Bifrons paid ${gained} SIN because the TARGET was a multiple of 7.`);
+  });
 }
 
 function memoryRawAverage(memoryEntry) {
@@ -4792,7 +5237,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const revealEntries = orderedPassiveEffectEntries(["p63", "p64"]);
   const extraRevealCount = revealEntries.reduce((sum, entry) => sum + Math.max(1, entry.stack || 1), 0);
-  const bossRevealAllowed = orderedPassiveEffectEntries("p61").length > 0;
+  const bossRevealAllowed = orderedPassiveEffectEntries(["p61", "p79"]).length > 0;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -4849,6 +5294,7 @@ function submitGuess() {
     round.botSubmittedGuesses.set(bot.id, bot.plannedGuess);
     round.botEffectiveGuesses.set(bot.id, applyGuessMutation(bot.name, bot.plannedGuess, bot));
   });
+  applyFurcasLastTargetGuessSet();
 
   round.edgeGambitStacks = 0;
 
@@ -4884,7 +5330,6 @@ function recalculateTarget() {
   if (tripleWeight > 1) {
     markPassiveTriggered("p16");
   }
-  if (sinWeight > 0) markPassiveTriggered("p42");
 
   state.bots.forEach((bot) => {
     const guess = round.botEffectiveGuesses.get(bot.id);
@@ -4947,7 +5392,7 @@ function installArcadeEnterShortcut() {
 
 function applyOrderedPenaltyPassiveDamage(activeBotList, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal) {
   const round = state.roundState;
-  orderedPassiveEffectEntries(["p2", "p3", "p55"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p2", "p3", "p4", "p66"]).forEach((entry) => {
     if (entry.id === "p2") {
       const sin = paimonSinReward(entry, round);
       if (sin <= 0) return;
@@ -4957,23 +5402,15 @@ function applyOrderedPenaltyPassiveDamage(activeBotList, botDamages, botDamageSo
       return;
     }
 
-    if (entry.id === "p55") {
-      const distance = playerTargetDistance(round);
+    if (entry.id === "p4") {
+      if (!round.edgeGambitStacks) return;
+      const damage = edgeGambitDamage(entry);
+      if (damage <= 0 || !activeBotList.length) return;
       markPassiveEntryTriggered(entry);
-      if (distance <= 5) {
-        const damage = sitriCloseGuessDamage(entry);
-        if (damage > 0) {
-          activeBotList.forEach((bot) => {
-            addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Sitri");
-          });
-        }
-        const sin = passiveEntryConvertedSin(entry, 2);
-        const gained = gainCredits(sin, true, "Seal of Sitri");
-        round.roundEvents.push(`Seal of Sitri rewarded your close guess: ${damage} damage to every DAMNED and ${gained} SIN.`);
-        return;
-      }
-      addPlayerDamage(5, "Seal of Sitri");
-      round.roundEvents.push("Seal of Sitri punished your distant guess for 5 damage.");
+      activeBotList.forEach((bot) => {
+        addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Andras");
+      });
+      round.roundEvents.push(`Seal of Andras dealt ${damage} damage to every DAMNED.`);
       return;
     }
 
@@ -4987,6 +5424,45 @@ function applyOrderedPenaltyPassiveDamage(activeBotList, botDamages, botDamageSo
       round.roundEvents.push(`Seal of Alloces triggers for ${verdictDamage} damage to all DAMNED.`);
       return;
     }
+
+    if (entry.id === "p66") {
+      if (state.round % 5 !== 0) return;
+      const nonBossTargets = activeBotList.filter((bot) => !bot.isBoss && !bot.immortal);
+      const bossTargets = activeBotList.filter((bot) => bot.isBoss && !bot.immortal);
+      let triggered = false;
+      if (nonBossTargets.length) {
+        const target = randomFrom(nonBossTargets);
+        addPendingBotDamage(botDamages, botDamageSources, target, target.hp, "Seal of Aim");
+        round.roundEvents.push(`Seal of Aim chose ${target.name} for elimination.`);
+        triggered = true;
+      }
+      const bossDamage = aimBossDamage(entry);
+      if (bossDamage > 0 && bossTargets.length) {
+        bossTargets.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, bossDamage, "Seal of Aim"));
+        round.roundEvents.push(`Seal of Aim dealt ${bossDamage} damage to each active BOSS.`);
+        triggered = true;
+      }
+      if (triggered) markPassiveEntryTriggered(entry);
+    }
+  });
+}
+
+function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) {
+  const entries = orderedPassiveEffectEntries("p54");
+  const round = state.roundState;
+  if (!round || !entries.length) return;
+  const marked = state.bots.find((bot) => bot.id === round.zeparMarkedBotId);
+  if (!marked) return;
+  const damage = Math.max(0, Math.ceil(round.targetDifferenceDamageByBotId.get(marked.id) || 0));
+  if (damage <= 0) return;
+  const targets = adjacentLivingBots(marked);
+  if (!targets.length) return;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    targets.forEach((bot) => {
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Zepar", false);
+    });
+    round.roundEvents.push(`Seal of Zepar echoed ${damage} damage from ${marked.name} to adjacent DAMNED.`);
   });
 }
 
@@ -4995,6 +5471,8 @@ function applyPenalties() {
   round.penaltiesApplied = true;
   recalculateTarget();
   state.previousTarget = round.target;
+  applyBifronsTargetSevenSin();
+  applySallosGuessShiftAwayFromTarget();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -5013,11 +5491,11 @@ function applyPenalties() {
     queuedPlayerHeals.push({ amount: heal, reason, source });
   };
   const activeBots = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
+  const targetDiffEntries = orderedPassiveEffectEntries("p80");
   round.edgeGambitStacks = [0, 50, 100].includes(round.playerEffectiveGuess) ? passiveStack("p4") : 0;
   if (round.edgeGambitStacks) {
-    const multiplier = edgeGambitMultiplier("p4");
     markPassiveTriggered("p4");
-    round.roundEvents.push(`Seal of Andras used your final guess and multiplied DAMNED penalty damage x${multiplier.toFixed(2)}.`);
+    round.roundEvents.push("Seal of Andras used your final guess to arm damage, halve your TARGET-difference damage, and block worst guess damage.");
   }
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
 
@@ -5043,7 +5521,7 @@ function applyPenalties() {
             addPlayerDamage(damage, "Seal of Ipos");
           }
         } else {
-          addPendingBotDamage(botDamages, botDamageSources, participant.bot, damage, "Seal of Ipos", false);
+          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, damage, "Seal of Ipos", targetDiffEntries);
         }
       });
       round.roundEvents.push(
@@ -5064,7 +5542,7 @@ function applyPenalties() {
             addPlayerDamage(10, "Worst guess penalty");
           }
         } else {
-          addPendingBotDamage(botDamages, botDamageSources, participant.bot, 10, "Worst guess penalty", false);
+          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, 10, "Worst guess penalty", targetDiffEntries);
         }
       });
       round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took 10 damage.`);
@@ -5077,6 +5555,12 @@ function applyPenalties() {
   if (criticals.some((hitter) => hitter.key === "player")) {
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
+    const paleHorseEntries = orderedPassiveEffectEntries("p77");
+    if (paleHorseEntries.length) {
+      paleHorseEntries.forEach((entry) => markPassiveEntryTriggered(entry));
+      state.paleHorseBoostArmed = true;
+      round.roundEvents.push("Seal of the Pale Horse armed next round's damage.");
+    }
   }
   let eligosBlockedCritical = false;
   criticals.forEach((hitter) => {
@@ -5113,12 +5597,15 @@ function applyPenalties() {
 
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   const playerTargetDiffMultiplier = targetDifferenceDamageMultiplier();
-  const playerTargetDiffDamage = Math.ceil(playerTargetDiffBaseDamage * playerTargetDiffMultiplier);
+  let playerTargetDiffDamage = Math.ceil(playerTargetDiffBaseDamage * playerTargetDiffMultiplier);
+  if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
   addPlayerDamage(
     playerTargetDiffDamage,
-    playerTargetDiffMultiplier > 1
-      ? `Target difference x${targetDifferenceDamagePercent()}%`
-      : "Target difference"
+    round.edgeGambitStacks
+      ? "Target difference halved by Seal of Andras"
+      : playerTargetDiffMultiplier > 1
+        ? `Target difference x${targetDifferenceDamagePercent()}%`
+        : "Target difference"
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -5127,10 +5614,10 @@ function applyPenalties() {
   state.bots
     .filter((bot) => bot.hp > 0 && !bot.eliminated)
     .forEach((bot) => {
-      let damage = Math.ceil(Math.abs(round.botEffectiveGuesses.get(bot.id) - round.target));
-      if (round.edgeGambitStacks) damage = Math.ceil(damage * edgeGambitMultiplier("p4"));
-      addPendingBotDamage(targetBotDamages, targetBotDamageSources, bot, damage, "Target difference", false);
+      const damage = Math.ceil(Math.abs(round.botEffectiveGuesses.get(bot.id) - round.target));
+      addPendingTargetDifferenceBotDamage(targetBotDamages, targetBotDamageSources, bot, damage, "Target difference", targetDiffEntries);
     });
+  applyZeparAdjacentTargetDifferenceDamage(targetBotDamages, targetBotDamageSources);
 
   if (round.playerDamageReduction) {
     const beforeReduction = playerDamage;
@@ -5287,6 +5774,48 @@ function findCriticalHits() {
   return hits;
 }
 
+function equalDamageSplit(totalDamage, targets) {
+  const total = Math.max(0, Math.ceil(totalDamage));
+  const liveTargets = targets.filter((bot) => bot && !bot.eliminated && bot.hp > 0);
+  const allocations = new Map();
+  if (total <= 0 || !liveTargets.length) return allocations;
+  const base = Math.floor(total / liveTargets.length);
+  let remainder = total - base * liveTargets.length;
+  liveTargets.forEach((bot) => {
+    const amount = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    if (amount > 0) allocations.set(bot.id, amount);
+  });
+  return allocations;
+}
+
+function applyExcessDamageSpread(eliminations) {
+  const entries = orderedPassiveEffectEntries("p73");
+  if (!entries.length) return;
+  eliminations.forEach((fallen) => {
+    const excess = Math.max(0, Math.ceil(fallen?.excessDamage || 0));
+    if (excess <= 0) return;
+    fallen.excessDamage = 0;
+    entries.forEach((entry) => {
+      const targets = activeBots().filter((bot) => bot.id !== fallen.id);
+      if (!targets.length) return;
+      const totalDamage = passiveEntryFlatDamage(entry, excess);
+      if (totalDamage <= 0) return;
+      const allocations = equalDamageSplit(totalDamage, targets);
+      const hitTargets = targets.filter((bot) => (allocations.get(bot.id) || 0) > 0);
+      if (!hitTargets.length) return;
+      markPassiveEntryTriggered(entry);
+      damageBots(
+        hitTargets,
+        (bot) => allocations.get(bot.id) || 0,
+        (bot, dealt) => `Seal of Asmoday dealt ${dealt} excess damage to ${bot.name}.`,
+        "Seal of Asmoday"
+      );
+      state.roundState.roundEvents.push(`Seal of Asmoday split ${totalDamage} excess damage from ${fallen.name}.`);
+    });
+  });
+}
+
 function resolveEliminatedBots(eliminated) {
   const freshEliminations = protectPavlosAcrossRound(
     eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated)
@@ -5337,10 +5866,12 @@ function resolveEliminatedBots(eliminated) {
     bot.pendingReplacementSpec = state.finalBossQueued ? null : nextBossSpecIfNeeded();
   });
 
+  applyExcessDamageSpread(freshEliminations);
+
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
     const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Seal of Sallos"));
+    activeBots().forEach((bot) => healBot(bot, heal, "Boss Seal of Sallos"));
   }
 
   checkRoundPentakillBonus();
@@ -5589,7 +6120,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p31", "p40", "p56", "p61", "p65"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -5628,6 +6159,17 @@ function applyEndOfRoundPassiveDamageInOrder() {
         (bot, damage) => `Seal of Dantalion dealt ${damage} damage to ${bot.name}.`,
         "Seal of Dantalion"
       );
+      return;
+    }
+
+    if (entry.id === "p21") {
+      const spent = state.roundState?.rerollSinSpentThisRound || 0;
+      const damage = shaxRerollDamage(entry, spent);
+      const targets = activeBots();
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      damageBots(targets, damage, (bot, dealt) => `Seal of Shax dealt ${dealt} reroll damage to ${bot.name}.`, "Seal of Shax");
+      state.roundState.roundEvents.push(`Seal of Shax turned ${spent} reroll SIN into ${damage} damage.`);
       return;
     }
 
@@ -5727,9 +6269,6 @@ function applyEndOfRoundPassives() {
   }
 
   activeBots().forEach((bot) => {
-    if (bot.isBoss && bot.bossOrder > ENDLESS_SCALING_BREAKPOINT_BOSSES && !bot.immortal) {
-      damagePlayer(1, `${bot.name}'s presence dealt 1 damage to you.`, true, true, `${bot.name} presence`);
-    }
     if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Seal of Bathin`);
     if (botHasPassive(bot, "fumes")) damagePlayer(2, `${bot.name}'s Seal of Amon dealt 2 damage to you.`);
     if (botHasPassive(bot, "thief") && state.player.credits > 0) {
@@ -5912,6 +6451,7 @@ function advanceAfterSummary() {
     render();
     return;
   }
+  state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
@@ -5923,9 +6463,7 @@ function advanceAfterSummary() {
 function rememberRound() {
   const round = state.roundState;
   clearBotMemoryBadges();
-  const memoryGrowthEntries = orderedPassiveEffectEntries("p54");
-  const extraMemory = memoryGrowthEntries.reduce((sum, entry) => sum + Math.max(1, entry.stack || 1), 0);
-  const memoryGain = 1 + extraMemory;
+  const memoryGain = 1;
   const botGuessValues = state.bots
     .map((bot) => round.botEffectiveGuesses.get(bot.id))
     .filter((value) => Number.isFinite(value));
@@ -5939,8 +6477,6 @@ function rememberRound() {
   };
 
   state.gameMemory.push(memoryEntry);
-  if (memoryGrowthEntries.length) memoryGrowthEntries.forEach((entry) => markPassiveEntryTriggered(entry));
-  const memoryEliminations = [];
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -5956,7 +6492,7 @@ function rememberRound() {
         ...memoryEntry
       });
     }
-    const memorySource = memoryGrowthEntries.length ? `${ITEMS.p54?.name || "Seal of Zepar"} memory growth` : "End of round memory";
+    const memorySource = "End of round memory";
     if (!bot.isBoss) {
       bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
       const actualIncrease = Math.max(0, bot.memory.length - beforeMemory);
@@ -5964,13 +6500,6 @@ function rememberRound() {
       recordBotMemorySource(bot, actualIncrease, memorySource);
       applyMemoryToBountyMirror(bot, actualIncrease);
       checkBalamMemoryBountyEliminations();
-      if (bot.eliminated || bot.hp <= 0) return;
-      if (memoryGrowthEntries.length && bot.memory.length >= ZEPAR_MEMORY_THRESHOLD) {
-        bot.hp = 0;
-        bot.deathCause = "memory-overload";
-        memoryEliminations.push(bot);
-        round.roundEvents.push(`Seal of Zepar eliminated ${bot.name} at ${bot.memory.length} memory.`);
-      }
     } else {
       const actualIncrease = Math.max(0, bot.memory.length - beforeMemory);
       applyMemoryAddedHealing(bot, actualIncrease);
@@ -5979,12 +6508,11 @@ function rememberRound() {
       checkBalamMemoryBountyEliminations();
     }
   });
-
-  if (memoryEliminations.length) resolveEliminatedBots(memoryEliminations);
 }
 
 function buyShopItem(slotIndex) {
   if (arcadeActionLocked()) return;
+  pruneRemovedPassives();
   if (shopDisabledBySatan()) {
     addLog("Satan has disabled Devil's Offerings.");
     render();
@@ -5993,6 +6521,13 @@ function buyShopItem(slotIndex) {
   const slot = state.shop[slotIndex];
   if (!slot || slot.sold) return;
   const item = slot.item;
+  if (item.type === "passive" && REMOVED_PASSIVE_IDS.has(item.id)) {
+    slot.sold = true;
+    addLog(`${item.name} is no longer offered.`);
+    syncShopSlotCount();
+    render();
+    return;
+  }
   const cost = shopPrice(item);
 
   if (!canSpendCredits(cost)) {
@@ -6003,7 +6538,7 @@ function buyShopItem(slotIndex) {
 
   if (item.type === "passive") {
     const existing = passiveEntry(item.id);
-    if (!existing && state.player.passives.length >= passiveLimit()) {
+    if (!existing && ownedSealSlotCount() >= passiveLimit()) {
       addLog("Seal slots are full.");
       render();
       return;
@@ -6062,6 +6597,9 @@ function rerollShopClick() {
     return;
   }
   spendCredits(cost);
+  if (state.roundState) {
+    state.roundState.rerollSinSpentThisRound = (state.roundState.rerollSinSpentThisRound || 0) + Math.max(0, Math.ceil(cost));
+  }
   rerollShop();
   state.rerollBaseCost += 1;
   addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
@@ -6194,16 +6732,16 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a17") {
-    const divisor = randomFrom([3, 5, 7]);
     recalculateTarget();
     const before = state.roundState.target;
-    const snapped = nearestMultiple(before, divisor);
+    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
+    const snapped = snap.value;
     state.roundState.targetOffset += snapped - before;
     recalculateTarget();
     recordCopiedArtifactResolution(
       copierName,
       item,
-      `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (nearest multiple of ${divisor}).`
+      `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`
     );
     return;
   }
@@ -6219,13 +6757,9 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a10") {
-    const multiplier = artifactMultiplier(2);
-    state.roundState.bountyMultiplier *= multiplier;
-    recordCopiedArtifactResolution(
-      copierName,
-      item,
-      `${item.name} armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`
-    );
+    const credits = randomInt(artifactValue(3), artifactValue(10));
+    const gained = gainCredits(credits, true, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} gained ${gained} SIN.`);
     return;
   }
 
@@ -6341,13 +6875,13 @@ function useActive(index) {
   }
 
   if (item.id === "a17") {
-    const divisor = randomFrom([3, 5, 7]);
     recalculateTarget();
     const before = state.roundState.target;
-    const snapped = nearestMultiple(before, divisor);
+    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
+    const snapped = snap.value;
     state.roundState.targetOffset += snapped - before;
     recalculateTarget();
-    consumeActive(index, `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (nearest multiple of ${divisor}).`, item.uid);
+    consumeActive(index, `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`, item.uid);
     return;
   }
 
@@ -6369,13 +6903,9 @@ function useActive(index) {
   }
 
   if (item.id === "a10") {
-    const multiplier = artifactMultiplier(2);
-    state.roundState.bountyMultiplier *= multiplier;
-    consumeActive(
-      index,
-      `${item.name} armed: SIN gains pay x${formatArtifactMultiplier(state.roundState.bountyMultiplier)} this round.`,
-      item.uid
-    );
+    const credits = randomInt(artifactValue(3), artifactValue(10));
+    const gained = gainCredits(credits, true, item.name);
+    consumeActive(index, `${item.name} gained ${gained} SIN.`, item.uid);
     return;
   }
 
@@ -8141,6 +8671,7 @@ function renderBot(bot, pendingPick) {
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
+  const diffMarkedClass = bot.diffMarkedByPlayer && !isDown ? "diff-marked" : "";
   const downClass = isDown ? "eliminated" : "";
   const deathCauseClass = bot.deathCause ? `death-${bot.deathCause}` : "";
   const faceClass = bot.isBoss ? "boss-face" : "";
@@ -8197,7 +8728,7 @@ function renderBot(bot, pendingPick) {
     : `<img class="bot-image" src="${escapeAttr(botImagePath(bot))}" alt="" loading="lazy" />`;
 
   return `
-    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${downClass} ${deathCauseClass}" style="--bot-color: ${bot.color}"${tooltipAttr}>
+    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass}" style="--bot-color: ${bot.color}"${tooltipAttr}>
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>
@@ -8336,7 +8867,7 @@ function renderShop() {
 }
 
 function renderShopSlot(slot, index) {
-  if (!slot || slot.sold) {
+  if (!slot || slot.sold || (slot.item?.type === "passive" && REMOVED_PASSIVE_IDS.has(slot.item.id))) {
     return `<div class="item-card"><div class="empty-state">Sold out until reroll</div></div>`;
   }
 
@@ -8345,7 +8876,7 @@ function renderShopSlot(slot, index) {
   const passiveCopies = item.type === "passive" ? directPassiveStack(item.id) : 0;
   const full =
     item.type === "passive"
-      ? passiveCopies === 0 && state.player.passives.length >= passiveLimit()
+      ? passiveCopies === 0 && ownedSealSlotCount() >= passiveLimit()
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full ? "disabled" : "";
   const buttonText = passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
@@ -8421,6 +8952,7 @@ function renderActiveItem(item, index) {
 }
 
 function renderPassives() {
+  pruneRemovedPassives();
   const slots = [];
   for (let index = 0; index < passiveLimit(); index += 1) {
     const item = state.player.passives[index];
