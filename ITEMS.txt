@@ -251,8 +251,8 @@ Every time you reroll Devil's Offerings, all DAMNED take damage equal to double 
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Sitri (11 SIN)
-If your final guess is within 5 of the TARGET, deal 5 damage to every DAMNED and gain 2 SIN. If it is outside 5, take 5 damage.
-ELITE levels: Only the damage you deal doubles each ELITE level.
+A DAMNED cannot gain MEMORY above the current round number. Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED.
+ELITE levels: Each ELITE level doubles this excess-MEMORY damage.
 
 Seal of Stolas (13 SIN)
 DAMNED take 1.5x TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.
@@ -267,8 +267,8 @@ When a DAMNED dies, gain a random ARTIFACT if you have room.
 ELITE levels: Each ELITE level gives +1 additional random ARTIFACT per death.
 
 Seal of Vapula (13 SIN)
-DAMNED with 8 or more MEMORY take 1.5x damage. DAMNED with more than 12 MEMORY take 2x damage.
-ELITE levels: Both damage multipliers scale by +20% per ELITE level.
+Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes 10 extra damage the first time it takes damage. With more than 12 MEMORY, it takes 20 extra damage.
+ELITE levels: Each ELITE level doubles this extra damage.
 
 Seal of Vassago (10 SIN)
 New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY.
@@ -295,7 +295,7 @@ Every round, one DAMNED is marked blue. That DAMNED takes double TARGET-differen
 ELITE levels: ELITE does not change this effect.
 
 Seal Duplicate Rule
-Devil's Offerings has a fixed 20% chance to offer an ELITE upgrade for a SEAL you already own. If you own no SEALS, the ELITE chance is 0. If you already own the offered SEAL, buying it upgrades that SEAL instead of taking another slot. The next copy costs twice its base price, the third costs three times, and so on. Equipped names upgrade to ELITE, then ELITE +2, ELITE +3, etc. Satanic Bible makes the next SEAL reroll have a 50% ELITE chance.
+Devil's Offerings has a fixed 8% chance to offer an ELITE upgrade for a SEAL you already own. If you own no SEALS, the ELITE chance is 0. If you already own the offered SEAL, buying it upgrades that SEAL instead of taking another slot. The next copy costs twice its base price, the third costs three times, and so on. Equipped names upgrade to ELITE, then ELITE +2, ELITE +3, etc. Satanic Bible makes the next SEAL reroll have a 50% ELITE chance.
 You can hold up to 6 SEALS. BOSS kill 2 unlocks one extra SEAL slot, and BOSS kill 4 unlocks two more, reaching the cap of 6.
 
 Core Round Rules
@@ -305,7 +305,7 @@ Ipos changes this so the 3 furthest guesses are punished instead, with the furth
 Balam instantly eliminates non-boss DAMNED that reach both 10+ MEMORY and 10+ BOUNTY.
 If all 5 opponents are eliminated in 1 round, a random owned SEAL is upgraded. If you have no SEAL yet, a random SEAL enters your SEALS instead.
 Every normal DAMNED elimination heals you for 1. Every BOSS elimination heals you for 8.
-For every 8 BOSS eliminations, your TARGET-difference damage is multiplied by x1.5 again. This is shown in the TARGET panel as diff dmg.
+Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 Healing cannot revive you from 0 HP. If total round damage drops you to 0, later healing effects do not keep you alive.
 If you have more than 150 SIN, Devil's Offerings item prices double. For every additional 150 SIN above that, item prices double again. When your SIN falls back below a threshold, prices immediately fall back too.
 
@@ -335,8 +335,8 @@ Pick a non-boss DAMNED and swap your effective guess with theirs.
 Engraved Skull (4 SIN)
 Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and 6 max HEALTH.
 
-Funeral Coin (6 SIN)
-Doubles SIN gained for this round. Multiple uses stack multiplicatively, so two copies pay x4.
+Funeral Coin (4 SIN)
+Gain a random 3 to 10 SIN.
 
 Goat Head (3 SIN)
 Pick a DAMNED; their guess counts five times for the TARGET average.
@@ -411,13 +411,13 @@ Petros and Pavlos's Seal
 Petros and Pavlos enter together as one special BOSS event. Each twin has half BOSS HEALTH and half BOSS SIN, and each borrows one other special BOSS ability. While either twin is alive, the TARGET modifier alternates every round between 0.9 and 1.1, starting at 0.9. If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round.
 
 Serafim's Seal
-Serafim has Caller personality. When Serafim enters play, you lose half your SIN; Serafim gains that SIN and twice that amount as HEALTH. Each round, you lose up to 2 SIN and Serafim gains the amount lost. The TARGET modifier becomes 0.7.
+Serafim has Caller personality. When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH. Each round, you lose up to 2 SIN and Serafim adds the stolen SIN to his BOSS bounty. The TARGET modifier becomes 0.7.
 
 Dantre's Seal
 Dantre has Stubborn personality. Every elimination deals 3 damage to you while Dantre is alive, and the TARGET modifier becomes 0.5.
 
 Pyros's Seal
-Pyros has Analyst personality. At the start of every round, one DAMNED receives a new random BOSS-variant SEAL while Pyros is alive, and the TARGET modifier becomes 1.0.
+Pyros has Analyst personality. At the start of every round, one DAMNED receives a new random later-BOSS ability while Pyros is alive, and the TARGET modifier becomes 1.0.
 
 Threon's Seal
 Threon has Drifter personality. Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3. Every ARTIFACT you use has a 50% chance to malfunction, have no effect, and deal 5 damage to you.
@@ -426,30 +426,33 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive, and the TARGET modifier becomes 1.5.
 
 Boss Scaling
-The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs unless Vial of Blood calls one sooner. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, and keep that modifier until they die.
+The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs unless Vial of Blood calls one sooner. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive two random later-BOSS abilities. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
 Goetic Boss Seal Lock
 While a Goetic BOSS is alive, the matching player SEAL cannot trigger. The disabled SEAL appears darker in your SEAL bar until that BOSS dies.
 
-Boss Variant Seals
+Later-BOSS Ability Pool
 
-Seal of Amon
-While this BOSS SEAL is alive, the player takes 2 damage at the end of every round.
+Item Toll
+Every time you use an ARTIFACT, take 5 damage.
 
-Seal of Bathin
-This BOSS SEAL heals 5 HEALTH at the end of every round.
+Round Toll
+At the end of every round, take 1 damage.
 
-Seal of Botis
-While this BOSS SEAL is alive, every time the player uses an ARTIFACT, the player takes 3 damage.
+Third Toll
+If the TARGET is a multiple of 3, take 3 damage.
 
-Seal of Halphas
-This BOSS SEAL cannot be picked or targeted by ARTIFACTS and its guess cannot be revealed.
+Fifth Toll
+If the TARGET is a multiple of 5, take 5 damage.
 
-Seal of Ipos
-This BOSS SEAL hits CRITICAL within 2 of the right integer and deals damage only to the player.
+Seventh Toll
+If the TARGET is a multiple of 7, take 7 damage.
 
-Seal of Raum
-While this BOSS SEAL is alive, the player loses 1 SIN at the end of every round.
+Even Toll
+If the TARGET is a multiple of 2, take 2 damage.
 
-Seal of Sallos
-When this BOSS SEAL dies, all other DAMNED gain 10 HEALTH.
+Critical Toll
+Every time anyone hits CRITICAL, take 10 damage.
+
+Offering Toll
+Every time you buy an ARTIFACT or SEAL, take 3 damage.

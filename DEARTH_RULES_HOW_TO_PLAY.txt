@@ -143,7 +143,7 @@ The current rule gives you +1 SEAL slot every 2 BOSS kills, up to the cap of 6.
 If you buy a SEAL that you already own, it does not take a new slot. It upgrades the
 existing SEAL into ELITE instead.
 
-Devil's Offerings has a fixed 20% chance to offer an ELITE upgrade for a SEAL you own.
+Devil's Offerings has a fixed 8% chance to offer an ELITE upgrade for a SEAL you own.
 If you own no SEALS, the ELITE chance is 0.
 
 Satanic Bible changes the next SEAL reroll to a 50% ELITE chance.
@@ -231,6 +231,7 @@ DAMNED remember previous rounds.
 At Next Round, each living DAMNED gains MEMORY of the round that just ended.
 Normal non-boss DAMNED have limited MEMORY.
 BOSSES remember the whole game up to that point.
+No DAMNED can have more MEMORY than the current round number.
 
 MEMORY includes things like:
 
@@ -291,6 +292,7 @@ Petros and Pavlos
 After those eight, the game enters the Goetic BOSS phase.
 Goetic BOSSES are named after SEALS. When a Goetic BOSS is alive, the matching player
 SEAL is disabled and appears darker in your SEAL bar.
+Each later BOSS gets two random BOSS abilities from the later-BOSS ability pool.
 
 After the Goetic BOSS sequence, the final Jesus and Satan phase begins.
 Only Jesus and Satan are on the board.
@@ -322,9 +324,18 @@ the eighth BOSS, and +60 after the first 8 BOSSES. BOSS HEALTH is doubled from
 the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also
 multiplied by 1.08 for every 3 BOSS numbers after BOSS 9.
 
-Every 8 BOSS kills, your TARGET-difference damage multiplier increases by x1.5.
-The current TARGET-difference damage percentage appears in the TARGET panel as
-diff dmg.
+Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
+
+Later-BOSS ability pool:
+
+Every time you use an ARTIFACT, take 5 damage.
+At the end of every round, take 1 damage.
+If the TARGET is a multiple of 3, take 3 damage.
+If the TARGET is a multiple of 5, take 5 damage.
+If the TARGET is a multiple of 7, take 7 damage.
+If the TARGET is a multiple of 2, take 2 damage.
+Every time anyone hits CRITICAL, take 10 damage.
+Every time you buy an ARTIFACT or SEAL, take 3 damage.
 
 
 15. Special Bosses
@@ -340,7 +351,7 @@ The TARGET modifier becomes 0.5.
 Personality: Stubborn.
 
 Pyros
-At the start of each round, one DAMNED receives a random BOSS-variant SEAL.
+At the start of each round, one DAMNED receives a random later-BOSS ability.
 The TARGET modifier becomes 1.0.
 Personality: Analyst.
 
@@ -356,9 +367,9 @@ The TARGET modifier becomes 1.2.
 Personality: Drifter.
 
 Serafim
-When Serafim enters, you lose half your SIN. Serafim gains that SIN and gains twice
-that amount as HEALTH. Each round after that, you lose up to 2 SIN and Serafim gains
-the amount lost.
+When Serafim enters, you lose half your SIN. Serafim adds that SIN to his BOSS
+bounty and gains twice that amount as HEALTH. Each round after that, you lose up to
+2 SIN and Serafim adds the amount lost to his BOSS bounty.
 The TARGET modifier becomes 0.7.
 Personality: Caller.
 
@@ -486,8 +497,7 @@ Use no ARTIFACT this round. Your next round ARTIFACT casts for sure.
 Hover SEALS, ARTIFACTS, BOSS passives, damage bubbles, healing bubbles, MEMORY bubbles,
 and SIN bubbles to see detailed descriptions and sources.
 
-The TARGET panel shows the current TARGET, previous TARGET, modifier, calculation,
-and TARGET-difference damage multiplier.
+The TARGET panel shows the current TARGET, previous TARGET, modifier, and calculation.
 
 The pause menu can resume, restart, switch modes, return to the main menu, and change
 sound settings.

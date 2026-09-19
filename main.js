@@ -25,8 +25,7 @@ const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 const ENDLESS_BOSS_INTERVAL = 8;
-const TARGET_DIFF_DAMAGE_BOSS_INTERVAL = 8;
-const TARGET_DIFF_DAMAGE_STEP = 1.5;
+const BOSS_PASSIVE_DAMAGE_INTERVAL = 8;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -484,7 +483,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sitri",
     price: 11,
-    description: "If your final guess is within 5 of the TARGET, deal 5 damage to every DAMNED and gain 2 SIN. If it is outside 5, take 5 damage. ELITE doubles only the damage you deal."
+    description:
+      "A DAMNED cannot gain MEMORY above the current round number. Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED. ELITE doubles the damage each level."
   },
   p56: {
     id: "p56",
@@ -581,7 +581,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "Whenever a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 20 extra damage."
+      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 20 extra damage."
   },
   p69: {
     id: "p69",
@@ -858,6 +858,7 @@ const PASSIVE_IDS = [
   "p52",
   "p53",
   "p54",
+  "p55",
   "p56",
   "p57",
   "p58",
@@ -884,7 +885,7 @@ const PASSIVE_IDS = [
   "p79",
   "p80"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p8", "p9", "p14", "p15", "p27", "p34", "p36", "p37", "p38", "p42", "p55"]);
+const REMOVED_PASSIVE_IDS = new Set(["p8", "p9", "p14", "p15", "p27", "p34", "p36", "p37", "p38", "p42"]);
 const ACTIVE_IDS = [
   "a6",
   "a7",
@@ -1166,33 +1167,41 @@ const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id]);
 const BOSS_PASSIVES = {
-  metabolism: {
-    name: "Seal of Bathin",
-    description: "This BOSS SEAL heals 5 HEALTH at the end of every round."
+  itemUsePain: {
+    name: "Item Toll",
+    baseDamage: 5
   },
-  fumes: {
-    name: "Seal of Amon",
-    description: "While this BOSS SEAL is alive, you take 2 damage at the end of every round."
+  roundPain: {
+    name: "Round Toll",
+    baseDamage: 1
   },
-  thief: {
-    name: "Seal of Raum",
-    description: "While this BOSS SEAL is alive, you lose 1 SIN at the end of every round."
+  targetMultipleThree: {
+    name: "Third Toll",
+    baseDamage: 3,
+    divisor: 3
   },
-  spite: {
-    name: "Seal of Botis",
-    description: "While this BOSS SEAL is alive, every time you use an ARTIFACT, you take 3 damage."
+  targetMultipleFive: {
+    name: "Fifth Toll",
+    baseDamage: 5,
+    divisor: 5
   },
-  wideCrit: {
-    name: "Seal of Ipos",
-    description: "This BOSS SEAL hits CRITICAL within 2 of the right integer and deals damage only to you."
+  targetMultipleSeven: {
+    name: "Seventh Toll",
+    baseDamage: 7,
+    divisor: 7
   },
-  shield: {
-    name: "Seal of Halphas",
-    description: "This BOSS SEAL cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
+  targetMultipleTwo: {
+    name: "Even Toll",
+    baseDamage: 2,
+    divisor: 2
   },
-  lamb: {
-    name: "Seal of Sallos",
-    description: "When this BOSS SEAL dies, all other DAMNED gain 10 HEALTH."
+  criticalPain: {
+    name: "Critical Toll",
+    baseDamage: 10
+  },
+  purchasePain: {
+    name: "Offering Toll",
+    baseDamage: 3
   }
 };
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
@@ -1296,7 +1305,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a new random BOSS-variant SEAL while Pyros is alive.",
+      "At the start of every round, one DAMNED receives a new random later-BOSS ability while Pyros is alive.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },
@@ -1328,8 +1337,8 @@ const UNIQUE_BOSS_SPECS = {
     personality: "Caller",
     modifierOverride: 0.7,
     descriptions: [
-      "When Serafim enters play, you lose half your SIN; Serafim gains that SIN and twice that amount as HEALTH.",
-      "Each round, you lose up to 2 SIN and Serafim gains the amount lost.",
+      "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
+      "Each round, you lose up to 2 SIN and Serafim adds the stolen SIN to his BOSS bounty.",
       "The TARGET modifier becomes 0.7 while Serafim is alive."
     ]
   },
@@ -2062,28 +2071,73 @@ function applyBountyToMemoryMirror(bot, amount, options = {}) {
     const memory = bountyGained * stackLinearMultiplier(entry);
     if (memory <= 0) return;
     markPassiveEntryTriggered(entry);
-    addBotMemory(bot, memory, `Seal of Gusion gave ${bot.name} +${memory} memory from bounty growth.`, {
+    const added = addBotMemory(bot, memory, "", {
+      source: "Seal of Gusion",
       triggerMemoryBountyMirror: false
     });
+    if (added > 0) addRoundEvent(`Seal of Gusion gave ${bot.name} +${added} memory from bounty growth.`);
+  });
+}
+
+function memoryRoundLimit() {
+  return Math.max(0, Math.ceil(state.round || 0));
+}
+
+function botMemoryLimit(bot) {
+  const roundLimit = memoryRoundLimit();
+  if (bot?.isBoss) return roundLimit;
+  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+}
+
+function trimBotMemoryToLimit(bot) {
+  if (!bot?.memory) return 0;
+  const limit = botMemoryLimit(bot);
+  const before = bot.memory.length;
+  bot.memory = limit > 0 ? bot.memory.slice(-limit) : [];
+  return Math.max(0, before - bot.memory.length);
+}
+
+function sitriExcessMemoryDamage(entry) {
+  return passiveEntryFlatDamage(entry, 5);
+}
+
+function applyExcessMemoryDamage(bot, excessMemory) {
+  const excess = Math.max(0, Math.ceil(excessMemory));
+  if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
+  orderedPassiveEffectEntries("p55").forEach((entry) => {
+    if (bot.eliminated) return;
+    const damage = excess * sitriExcessMemoryDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    damageBot(
+      bot,
+      damage,
+      `Seal of Sitri converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
+      "Seal of Sitri"
+    );
   });
 }
 
 function addBotMemory(bot, count, reason = "", options = {}) {
   if (!bot || bot.eliminated || count <= 0) return 0;
-  const added = Math.ceil(count);
+  const requested = Math.ceil(count);
+  trimBotMemoryToLimit(bot);
   const beforeMemory = bot.memory?.length || 0;
-  const entry = memoryEntryForBot(bot);
+  const allowed = Math.max(0, botMemoryLimit(bot) - beforeMemory);
+  const added = Math.min(requested, allowed);
+  const excess = Math.max(0, requested - added);
+  const entry = options.entry || memoryEntryForBot(bot);
   for (let index = 0; index < added; index += 1) {
     bot.memory.push({ ...entry });
   }
-  if (!bot.isBoss) bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
   const actualIncrease = Math.max(0, (bot.memory?.length || 0) - beforeMemory);
   recordBotMemorySource(bot, actualIncrease, options.source || sourceLabelFromReason(reason, "Memory"));
   applyMemoryAddedHealing(bot, actualIncrease);
   applyMemoryToBountyMirror(bot, actualIncrease, options);
+  applyExcessMemoryDamage(bot, excess);
   if (reason) state.roundState?.roundEvents.push(reason);
   checkBalamMemoryBountyEliminations();
-  return added;
+  return actualIncrease;
 }
 
 function initialMemoryEntries(count) {
@@ -2106,7 +2160,8 @@ function seedNewBotMemoryFromVassago(bot) {
   if (!bot || bot.isBoss) return;
   const entries = orderedPassiveEffectEntries("p1");
   if (!entries.length) return;
-  bot.memory = initialMemoryEntries(5).slice(-NON_BOSS_MEMORY_LIMIT);
+  const seedCount = Math.min(5, botMemoryLimit(bot));
+  bot.memory = initialMemoryEntries(seedCount);
   recordBotMemorySource(bot, bot.memory.length, ITEMS.p1?.name || "Seal of Vassago");
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
 }
@@ -2342,10 +2397,6 @@ function shaxRerollDamage(entry, spent) {
 function sallosShiftValues(entry) {
   const max = 5 + Math.max(0, (entry?.stack || 1) - 1);
   return Array.from({ length: Math.max(1, max - 1) }, (_, index) => index + 2);
-}
-
-function sitriCloseGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 5);
 }
 
 function barbatosDamage(idOrItem) {
@@ -2599,11 +2650,12 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   const modifierEntries = [];
   const applyFlatBonus = (bonus, source, entry) => {
     const extra = Math.max(0, Math.ceil(bonus || 0));
-    if (extra <= 0 || roundedDamage <= 0) return;
+    if (extra <= 0 || roundedDamage <= 0) return false;
     exactDamage += extra;
     roundedDamage += extra;
-    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    modifierEntries.push({ amount: extra, source, kind: "flat-bonus" });
     markPassiveEntryTriggered(entry);
+    return true;
   };
   const applyMultiplier = (multiplier, source, entry) => {
     if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
@@ -2612,7 +2664,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     roundedDamage = Math.ceil(exactDamage);
     const extra = Math.max(0, roundedDamage - before);
     if (extra <= 0) return;
-    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
 
@@ -2635,7 +2687,10 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p68") {
-        applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry);
+        if (state.roundState?.vapulaTriggeredBotIds?.has(bot.id)) return;
+        if (applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry)) {
+          state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
+        }
         return;
       }
 
@@ -2694,7 +2749,7 @@ function scaledBotDamageSourceEntries(details, source) {
   if (baseDamage > 0) entries.push({ amount: baseDamage, source });
   (details?.modifierEntries || []).forEach((entry) => {
     const amount = Math.max(0, Math.ceil(entry.amount || 0));
-    if (amount > 0) entries.push({ amount, source: entry.source || "Damage modifier", kind: "bonus" });
+    if (amount > 0) entries.push({ amount, source: entry.source || "Damage modifier", kind: entry.kind || "bonus" });
   });
   return entries;
 }
@@ -2855,7 +2910,7 @@ function itemDescription(item) {
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
   if (item.id === "p54") return "Every round, one DAMNED is marked blue. When it takes TARGET-difference damage, each adjacent DAMNED takes that much damage too.";
   if (item.id === "p55") {
-    return `If your final guess is within 5 of the TARGET, deal ${sitriCloseGuessDamage(item)} damage to every DAMNED and gain ${passiveConvertedSin(item, 2)} SIN. If outside 5, take 5 damage.`;
+    return `A DAMNED cannot gain MEMORY above the current round number. Each excess MEMORY becomes ${flatDamageValue(item, 5)} damage to that DAMNED.`;
   }
   if (item.id === "p56") {
     return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
@@ -2884,7 +2939,7 @@ function itemDescription(item) {
   if (item.id === "p66") return `On round numbers that are multiples of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `DAMNED with 8 or more MEMORY take ${vapulaMemoryExtraDamage(item, 8)} extra damage. DAMNED with more than 12 MEMORY take ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
+    return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
   if (item.id === "p69") {
     return "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET.";
@@ -2938,6 +2993,46 @@ function botHasPassive(bot, key) {
 
 function hasBossPassive(key) {
   return state.bots.some((bot) => bot.hp > 0 && botHasPassive(bot, key));
+}
+
+function bossPassiveDamageBonus() {
+  return Math.max(0, Math.floor((state.bossKills || 0) / BOSS_PASSIVE_DAMAGE_INTERVAL));
+}
+
+function bossPassiveDamage(key) {
+  const passive = BOSS_PASSIVES[key];
+  if (!passive) return 0;
+  return Math.max(0, Math.ceil((passive.baseDamage || 0) + bossPassiveDamageBonus()));
+}
+
+function bossPassiveEffectDescription(key) {
+  const damage = bossPassiveDamage(key);
+  const passive = BOSS_PASSIVES[key];
+  if (!passive) return "";
+  if (passive.divisor) {
+    return `While this BOSS ability is alive, if the TARGET is a multiple of ${passive.divisor}, you take ${damage} damage.`;
+  }
+  if (key === "itemUsePain") return `While this BOSS ability is alive, every time you use an ARTIFACT, you take ${damage} damage.`;
+  if (key === "roundPain") return `While this BOSS ability is alive, you take ${damage} damage at the end of every round.`;
+  if (key === "criticalPain") return `While this BOSS ability is alive, every time anyone hits CRITICAL, you take ${damage} damage.`;
+  if (key === "purchasePain") {
+    return `While this BOSS ability is alive, every time you buy an ARTIFACT or SEAL, you take ${damage} damage.`;
+  }
+  return `${passive.name} deals ${damage} damage.`;
+}
+
+function activeBotsWithBossPassive(key) {
+  return activeBots().filter((bot) => botHasPassive(bot, key));
+}
+
+function applyBossPassivePlayerDamage(key, reasonForBot) {
+  const damage = bossPassiveDamage(key);
+  if (damage <= 0) return 0;
+  let total = 0;
+  activeBotsWithBossPassive(key).forEach((bot) => {
+    total += damagePlayer(damage, reasonForBot(bot, damage), true, true, BOSS_PASSIVES[key]?.name);
+  });
+  return total;
 }
 
 function botHasUniquePower(bot, key) {
@@ -3030,8 +3125,8 @@ function botPassiveDescription(bot) {
     const sealName = bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "this Seal";
     descriptions.push(`While ${bot.name} is alive, your ${sealName} cannot trigger and appears darkened.`);
   }
-  bot.passiveKeys?.forEach((key) => descriptions.push(BOSS_PASSIVES[key].description));
-  if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${BOSS_PASSIVES[bot.buffPassiveKey].description}`);
+  bot.passiveKeys?.forEach((key) => descriptions.push(bossPassiveEffectDescription(key)));
+  if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${bossPassiveEffectDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
 }
 
@@ -3154,18 +3249,6 @@ function formatModifier(value) {
   return Number.isInteger(value * 10)
     ? value.toFixed(1)
     : value.toFixed(3).replace(/0+$/u, "").replace(/\.$/u, "");
-}
-
-function targetDifferenceDamageTier() {
-  return Math.max(0, Math.floor((state.bossKills || 0) / TARGET_DIFF_DAMAGE_BOSS_INTERVAL));
-}
-
-function targetDifferenceDamageMultiplier() {
-  return Math.pow(TARGET_DIFF_DAMAGE_STEP, targetDifferenceDamageTier());
-}
-
-function targetDifferenceDamagePercent() {
-  return Math.ceil(targetDifferenceDamageMultiplier() * 100);
 }
 
 function guessClosenessColor(guess, target) {
@@ -3375,11 +3458,15 @@ function sourceTooltip(sources, kind = "damage") {
   }
   if (kind === "damage") {
     const damageEntries = mergeSourceEntries((sources || []).filter((entry) => !entry.kind || entry.kind === "damage"));
+    const flatBonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "flat-bonus"));
+    const multiplierBonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "multiplier-bonus"));
     const bonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "bonus"));
     const savedEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "saved"));
     return [
       ...damageEntries.map((entry) => `-${entry.amount} health from ${entry.source}`),
-      ...bonusEntries.map((entry) => `+${entry.amount} total damage from ${entry.source}`),
+      ...flatBonusEntries.map((entry) => `+${entry.amount} flat damage from ${entry.source}`),
+      ...multiplierBonusEntries.map((entry) => `+${entry.amount} multiplied damage from ${entry.source}`),
+      ...bonusEntries.map((entry) => `+${entry.amount} bonus damage from ${entry.source}`),
       ...savedEntries.map((entry) => `+${entry.amount} health saved from ${entry.source}`)
     ].join("\n");
   }
@@ -3516,6 +3603,7 @@ function recordBotHealSource(bot, amount, source) {
 }
 
 function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, playerDealt = true) {
+  if (!bot || bot.eliminated) return;
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (!bot || damage <= 0) return;
@@ -3540,7 +3628,7 @@ function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = or
     roundedDamage = Math.ceil(exactDamage);
     const extra = Math.max(0, roundedDamage - before);
     if (extra <= 0) return;
-    modifierEntries.push({ amount: extra, source, kind: "bonus" });
+    modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
 
@@ -3994,9 +4082,10 @@ function pavlosDamageBlocked(bot) {
 
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || bot.eliminated || rawDamage <= 0) return 0;
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
-  if (!bot || bot.eliminated || damage <= 0) return 0;
+  if (damage <= 0) return 0;
   if (pavlosDamageBlocked(bot)) return 0;
   bot.lastDamage = (bot.lastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
@@ -4022,9 +4111,10 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
 
 function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || bot.eliminated || bot.hp <= 1 || rawDamage <= 0) return 0;
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
-  if (!bot || bot.eliminated || bot.hp <= 1 || damage <= 0) return 0;
+  if (damage <= 0) return 0;
   if (pavlosDamageBlocked(bot)) return 0;
   if (bot.immortal) {
     bot.lastDamage = (bot.lastDamage || 0) + damage;
@@ -4053,6 +4143,7 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
 function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
   const eliminated = [];
   const planned = bots.map((bot) => {
+    if (!bot || bot.eliminated) return { bot, damageDetails: { damage: 0, baseDamage: 0, modifierEntries: [] }, damage: 0 };
     const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
@@ -4905,6 +4996,7 @@ function beginRound() {
     revealedBotIds: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     belethTriggeredBotIds: new Set(),
+    vapulaTriggeredBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),
@@ -4924,6 +5016,7 @@ function beginRound() {
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
+    trimBotMemoryToLimit(bot);
     bot.fresh = bot.memory.length === 0;
     bot.lastDamage = 0;
     bot.lastHeal = 0;
@@ -5242,8 +5335,7 @@ function applyGuessReveals() {
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
       bot.hp > 0 &&
-      !bot.eliminated &&
-      !botHasPassive(bot, "shield")
+      !bot.eliminated
   );
   const desiredRevealCount = Math.min(revealableBots.length, 1 + extraRevealCount);
   const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
@@ -5491,6 +5583,13 @@ function applyPenalties() {
     queuedPlayerHeals.push({ amount: heal, reason, source });
   };
   const activeBots = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
+  const addBossPassiveDamage = (key, sourceForBot) => {
+    const damage = bossPassiveDamage(key);
+    if (damage <= 0) return;
+    activeBots
+      .filter((bot) => botHasPassive(bot, key))
+      .forEach((bot) => addPlayerDamage(damage, sourceForBot(bot, damage)));
+  };
   const targetDiffEntries = orderedPassiveEffectEntries("p80");
   round.edgeGambitStacks = [0, 50, 100].includes(round.playerEffectiveGuess) ? passiveStack("p4") : 0;
   if (round.edgeGambitStacks) {
@@ -5498,6 +5597,15 @@ function applyPenalties() {
     round.roundEvents.push("Seal of Andras used your final guess to arm damage, halve your TARGET-difference damage, and block worst guess damage.");
   }
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
+
+  BOSS_PASSIVE_KEYS.filter((key) => BOSS_PASSIVES[key].divisor).forEach((key) => {
+    const divisor = BOSS_PASSIVES[key].divisor;
+    if (!Number.isFinite(round.target) || round.target % divisor !== 0) return;
+    addBossPassiveDamage(
+      key,
+      (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES[key].name} dealt ${damage} damage because TARGET ${formatNumber(round.target)} is a multiple of ${divisor}.`
+    );
+  });
 
   const participants = currentRoundParticipants(activeBots);
   const iposEntries = orderedPassiveEffectEntries("p58");
@@ -5552,6 +5660,12 @@ function applyPenalties() {
 
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
+  criticals.forEach((hitter) => {
+    addBossPassiveDamage(
+      "criticalPain",
+      (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.criticalPain.name} dealt ${damage} damage because ${hitter.name} hit CRITICAL.`
+    );
+  });
   if (criticals.some((hitter) => hitter.key === "player")) {
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
@@ -5577,16 +5691,14 @@ function applyPenalties() {
         }
         addPlayerDamage(criticalDamage, `CRITICAL from ${hitter.name}`);
       } else {
-        if (!hitter.bot || !botHasPassive(hitter.bot, "wideCrit")) {
-          addPendingBotDamage(
-            botDamages,
-            botDamageSources,
-            victim.bot,
-            criticalDamage,
-            `CRITICAL from ${hitter.name}`,
-            hitter.kind === "player"
-          );
-        }
+        addPendingBotDamage(
+          botDamages,
+          botDamageSources,
+          victim.bot,
+          criticalDamage,
+          `CRITICAL from ${hitter.name}`,
+          hitter.kind === "player"
+        );
       }
     });
   });
@@ -5596,16 +5708,11 @@ function applyPenalties() {
   applyPendingBotDamageBatch(botDamages, botDamageSources, activeBots);
 
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
-  const playerTargetDiffMultiplier = targetDifferenceDamageMultiplier();
-  let playerTargetDiffDamage = Math.ceil(playerTargetDiffBaseDamage * playerTargetDiffMultiplier);
+  let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
   addPlayerDamage(
     playerTargetDiffDamage,
-    round.edgeGambitStacks
-      ? "Target difference halved by Seal of Andras"
-      : playerTargetDiffMultiplier > 1
-        ? `Target difference x${targetDifferenceDamagePercent()}%`
-        : "Target difference"
+    round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference"
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -5742,7 +5849,7 @@ function getParticipants() {
         bot,
         name: bot.name,
         guess: round.botEffectiveGuesses.get(bot.id),
-        window: Math.max(botHasPassive(bot, "wideCrit") ? 2 : 0, passiveStack("p69") ? 1 : 0),
+        window: passiveStack("p69") ? 1 : 0,
         bonusWindowChance: 0,
         damage: 10
       }))
@@ -5867,12 +5974,6 @@ function resolveEliminatedBots(eliminated) {
   });
 
   applyExcessDamageSpread(freshEliminations);
-
-  const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
-  if (lambDeaths) {
-    const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Boss Seal of Sallos"));
-  }
 
   checkRoundPentakillBonus();
 }
@@ -6268,14 +6369,10 @@ function applyEndOfRoundPassives() {
     applyPassivePlayerHeal("p8", 5, "Seal of Buer");
   }
 
-  activeBots().forEach((bot) => {
-    if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Seal of Bathin`);
-    if (botHasPassive(bot, "fumes")) damagePlayer(2, `${bot.name}'s Seal of Amon dealt 2 damage to you.`);
-    if (botHasPassive(bot, "thief") && state.player.credits > 0) {
-      state.player.credits = Math.max(0, state.player.credits - 1);
-      state.roundState.roundEvents.push(`${bot.name}'s Seal of Raum stole 1 SIN.`);
-    }
-  });
+  applyBossPassivePlayerDamage(
+    "roundPain",
+    (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.roundPain.name} dealt ${damage} damage at the end of the round.`
+  );
 
   applyEndOfRoundBotSinPassives();
   applyInflationEngine();
@@ -6482,31 +6579,21 @@ function rememberRound() {
     if (bot.eliminated) return;
     const ownGuess = round.botEffectiveGuesses.get(bot.id);
     if (!Number.isFinite(ownGuess)) {
-      if (bot.isBoss) bot.memory = state.gameMemory.slice();
+      if (bot.isBoss) bot.memory = state.gameMemory.slice(-botMemoryLimit(bot));
       return;
     }
-    const beforeMemory = bot.memory?.length || 0;
-    for (let copy = 0; copy < memoryGain; copy += 1) {
-      bot.memory.push({
-        ownGuess,
-        ...memoryEntry
-      });
-    }
-    const memorySource = "End of round memory";
-    if (!bot.isBoss) {
-      bot.memory = bot.memory.slice(-NON_BOSS_MEMORY_LIMIT);
-      const actualIncrease = Math.max(0, bot.memory.length - beforeMemory);
-      applyMemoryAddedHealing(bot, actualIncrease);
-      recordBotMemorySource(bot, actualIncrease, memorySource);
-      applyMemoryToBountyMirror(bot, actualIncrease);
-      checkBalamMemoryBountyEliminations();
-    } else {
-      const actualIncrease = Math.max(0, bot.memory.length - beforeMemory);
-      applyMemoryAddedHealing(bot, actualIncrease);
-      recordBotMemorySource(bot, actualIncrease, memorySource);
-      applyMemoryToBountyMirror(bot, actualIncrease);
-      checkBalamMemoryBountyEliminations();
-    }
+    addBotMemory(
+      bot,
+      memoryGain,
+      "",
+      {
+        source: "End of round memory",
+        entry: {
+          ownGuess,
+          ...memoryEntry
+        }
+      }
+    );
   });
 }
 
@@ -6560,6 +6647,11 @@ function buyShopItem(slotIndex) {
     applyGuessReveals();
     checkBalamMemoryBountyEliminations();
     playSealPurchaseSfx();
+    applyBossPassivePlayerDamage(
+      "purchasePain",
+      (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.purchasePain.name} dealt ${damage} damage because you bought ${item.name}.`
+    );
+    if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;
   }
@@ -6580,6 +6672,11 @@ function buyShopItem(slotIndex) {
   slot.sold = true;
   syncShopSlotCount();
   addLog(`Bought ${item.name}.`);
+  applyBossPassivePlayerDamage(
+    "purchasePain",
+    (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.purchasePain.name} dealt ${damage} damage because you bought ${item.name}.`
+  );
+  if (state.player.hp <= 0) finishGameOverRound();
   render();
 }
 
@@ -6843,10 +6940,10 @@ function useActive(index) {
     }
   }
 
-  const mirrorSpiteBots = activeBots().filter((bot) => botHasPassive(bot, "spite"));
-  mirrorSpiteBots.forEach((bot) => {
-    damagePlayer(3, `${bot.name}'s Seal of Botis dealt 3 damage to you.`);
-  });
+  applyBossPassivePlayerDamage(
+    "itemUsePain",
+    (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.itemUsePain.name} dealt ${damage} damage because you used an ARTIFACT.`
+  );
   if (state.player.hp <= 0) {
     finishGameOverRound();
     render();
@@ -7080,11 +7177,6 @@ function chooseBot(botId) {
     render();
     return;
   }
-  if (botHasPassive(bot, "shield")) {
-    addLog(`${bot.name}'s Seal of Halphas blocks Artifacts.`);
-    render();
-    return;
-  }
   const round = state.roundState;
   const item = pendingArtifactItem();
   const itemName = item?.name || activeName(id);
@@ -7170,12 +7262,12 @@ function chooseBot(botId) {
       return;
     }
     const value = artifactValue(6);
-    addBotMemory(bot, value, `${itemName} gave ${bot.name} +${value} memory.`);
+    const memoryAdded = addBotMemory(bot, value, "", { source: itemName });
     changeBotSin(bot, value, `${itemName} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
     bot.maxHp += value;
     bot.hp += value;
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} gave ${bot.name} +${value} memory, +${value} SIN, and +${value} health.`);
+    finishActiveResolution(index, `${itemName} gave ${bot.name} +${memoryAdded} memory, +${value} SIN, and +${value} health.`);
     return;
   }
 
@@ -8639,7 +8731,6 @@ function renderTargetPanel() {
         <div class="target-line target-modifier">Modifier: <strong>${modifier}</strong></div>
         <div class="target-calc-line">Calc: ${calculation}</div>
       </div>
-      <div class="target-diff-damage">diff dmg: ${targetDifferenceDamagePercent()}%</div>
     </section>
   `;
 }
@@ -8715,10 +8806,9 @@ function renderBot(bot, pendingPick) {
   const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
   const healthPercent = bot.immortal ? 100 : (bot.hp / bot.maxHp) * 100;
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
-  const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
-  const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
+  const pickDisabled = isDown || identitySwapBlocked;
   const pickButton = pendingPick
-    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
+    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
   const faceInner = isDown
