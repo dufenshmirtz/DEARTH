@@ -27,8 +27,8 @@ Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 
 ELITE levels: Each ELITE level doubles this damage.
 
 Seal of Amy (12 SIN)
-Sacrificial Dagger deals 20% max-HEALTH damage to BOSSES too and appears twice as often in Devil's Offerings.
-ELITE levels: Each ELITE level adds +2% BOSS damage and one more shop weight for Sacrificial Dagger.
+Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings.
+ELITE levels: Each ELITE level doubles the flat damage.
 
 Seal of Andras (12 SIN)
 If your final effective guess is 0, 50, or 100, DAMNED TARGET-difference damage is doubled this round and you are immune to worst guess penalty damage.
@@ -351,7 +351,7 @@ Mummified Lamb (4 SIN)
 Pick a DAMNED, heal it to full, and increase its BOUNTY by 9.
 
 Sacrificial Dagger (4 SIN)
-Pick a target. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES. Seal of Amy raises BOSS damage to 20%.
+Pick a target. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES. Seal of Amy adds extra flat damage.
 
 Satanic Bible (3 SIN)
 Arm the next Devil's Offerings reroll: the SEAL slot has a 50% ELITE chance.
