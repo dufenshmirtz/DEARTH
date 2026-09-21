@@ -50,6 +50,10 @@ const NEXT_ROUND_SFX_VOLUME = 0.2;
 const CLOCK_TICK_SFX_VOLUME = 0.154;
 const GUESS_SFX_START_OFFSET = 0.12;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
+const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
+const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
+const ARCADE_RUN_SAVE_VERSION = 1;
+const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.08;
@@ -1484,6 +1488,7 @@ let nextClockTickIndex = 0;
 const activeClockTickInstances = new Set();
 let sfxPrimed = false;
 let gameButtonTickInstalled = false;
+let soundtrackPausedByAppBackground = false;
 
 function musicVolume() {
   return state.sound.muted ? 0 : clamp(state.sound.musicVolume, 0, 1);
@@ -1519,6 +1524,205 @@ function saveSoundSettings() {
   try {
     window.localStorage?.setItem(SOUND_SETTINGS_STORAGE_KEY, JSON.stringify(state.sound));
   } catch (error) {}
+}
+
+function isNativeArcadeApp() {
+  return NATIVE_ARCADE_APP || Boolean(typeof document !== "undefined" && document.body?.classList.contains("native-arcade"));
+}
+
+function hasSavedArcadeRun() {
+  if (!isNativeArcadeApp()) return false;
+  try {
+    return Boolean(window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY));
+  } catch (error) {
+    return false;
+  }
+}
+
+function markNativeArcadeResumeOnForeground() {
+  if (!isNativeArcadeApp() || state.mode !== "arcade") return;
+  try {
+    window.sessionStorage?.setItem(ARCADE_RUN_SESSION_RESUME_KEY, "1");
+  } catch (error) {}
+}
+
+function clearNativeArcadeResumeOnForeground() {
+  if (!isNativeArcadeApp()) return;
+  try {
+    window.sessionStorage?.removeItem(ARCADE_RUN_SESSION_RESUME_KEY);
+  } catch (error) {}
+}
+
+function shouldResumeNativeArcadeOnForeground() {
+  if (!isNativeArcadeApp() || !hasSavedArcadeRun()) return false;
+  try {
+    return window.sessionStorage?.getItem(ARCADE_RUN_SESSION_RESUME_KEY) === "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function resumeNativeArcadeOnForeground() {
+  if (!shouldResumeNativeArcadeOnForeground()) return false;
+  if (loadArcadeRun()) {
+    render();
+    return true;
+  }
+  clearNativeArcadeResumeOnForeground();
+  return false;
+}
+
+function encodeArcadeSaveValue(key, value) {
+  if (value instanceof Map) {
+    return { __dearthType: "Map", entries: Array.from(value.entries()) };
+  }
+  if (value instanceof Set) {
+    return { __dearthType: "Set", values: Array.from(value.values()) };
+  }
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    return {
+      __dearthType: "Number",
+      value: value === Infinity ? "Infinity" : value === -Infinity ? "-Infinity" : "NaN"
+    };
+  }
+  return value;
+}
+
+function decodeArcadeSaveValue(key, value) {
+  if (!value || typeof value !== "object" || !value.__dearthType) return value;
+  if (value.__dearthType === "Map") return new Map(Array.isArray(value.entries) ? value.entries : []);
+  if (value.__dearthType === "Set") return new Set(Array.isArray(value.values) ? value.values : []);
+  if (value.__dearthType === "Number") {
+    if (value.value === "Infinity") return Infinity;
+    if (value.value === "-Infinity") return -Infinity;
+    return NaN;
+  }
+  return value;
+}
+
+function arcadeRunSaveSnapshot() {
+  const snapshot = {};
+  Object.keys(state).forEach((key) => {
+    if (key === "sound" || key === "pvp") return;
+    snapshot[key] = state[key];
+  });
+  snapshot.mode = "arcade";
+  snapshot.pauseOpen = false;
+  snapshot.mobileOfferingsOpen = false;
+  return snapshot;
+}
+
+function saveArcadeRun() {
+  if (!isNativeArcadeApp() || state.mode !== "arcade") return;
+  try {
+    const payload = {
+      version: ARCADE_RUN_SAVE_VERSION,
+      savedAt: Date.now(),
+      state: arcadeRunSaveSnapshot()
+    };
+    window.localStorage?.setItem(ARCADE_RUN_STORAGE_KEY, JSON.stringify(payload, encodeArcadeSaveValue));
+  } catch (error) {}
+}
+
+function removeCorruptArcadeRunSave() {
+  try {
+    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+  } catch (error) {}
+}
+
+function ensureMap(value) {
+  if (value instanceof Map) return value;
+  return new Map(Array.isArray(value) ? value : []);
+}
+
+function ensureSet(value) {
+  if (value instanceof Set) return value;
+  return new Set(Array.isArray(value) ? value : []);
+}
+
+function normalizeLoadedRoundState(round) {
+  if (!round || typeof round !== "object") return null;
+  [
+    "botSubmittedGuesses",
+    "botEffectiveGuesses",
+    "activeUseItemCounts",
+    "artifactTargetCountsByBotId",
+    "botDamageTotals",
+    "targetDifferenceDamageByBotId",
+    "pavlosStartHpById"
+  ].forEach((key) => {
+    round[key] = ensureMap(round[key]);
+  });
+  [
+    "removedBotIds",
+    "twinDetonatorTriggeredIds",
+    "highDamageSinBotIds",
+    "revealedBotIds",
+    "belethTriggeredBotIds",
+    "vapulaTriggeredBotIds",
+    "kalhaSuppressedPassiveIds",
+    "pavlosDeferredBotIds",
+    "triggeredPassiveIds",
+    "criticalHitKeys"
+  ].forEach((key) => {
+    round[key] = ensureSet(round[key]);
+  });
+  if (!Array.isArray(round.extraAverageGuesses)) round.extraAverageGuesses = [];
+  if (!Array.isArray(round.temporaryBotSinBonuses)) round.temporaryBotSinBonuses = [];
+  if (!Array.isArray(round.eliminationCreditRecords)) round.eliminationCreditRecords = [];
+  if (!Array.isArray(round.roundEvents)) round.roundEvents = [];
+  return round;
+}
+
+function normalizeLoadedArcadeRun() {
+  state.mode = "arcade";
+  state.menuScreen = "main";
+  state.pauseOpen = false;
+  state.mobileOfferingsOpen = false;
+  state.pvp = null;
+  if (!state.player || typeof state.player !== "object") {
+    state.player = { hp: PLAYER_MAX_HP, maxHp: PLAYER_MAX_HP, credits: STARTING_CREDITS, passives: [], actives: [] };
+  }
+  if (!Array.isArray(state.player.passives)) state.player.passives = [];
+  if (!Array.isArray(state.player.actives)) state.player.actives = [];
+  if (!Array.isArray(state.bots)) state.bots = [];
+  if (!Array.isArray(state.shop)) state.shop = [];
+  if (!Array.isArray(state.log)) state.log = [];
+  if (!Array.isArray(state.gameMemory)) state.gameMemory = [];
+  if (!Array.isArray(state.playerDamageSources)) state.playerDamageSources = [];
+  if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
+  if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
+  if (!state.sealStats || typeof state.sealStats !== "object") state.sealStats = {};
+  state.roundState = normalizeLoadedRoundState(state.roundState);
+  state.bots.forEach((bot) => {
+    if (!Array.isArray(bot.memory)) bot.memory = [];
+    if (!Array.isArray(bot.damageSources)) bot.damageSources = [];
+    if (!Array.isArray(bot.healSources)) bot.healSources = [];
+    if (!Array.isArray(bot.sinSources)) bot.sinSources = [];
+    trimBotMemoryToLimit(bot);
+  });
+}
+
+function loadArcadeRun() {
+  if (!isNativeArcadeApp()) return false;
+  try {
+    const raw = window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY);
+    if (!raw) return false;
+    const payload = JSON.parse(raw, decodeArcadeSaveValue);
+    if (!payload || payload.version !== ARCADE_RUN_SAVE_VERSION || !payload.state || payload.state.mode !== "arcade") {
+      removeCorruptArcadeRunSave();
+      return false;
+    }
+    Object.keys(payload.state).forEach((key) => {
+      if (key === "sound" || key === "pvp" || !(key in state)) return;
+      state[key] = payload.state[key];
+    });
+    normalizeLoadedArcadeRun();
+    return true;
+  } catch (error) {
+    removeCorruptArcadeRunSave();
+    return false;
+  }
 }
 
 function loadAudioElement(audio) {
@@ -1580,6 +1784,33 @@ function unlockSoundtrack() {
 
 function resumeSoundtrack() {
   playSoundtrack();
+}
+
+function pauseAudioElement(audio) {
+  if (!audio) return;
+  try {
+    audio.pause();
+  } catch (error) {}
+}
+
+function pauseGameAudioForBackground() {
+  soundtrackPausedByAppBackground = Boolean(soundtrackAudio && !soundtrackAudio.paused);
+  [
+    soundtrackAudio,
+    sealPurchaseSfx,
+    guessSfx,
+    readySfx,
+    nextRoundSfx,
+    ...clockTickSfx,
+    ...activeClockTickInstances
+  ].forEach(pauseAudioElement);
+  activeClockTickInstances.clear();
+}
+
+function resumeGameAudioAfterForeground() {
+  if (!soundtrackPausedByAppBackground) return;
+  soundtrackPausedByAppBackground = false;
+  resumeSoundtrack();
 }
 
 function ensureSealPurchaseSfx() {
@@ -6919,6 +7150,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a13") {
     state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
     if (item.id === "a13") state.pendingActive.step = "damage";
+    closeMobileOfferingsForTargetPick();
     addLog(`${copierName} copied ${item.name}. Pick a DAMNED to resolve the copied effect.`);
     render();
     return;
@@ -7091,6 +7323,7 @@ function useActive(index) {
 
   if (TARGETED_ARTIFACT_IDS.has(item.id)) {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot" };
+    closeMobileOfferingsForTargetPick();
     addLog("Pick a DAMNED to resolve the ARTIFACT.");
     render();
     return;
@@ -7112,6 +7345,7 @@ function useActive(index) {
 
   if (item.id === "a13") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
+    closeMobileOfferingsForTargetPick();
     addLog("Pick a DAMNED to take 20 non-lethal damage.");
     render();
     return;
@@ -7571,6 +7805,10 @@ function pvpToggleWait() {
 }
 
 function startPvpMode() {
+  if (isNativeArcadeApp()) {
+    showMainMenu();
+    return;
+  }
   resumeSoundtrack();
   pvpClearAutoTimer();
   state.mode = "pvp";
@@ -8211,6 +8449,7 @@ function render() {
   app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
   app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
   bindEvents();
+  saveArcadeRun();
 }
 
 function renderMenuApp() {
@@ -8225,6 +8464,18 @@ function renderMenuApp() {
 }
 
 function renderMainMenu() {
+  if (isNativeArcadeApp()) {
+    const continueButton = hasSavedArcadeRun()
+      ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
+      : "";
+    return `
+      <div class="main-menu-actions">
+        ${continueButton}
+        <button class="menu-button" data-menu-action="arcade">${continueButton ? "New Run" : "Arcade"}</button>
+        <button class="menu-button" data-menu-action="options">Options</button>
+      </div>
+    `;
+  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
@@ -8235,6 +8486,14 @@ function renderMainMenu() {
 }
 
 function renderPlayMenu() {
+  if (isNativeArcadeApp()) {
+    return `
+      <div class="main-menu-actions">
+        <button class="menu-button" data-menu-action="arcade">New Run</button>
+        <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      </div>
+    `;
+  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="arcade">Arcade</button>
@@ -8296,6 +8555,7 @@ function renderArcadeApp() {
         ${renderTopbar()}
         ${renderBots()}
         ${renderConsole()}
+        ${renderMobileNumpad()}
         ${renderOverlay()}
         ${renderPauseMenu()}
         ${renderPentakillPopup()}
@@ -8316,6 +8576,10 @@ function isMobileArcadeView() {
   return document.body.classList.contains("mobile-arcade");
 }
 
+function closeMobileOfferingsForTargetPick() {
+  if (isMobileArcadeView()) state.mobileOfferingsOpen = false;
+}
+
 function renderMobileOfferingsButton() {
   if (!isMobileArcadeView()) return "";
   return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open Devil's Offerings">Offerings</button>`;
@@ -8323,9 +8587,11 @@ function renderMobileOfferingsButton() {
 
 function renderMobileOfferingsHeader() {
   if (!isMobileArcadeView()) return "";
+  const playerSin = Math.max(0, Math.ceil(Number(state.player.credits) || 0));
   return `
     <div class="mobile-offerings-header">
       <div class="panel-title">Devil's Offerings</div>
+      <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
   `;
@@ -8340,10 +8606,43 @@ function renderPauseButton() {
   return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
 }
 
+function mobileNumpadEnabled() {
+  return isNativeArcadeApp() && state.mode === "arcade" && state.stage === "guess" && !state.gameOver;
+}
+
+function renderMobileNumpad() {
+  if (!isNativeArcadeApp() || state.pendingActive?.mode === "bot") return "";
+  const disabled = mobileNumpadEnabled() ? "" : "disabled";
+  const keys = [
+    ["1", "1"],
+    ["2", "2"],
+    ["3", "3"],
+    ["4", "4"],
+    ["5", "5"],
+    ["6", "6"],
+    ["7", "7"],
+    ["8", "8"],
+    ["9", "9"],
+    ["clear", "C"],
+    ["0", "0"],
+    ["backspace", "DEL"]
+  ];
+  return `
+    <section class="mobile-numpad" aria-label="Number pad">
+      ${keys
+        .map(([key, label]) => `<button type="button" class="mobile-numpad-key" data-numpad-key="${key}" ${disabled}>${label}</button>`)
+        .join("")}
+    </section>
+  `;
+}
+
 function renderPauseMenu() {
   if (!state.pauseOpen) return "";
   const modeButton = state.mode === "pvp" ? "Arcade" : "PvP";
   const modeAction = state.mode === "pvp" ? "arcade" : "pvp";
+  const modeSwitchButton = isNativeArcadeApp()
+    ? ""
+    : `<button class="primary-button" data-pause-action="${modeAction}">${modeButton}</button>`;
   return `
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
@@ -8351,7 +8650,7 @@ function renderPauseMenu() {
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
           <button class="primary-button" data-pause-action="restart">Restart</button>
-          <button class="primary-button" data-pause-action="${modeAction}">${modeButton}</button>
+          ${modeSwitchButton}
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
         </div>
         <div class="pause-sound-settings">
@@ -8989,6 +9288,10 @@ function renderConsole() {
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
   const criticalInputClass = playerCritical ? "critical-guess" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
+  const nativeInputType = isNativeArcadeApp() ? "text" : "number";
+  const nativeInputLock = isNativeArcadeApp()
+    ? 'readonly inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-readonly="true"'
+    : "";
   const pendingText = renderPendingText();
   const pendingCancel = state.pendingActive ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
 
@@ -8999,12 +9302,13 @@ function renderConsole() {
         <input
           id="guessInput"
           class="${inputClass}"
-          type="number"
+          type="${nativeInputType}"
           min="0"
           max="${maxGuess}"
           step="1"
           value="${value}"
           ${playerCloseness.style.trim()}
+          ${nativeInputLock}
           ${inputDisabled}
         />
         <button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>
@@ -9038,6 +9342,35 @@ function renderPendingText() {
     return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
+}
+
+function setGuessInputValue(value) {
+  const input = document.querySelector("#guessInput");
+  if (!input) return;
+  input.value = value;
+}
+
+function handleMobileNumpadKey(key) {
+  if (!mobileNumpadEnabled()) return;
+  const input = document.querySelector("#guessInput");
+  if (!input) return;
+
+  const current = String(input.value || "");
+  if (key === "clear") {
+    setGuessInputValue("");
+    return;
+  }
+  if (key === "backspace") {
+    setGuessInputValue(current.slice(0, -1));
+    return;
+  }
+  if (!/^\d$/.test(key)) return;
+
+  const maxGuess = playerGuessLimit();
+  const next = current === "0" ? key : `${current}${key}`;
+  const parsed = Number(next);
+  if (!Number.isFinite(parsed) || parsed > maxGuess || next.length > String(maxGuess).length) return;
+  setGuessInputValue(next);
 }
 
 function renderShop() {
@@ -9201,6 +9534,7 @@ function renderPentakillPopup() {
 function showMainMenu(screen = "main") {
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  clearNativeArcadeResumeOnForeground();
   state.mode = "menu";
   state.menuScreen = screen;
   state.pauseOpen = false;
@@ -9229,7 +9563,20 @@ function handleMenuAction(action) {
     startGame();
     return;
   }
+  if (action === "continue-arcade") {
+    if (loadArcadeRun()) {
+      resumeSoundtrack();
+      render();
+    } else {
+      startGame();
+    }
+    return;
+  }
   if (action === "pvp") {
+    if (isNativeArcadeApp()) {
+      showMainMenu();
+      return;
+    }
     startPvpMode();
     return;
   }
@@ -9263,6 +9610,10 @@ function handlePauseAction(action) {
     return;
   }
   if (action === "pvp") {
+    if (isNativeArcadeApp()) {
+      showMainMenu();
+      return;
+    }
     startPvpMode();
     return;
   }
@@ -9424,6 +9775,13 @@ function bindEvents() {
     });
   }
 
+  document.querySelectorAll("[data-numpad-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      handleMobileNumpadKey(button.dataset.numpadKey);
+      button.blur();
+    });
+  });
+
   document.querySelectorAll("[data-buy]").forEach((button) => {
     button.addEventListener("click", () => buyShopItem(Number(button.dataset.buy)));
   });
@@ -9492,12 +9850,48 @@ function bindEvents() {
   }
 }
 
+function saveArcadeRunForNativeExit() {
+  markNativeArcadeResumeOnForeground();
+  saveArcadeRun();
+}
+
+function blockNativeSelection(event) {
+  if (isNativeArcadeApp()) event.preventDefault();
+}
+
+function installNativeSelectionGuards() {
+  if (!isNativeArcadeApp()) return;
+  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
+  document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
+  document.addEventListener("dragstart", blockNativeSelection, { passive: false });
+}
+
 window.addEventListener("resize", updateFullscreenLayoutClass);
+window.addEventListener("pagehide", saveArcadeRunForNativeExit);
+window.addEventListener("beforeunload", saveArcadeRunForNativeExit);
 document.addEventListener("fullscreenchange", updateFullscreenLayoutClass);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveArcadeRunForNativeExit();
+    if (isNativeArcadeApp()) pauseGameAudioForBackground();
+    return;
+  }
+  if (isNativeArcadeApp()) {
+    if (state.mode === "menu") resumeNativeArcadeOnForeground();
+    resumeGameAudioAfterForeground();
+  }
+});
+window.addEventListener("blur", () => {
+  if (isNativeArcadeApp()) pauseGameAudioForBackground();
+});
+window.addEventListener("focus", () => {
+  if (isNativeArcadeApp()) resumeGameAudioAfterForeground();
+});
 
 loadSoundSettings();
 installSoundtrack();
 installArcadeEnterShortcut();
 installShiftTooltipMore();
+installNativeSelectionGuards();
 updateFullscreenLayoutClass();
-showMainMenu();
+if (!resumeNativeArcadeOnForeground()) showMainMenu();

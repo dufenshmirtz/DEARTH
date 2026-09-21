@@ -1,4 +1,7 @@
 node_modules/
+.pnpm-store/
+.android-toolchain/
+.gradle-cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -14,4 +17,5 @@ Thumbs.db
 *.log
 dist/
 build/
+native-www/
 coverage/
