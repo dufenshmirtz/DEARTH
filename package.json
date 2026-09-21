@@ -6,9 +6,21 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check main.js && node --check controller.js && node --check server.js"
+    "check": "node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-mobile.js",
+    "mobile:build": "node scripts/build-mobile.js",
+    "mobile:sync": "pnpm run mobile:build && cap sync",
+    "mobile:android": "pnpm run mobile:build && cap sync android",
+    "mobile:ios": "pnpm run mobile:build && cap sync ios"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
   }
 }
