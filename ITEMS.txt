@@ -8,7 +8,7 @@ ELITE levels: Each ELITE level doubles this extra damage.
 
 Seal of Agares (9 SIN)
 At end of round, 10% of SIN earned this round spreads equally among DAMNED, with leftover SIN going first to the highest BOUNTY DAMNED. Whenever a DAMNED gains SIN, it takes 5 damage per SIN gained.
-ELITE levels: Each ELITE level doubles the damage per SIN gained.
+ELITE levels: Each ELITE level multiplies the damage per SIN gained by x1.5, rounded up.
 
 Seal of Aim (15 SIN)
 On round numbers that are multiples of 5, DAMNED take double damage.
@@ -16,7 +16,7 @@ ELITE levels: The damage multiplier scales by +20% per ELITE level.
 
 Seal of Alloces (7 SIN)
 If the rounded TARGET is a multiple of 3, all DAMNED take 20 extra damage.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Amon (11 SIN)
 Whenever you take damage, prevent 4 of it.
@@ -24,11 +24,11 @@ ELITE levels: Each ELITE level doubles the prevented damage.
 
 Seal of Amdusias (14 SIN)
 Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 damage to all DAMNED.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Amy (12 SIN)
 Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings.
-ELITE levels: Each ELITE level doubles the flat damage.
+ELITE levels: Each ELITE level multiplies the flat damage by x1.5, rounded up.
 
 Seal of Andras (12 SIN)
 If your final effective guess is 0, 50, or 100, DAMNED TARGET-difference damage is doubled this round and you are immune to worst guess penalty damage.
@@ -36,7 +36,7 @@ ELITE levels: Each ELITE level multiplies the damage bonus by x1.5. Worst guess 
 
 Seal of Andrealphus (9 SIN)
 Every time a DAMNED is eliminated, deal 10 damage to the DAMNED on its left and right.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Andromalius (13 SIN)
 At end of round, any DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY.
@@ -72,7 +72,7 @@ ELITE levels: This SIN payout scales by +20% per ELITE level.
 
 Seal of Belial (11 SIN)
 At end of round, for every 10 SIN you have, deal 2 damage to every DAMNED.
-ELITE levels: Each ELITE level doubles the damage per 10 SIN.
+ELITE levels: Each ELITE level multiplies the damage per 10 SIN by x1.5, rounded up.
 
 Seal of Berith (8 SIN)
 At end of round, this SEAL's sell value increases by 3.
@@ -108,7 +108,7 @@ ELITE levels: The payout multiplier scales by +20% per ELITE level.
 
 Seal of Dantalion (12 SIN)
 At end of round, deal damage equal to the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If any BOSSES are active, hit all active BOSSES instead and exclude BOSS MEMORY from the sum.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Decarabia (12 SIN)
 DAMNED take 10% more damage for every MEMORY they have. BOSSES take 3% more damage per MEMORY instead.
@@ -136,19 +136,19 @@ ELITE levels: Each ELITE level makes DAMNED take x1.2 more TARGET-difference dam
 
 Seal of Furfur (10 SIN)
 For every 2 SIN spent in a round, deal 1 damage to the highest-HEALTH non-boss DAMNED.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Glasya-Labolas (9 SIN)
 When you hit CRITICAL, it deals 30 damage to everyone else.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Gremory (12 SIN)
 Whenever a DAMNED with 6 or more BOUNTY dies, gain 2 SIN and deal 10 damage to the highest-HEALTH enemy.
-ELITE levels: Each ELITE level doubles the damage and increases the SIN payout by +20%.
+ELITE levels: Each ELITE level multiplies the damage by x1.5, rounded up, and increases the SIN payout by +20%.
 
 Seal of Gusion (15 SIN)
 Whenever a DAMNED gains MEMORY, it gains that much BOUNTY too. Whenever a DAMNED gains BOUNTY, it gains that much MEMORY too.
@@ -156,7 +156,7 @@ ELITE levels: Each point of MEMORY or BOUNTY gained adds +2 to the other value a
 
 Seal of Haagenti (11 SIN)
 Devil's Offerings has one more ARTIFACT slot. Whenever you use an ARTIFACT, all DAMNED take damage equal to that ARTIFACT's purchase cost.
-ELITE levels: The extra shop slot does not stack; each ELITE level doubles ARTIFACT-use damage.
+ELITE levels: The extra shop slot does not stack; each ELITE level multiplies ARTIFACT-use damage by x1.5, rounded up.
 
 Seal of Halphas (12 SIN)
 At end of round, deal round x BOSSES defeated total damage, spread randomly among enemies.
@@ -164,15 +164,15 @@ ELITE levels: Damage does not scale; each ELITE level gives +2 SIN at end of eve
 
 Seal of Haures (9 SIN)
 Whenever you take damage, all DAMNED take that much extra damage.
-ELITE levels: Each ELITE level doubles the echoed damage.
+ELITE levels: Each ELITE level multiplies the echoed damage by x1.5, rounded up.
 
 Seal of Ipos (13 SIN)
 The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, and the next two take 10.
-ELITE levels: Each ELITE level doubles both damage values.
+ELITE levels: Each ELITE level multiplies both damage values by x1.5, rounded up.
 
 Seal of Leraje (8 SIN)
 At the start of each round, deal 20 damage to a random DAMNED. If this kills, gain 5 SIN.
-ELITE levels: Each ELITE level doubles the damage and increases the SIN payout by +20%.
+ELITE levels: Each ELITE level multiplies the damage by x1.5, rounded up, and increases the SIN payout by +20%.
 
 Seal of Malphas (9 SIN)
 When you take 4 or less total damage in a round, gain 7 SIN.
@@ -196,7 +196,7 @@ ELITE levels: Each ELITE level doubles this BOUNTY-based damage.
 
 Seal of Naberius (12 SIN)
 At end of round, revealed DAMNED take damage equal to half their guess.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Orias (13 SIN)
 Your CRITICAL hit triggers when your guess is within +/-2 of the right integer.
@@ -224,7 +224,7 @@ ELITE levels: The end-round SIN payout scales by +20% per ELITE level; stack gai
 
 Seal of Raum (12 SIN)
 Whenever a DAMNED loses SIN, it takes 20 damage. At end of round, all DAMNED lose 1 SIN.
-ELITE levels: Each ELITE level doubles this damage; the end-round SIN loss stays 1.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up; the end-round SIN loss stays 1.
 
 Seal of Ronove (10 SIN)
 At end of round, a DAMNED loses half its BOUNTY and you gain double the SIN removed.
@@ -232,7 +232,7 @@ ELITE levels: Each ELITE level adds one more DAMNED target.
 
 Seal of Sabnock (13 SIN)
 Every time a DAMNED dies, deal 5 damage to every other DAMNED.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Sallos (14 SIN)
 Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average.
@@ -248,7 +248,7 @@ ELITE levels: The spawn chance scales by +20% per ELITE level, capped at 100%.
 
 Seal of Shax (10 SIN)
 Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round.
-ELITE levels: Each ELITE level doubles this damage.
+ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Sitri (11 SIN)
 A DAMNED cannot gain MEMORY above the current round number. Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED.
@@ -263,7 +263,7 @@ Gain +2 ARTIFACT uses per round and +2 ARTIFACT inventory slots.
 ELITE levels: Each ELITE level adds +2 more ARTIFACT uses and +2 more ARTIFACT inventory slots.
 
 Seal of Valefor (7 SIN)
-When a DAMNED dies, gain a random ARTIFACT if you have room.
+When a DAMNED dies, gain a random ARTIFACT with 0 sell value if you have room.
 ELITE levels: Each ELITE level gives +1 additional random ARTIFACT per death.
 
 Seal of Vapula (13 SIN)
@@ -272,30 +272,30 @@ ELITE levels: Each ELITE level doubles this extra damage.
 
 Seal of Vassago (10 SIN)
 New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY.
-ELITE levels: Each ELITE level doubles this damage per MEMORY.
+ELITE levels: Each ELITE level multiplies this damage per MEMORY by x1.5, rounded up.
 
 Seal of Vepar (13 SIN)
 BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage.
 ELITE levels: Each ELITE level adds +2% max-HEALTH damage per poison.
 
 Seal of Vine (10 SIN)
-One extra DAMNED is revealed. Revealed DAMNED pay double BOUNTY SIN when eliminated.
-ELITE levels: Each ELITE level reveals +1 more DAMNED and raises the payout multiplier by +20%.
+Revealed DAMNED pay double BOUNTY SIN when eliminated.
+ELITE levels: Each ELITE level raises the payout multiplier by +20%.
 
 Seal of Vual (10 SIN)
-One extra DAMNED is revealed. Revealed DAMNED take 1.3x damage.
-ELITE levels: Each ELITE level reveals +1 more DAMNED and raises the damage multiplier by +20%.
+Whenever a revealed DAMNED takes damage, it takes 15 extra damage.
+ELITE levels: Each ELITE level multiplies the extra damage by x1.5, rounded up.
 
 Seal of Zagan (10 SIN)
 Every time an ARTIFACT is used, one random benefit always triggers: gain 3 SIN, deal 10 damage to a random DAMNED, or refund the SIN spent to buy that specific ARTIFACT.
-ELITE levels: Each ELITE level doubles the damage outcome and increases the SIN outcome by +20%; refund is unchanged.
+ELITE levels: Each ELITE level multiplies the damage outcome by x1.5, rounded up, and increases the SIN outcome by +20%; refund is unchanged.
 
 Seal of Zepar (12 SIN)
 Every round, one DAMNED is marked blue. That DAMNED takes double TARGET-difference damage until round end. Worst guess damage counts as TARGET-difference damage.
 ELITE levels: ELITE does not change this effect.
 
 Seal Duplicate Rule
-Devil's Offerings has a fixed 8% chance to offer an ELITE upgrade for a SEAL you already own. If you own no SEALS, the ELITE chance is 0. If you already own the offered SEAL, buying it upgrades that SEAL instead of taking another slot. The next copy costs twice its base price, the third costs three times, and so on. Equipped names upgrade to ELITE, then ELITE +2, ELITE +3, etc. Satanic Bible makes the next SEAL reroll have a 50% ELITE chance.
+Devil's Offerings has a fixed 8% chance to offer an ELITE upgrade for a SEAL you already own. If you own no SEALS, the ELITE chance is 0. If you already own the offered SEAL, buying it upgrades that SEAL instead of taking another slot. The next copy costs twice its base price, the third costs three times, and so on. Equipped names upgrade to ELITE, then ELITE +2, ELITE +3, etc. Satanic Bible doubles the ELITE chance for the next SEAL reroll.
 You can hold up to 6 SEALS. BOSS kill 2 unlocks one extra SEAL slot, and BOSS kill 4 unlocks two more, reaching the cap of 6.
 
 Core Round Rules
@@ -303,7 +303,7 @@ Damage from TARGET difference is calculated last. SEAL damage resolves from the 
 After normal penalties are calculated, whoever is furthest from the TARGET takes 10 extra damage. If several participants tie for worst guess, all tied participants take the damage.
 Ipos changes this so the 3 furthest guesses are punished instead, with the furthest taking double damage.
 Balam instantly eliminates non-boss DAMNED that reach both 10+ MEMORY and 10+ BOUNTY.
-If all 5 opponents are eliminated in 1 round, a random owned SEAL is upgraded. If you have no SEAL yet, a random SEAL enters your SEALS instead.
+If all 5 opponents are eliminated in 1 round, PENTAKILL heals 5 and pays 8 SIN.
 Every normal DAMNED elimination heals you for 1. Every BOSS elimination heals you for 8.
 Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 Healing cannot revive you from 0 HP. If total round damage drops you to 0, later healing effects do not keep you alive.
@@ -324,7 +324,7 @@ Corrupted Crystal (4 SIN)
 Instantly copy a random other ARTIFACT effect in your inventory.
 
 Cursed Chalice (4 SIN)
-10% take 20 damage, 20% take 10 damage, 30% gain 6 SIN, 20% gain 12 SIN, 10% gain 15 SIN and deal 20 damage to each DAMNED. The remaining 10% fizzles.
+10% lose 8 SIN, 15% lose 4 SIN, 15% deal 10 damage to a random DAMNED, 30% gain 8 SIN, 20% gain 12 SIN, 10% gain 16 SIN and deal 20 damage to each DAMNED.
 
 Dark Talisman (2 SIN)
 You take 50% less damage this round, including CRITICAL damage.
@@ -354,13 +354,13 @@ Sacrificial Dagger (4 SIN)
 Pick a target. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES. Seal of Amy adds extra flat damage.
 
 Satanic Bible (3 SIN)
-Arm the next Devil's Offerings reroll: the SEAL slot has a 50% ELITE chance.
+Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
 
 Vial of Blood (4 SIN)
-Heal 10. There is a 33% chance the next elimination spawns a BOSS.
+Move the TARGET to the closest multiple of 3, 5, or 7.
 
 Voodoo Doll (4 SIN)
-This round, DAMNED take double the damage you take.
+This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.
 
 Reserved Artifact Names / Icons
 
@@ -426,7 +426,7 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive, and the TARGET modifier becomes 1.5.
 
 Boss Scaling
-The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs unless Vial of Blood calls one sooner. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive two random later-BOSS abilities. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
+The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive two random later-BOSS abilities. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
 Goetic Boss Seal Lock
 While a Goetic BOSS is alive, the matching player SEAL cannot trigger. The disabled SEAL appears darker in your SEAL bar until that BOSS dies.

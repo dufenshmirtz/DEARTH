@@ -750,6 +750,32 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+.bot-health-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bot-health-heading > span:first-child {
+  min-width: 0;
+}
+
+.poison-stack-label {
+  flex: 0 0 auto;
+  color: #d5b6ff !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.poison-stack-label.has-damage-badge {
+  margin-right: 50px;
+}
+
 .bot-health .health-bar {
   margin-top: 6px;
 }
@@ -3257,6 +3283,10 @@ body.mobile-arcade .bot-card.boss:hover {
 .bot-card.boss .bot-reward,
 .bot-card.boss .pick-button {
   border-color: var(--accent-red) !important;
+}
+
+.bot-card.boss .poison-stack-label {
+  color: #d5b6ff !important;
 }
 
 .bot-card.boss .bot-reward,
