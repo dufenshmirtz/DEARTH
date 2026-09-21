@@ -18,10 +18,6 @@ Seal of Alloces (7 SIN)
 If the rounded TARGET is a multiple of 3, all DAMNED take 20 extra damage.
 ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
-Seal of Amon (11 SIN)
-Whenever you take damage, prevent 4 of it.
-ELITE levels: Each ELITE level doubles the prevented damage.
-
 Seal of Amdusias (14 SIN)
 Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 damage to all DAMNED.
 ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
@@ -39,7 +35,7 @@ Every time a DAMNED is eliminated, deal 10 damage to the DAMNED on its left and 
 ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Andromalius (13 SIN)
-At end of round, any DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY.
+At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY.
 ELITE levels: The low-SIN elimination threshold does not change.
 
 Seal of Asmoday (15 SIN)
@@ -333,7 +329,7 @@ Demonic Idol (6 SIN)
 Pick a non-boss DAMNED and swap your effective guess with theirs.
 
 Engraved Skull (4 SIN)
-Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and 6 max HEALTH.
+Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH.
 
 Funeral Coin (4 SIN)
 Gain a random 3 to 10 SIN.
@@ -343,9 +339,6 @@ Pick a DAMNED; their guess counts five times for the TARGET average.
 
 Inverted Cross (3 SIN)
 Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.
-
-Defixio (4 SIN)
-Move the TARGET to the closest multiple of 3, 5, or 7.
 
 Mummified Lamb (4 SIN)
 Pick a DAMNED, heal it to full, and increase its BOUNTY by 9.

@@ -410,7 +410,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Andromalius",
     price: 13,
-    description: "At end of round, any DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE does not change this effect."
+    description: "At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE does not change this effect."
   },
   p45: {
     id: "p45",
@@ -512,13 +512,6 @@ const ITEMS = {
     price: 13,
     description:
       "The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, the next two take 10. ELITE multiplies both damage values by x1.5 each level, rounded up."
-  },
-  p59: {
-    id: "p59",
-    type: "passive",
-    name: "Seal of Amon",
-    price: 11,
-    description: "Whenever you take damage, prevent 4 of it. ELITE doubles the prevented damage each level."
   },
   p60: {
     id: "p60",
@@ -630,49 +623,49 @@ const ITEMS = {
     id: "p74",
     type: "passive",
     name: "Seal of the White Horse",
-    price: 30,
+    price: 20,
     description: "DAMNED with more than 12 BOUNTY take x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
   },
   p75: {
     id: "p75",
     type: "passive",
     name: "Seal of the Red Horse",
-    price: 30,
+    price: 20,
     description: "Revealed DAMNED take x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
   },
   p76: {
     id: "p76",
     type: "passive",
     name: "Seal of the Black Horse",
-    price: 30,
+    price: 20,
     description: "Non-boss DAMNED with more than 8 MEMORY take x1.1 damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead. ELITE adds +0.1 to the multiplier."
   },
   p77: {
     id: "p77",
     type: "passive",
     name: "Seal of the Pale Horse",
-    price: 30,
+    price: 20,
     description: "If you score CRITICAL this round, DAMNED take x1.1 damage from all sources next round. ELITE adds +0.1 to the multiplier."
   },
   p78: {
     id: "p78",
     type: "passive",
     name: "Seal of the Souls of Martyrs",
-    price: 30,
+    price: 20,
     description: "DAMNED take x1.1 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.1 to the multiplier."
   },
   p79: {
     id: "p79",
     type: "passive",
     name: "Seal of Creation Uncreated",
-    price: 30,
+    price: 20,
     description: "DAMNED take x1.1 damage from all sources if an ARTIFACT was used on them this round. ELITE adds +0.1 to the multiplier."
   },
   p80: {
     id: "p80",
     type: "passive",
     name: "Seal of Silence in Heaven",
-    price: 30,
+    price: 20,
     description: "DAMNED take x1.1 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.1 to the multiplier."
   },
   a28: {
@@ -680,7 +673,7 @@ const ITEMS = {
     type: "active",
     name: "Engraved Skull",
     price: 4,
-    description: "Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and 6 max HEALTH."
+    description: "Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
   },
   a14: {
     id: "a14",
@@ -758,13 +751,6 @@ const ITEMS = {
     name: "Dr Dee's Gold Disc",
     price: 4,
     description: "Gain a random 3 to 9 SIN."
-  },
-  a17: {
-    id: "a17",
-    type: "active",
-    name: "Defixio",
-    price: 4,
-    description: "Move the TARGET to the closest multiple of 3, 5, or 7."
   },
   a18: {
     id: "a18",
@@ -866,7 +852,6 @@ const PASSIVE_IDS = [
   "p56",
   "p57",
   "p58",
-  "p59",
   "p60",
   "p61",
   "p62",
@@ -889,7 +874,7 @@ const PASSIVE_IDS = [
   "p79",
   "p80"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p8", "p9", "p14", "p15", "p27", "p34", "p36", "p37", "p38", "p42"]);
+const REMOVED_PASSIVE_IDS = new Set(["p8", "p9", "p14", "p15", "p27", "p34", "p36", "p37", "p38", "p42", "p59"]);
 const ACTIVE_IDS = [
   "a6",
   "a7",
@@ -900,7 +885,6 @@ const ACTIVE_IDS = [
   "a12",
   "a14",
   "a15",
-  "a17",
   "a18",
   "a21",
   "a22",
@@ -922,7 +906,6 @@ const ARTIFACT_ICONS = {
   a14: "occult-items-17/02 BLACK CANDLE.png",
   a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
   a16: "a16.png",
-  a17: "a17.png",
   a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
   a21: "occult-items-17/08 VOODOO DOLL.png",
   a22: "occult-items-17/06 CURSED CHALICE.png",
@@ -2597,10 +2580,6 @@ function pressureSpikeDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-function sealDamageReduction(idOrItem) {
-  return doubledStackValue(idOrItem, 4);
-}
-
 function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
@@ -3080,7 +3059,6 @@ function artifactDescription(item) {
     return `Pick a target. Deal ${artifactPercentValue(20)}% max-HEALTH damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
-  if (item.id === "a17") return "Move the TARGET to the closest multiple of 3, 5, or 7.";
   if (item.id === "a18") {
     return "Instantly copy a random other ARTIFACT effect in your inventory.";
   }
@@ -3097,7 +3075,7 @@ function artifactDescription(item) {
   }
   if (item.id === "a28") {
     const value = artifactValue(6);
-    return `Pick a non-boss DAMNED. It gains ${value} MEMORY, ${value} SIN, and ${value} max HEALTH.`;
+    return `Pick a non-boss DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
   }
   return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
 }
@@ -3168,7 +3146,7 @@ function itemDescription(item) {
   if (item.id === "p41") return `If the rounded TARGET is a multiple of 7, gain SIN equal to ${Math.round(passivePower(item) * 100)}% of your current SIN.`;
   if (item.id === "p42") return "Removed.";
   if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
-  if (item.id === "p44") return `At end of round, DAMNED with 2 or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
+  if (item.id === "p44") return `At end of round, non-boss DAMNED with 2 or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
@@ -3193,7 +3171,6 @@ function itemDescription(item) {
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;
   }
-  if (item.id === "p59") return `Whenever you take damage, prevent ${sealDamageReduction(item)} of it.`;
   if (item.id === "p60") {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
@@ -3623,7 +3600,6 @@ function sourceLabelFromReason(reason, fallback) {
     ["Cursed Chalice", "Cursed Chalice"],
     ["Satanic Bible", "Satanic Bible"],
     ["Mummified Lamb", "Mummified Lamb"],
-    ["Defixio", "Defixio"],
     ["Spirit Board", "Spirit Board"],
     ["The Magical Sword of Solomon", "The Magical Sword of Solomon"],
     ["Demon Bowl", "Demon Bowl"],
@@ -3675,12 +3651,10 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Bathin", "Seal of Bathin"],
     ["Seal of Botis", "Seal of Botis"],
     ["Seal of Gusion", "Seal of Gusion"],
-    ["Seal of Amon", "Seal of Amon"],
     ["Seal of Raum", "Seal of Raum"],
     ["Seal of Ronove", "Seal of Ronove"],
     ["Seal of Andromalius", "Seal of Andromalius"],
     ["Seal of Botis", "Seal of Botis"],
-    ["Seal of Amon", "Seal of Amon"],
     ["Seal of Gaap", "Seal of Gaap"],
     ["Seal of Vepar", "Seal of Vepar"],
     ["Seal of Beleth", "Seal of Beleth"],
@@ -3708,7 +3682,6 @@ function sourceLabelFromReason(reason, fallback) {
     ["The Philosopher's Stone", "The Philosopher's Stone"],
     ["The Necklace of Harmonia", "The Necklace of Harmonia"],
     ["Dantre", "Dantre"],
-    ["Seal of Amon", "Seal of Amon"],
     ["Seal of Botis", "Seal of Botis"]
   ];
   const match = knownSources.find(([needle]) => text.includes(needle));
@@ -4063,25 +4036,6 @@ function applyPlayerDamageMemoryConversion(amount) {
   };
 }
 
-function applyPlayerFlatDamageReduction(amount) {
-  let damage = Math.max(0, Math.ceil(amount));
-  const reductions = [];
-  if (!state.roundState || damage <= 0) return { damage, reductions, savedTotal: 0 };
-  orderedPassiveEffectEntries("p59").forEach((entry) => {
-    if (damage <= 0) return;
-    const saved = Math.min(damage, sealDamageReduction(entry));
-    if (saved <= 0) return;
-    damage -= saved;
-    reductions.push({ saved, source: ITEMS.p59?.name || "Seal of Amon" });
-    markPassiveEntryTriggered(entry);
-  });
-  return {
-    damage,
-    reductions,
-    savedTotal: reductions.reduce((sum, reduction) => sum + reduction.saved, 0)
-  };
-}
-
 function resolvePlayerDamageMemoryConversions(conversions = []) {
   conversions.forEach(({ avoided, memory }) => {
     const target = highestMemorySinner();
@@ -4103,16 +4057,12 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
     damage = Math.ceil(damage * (1 - state.roundState.playerDamageReduction));
     reductionSaved = Math.max(0, beforeReduction - damage);
   }
-  const flatReduction =
-    respectReduction || applySealConversion ? applyPlayerFlatDamageReduction(damage) : { damage, reductions: [], savedTotal: 0 };
-  damage = flatReduction.damage;
   const conversion = applySealConversion ? applyPlayerDamageMemoryConversion(damage) : { damage, conversions: [], avoidedTotal: 0 };
   damage = conversion.damage;
   if (damage <= 0) {
     if (reductionSaved > 0) {
       recordPlayerDamageSource(reductionSaved, state.roundState?.playerDamageReductionSource || "Damage reduction", "saved");
     }
-    flatReduction.reductions.forEach((entry) => recordPlayerDamageSource(entry.saved, entry.source, "saved"));
     if (conversion.avoidedTotal > 0) {
       recordPlayerDamageSource(conversion.avoidedTotal, ITEMS.p22?.name || "Seal of Botis", "saved");
     }
@@ -4126,7 +4076,6 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
   if (reductionSaved > 0) {
     recordPlayerDamageSource(reductionSaved, state.roundState?.playerDamageReductionSource || "Damage reduction", "saved");
   }
-  flatReduction.reductions.forEach((entry) => recordPlayerDamageSource(entry.saved, entry.source, "saved"));
   if (conversion.avoidedTotal > 0) {
     recordPlayerDamageSource(conversion.avoidedTotal, ITEMS.p22?.name || "Seal of Botis", "saved");
   }
@@ -6078,14 +6027,6 @@ function applyPenalties() {
       round.roundEvents.push(`${round.playerDamageReductionSource || "Damage reduction"} reduced damage from ${beforeReduction} to ${playerDamage}.`);
     }
   }
-  const flatReduction = applyPlayerFlatDamageReduction(playerDamage);
-  playerDamage = flatReduction.damage;
-  if (flatReduction.savedTotal > 0) {
-    flatReduction.reductions.forEach((entry) => {
-      playerDamageSources.push({ amount: entry.saved, source: entry.source, kind: "saved" });
-    });
-    round.roundEvents.push(`Seal of Amon prevented ${flatReduction.savedTotal} damage.`);
-  }
   const memoryConversion = applyPlayerDamageMemoryConversion(playerDamage);
   playerDamage = memoryConversion.damage;
   if (memoryConversion.avoidedTotal > 0) {
@@ -6801,7 +6742,7 @@ function applyRonoveDrain() {
 function applyAndromaliusLowSinEliminations() {
   const entries = orderedPassiveEffectEntries("p44");
   if (!entries.length) return;
-  const targets = activeBots().filter((bot) => !bot.immortal && botSin(bot) <= 2);
+  const targets = activeBots().filter((bot) => !bot.isBoss && !bot.immortal && botSin(bot) <= 2);
   if (!targets.length) return;
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
   const targetIds = new Set(targets.map((bot) => bot.id));
@@ -7170,7 +7111,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     return;
   }
 
-  if (item.id === "a11" || item.id === "a17") {
+  if (item.id === "a11") {
     recalculateTarget();
     const before = state.roundState.target;
     const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
@@ -7300,7 +7241,7 @@ function useActive(index) {
     return;
   }
 
-  if (item.id === "a11" || item.id === "a17") {
+  if (item.id === "a11") {
     recalculateTarget();
     const before = state.roundState.target;
     const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
@@ -7593,12 +7534,12 @@ function chooseBot(botId) {
       return;
     }
     const value = artifactValue(6);
+    const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(6));
     const memoryAdded = addBotMemory(bot, value, "", { source: itemName });
     changeBotSin(bot, value, `${itemName} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
-    bot.maxHp += value;
-    bot.hp += value;
+    const healed = healBot(bot, healAmount, itemName, itemName);
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} gave ${bot.name} +${memoryAdded} memory, +${value} SIN, and +${value} health.`);
+    finishActiveResolution(index, `${itemName} gave ${bot.name} +${memoryAdded} memory, +${value} SIN, and healed ${healed}.`);
     return;
   }
 
@@ -9336,7 +9277,7 @@ function renderPendingText() {
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
     const value = artifactValue(6);
-    return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and +${value} HEALTH.`;
+    return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
   if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
     return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
