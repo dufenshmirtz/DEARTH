@@ -7122,6 +7122,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a13") {
     state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
     if (item.id === "a13") state.pendingActive.step = "damage";
+    closeMobileOfferingsForTargetPick();
     addLog(`${copierName} copied ${item.name}. Pick a DAMNED to resolve the copied effect.`);
     render();
     return;
@@ -7307,6 +7308,7 @@ function useActive(index) {
 
   if (TARGETED_ARTIFACT_IDS.has(item.id)) {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot" };
+    closeMobileOfferingsForTargetPick();
     addLog("Pick a DAMNED to resolve the ARTIFACT.");
     render();
     return;
@@ -7340,6 +7342,7 @@ function useActive(index) {
 
   if (item.id === "a13") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
+    closeMobileOfferingsForTargetPick();
     addLog("Pick a DAMNED to take 20 non-lethal damage.");
     render();
     return;
@@ -8541,6 +8544,7 @@ function renderArcadeApp() {
         ${renderTopbar()}
         ${renderBots()}
         ${renderConsole()}
+        ${renderMobileNumpad()}
         ${renderOverlay()}
         ${renderPauseMenu()}
         ${renderPentakillPopup()}
@@ -8561,6 +8565,10 @@ function isMobileArcadeView() {
   return document.body.classList.contains("mobile-arcade");
 }
 
+function closeMobileOfferingsForTargetPick() {
+  if (isMobileArcadeView()) state.mobileOfferingsOpen = false;
+}
+
 function renderMobileOfferingsButton() {
   if (!isMobileArcadeView()) return "";
   return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open Devil's Offerings">Offerings</button>`;
@@ -8568,9 +8576,11 @@ function renderMobileOfferingsButton() {
 
 function renderMobileOfferingsHeader() {
   if (!isMobileArcadeView()) return "";
+  const playerSin = Math.max(0, Math.ceil(Number(state.player.credits) || 0));
   return `
     <div class="mobile-offerings-header">
       <div class="panel-title">Devil's Offerings</div>
+      <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
   `;
@@ -8583,6 +8593,36 @@ function renderMobileOfferingsBackdrop() {
 
 function renderPauseButton() {
   return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
+}
+
+function mobileNumpadEnabled() {
+  return isNativeArcadeApp() && state.mode === "arcade" && state.stage === "guess" && !state.gameOver;
+}
+
+function renderMobileNumpad() {
+  if (!isNativeArcadeApp() || state.pendingActive?.mode === "bot") return "";
+  const disabled = mobileNumpadEnabled() ? "" : "disabled";
+  const keys = [
+    ["1", "1"],
+    ["2", "2"],
+    ["3", "3"],
+    ["4", "4"],
+    ["5", "5"],
+    ["6", "6"],
+    ["7", "7"],
+    ["8", "8"],
+    ["9", "9"],
+    ["clear", "C"],
+    ["0", "0"],
+    ["backspace", "DEL"]
+  ];
+  return `
+    <section class="mobile-numpad" aria-label="Number pad">
+      ${keys
+        .map(([key, label]) => `<button type="button" class="mobile-numpad-key" data-numpad-key="${key}" ${disabled}>${label}</button>`)
+        .join("")}
+    </section>
+  `;
 }
 
 function renderPauseMenu() {
@@ -9230,6 +9270,10 @@ function renderConsole() {
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
   const criticalInputClass = playerCritical ? "critical-guess" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
+  const nativeInputType = isNativeArcadeApp() ? "text" : "number";
+  const nativeInputLock = isNativeArcadeApp()
+    ? 'readonly inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-readonly="true"'
+    : "";
   const pendingText = renderPendingText();
   const pendingCancel = state.pendingActive ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
 
@@ -9240,12 +9284,13 @@ function renderConsole() {
         <input
           id="guessInput"
           class="${inputClass}"
-          type="number"
+          type="${nativeInputType}"
           min="0"
           max="${maxGuess}"
           step="1"
           value="${value}"
           ${playerCloseness.style.trim()}
+          ${nativeInputLock}
           ${inputDisabled}
         />
         <button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>
@@ -9279,6 +9324,35 @@ function renderPendingText() {
     return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
+}
+
+function setGuessInputValue(value) {
+  const input = document.querySelector("#guessInput");
+  if (!input) return;
+  input.value = value;
+}
+
+function handleMobileNumpadKey(key) {
+  if (!mobileNumpadEnabled()) return;
+  const input = document.querySelector("#guessInput");
+  if (!input) return;
+
+  const current = String(input.value || "");
+  if (key === "clear") {
+    setGuessInputValue("");
+    return;
+  }
+  if (key === "backspace") {
+    setGuessInputValue(current.slice(0, -1));
+    return;
+  }
+  if (!/^\d$/.test(key)) return;
+
+  const maxGuess = playerGuessLimit();
+  const next = current === "0" ? key : `${current}${key}`;
+  const parsed = Number(next);
+  if (!Number.isFinite(parsed) || parsed > maxGuess || next.length > String(maxGuess).length) return;
+  setGuessInputValue(next);
 }
 
 function renderShop() {
@@ -9683,6 +9757,13 @@ function bindEvents() {
     });
   }
 
+  document.querySelectorAll("[data-numpad-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      handleMobileNumpadKey(button.dataset.numpadKey);
+      button.blur();
+    });
+  });
+
   document.querySelectorAll("[data-buy]").forEach((button) => {
     button.addEventListener("click", () => buyShopItem(Number(button.dataset.buy)));
   });
@@ -9756,6 +9837,17 @@ function saveArcadeRunForNativeExit() {
   saveArcadeRun();
 }
 
+function blockNativeSelection(event) {
+  if (isNativeArcadeApp()) event.preventDefault();
+}
+
+function installNativeSelectionGuards() {
+  if (!isNativeArcadeApp()) return;
+  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
+  document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
+  document.addEventListener("dragstart", blockNativeSelection, { passive: false });
+}
+
 window.addEventListener("resize", updateFullscreenLayoutClass);
 window.addEventListener("pagehide", saveArcadeRunForNativeExit);
 window.addEventListener("beforeunload", saveArcadeRunForNativeExit);
@@ -9782,5 +9874,6 @@ loadSoundSettings();
 installSoundtrack();
 installArcadeEnterShortcut();
 installShiftTooltipMore();
+installNativeSelectionGuards();
 updateFullscreenLayoutClass();
 if (!resumeNativeArcadeOnForeground()) showMainMenu();
