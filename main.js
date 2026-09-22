@@ -1156,7 +1156,7 @@ const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_
 const BOSS_PASSIVES = {
   itemUsePain: {
     name: "Item Toll",
-    baseDamage: 5
+    baseDamage: 1
   },
   roundPain: {
     name: "Round Toll",
@@ -1184,7 +1184,7 @@ const BOSS_PASSIVES = {
   },
   criticalPain: {
     name: "Critical Toll",
-    baseDamage: 10
+    baseDamage: 5
   },
   purchasePain: {
     name: "Offering Toll",
@@ -4220,6 +4220,18 @@ function shopSlotCountForItem(item) {
   return 3 + (item?.id === "p20" ? 1 : 0);
 }
 
+function sealSlotsFull() {
+  return ownedSealSlotCount() >= passiveLimit();
+}
+
+function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
+  if (ownedSealSlotCount() <= 0) return 0;
+  let multiplier = 1;
+  if (eliteBoosted) multiplier *= 2;
+  if (sealSlotsFull()) multiplier *= 2;
+  return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
+}
+
 function activeInventoryLimit() {
   return ACTIVE_LIMIT + baseEditionBonus("p25");
 }
@@ -4503,6 +4515,7 @@ function uniqueBossSpecFromKey(key) {
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
+  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);
@@ -4745,7 +4758,7 @@ function createBot(options = {}) {
   const passiveKeys = isBoss
     ? uniqueSpec
       ? []
-      : randomBossPassiveKeys(2)
+      : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -4844,7 +4857,7 @@ function rerollShop() {
   const eliteBoosted = state.eliteBoostedNextReroll;
   state.eliteBoostedNextReroll = false;
   state.shop = [drawPassiveShopItem(eliteBoosted), drawActiveShopItem(), drawActiveShopItem()];
-  if (eliteBoosted) addLog(`${activeName("a23")} doubled this Seal reroll's ELITE chance to ${Math.round(Math.min(1, SHOP_ELITE_CHANCE * 2) * 100)}%.`);
+  if (eliteBoosted) addLog(`${activeName("a23")} doubled this Seal reroll's ELITE chance to ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   syncShopSlotCount();
 }
 
@@ -4886,7 +4899,7 @@ function drawPassiveShopItem(eliteBoosted = false) {
   const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id));
   const ownedPassives = passivePool.filter((id) => directPassiveStack(id) > 0);
   const freshPassives = passivePool.filter((id) => directPassiveStack(id) === 0);
-  const eliteChance = eliteBoosted ? Math.min(1, SHOP_ELITE_CHANCE * 2) : SHOP_ELITE_CHANCE;
+  const eliteChance = eliteShopChance(eliteBoosted);
   const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
   if (!choices.length) return drawShopItem(passivePool);
@@ -8531,7 +8544,10 @@ function renderMobileOfferingsHeader() {
   const playerSin = Math.max(0, Math.ceil(Number(state.player.credits) || 0));
   return `
     <div class="mobile-offerings-header">
-      <div class="panel-title">Devil's Offerings</div>
+      <div class="shop-title-wrap">
+        <div class="panel-title">Devil's Offerings</div>
+        <div class="elite-chance-label">${Math.round(eliteShopChance() * 100)}% ELITE</div>
+      </div>
       <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
@@ -9317,11 +9333,13 @@ function handleMobileNumpadKey(key) {
 function renderShop() {
   const locked = shopDisabledBySatan();
   const actionsLocked = arcadeActionLocked();
+  const eliteChance = Math.round(eliteShopChance() * 100);
   return `
     <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
       <div class="panel-header">
-        <div>
+        <div class="shop-title-wrap">
           <div class="panel-title">Devil's Offerings</div>
+          <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
           <span class="reroll-cost">${currentRerollCost()} SIN</span>

@@ -419,7 +419,7 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive, and the TARGET modifier becomes 1.5.
 
 Boss Scaling
-The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive two random later-BOSS abilities. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
+The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive one random later-BOSS ability. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
 Goetic Boss Seal Lock
 While a Goetic BOSS is alive, the matching player SEAL cannot trigger. The disabled SEAL appears darker in your SEAL bar until that BOSS dies.
@@ -427,7 +427,7 @@ While a Goetic BOSS is alive, the matching player SEAL cannot trigger. The disab
 Later-BOSS Ability Pool
 
 Item Toll
-Every time you use an ARTIFACT, take 5 damage.
+Every time you use an ARTIFACT, take 1 damage.
 
 Round Toll
 At the end of every round, take 1 damage.
@@ -445,7 +445,7 @@ Even Toll
 If the TARGET is a multiple of 2, take 2 damage.
 
 Critical Toll
-Every time anyone hits CRITICAL, take 10 damage.
+Every time anyone hits CRITICAL, take 5 damage.
 
 Offering Toll
 Every time you buy an ARTIFACT or SEAL, take 3 damage.

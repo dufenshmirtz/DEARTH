@@ -328,13 +328,13 @@ Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
 Later-BOSS ability pool:
 
-Every time you use an ARTIFACT, take 5 damage.
+Every time you use an ARTIFACT, take 1 damage.
 At the end of every round, take 1 damage.
 If the TARGET is a multiple of 3, take 3 damage.
 If the TARGET is a multiple of 5, take 5 damage.
 If the TARGET is a multiple of 7, take 7 damage.
 If the TARGET is a multiple of 2, take 2 damage.
-Every time anyone hits CRITICAL, take 10 damage.
+Every time anyone hits CRITICAL, take 5 damage.
 Every time you buy an ARTIFACT or SEAL, take 3 damage.
 
 
