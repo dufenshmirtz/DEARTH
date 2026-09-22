@@ -8501,6 +8501,57 @@ function renderQuitMenu() {
 
 function renderArcadeApp() {
   const mobileArcade = isMobileArcadeView();
+  if (isNativeArcadeApp() && state.pauseOpen) {
+    return `
+      <main class="pause-scene" aria-label="Paused game">
+        ${renderPauseMenu()}
+      </main>
+      <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
+    `;
+  }
+  if (isNativeArcadeApp()) {
+    const targetPicking = state.pendingActive?.mode === "bot";
+    if (targetPicking) {
+      return `
+        <div class="native-arcade-frame target-picking">
+          <main class="arena native-board-panel">
+            ${renderTopbar()}
+            ${renderBots()}
+            ${renderOverlay()}
+            ${renderPentakillPopup()}
+          </main>
+          ${renderNativeTargetPickPanel()}
+        </div>
+        <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
+      `;
+    }
+    return `
+      <div class="native-arcade-frame">
+        <main class="arena native-board-panel">
+          ${renderTopbar()}
+          ${renderBots()}
+          ${renderOverlay()}
+          ${renderPentakillPopup()}
+        </main>
+        ${renderNativeInputPanel()}
+        <section class="native-console-panel" aria-label="Player action controls">
+          ${renderConsole()}
+          <div class="native-console-actions">
+            ${renderMobileOfferingsButton()}
+            ${renderPauseButton()}
+          </div>
+        </section>
+        ${renderPassives()}
+      </div>
+      ${renderMobileOfferingsBackdrop()}
+      <aside class="side-panel ${mobileArcade && state.mobileOfferingsOpen ? "mobile-open" : ""}">
+        ${renderMobileOfferingsHeader()}
+        ${renderShop()}
+        ${renderActives()}
+      </aside>
+      <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
+    `;
+  }
   return `
     <div class="play-column">
       <main class="arena">
@@ -8509,7 +8560,6 @@ function renderArcadeApp() {
         ${renderTopbar()}
         ${renderBots()}
         ${renderConsole()}
-        ${renderMobileNumpad()}
         ${renderOverlay()}
         ${renderPauseMenu()}
         ${renderPentakillPopup()}
@@ -8563,8 +8613,24 @@ function renderPauseButton() {
   return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
 }
 
+function renderNativeInputPanel() {
+  if (state.pendingActive?.mode === "bot") return renderNativeTargetPickPanel();
+  return renderMobileNumpad();
+}
+
+function renderNativeTargetPickPanel() {
+  const pendingText = renderPendingText();
+  return `
+    <section class="native-target-pick-panel" aria-label="Pick target">
+      <div class="native-target-pick-title">Pick a DAMNED</div>
+      <div class="native-target-pick-copy">${escapeHtml(normalizeGameText(pendingText))}</div>
+      <button id="cancelPendingActive" class="small-button pending-cancel native-target-cancel">Cancel</button>
+    </section>
+  `;
+}
+
 function mobileNumpadEnabled() {
-  return isNativeArcadeApp() && state.mode === "arcade" && state.stage === "guess" && !state.gameOver;
+  return isNativeArcadeApp() && state.mode === "arcade" && state.stage === "guess" && !state.gameOver && !state.pauseOpen;
 }
 
 function renderMobileNumpad() {
@@ -9250,7 +9316,8 @@ function renderConsole() {
     ? 'readonly inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-readonly="true"'
     : "";
   const pendingText = renderPendingText();
-  const pendingCancel = state.pendingActive ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
+  const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
+  const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
 
   return `
     <section class="center-console" aria-label="Player action">
