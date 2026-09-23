@@ -3725,6 +3725,10 @@ body.mobile-arcade .arena:not(.pvp-arena) .topbar > .target-panel {
 /* Native phone fit pass: use the full landscape viewport and avoid header/card overlap. */
 body.native-arcade {
   --native-target-panel-width: clamp(174px, 24vw, 220px);
+  --native-numpad-width: 232px;
+  --native-console-row-height: 86px;
+  --native-seal-row-height: 70px;
+  --native-layout-gap: 5px;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -3744,9 +3748,102 @@ body.native-arcade::after {
   display: none !important;
 }
 
-body.native-arcade .play-column {
-  grid-template-rows: minmax(0, 1fr) 70px !important;
-  gap: 3px !important;
+body.native-arcade .pause-scene {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.46);
+  border-radius: 6px;
+  background: #000;
+}
+
+body.native-arcade .pause-scene .pause-overlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  background: #000;
+}
+
+body.native-arcade .native-arcade-frame {
+  display: grid;
+  grid-template-columns: var(--native-numpad-width) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--native-console-row-height) var(--native-seal-row-height);
+  gap: var(--native-layout-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+body.native-arcade .native-arcade-frame.target-picking {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 52px;
+}
+
+body.native-arcade .native-board-panel {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+body.native-arcade .native-console-panel {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.46);
+  border-radius: 6px;
+  background: #000;
+}
+
+body.native-arcade .native-console-panel .center-console {
+  position: static !important;
+  z-index: auto;
+  right: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding-bottom: 0 !important;
+  transform: none !important;
+}
+
+body.native-arcade .native-console-panel .console-hint,
+body.native-arcade .native-console-panel .pending-panel {
+  position: static !important;
+  width: auto !important;
+  margin-top: 0 !important;
+}
+
+body.native-arcade .native-console-panel .console-hint {
+  min-height: 16px;
+}
+
+body.native-arcade .native-console-panel .pending-panel {
+  margin-top: 4px !important;
+}
+
+body.native-arcade .native-console-actions {
+  display: grid;
+  grid-template-columns: 112px 82px;
+  gap: 8px;
+  align-items: stretch;
+}
+
+body.native-arcade .native-console-panel .pause-button,
+body.native-arcade .native-console-panel .mobile-offerings-button {
+  position: static !important;
+  min-width: 0 !important;
+  width: 100%;
+}
+
+body.native-arcade .native-arcade-frame.target-picking .native-console-panel .pending-panel {
+  display: none !important;
 }
 
 body.native-arcade .arena:not(.pvp-arena) {
@@ -3842,6 +3939,10 @@ body.native-arcade .arena:not(.pvp-arena) .health-fill {
   background: #fff !important;
 }
 
+body.native-arcade .arena:not(.pvp-arena) .health-wrap .player-damage-badge {
+  top: 3px !important;
+}
+
 body.native-arcade .arena:not(.pvp-arena) .bot-card.boss .health-fill {
   background: var(--accent-red) !important;
 }
@@ -3865,14 +3966,42 @@ body.native-arcade .arena:not(.pvp-arena) #playtestMoney {
 }
 
 body.native-arcade .arena:not(.pvp-arena) .bot-grid {
-  inset: 70px 4px 56px !important;
+  inset: 70px 4px 4px !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   gap: 4px !important;
   overflow: hidden !important;
 }
 
+body.native-arcade .arena:not(.pvp-arena) .bot-grid.picking {
+  z-index: 60;
+}
+
 body.native-arcade .arena:not(.pvp-arena) .bot-card {
   padding: 4px !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-card.pickable {
+  padding-bottom: 32px !important;
+  border-color: rgba(117, 201, 193, 0.92) !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  left: 6px;
+  z-index: 6;
+  min-height: 24px !important;
+  padding: 0 6px !important;
+  border-color: #fff !important;
+  background: #000 !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-card.pickable .pick-button:disabled {
+  opacity: 0.42;
 }
 
 body.native-arcade .arena:not(.pvp-arena) .bot-face,
@@ -3902,6 +4031,21 @@ body.native-arcade .arena:not(.pvp-arena) .mini-stat strong {
 
 body.native-arcade .arena:not(.pvp-arena) .bot-health .health-bar {
   height: 7px !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-health .damage-badge,
+body.native-arcade .arena:not(.pvp-arena) .bot-health .pvp-damage-badge {
+  top: 1px !important;
+  right: 4px !important;
+  line-height: 1 !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-health .heal-badge {
+  top: -14px !important;
+  right: 4px !important;
+  bottom: auto !important;
+  z-index: 18;
+  line-height: 1 !important;
 }
 
 body.native-arcade .arena:not(.pvp-arena) .center-console,
@@ -3969,13 +4113,13 @@ body.native-arcade .shop-slots {
 }
 
 body.native-arcade .mobile-numpad {
-  position: fixed;
-  z-index: 86;
-  bottom: 15px;
-  left: 16px;
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 2 / 4;
   display: grid;
-  width: 218px;
-  height: 158px;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(4, minmax(0, 1fr));
@@ -3984,6 +4128,48 @@ body.native-arcade .mobile-numpad {
   border: 2px solid rgba(255, 255, 255, 0.42);
   border-radius: 7px;
   background: #000;
+}
+
+body.native-arcade .native-target-pick-panel {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: 2px solid rgba(117, 201, 193, 0.78);
+  border-radius: 7px;
+  background: #000;
+}
+
+body.native-arcade .native-target-pick-title {
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+body.native-arcade .native-target-pick-copy {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.native-arcade .native-target-cancel {
+  min-height: 36px !important;
+  border-color: rgba(239, 111, 97, 0.9) !important;
+  color: #fff !important;
 }
 
 body.native-arcade .mobile-numpad-key {
@@ -4021,10 +4207,13 @@ body.native-arcade .mobile-numpad-key:disabled {
 }
 
 body.native-arcade .passive-bar {
-  height: 70px !important;
+  grid-column: 2;
+  grid-row: 3;
+  height: 100% !important;
+  min-height: 0 !important;
   grid-auto-columns: 66px !important;
   grid-auto-rows: 64px !important;
-  padding: 3px 3px 3px 238px !important;
+  padding: 3px !important;
 }
 
 body.native-arcade .passive-slot,
