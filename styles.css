@@ -2060,6 +2060,15 @@ select {
   padding: 10px;
 }
 
+.empty-seal-slot-image {
+  display: block;
+  width: min(96px, calc(100% - 24px));
+  height: min(96px, calc(100% - 24px));
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .passive-slot .equipped-seal-sigil {
   width: min(112px, calc(100% - 10px));
   height: min(112px, calc(100% - 10px));
@@ -2837,6 +2846,11 @@ body.mobile-arcade .passive-slot.empty {
 body.mobile-arcade .passive-slot .equipped-seal-sigil {
   width: 62px !important;
   height: 62px !important;
+}
+
+body.mobile-arcade .empty-seal-slot-image {
+  width: 54px !important;
+  height: 54px !important;
 }
 
 body.mobile-arcade .passive-counter {
@@ -4155,6 +4169,13 @@ body:not(.mobile-arcade) .passive-slot .equipped-seal-sigil {
   width: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
   height: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
   transform: none;
+}
+
+body:not(.mobile-arcade) .passive-slot .empty-seal-slot-image {
+  align-self: center;
+  justify-self: center;
+  width: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) - 10px), calc(100% - 16px)) !important;
+  height: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) - 10px), calc(100% - 16px)) !important;
 }
 
 body:not(.mobile-arcade) .passive-slot .seal-sell-button {

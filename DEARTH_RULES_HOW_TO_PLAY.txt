@@ -111,7 +111,7 @@ SEALS can change this. For example:
 Seal of Orias expands your CRITICAL window.
 Seal of Glasya-Labolas makes your CRITICAL deal extra damage.
 Seal of Eligos can mirror DAMNED CRITICAL hits for you and protect you from DAMNED
-CRITICAL damage.
+CRITICAL damage. Eligos ELITE levels widen the DAMNED CRITICAL range.
 
 When a DAMNED hits CRITICAL, the guess label and guess number turn red.
 
@@ -146,7 +146,7 @@ existing SEAL into ELITE instead.
 Devil's Offerings has a fixed 8% chance to offer an ELITE upgrade for a SEAL you own.
 If you own no SEALS, the ELITE chance is 0.
 
-Satanic Bible changes the next SEAL reroll to a 50% ELITE chance.
+Satanic Bible doubles the ELITE chance for the next SEAL reroll.
 
 Most flat damage SEALS scale strongly with ELITE levels. In the current rules, flat
 damage effects generally double each ELITE level unless the SEAL description says
@@ -276,7 +276,7 @@ BOSSES use personalities too, but they play somewhat smarter than normal DAMNED.
 
 13. Boss Progression
 
-BOSSES arrive strictly after every 8 KOs, unless Vial of Blood causes an early BOSS.
+BOSSES arrive strictly after every 8 KOs.
 
 The first eight special BOSS events happen in random order:
 
@@ -312,17 +312,15 @@ Second press jumps to the Jesus and Satan phase.
 
 Normal DAMNED begin with HP in the 20 to 60 range.
 
-After each of the first 4 BOSS kills, normal DAMNED HP limits increase by 5.
-After each of the next 4 BOSS kills, normal DAMNED HP limits increase by 10.
+After each of the first 8 BOSS kills, normal DAMNED HP limits increase by 10.
 After the first 8 BOSS kills, normal DAMNED HP limits increase by 20 per later
 BOSS kill. After those first 8 BOSS kills, the resulting HP range is also
 multiplied by 1.08 for every 3 later BOSS kills.
 
 BOSS HEALTH also scales as the run progresses.
-Each prior BOSS spawn adds +20 BOSS HEALTH through the fourth BOSS, +30 through
-the eighth BOSS, and +60 after the first 8 BOSSES. BOSS HEALTH is doubled from
-the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also
-multiplied by 1.08 for every 3 BOSS numbers after BOSS 9.
+Each prior BOSS spawn adds +30 BOSS HEALTH through the first 8 BOSSES, and +60
+after the first 8 BOSSES. From BOSS 10 onward, the resulting BOSS HEALTH is
+also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9.
 
 Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
@@ -336,6 +334,21 @@ If the TARGET is a multiple of 7, take 7 damage.
 If the TARGET is a multiple of 2, take 2 damage.
 Every time anyone hits CRITICAL, take 5 damage.
 Every time you buy an ARTIFACT or SEAL, take 3 damage.
+
+Pyros Gift pool:
+
+Seal of Bathin: the gifted DAMNED heals 5 HEALTH at the end of every round.
+Seal of Amon: while the gifted DAMNED is alive, you take 2 damage at the end
+of every round.
+Seal of Raum: while the gifted DAMNED is alive, you lose 1 SIN at the end of
+every round.
+Seal of Botis: while the gifted DAMNED is alive, every ARTIFACT use deals 3
+damage to you.
+Seal of Ipos: the gifted DAMNED hits CRITICAL within 2 of the right integer,
+and that CRITICAL damage only hits you.
+Seal of Halphas: the gifted DAMNED cannot be targeted by ARTIFACTS and its
+guess cannot be revealed.
+Seal of Sallos: when the gifted DAMNED dies, all other DAMNED heal 10 HEALTH.
 
 
 15. Special Bosses
@@ -351,7 +364,7 @@ The TARGET modifier becomes 0.5.
 Personality: Stubborn.
 
 Pyros
-At the start of each round, one DAMNED receives a random later-BOSS ability.
+At the start of each round, one DAMNED receives a random Pyros Gift.
 The TARGET modifier becomes 1.0.
 Personality: Analyst.
 

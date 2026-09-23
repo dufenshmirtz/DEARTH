@@ -13,10 +13,10 @@ const BASE_TARGET_MODIFIER = 0.8;
 const FINAL_BOSS_TARGET_MODIFIER = 0.666;
 const SCALING_BREAKPOINT_BOSSES = 4;
 const ENDLESS_SCALING_BREAKPOINT_BOSSES = 8;
-const BOT_HP_BONUS_PER_BOSS = 5;
+const BOT_HP_BONUS_PER_BOSS = 10;
 const BOT_HP_BONUS_PER_BOSS_LATE = 10;
 const BOT_HP_BONUS_PER_BOSS_ENDLESS = 20;
-const BOSS_HP_BONUS_PER_SPAWN = 20;
+const BOSS_HP_BONUS_PER_SPAWN = 30;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 30;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 60;
 const HP_EXPONENTIAL_RATE = 1.08;
@@ -488,7 +488,7 @@ const ITEMS = {
     name: "Seal of Sitri",
     price: 11,
     description:
-      "A DAMNED cannot gain MEMORY above the current round number. Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p56: {
     id: "p56",
@@ -563,7 +563,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aim",
     price: 15,
-    description: "On round numbers that are multiples of 5, eliminate one random non-boss DAMNED. If a BOSS is active, deal 30 damage to each active BOSS. ELITE multiplies only the BOSS damage by x1.5 each level, rounded up."
+    description: "When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If a BOSS is active, deal 30 damage to each active BOSS. ELITE multiplies only the BOSS damage by x1.5 each level, rounded up."
   },
   p67: {
     id: "p67",
@@ -586,7 +586,7 @@ const ITEMS = {
     name: "Seal of Eligos",
     price: 14,
     description:
-      "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET. ELITE does not change this effect."
+      "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET. ELITE adds +/-1 to the DAMNED CRITICAL range."
   },
   p70: {
     id: "p70",
@@ -624,49 +624,49 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the White Horse",
     price: 20,
-    description: "DAMNED with more than 12 BOUNTY take x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
+    description: "DAMNED with more than 12 BOUNTY take x1.2 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p75: {
     id: "p75",
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Revealed DAMNED take x1.1 damage from all sources. ELITE adds +0.1 to the multiplier."
+    description: "Revealed DAMNED take x1.2 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
     type: "passive",
     name: "Seal of the Black Horse",
     price: 20,
-    description: "Non-boss DAMNED with more than 8 MEMORY take x1.1 damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead. ELITE adds +0.1 to the multiplier."
+    description: "Non-boss DAMNED with more than 8 MEMORY take x1.2 damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead. ELITE adds +0.2 to the multiplier."
   },
   p77: {
     id: "p77",
     type: "passive",
     name: "Seal of the Pale Horse",
     price: 20,
-    description: "If you score CRITICAL this round, DAMNED take x1.1 damage from all sources next round. ELITE adds +0.1 to the multiplier."
+    description: "If you score CRITICAL this round, DAMNED take x1.2 damage from all sources next round. ELITE adds +0.2 to the multiplier."
   },
   p78: {
     id: "p78",
     type: "passive",
     name: "Seal of the Souls of Martyrs",
     price: 20,
-    description: "DAMNED take x1.1 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.1 to the multiplier."
+    description: "DAMNED take x1.2 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.2 to the multiplier."
   },
   p79: {
     id: "p79",
     type: "passive",
     name: "Seal of Creation Uncreated",
     price: 20,
-    description: "DAMNED take x1.1 damage from all sources if an ARTIFACT was used on them this round. ELITE adds +0.1 to the multiplier."
+    description: "DAMNED take x1.2 damage from all sources if an ARTIFACT was used on them this round. ELITE adds +0.2 to the multiplier."
   },
   p80: {
     id: "p80",
     type: "passive",
     name: "Seal of Silence in Heaven",
     price: 20,
-    description: "DAMNED take x1.1 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.1 to the multiplier."
+    description: "DAMNED take x1.2 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier."
   },
   a28: {
     id: "a28",
@@ -729,7 +729,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 4,
-    description: "Move the TARGET to the closest multiple of 3, 5, or 7."
+    description: "Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest."
   },
   a12: {
     id: "a12",
@@ -1192,6 +1192,37 @@ const BOSS_PASSIVES = {
   }
 };
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const PYROS_GIFT_PASSIVES = {
+  metabolism: {
+    name: "Seal of Bathin",
+    description: "This Pyros Gift heals 5 HEALTH at the end of every round."
+  },
+  fumes: {
+    name: "Seal of Amon",
+    description: "While this Pyros Gift is alive, you take 2 damage at the end of every round."
+  },
+  thief: {
+    name: "Seal of Raum",
+    description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
+  },
+  spite: {
+    name: "Seal of Botis",
+    description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
+  },
+  wideCrit: {
+    name: "Seal of Ipos",
+    description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
+  },
+  shield: {
+    name: "Seal of Halphas",
+    description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
+  },
+  lamb: {
+    name: "Seal of Sallos",
+    description: "When this Pyros Gift dies, all other DAMNED gain 10 HEALTH."
+  }
+};
+const PYROS_GIFT_KEYS = Object.keys(PYROS_GIFT_PASSIVES);
 
 const BOT_ARCHETYPES = [
   { type: "Anchor", anchor: 56, noise: 7, color: "#75c9c1", aggression: 0.34 },
@@ -1292,7 +1323,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a new random later-BOSS ability while Pyros is alive.",
+      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },
@@ -1449,9 +1480,10 @@ const state = {
   finalBossPhase: false,
   finalBossQueued: false,
   bossQueued: false,
-  eliteBoostedNextReroll: false,
+  eliteBoostedNextReroll: 0,
   paleHorseBoostArmed: false,
   previousRoundEliminationsForMartyrs: 0,
+  shouldFocusGuessInput: false,
   pendingActive: null,
   playtestInfiniteMoney: false,
   gameOver: false,
@@ -1957,10 +1989,22 @@ function nearestMultiple(value, divisor) {
 function nearestMultipleFromDivisors(value, divisors) {
   const number = Number(value);
   if (!Number.isFinite(number)) return { value: 0, divisor: 1 };
+  const forceDifferent = divisors.some((divisor) => {
+    const step = Math.max(1, Math.ceil(divisor));
+    return number % step === 0;
+  });
   return divisors
-    .map((divisor) => {
-      const snapped = nearestMultiple(number, divisor);
-      return { divisor, value: snapped, distance: Math.abs(snapped - number) };
+    .flatMap((divisor) => {
+      const step = Math.max(1, Math.ceil(divisor));
+      const lower = Math.floor(number / step) * step;
+      const upper = Math.ceil(number / step) * step;
+      const values = new Set([lower, upper]);
+      if (forceDifferent && values.has(number)) {
+        values.delete(number);
+        values.add(lower - step);
+        values.add(upper + step);
+      }
+      return [...values].map((snapped) => ({ divisor, value: Math.ceil(snapped), distance: Math.abs(snapped - number) }));
     })
     .sort((left, right) => left.distance - right.distance || left.value - right.value || left.divisor - right.divisor)[0];
 }
@@ -2576,6 +2620,11 @@ function criticalCalipersWindow(idOrItem) {
   return stack ? stack + 1 : 0;
 }
 
+function eligosBotCriticalWindow(idOrItem = "p69") {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? stack : 0;
+}
+
 function pressureSpikeDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
@@ -2659,7 +2708,7 @@ function furcasSelectedDamage(idOrItem) {
 function specialSealBaseMultiplier(idOrItem, baseMultiplier) {
   const stack = simpleStackCount(idOrItem);
   if (!stack) return 1;
-  return baseMultiplier + eliteLevels(idOrItem) * 0.1;
+  return baseMultiplier + eliteLevels(idOrItem) * 0.2;
 }
 
 function revealedBountyMultiplier(idOrItem) {
@@ -2925,12 +2974,12 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
     orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
       if (entry.id === "p74") {
-        if (botSin(bot) > 12) applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p74?.name, entry);
+        if (botSin(bot) > 12) applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p74?.name, entry);
         return;
       }
 
       if (entry.id === "p75") {
-        if (bot.revealedByPassive) applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p75?.name, entry);
+        if (bot.revealedByPassive) applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p75?.name, entry);
         return;
       }
 
@@ -2938,27 +2987,27 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
         if (bot.isBoss || (bot.memory?.length || 0) <= 8) return;
         const redirectBoss = blackHorseRedirectBoss(bot);
         if (redirectBoss) {
-          applyRedirectMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p76?.name, entry, redirectBoss);
+          applyRedirectMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p76?.name, entry, redirectBoss);
         } else {
-          applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p76?.name, entry);
+          applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p76?.name, entry);
         }
         return;
       }
 
       if (entry.id === "p77" && state.roundState?.paleHorseDamageBoostActive) {
-        applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p77?.name, entry);
+        applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p77?.name, entry);
         return;
       }
 
       if (entry.id === "p78") {
         if ((state.roundState?.previousRoundEliminationsForMartyrs || 0) >= 3) {
-          applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p78?.name, entry);
+          applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p78?.name, entry);
         }
         return;
       }
 
       if (entry.id === "p79" && (state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0) > 0) {
-        applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p79?.name, entry);
+        applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p79?.name, entry);
       }
     });
   }
@@ -3047,7 +3096,7 @@ function artifactDescription(item) {
   if (item.id === "a10") {
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
-  if (item.id === "a11") return "Move the TARGET to the closest multiple of 3, 5, or 7.";
+  if (item.id === "a11") return "Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest.";
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage.`;
   if (item.id === "a13") {
     const value = artifactValue(20);
@@ -3160,7 +3209,7 @@ function itemDescription(item) {
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
   if (item.id === "p54") return "Every round, one DAMNED is marked blue. When it takes TARGET-difference damage, each adjacent DAMNED takes that much damage too.";
   if (item.id === "p55") {
-    return `A DAMNED cannot gain MEMORY above the current round number. Each excess MEMORY becomes ${flatDamageValue(item, 5)} damage to that DAMNED.`;
+    return `Each excess MEMORY becomes ${flatDamageValue(item, 5)} damage to that DAMNED.`;
   }
   if (item.id === "p56") {
     return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
@@ -3185,13 +3234,13 @@ function itemDescription(item) {
     return `Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
   if (item.id === "p65") return `At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
-  if (item.id === "p66") return `On round numbers that are multiples of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
+  if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
     return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
   if (item.id === "p69") {
-    return "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET.";
+    return `Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-${eligosBotCriticalWindow(item)} of the TARGET.`;
   }
   if (item.id === "p70") {
     return `Sacrificial Dagger deals ${sacrificialDaggerExtraDamage(item)} extra flat damage and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
@@ -3206,18 +3255,18 @@ function itemDescription(item) {
   if (item.id === "p73") {
     return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
   }
-  if (item.id === "p74") return `DAMNED with more than 12 BOUNTY take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources.`;
-  if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources.`;
+  if (item.id === "p74") return `DAMNED with more than 12 BOUNTY take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources.`;
+  if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources.`;
   if (item.id === "p76") {
-    return `Non-boss DAMNED with more than 8 MEMORY take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead.`;
+    return `Non-boss DAMNED with more than 8 MEMORY take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead.`;
   }
-  if (item.id === "p77") return `If you scored CRITICAL this round, DAMNED take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources next round.`;
+  if (item.id === "p77") return `If you scored CRITICAL this round, DAMNED take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources next round.`;
   if (item.id === "p78") {
-    return `DAMNED take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources if 3 or more eliminations happened in the previous round.`;
+    return `DAMNED take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources if 3 or more eliminations happened in the previous round.`;
   }
-  if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
+  if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
   if (item.id === "p80") {
-    return `DAMNED take x${specialSealBaseMultiplier(item, 1.1).toFixed(2)} damage if they have more than 10 TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.`;
+    return `DAMNED take x${specialSealBaseMultiplier(item, 1.2).toFixed(2)} damage if they have more than 10 TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.`;
   }
   return item.description;
 }
@@ -3242,6 +3291,14 @@ function currentRerollCost() {
 
 function botHasPassive(bot, key) {
   return Boolean(bot.passiveKeys?.includes(key) || bot.buffPassiveKey === key);
+}
+
+function botPassiveKeyName(key) {
+  return BOSS_PASSIVES[key]?.name || PYROS_GIFT_PASSIVES[key]?.name || key;
+}
+
+function botPassiveKeyDescription(key) {
+  return BOSS_PASSIVES[key] ? bossPassiveEffectDescription(key) : PYROS_GIFT_PASSIVES[key]?.description || "";
 }
 
 function hasBossPassive(key) {
@@ -3357,8 +3414,8 @@ function botPassiveSummary(bot) {
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.goeticPassiveId) names.push(`${bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "Seal"} Lock`);
-  bot.passiveKeys?.forEach((key) => names.push(BOSS_PASSIVES[key].name));
-  if (bot.buffPassiveKey) names.push(`Pyros Gift: ${BOSS_PASSIVES[bot.buffPassiveKey].name}`);
+  bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
+  if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
   return names.join(" + ") || "No Seal";
 }
 
@@ -3378,8 +3435,8 @@ function botPassiveDescription(bot) {
     const sealName = bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "this Seal";
     descriptions.push(`While ${bot.name} is alive, your ${sealName} cannot trigger and appears darkened.`);
   }
-  bot.passiveKeys?.forEach((key) => descriptions.push(bossPassiveEffectDescription(key)));
-  if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${bossPassiveEffectDescription(bot.buffPassiveKey)}`);
+  bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
+  if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
 }
 
@@ -3909,7 +3966,7 @@ function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = or
 
   targetDiffEntries.forEach((entry) => {
     if (entry.id === "p80" && baseDamage > 10) {
-      applyMultiplier(specialSealBaseMultiplier(entry, 1.1), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
+      applyMultiplier(specialSealBaseMultiplier(entry, 1.2), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
     }
   });
 
@@ -4224,10 +4281,20 @@ function sealSlotsFull() {
   return ownedSealSlotCount() >= passiveLimit();
 }
 
+function eliteRerollBoostCount(value = state.eliteBoostedNextReroll) {
+  if (value === true) return 1;
+  if (!Number.isFinite(Number(value))) return 0;
+  return Math.max(0, Math.ceil(Number(value)));
+}
+
+function addEliteRerollBoost() {
+  state.eliteBoostedNextReroll = eliteRerollBoostCount() + 1;
+}
+
 function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
   if (ownedSealSlotCount() <= 0) return 0;
   let multiplier = 1;
-  if (eliteBoosted) multiplier *= 2;
+  multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
   if (sealSlotsFull()) multiplier *= 2;
   return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
 }
@@ -4523,6 +4590,16 @@ function grantRandomBossPassive(bot) {
   return key;
 }
 
+function grantRandomPyrosGift(bot) {
+  if (!bot || bot.hp <= 0 || bot.eliminated) return null;
+  const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
+  const choices = PYROS_GIFT_KEYS.filter((key) => !owned.has(key));
+  if (!choices.length) return null;
+  const key = randomFrom(choices);
+  bot.passiveKeys.push(key);
+  return key;
+}
+
 function randomBotProfile() {
   const profile = randomFrom(BOT_PROFILES);
   return {
@@ -4751,9 +4828,8 @@ function createBot(options = {}) {
   const isEndlessBoss = isBoss && !uniqueSpec;
   const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
-  const bossHealthMultiplier = state.bossSpawnCount >= SCALING_BREAKPOINT_BOSSES ? 2 : 1;
   const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
-  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthMultiplier * bossHealthScaleFactor() * statFactor) : randomBotHealth();
+  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
     ? uniqueSpec
@@ -4841,11 +4917,11 @@ function applyPyrosBuffs() {
   const candidates = activeBots();
   if (!candidates.length) return;
   const target = randomFrom(candidates);
-  const key = grantRandomBossPassive(target);
+  const key = grantRandomPyrosGift(target);
   if (!key) return;
   if (state.roundState) {
     state.roundState.pyrosGiftGranted = true;
-    state.roundState.roundEvents.push(`${pyrosSource.name} gave ${target.name} ${BOSS_PASSIVES[key].name}.`);
+    state.roundState.roundEvents.push(`${pyrosSource.name} gave ${target.name} ${botPassiveKeyName(key)}.`);
   }
 }
 
@@ -4854,10 +4930,10 @@ function rerollShop() {
     state.shop = [];
     return;
   }
-  const eliteBoosted = state.eliteBoostedNextReroll;
-  state.eliteBoostedNextReroll = false;
+  const eliteBoosted = eliteRerollBoostCount();
+  state.eliteBoostedNextReroll = 0;
   state.shop = [drawPassiveShopItem(eliteBoosted), drawActiveShopItem(), drawActiveShopItem()];
-  if (eliteBoosted) addLog(`${activeName("a23")} doubled this Seal reroll's ELITE chance to ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   syncShopSlotCount();
 }
 
@@ -5220,7 +5296,7 @@ function startGame() {
   state.finalBossQueued = false;
   state.bossQueued = false;
   state.killsSinceBossSpawn = 0;
-  state.eliteBoostedNextReroll = false;
+  state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.previousRoundEliminationsForMartyrs = 0;
   resetBotsForRun();
@@ -5234,6 +5310,7 @@ function beginRound() {
   resetNegativePlaytestSin();
   pruneRemovedPassives();
   state.stage = "guess";
+  state.shouldFocusGuessInput = true;
   state.pendingActive = null;
   state.playerLastDamage = 0;
   state.playerLastHeal = 0;
@@ -5622,7 +5699,8 @@ function applyGuessReveals() {
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
       bot.hp > 0 &&
-      !bot.eliminated
+      !bot.eliminated &&
+      !botHasPassive(bot, "shield")
   );
   const desiredRevealCount = Math.min(revealableBots.length, 1);
   const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
@@ -5820,20 +5898,21 @@ function applyOrderedPenaltyPassiveDamage(activeBotList, botDamages, botDamageSo
     }
 
     if (entry.id === "p66") {
-      if (state.round % 5 !== 0) return;
+      const targetValue = Math.ceil(round.target);
+      if (!Number.isFinite(targetValue) || targetValue % 5 !== 0) return;
       const nonBossTargets = activeBotList.filter((bot) => !bot.isBoss && !bot.immortal);
       const bossTargets = activeBotList.filter((bot) => bot.isBoss && !bot.immortal);
       let triggered = false;
       if (nonBossTargets.length) {
         const target = randomFrom(nonBossTargets);
         addPendingBotDamage(botDamages, botDamageSources, target, target.hp, "Seal of Aim");
-        round.roundEvents.push(`Seal of Aim chose ${target.name} for elimination.`);
+        round.roundEvents.push(`Seal of Aim chose ${target.name} for elimination because TARGET ${targetValue} is a multiple of 5.`);
         triggered = true;
       }
       const bossDamage = aimBossDamage(entry);
       if (bossDamage > 0 && bossTargets.length) {
         bossTargets.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, bossDamage, "Seal of Aim"));
-        round.roundEvents.push(`Seal of Aim dealt ${bossDamage} damage to each active BOSS.`);
+        round.roundEvents.push(`Seal of Aim dealt ${bossDamage} damage to each active BOSS because TARGET ${targetValue} is a multiple of 5.`);
         triggered = true;
       }
       if (triggered) markPassiveEntryTriggered(entry);
@@ -5993,6 +6072,7 @@ function applyPenalties() {
         }
         addPlayerDamage(criticalDamage, `CRITICAL from ${hitter.name}`);
       } else {
+        if (hitter.bot && botHasPassive(hitter.bot, "wideCrit")) return;
         addPendingBotDamage(
           botDamages,
           botDamageSources,
@@ -6143,7 +6223,7 @@ function getParticipants() {
         bot,
         name: bot.name,
         guess: round.botEffectiveGuesses.get(bot.id),
-        window: passiveStack("p69") ? 1 : 0,
+        window: Math.max(eligosBotCriticalWindow("p69"), botHasPassive(bot, "wideCrit") ? 2 : 0),
         bonusWindowChance: 0,
         damage: 10
       }))
@@ -6269,6 +6349,12 @@ function resolveEliminatedBots(eliminated) {
 
   applyExcessDamageSpread(freshEliminations);
 
+  const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
+  if (lambDeaths) {
+    const heal = 10 * lambDeaths;
+    activeBots().forEach((bot) => healBot(bot, heal, "Pyros Gift: Seal of Sallos"));
+  }
+
   checkRoundPentakillBonus();
 }
 
@@ -6379,22 +6465,31 @@ function nextBossSpecIfNeeded() {
   if (state.finalBossPhase || state.finalBossQueued) return null;
 
   if (state.bossQueued) {
+    const bossSpec = takeNextBossSpec();
+    if (!bossSpec) return null;
     state.bossQueued = false;
     state.killsSinceBossSpawn = 0;
-    return takeNextBossSpec();
+    return bossSpec;
   }
 
   if (state.killsSinceBossSpawn >= ENDLESS_BOSS_INTERVAL) {
+    const bossSpec = takeNextBossSpec();
+    if (!bossSpec) return null;
     state.killsSinceBossSpawn = 0;
-    return takeNextBossSpec();
+    return bossSpec;
   }
   return null;
+}
+
+function allSpecialBossesKilled() {
+  return (state.bossKills || 0) >= UNIQUE_BOSS_KEYS.length;
 }
 
 function takeNextBossSpec() {
   if (state.uniqueBossQueue.length) {
     return uniqueBossSpecFromKey(state.uniqueBossQueue.shift());
   }
+  if (!allSpecialBossesKilled()) return null;
   if (state.goeticBossQueue.length) {
     return { goeticKey: state.goeticBossQueue.shift() };
   }
@@ -6662,6 +6757,14 @@ function applyEndOfRoundPassives() {
     markPassiveTriggered("p8");
     applyPassivePlayerHeal("p8", 5, "Seal of Buer");
   }
+
+  activeBots().forEach((bot) => {
+    if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
+    if (botHasPassive(bot, "fumes")) damagePlayer(2, `${bot.name}'s Pyros Gift: Seal of Amon dealt 2 damage to you.`);
+    if (botHasPassive(bot, "thief")) {
+      loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+    }
+  });
 
   applyBossPassivePlayerDamage(
     "roundPain",
@@ -7140,11 +7243,11 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a23") {
-    state.eliteBoostedNextReroll = true;
+    addEliteRerollBoost();
     recordCopiedArtifactResolution(
       copierName,
       item,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is doubled.`
+      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`
     );
     return;
   }
@@ -7227,6 +7330,11 @@ function useActive(index) {
     "itemUsePain",
     (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.itemUsePain.name} dealt ${damage} damage because you used an ARTIFACT.`
   );
+  activeBots()
+    .filter((bot) => botHasPassive(bot, "spite"))
+    .forEach((bot) => {
+      damagePlayer(3, `${bot.name}'s Pyros Gift: Seal of Botis dealt 3 damage because you used an ARTIFACT.`);
+    });
   if (state.player.hp <= 0) {
     finishGameOverRound();
     render();
@@ -7266,10 +7374,10 @@ function useActive(index) {
   }
 
   if (item.id === "a23") {
-    state.eliteBoostedNextReroll = true;
+    addEliteRerollBoost();
     consumeActive(
       index,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is doubled.`,
+      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`,
       item.uid
     );
     return;
@@ -7455,6 +7563,11 @@ function chooseBot(botId) {
   if (!bot) return;
   if (bot.hp <= 0) {
     addLog(`${bot.name} is already down.`);
+    render();
+    return;
+  }
+  if (botHasPassive(bot, "shield")) {
+    addLog(`${bot.name}'s Pyros Gift: Seal of Halphas blocks ARTIFACTS.`);
     render();
     return;
   }
@@ -8403,7 +8516,32 @@ function render() {
   app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
   app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
   bindEvents();
+  focusGuessInputAfterRender();
   saveArcadeRun();
+}
+
+function focusGuessInputAfterRender() {
+  if (!state.shouldFocusGuessInput) return;
+  if (state.mode !== "arcade" || state.stage !== "guess" || state.pauseOpen || state.gameOver || state.pendingActive || state.mobileOfferingsOpen) return;
+  const input = document.querySelector("#guessInput");
+  if (!input || input.disabled || input.readOnly) {
+    state.shouldFocusGuessInput = false;
+    return;
+  }
+  const focus = () => {
+    if (document.activeElement === input) {
+      state.shouldFocusGuessInput = false;
+      return;
+    }
+    input.focus({ preventScroll: true });
+    input.select();
+    state.shouldFocusGuessInput = false;
+  };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(focus);
+  } else {
+    focus();
+  }
 }
 
 function renderMenuApp() {
@@ -9163,9 +9301,10 @@ function renderBot(bot, pendingPick) {
   const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
   const healthPercent = bot.immortal ? 100 : (bot.hp / bot.maxHp) * 100;
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
-  const pickDisabled = isDown || identitySwapBlocked;
+  const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
+  const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
   const pickButton = pendingPick
-    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : "Pick"}</button>`
+    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
   const faceInner = isDown
@@ -9444,7 +9583,11 @@ function renderPassives() {
   for (let index = 0; index < passiveLimit(); index += 1) {
     const item = state.player.passives[index];
     if (!item) {
-      slots.push(`<div class="passive-slot empty">Empty SEAL slot</div>`);
+      slots.push(`
+        <div class="passive-slot empty" data-tooltip="Empty SEAL slot" aria-label="Empty SEAL slot">
+          <img class="empty-seal-slot-image" src="assets/ui/empty-seal-slot-x.png" alt="" />
+        </div>
+      `);
       continue;
     }
     const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);

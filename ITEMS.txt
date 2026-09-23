@@ -11,8 +11,8 @@ At end of round, 10% of SIN earned this round spreads equally among DAMNED, with
 ELITE levels: Each ELITE level multiplies the damage per SIN gained by x1.5, rounded up.
 
 Seal of Aim (15 SIN)
-On round numbers that are multiples of 5, DAMNED take double damage.
-ELITE levels: The damage multiplier scales by +20% per ELITE level.
+When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If a BOSS is active, deal 30 damage to each active BOSS.
+ELITE levels: Each ELITE level multiplies only the BOSS damage by x1.5, rounded up.
 
 Seal of Alloces (7 SIN)
 If the rounded TARGET is a multiple of 3, all DAMNED take 20 extra damage.
@@ -112,7 +112,7 @@ ELITE levels: The per-MEMORY damage bonus scales by +20% per ELITE level.
 
 Seal of Eligos (14 SIN)
 Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET.
-ELITE levels: ELITE does not change this effect.
+ELITE levels: Each ELITE level adds +/-1 to the DAMNED CRITICAL range.
 
 Seal of Focalor (14 SIN)
 At end of round, deal half the total BOUNTY of living DAMNED to every enemy.
@@ -247,7 +247,7 @@ Every time you reroll Devil's Offerings, all DAMNED take damage equal to double 
 ELITE levels: Each ELITE level multiplies this damage by x1.5, rounded up.
 
 Seal of Sitri (11 SIN)
-A DAMNED cannot gain MEMORY above the current round number. Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED.
+Excess MEMORY that would be added to a DAMNED becomes 5 damage per MEMORY to that DAMNED.
 ELITE levels: Each ELITE level doubles this excess-MEMORY damage.
 
 Seal of Stolas (13 SIN)
@@ -350,7 +350,7 @@ Satanic Bible (3 SIN)
 Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
 
 Vial of Blood (4 SIN)
-Move the TARGET to the closest multiple of 3, 5, or 7.
+Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest.
 
 Voodoo Doll (4 SIN)
 This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.
@@ -410,7 +410,7 @@ Dantre's Seal
 Dantre has Stubborn personality. Every elimination deals 3 damage to you while Dantre is alive, and the TARGET modifier becomes 0.5.
 
 Pyros's Seal
-Pyros has Analyst personality. At the start of every round, one DAMNED receives a new random later-BOSS ability while Pyros is alive, and the TARGET modifier becomes 1.0.
+Pyros has Analyst personality. At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool, and the TARGET modifier becomes 1.0.
 
 Threon's Seal
 Threon has Drifter personality. Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3. Every ARTIFACT you use has a 50% chance to malfunction, have no effect, and deal 5 damage to you.
@@ -419,7 +419,7 @@ Zilon's Seal
 Zilon has Caller personality. Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive, and the TARGET modifier becomes 1.5.
 
 Boss Scaling
-The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +5 HP to both limits after each of the first four BOSS kills, +10 HP after each of the next four BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +20 per prior BOSS spawn through the fourth BOSS, +30 per prior BOSS spawn through the eighth BOSS, then +60 per prior BOSS spawn after that. BOSS HEALTH is doubled from the fifth BOSS onward. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive one random later-BOSS ability. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
+The first eight special BOSS events are Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, and Petros/Pavlos, in random order. BOSSES arrive strictly after every 8 KOs. The SKIP button jumps past those eight special BOSS events and starts the ninth BOSS event, the Goetic/infinite phase. Normal DAMNED start at 20-60 HP, gain +10 HP to both limits after each of the first eight BOSS kills, then +20 HP after each later BOSS kill. After the first eight BOSS kills, the resulting DAMNED HP range is also multiplied by 1.08 for every 3 later BOSS kills. BOSS HEALTH gains +30 per prior BOSS spawn through the first eight BOSSES, then +60 per prior BOSS spawn after that. From BOSS 10 onward, the resulting BOSS HEALTH is also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9. After the eight special BOSS events, later BOSSES are Goetic BOSSES named after one of the playable SEALS. They use the matching Goetic BOSS image, roll one fixed TARGET modifier from 0.6 to 1.2 when they spawn, keep that modifier until they die, and receive one random later-BOSS ability. Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 
 Goetic Boss Seal Lock
 While a Goetic BOSS is alive, the matching player SEAL cannot trigger. The disabled SEAL appears darker in your SEAL bar until that BOSS dies.
