@@ -54,6 +54,59 @@ Runs syntax checks for the browser game, phone controller, and local server scri
 - Add automated browser smoke tests for core single-player and PvP flows.
 - Finalize asset credits and release packaging.
 
+## Building The Android APK
+
+After gameplay or layout changes, rebuild the mobile bundle before creating the APK. The Android app uses a copied snapshot of `main.js`, `styles.css`, `app.html`, and `assets/`, so skipping the mobile sync can leave the APK with stale game files.
+
+From the project root:
+
+```powershell
+cd C:\Users\arish\Documents\GitHub\AENAO
+
+pnpm run check
+pnpm run mobile:android
+```
+
+Then build the debug APK:
+
+```powershell
+cd C:\Users\arish\Documents\GitHub\AENAO\android
+
+$root = (Resolve-Path '..').Path
+$toolchain = Join-Path $root '.android-toolchain'
+$sdk = Join-Path $toolchain 'android-sdk'
+$javaExe = Get-ChildItem (Join-Path $toolchain 'jdk21') -Recurse -Filter java.exe | Select-Object -First 1 -ExpandProperty FullName
+
+$env:JAVA_HOME = Split-Path (Split-Path $javaExe -Parent) -Parent
+$env:ANDROID_HOME = $sdk
+$env:ANDROID_SDK_ROOT = $sdk
+$env:GRADLE_USER_HOME = Join-Path $root '.gradle-cache'
+$env:USERPROFILE = 'C:\Users\arish'
+$env:HOME = 'C:\Users\arish'
+$env:ANDROID_USER_HOME = 'C:\Users\arish\.android'
+$env:ANDROID_SDK_HOME = 'C:\Users\arish'
+
+.\gradlew.bat --no-daemon assembleDebug
+```
+
+The rebuilt APK is created at:
+
+```text
+C:\Users\arish\Documents\GitHub\AENAO\android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+To install it on a connected Android phone with USB debugging enabled:
+
+```powershell
+cd C:\Users\arish\Documents\GitHub\AENAO
+
+$adb = Join-Path (Resolve-Path '.').Path '.android-toolchain\android-sdk\platform-tools\adb.exe'
+$apk = Join-Path (Resolve-Path '.').Path 'android\app\build\outputs\apk\debug\app-debug.apk'
+
+& $adb devices
+& $adb install -r $apk
+```
+
 ## Status And License
 
 DEARTH is public for portfolio and development review. It is not a finished commercial release.
