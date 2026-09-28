@@ -359,7 +359,7 @@ The TARGET modifier becomes 1.5.
 Personality: Caller.
 
 Dantre
-Every elimination deals 3 damage to you.
+Every elimination deals 2 damage to you.
 The TARGET modifier becomes 0.5.
 Personality: Stubborn.
 
@@ -371,7 +371,7 @@ Personality: Analyst.
 Threon
 Each round, Threon applies a mystery TARGET modifier from 0.7 to 1.3.
 Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal
-5 damage to you.
+3 damage to you.
 Personality: Drifter.
 
 Kalha
@@ -387,8 +387,9 @@ The TARGET modifier becomes 0.7.
 Personality: Caller.
 
 Padma
-You cannot recover HEALTH while Padma is alive. Padma heals every other DAMNED for
-10% max HEALTH at the start of each round.
+Non-boss healing cannot restore your HEALTH while Padma is alive. Padma heals
+non-boss DAMNED for 10% max HEALTH and herself for 5% max HEALTH at the start
+of each round.
 The TARGET modifier becomes 0.6.
 Personality: Stubborn.
 
