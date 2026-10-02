@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-mobile.js",
+    "build:game": "node scripts/build-game.js",
+    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "pnpm run mobile:build && cap sync",
     "mobile:android": "pnpm run mobile:build && cap sync android",

@@ -292,7 +292,7 @@ Petros and Pavlos
 After those eight, the game enters the Goetic BOSS phase.
 Goetic BOSSES are named after SEALS. When a Goetic BOSS is alive, the matching player
 SEAL is disabled and appears darker in your SEAL bar.
-Each later BOSS gets two random BOSS abilities from the later-BOSS ability pool.
+Each later BOSS gets one random BOSS ability from the later-BOSS ability pool.
 
 After the Goetic BOSS sequence, the final Jesus and Satan phase begins.
 Only Jesus and Satan are on the board.
@@ -313,14 +313,14 @@ Second press jumps to the Jesus and Satan phase.
 Normal DAMNED begin with HP in the 20 to 60 range.
 
 After each of the first 8 BOSS kills, normal DAMNED HP limits increase by 10.
-After the first 8 BOSS kills, normal DAMNED HP limits increase by 20 per later
+After the first 8 BOSS kills, normal DAMNED HP limits increase by 30 per later
 BOSS kill. After those first 8 BOSS kills, the resulting HP range is also
-multiplied by 1.08 for every 3 later BOSS kills.
+multiplied by 1.12 for every 3 later BOSS kills.
 
 BOSS HEALTH also scales as the run progresses.
-Each prior BOSS spawn adds +30 BOSS HEALTH through the first 8 BOSSES, and +60
+Each prior BOSS spawn adds +30 BOSS HEALTH through the first 8 BOSSES, and +90
 after the first 8 BOSSES. From BOSS 10 onward, the resulting BOSS HEALTH is
-also multiplied by 1.08 for every 3 BOSS numbers after BOSS 9.
+also multiplied by 1.12 for every 3 BOSS numbers after BOSS 9.
 
 Later-BOSS ability damage increases by +1 for every 8 completed BOSS kills.
 

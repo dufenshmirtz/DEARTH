@@ -3,6 +3,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const { writeGameBundle } = require("./build-game");
+
 const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "native-www");
 
@@ -23,6 +25,8 @@ function copyDir(from, to) {
     }
   }
 }
+
+writeGameBundle({ quiet: true });
 
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
