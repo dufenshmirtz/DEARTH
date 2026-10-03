@@ -7,6 +7,9 @@ Player Seals
 Seal of Agares (9 SIN)
 At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, they take 5 damage per SIN. ELITE multiplies the damage by x1.5 each level, rounded up.
 
+Seal of Alloces (13 SIN)
+At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains.
+
 Seal of Aim (14 SIN)
 Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage.
 
@@ -19,8 +22,8 @@ Reveal one extra DAMNED each round. Revealed DAMNED gain +2 BOUNTY and +2 MEMORY
 Seal of Amy (12 SIN)
 Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up.
 
-Seal of Andras (12 SIN)
-If your final effective guess is 0, 50, or 100, deal 10 damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage. ELITE multiplies only the damage by x1.5 each level, rounded up.
+Seal of Andras (13 SIN)
+Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to STUBBORN. At end of round, BOSSES take 5 damage for every STUBBORN DAMNED. ELITE adds +10% chance and multiplies the BOSS damage by x1.5 each level, rounded up.
 
 Seal of Andrealphus (9 SIN)
 Every time a DAMNED is eliminated, deal 10 damage to the DAMNED on its left and right. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -32,10 +35,10 @@ Seal of Asmoday (12 SIN)
 When a DAMNED dies from excess damage, split that excess damage equally among the other living enemies. ELITE multiplies the excess damage split by x1.5 each level, rounded up.
 
 Seal of Astaroth (13 SIN)
-If a DAMNED with a revealed guess dies this round, each adjacent DAMNED takes damage equal to the TARGET-difference damage it took this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up.
+At end of round, every revealed DAMNED makes each adjacent DAMNED take damage equal to that revealed DAMNED's TARGET-difference damage this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Bael (10 SIN)
-Your guess counts five times when calculating the TARGET average. ELITE adds +2 more guess weight each level.
+If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Balam (15 SIN)
 If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE does not change this effect.
@@ -56,7 +59,7 @@ Seal of Berith (14 SIN)
 At end of round, each DAMNED takes 10 damage for every other living DAMNED with the same personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Bifrons (15 SIN)
-Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the start of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up.
+Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the end of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Botis (14 SIN)
 Avoid 20% of damage you would take in a round, rounded down, and convert the avoided damage into MEMORY for the living DAMNED with the most MEMORY. ELITE doubles only the MEMORY added each level.
@@ -104,7 +107,7 @@ Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Glasya-Labolas (12 SIN)
-When you hit CRITICAL, it deals 30 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
+When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Gremory (14 SIN)
 Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +2 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.
@@ -148,8 +151,11 @@ At end of round, revealed DAMNED take damage equal to half their guess. ELITE mu
 Seal of Orias (13 SIN)
 Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level.
 
-Seal of Ose (14 SIN)
-Copies a random SEAL you own and keeps copying it. If that SEAL is sold, Ose chooses another owned SEAL. If no SEAL is available, it waits for the next SEAL you buy. ELITE makes the copied SEAL resolve one level stronger each level.
+Seal of Orobas (14 SIN)
+When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
+
+Seal of Ose (12 SIN)
+STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE changes one extra DAMNED each round.
 
 Seal of Paimon (11 SIN)
 If your final guess is close to the TARGET, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact TARGET, gain 10 SIN. ELITE doubles all SIN gained.
@@ -208,6 +214,9 @@ Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout m
 Seal of Vual (10 SIN)
 Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
 
+Seal of Zagan (14 SIN)
+At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up.
+
 Seal of Zepar (12 SIN)
 When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes that much damage too. ELITE does not change this effect.
 
@@ -229,7 +238,7 @@ Seal of the Red Horse (20 SIN)
 Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of the Souls of Martyrs (20 SIN)
-DAMNED take x1.5 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.2 to the multiplier.
+DAMNED with the STUBBORN personality take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of the White Horse (20 SIN)
 DAMNED with 10 or more BOUNTY take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
@@ -237,22 +246,22 @@ DAMNED with 10 or more BOUNTY take x1.5 damage from all sources. ELITE adds +0.2
 Dev Seals
 
 Seal of Dantre (30 SIN)
-At reveal, 20% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
+At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
 Seal of Padma (30 SIN)
-At reveal, 20% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect.
+At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect.
 
 Seal of Pyros (30 SIN)
-At reveal, 20% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect.
+At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect.
 
 Seal of Serafeim (30 SIN)
-At reveal, 20% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect.
+At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect.
 
 Seal of Threon (30 SIN)
-At reveal, 20% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect.
+At reveal, 30% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect.
 
 Seal of Zilon (30 SIN)
-At reveal, 20% chance to double every DAMNED BOUNTY. ELITE does not change this effect.
+At reveal, 30% chance to double every DAMNED BOUNTY. ELITE does not change this effect.
 
 Self-Stacking Seals
 
@@ -271,6 +280,9 @@ Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then th
 Seal of Samael Star (14 SIN)
 Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded.
 
+Seal of Samael Triangle (14 SIN)
+Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
+
 Seal of Zachriel Triangle (14 SIN)
 Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
 
@@ -286,7 +298,7 @@ Corrupted Crystal (4 SIN)
 Instantly copy the effect of the last non-Crystal ARTIFACT you used.
 
 Cursed Chalice (4 SIN)
-10% lose 8 SIN, 15% lose 4 SIN, 15% deal 10 damage to a random DAMNED, 30% gain 8 SIN, 20% gain 12 SIN, 10% gain 16 SIN and deal 20 damage to each DAMNED.
++1 CRITICAL range for the round.
 
 Dark Talisman (2 SIN)
 You take 50% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.
@@ -316,7 +328,7 @@ Satanic Bible (3 SIN)
 Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
 
 Vial of Blood (4 SIN)
-Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest.
+Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability.
 
 Voodoo Doll (4 SIN)
 This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.

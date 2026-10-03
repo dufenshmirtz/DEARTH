@@ -51,6 +51,7 @@ function clearBotMemoryBadges() {
 function recordBotDamageSource(bot, amount, source, kind = "") {
   const damage = Math.max(0, Math.ceil(amount));
   if (!bot || damage <= 0) return;
+  recordRunDamage(damage);
   recordBotRoundDamage(bot, damage);
   if (!source) return;
   bot.damageSources = bot.damageSources || [];
@@ -371,10 +372,10 @@ function healPlayer(amount, reason, source = undefined) {
   return healed;
 }
 
-function healBot(bot, amount, reason, source = undefined) {
+function healBot(bot, amount, reason, source = undefined, options = {}) {
   amount = Math.ceil(amount);
   const before = bot.hp;
-  bot.hp = Math.min(bot.maxHp, bot.hp + amount);
+  bot.hp = options.allowOverheal ? bot.hp + amount : Math.min(bot.maxHp, bot.hp + amount);
   const healed = bot.hp - before;
   bot.lastHeal = (bot.lastHeal || 0) + healed;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
@@ -771,7 +772,7 @@ function enforceTwinTemperPersonalities() {
   });
 }
 
-function applyForcedDoctrineStart() {
+function applyForcedDoctrineEndRound() {
   const entries = orderedPassiveEffectEntries("p90");
   if (!entries.length) return;
   const prevalent = mostPrevalentPersonality();
@@ -781,6 +782,19 @@ function applyForcedDoctrineStart() {
     if (!targets.length) return;
     const target = randomFrom(targets);
     setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
+  });
+}
+
+function applyFixedWillStart() {
+  const entries = orderedPassiveEffectEntries("p107");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    for (let count = 0; count < (entry.stack || 1); count += 1) {
+      const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+      if (!targets.length) return;
+      const target = randomFrom(targets);
+      setBotPersonality(target, "Stubborn", passiveName("p107", "Seal of Ose"), { markEntry: entry });
+    }
   });
 }
 

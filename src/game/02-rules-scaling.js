@@ -545,6 +545,12 @@ function applyBotSinGainDamage(bot, gained) {
   });
 }
 
+function stubbornArtifactChance(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 0;
+  return Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1);
+}
+
 function balamCollapseTargets(sourceBot) {
   const bosses = activeBots().filter((bot) => bot.id !== sourceBot?.id && bot.isBoss);
   if (bosses.length) return bosses;
@@ -647,6 +653,16 @@ function applyTargetedItemSinGain(item, targets) {
     });
     if (revealed > 0) state.roundState?.roundEvents.push(`Seal of Marked Offering revealed ${revealed} targeted DAMNED.`);
   });
+  orderedPassiveEffectEntries("p105").forEach((entry) => {
+    const chance = stubbornArtifactChance(entry);
+    let changed = 0;
+    uniqueTargets.forEach((bot) => {
+      if (Math.random() < chance && setBotPersonality(bot, "Stubborn", passiveName("p105", "Seal of Andras"), { markEntry: entry })) {
+        changed += 1;
+      }
+    });
+    if (changed > 0) state.roundState?.roundEvents.push(`${passiveName("p105", "Seal of Andras")} made ${changed} ARTIFACT target${changed === 1 ? "" : "s"} STUBBORN.`);
+  });
   const entries = orderedPassiveEffectEntries("p49");
   if (!entries.length) return;
   entries.forEach((entry) => {
@@ -716,7 +732,7 @@ function eligosBotCriticalWindow(idOrItem = "p69") {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 30);
+  return flatDamageValue(idOrItem, 20);
 }
 
 function gaapDamage(idOrItem) {
@@ -919,11 +935,6 @@ function lowProfileRewardSin(idOrItem) {
   return baseSin + passiveConvertedSin(idOrItem, 3);
 }
 
-function tripleBallotWeight(idOrItem) {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? 5 + (stack - 1) * 2 : 1;
-}
-
 function passiveConvertedSin(idOrItem, baseHeal) {
   return simpleStackCount(idOrItem) ? Math.ceil(baseHeal * passivePower(idOrItem)) : 0;
 }
@@ -1096,7 +1107,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p78") {
-        if ((state.roundState?.previousRoundEliminationsForMartyrs || 0) >= 3) {
+        if (personalityType(bot) === "Stubborn") {
           applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p78?.name, entry);
         }
         return;

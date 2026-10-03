@@ -100,6 +100,59 @@ function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) 
   });
 }
 
+function previousRecordedBotGuess(bot) {
+  return bot?.memory
+    ?.slice()
+    .reverse()
+    .find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
+}
+
+function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSources) {
+  const entries = orderedPassiveEffectEntries("p16");
+  const round = state.roundState;
+  if (!round || !entries.length) return;
+  entries.forEach((entry) => {
+    let triggeredCount = 0;
+    activeBotList.forEach((bot) => {
+      const currentGuess = round.botEffectiveGuesses.get(bot.id);
+      const previousGuess = previousRecordedBotGuess(bot);
+      if (!Number.isFinite(currentGuess) || !Number.isFinite(previousGuess)) return;
+      const difference = Math.abs(currentGuess - previousGuess);
+      if (difference >= 5) return;
+      const baseDamage = difference === 0 ? 30 : 10;
+      const damage = passiveEntryFlatDamage(entry, baseDamage);
+      if (damage <= 0) return;
+      triggeredCount += 1;
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Bael");
+    });
+    if (triggeredCount > 0) {
+      markPassiveEntryTriggered(entry);
+      round.roundEvents.push(`Seal of Bael punished ${triggeredCount} repeated DAMNED guess${triggeredCount === 1 ? "" : "es"}.`);
+    }
+  });
+}
+
+function applyAstarothRevealedTargetDifferenceEcho(entry) {
+  const round = state.roundState;
+  if (!round) return;
+  const sources = activeBots().filter((bot) => bot.revealedByPassive);
+  if (!sources.length) return;
+  const name = passiveName("p84", "Seal of Astaroth");
+  let triggered = false;
+  sources.forEach((sourceBot) => {
+    const baseDamage = Math.max(0, Math.ceil(round.targetDifferenceDamageByBotId?.get(sourceBot.id) || 0));
+    const damage = passiveEntryFlatDamage(entry, baseDamage);
+    const targets = adjacentLivingBots(sourceBot);
+    if (!targets.length || damage <= 0) return;
+    if (!triggered) {
+      markPassiveEntryTriggered(entry);
+      triggered = true;
+    }
+    damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
+    round.roundEvents.push(`${name} echoed ${damage} TARGET-difference damage from ${sourceBot.name} to adjacent DAMNED.`);
+  });
+}
+
 function applyPenalties() {
   const round = state.roundState;
   round.penaltiesApplied = true;
@@ -215,10 +268,7 @@ function applyPenalties() {
   }
   let eligosBlockedCritical = false;
   criticals.forEach((hitter) => {
-    const criticalSummary =
-      hitter.key === "player"
-        ? `${playerCriticalDamageTotal()} damage`
-        : `${hitter.damage} damage`;
+    const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
     getParticipants().forEach((victim) => {
       if (victim.key === hitter.key) return;
@@ -246,6 +296,7 @@ function applyPenalties() {
   if (eligosBlockedCritical) round.roundEvents.push("Seal of Eligos blocked DAMNED CRITICAL damage against you.");
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
+  applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
   applyPendingBotDamageBatch(botDamages, botDamageSources, activeBots);
 
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
@@ -343,10 +394,13 @@ function applyPenalties() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
+  updateArcadeRecordsFromCurrentRun();
+  removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
   state.inspectingGameOver = false;
   state.stage = "ended";
   state.pendingActive = null;
+  state.currentRunSlotId = null;
   addLog("Game over. The table solved you first.");
 }
 
@@ -373,15 +427,16 @@ function getParticipants() {
   const round = state.roundState;
   const playerCritWindow = critWindowDetails("p6");
   const ascendedWindow = ascendingCritWindowBonus();
+  const artifactWindow = Math.max(0, Math.ceil(round.artifactCriticalRangeBonus || 0));
   return [
     {
       key: "player",
       kind: "player",
       name: "You",
       guess: round.playerEffectiveGuess,
-      window: playerCritWindow.guaranteed + ascendedWindow,
+      window: playerCritWindow.guaranteed + ascendedWindow + artifactWindow,
       bonusWindowChance: playerCritWindow.chance,
-      damage: 10 + ascendingCritDamageBonus()
+      damage: 0
     },
     ...state.bots
       .filter((bot) => bot.hp > 0 && !bot.eliminated)
@@ -393,21 +448,38 @@ function getParticipants() {
         guess: round.botEffectiveGuesses.get(bot.id),
         window: Math.max(eligosBotCriticalWindow("p69"), botHasPassive(bot, "wideCrit") ? 2 : 0),
         bonusWindowChance: 0,
-        damage: 10
+        damage: 0
       }))
   ];
 }
 
 function criticalDamageForVictim(hitter, victim) {
   if (hitter.key === "player") {
-    return playerCriticalDamageTotal();
+    return playerCriticalDamageTotal(victim);
   }
-  return hitter.damage;
+  return maxHealthCriticalDamageForVictim(victim);
 }
 
-function playerCriticalDamageTotal() {
-  const base = passiveStack("p7") ? pressureSpikeDamage("p7") + ascendingCritDamageBonus() : 10 + ascendingCritDamageBonus();
-  return base + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+function maxHealthCriticalDamageForVictim(victim) {
+  if (victim?.kind === "player") return Math.ceil(playerMaxHp() * 0.1);
+  if (victim?.bot) return Math.ceil((victim.bot.maxHp || 0) * 0.1);
+  return 10;
+}
+
+function playerCriticalFlatBonus() {
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+}
+
+function playerCriticalDamageTotal(victim) {
+  const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
+  return base + playerCriticalFlatBonus();
+}
+
+function criticalSummaryForHitter(hitter) {
+  if (hitter.key !== "player") return "10% max HEALTH";
+  const flatBonus = playerCriticalFlatBonus();
+  if (passiveStack("p7")) return `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  return flatBonus > 0 ? `10% max HEALTH + ${flatBonus} damage` : "10% max HEALTH";
 }
 
 function findCriticalHits() {
@@ -627,6 +699,8 @@ function checkRoundPentakillBonus() {
   if (!round || round.pentakillAwarded || round.eliminationsThisRound < BOT_COUNT) return;
   round.pentakillAwarded = true;
   round.pentakillPopup = true;
+  playPentakillSfx();
+  recordRunPentakill();
   const healed = healPlayer(5, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
@@ -754,7 +828,8 @@ function takeNextBossSpec() {
 
 function applyEliminationPassives(bot) {
   applySelfStackingRevealedDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p84", "p87", "p88"]).forEach((entry) => {
+  applySelfStackingStubbornDeath(bot);
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108"]).forEach((entry) => {
     if (entry.id === "p9") {
       queueMarbasNextRoundSpread(entry);
       return;
@@ -860,18 +935,6 @@ function applyEliminationPassives(bot) {
       return;
     }
 
-    if (entry.id === "p84") {
-      if (!bot.revealedByPassive) return;
-      const baseDamage = Math.max(0, Math.ceil(state.roundState?.targetDifferenceDamageByBotId?.get(bot.id) || 0));
-      const damage = passiveEntryFlatDamage(entry, baseDamage);
-      const targets = adjacentLivingBots(bot);
-      if (!targets.length || damage <= 0) return;
-      markPassiveEntryTriggered(entry);
-      const name = passiveName("p84", "Seal of Astaroth");
-      damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
-      return;
-    }
-
     if (entry.id === "p87") {
       const targets = samePersonalityBots(bot);
       const damage = passiveEntryFlatDamage(entry, 30);
@@ -900,6 +963,17 @@ function applyEliminationPassives(bot) {
       return;
     }
 
+    if (entry.id === "p108") {
+      if (personalityType(bot) !== "Stubborn") return;
+      const targets = activeBots().filter((target) => target.isBoss);
+      const damage = passiveEntryFlatDamage(entry, 30);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p108", "Seal of Orobas");
+      damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
+      return;
+    }
+
     if (entry.id === "p53") {
       if (bot.isBoss || !bot.memory?.length) return;
       const bonus = Math.ceil(bot.memory.length * passiveEntryPower(entry));
@@ -912,7 +986,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65", "p85", "p89"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -1042,6 +1116,11 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    if (entry.id === "p84") {
+      applyAstarothRevealedTargetDifferenceEcho(entry);
+      return;
+    }
+
     if (entry.id === "p85") {
       const living = activeBots();
       if (!living.length) return;
@@ -1076,6 +1155,30 @@ function applyEndOfRoundPassiveDamageInOrder() {
       markPassiveEntryTriggered(entry);
       const name = passiveName("p89", "Seal of Marax");
       damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} adjacency damage to ${bot.name}.`, name);
+      return;
+    }
+
+    if (entry.id === "p105") {
+      const stubbornCount = activeBots().filter((bot) => personalityType(bot) === "Stubborn").length;
+      const targets = activeBots().filter((bot) => bot.isBoss);
+      const damage = passiveEntryFlatDamage(entry, stubbornCount * 5);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p105", "Seal of Andras");
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} STUBBORN toll damage to ${bot.name}.`, name);
+      return;
+    }
+
+    if (entry.id === "p106") {
+      const living = activeBots();
+      const type = mostPrevalentPersonality();
+      if (!living.length || !type) return;
+      const targets = living.filter((bot) => personalityType(bot) === type);
+      const damage = passiveEntryFlatDamage(entry, targets.length * 5);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p106", "Seal of Zagan");
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} ${type} damage to ${bot.name}.`, name);
     }
   });
 }
@@ -1107,6 +1210,7 @@ function applyEndOfRoundPassives() {
   });
 
   applyEndOfRoundBotSinPassives();
+  applyForcedDoctrineEndRound();
   applyInflationEngine();
   applySelfStackingBountySumDamage();
   applyLowProfileReward();

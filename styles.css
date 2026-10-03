@@ -4517,6 +4517,134 @@ body:has(.menu-app) {
   width: 100%;
 }
 
+.run-menu,
+.records-menu {
+  display: grid;
+  gap: 14px;
+  width: min(620px, 90vw);
+  transform: translateX(clamp(-120px, -6vw, -68px));
+}
+
+.run-slot-list,
+.records-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.run-slot-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.run-slot-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 58px;
+  width: 100%;
+  padding: 8px 16px;
+  border-color: transparent;
+  background: transparent;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.run-remove-button {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  width: 46px;
+  border-color: transparent;
+  background: transparent;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.run-slot-button:hover:not(:disabled) {
+  border-color: transparent;
+  background: transparent;
+}
+
+.run-remove-button:hover:not(:disabled) {
+  border-color: transparent;
+  background: transparent;
+  color: #ff5b5b;
+}
+
+.run-slot-label {
+  min-width: 0;
+}
+
+.run-slot-date {
+  font-size: 18px;
+  opacity: 0.82;
+  text-align: right;
+}
+
+.empty-run-slot {
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+
+.run-remove-confirm {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px 10px;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.run-remove-confirm-date {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.run-remove-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.records-list {
+  max-height: min(48vh, 460px);
+  padding: 14px 18px;
+  overflow-y: auto;
+  border-radius: 7px;
+  background: #000;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.78);
+}
+
+.record-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, auto);
+  align-items: center;
+  gap: 16px;
+  min-height: 38px;
+  color: #fff;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.record-row strong {
+  font-size: 20px;
+  text-align: right;
+}
+
 .menu-button {
   min-height: 62px;
   width: 100%;
@@ -4584,6 +4712,11 @@ body:has(.menu-app) {
 @media (max-width: 800px) {
   .main-menu {
     grid-template-rows: minmax(160px, 38vh) auto minmax(18px, 1fr);
+  }
+
+  .run-menu,
+  .records-menu {
+    transform: none;
   }
 
   .menu-button {
@@ -4658,6 +4791,27 @@ body.native-arcade .main-menu-panel {
 body.native-arcade .main-menu-actions,
 body.native-arcade .options-menu {
   gap: 8px;
+}
+
+body.native-arcade .run-menu,
+body.native-arcade .records-menu {
+  width: min(620px, 92vw);
+  transform: translateX(clamp(-76px, -5vw, -28px));
+}
+
+body.native-arcade .run-slot-button {
+  min-height: 52px;
+  font-size: 22px;
+}
+
+body.native-arcade .run-remove-button {
+  min-height: 52px;
+  width: 42px;
+  font-size: 20px;
+}
+
+body.native-arcade .run-slot-date {
+  font-size: 16px;
 }
 
 body.native-arcade .menu-button {

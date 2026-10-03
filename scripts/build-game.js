@@ -8,8 +8,10 @@ const sourceDir = path.join(root, "src", "game");
 const outputFile = path.join(root, "main.js");
 
 const SOURCE_FILES = [
+  "00-audio-sfx-config.js",
   "00-config-data-state.js",
   "01-persistence-audio.js",
+  "02-run-records.js",
   "02-rules-scaling.js",
   "03-descriptions-ui-stats.js",
   "04-damage-bots-core.js",

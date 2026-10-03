@@ -37,25 +37,30 @@ function renderMenuApp() {
   return `
     <main class="main-menu" aria-label="main menu">
       <section class="main-menu-panel">
-        ${screen === "play" ? renderPlayMenu() : screen === "options" ? renderOptionsMenu() : screen === "quit" ? renderQuitMenu() : renderMainMenu()}
+        ${
+          screen === "play"
+            ? renderPlayMenu()
+            : screen === "arcade-options"
+              ? renderArcadeOptionsMenu()
+            : screen === "arcade-runs"
+              ? renderArcadeRunsMenu()
+            : screen === "options"
+              ? renderOptionsMenu()
+              : screen === "sound"
+                ? renderSoundOptionsMenu()
+                : screen === "records"
+                  ? renderRecordsMenu()
+                  : screen === "quit"
+                    ? renderQuitMenu()
+                    : renderMainMenu()
+        }
       </section>
     </main>
+    <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
 
 function renderMainMenu() {
-  if (isNativeArcadeApp()) {
-    const continueButton = hasSavedArcadeRun()
-      ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
-      : "";
-    return `
-      <div class="main-menu-actions">
-        ${continueButton}
-        <button class="menu-button" data-menu-action="arcade">${continueButton ? "New Run" : "Arcade"}</button>
-        <button class="menu-button" data-menu-action="options">Options</button>
-      </div>
-    `;
-  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
@@ -65,29 +70,145 @@ function renderMainMenu() {
   `;
 }
 
+function formatRunStartedAt(timestamp) {
+  const date = new Date(Number(timestamp) || Date.now());
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 function renderPlayMenu() {
-  if (isNativeArcadeApp()) {
-    return `
-      <div class="main-menu-actions">
-        <button class="menu-button" data-menu-action="arcade">New Run</button>
-        <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
-      </div>
-    `;
-  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="arcade">Arcade</button>
-      <button class="menu-button" data-menu-action="pvp">Pvp</button>
+      ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">PvP</button>`}
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderArcadeOptionsMenu() {
+  const continueDisabled = hasSavedArcadeRun() ? "" : "disabled";
+  return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="continue-arcade" ${continueDisabled}>Continue</button>
+      <button class="menu-button" data-menu-action="load-run">Load Run</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="play">Back</button>
+    </div>
+  `;
+}
+
+function renderArcadeRunsMenu() {
+  const savedSlots = readArcadeRunSlots();
+  const emptyCount = Math.max(0, ARCADE_RUN_SLOT_COUNT - savedSlots.length);
+  const pendingDeleteSlot = savedSlots.find((slot) => slot.slotId === state.pendingRunDeleteSlotId);
+  const savedRows = savedSlots
+    .map(
+      (slot) => `
+        <article class="run-slot-row">
+          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}">
+            <span class="run-slot-label">Continue Run</span>
+            <span class="run-slot-date">${escapeHtml(formatRunStartedAt(slot.startedAt))}</span>
+          </button>
+          <button
+            class="run-remove-button"
+            data-remove-run-slot-id="${escapeAttr(slot.slotId)}"
+            data-tooltip="REMOVE RUN"
+            aria-label="Remove run"
+          >X</button>
+        </article>
+      `
+    )
+    .join("");
+  const emptyRows = Array.from({ length: emptyCount }, (_, index) => {
+    return `
+      <button class="run-slot-button empty-run-slot" data-new-run="${index}">
+        <span class="run-slot-label">New Run</span>
+      </button>
+    `;
+  }).join("");
+  return `
+    <div class="run-menu">
+      <div class="run-slot-list" aria-label="Saved runs">
+        ${savedRows}${emptyRows}
+      </div>
+      ${
+        pendingDeleteSlot
+          ? `
+            <div class="run-remove-confirm">
+              <div>Are You Sure You Want To Remove This Run?</div>
+              <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
+              <div class="run-remove-confirm-actions">
+                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">Yes</button>
+                <button class="small-button" data-cancel-remove-run>No</button>
+              </div>
+            </div>
+          `
+          : ""
+      }
+      <button class="menu-button secondary-menu-button" data-menu-action="arcade">Back</button>
     </div>
   `;
 }
 
 function renderOptionsMenu() {
   return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="sound-options">Sound Settings</button>
+      <button class="menu-button" data-menu-action="records">Records</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderSoundOptionsMenu() {
+  return `
     <div class="options-menu">
       ${renderSoundSettings("menu")}
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+    </div>
+  `;
+}
+
+function recordValueText(record, { withName = false, prefix = "" } = {}) {
+  const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
+  if (value <= 0) return "None";
+  const label = withName && record?.name ? ` - ${record.name}` : "";
+  return `${prefix}${formatNumber(value)}${label}`;
+}
+
+function renderRecordRow(label, value) {
+  return `
+    <div class="record-row">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderRecordsMenu() {
+  const records = loadArcadeRecords();
+  const rows = [
+    renderRecordRow("Most Eliminations", recordValueText(records.mostEliminations)),
+    renderRecordRow("Most Boss Eliminations", recordValueText(records.mostBossEliminations)),
+    renderRecordRow("Most Overall Damage", recordValueText(records.mostOverallDamage)),
+    renderRecordRow("Most Single Round Damage", recordValueText(records.mostSingleRoundDamage)),
+    renderRecordRow("Highest Round Reached", recordValueText(records.highestRoundReached)),
+    renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
+    renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
+    renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
+    renderRecordRow("Highest Elite Level Bought", recordValueText(records.highestEliteLevel, { withName: true, prefix: "ELITE " })),
+    renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
+    renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
+  ].join("");
+  return `
+    <div class="records-menu">
+      <div class="records-list">${rows}</div>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
   `;
 }
@@ -872,7 +993,7 @@ function renderBot(bot, pendingPick) {
     ? ""
     : `<span class="bot-flag" aria-label="${escapeAttr(bot.country)}" title="${escapeAttr(bot.country)}">${bot.flag}</span>`;
   const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
-  const healthPercent = bot.immortal ? 100 : (bot.hp / bot.maxHp) * 100;
+  const healthPercent = bot.immortal ? 100 : clamp((bot.hp / bot.maxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
   const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
@@ -1008,8 +1129,8 @@ function renderPendingText() {
     const value = artifactValue(6);
     return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
-  if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
-    return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
+  if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
+    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }
@@ -1212,13 +1333,32 @@ function renderPentakillPopup() {
 }
 
 function showMainMenu(screen = "main") {
+  saveArcadeRun();
   pvpClearAutoTimer();
   pvpStopHostPolling();
   clearNativeArcadeResumeOnForeground();
   state.mode = "menu";
   state.menuScreen = screen;
+  state.pendingRunDeleteSlotId = null;
   state.pauseOpen = false;
   state.mobileOfferingsOpen = false;
+  render();
+}
+
+function requestRunRemoval(slotId) {
+  state.pendingRunDeleteSlotId = slotId || null;
+  render();
+}
+
+function cancelRunRemoval() {
+  state.pendingRunDeleteSlotId = null;
+  render();
+}
+
+function confirmRunRemoval(slotId) {
+  removeArcadeRunSlot(slotId);
+  if (state.currentRunSlotId === slotId) state.currentRunSlotId = null;
+  state.pendingRunDeleteSlotId = null;
   render();
 }
 
@@ -1226,6 +1366,7 @@ function handleMenuAction(action) {
   resumeSoundtrack();
   if (action === "play") {
     state.menuScreen = "play";
+    state.pendingRunDeleteSlotId = null;
     render();
     return;
   }
@@ -1234,13 +1375,32 @@ function handleMenuAction(action) {
     render();
     return;
   }
+  if (action === "sound-options") {
+    state.menuScreen = "sound";
+    render();
+    return;
+  }
+  if (action === "records") {
+    state.menuScreen = "records";
+    render();
+    return;
+  }
   if (action === "back") {
     state.menuScreen = "main";
+    state.pendingRunDeleteSlotId = null;
     render();
     return;
   }
   if (action === "arcade") {
-    startGame();
+    state.menuScreen = "arcade-options";
+    state.pendingRunDeleteSlotId = null;
+    render();
+    return;
+  }
+  if (action === "load-run") {
+    state.menuScreen = "arcade-runs";
+    state.pendingRunDeleteSlotId = null;
+    render();
     return;
   }
   if (action === "continue-arcade") {

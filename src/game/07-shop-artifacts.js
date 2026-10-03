@@ -1,3 +1,25 @@
+function applyStubbornWitnessEndRoundGrowth() {
+  const entries = orderedPassiveEffectEntries("p104");
+  if (!entries.length) return;
+  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && personalityType(bot) === "Stubborn");
+  if (!targets.length) return;
+  entries.forEach((entry) => {
+    const amount = Math.max(0, Math.ceil(entry.stack || 1));
+    if (amount <= 0) return;
+    const source = passiveName("p104", "Seal of Alloces");
+    let totalMemory = 0;
+    let totalBounty = 0;
+    targets.forEach((bot) => {
+      totalMemory += addBotMemory(bot, amount, "", { source });
+      totalBounty += changeBotSin(bot, amount, "", { triggerLossDamage: false, source }).gained;
+    });
+    if (totalMemory > 0 || totalBounty > 0) {
+      markPassiveEntryTriggered(entry);
+      state.roundState?.roundEvents.push(`${source} gave STUBBORN DAMNED ${totalMemory} MEMORY and ${totalBounty} BOUNTY.`);
+    }
+  });
+}
+
 function rememberRound() {
   const round = state.roundState;
   clearBotMemoryBadges();
@@ -36,6 +58,7 @@ function rememberRound() {
       }
     );
   });
+  applyStubbornWitnessEndRoundGrowth();
 }
 
 function buyShopItem(slotIndex) {
@@ -81,6 +104,7 @@ function buyShopItem(slotIndex) {
     spendCredits(cost);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
@@ -88,6 +112,7 @@ function buyShopItem(slotIndex) {
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
     }
+    recordPlayedSeal(item.id);
     recordShopItemBought(item.id);
     state.itemsBought += 1;
     slot.sold = true;
@@ -256,6 +281,40 @@ function stackPlayerDamageReduction(basePercent, source) {
   return state.roundState.playerDamageReduction;
 }
 
+function addArtifactCriticalRangeBonus(amount, source) {
+  if (!state.roundState) return 0;
+  const bonus = Math.max(0, Math.ceil(amount || 0));
+  state.roundState.artifactCriticalRangeBonus = Math.max(0, Math.ceil(state.roundState.artifactCriticalRangeBonus || 0)) + bonus;
+  return state.roundState.artifactCriticalRangeBonus;
+}
+
+function snapshotDamnedAbility(bot) {
+  return {
+    type: personalityType(bot),
+    passiveKeys: [...(bot?.passiveKeys || [])],
+    buffPassiveKey: bot?.buffPassiveKey || null
+  };
+}
+
+function applyDamnedAbilitySnapshot(bot, snapshot, source) {
+  if (!bot || !snapshot) return false;
+  let changed = false;
+  if (snapshot.type) {
+    changed = setBotPersonality(bot, snapshot.type, source) || changed;
+  }
+  const passiveKeys = (snapshot.passiveKeys || []).filter((key) => BOSS_PASSIVES[key] || PYROS_GIFT_PASSIVES[key]);
+  const buffPassiveKey = PYROS_GIFT_PASSIVES[snapshot.buffPassiveKey] ? snapshot.buffPassiveKey : null;
+  if (JSON.stringify(bot.passiveKeys || []) !== JSON.stringify(passiveKeys)) {
+    bot.passiveKeys = [...passiveKeys];
+    changed = true;
+  }
+  if ((bot.buffPassiveKey || null) !== buffPassiveKey) {
+    bot.buffPassiveKey = buffPassiveKey;
+    changed = true;
+  }
+  return changed;
+}
+
 function recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter = true) {
   rememberLastUsedArtifactEffect(copiedItem);
   const text = `${copierName} copied ${copiedItem?.name || "Artifact"}: ${message}`;
@@ -280,9 +339,9 @@ function finishActiveResolution(index, message, uid = state.pendingActive?.uid, 
 
 function beginCopiedArtifactEffect(sourceItem, copierName) {
   const item = copiedEffectItem(sourceItem);
-  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a13") {
+  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a11") {
     state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
-    if (item.id === "a13") state.pendingActive.step = "damage";
+    if (item.id === "a11") state.pendingActive.step = "damage";
     closeMobileOfferingsForTargetPick();
     addLog(`${copierName} copied ${item.name}. Pick a DAMNED to resolve the copied effect.`);
     render();
@@ -300,21 +359,6 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     const value = artifactValue(10);
     state.roundState.targetOffset -= value;
     recordCopiedArtifactResolution(copierName, item, `${item.name} reduced the target by ${value}.`);
-    return;
-  }
-
-  if (item.id === "a11") {
-    recalculateTarget();
-    const before = state.roundState.target;
-    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
-    const snapped = snap.value;
-    state.roundState.targetOffset += snapped - before;
-    recalculateTarget();
-    recordCopiedArtifactResolution(
-      copierName,
-      item,
-      `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`
-    );
     return;
   }
 
@@ -363,7 +407,8 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a22") {
-    resolvePandoraRollEffect(item, (message) => recordCopiedArtifactResolution(copierName, item, message));
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`);
     return;
   }
 
@@ -392,10 +437,10 @@ function useActive(index) {
     return;
   }
 
-  if (item.id === "a13") {
-    const damagedHealTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.hp < bot.maxHp);
-    if (!damagedHealTargets.length) {
-      addLog(`${item.name} needs a damaged DAMNED to heal.`);
+  if (item.id === "a11") {
+    const nonBossTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && !bot.isBoss);
+    if (nonBossTargets.length < 2) {
+      addLog(`${item.name} needs two non-boss DAMNED.`);
       render();
       return;
     }
@@ -430,17 +475,6 @@ function useActive(index) {
     const value = artifactValue(10);
     state.roundState.targetOffset -= value;
     consumeActive(index, `${item.name} reduced the target by ${value}.`, item.uid);
-    return;
-  }
-
-  if (item.id === "a11") {
-    recalculateTarget();
-    const before = state.roundState.target;
-    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
-    const snapped = snap.value;
-    state.roundState.targetOffset += snapped - before;
-    recalculateTarget();
-    consumeActive(index, `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`, item.uid);
     return;
   }
 
@@ -479,10 +513,10 @@ function useActive(index) {
     return;
   }
 
-  if (item.id === "a13") {
+  if (item.id === "a11") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
     closeMobileOfferingsForTargetPick();
-    addLog("Pick a DAMNED to take 20 non-lethal damage.");
+    addLog("Pick a non-boss DAMNED to take 30% max-HEALTH damage.");
     render();
     return;
   }
@@ -521,7 +555,8 @@ function useActive(index) {
   }
 
   if (item.id === "a22") {
-    resolvePandoraRoll(index, item.uid);
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    consumeActive(index, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`, item.uid);
     return;
   }
 
@@ -534,8 +569,8 @@ function cancelPendingActive() {
   if (!pending) return;
   const item = pendingArtifactItem();
   const itemName = item?.name || "Artifact";
-  if (pending.id === "a13" && pending.step === "heal") {
-    addLog(`${itemName} has already hit; choose a heal target to finish it.`);
+  if (pending.id === "a11" && pending.step === "heal") {
+      addLog(`${itemName} has already hit; choose an overheal target to finish it.`);
     render();
     return;
   }
@@ -567,6 +602,8 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   }
   const [item] = state.player.actives.splice(actualIndex, 1);
   if (!item) return;
+  playArtifactSfx(item.id);
+  recordPlayedArtifact(item.id);
   if (!item.devTemporary) state.roundState.activeUses += 1;
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
@@ -580,51 +617,6 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
     finishGameOverRound();
   }
   if (renderAfter) render();
-}
-
-function resolvePandoraRollEffect(item, finish) {
-  const name = item?.name || activeName("a22");
-  const roll = Math.random();
-  if (roll < 0.1) {
-    const lost = loseCredits(artifactValue(8), name);
-    finish(`${name} consumed ${lost} SIN.`);
-    return;
-  }
-  if (roll < 0.25) {
-    const lost = loseCredits(artifactValue(4), name);
-    finish(`${name} consumed ${lost} SIN.`);
-    return;
-  }
-  if (roll < 0.4) {
-    const target = randomFrom(activeBots());
-    const damage = artifactValue(10);
-    if (target) {
-      damageBot(target, damage, `${name} dealt ${damage} damage to ${target.name}.`, name);
-      finish(`${name} struck ${target.name} for ${damage}.`);
-    } else {
-      finish(`${name} found no DAMNED to strike.`);
-    }
-    return;
-  }
-  if (roll < 0.7) {
-    const gained = gainCredits(artifactValue(8), true, name);
-    finish(`${name} gained ${gained} SIN.`);
-    return;
-  }
-  if (roll < 0.9) {
-    const gained = gainCredits(artifactValue(12), true, name);
-    finish(`${name} gained ${gained} SIN.`);
-    return;
-  }
-  const gained = gainCredits(artifactValue(16), true, name);
-  const damage = artifactValue(20);
-  damageBots(activeBots(), damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name}.`, name);
-  finish(`${name} gained ${gained} SIN and struck every DAMNED.`);
-}
-
-function resolvePandoraRoll(index, uid) {
-  const item = state.player.actives.find((active) => active.uid === uid) || ITEMS.a22;
-  resolvePandoraRollEffect(item, (message) => consumeActive(index, message, uid));
 }
 
 function chooseBot(botId) {
@@ -742,35 +734,37 @@ function chooseBot(botId) {
     return;
   }
 
-  if (id === "a13") {
-    resolveTriageBeam(bot);
+  if (id === "a11") {
+    resolveBloodVial(bot);
   }
 }
 
-function resolveTriageBeam(bot) {
+function resolveBloodVial(bot) {
   const pending = state.pendingActive;
   const item = pendingArtifactItem();
-  const itemName = item?.name || activeName("a13");
+  const itemName = item?.name || activeName("a11");
   if (pending.step === "damage") {
-    const possibleHealTargets = state.bots.filter(
-      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && candidate.hp < candidate.maxHp
-    );
-    if (!possibleHealTargets.length) {
-      addLog("Pick a damage target that leaves another damaged DAMNED to heal.");
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
       render();
       return;
     }
-    const value = artifactValue(20);
-    const dealt = damageBotNonLethal(
-      bot,
-      value,
-      (target, damage) => `${itemName} dealt ${damage} non-lethal damage to ${target.name}.`,
-      itemName
+    const possibleHealTargets = state.bots.filter(
+      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && !candidate.isBoss
     );
+    if (!possibleHealTargets.length) {
+      addLog("Pick a target that leaves another non-boss DAMNED to overheal.");
+      render();
+      return;
+    }
+    const damage = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
     pending.damageBotId = bot.id;
-    addLog(`Now pick another DAMNED to heal for ${value}.`);
+    pending.copiedAbility = snapshotDamnedAbility(bot);
+    pending.copiedAbilityName = bot.name;
+    addLog("Now pick another non-boss DAMNED to overheal and receive the copied ability.");
     render();
     return;
   }
@@ -781,14 +775,19 @@ function resolveTriageBeam(bot) {
       render();
       return;
     }
-    if (bot.hp >= bot.maxHp) {
-      addLog(`${itemName} can only heal a damaged DAMNED.`);
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
       render();
       return;
     }
-    const healed = healBot(bot, artifactValue(20), itemName);
+    const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    const healed = healBot(bot, healAmount, itemName, itemName, { allowOverheal: true });
+    const copied = applyDamnedAbilitySnapshot(bot, pending.copiedAbility, itemName);
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(pending.index, `${itemName} healed ${bot.name} for ${healed}.`);
+    finishActiveResolution(
+      pending.index,
+      `${itemName} overhealed ${bot.name} for ${healed} and ${copied ? "copied" : "matched"} ${pending.copiedAbilityName || "the first DAMNED"}'s ability.`
+    );
   }
 }
 

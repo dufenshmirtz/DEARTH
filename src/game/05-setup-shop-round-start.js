@@ -661,11 +661,14 @@ function applyActiveUsePassives(item) {
   });
 }
 
-function startGame() {
+function startGame(options = {}) {
   resumeSoundtrack();
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  const restartingSlotId = options.slotId || (state.mode === "arcade" ? state.currentRunSlotId : null) || createArcadeRunSlotId();
   state.mode = "arcade";
+  state.currentRunSlotId = restartingSlotId;
+  state.runStartedAt = Date.now();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.round = 1;
@@ -685,6 +688,7 @@ function startGame() {
   state.playerHealSources = [];
   state.playerCreditSources = [];
   state.sealStats = {};
+  state.runStats = defaultRunStats();
   state.pendingNextRoundMarbasBonuses = [];
   state.pendingSelfStackingPentakillDamage = 0;
   state.gameMemory = [];
@@ -723,6 +727,7 @@ function startGame() {
 }
 
 function beginRound() {
+  beginRunRoundStats();
   resetNegativePlaytestSin();
   pruneRemovedPassives();
   state.stage = "guess";
@@ -825,7 +830,7 @@ function beginRound() {
   });
 
   enforceTwinTemperPersonalities();
-  applyForcedDoctrineStart();
+  applyFixedWillStart();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -1110,7 +1115,14 @@ function planBossGuess(bot) {
     guess = selfConsistentGuess + randomFrom([-1, 1]) * randomInt(10, 18);
   }
 
-  return Math.ceil(clamp(guess, 0, 100));
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+}
+
+function clampFixedWillGuess(bot, guess) {
+  if (!passiveStack("p107") || personalityType(bot) !== "Stubborn") return guess;
+  const previousGuess = bot?.memory?.slice().reverse().find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
+  if (!Number.isFinite(previousGuess)) return guess;
+  return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
 function planBotGuess(bot) {
@@ -1156,7 +1168,7 @@ function planBotGuess(bot) {
     guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
   }
 
-  return Math.ceil(clamp(guess, 0, 100));
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
 }
 
 function bossRevealAllowedBySeals() {
@@ -1175,6 +1187,11 @@ function revealBotGuess(bot, source = "", entry = null) {
   state.roundState?.revealedBotIds?.add(bot.id);
   if (entry && !wasRevealed) markPassiveEntryTriggered(entry);
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
+  if (!wasRevealed) {
+    orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
+      setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
+    });
+  }
   return !wasRevealed;
 }
 
@@ -1414,13 +1431,9 @@ function recalculateTarget() {
     totalWeight += weight;
   };
 
-  const tripleWeight = tripleBallotWeight("p16");
   const sinWeight = wealthWeightBonus();
-  const playerWeight = tripleWeight + sinWeight;
+  const playerWeight = 1 + sinWeight;
   addWeightedGuess(round.playerEffectiveGuess, playerWeight);
-  if (tripleWeight > 1) {
-    markPassiveTriggered("p16");
-  }
 
   state.bots.forEach((bot) => {
     const guess = round.botEffectiveGuesses.get(bot.id);

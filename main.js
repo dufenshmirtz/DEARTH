@@ -1,5 +1,51 @@
 "use strict";
 
+// Central audio tuning. Edit volumes here, then run `pnpm run build:game`.
+// Values are multiplied by the in-game Sfx slider and muted by the mute toggle.
+const SOUNDTRACK_SRC = "assets/audio/Zingaresca_1910_loop.ogg";
+const SOUNDTRACK_VOLUME = 0.55;
+
+const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
+const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
+const READY_SFX_SRC = "assets/audio/Ready.mp3";
+const NEXT_ROUND_SFX_SRC = "assets/audio/nextroundSound.mp3";
+const CLOCK_TICK_SFX_SRCS = [
+  "assets/audio/tickinclock_RdeIBkld.mp3",
+  "assets/audio/tickinclock_N3shRVgw.mp3"
+];
+
+const SEAL_PURCHASE_SFX_VOLUME = 0.055;
+const GUESS_SFX_VOLUME = 0.9;
+const READY_SFX_VOLUME = 0.2;
+const NEXT_ROUND_SFX_VOLUME = 0.2;
+const CLOCK_TICK_SFX_VOLUME = 0.154;
+const GUESS_SFX_START_OFFSET = 0.12;
+
+const DEFAULT_ARTIFACT_SFX_VOLUME = 0.45;
+const ARTIFACT_SFX = {
+  a6: { src: "assets/audio/artifacts/Altar.mp3", volume: 0.45 },
+  a7: { src: "assets/audio/artifacts/Statue.mp3", volume: 0.45 },
+  a8: { src: "assets/audio/artifacts/goat.mp3", volume: 0.45 },
+  a9: { src: "assets/audio/artifacts/invertedCross.mp3", volume: 0.42 },
+  a10: { src: "assets/audio/artifacts/coin.mp3", volume: 0.48 },
+  a11: { src: "assets/audio/artifacts/VialofBlood.mp3", volume: 0.5 },
+  a12: { src: "assets/audio/artifacts/invertedCross.mp3", volume: 0.38 },
+  a14: { src: "assets/audio/artifacts/candle.mp3", volume: 0.45 },
+  a15: { src: "assets/audio/artifacts/Dagger.mp3", volume: 0.5 },
+  a18: { src: "assets/audio/artifacts/Crystal.mp3", volume: 0.5 },
+  a21: { src: "assets/audio/artifacts/voodoo.mp3", volume: 0.44 },
+  a22: { src: "assets/audio/artifacts/chalice.mp3", volume: 0.42 },
+  a23: { src: "assets/audio/artifacts/book.mp3", volume: 0.48 },
+  a25: { src: "assets/audio/artifacts/pentakill.mp3", volume: 0.55 },
+  a28: { src: "assets/audio/artifacts/skull.mp3", volume: 0.43 }
+};
+
+const PENTAKILL_SFX = {
+  src: "assets/audio/artifacts/lamb.mp3",
+  volume: 0.43
+};
+"use strict";
+
 const BASE_PASSIVE_LIMIT = 3;
 const MAX_PASSIVE_LIMIT = 6;
 const ACTIVE_LIMIT = 5;
@@ -32,26 +78,13 @@ const PVP_MODIFIERS = [0.7, 0.8, 0.9, 1, 1.1, 1.2];
 const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
-const SOUNDTRACK_SRC = "assets/audio/Zingaresca_1910_loop.ogg";
-const SOUNDTRACK_VOLUME = 0.55;
-const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
-const SEAL_PURCHASE_SFX_VOLUME = 0.055;
-const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
-const READY_SFX_SRC = "assets/audio/Ready.mp3";
-const NEXT_ROUND_SFX_SRC = "assets/audio/nextroundSound.mp3";
-const CLOCK_TICK_SFX_SRCS = [
-  "assets/audio/tickinclock_RdeIBkld.mp3",
-  "assets/audio/tickinclock_N3shRVgw.mp3"
-];
-const GUESS_SFX_VOLUME = 0.9;
-const READY_SFX_VOLUME = 0.2;
-const NEXT_ROUND_SFX_VOLUME = 0.2;
-const CLOCK_TICK_SFX_VOLUME = 0.154;
-const GUESS_SFX_START_OFFSET = 0.12;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
+const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
+const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
 const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
 const ARCADE_RUN_SAVE_VERSION = 1;
+const ARCADE_RUN_SLOT_COUNT = 5;
 const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
@@ -150,7 +183,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 30 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -214,7 +247,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Bael",
     price: 10,
-    description: "Your guess counts five times when calculating the TARGET average. ELITE adds +2 more guess weight each level."
+    description: "If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p17: {
     id: "p17",
@@ -661,7 +694,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Souls of Martyrs",
     price: 20,
-    description: "DAMNED take x1.5 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.2 to the multiplier."
+    description: "DAMNED with the STUBBORN personality take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p79: {
     id: "p79",
@@ -696,7 +729,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Astaroth",
     price: 13,
-    description: "If a DAMNED with a revealed guess dies this round, each adjacent DAMNED takes damage equal to the TARGET-difference damage it took this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "At end of round, every revealed DAMNED makes each adjacent DAMNED take damage equal to that revealed DAMNED's TARGET-difference damage this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p85: {
     id: "p85",
@@ -738,7 +771,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Bifrons",
     price: 15,
-    description: "Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the start of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the end of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p91: {
     id: "p91",
@@ -752,42 +785,42 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 30,
-    description: "At reveal, 20% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
+    description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
     name: "Seal of Zilon",
     price: 30,
-    description: "At reveal, 20% chance to double every DAMNED BOUNTY. ELITE does not change this effect."
+    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE does not change this effect."
   },
   p94: {
     id: "p94",
     type: "passive",
     name: "Seal of Serafeim",
     price: 30,
-    description: "At reveal, 20% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect."
   },
   p95: {
     id: "p95",
     type: "passive",
     name: "Seal of Pyros",
     price: 30,
-    description: "At reveal, 20% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect."
+    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
     price: 30,
-    description: "At reveal, 20% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
     price: 30,
-    description: "At reveal, 20% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect."
+    description: "At reveal, 30% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect."
   },
   p98: {
     id: "p98",
@@ -830,6 +863,48 @@ const ITEMS = {
     name: "Seal of Cassiel Pentagram",
     price: 14,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
+  },
+  p104: {
+    id: "p104",
+    type: "passive",
+    name: "Seal of Alloces",
+    price: 13,
+    description: "At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains."
+  },
+  p105: {
+    id: "p105",
+    type: "passive",
+    name: "Seal of Andras",
+    price: 13,
+    description: "Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to STUBBORN. At end of round, BOSSES take 5 damage for every STUBBORN DAMNED. ELITE adds +10% chance and multiplies the BOSS damage by x1.5 each level, rounded up."
+  },
+  p106: {
+    id: "p106",
+    type: "passive",
+    name: "Seal of Zagan",
+    price: 14,
+    description: "At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p107: {
+    id: "p107",
+    type: "passive",
+    name: "Seal of Ose",
+    price: 12,
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE changes one extra DAMNED each round."
+  },
+  p108: {
+    id: "p108",
+    type: "passive",
+    name: "Seal of Orobas",
+    price: 14,
+    description: "When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p109: {
+    id: "p109",
+    type: "passive",
+    name: "Seal of Samael Triangle",
+    price: 14,
+    description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
   a28: {
     id: "a28",
@@ -892,7 +967,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 4,
-    description: "Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest."
+    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability."
   },
   a12: {
     id: "a12",
@@ -906,7 +981,7 @@ const ITEMS = {
     type: "active",
     name: "The White-Hilted Knife",
     price: 4,
-    description: "Deal 20 non-lethal damage to one DAMNED, then heal another already-damaged DAMNED for 20."
+    description: "Removed."
   },
   a16: {
     id: "a16",
@@ -941,7 +1016,7 @@ const ITEMS = {
     type: "active",
     name: "Cursed Chalice",
     price: 4,
-    description: "10% lose 8 SIN, 15% lose 4 SIN, 15% deal 10 damage to a random DAMNED, 30% gain 8 SIN, 20% gain 12 SIN, 10% gain 16 SIN and deal 20 damage to each DAMNED."
+    description: "+1 CRITICAL range for the round."
   },
   a23: {
     id: "a23",
@@ -1065,18 +1140,25 @@ const PASSIVE_IDS = [
   "p100",
   "p101",
   "p102",
-  "p103"
+  "p103",
+  "p104",
+  "p105",
+  "p106",
+  "p107",
+  "p108",
+  "p109"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p3", "p5", "p8", "p18", "p24", "p27", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p82", "p83"]);
+const REMOVED_PASSIVE_IDS = new Set(["p3", "p4", "p5", "p8", "p18", "p24", "p27", "p28", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p82", "p83"]);
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97"]);
-const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103"]);
+const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 5 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
-  p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 }
+  p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
+  p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
 };
 const ACTIVE_IDS = [
   "a6",
@@ -1222,7 +1304,13 @@ const SEAL_SIGILS = {
   p100: "self-stacking/Bethor.png",
   p101: "self-stacking/Aggiel-Hexagram.png",
   p102: "self-stacking/Zachriel-Triangle.png",
-  p103: "self-stacking/Cassiel-Pentagram.png"
+  p103: "self-stacking/Cassiel-Pentagram.png",
+  p104: "004_Allocer.png",
+  p105: "008_Andras.png",
+  p106: "071_Zagan.png",
+  p107: "050_Ose.png",
+  p108: "049_Orobas.png",
+  p109: "self-stacking/Samael-Triangle.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -1298,7 +1386,12 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p88: "40-raum.png",
   p89: "21-marax-morax.png",
   p90: "46-bifrons.png",
-  p91: "23-aim-haborym.png"
+  p91: "23-aim-haborym.png",
+  p104: "52-alloces.png",
+  p105: "63-andras.png",
+  p106: "61-zagan.png",
+  p107: "57-ose.png",
+  p108: "55-orobas.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -1352,18 +1445,18 @@ const GOETIC_BOSS_SPECS = [
   { key: "crocell", name: "Crocell", image: "49-crocell.png", passiveId: "p45" },
   { key: "furcas", name: "Furcas", image: "50-furcas.png", passiveId: "p72" },
   { key: "balam", name: "Balam", image: "51-balam.png", passiveId: "p57" },
-  { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p3" },
+  { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p104" },
   { key: "caim", name: "Caim", image: "53-caim-camio.png", passiveId: "p67" },
   { key: "murmur", name: "Murmur", image: "54-murmur.png", passiveId: "p31" },
-  { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p83" },
+  { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p108" },
   { key: "gremory", name: "Gremory", image: "56-gremory-gamori.png", passiveId: "p34" },
-  { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p28" },
+  { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p107" },
   { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p70" },
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
-  { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p27" },
+  { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
   { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p25" },
-  { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p4" },
+  { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p105" },
   { key: "haures", name: "Haures", image: "64-haures-flauros.png", passiveId: "p86" },
   { key: "andrealphus", name: "Andrealphus", image: "65-andrealphus.png", passiveId: "p30" },
   { key: "cimejes", name: "Cimejes", image: "66-cimejes-kimaris.png", passiveId: "p48" },
@@ -1659,6 +1752,7 @@ const FINAL_BOSS_SPECS = {
 const state = {
   mode: "menu",
   menuScreen: "main",
+  pendingRunDeleteSlotId: null,
   sound: {
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
@@ -1687,6 +1781,9 @@ const state = {
   playerHealSources: [],
   playerCreditSources: [],
   sealStats: {},
+  runStats: null,
+  currentRunSlotId: null,
+  runStartedAt: null,
   pendingNextRoundMarbasBonuses: [],
   pendingSelfStackingPentakillDamage: 0,
   gameMemory: [],
@@ -1730,8 +1827,10 @@ let guessSfx = null;
 let readySfx = null;
 let nextRoundSfx = null;
 let clockTickSfx = [];
+let artifactSfx = {};
+let pentakillSfx = null;
 let nextClockTickIndex = 0;
-const activeClockTickInstances = new Set();
+const activeOneShotSfxInstances = new Set();
 let sfxPrimed = false;
 let gameButtonTickInstalled = false;
 let soundtrackPausedByAppBackground = false;
@@ -1753,6 +1852,10 @@ function applySoundSettings() {
   clockTickSfx.forEach((audio) => {
     if (audio) audio.volume = sfxVolume(CLOCK_TICK_SFX_VOLUME);
   });
+  Object.entries(artifactSfx).forEach(([id, audio]) => {
+    if (audio) audio.volume = artifactSfxVolume(id);
+  });
+  if (pentakillSfx) pentakillSfx.volume = pentakillSfxVolume();
 }
 
 function loadSoundSettings() {
@@ -1777,9 +1880,8 @@ function isNativeArcadeApp() {
 }
 
 function hasSavedArcadeRun() {
-  if (!isNativeArcadeApp()) return false;
   try {
-    return Boolean(window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY));
+    return readArcadeRunSlots().length > 0;
   } catch (error) {
     return false;
   }
@@ -1859,21 +1961,119 @@ function arcadeRunSaveSnapshot() {
   return snapshot;
 }
 
-function saveArcadeRun() {
-  if (!isNativeArcadeApp() || state.mode !== "arcade") return;
+function createArcadeRunSlotId() {
+  return `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeArcadeRunPayload(payload) {
+  if (!payload || payload.version !== ARCADE_RUN_SAVE_VERSION || !payload.state || payload.state.mode !== "arcade") return null;
+  const slotId = payload.slotId || payload.state.currentRunSlotId || createArcadeRunSlotId();
+  const startedAt = Number(payload.startedAt || payload.state.runStartedAt || payload.savedAt || Date.now());
+  const lastPlayedAt = Number(payload.lastPlayedAt || payload.savedAt || startedAt);
+  return {
+    version: ARCADE_RUN_SAVE_VERSION,
+    slotId,
+    startedAt,
+    lastPlayedAt,
+    state: payload.state
+  };
+}
+
+function sortArcadeRunSlots(slots) {
+  return slots
+    .map(normalizeArcadeRunPayload)
+    .filter(Boolean)
+    .sort((a, b) => (b.lastPlayedAt || 0) - (a.lastPlayedAt || 0))
+    .slice(0, ARCADE_RUN_SLOT_COUNT);
+}
+
+function readLegacyArcadeRunSlot() {
   try {
+    const raw = window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw, decodeArcadeSaveValue);
+    const normalized = normalizeArcadeRunPayload(parsed);
+    if (normalized && !parsed.slotId && !parsed.state?.currentRunSlotId) normalized.slotId = "legacy-run";
+    return normalized;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readArcadeRunSlots() {
+  try {
+    const raw = window.localStorage?.getItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
+    if (!raw) {
+      const legacy = readLegacyArcadeRunSlot();
+      return legacy ? [legacy] : [];
+    }
+    const parsed = JSON.parse(raw, decodeArcadeSaveValue);
+    const slots = Array.isArray(parsed?.slots) ? parsed.slots : Array.isArray(parsed) ? parsed : [];
+    const normalized = sortArcadeRunSlots(slots);
+    if (!normalized.length) {
+      const legacy = readLegacyArcadeRunSlot();
+      return legacy ? [legacy] : [];
+    }
+    return normalized;
+  } catch (error) {
+    const legacy = readLegacyArcadeRunSlot();
+    return legacy ? [legacy] : [];
+  }
+}
+
+function writeArcadeRunSlots(slots) {
+  const normalized = sortArcadeRunSlots(slots);
+  try {
+    window.localStorage?.setItem(
+      ARCADE_RUN_SLOTS_STORAGE_KEY,
+      JSON.stringify({ version: ARCADE_RUN_SAVE_VERSION, slots: normalized }, encodeArcadeSaveValue)
+    );
+  } catch (error) {}
+  return normalized;
+}
+
+function upsertArcadeRunPayload(payload) {
+  const normalizedPayload = normalizeArcadeRunPayload(payload);
+  if (!normalizedPayload) return;
+  const slots = readArcadeRunSlots().filter((slot) => slot.slotId !== normalizedPayload.slotId);
+  slots.unshift(normalizedPayload);
+  writeArcadeRunSlots(slots);
+}
+
+function removeArcadeRunSlot(slotId) {
+  if (!slotId) return;
+  writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
+}
+
+function saveArcadeRun() {
+  if (state.mode !== "arcade") return;
+  if (state.gameOver) {
+    removeArcadeRunSlot(state.currentRunSlotId);
+    return;
+  }
+  try {
+    if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
+    if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();
+    updateArcadeRecordsFromCurrentRun();
     const payload = {
       version: ARCADE_RUN_SAVE_VERSION,
+      slotId: state.currentRunSlotId,
+      startedAt: state.runStartedAt,
       savedAt: Date.now(),
+      lastPlayedAt: Date.now(),
       state: arcadeRunSaveSnapshot()
     };
-    window.localStorage?.setItem(ARCADE_RUN_STORAGE_KEY, JSON.stringify(payload, encodeArcadeSaveValue));
+    upsertArcadeRunPayload(payload);
   } catch (error) {}
 }
 
-function removeCorruptArcadeRunSave() {
+function removeCorruptArcadeRunSave(slotId = "") {
   try {
-    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    if (slotId) removeArcadeRunSlot(slotId);
+    else {
+      window.localStorage?.removeItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
+      window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    }
   } catch (error) {}
 }
 
@@ -1956,6 +2156,9 @@ function normalizeLoadedArcadeRun() {
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
+  state.runStats = normalizeRunStats(state.runStats);
+  if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
+  if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();
   selfStackingGameConditionCounts();
   if (!state.lastUsedArtifact || typeof state.lastUsedArtifact !== "object" || !ACTIVE_IDS.includes(state.lastUsedArtifact.id)) {
     state.lastUsedArtifact = null;
@@ -1977,24 +2180,26 @@ function normalizeLoadedArcadeRun() {
   });
 }
 
-function loadArcadeRun() {
-  if (!isNativeArcadeApp()) return false;
+function loadArcadeRun(slotId = "") {
   try {
-    const raw = window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY);
-    if (!raw) return false;
-    const payload = JSON.parse(raw, decodeArcadeSaveValue);
-    if (!payload || payload.version !== ARCADE_RUN_SAVE_VERSION || !payload.state || payload.state.mode !== "arcade") {
-      removeCorruptArcadeRunSave();
+    const slots = readArcadeRunSlots();
+    const payload = normalizeArcadeRunPayload(slotId ? slots.find((slot) => slot.slotId === slotId) : slots[0]);
+    if (!payload) return false;
+    if (!payload.state || payload.state.mode !== "arcade") {
+      removeCorruptArcadeRunSave(slotId);
       return false;
     }
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
     });
+    state.currentRunSlotId = payload.slotId;
+    state.runStartedAt = payload.startedAt;
     normalizeLoadedArcadeRun();
+    saveArcadeRun();
     return true;
   } catch (error) {
-    removeCorruptArcadeRunSave();
+    removeCorruptArcadeRunSave(slotId);
     return false;
   }
 }
@@ -2028,8 +2233,11 @@ function primeSfxAudio() {
     ensureButtonSfx("guess"),
     ensureButtonSfx("ready"),
     ensureNextRoundSfx(),
-    ...CLOCK_TICK_SFX_SRCS.map((_, index) => ensureClockTickSfx(index))
+    ...CLOCK_TICK_SFX_SRCS.map((_, index) => ensureClockTickSfx(index)),
+    ...Object.keys(ARTIFACT_SFX).map((id) => ensureArtifactSfx(id)),
+    ensurePentakillSfx()
   ].forEach((audio) => {
+    if (!audio) return;
     try {
       const primer = audio.cloneNode(true);
       primer.volume = 0;
@@ -2076,9 +2284,11 @@ function pauseGameAudioForBackground() {
     readySfx,
     nextRoundSfx,
     ...clockTickSfx,
-    ...activeClockTickInstances
+    ...Object.values(artifactSfx),
+    pentakillSfx,
+    ...activeOneShotSfxInstances
   ].forEach(pauseAudioElement);
-  activeClockTickInstances.clear();
+  activeOneShotSfxInstances.clear();
 }
 
 function resumeGameAudioAfterForeground() {
@@ -2133,6 +2343,42 @@ function ensureClockTickSfx(index) {
   return clockTickSfx[index];
 }
 
+function artifactSfxConfig(id) {
+  return ARTIFACT_SFX[id] || null;
+}
+
+function artifactSfxVolume(id) {
+  const config = artifactSfxConfig(id);
+  return sfxVolume(config?.volume ?? DEFAULT_ARTIFACT_SFX_VOLUME);
+}
+
+function pentakillSfxVolume() {
+  return sfxVolume(PENTAKILL_SFX.volume);
+}
+
+function ensureArtifactSfx(id) {
+  const config = artifactSfxConfig(id);
+  if (!config?.src) return null;
+  if (!artifactSfx[id]) {
+    const audio = new Audio(config.src);
+    audio.preload = "auto";
+    audio.volume = artifactSfxVolume(id);
+    artifactSfx[id] = loadAudioElement(audio);
+  }
+  return artifactSfx[id];
+}
+
+function ensurePentakillSfx() {
+  if (!PENTAKILL_SFX.src) return null;
+  if (!pentakillSfx) {
+    pentakillSfx = new Audio(PENTAKILL_SFX.src);
+    pentakillSfx.preload = "auto";
+    pentakillSfx.volume = pentakillSfxVolume();
+    loadAudioElement(pentakillSfx);
+  }
+  return pentakillSfx;
+}
+
 function playOneShot(audio, startOffset = 0) {
   try {
     audio.currentTime = Math.max(0, startOffset);
@@ -2140,14 +2386,15 @@ function playOneShot(audio, startOffset = 0) {
   } catch (error) {}
 }
 
-function playClonedOneShot(audio, volume) {
+function playClonedOneShot(audio, volume, startOffset = 0) {
   try {
     const instance = audio.cloneNode(true);
     instance.volume = volume;
-    activeClockTickInstances.add(instance);
-    const cleanup = () => activeClockTickInstances.delete(instance);
+    activeOneShotSfxInstances.add(instance);
+    const cleanup = () => activeOneShotSfxInstances.delete(instance);
     instance.addEventListener("ended", cleanup, { once: true });
     instance.addEventListener("error", cleanup, { once: true });
+    instance.currentTime = Math.max(0, startOffset || 0);
     instance.play().catch(cleanup);
   } catch (error) {}
 }
@@ -2174,6 +2421,19 @@ function playClockTickSfx() {
   playClonedOneShot(ensureClockTickSfx(tickIndex), sfxVolume(CLOCK_TICK_SFX_VOLUME));
 }
 
+function playArtifactSfx(id) {
+  const config = artifactSfxConfig(id);
+  const audio = ensureArtifactSfx(id);
+  if (!audio || !config) return;
+  playClonedOneShot(audio, artifactSfxVolume(id), config.startOffset || 0);
+}
+
+function playPentakillSfx() {
+  const audio = ensurePentakillSfx();
+  if (!audio) return;
+  playClonedOneShot(audio, pentakillSfxVolume(), PENTAKILL_SFX.startOffset || 0);
+}
+
 function installGameButtonTickSfx() {
   if (gameButtonTickInstalled) return;
   gameButtonTickInstalled = true;
@@ -2195,11 +2455,204 @@ function installSoundtrack() {
   ensureButtonSfx("ready");
   ensureNextRoundSfx();
   CLOCK_TICK_SFX_SRCS.forEach((_, index) => ensureClockTickSfx(index));
+  Object.keys(ARTIFACT_SFX).forEach((id) => ensureArtifactSfx(id));
+  ensurePentakillSfx();
   installGameButtonTickSfx();
   document.addEventListener("pointerdown", unlockSoundtrack);
   document.addEventListener("keydown", unlockSoundtrack);
 }
 
+"use strict";
+
+function emptyRecord(extra = {}) {
+  return { value: 0, ...extra };
+}
+
+function defaultRunStats() {
+  return {
+    overallDamage: 0,
+    currentRoundDamage: 0,
+    singleRoundDamage: 0,
+    pentakills: 0,
+    currentRoundSealDamage: {},
+    maxSealRoundDamage: emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: emptyRecord({ id: "", name: "" }),
+    sealPlays: {},
+    artifactPlays: {}
+  };
+}
+
+function normalizeRunStats(stats) {
+  const base = defaultRunStats();
+  const source = stats && typeof stats === "object" ? stats : {};
+  return {
+    ...base,
+    ...source,
+    overallDamage: Math.max(0, Math.ceil(Number(source.overallDamage) || 0)),
+    currentRoundDamage: Math.max(0, Math.ceil(Number(source.currentRoundDamage) || 0)),
+    singleRoundDamage: Math.max(0, Math.ceil(Number(source.singleRoundDamage) || 0)),
+    pentakills: Math.max(0, Math.floor(Number(source.pentakills) || 0)),
+    currentRoundSealDamage: source.currentRoundSealDamage && typeof source.currentRoundSealDamage === "object" ? source.currentRoundSealDamage : {},
+    maxSealRoundDamage:
+      source.maxSealRoundDamage && typeof source.maxSealRoundDamage === "object"
+        ? { ...emptyRecord({ id: "", name: "" }), ...source.maxSealRoundDamage }
+        : base.maxSealRoundDamage,
+    highestEliteLevel:
+      source.highestEliteLevel && typeof source.highestEliteLevel === "object"
+        ? { ...emptyRecord({ id: "", name: "" }), ...source.highestEliteLevel }
+        : base.highestEliteLevel,
+    sealPlays: source.sealPlays && typeof source.sealPlays === "object" ? source.sealPlays : {},
+    artifactPlays: source.artifactPlays && typeof source.artifactPlays === "object" ? source.artifactPlays : {}
+  };
+}
+
+function ensureRunStats() {
+  state.runStats = normalizeRunStats(state.runStats);
+  return state.runStats;
+}
+
+function defaultArcadeRecords() {
+  return {
+    mostEliminations: emptyRecord(),
+    mostBossEliminations: emptyRecord(),
+    mostOverallDamage: emptyRecord(),
+    mostSingleRoundDamage: emptyRecord(),
+    highestRoundReached: emptyRecord(),
+    mostPentakills: emptyRecord(),
+    mostOverallSealDamage: emptyRecord({ id: "", name: "" }),
+    mostRoundSealDamage: emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: emptyRecord({ id: "", name: "" }),
+    mostPlayedSeal: emptyRecord({ id: "", name: "" }),
+    mostPlayedArtifact: emptyRecord({ id: "", name: "" })
+  };
+}
+
+function normalizeRecord(record, fallback) {
+  const source = record && typeof record === "object" ? record : {};
+  return { ...fallback, ...source, value: Math.max(0, Math.ceil(Number(source.value) || 0)) };
+}
+
+function normalizeArcadeRecords(records) {
+  const defaults = defaultArcadeRecords();
+  const source = records && typeof records === "object" ? records : {};
+  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => [key, normalizeRecord(source[key], fallback)]));
+}
+
+function loadArcadeRecords() {
+  try {
+    const raw = window.localStorage?.getItem(ARCADE_RECORDS_STORAGE_KEY);
+    return normalizeArcadeRecords(raw ? JSON.parse(raw) : null);
+  } catch (error) {
+    return defaultArcadeRecords();
+  }
+}
+
+function saveArcadeRecords(records) {
+  try {
+    window.localStorage?.setItem(ARCADE_RECORDS_STORAGE_KEY, JSON.stringify(normalizeArcadeRecords(records)));
+  } catch (error) {}
+}
+
+function bestCountEntry(counts, type) {
+  if (!counts || typeof counts !== "object") return emptyRecord({ id: "", name: "" });
+  return Object.entries(counts).reduce(
+    (best, [id, raw]) => {
+      const value = Math.max(0, Math.floor(Number(raw) || 0));
+      if (value <= best.value) return best;
+      return { value, id, name: ITEMS[id]?.name || id || type };
+    },
+    emptyRecord({ id: "", name: "" })
+  );
+}
+
+function bestOverallSealDamageEntry() {
+  const stats = state.sealStats && typeof state.sealStats === "object" ? state.sealStats : {};
+  return Object.entries(stats).reduce(
+    (best, [id, sealStats]) => {
+      const value = Math.max(0, Math.ceil(Number(sealStats?.damage) || 0));
+      if (value <= best.value) return best;
+      return { value, id, name: ITEMS[id]?.name || id || "SEAL" };
+    },
+    emptyRecord({ id: "", name: "" })
+  );
+}
+
+function updateRecordIfHigher(records, key, candidate) {
+  const current = records[key] || emptyRecord();
+  const value = Math.max(0, Math.ceil(Number(candidate?.value) || 0));
+  if (value <= Math.max(0, Math.ceil(Number(current.value) || 0))) return;
+  records[key] = { ...current, ...candidate, value };
+}
+
+function updateArcadeRecordsFromCurrentRun() {
+  if (state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  const records = loadArcadeRecords();
+  updateRecordIfHigher(records, "mostEliminations", { value: state.eliminations || 0 });
+  updateRecordIfHigher(records, "mostBossEliminations", { value: state.bossKills || 0 });
+  updateRecordIfHigher(records, "mostOverallDamage", { value: stats.overallDamage || 0 });
+  updateRecordIfHigher(records, "mostSingleRoundDamage", { value: stats.singleRoundDamage || 0 });
+  updateRecordIfHigher(records, "highestRoundReached", { value: state.round || 0 });
+  updateRecordIfHigher(records, "mostPentakills", { value: stats.pentakills || 0 });
+  updateRecordIfHigher(records, "mostOverallSealDamage", bestOverallSealDamageEntry());
+  updateRecordIfHigher(records, "mostRoundSealDamage", stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }));
+  updateRecordIfHigher(records, "highestEliteLevel", stats.highestEliteLevel || emptyRecord({ id: "", name: "" }));
+  updateRecordIfHigher(records, "mostPlayedSeal", bestCountEntry(stats.sealPlays, "SEAL"));
+  updateRecordIfHigher(records, "mostPlayedArtifact", bestCountEntry(stats.artifactPlays, "ARTIFACT"));
+  saveArcadeRecords(records);
+}
+
+function beginRunRoundStats() {
+  const stats = ensureRunStats();
+  stats.currentRoundDamage = 0;
+  stats.currentRoundSealDamage = {};
+}
+
+function recordRunDamage(amount) {
+  const damage = Math.max(0, Math.ceil(Number(amount) || 0));
+  if (damage <= 0 || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.overallDamage += damage;
+  stats.currentRoundDamage += damage;
+  if (stats.currentRoundDamage > stats.singleRoundDamage) stats.singleRoundDamage = stats.currentRoundDamage;
+}
+
+function recordRunSealDamage(id, amount) {
+  const damage = Math.max(0, Math.ceil(Number(amount) || 0));
+  if (!id || damage <= 0 || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  const next = (Number(stats.currentRoundSealDamage[id]) || 0) + damage;
+  stats.currentRoundSealDamage[id] = next;
+  if (next > (stats.maxSealRoundDamage?.value || 0)) {
+    stats.maxSealRoundDamage = { value: next, id, name: ITEMS[id]?.name || id };
+  }
+}
+
+function recordRunPentakill() {
+  if (state.mode !== "arcade") return;
+  ensureRunStats().pentakills += 1;
+}
+
+function recordPlayedSeal(id) {
+  if (!id || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.sealPlays[id] = (Number(stats.sealPlays[id]) || 0) + 1;
+}
+
+function recordPlayedArtifact(id) {
+  if (!id || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.artifactPlays[id] = (Number(stats.artifactPlays[id]) || 0) + 1;
+}
+
+function recordEliteLevelBought(id, stack) {
+  if (!id || state.mode !== "arcade") return;
+  const eliteLevel = Math.max(0, Math.floor(Number(stack) || 1) - 1);
+  const stats = ensureRunStats();
+  if (eliteLevel > (stats.highestEliteLevel?.value || 0)) {
+    stats.highestEliteLevel = { value: eliteLevel, id, name: ITEMS[id]?.name || id };
+  }
+}
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -2747,6 +3200,12 @@ function applyBotSinGainDamage(bot, gained) {
   });
 }
 
+function stubbornArtifactChance(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 0;
+  return Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1);
+}
+
 function balamCollapseTargets(sourceBot) {
   const bosses = activeBots().filter((bot) => bot.id !== sourceBot?.id && bot.isBoss);
   if (bosses.length) return bosses;
@@ -2849,6 +3308,16 @@ function applyTargetedItemSinGain(item, targets) {
     });
     if (revealed > 0) state.roundState?.roundEvents.push(`Seal of Marked Offering revealed ${revealed} targeted DAMNED.`);
   });
+  orderedPassiveEffectEntries("p105").forEach((entry) => {
+    const chance = stubbornArtifactChance(entry);
+    let changed = 0;
+    uniqueTargets.forEach((bot) => {
+      if (Math.random() < chance && setBotPersonality(bot, "Stubborn", passiveName("p105", "Seal of Andras"), { markEntry: entry })) {
+        changed += 1;
+      }
+    });
+    if (changed > 0) state.roundState?.roundEvents.push(`${passiveName("p105", "Seal of Andras")} made ${changed} ARTIFACT target${changed === 1 ? "" : "s"} STUBBORN.`);
+  });
   const entries = orderedPassiveEffectEntries("p49");
   if (!entries.length) return;
   entries.forEach((entry) => {
@@ -2918,7 +3387,7 @@ function eligosBotCriticalWindow(idOrItem = "p69") {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 30);
+  return flatDamageValue(idOrItem, 20);
 }
 
 function gaapDamage(idOrItem) {
@@ -3121,11 +3590,6 @@ function lowProfileRewardSin(idOrItem) {
   return baseSin + passiveConvertedSin(idOrItem, 3);
 }
 
-function tripleBallotWeight(idOrItem) {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? 5 + (stack - 1) * 2 : 1;
-}
-
 function passiveConvertedSin(idOrItem, baseHeal) {
   return simpleStackCount(idOrItem) ? Math.ceil(baseHeal * passivePower(idOrItem)) : 0;
 }
@@ -3298,7 +3762,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p78") {
-        if ((state.roundState?.previousRoundEliminationsForMartyrs || 0) >= 3) {
+        if (personalityType(bot) === "Stubborn") {
           applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p78?.name, entry);
         }
         return;
@@ -3394,11 +3858,12 @@ function artifactDescription(item) {
   if (item.id === "a10") {
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
-  if (item.id === "a11") return "Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest.";
+  if (item.id === "a11") {
+    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's ability.`;
+  }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
   if (item.id === "a13") {
-    const value = artifactValue(20);
-    return `Deal ${value} non-lethal damage to one DAMNED, then heal another already-damaged DAMNED for ${value}.`;
+    return "Removed.";
   }
   if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
   if (item.id === "a15") {
@@ -3413,7 +3878,7 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.";
   }
   if (item.id === "a22") {
-    return `10% lose ${artifactValue(8)} SIN, 15% lose ${artifactValue(4)} SIN, 15% deal ${artifactValue(10)} damage to a random DAMNED, 30% gain ${artifactValue(8)} SIN, 20% gain ${artifactValue(12)} SIN, 10% gain ${artifactValue(16)} SIN and deal ${artifactValue(20)} damage to each DAMNED.`;
+    return "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
   if (item.id === "a25") return `Pick a DAMNED, heal it to full, and increase its BOUNTY by ${artifactValue(9)}.`;
@@ -3468,7 +3933,9 @@ function itemDescription(item) {
   if (item.id === "p15") {
     return `Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal ${bathinMemoryDamage(item)} damage to that DAMNED.`;
   }
-  if (item.id === "p16") return `Your guess has x${tripleBallotWeight(item)} weight when calculating the TARGET average.`;
+  if (item.id === "p16") {
+    return `If a DAMNED's guess is less than 5 away from their previous guess, they take ${flatDamageValue(item, 10)} damage. If it is exactly the same, they take ${flatDamageValue(item, 30)} damage.`;
+  }
   if (item.id === "p17") {
     return `At end of round, deal ${flatDamagePower(item)}x the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If BOSSES are active, hit all active BOSSES and exclude BOSS MEMORY from the sum.`;
   }
@@ -3570,7 +4037,7 @@ function itemDescription(item) {
   }
   if (item.id === "p77") return `If you scored CRITICAL this round, DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources next round.`;
   if (item.id === "p78") {
-    return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if 3 or more eliminations happened in the previous round.`;
+    return `STUBBORN DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   }
   if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
   if (item.id === "p80") {
@@ -3581,7 +4048,7 @@ function itemDescription(item) {
     return `Using an ARTIFACT on a DAMNED has a ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance to reveal their guess.`;
   }
   if (item.id === "p84") {
-    return `If a revealed DAMNED dies, adjacent DAMNED take ${flatDamagePower(item)}x the TARGET-difference damage it took this round. Worst guess penalty counts.`;
+    return `At end of round, every revealed DAMNED makes adjacent DAMNED take ${flatDamagePower(item)}x the TARGET-difference damage it took this round. Worst guess penalty counts.`;
   }
   if (item.id === "p85") {
     return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
@@ -3599,10 +4066,27 @@ function itemDescription(item) {
     return `DAMNED can only be ANALYST or STUBBORN. At end of round, a DAMNED takes ${flatDamageValue(item, 5)} damage if both adjacent DAMNED have the same personality.`;
   }
   if (item.id === "p90") {
-    return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At start of round, one DAMNED changes to the most prevalent personality.`;
+    return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At end of round, one DAMNED changes to the most prevalent personality.`;
   }
   if (item.id === "p91") {
     return `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage. Current range bonus: +${ascendingCritWindowBonus()}.`;
+  }
+  if (item.id === "p104") {
+    const amount = item.stack || 1;
+    return `At end of round, STUBBORN DAMNED gain +${amount} additional MEMORY and +${amount} BOUNTY. Revealed DAMNED become STUBBORN.`;
+  }
+  if (item.id === "p105") {
+    const chance = Math.round(stubbornArtifactChance(item) * 100);
+    return `Using an ARTIFACT on a DAMNED has a ${chance}% chance to make them STUBBORN. At end of round, BOSSES take ${flatDamageValue(item, 5)} damage per STUBBORN DAMNED.`;
+  }
+  if (item.id === "p106") {
+    return `At end of round, DAMNED with the most prevalent personality take ${flatDamageValue(item, 5)} damage for every DAMNED with that personality.`;
+  }
+  if (item.id === "p107") {
+    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At start of round, ${item.stack || 1} random DAMNED become STUBBORN.`;
+  }
+  if (item.id === "p108") {
+    return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
   }
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
   if (item.id === "p93") return `At reveal, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
@@ -3873,7 +4357,6 @@ function botPassiveSummary(bot) {
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
-  if (bot.isBoss && bot.goeticPassiveId) names.push(`${bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "Seal"} Lock`);
   bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
   return names.join(" + ") || "No Seal";
@@ -3890,10 +4373,6 @@ function botPassiveDescription(bot) {
       .replaceAll(copiedSpec.name, bot.name)
       .replaceAll(`${copiedSpec.name}'s`, `${bot.name}'s`);
     descriptions.push(`Borrowed power: ${borrowedText}`);
-  }
-  if (bot.isBoss && bot.goeticPassiveId) {
-    const sealName = bot.goeticSealName || ITEMS[bot.goeticPassiveId]?.name || "this Seal";
-    descriptions.push(`While ${bot.name} is alive, your ${sealName} cannot trigger and appears darkened.`);
   }
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
@@ -4092,14 +4571,14 @@ function devSealChance(idOrItem) {
   const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   const stack = typeof idOrItem === "string" ? simpleStackCount(idOrItem) : idOrItem?.stack || 0;
   if (!stack) return 0;
-  if (id === "p92") return Math.min(0.8, 0.2 + Math.max(0, stack - 1) * 0.05);
-  return 0.2;
+  if (id === "p92") return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
+  return 0.3;
 }
 
 function devSealEntryChance(entry) {
   if (!entry?.stack) return 0;
-  if (entry.id === "p92") return Math.min(0.8, 0.2 + Math.max(0, entry.stack - 1) * 0.05);
-  return 0.2;
+  if (entry.id === "p92") return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
+  return 0.3;
 }
 
 function isSelfStackingSeal(idOrItem) {
@@ -4232,6 +4711,20 @@ function applySelfStackingRevealedDeath(bot) {
     damage,
     (target, dealt) => `${ITEMS.p102.name} dealt ${dealt} damage to ${target.name} from ${bot.name}'s revealed death.`,
     ITEMS.p102.name
+  );
+}
+
+function applySelfStackingStubbornDeath(bot) {
+  if (personalityType(bot) !== "Stubborn") return;
+  const damage = triggerSelfStackingSeal("p109");
+  if (damage <= 0) return;
+  const targets = activeBots().filter((target) => personalityType(target) !== "Stubborn");
+  if (!targets.length) return;
+  damageBots(
+    targets,
+    damage,
+    (target, dealt) => `${ITEMS.p109.name} dealt ${dealt} damage to ${target.name} from ${bot.name}'s STUBBORN death.`,
+    ITEMS.p109.name
   );
 }
 
@@ -4494,6 +4987,7 @@ function recordSealStat(id, kind, amount) {
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats[kind] = (stats[kind] || 0) + value;
+  if (kind === "damage") recordRunSealDamage(id, value);
 }
 
 function recordSealTrigger(id) {
@@ -4590,6 +5084,7 @@ function clearBotMemoryBadges() {
 function recordBotDamageSource(bot, amount, source, kind = "") {
   const damage = Math.max(0, Math.ceil(amount));
   if (!bot || damage <= 0) return;
+  recordRunDamage(damage);
   recordBotRoundDamage(bot, damage);
   if (!source) return;
   bot.damageSources = bot.damageSources || [];
@@ -4910,10 +5405,10 @@ function healPlayer(amount, reason, source = undefined) {
   return healed;
 }
 
-function healBot(bot, amount, reason, source = undefined) {
+function healBot(bot, amount, reason, source = undefined, options = {}) {
   amount = Math.ceil(amount);
   const before = bot.hp;
-  bot.hp = Math.min(bot.maxHp, bot.hp + amount);
+  bot.hp = options.allowOverheal ? bot.hp + amount : Math.min(bot.maxHp, bot.hp + amount);
   const healed = bot.hp - before;
   bot.lastHeal = (bot.lastHeal || 0) + healed;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
@@ -5310,7 +5805,7 @@ function enforceTwinTemperPersonalities() {
   });
 }
 
-function applyForcedDoctrineStart() {
+function applyForcedDoctrineEndRound() {
   const entries = orderedPassiveEffectEntries("p90");
   if (!entries.length) return;
   const prevalent = mostPrevalentPersonality();
@@ -5320,6 +5815,19 @@ function applyForcedDoctrineStart() {
     if (!targets.length) return;
     const target = randomFrom(targets);
     setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
+  });
+}
+
+function applyFixedWillStart() {
+  const entries = orderedPassiveEffectEntries("p107");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    for (let count = 0; count < (entry.stack || 1); count += 1) {
+      const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+      if (!targets.length) return;
+      const target = randomFrom(targets);
+      setBotPersonality(target, "Stubborn", passiveName("p107", "Seal of Ose"), { markEntry: entry });
+    }
   });
 }
 
@@ -6067,11 +6575,14 @@ function applyActiveUsePassives(item) {
   });
 }
 
-function startGame() {
+function startGame(options = {}) {
   resumeSoundtrack();
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  const restartingSlotId = options.slotId || (state.mode === "arcade" ? state.currentRunSlotId : null) || createArcadeRunSlotId();
   state.mode = "arcade";
+  state.currentRunSlotId = restartingSlotId;
+  state.runStartedAt = Date.now();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.round = 1;
@@ -6091,6 +6602,7 @@ function startGame() {
   state.playerHealSources = [];
   state.playerCreditSources = [];
   state.sealStats = {};
+  state.runStats = defaultRunStats();
   state.pendingNextRoundMarbasBonuses = [];
   state.pendingSelfStackingPentakillDamage = 0;
   state.gameMemory = [];
@@ -6129,6 +6641,7 @@ function startGame() {
 }
 
 function beginRound() {
+  beginRunRoundStats();
   resetNegativePlaytestSin();
   pruneRemovedPassives();
   state.stage = "guess";
@@ -6231,7 +6744,7 @@ function beginRound() {
   });
 
   enforceTwinTemperPersonalities();
-  applyForcedDoctrineStart();
+  applyFixedWillStart();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -6516,7 +7029,14 @@ function planBossGuess(bot) {
     guess = selfConsistentGuess + randomFrom([-1, 1]) * randomInt(10, 18);
   }
 
-  return Math.ceil(clamp(guess, 0, 100));
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+}
+
+function clampFixedWillGuess(bot, guess) {
+  if (!passiveStack("p107") || personalityType(bot) !== "Stubborn") return guess;
+  const previousGuess = bot?.memory?.slice().reverse().find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
+  if (!Number.isFinite(previousGuess)) return guess;
+  return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
 function planBotGuess(bot) {
@@ -6562,7 +7082,7 @@ function planBotGuess(bot) {
     guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
   }
 
-  return Math.ceil(clamp(guess, 0, 100));
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
 }
 
 function bossRevealAllowedBySeals() {
@@ -6581,6 +7101,11 @@ function revealBotGuess(bot, source = "", entry = null) {
   state.roundState?.revealedBotIds?.add(bot.id);
   if (entry && !wasRevealed) markPassiveEntryTriggered(entry);
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
+  if (!wasRevealed) {
+    orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
+      setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
+    });
+  }
   return !wasRevealed;
 }
 
@@ -6820,13 +7345,9 @@ function recalculateTarget() {
     totalWeight += weight;
   };
 
-  const tripleWeight = tripleBallotWeight("p16");
   const sinWeight = wealthWeightBonus();
-  const playerWeight = tripleWeight + sinWeight;
+  const playerWeight = 1 + sinWeight;
   addWeightedGuess(round.playerEffectiveGuess, playerWeight);
-  if (tripleWeight > 1) {
-    markPassiveTriggered("p16");
-  }
 
   state.bots.forEach((bot) => {
     const guess = round.botEffectiveGuesses.get(bot.id);
@@ -6989,6 +7510,59 @@ function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) 
   });
 }
 
+function previousRecordedBotGuess(bot) {
+  return bot?.memory
+    ?.slice()
+    .reverse()
+    .find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
+}
+
+function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSources) {
+  const entries = orderedPassiveEffectEntries("p16");
+  const round = state.roundState;
+  if (!round || !entries.length) return;
+  entries.forEach((entry) => {
+    let triggeredCount = 0;
+    activeBotList.forEach((bot) => {
+      const currentGuess = round.botEffectiveGuesses.get(bot.id);
+      const previousGuess = previousRecordedBotGuess(bot);
+      if (!Number.isFinite(currentGuess) || !Number.isFinite(previousGuess)) return;
+      const difference = Math.abs(currentGuess - previousGuess);
+      if (difference >= 5) return;
+      const baseDamage = difference === 0 ? 30 : 10;
+      const damage = passiveEntryFlatDamage(entry, baseDamage);
+      if (damage <= 0) return;
+      triggeredCount += 1;
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Bael");
+    });
+    if (triggeredCount > 0) {
+      markPassiveEntryTriggered(entry);
+      round.roundEvents.push(`Seal of Bael punished ${triggeredCount} repeated DAMNED guess${triggeredCount === 1 ? "" : "es"}.`);
+    }
+  });
+}
+
+function applyAstarothRevealedTargetDifferenceEcho(entry) {
+  const round = state.roundState;
+  if (!round) return;
+  const sources = activeBots().filter((bot) => bot.revealedByPassive);
+  if (!sources.length) return;
+  const name = passiveName("p84", "Seal of Astaroth");
+  let triggered = false;
+  sources.forEach((sourceBot) => {
+    const baseDamage = Math.max(0, Math.ceil(round.targetDifferenceDamageByBotId?.get(sourceBot.id) || 0));
+    const damage = passiveEntryFlatDamage(entry, baseDamage);
+    const targets = adjacentLivingBots(sourceBot);
+    if (!targets.length || damage <= 0) return;
+    if (!triggered) {
+      markPassiveEntryTriggered(entry);
+      triggered = true;
+    }
+    damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
+    round.roundEvents.push(`${name} echoed ${damage} TARGET-difference damage from ${sourceBot.name} to adjacent DAMNED.`);
+  });
+}
+
 function applyPenalties() {
   const round = state.roundState;
   round.penaltiesApplied = true;
@@ -7104,10 +7678,7 @@ function applyPenalties() {
   }
   let eligosBlockedCritical = false;
   criticals.forEach((hitter) => {
-    const criticalSummary =
-      hitter.key === "player"
-        ? `${playerCriticalDamageTotal()} damage`
-        : `${hitter.damage} damage`;
+    const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
     getParticipants().forEach((victim) => {
       if (victim.key === hitter.key) return;
@@ -7135,6 +7706,7 @@ function applyPenalties() {
   if (eligosBlockedCritical) round.roundEvents.push("Seal of Eligos blocked DAMNED CRITICAL damage against you.");
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
+  applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
   applyPendingBotDamageBatch(botDamages, botDamageSources, activeBots);
 
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
@@ -7232,10 +7804,13 @@ function applyPenalties() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
+  updateArcadeRecordsFromCurrentRun();
+  removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
   state.inspectingGameOver = false;
   state.stage = "ended";
   state.pendingActive = null;
+  state.currentRunSlotId = null;
   addLog("Game over. The table solved you first.");
 }
 
@@ -7262,15 +7837,16 @@ function getParticipants() {
   const round = state.roundState;
   const playerCritWindow = critWindowDetails("p6");
   const ascendedWindow = ascendingCritWindowBonus();
+  const artifactWindow = Math.max(0, Math.ceil(round.artifactCriticalRangeBonus || 0));
   return [
     {
       key: "player",
       kind: "player",
       name: "You",
       guess: round.playerEffectiveGuess,
-      window: playerCritWindow.guaranteed + ascendedWindow,
+      window: playerCritWindow.guaranteed + ascendedWindow + artifactWindow,
       bonusWindowChance: playerCritWindow.chance,
-      damage: 10 + ascendingCritDamageBonus()
+      damage: 0
     },
     ...state.bots
       .filter((bot) => bot.hp > 0 && !bot.eliminated)
@@ -7282,21 +7858,38 @@ function getParticipants() {
         guess: round.botEffectiveGuesses.get(bot.id),
         window: Math.max(eligosBotCriticalWindow("p69"), botHasPassive(bot, "wideCrit") ? 2 : 0),
         bonusWindowChance: 0,
-        damage: 10
+        damage: 0
       }))
   ];
 }
 
 function criticalDamageForVictim(hitter, victim) {
   if (hitter.key === "player") {
-    return playerCriticalDamageTotal();
+    return playerCriticalDamageTotal(victim);
   }
-  return hitter.damage;
+  return maxHealthCriticalDamageForVictim(victim);
 }
 
-function playerCriticalDamageTotal() {
-  const base = passiveStack("p7") ? pressureSpikeDamage("p7") + ascendingCritDamageBonus() : 10 + ascendingCritDamageBonus();
-  return base + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+function maxHealthCriticalDamageForVictim(victim) {
+  if (victim?.kind === "player") return Math.ceil(playerMaxHp() * 0.1);
+  if (victim?.bot) return Math.ceil((victim.bot.maxHp || 0) * 0.1);
+  return 10;
+}
+
+function playerCriticalFlatBonus() {
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+}
+
+function playerCriticalDamageTotal(victim) {
+  const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
+  return base + playerCriticalFlatBonus();
+}
+
+function criticalSummaryForHitter(hitter) {
+  if (hitter.key !== "player") return "10% max HEALTH";
+  const flatBonus = playerCriticalFlatBonus();
+  if (passiveStack("p7")) return `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  return flatBonus > 0 ? `10% max HEALTH + ${flatBonus} damage` : "10% max HEALTH";
 }
 
 function findCriticalHits() {
@@ -7516,6 +8109,8 @@ function checkRoundPentakillBonus() {
   if (!round || round.pentakillAwarded || round.eliminationsThisRound < BOT_COUNT) return;
   round.pentakillAwarded = true;
   round.pentakillPopup = true;
+  playPentakillSfx();
+  recordRunPentakill();
   const healed = healPlayer(5, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
@@ -7643,7 +8238,8 @@ function takeNextBossSpec() {
 
 function applyEliminationPassives(bot) {
   applySelfStackingRevealedDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p84", "p87", "p88"]).forEach((entry) => {
+  applySelfStackingStubbornDeath(bot);
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108"]).forEach((entry) => {
     if (entry.id === "p9") {
       queueMarbasNextRoundSpread(entry);
       return;
@@ -7749,18 +8345,6 @@ function applyEliminationPassives(bot) {
       return;
     }
 
-    if (entry.id === "p84") {
-      if (!bot.revealedByPassive) return;
-      const baseDamage = Math.max(0, Math.ceil(state.roundState?.targetDifferenceDamageByBotId?.get(bot.id) || 0));
-      const damage = passiveEntryFlatDamage(entry, baseDamage);
-      const targets = adjacentLivingBots(bot);
-      if (!targets.length || damage <= 0) return;
-      markPassiveEntryTriggered(entry);
-      const name = passiveName("p84", "Seal of Astaroth");
-      damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
-      return;
-    }
-
     if (entry.id === "p87") {
       const targets = samePersonalityBots(bot);
       const damage = passiveEntryFlatDamage(entry, 30);
@@ -7789,6 +8373,17 @@ function applyEliminationPassives(bot) {
       return;
     }
 
+    if (entry.id === "p108") {
+      if (personalityType(bot) !== "Stubborn") return;
+      const targets = activeBots().filter((target) => target.isBoss);
+      const damage = passiveEntryFlatDamage(entry, 30);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p108", "Seal of Orobas");
+      damageBots(targets, damage, (target, dealt) => `${name} dealt ${dealt} damage to ${target.name}.`, name);
+      return;
+    }
+
     if (entry.id === "p53") {
       if (bot.isBoss || !bot.memory?.length) return;
       const bonus = Math.ceil(bot.memory.length * passiveEntryPower(entry));
@@ -7801,7 +8396,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65", "p85", "p89"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -7931,6 +8526,11 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    if (entry.id === "p84") {
+      applyAstarothRevealedTargetDifferenceEcho(entry);
+      return;
+    }
+
     if (entry.id === "p85") {
       const living = activeBots();
       if (!living.length) return;
@@ -7965,6 +8565,30 @@ function applyEndOfRoundPassiveDamageInOrder() {
       markPassiveEntryTriggered(entry);
       const name = passiveName("p89", "Seal of Marax");
       damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} adjacency damage to ${bot.name}.`, name);
+      return;
+    }
+
+    if (entry.id === "p105") {
+      const stubbornCount = activeBots().filter((bot) => personalityType(bot) === "Stubborn").length;
+      const targets = activeBots().filter((bot) => bot.isBoss);
+      const damage = passiveEntryFlatDamage(entry, stubbornCount * 5);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p105", "Seal of Andras");
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} STUBBORN toll damage to ${bot.name}.`, name);
+      return;
+    }
+
+    if (entry.id === "p106") {
+      const living = activeBots();
+      const type = mostPrevalentPersonality();
+      if (!living.length || !type) return;
+      const targets = living.filter((bot) => personalityType(bot) === type);
+      const damage = passiveEntryFlatDamage(entry, targets.length * 5);
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p106", "Seal of Zagan");
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} ${type} damage to ${bot.name}.`, name);
     }
   });
 }
@@ -7996,6 +8620,7 @@ function applyEndOfRoundPassives() {
   });
 
   applyEndOfRoundBotSinPassives();
+  applyForcedDoctrineEndRound();
   applyInflationEngine();
   applySelfStackingBountySumDamage();
   applyLowProfileReward();
@@ -8181,6 +8806,28 @@ function advanceAfterSummary() {
   render();
 }
 
+function applyStubbornWitnessEndRoundGrowth() {
+  const entries = orderedPassiveEffectEntries("p104");
+  if (!entries.length) return;
+  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && personalityType(bot) === "Stubborn");
+  if (!targets.length) return;
+  entries.forEach((entry) => {
+    const amount = Math.max(0, Math.ceil(entry.stack || 1));
+    if (amount <= 0) return;
+    const source = passiveName("p104", "Seal of Alloces");
+    let totalMemory = 0;
+    let totalBounty = 0;
+    targets.forEach((bot) => {
+      totalMemory += addBotMemory(bot, amount, "", { source });
+      totalBounty += changeBotSin(bot, amount, "", { triggerLossDamage: false, source }).gained;
+    });
+    if (totalMemory > 0 || totalBounty > 0) {
+      markPassiveEntryTriggered(entry);
+      state.roundState?.roundEvents.push(`${source} gave STUBBORN DAMNED ${totalMemory} MEMORY and ${totalBounty} BOUNTY.`);
+    }
+  });
+}
+
 function rememberRound() {
   const round = state.roundState;
   clearBotMemoryBadges();
@@ -8219,6 +8866,7 @@ function rememberRound() {
       }
     );
   });
+  applyStubbornWitnessEndRoundGrowth();
 }
 
 function buyShopItem(slotIndex) {
@@ -8264,6 +8912,7 @@ function buyShopItem(slotIndex) {
     spendCredits(cost);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
@@ -8271,6 +8920,7 @@ function buyShopItem(slotIndex) {
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
     }
+    recordPlayedSeal(item.id);
     recordShopItemBought(item.id);
     state.itemsBought += 1;
     slot.sold = true;
@@ -8439,6 +9089,40 @@ function stackPlayerDamageReduction(basePercent, source) {
   return state.roundState.playerDamageReduction;
 }
 
+function addArtifactCriticalRangeBonus(amount, source) {
+  if (!state.roundState) return 0;
+  const bonus = Math.max(0, Math.ceil(amount || 0));
+  state.roundState.artifactCriticalRangeBonus = Math.max(0, Math.ceil(state.roundState.artifactCriticalRangeBonus || 0)) + bonus;
+  return state.roundState.artifactCriticalRangeBonus;
+}
+
+function snapshotDamnedAbility(bot) {
+  return {
+    type: personalityType(bot),
+    passiveKeys: [...(bot?.passiveKeys || [])],
+    buffPassiveKey: bot?.buffPassiveKey || null
+  };
+}
+
+function applyDamnedAbilitySnapshot(bot, snapshot, source) {
+  if (!bot || !snapshot) return false;
+  let changed = false;
+  if (snapshot.type) {
+    changed = setBotPersonality(bot, snapshot.type, source) || changed;
+  }
+  const passiveKeys = (snapshot.passiveKeys || []).filter((key) => BOSS_PASSIVES[key] || PYROS_GIFT_PASSIVES[key]);
+  const buffPassiveKey = PYROS_GIFT_PASSIVES[snapshot.buffPassiveKey] ? snapshot.buffPassiveKey : null;
+  if (JSON.stringify(bot.passiveKeys || []) !== JSON.stringify(passiveKeys)) {
+    bot.passiveKeys = [...passiveKeys];
+    changed = true;
+  }
+  if ((bot.buffPassiveKey || null) !== buffPassiveKey) {
+    bot.buffPassiveKey = buffPassiveKey;
+    changed = true;
+  }
+  return changed;
+}
+
 function recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter = true) {
   rememberLastUsedArtifactEffect(copiedItem);
   const text = `${copierName} copied ${copiedItem?.name || "Artifact"}: ${message}`;
@@ -8463,9 +9147,9 @@ function finishActiveResolution(index, message, uid = state.pendingActive?.uid, 
 
 function beginCopiedArtifactEffect(sourceItem, copierName) {
   const item = copiedEffectItem(sourceItem);
-  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a13") {
+  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a11") {
     state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
-    if (item.id === "a13") state.pendingActive.step = "damage";
+    if (item.id === "a11") state.pendingActive.step = "damage";
     closeMobileOfferingsForTargetPick();
     addLog(`${copierName} copied ${item.name}. Pick a DAMNED to resolve the copied effect.`);
     render();
@@ -8483,21 +9167,6 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     const value = artifactValue(10);
     state.roundState.targetOffset -= value;
     recordCopiedArtifactResolution(copierName, item, `${item.name} reduced the target by ${value}.`);
-    return;
-  }
-
-  if (item.id === "a11") {
-    recalculateTarget();
-    const before = state.roundState.target;
-    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
-    const snapped = snap.value;
-    state.roundState.targetOffset += snapped - before;
-    recalculateTarget();
-    recordCopiedArtifactResolution(
-      copierName,
-      item,
-      `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`
-    );
     return;
   }
 
@@ -8546,7 +9215,8 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a22") {
-    resolvePandoraRollEffect(item, (message) => recordCopiedArtifactResolution(copierName, item, message));
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`);
     return;
   }
 
@@ -8575,10 +9245,10 @@ function useActive(index) {
     return;
   }
 
-  if (item.id === "a13") {
-    const damagedHealTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.hp < bot.maxHp);
-    if (!damagedHealTargets.length) {
-      addLog(`${item.name} needs a damaged DAMNED to heal.`);
+  if (item.id === "a11") {
+    const nonBossTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && !bot.isBoss);
+    if (nonBossTargets.length < 2) {
+      addLog(`${item.name} needs two non-boss DAMNED.`);
       render();
       return;
     }
@@ -8613,17 +9283,6 @@ function useActive(index) {
     const value = artifactValue(10);
     state.roundState.targetOffset -= value;
     consumeActive(index, `${item.name} reduced the target by ${value}.`, item.uid);
-    return;
-  }
-
-  if (item.id === "a11") {
-    recalculateTarget();
-    const before = state.roundState.target;
-    const snap = nearestMultipleFromDivisors(before, [3, 5, 7]);
-    const snapped = snap.value;
-    state.roundState.targetOffset += snapped - before;
-    recalculateTarget();
-    consumeActive(index, `${item.name} moved the TARGET to ${formatNumber(state.roundState.target)} (closest multiple of ${snap.divisor}).`, item.uid);
     return;
   }
 
@@ -8662,10 +9321,10 @@ function useActive(index) {
     return;
   }
 
-  if (item.id === "a13") {
+  if (item.id === "a11") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
     closeMobileOfferingsForTargetPick();
-    addLog("Pick a DAMNED to take 20 non-lethal damage.");
+    addLog("Pick a non-boss DAMNED to take 30% max-HEALTH damage.");
     render();
     return;
   }
@@ -8704,7 +9363,8 @@ function useActive(index) {
   }
 
   if (item.id === "a22") {
-    resolvePandoraRoll(index, item.uid);
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    consumeActive(index, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`, item.uid);
     return;
   }
 
@@ -8717,8 +9377,8 @@ function cancelPendingActive() {
   if (!pending) return;
   const item = pendingArtifactItem();
   const itemName = item?.name || "Artifact";
-  if (pending.id === "a13" && pending.step === "heal") {
-    addLog(`${itemName} has already hit; choose a heal target to finish it.`);
+  if (pending.id === "a11" && pending.step === "heal") {
+      addLog(`${itemName} has already hit; choose an overheal target to finish it.`);
     render();
     return;
   }
@@ -8750,6 +9410,8 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   }
   const [item] = state.player.actives.splice(actualIndex, 1);
   if (!item) return;
+  playArtifactSfx(item.id);
+  recordPlayedArtifact(item.id);
   if (!item.devTemporary) state.roundState.activeUses += 1;
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
@@ -8763,51 +9425,6 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
     finishGameOverRound();
   }
   if (renderAfter) render();
-}
-
-function resolvePandoraRollEffect(item, finish) {
-  const name = item?.name || activeName("a22");
-  const roll = Math.random();
-  if (roll < 0.1) {
-    const lost = loseCredits(artifactValue(8), name);
-    finish(`${name} consumed ${lost} SIN.`);
-    return;
-  }
-  if (roll < 0.25) {
-    const lost = loseCredits(artifactValue(4), name);
-    finish(`${name} consumed ${lost} SIN.`);
-    return;
-  }
-  if (roll < 0.4) {
-    const target = randomFrom(activeBots());
-    const damage = artifactValue(10);
-    if (target) {
-      damageBot(target, damage, `${name} dealt ${damage} damage to ${target.name}.`, name);
-      finish(`${name} struck ${target.name} for ${damage}.`);
-    } else {
-      finish(`${name} found no DAMNED to strike.`);
-    }
-    return;
-  }
-  if (roll < 0.7) {
-    const gained = gainCredits(artifactValue(8), true, name);
-    finish(`${name} gained ${gained} SIN.`);
-    return;
-  }
-  if (roll < 0.9) {
-    const gained = gainCredits(artifactValue(12), true, name);
-    finish(`${name} gained ${gained} SIN.`);
-    return;
-  }
-  const gained = gainCredits(artifactValue(16), true, name);
-  const damage = artifactValue(20);
-  damageBots(activeBots(), damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name}.`, name);
-  finish(`${name} gained ${gained} SIN and struck every DAMNED.`);
-}
-
-function resolvePandoraRoll(index, uid) {
-  const item = state.player.actives.find((active) => active.uid === uid) || ITEMS.a22;
-  resolvePandoraRollEffect(item, (message) => consumeActive(index, message, uid));
 }
 
 function chooseBot(botId) {
@@ -8925,35 +9542,37 @@ function chooseBot(botId) {
     return;
   }
 
-  if (id === "a13") {
-    resolveTriageBeam(bot);
+  if (id === "a11") {
+    resolveBloodVial(bot);
   }
 }
 
-function resolveTriageBeam(bot) {
+function resolveBloodVial(bot) {
   const pending = state.pendingActive;
   const item = pendingArtifactItem();
-  const itemName = item?.name || activeName("a13");
+  const itemName = item?.name || activeName("a11");
   if (pending.step === "damage") {
-    const possibleHealTargets = state.bots.filter(
-      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && candidate.hp < candidate.maxHp
-    );
-    if (!possibleHealTargets.length) {
-      addLog("Pick a damage target that leaves another damaged DAMNED to heal.");
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
       render();
       return;
     }
-    const value = artifactValue(20);
-    const dealt = damageBotNonLethal(
-      bot,
-      value,
-      (target, damage) => `${itemName} dealt ${damage} non-lethal damage to ${target.name}.`,
-      itemName
+    const possibleHealTargets = state.bots.filter(
+      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && !candidate.isBoss
     );
+    if (!possibleHealTargets.length) {
+      addLog("Pick a target that leaves another non-boss DAMNED to overheal.");
+      render();
+      return;
+    }
+    const damage = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
     pending.damageBotId = bot.id;
-    addLog(`Now pick another DAMNED to heal for ${value}.`);
+    pending.copiedAbility = snapshotDamnedAbility(bot);
+    pending.copiedAbilityName = bot.name;
+    addLog("Now pick another non-boss DAMNED to overheal and receive the copied ability.");
     render();
     return;
   }
@@ -8964,14 +9583,19 @@ function resolveTriageBeam(bot) {
       render();
       return;
     }
-    if (bot.hp >= bot.maxHp) {
-      addLog(`${itemName} can only heal a damaged DAMNED.`);
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
       render();
       return;
     }
-    const healed = healBot(bot, artifactValue(20), itemName);
+    const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    const healed = healBot(bot, healAmount, itemName, itemName, { allowOverheal: true });
+    const copied = applyDamnedAbilitySnapshot(bot, pending.copiedAbility, itemName);
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(pending.index, `${itemName} healed ${bot.name} for ${healed}.`);
+    finishActiveResolution(
+      pending.index,
+      `${itemName} overhealed ${bot.name} for ${healed} and ${copied ? "copied" : "matched"} ${pending.copiedAbilityName || "the first DAMNED"}'s ability.`
+    );
   }
 }
 
@@ -9805,25 +10429,30 @@ function renderMenuApp() {
   return `
     <main class="main-menu" aria-label="main menu">
       <section class="main-menu-panel">
-        ${screen === "play" ? renderPlayMenu() : screen === "options" ? renderOptionsMenu() : screen === "quit" ? renderQuitMenu() : renderMainMenu()}
+        ${
+          screen === "play"
+            ? renderPlayMenu()
+            : screen === "arcade-options"
+              ? renderArcadeOptionsMenu()
+            : screen === "arcade-runs"
+              ? renderArcadeRunsMenu()
+            : screen === "options"
+              ? renderOptionsMenu()
+              : screen === "sound"
+                ? renderSoundOptionsMenu()
+                : screen === "records"
+                  ? renderRecordsMenu()
+                  : screen === "quit"
+                    ? renderQuitMenu()
+                    : renderMainMenu()
+        }
       </section>
     </main>
+    <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
 
 function renderMainMenu() {
-  if (isNativeArcadeApp()) {
-    const continueButton = hasSavedArcadeRun()
-      ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
-      : "";
-    return `
-      <div class="main-menu-actions">
-        ${continueButton}
-        <button class="menu-button" data-menu-action="arcade">${continueButton ? "New Run" : "Arcade"}</button>
-        <button class="menu-button" data-menu-action="options">Options</button>
-      </div>
-    `;
-  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
@@ -9833,29 +10462,145 @@ function renderMainMenu() {
   `;
 }
 
+function formatRunStartedAt(timestamp) {
+  const date = new Date(Number(timestamp) || Date.now());
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 function renderPlayMenu() {
-  if (isNativeArcadeApp()) {
-    return `
-      <div class="main-menu-actions">
-        <button class="menu-button" data-menu-action="arcade">New Run</button>
-        <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
-      </div>
-    `;
-  }
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="arcade">Arcade</button>
-      <button class="menu-button" data-menu-action="pvp">Pvp</button>
+      ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">PvP</button>`}
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderArcadeOptionsMenu() {
+  const continueDisabled = hasSavedArcadeRun() ? "" : "disabled";
+  return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="continue-arcade" ${continueDisabled}>Continue</button>
+      <button class="menu-button" data-menu-action="load-run">Load Run</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="play">Back</button>
+    </div>
+  `;
+}
+
+function renderArcadeRunsMenu() {
+  const savedSlots = readArcadeRunSlots();
+  const emptyCount = Math.max(0, ARCADE_RUN_SLOT_COUNT - savedSlots.length);
+  const pendingDeleteSlot = savedSlots.find((slot) => slot.slotId === state.pendingRunDeleteSlotId);
+  const savedRows = savedSlots
+    .map(
+      (slot) => `
+        <article class="run-slot-row">
+          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}">
+            <span class="run-slot-label">Continue Run</span>
+            <span class="run-slot-date">${escapeHtml(formatRunStartedAt(slot.startedAt))}</span>
+          </button>
+          <button
+            class="run-remove-button"
+            data-remove-run-slot-id="${escapeAttr(slot.slotId)}"
+            data-tooltip="REMOVE RUN"
+            aria-label="Remove run"
+          >X</button>
+        </article>
+      `
+    )
+    .join("");
+  const emptyRows = Array.from({ length: emptyCount }, (_, index) => {
+    return `
+      <button class="run-slot-button empty-run-slot" data-new-run="${index}">
+        <span class="run-slot-label">New Run</span>
+      </button>
+    `;
+  }).join("");
+  return `
+    <div class="run-menu">
+      <div class="run-slot-list" aria-label="Saved runs">
+        ${savedRows}${emptyRows}
+      </div>
+      ${
+        pendingDeleteSlot
+          ? `
+            <div class="run-remove-confirm">
+              <div>Are You Sure You Want To Remove This Run?</div>
+              <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
+              <div class="run-remove-confirm-actions">
+                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">Yes</button>
+                <button class="small-button" data-cancel-remove-run>No</button>
+              </div>
+            </div>
+          `
+          : ""
+      }
+      <button class="menu-button secondary-menu-button" data-menu-action="arcade">Back</button>
     </div>
   `;
 }
 
 function renderOptionsMenu() {
   return `
+    <div class="main-menu-actions">
+      <button class="menu-button" data-menu-action="sound-options">Sound Settings</button>
+      <button class="menu-button" data-menu-action="records">Records</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+    </div>
+  `;
+}
+
+function renderSoundOptionsMenu() {
+  return `
     <div class="options-menu">
       ${renderSoundSettings("menu")}
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+    </div>
+  `;
+}
+
+function recordValueText(record, { withName = false, prefix = "" } = {}) {
+  const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
+  if (value <= 0) return "None";
+  const label = withName && record?.name ? ` - ${record.name}` : "";
+  return `${prefix}${formatNumber(value)}${label}`;
+}
+
+function renderRecordRow(label, value) {
+  return `
+    <div class="record-row">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderRecordsMenu() {
+  const records = loadArcadeRecords();
+  const rows = [
+    renderRecordRow("Most Eliminations", recordValueText(records.mostEliminations)),
+    renderRecordRow("Most Boss Eliminations", recordValueText(records.mostBossEliminations)),
+    renderRecordRow("Most Overall Damage", recordValueText(records.mostOverallDamage)),
+    renderRecordRow("Most Single Round Damage", recordValueText(records.mostSingleRoundDamage)),
+    renderRecordRow("Highest Round Reached", recordValueText(records.highestRoundReached)),
+    renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
+    renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
+    renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
+    renderRecordRow("Highest Elite Level Bought", recordValueText(records.highestEliteLevel, { withName: true, prefix: "ELITE " })),
+    renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
+    renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
+  ].join("");
+  return `
+    <div class="records-menu">
+      <div class="records-list">${rows}</div>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
   `;
 }
@@ -10640,7 +11385,7 @@ function renderBot(bot, pendingPick) {
     ? ""
     : `<span class="bot-flag" aria-label="${escapeAttr(bot.country)}" title="${escapeAttr(bot.country)}">${bot.flag}</span>`;
   const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
-  const healthPercent = bot.immortal ? 100 : (bot.hp / bot.maxHp) * 100;
+  const healthPercent = bot.immortal ? 100 : clamp((bot.hp / bot.maxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
   const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
@@ -10776,8 +11521,8 @@ function renderPendingText() {
     const value = artifactValue(6);
     return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
-  if (state.pendingActive.id === "a13" && state.pendingActive.step === "heal") {
-    return `${item.name}: pick different DAMNED to heal for ${artifactValue(20)}.`;
+  if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
+    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }
@@ -10980,13 +11725,32 @@ function renderPentakillPopup() {
 }
 
 function showMainMenu(screen = "main") {
+  saveArcadeRun();
   pvpClearAutoTimer();
   pvpStopHostPolling();
   clearNativeArcadeResumeOnForeground();
   state.mode = "menu";
   state.menuScreen = screen;
+  state.pendingRunDeleteSlotId = null;
   state.pauseOpen = false;
   state.mobileOfferingsOpen = false;
+  render();
+}
+
+function requestRunRemoval(slotId) {
+  state.pendingRunDeleteSlotId = slotId || null;
+  render();
+}
+
+function cancelRunRemoval() {
+  state.pendingRunDeleteSlotId = null;
+  render();
+}
+
+function confirmRunRemoval(slotId) {
+  removeArcadeRunSlot(slotId);
+  if (state.currentRunSlotId === slotId) state.currentRunSlotId = null;
+  state.pendingRunDeleteSlotId = null;
   render();
 }
 
@@ -10994,6 +11758,7 @@ function handleMenuAction(action) {
   resumeSoundtrack();
   if (action === "play") {
     state.menuScreen = "play";
+    state.pendingRunDeleteSlotId = null;
     render();
     return;
   }
@@ -11002,13 +11767,32 @@ function handleMenuAction(action) {
     render();
     return;
   }
+  if (action === "sound-options") {
+    state.menuScreen = "sound";
+    render();
+    return;
+  }
+  if (action === "records") {
+    state.menuScreen = "records";
+    render();
+    return;
+  }
   if (action === "back") {
     state.menuScreen = "main";
+    state.pendingRunDeleteSlotId = null;
     render();
     return;
   }
   if (action === "arcade") {
-    startGame();
+    state.menuScreen = "arcade-options";
+    state.pendingRunDeleteSlotId = null;
+    render();
+    return;
+  }
+  if (action === "load-run") {
+    state.menuScreen = "arcade-runs";
+    state.pendingRunDeleteSlotId = null;
+    render();
     return;
   }
   if (action === "continue-arcade") {
@@ -11153,6 +11937,33 @@ function bindPvpEvents() {
 function bindEvents() {
   document.querySelectorAll("[data-menu-action]").forEach((button) => {
     button.addEventListener("click", () => handleMenuAction(button.dataset.menuAction));
+  });
+
+  document.querySelectorAll("[data-run-slot-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (loadArcadeRun(button.dataset.runSlotId)) {
+        resumeSoundtrack();
+        render();
+      } else {
+        startGame();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-new-run]").forEach((button) => {
+    button.addEventListener("click", () => startGame());
+  });
+
+  document.querySelectorAll("[data-remove-run-slot-id]").forEach((button) => {
+    button.addEventListener("click", () => requestRunRemoval(button.dataset.removeRunSlotId));
+  });
+
+  document.querySelectorAll("[data-confirm-remove-run]").forEach((button) => {
+    button.addEventListener("click", () => confirmRunRemoval(button.dataset.confirmRemoveRun));
+  });
+
+  document.querySelectorAll("[data-cancel-remove-run]").forEach((button) => {
+    button.addEventListener("click", cancelRunRemoval);
   });
 
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {

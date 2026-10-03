@@ -32,26 +32,13 @@ const PVP_MODIFIERS = [0.7, 0.8, 0.9, 1, 1.1, 1.2];
 const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
-const SOUNDTRACK_SRC = "assets/audio/Zingaresca_1910_loop.ogg";
-const SOUNDTRACK_VOLUME = 0.55;
-const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
-const SEAL_PURCHASE_SFX_VOLUME = 0.055;
-const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
-const READY_SFX_SRC = "assets/audio/Ready.mp3";
-const NEXT_ROUND_SFX_SRC = "assets/audio/nextroundSound.mp3";
-const CLOCK_TICK_SFX_SRCS = [
-  "assets/audio/tickinclock_RdeIBkld.mp3",
-  "assets/audio/tickinclock_N3shRVgw.mp3"
-];
-const GUESS_SFX_VOLUME = 0.9;
-const READY_SFX_VOLUME = 0.2;
-const NEXT_ROUND_SFX_VOLUME = 0.2;
-const CLOCK_TICK_SFX_VOLUME = 0.154;
-const GUESS_SFX_START_OFFSET = 0.12;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
+const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
+const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
 const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
 const ARCADE_RUN_SAVE_VERSION = 1;
+const ARCADE_RUN_SLOT_COUNT = 5;
 const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
@@ -150,7 +137,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 30 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -214,7 +201,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Bael",
     price: 10,
-    description: "Your guess counts five times when calculating the TARGET average. ELITE adds +2 more guess weight each level."
+    description: "If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p17: {
     id: "p17",
@@ -661,7 +648,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Souls of Martyrs",
     price: 20,
-    description: "DAMNED take x1.5 damage from all sources if 3 or more eliminations happened in the previous round. ELITE adds +0.2 to the multiplier."
+    description: "DAMNED with the STUBBORN personality take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p79: {
     id: "p79",
@@ -696,7 +683,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Astaroth",
     price: 13,
-    description: "If a DAMNED with a revealed guess dies this round, each adjacent DAMNED takes damage equal to the TARGET-difference damage it took this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "At end of round, every revealed DAMNED makes each adjacent DAMNED take damage equal to that revealed DAMNED's TARGET-difference damage this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p85: {
     id: "p85",
@@ -738,7 +725,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Bifrons",
     price: 15,
-    description: "Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the start of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the end of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p91: {
     id: "p91",
@@ -752,42 +739,42 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 30,
-    description: "At reveal, 20% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
+    description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
     name: "Seal of Zilon",
     price: 30,
-    description: "At reveal, 20% chance to double every DAMNED BOUNTY. ELITE does not change this effect."
+    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE does not change this effect."
   },
   p94: {
     id: "p94",
     type: "passive",
     name: "Seal of Serafeim",
     price: 30,
-    description: "At reveal, 20% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect."
   },
   p95: {
     id: "p95",
     type: "passive",
     name: "Seal of Pyros",
     price: 30,
-    description: "At reveal, 20% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect."
+    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
     price: 30,
-    description: "At reveal, 20% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
     price: 30,
-    description: "At reveal, 20% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect."
+    description: "At reveal, 30% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect."
   },
   p98: {
     id: "p98",
@@ -830,6 +817,48 @@ const ITEMS = {
     name: "Seal of Cassiel Pentagram",
     price: 14,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
+  },
+  p104: {
+    id: "p104",
+    type: "passive",
+    name: "Seal of Alloces",
+    price: 13,
+    description: "At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains."
+  },
+  p105: {
+    id: "p105",
+    type: "passive",
+    name: "Seal of Andras",
+    price: 13,
+    description: "Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to STUBBORN. At end of round, BOSSES take 5 damage for every STUBBORN DAMNED. ELITE adds +10% chance and multiplies the BOSS damage by x1.5 each level, rounded up."
+  },
+  p106: {
+    id: "p106",
+    type: "passive",
+    name: "Seal of Zagan",
+    price: 14,
+    description: "At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p107: {
+    id: "p107",
+    type: "passive",
+    name: "Seal of Ose",
+    price: 12,
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE changes one extra DAMNED each round."
+  },
+  p108: {
+    id: "p108",
+    type: "passive",
+    name: "Seal of Orobas",
+    price: 14,
+    description: "When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p109: {
+    id: "p109",
+    type: "passive",
+    name: "Seal of Samael Triangle",
+    price: 14,
+    description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
   a28: {
     id: "a28",
@@ -892,7 +921,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 4,
-    description: "Move the TARGET to the closest multiple of 3, 5, or 7. If already on one, move to the next closest."
+    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability."
   },
   a12: {
     id: "a12",
@@ -906,7 +935,7 @@ const ITEMS = {
     type: "active",
     name: "The White-Hilted Knife",
     price: 4,
-    description: "Deal 20 non-lethal damage to one DAMNED, then heal another already-damaged DAMNED for 20."
+    description: "Removed."
   },
   a16: {
     id: "a16",
@@ -941,7 +970,7 @@ const ITEMS = {
     type: "active",
     name: "Cursed Chalice",
     price: 4,
-    description: "10% lose 8 SIN, 15% lose 4 SIN, 15% deal 10 damage to a random DAMNED, 30% gain 8 SIN, 20% gain 12 SIN, 10% gain 16 SIN and deal 20 damage to each DAMNED."
+    description: "+1 CRITICAL range for the round."
   },
   a23: {
     id: "a23",
@@ -1065,18 +1094,25 @@ const PASSIVE_IDS = [
   "p100",
   "p101",
   "p102",
-  "p103"
+  "p103",
+  "p104",
+  "p105",
+  "p106",
+  "p107",
+  "p108",
+  "p109"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p3", "p5", "p8", "p18", "p24", "p27", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p82", "p83"]);
+const REMOVED_PASSIVE_IDS = new Set(["p3", "p4", "p5", "p8", "p18", "p24", "p27", "p28", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p82", "p83"]);
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97"]);
-const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103"]);
+const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 5 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
-  p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 }
+  p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
+  p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
 };
 const ACTIVE_IDS = [
   "a6",
@@ -1222,7 +1258,13 @@ const SEAL_SIGILS = {
   p100: "self-stacking/Bethor.png",
   p101: "self-stacking/Aggiel-Hexagram.png",
   p102: "self-stacking/Zachriel-Triangle.png",
-  p103: "self-stacking/Cassiel-Pentagram.png"
+  p103: "self-stacking/Cassiel-Pentagram.png",
+  p104: "004_Allocer.png",
+  p105: "008_Andras.png",
+  p106: "071_Zagan.png",
+  p107: "050_Ose.png",
+  p108: "049_Orobas.png",
+  p109: "self-stacking/Samael-Triangle.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -1298,7 +1340,12 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p88: "40-raum.png",
   p89: "21-marax-morax.png",
   p90: "46-bifrons.png",
-  p91: "23-aim-haborym.png"
+  p91: "23-aim-haborym.png",
+  p104: "52-alloces.png",
+  p105: "63-andras.png",
+  p106: "61-zagan.png",
+  p107: "57-ose.png",
+  p108: "55-orobas.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -1352,18 +1399,18 @@ const GOETIC_BOSS_SPECS = [
   { key: "crocell", name: "Crocell", image: "49-crocell.png", passiveId: "p45" },
   { key: "furcas", name: "Furcas", image: "50-furcas.png", passiveId: "p72" },
   { key: "balam", name: "Balam", image: "51-balam.png", passiveId: "p57" },
-  { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p3" },
+  { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p104" },
   { key: "caim", name: "Caim", image: "53-caim-camio.png", passiveId: "p67" },
   { key: "murmur", name: "Murmur", image: "54-murmur.png", passiveId: "p31" },
-  { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p83" },
+  { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p108" },
   { key: "gremory", name: "Gremory", image: "56-gremory-gamori.png", passiveId: "p34" },
-  { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p28" },
+  { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p107" },
   { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p70" },
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
-  { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p27" },
+  { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
   { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p25" },
-  { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p4" },
+  { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p105" },
   { key: "haures", name: "Haures", image: "64-haures-flauros.png", passiveId: "p86" },
   { key: "andrealphus", name: "Andrealphus", image: "65-andrealphus.png", passiveId: "p30" },
   { key: "cimejes", name: "Cimejes", image: "66-cimejes-kimaris.png", passiveId: "p48" },
@@ -1659,6 +1706,7 @@ const FINAL_BOSS_SPECS = {
 const state = {
   mode: "menu",
   menuScreen: "main",
+  pendingRunDeleteSlotId: null,
   sound: {
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
@@ -1687,6 +1735,9 @@ const state = {
   playerHealSources: [],
   playerCreditSources: [],
   sealStats: {},
+  runStats: null,
+  currentRunSlotId: null,
+  runStartedAt: null,
   pendingNextRoundMarbasBonuses: [],
   pendingSelfStackingPentakillDamage: 0,
   gameMemory: [],
@@ -1730,8 +1781,10 @@ let guessSfx = null;
 let readySfx = null;
 let nextRoundSfx = null;
 let clockTickSfx = [];
+let artifactSfx = {};
+let pentakillSfx = null;
 let nextClockTickIndex = 0;
-const activeClockTickInstances = new Set();
+const activeOneShotSfxInstances = new Set();
 let sfxPrimed = false;
 let gameButtonTickInstalled = false;
 let soundtrackPausedByAppBackground = false;

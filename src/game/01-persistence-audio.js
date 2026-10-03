@@ -15,6 +15,10 @@ function applySoundSettings() {
   clockTickSfx.forEach((audio) => {
     if (audio) audio.volume = sfxVolume(CLOCK_TICK_SFX_VOLUME);
   });
+  Object.entries(artifactSfx).forEach(([id, audio]) => {
+    if (audio) audio.volume = artifactSfxVolume(id);
+  });
+  if (pentakillSfx) pentakillSfx.volume = pentakillSfxVolume();
 }
 
 function loadSoundSettings() {
@@ -39,9 +43,8 @@ function isNativeArcadeApp() {
 }
 
 function hasSavedArcadeRun() {
-  if (!isNativeArcadeApp()) return false;
   try {
-    return Boolean(window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY));
+    return readArcadeRunSlots().length > 0;
   } catch (error) {
     return false;
   }
@@ -121,21 +124,119 @@ function arcadeRunSaveSnapshot() {
   return snapshot;
 }
 
-function saveArcadeRun() {
-  if (!isNativeArcadeApp() || state.mode !== "arcade") return;
+function createArcadeRunSlotId() {
+  return `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeArcadeRunPayload(payload) {
+  if (!payload || payload.version !== ARCADE_RUN_SAVE_VERSION || !payload.state || payload.state.mode !== "arcade") return null;
+  const slotId = payload.slotId || payload.state.currentRunSlotId || createArcadeRunSlotId();
+  const startedAt = Number(payload.startedAt || payload.state.runStartedAt || payload.savedAt || Date.now());
+  const lastPlayedAt = Number(payload.lastPlayedAt || payload.savedAt || startedAt);
+  return {
+    version: ARCADE_RUN_SAVE_VERSION,
+    slotId,
+    startedAt,
+    lastPlayedAt,
+    state: payload.state
+  };
+}
+
+function sortArcadeRunSlots(slots) {
+  return slots
+    .map(normalizeArcadeRunPayload)
+    .filter(Boolean)
+    .sort((a, b) => (b.lastPlayedAt || 0) - (a.lastPlayedAt || 0))
+    .slice(0, ARCADE_RUN_SLOT_COUNT);
+}
+
+function readLegacyArcadeRunSlot() {
   try {
+    const raw = window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw, decodeArcadeSaveValue);
+    const normalized = normalizeArcadeRunPayload(parsed);
+    if (normalized && !parsed.slotId && !parsed.state?.currentRunSlotId) normalized.slotId = "legacy-run";
+    return normalized;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readArcadeRunSlots() {
+  try {
+    const raw = window.localStorage?.getItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
+    if (!raw) {
+      const legacy = readLegacyArcadeRunSlot();
+      return legacy ? [legacy] : [];
+    }
+    const parsed = JSON.parse(raw, decodeArcadeSaveValue);
+    const slots = Array.isArray(parsed?.slots) ? parsed.slots : Array.isArray(parsed) ? parsed : [];
+    const normalized = sortArcadeRunSlots(slots);
+    if (!normalized.length) {
+      const legacy = readLegacyArcadeRunSlot();
+      return legacy ? [legacy] : [];
+    }
+    return normalized;
+  } catch (error) {
+    const legacy = readLegacyArcadeRunSlot();
+    return legacy ? [legacy] : [];
+  }
+}
+
+function writeArcadeRunSlots(slots) {
+  const normalized = sortArcadeRunSlots(slots);
+  try {
+    window.localStorage?.setItem(
+      ARCADE_RUN_SLOTS_STORAGE_KEY,
+      JSON.stringify({ version: ARCADE_RUN_SAVE_VERSION, slots: normalized }, encodeArcadeSaveValue)
+    );
+  } catch (error) {}
+  return normalized;
+}
+
+function upsertArcadeRunPayload(payload) {
+  const normalizedPayload = normalizeArcadeRunPayload(payload);
+  if (!normalizedPayload) return;
+  const slots = readArcadeRunSlots().filter((slot) => slot.slotId !== normalizedPayload.slotId);
+  slots.unshift(normalizedPayload);
+  writeArcadeRunSlots(slots);
+}
+
+function removeArcadeRunSlot(slotId) {
+  if (!slotId) return;
+  writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
+}
+
+function saveArcadeRun() {
+  if (state.mode !== "arcade") return;
+  if (state.gameOver) {
+    removeArcadeRunSlot(state.currentRunSlotId);
+    return;
+  }
+  try {
+    if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
+    if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();
+    updateArcadeRecordsFromCurrentRun();
     const payload = {
       version: ARCADE_RUN_SAVE_VERSION,
+      slotId: state.currentRunSlotId,
+      startedAt: state.runStartedAt,
       savedAt: Date.now(),
+      lastPlayedAt: Date.now(),
       state: arcadeRunSaveSnapshot()
     };
-    window.localStorage?.setItem(ARCADE_RUN_STORAGE_KEY, JSON.stringify(payload, encodeArcadeSaveValue));
+    upsertArcadeRunPayload(payload);
   } catch (error) {}
 }
 
-function removeCorruptArcadeRunSave() {
+function removeCorruptArcadeRunSave(slotId = "") {
   try {
-    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    if (slotId) removeArcadeRunSlot(slotId);
+    else {
+      window.localStorage?.removeItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
+      window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    }
   } catch (error) {}
 }
 
@@ -218,6 +319,9 @@ function normalizeLoadedArcadeRun() {
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
+  state.runStats = normalizeRunStats(state.runStats);
+  if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
+  if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();
   selfStackingGameConditionCounts();
   if (!state.lastUsedArtifact || typeof state.lastUsedArtifact !== "object" || !ACTIVE_IDS.includes(state.lastUsedArtifact.id)) {
     state.lastUsedArtifact = null;
@@ -239,24 +343,26 @@ function normalizeLoadedArcadeRun() {
   });
 }
 
-function loadArcadeRun() {
-  if (!isNativeArcadeApp()) return false;
+function loadArcadeRun(slotId = "") {
   try {
-    const raw = window.localStorage?.getItem(ARCADE_RUN_STORAGE_KEY);
-    if (!raw) return false;
-    const payload = JSON.parse(raw, decodeArcadeSaveValue);
-    if (!payload || payload.version !== ARCADE_RUN_SAVE_VERSION || !payload.state || payload.state.mode !== "arcade") {
-      removeCorruptArcadeRunSave();
+    const slots = readArcadeRunSlots();
+    const payload = normalizeArcadeRunPayload(slotId ? slots.find((slot) => slot.slotId === slotId) : slots[0]);
+    if (!payload) return false;
+    if (!payload.state || payload.state.mode !== "arcade") {
+      removeCorruptArcadeRunSave(slotId);
       return false;
     }
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
     });
+    state.currentRunSlotId = payload.slotId;
+    state.runStartedAt = payload.startedAt;
     normalizeLoadedArcadeRun();
+    saveArcadeRun();
     return true;
   } catch (error) {
-    removeCorruptArcadeRunSave();
+    removeCorruptArcadeRunSave(slotId);
     return false;
   }
 }
@@ -290,8 +396,11 @@ function primeSfxAudio() {
     ensureButtonSfx("guess"),
     ensureButtonSfx("ready"),
     ensureNextRoundSfx(),
-    ...CLOCK_TICK_SFX_SRCS.map((_, index) => ensureClockTickSfx(index))
+    ...CLOCK_TICK_SFX_SRCS.map((_, index) => ensureClockTickSfx(index)),
+    ...Object.keys(ARTIFACT_SFX).map((id) => ensureArtifactSfx(id)),
+    ensurePentakillSfx()
   ].forEach((audio) => {
+    if (!audio) return;
     try {
       const primer = audio.cloneNode(true);
       primer.volume = 0;
@@ -338,9 +447,11 @@ function pauseGameAudioForBackground() {
     readySfx,
     nextRoundSfx,
     ...clockTickSfx,
-    ...activeClockTickInstances
+    ...Object.values(artifactSfx),
+    pentakillSfx,
+    ...activeOneShotSfxInstances
   ].forEach(pauseAudioElement);
-  activeClockTickInstances.clear();
+  activeOneShotSfxInstances.clear();
 }
 
 function resumeGameAudioAfterForeground() {
@@ -395,6 +506,42 @@ function ensureClockTickSfx(index) {
   return clockTickSfx[index];
 }
 
+function artifactSfxConfig(id) {
+  return ARTIFACT_SFX[id] || null;
+}
+
+function artifactSfxVolume(id) {
+  const config = artifactSfxConfig(id);
+  return sfxVolume(config?.volume ?? DEFAULT_ARTIFACT_SFX_VOLUME);
+}
+
+function pentakillSfxVolume() {
+  return sfxVolume(PENTAKILL_SFX.volume);
+}
+
+function ensureArtifactSfx(id) {
+  const config = artifactSfxConfig(id);
+  if (!config?.src) return null;
+  if (!artifactSfx[id]) {
+    const audio = new Audio(config.src);
+    audio.preload = "auto";
+    audio.volume = artifactSfxVolume(id);
+    artifactSfx[id] = loadAudioElement(audio);
+  }
+  return artifactSfx[id];
+}
+
+function ensurePentakillSfx() {
+  if (!PENTAKILL_SFX.src) return null;
+  if (!pentakillSfx) {
+    pentakillSfx = new Audio(PENTAKILL_SFX.src);
+    pentakillSfx.preload = "auto";
+    pentakillSfx.volume = pentakillSfxVolume();
+    loadAudioElement(pentakillSfx);
+  }
+  return pentakillSfx;
+}
+
 function playOneShot(audio, startOffset = 0) {
   try {
     audio.currentTime = Math.max(0, startOffset);
@@ -402,14 +549,15 @@ function playOneShot(audio, startOffset = 0) {
   } catch (error) {}
 }
 
-function playClonedOneShot(audio, volume) {
+function playClonedOneShot(audio, volume, startOffset = 0) {
   try {
     const instance = audio.cloneNode(true);
     instance.volume = volume;
-    activeClockTickInstances.add(instance);
-    const cleanup = () => activeClockTickInstances.delete(instance);
+    activeOneShotSfxInstances.add(instance);
+    const cleanup = () => activeOneShotSfxInstances.delete(instance);
     instance.addEventListener("ended", cleanup, { once: true });
     instance.addEventListener("error", cleanup, { once: true });
+    instance.currentTime = Math.max(0, startOffset || 0);
     instance.play().catch(cleanup);
   } catch (error) {}
 }
@@ -436,6 +584,19 @@ function playClockTickSfx() {
   playClonedOneShot(ensureClockTickSfx(tickIndex), sfxVolume(CLOCK_TICK_SFX_VOLUME));
 }
 
+function playArtifactSfx(id) {
+  const config = artifactSfxConfig(id);
+  const audio = ensureArtifactSfx(id);
+  if (!audio || !config) return;
+  playClonedOneShot(audio, artifactSfxVolume(id), config.startOffset || 0);
+}
+
+function playPentakillSfx() {
+  const audio = ensurePentakillSfx();
+  if (!audio) return;
+  playClonedOneShot(audio, pentakillSfxVolume(), PENTAKILL_SFX.startOffset || 0);
+}
+
 function installGameButtonTickSfx() {
   if (gameButtonTickInstalled) return;
   gameButtonTickInstalled = true;
@@ -457,6 +618,8 @@ function installSoundtrack() {
   ensureButtonSfx("ready");
   ensureNextRoundSfx();
   CLOCK_TICK_SFX_SRCS.forEach((_, index) => ensureClockTickSfx(index));
+  Object.keys(ARTIFACT_SFX).forEach((id) => ensureArtifactSfx(id));
+  ensurePentakillSfx();
   installGameButtonTickSfx();
   document.addEventListener("pointerdown", unlockSoundtrack);
   document.addEventListener("keydown", unlockSoundtrack);

@@ -74,6 +74,33 @@ function bindEvents() {
     button.addEventListener("click", () => handleMenuAction(button.dataset.menuAction));
   });
 
+  document.querySelectorAll("[data-run-slot-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (loadArcadeRun(button.dataset.runSlotId)) {
+        resumeSoundtrack();
+        render();
+      } else {
+        startGame();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-new-run]").forEach((button) => {
+    button.addEventListener("click", () => startGame());
+  });
+
+  document.querySelectorAll("[data-remove-run-slot-id]").forEach((button) => {
+    button.addEventListener("click", () => requestRunRemoval(button.dataset.removeRunSlotId));
+  });
+
+  document.querySelectorAll("[data-confirm-remove-run]").forEach((button) => {
+    button.addEventListener("click", () => confirmRunRemoval(button.dataset.confirmRemoveRun));
+  });
+
+  document.querySelectorAll("[data-cancel-remove-run]").forEach((button) => {
+    button.addEventListener("click", cancelRunRemoval);
+  });
+
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {
     const key = control.dataset.soundSetting;
     if (key === "muted") {
