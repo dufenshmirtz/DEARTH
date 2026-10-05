@@ -3786,9 +3786,10 @@ body.mobile-arcade .arena:not(.pvp-arena) .topbar > .target-panel {
 /* Native phone fit pass: use the full landscape viewport and avoid header/card overlap. */
 body.native-arcade {
   --native-target-panel-width: clamp(174px, 24vw, 220px);
-  --native-numpad-width: 232px;
-  --native-console-row-height: 86px;
-  --native-seal-row-height: 70px;
+  --native-numpad-width: clamp(216px, 25vw, 260px);
+  --native-control-width: clamp(112px, 12vw, 136px);
+  --native-control-row-height: clamp(36px, 7vh, 42px);
+  --native-seal-row-height: clamp(116px, 27.5vh, 132px);
   --native-layout-gap: 5px;
   width: 100vw;
   height: 100vh;
@@ -3799,10 +3800,15 @@ body.native-arcade {
 }
 
 body.native-arcade #app.app {
+  display: block;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  gap: 0;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
   padding: 3px !important;
+  overflow: hidden;
 }
 
 body.native-arcade::after {
@@ -3830,9 +3836,12 @@ body.native-arcade .pause-scene .pause-overlay {
 
 body.native-arcade .native-arcade-frame {
   display: grid;
-  grid-template-columns: var(--native-numpad-width) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) var(--native-console-row-height) var(--native-seal-row-height);
+  grid-template-columns: minmax(0, 1fr) var(--native-control-width) var(--native-numpad-width);
+  grid-template-rows: minmax(0, 1fr) var(--native-control-row-height) var(--native-seal-row-height);
   gap: var(--native-layout-gap);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   min-width: 0;
   min-height: 0;
 }
@@ -3851,21 +3860,29 @@ body.native-arcade .native-console-panel {
   grid-column: 2;
   grid-row: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 6px;
   min-width: 0;
   min-height: 0;
-  padding: 7px;
+  padding: 6px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.46);
+  border: 2px solid #fff;
   border-radius: 6px;
   background: #000;
+}
+
+body.native-arcade .native-console-panel.critical-guess-panel {
+  border-color: var(--accent-red) !important;
 }
 
 body.native-arcade .native-console-panel .center-console {
   position: static !important;
   z-index: auto;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 6px;
   right: auto !important;
   bottom: auto !important;
   width: auto !important;
@@ -3874,7 +3891,6 @@ body.native-arcade .native-console-panel .center-console {
   transform: none !important;
 }
 
-body.native-arcade .native-console-panel .console-hint,
 body.native-arcade .native-console-panel .pending-panel {
   position: static !important;
   width: auto !important;
@@ -3882,25 +3898,43 @@ body.native-arcade .native-console-panel .pending-panel {
 }
 
 body.native-arcade .native-console-panel .console-hint {
-  min-height: 16px;
+  display: none !important;
 }
 
 body.native-arcade .native-console-panel .pending-panel {
   margin-top: 4px !important;
 }
 
-body.native-arcade .native-console-actions {
+body.native-arcade .native-console-panel .console-row {
   display: grid;
-  grid-template-columns: 112px 82px;
-  gap: 8px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
 }
 
-body.native-arcade .native-console-panel .pause-button,
-body.native-arcade .native-console-panel .mobile-offerings-button {
+body.native-arcade .native-seal-actions {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+}
+
+body.native-arcade .native-seal-actions .pause-button,
+body.native-arcade .native-seal-actions .mobile-offerings-button {
   position: static !important;
   min-width: 0 !important;
+  min-height: 0 !important;
   width: 100%;
+  height: 100% !important;
+  padding: 0 8px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
 }
 
 body.native-arcade .native-arcade-frame.target-picking .native-console-panel .pending-panel {
@@ -4074,7 +4108,26 @@ body.native-arcade .arena:not(.pvp-arena) .bot-face.empty-face {
 }
 
 body.native-arcade .arena:not(.pvp-arena) .bot-name {
+  flex: 0 1 auto;
+  max-width: calc(100% - 34px);
   font-size: 10px !important;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 18px;
+}
+
+body.native-arcade .arena:not(.pvp-arena) .bot-flag {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 11px !important;
+  line-height: 1 !important;
 }
 
 body.native-arcade .arena:not(.pvp-arena) .bot-type,
@@ -4119,11 +4172,30 @@ body.native-arcade .arena:not(.pvp-arena) .guess-input,
 body.native-arcade .arena:not(.pvp-arena) .primary-button,
 body.native-arcade .arena:not(.pvp-arena) .pause-button,
 body.native-arcade .arena:not(.pvp-arena) .mobile-offerings-button {
-  min-height: 34px !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 0 5px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
 }
 
 body.native-arcade .arena:not(.pvp-arena) .guess-input {
   caret-color: transparent;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+body.native-arcade .native-console-panel .guess-input {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 0 5px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  caret-color: transparent;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  text-align: center;
 }
 
 body.native-arcade,
@@ -4176,7 +4248,7 @@ body.native-arcade .shop-slots {
 body.native-arcade .mobile-numpad {
   position: relative;
   z-index: 1;
-  grid-column: 1;
+  grid-column: 3;
   grid-row: 2 / 4;
   display: grid;
   width: 100%;
@@ -4186,7 +4258,7 @@ body.native-arcade .mobile-numpad {
   grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 5px;
   padding: 5px;
-  border: 2px solid rgba(255, 255, 255, 0.42);
+  border: 2px solid rgba(255, 255, 255, 0.58);
   border-radius: 7px;
   background: #000;
 }
@@ -4267,31 +4339,47 @@ body.native-arcade .mobile-numpad-key:disabled {
   opacity: 0.35;
 }
 
+body.native-arcade .mobile-numpad-action {
+  border-color: rgba(239, 111, 97, 0.95) !important;
+  color: var(--accent-red) !important;
+  font-size: 11px !important;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
 body.native-arcade .passive-bar {
-  grid-column: 2;
-  grid-row: 3;
+  grid-column: 1 / 3 !important;
+  grid-row: 3 !important;
+  grid-template-columns: none !important;
+  grid-auto-flow: column !important;
+  gap: 4px !important;
   height: 100% !important;
   min-height: 0 !important;
-  grid-auto-columns: 66px !important;
-  grid-auto-rows: 64px !important;
-  padding: 3px !important;
+  grid-auto-columns: 108px !important;
+  grid-auto-rows: calc(var(--native-seal-row-height) - 12px) !important;
+  padding: 6px !important;
+  align-content: center !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 }
 
 body.native-arcade .passive-slot,
 body.native-arcade .passive-slot.empty,
 body.native-arcade .passive-slot.triggered {
-  width: 66px !important;
-  height: 64px !important;
-  min-height: 64px !important;
+  width: 108px !important;
+  height: calc(var(--native-seal-row-height) - 12px) !important;
+  min-height: calc(var(--native-seal-row-height) - 12px) !important;
 }
 
 body.native-arcade .passive-slot.empty {
-  font-size: 9px !important;
+  font-size: 10px !important;
 }
 
 body.native-arcade .passive-slot .equipped-seal-sigil {
-  width: 58px !important;
-  height: 58px !important;
+  width: min(100px, calc(var(--native-seal-row-height) - 28px)) !important;
+  height: min(100px, calc(var(--native-seal-row-height) - 28px)) !important;
 }
 
 /* Desktop fullscreen alignment: lower Sinner cards and lift Seals inside the taller Seal tray. */

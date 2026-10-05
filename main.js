@@ -10664,6 +10664,7 @@ function renderArcadeApp() {
         <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
       `;
     }
+    const playerGuessCritical = Boolean(state.roundState?.criticalHitKeys?.has("player"));
     return `
       <div class="native-arcade-frame">
         <main class="arena native-board-panel">
@@ -10672,14 +10673,14 @@ function renderArcadeApp() {
           ${renderOverlay()}
           ${renderPentakillPopup()}
         </main>
-        ${renderNativeInputPanel()}
-        <section class="native-console-panel" aria-label="Player action controls">
+        <div class="native-seal-actions" aria-label="Menu controls">
+          ${renderPauseButton()}
+          ${renderMobileOfferingsButton()}
+        </div>
+        <section class="native-console-panel ${playerGuessCritical ? "critical-guess-panel" : ""}" aria-label="Player guess">
           ${renderConsole()}
-          <div class="native-console-actions">
-            ${renderMobileOfferingsButton()}
-            ${renderPauseButton()}
-          </div>
         </section>
+        ${renderNativeInputPanel()}
         ${renderPassives()}
       </div>
       ${renderMobileOfferingsBackdrop()}
@@ -10774,7 +10775,8 @@ function mobileNumpadEnabled() {
 
 function renderMobileNumpad() {
   if (!isNativeArcadeApp() || state.pendingActive?.mode === "bot") return "";
-  const disabled = mobileNumpadEnabled() ? "" : "disabled";
+  const numberDisabled = mobileNumpadEnabled() ? "" : "disabled";
+  const { buttonText, disabled } = consoleActionState();
   const keys = [
     ["1", "1"],
     ["2", "2"],
@@ -10785,14 +10787,18 @@ function renderMobileNumpad() {
     ["7", "7"],
     ["8", "8"],
     ["9", "9"],
-    ["clear", "C"],
+    ["action", buttonText],
     ["0", "0"],
     ["backspace", "DEL"]
   ];
   return `
     <section class="mobile-numpad" aria-label="Number pad">
       ${keys
-        .map(([key, label]) => `<button type="button" class="mobile-numpad-key" data-numpad-key="${key}" ${disabled}>${label}</button>`)
+        .map(([key, label]) =>
+          key === "action"
+            ? `<button type="button" id="mainAction" class="mobile-numpad-key mobile-numpad-action" ${disabled}>${label}</button>`
+            : `<button type="button" class="mobile-numpad-key" data-numpad-key="${key}" ${numberDisabled}>${label}</button>`
+        )
         .join("")}
     </section>
   `;
@@ -11438,7 +11444,7 @@ function renderBot(bot, pendingPick) {
   `;
 }
 
-function renderConsole() {
+function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
@@ -11465,6 +11471,11 @@ function renderConsole() {
     hint = `Pick a number between 0 and ${maxGuess}`;
   }
 
+  return { buttonText, disabled, hint, inputDisabled, maxGuess, round };
+}
+
+function renderConsole() {
+  const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
   const value = round?.playerSubmittedGuess ?? "";
   const playerCritical = round?.criticalHitKeys?.has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
@@ -11494,7 +11505,7 @@ function renderConsole() {
           ${nativeInputLock}
           ${inputDisabled}
         />
-        <button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>
+        ${isNativeArcadeApp() ? "" : `<button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>`}
       </div>
       <div class="pending-panel ${state.pendingActive ? "visible" : ""}">
         <span>${escapeHtml(normalizeGameText(pendingText))}</span>
