@@ -484,22 +484,22 @@ If a player skipped ARTIFACT use last round, their ARTIFACT this round casts for
 Current PvP ARTIFACTS:
 
 Demon Bowl
-If it casts, deal 3 damage to everyone else.
+Deal 3 damage to everyone else.
 
 Sigillum Dei Aemeth
-If it casts, change the final TARGET by +5.
+Change the final TARGET by +5.
 
 John Dee's Obsidian Mirror
-If it casts, change the final TARGET by -5.
+Change the final TARGET by -5.
 
 Witch in a Bottle
-If it casts, you take 50% less damage this round.
+You take 50% less damage this round.
 
 The Black-Hilted Knife
-If it casts, deal 5 damage to every player tied closest to the first TARGET.
+Deal 5 damage to every player tied closest to the first TARGET.
 
 Null Vote
-If it casts, pick a player whose guess does not count for the final TARGET.
+Pick a player whose guess does not count for the final TARGET.
 The log says who Null Vote was cast on.
 
 Skip

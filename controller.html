@@ -253,6 +253,52 @@
       .warning {
         text-shadow: none !important;
       }
+      .guess-stat {
+        grid-column: 1 / -1;
+        text-align: center;
+      }
+
+      .guess-stat strong {
+        font-size: 34px;
+      }
+
+      .cast-banner {
+        display: grid;
+        gap: 4px;
+        padding: 14px;
+        border: 2px solid #fff;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .cast-banner strong {
+        font-size: 24px;
+        letter-spacing: 1px;
+      }
+
+      .cast-banner-success {
+        border-color: #e1b84c;
+        color: #e1b84c;
+        background: rgba(225, 184, 76, 0.12);
+        animation: cast-pulse 0.6s ease-out 2;
+      }
+
+      .cast-banner-fail {
+        border-color: #ef6f61;
+        color: #ef6f61;
+        background: rgba(239, 111, 97, 0.1);
+      }
+
+      .cast-banner-skip {
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #fff;
+      }
+
+      @keyframes cast-pulse {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
     </style>
   </head>
   <body>

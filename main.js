@@ -93,37 +93,37 @@ const PVP_ACTIVES = [
   {
     id: "pulse",
     name: "Demon Bowl",
-    description: "If it casts, deal 3 damage to everyone else.",
+    description: "Deal 3 damage to everyone else.",
     needsTarget: false
   },
   {
     id: "rise",
     name: "Sigillum Dei Aemeth",
-    description: "If it casts, change the final TARGET by +5.",
+    description: "Change the final TARGET by +5.",
     needsTarget: false
   },
   {
     id: "sink",
     name: "John Dee's Obsidian Mirror",
-    description: "If it casts, change the final TARGET by -5.",
+    description: "Change the final TARGET by -5.",
     needsTarget: false
   },
   {
     id: "shield",
     name: "Witch in a Bottle",
-    description: "If it casts, you take 50% less damage this round.",
+    description: "You take 50% less damage this round.",
     needsTarget: false
   },
   {
     id: "markBest",
     name: "The Black-Hilted Knife",
-    description: "If it casts, deal 5 damage to every player tied closest to the first TARGET.",
+    description: "Deal 5 damage to every player tied closest to the first TARGET.",
     needsTarget: false
   },
   {
     id: "jam",
     name: "Null Vote",
-    description: "If it casts, pick a player whose guess does not count for the final TARGET.",
+    description: "Pick a player whose guess does not count for the final TARGET.",
     needsTarget: true
   }
 ];

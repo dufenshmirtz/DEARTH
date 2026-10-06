@@ -92,7 +92,8 @@ const controllerState = {
   draftActiveTargets: {},
   lastRound: null,
   lastStage: null,
-  renderedKey: ""
+  renderedKey: "",
+  lastCastSignal: null
 };
 
 function escapeHtml(value) {
@@ -157,6 +158,38 @@ function playerActiveName(player) {
   return player.activeOptions?.find((active) => active.id === player.activeChoiceId)?.name || player.activeChoiceId;
 }
 
+function myGuess() {
+  const host = hostState();
+  const remote = remotePlayer();
+  if (!host || host.stage === "lobby") return null;
+  if (remote && remote.guessRound === host.round && Number.isFinite(remote.guess)) return remote.guess;
+  const player = hostPlayer();
+  return Number.isFinite(player?.guess) ? player.guess : null;
+}
+
+function renderCastBanner(player) {
+  if (!player?.activeResolved || !player.activeChoiceId) return "";
+  if (player.activeChoiceId === "skip") {
+    return `<div class="cast-banner cast-banner-skip"><strong>ARTIFACT SKIPPED</strong><span>Your next ARTIFACT casts for sure.</span></div>`;
+  }
+  const name = escapeHtml(playerActiveName(player));
+  return player.activeCast
+    ? `<div class="cast-banner cast-banner-success"><strong>ARTIFACT TRIGGERED</strong><span>${name}</span></div>`
+    : `<div class="cast-banner cast-banner-fail"><strong>ARTIFACT FAILED</strong><span>${name}</span></div>`;
+}
+
+function maybeVibrateCastResult() {
+  const player = hostPlayer();
+  const host = hostState();
+  if (!player?.activeResolved || !player.activeChoiceId || player.activeChoiceId === "skip" || !host) return;
+  const key = `${host.round}:${player.activeCast ? "cast" : "fail"}`;
+  if (controllerState.lastCastSignal === key) return;
+  controllerState.lastCastSignal = key;
+  try {
+    if (navigator.vibrate) navigator.vibrate(player.activeCast ? [80, 60, 80] : 250);
+  } catch (error) {}
+}
+
 function activeCastText(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
   if (player.activeChoiceId === "skip") return "skipped ARTIFACT use";
@@ -213,6 +246,7 @@ async function pollRoom() {
       controllerState.lastRound = host.round;
       controllerState.lastStage = host.stage;
     }
+    maybeVibrateCastResult();
     render();
   } catch {
     controllerState.message = "Cannot reach the host.";
@@ -290,7 +324,7 @@ async function submitActive(activeId) {
 function renderHeader() {
   const host = hostState();
   const player = hostPlayer();
-  const castText = activeCastText(player);
+  const guess = myGuess();
   const damageTooltip = sourceTooltip(player?.damageSources, "damage");
   const damageBadge =
     player?.lastDamage > 0
@@ -305,11 +339,12 @@ function renderHeader() {
         <div class="stat health-stat">${damageBadge}<span>HEALTH</span><strong>${player ? player.hp : "-"}</strong></div>
         <div class="stat"><span>Modifier</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
         <div class="stat"><span>TARGET</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
+        <div class="stat guess-stat"><span>Your Guess</span><strong>${guess ?? "-"}</strong></div>
       </div>
+      ${renderCastBanner(player)}
       ${host?.waitForHost ? `<p class="warning">Host wait is on.</p>` : ""}
       ${player?.activeGuaranteeThisRound ? `<p class="cast">Skip bonus ready: your ARTIFACT will cast for sure.</p>` : ""}
       ${player?.activeGuaranteeNextRound ? `<p class="cast">Skip bonus armed for next round.</p>` : ""}
-      ${castText ? `<p class="${player.activeCast ? "active-cast" : "muted"}">${escapeHtml(castText)}</p>` : ""}
       ${controllerState.message ? `<p class="cast">${escapeHtml(normalizeGameText(controllerState.message))}</p>` : ""}
     </section>
   `;
@@ -319,7 +354,7 @@ function renderJoin() {
   return `
     <section class="panel">
       <h1>DEARTH PvP</h1>
-      <p class="muted">Enter your name to take one of the five table slots.</p>
+      <p class="muted">Enter your name to take a table slot.</p>
       <input id="joinName" type="text" maxlength="16" placeholder="Your name" value="${escapeAttr(controllerState.draftName)}" />
       <button id="joinButton">Join</button>
       ${controllerState.message ? `<p class="warning">${escapeHtml(controllerState.message)}</p>` : ""}
@@ -501,6 +536,8 @@ function renderKey() {
     submittedActive ? "active-ready" : "active-open",
     allActivesSubmitted(host) ? "all-active-ready" : "active-waiting",
     hostPlayerState?.activeCast === true ? "cast" : hostPlayerState?.activeCast === false ? "failed" : "pending",
+    hostPlayerState?.activeResolved ? "resolved" : "unresolved",
+    myGuess() ?? "no-guess",
     host?.waitForHost ? "wait" : "auto",
     host?.players?.filter(Boolean).length || 0,
     hostPlayerState?.activeOptions?.map((active) => active.id).join(",") || "",
