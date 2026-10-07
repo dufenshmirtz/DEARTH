@@ -93,36 +93,42 @@ const PVP_ACTIVES = [
   {
     id: "pulse",
     name: "Demon Bowl",
+    icon: "assets/artifacts/occult-new-9/demon-bowl-incantation-bowl.png",
     description: "Deal 3 damage to everyone else.",
     needsTarget: false
   },
   {
     id: "rise",
-    name: "Sigillum Dei Aemeth",
+    name: "Ceremonial Altar",
+    icon: "assets/artifacts/occult-items-17/17 CEREMONIAL ALTAR.png",
     description: "Change the final TARGET by +5.",
     needsTarget: false
   },
   {
     id: "sink",
-    name: "John Dee's Obsidian Mirror",
+    name: "Black Candle",
+    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
     description: "Change the final TARGET by -5.",
     needsTarget: false
   },
   {
     id: "shield",
-    name: "Witch in a Bottle",
+    name: "Dark Talisman",
+    icon: "assets/artifacts/occult-items-17/16 DARK TALISMAN.png",
     description: "You take 50% less damage this round.",
     needsTarget: false
   },
   {
     id: "markBest",
-    name: "The Black-Hilted Knife",
+    name: "Sacrificial Dagger",
+    icon: "assets/artifacts/occult-items-17/01 SACRIFICIAL DAGGER.png",
     description: "Deal 5 damage to every player tied closest to the first TARGET.",
     needsTarget: false
   },
   {
     id: "jam",
-    name: "Null Vote",
+    name: "Inverted Cross",
+    icon: "assets/artifacts/occult-items-17/11 INVERTED CROSS.png",
     description: "Pick a player whose guess does not count for the final TARGET.",
     needsTarget: true
   }
@@ -10046,11 +10052,11 @@ function pvpDamageParticipant(participant, amount, reason, source = undefined) {
   if (sourceLabel) {
     participant.damageSources = participant.damageSources || [];
     participant.damageSources.push({ amount: rawDamage, source: sourceLabel });
-    if (saved > 0) participant.damageSources.push({ amount: saved, source: "Witch in a Bottle", kind: "saved" });
+    if (saved > 0) participant.damageSources.push({ amount: saved, source: "Dark Talisman", kind: "saved" });
   }
   if (reason) {
     state.pvp.activeResults.push(reason);
-    if (saved > 0) state.pvp.activeResults.push(`Witch in a Bottle saved ${participant.name} ${saved} health.`);
+    if (saved > 0) state.pvp.activeResults.push(`Dark Talisman saved ${participant.name} ${saved} health.`);
   }
   if (participant.hp <= 0) {
     participant.eliminated = true;
@@ -10129,13 +10135,13 @@ function pvpApplyActiveEffect(participant) {
     pvp.targetOffset -= 5;
   } else if (active.id === "markBest") {
     pvpBestGuessParticipants().forEach((target) =>
-      pvpDamageParticipant(target, 5, `${target.name} took 5 as one of the closest guesses.`, "The Black-Hilted Knife")
+      pvpDamageParticipant(target, 5, `${target.name} took 5 as one of the closest guesses.`, "Sacrificial Dagger")
     );
   } else if (active.id === "jam") {
     const target = pvp.slots.find((candidate) => candidate?.id === participant.activeTargetId);
     if (target && !target.eliminated) {
       pvp.removedIds.add(target.id);
-      pvp.activeResults.push(`${participant.name} used Null Vote on ${target.name}; ${target.name}'s guess no longer counts.`);
+      pvp.activeResults.push(`${participant.name} used Inverted Cross on ${target.name}; ${target.name}'s guess no longer counts.`);
     }
   }
 }
@@ -10256,6 +10262,7 @@ function pvpPublicState() {
             activeOptions: pvpSelectableActives(participant).map((active) => ({
               id: active.id,
               name: active.name,
+              icon: active.icon || null,
               description: normalizeGameText(active.description),
               needsTarget: active.needsTarget
             })),
@@ -10960,7 +10967,14 @@ function renderPvpSlot(participant, slot) {
   const guessClass = [criticalClass, guessCloseness.className].filter(Boolean).join(" ");
   const active = participant.activeChoiceId ? pvpActiveById(participant.activeChoiceId) : null;
   const activeHidden = state.pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
-  const activeClass = participant.activeCast && !activeHidden && !isDown ? "cast-active" : "";
+  const activeResultVisible = participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
+  const activeClass = !activeResultVisible
+    ? ""
+    : participant.activeCast
+      ? "cast-active pvp-artifact-hit"
+      : participant.activeCast === false
+        ? "pvp-artifact-failed"
+        : "";
   const activeText = isDown
     ? "X"
     : activeHidden

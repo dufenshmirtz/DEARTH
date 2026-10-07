@@ -153,6 +153,16 @@ function aliveTargets() {
   return host.players.filter((player) => player && !player.eliminated && player.id !== controllerState.player?.id);
 }
 
+function activeIconHtml(active, className = "artifact-icon") {
+  if (!active?.icon) return "";
+  return `<img class="${className}" src="${escapeAttr(encodeURI(active.icon))}" alt="" />`;
+}
+
+function playerActiveOption(player) {
+  if (!player?.activeChoiceId) return null;
+  return player.activeOptions?.find((active) => active.id === player.activeChoiceId) || null;
+}
+
 function playerActiveName(player) {
   if (!player?.activeChoiceId) return "";
   return player.activeOptions?.find((active) => active.id === player.activeChoiceId)?.name || player.activeChoiceId;
@@ -173,9 +183,10 @@ function renderCastBanner(player) {
     return `<div class="cast-banner cast-banner-skip"><strong>ARTIFACT SKIPPED</strong><span>Your next ARTIFACT casts for sure.</span></div>`;
   }
   const name = escapeHtml(playerActiveName(player));
+  const icon = activeIconHtml(playerActiveOption(player), "artifact-icon banner-icon");
   return player.activeCast
-    ? `<div class="cast-banner cast-banner-success"><strong>ARTIFACT TRIGGERED</strong><span>${name}</span></div>`
-    : `<div class="cast-banner cast-banner-fail"><strong>ARTIFACT FAILED</strong><span>${name}</span></div>`;
+    ? `<div class="cast-banner cast-banner-success">${icon}<strong>ARTIFACT TRIGGERED</strong><span>${name}</span></div>`
+    : `<div class="cast-banner cast-banner-fail">${icon}<strong>ARTIFACT FAILED</strong><span>${name}</span></div>`;
 }
 
 function maybeVibrateCastResult() {
@@ -412,8 +423,13 @@ function renderActiveChoice(active, submitted) {
     : "";
   return `
     <div class="choice ${selected ? "selected-choice" : ""} ${castClass}">
-      <h2>${escapeHtml(active.name)}</h2>
-      <p class="muted">${escapeHtml(normalizeGameText(active.description))}</p>
+      <div class="choice-head">
+        ${activeIconHtml(active)}
+        <div>
+          <h2>${escapeHtml(active.name)}</h2>
+          <p class="muted">${escapeHtml(normalizeGameText(active.description))}</p>
+        </div>
+      </div>
       ${targetSelect}
       <button class="activeButton" data-active-id="${escapeAttr(active.id)}" ${submitted ? "disabled" : ""}>Choose</button>
     </div>

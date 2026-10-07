@@ -486,21 +486,21 @@ Current PvP ARTIFACTS:
 Demon Bowl
 Deal 3 damage to everyone else.
 
-Sigillum Dei Aemeth
+Ceremonial Altar
 Change the final TARGET by +5.
 
-John Dee's Obsidian Mirror
+Black Candle
 Change the final TARGET by -5.
 
-Witch in a Bottle
+Dark Talisman
 You take 50% less damage this round.
 
-The Black-Hilted Knife
+Sacrificial Dagger
 Deal 5 damage to every player tied closest to the first TARGET.
 
-Null Vote
+Inverted Cross
 Pick a player whose guess does not count for the final TARGET.
-The log says who Null Vote was cast on.
+The log says who Inverted Cross was cast on.
 
 Skip
 Use no ARTIFACT this round. Your next round ARTIFACT casts for sure.

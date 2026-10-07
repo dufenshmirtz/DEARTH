@@ -47,36 +47,42 @@ const PVP_ACTIVES = [
   {
     id: "pulse",
     name: "Demon Bowl",
+    icon: "assets/artifacts/occult-new-9/demon-bowl-incantation-bowl.png",
     description: "Deal 3 damage to everyone else.",
     needsTarget: false
   },
   {
     id: "rise",
-    name: "Sigillum Dei Aemeth",
+    name: "Ceremonial Altar",
+    icon: "assets/artifacts/occult-items-17/17 CEREMONIAL ALTAR.png",
     description: "Change the final TARGET by +5.",
     needsTarget: false
   },
   {
     id: "sink",
-    name: "John Dee's Obsidian Mirror",
+    name: "Black Candle",
+    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
     description: "Change the final TARGET by -5.",
     needsTarget: false
   },
   {
     id: "shield",
-    name: "Witch in a Bottle",
+    name: "Dark Talisman",
+    icon: "assets/artifacts/occult-items-17/16 DARK TALISMAN.png",
     description: "You take 50% less damage this round.",
     needsTarget: false
   },
   {
     id: "markBest",
-    name: "The Black-Hilted Knife",
+    name: "Sacrificial Dagger",
+    icon: "assets/artifacts/occult-items-17/01 SACRIFICIAL DAGGER.png",
     description: "Deal 5 damage to every player tied closest to the first TARGET.",
     needsTarget: false
   },
   {
     id: "jam",
-    name: "Null Vote",
+    name: "Inverted Cross",
+    icon: "assets/artifacts/occult-items-17/11 INVERTED CROSS.png",
     description: "Pick a player whose guess does not count for the final TARGET.",
     needsTarget: true
   }

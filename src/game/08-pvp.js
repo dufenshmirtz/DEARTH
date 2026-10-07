@@ -445,11 +445,11 @@ function pvpDamageParticipant(participant, amount, reason, source = undefined) {
   if (sourceLabel) {
     participant.damageSources = participant.damageSources || [];
     participant.damageSources.push({ amount: rawDamage, source: sourceLabel });
-    if (saved > 0) participant.damageSources.push({ amount: saved, source: "Witch in a Bottle", kind: "saved" });
+    if (saved > 0) participant.damageSources.push({ amount: saved, source: "Dark Talisman", kind: "saved" });
   }
   if (reason) {
     state.pvp.activeResults.push(reason);
-    if (saved > 0) state.pvp.activeResults.push(`Witch in a Bottle saved ${participant.name} ${saved} health.`);
+    if (saved > 0) state.pvp.activeResults.push(`Dark Talisman saved ${participant.name} ${saved} health.`);
   }
   if (participant.hp <= 0) {
     participant.eliminated = true;
@@ -528,13 +528,13 @@ function pvpApplyActiveEffect(participant) {
     pvp.targetOffset -= 5;
   } else if (active.id === "markBest") {
     pvpBestGuessParticipants().forEach((target) =>
-      pvpDamageParticipant(target, 5, `${target.name} took 5 as one of the closest guesses.`, "The Black-Hilted Knife")
+      pvpDamageParticipant(target, 5, `${target.name} took 5 as one of the closest guesses.`, "Sacrificial Dagger")
     );
   } else if (active.id === "jam") {
     const target = pvp.slots.find((candidate) => candidate?.id === participant.activeTargetId);
     if (target && !target.eliminated) {
       pvp.removedIds.add(target.id);
-      pvp.activeResults.push(`${participant.name} used Null Vote on ${target.name}; ${target.name}'s guess no longer counts.`);
+      pvp.activeResults.push(`${participant.name} used Inverted Cross on ${target.name}; ${target.name}'s guess no longer counts.`);
     }
   }
 }
@@ -655,6 +655,7 @@ function pvpPublicState() {
             activeOptions: pvpSelectableActives(participant).map((active) => ({
               id: active.id,
               name: active.name,
+              icon: active.icon || null,
               description: normalizeGameText(active.description),
               needsTarget: active.needsTarget
             })),

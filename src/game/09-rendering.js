@@ -568,7 +568,14 @@ function renderPvpSlot(participant, slot) {
   const guessClass = [criticalClass, guessCloseness.className].filter(Boolean).join(" ");
   const active = participant.activeChoiceId ? pvpActiveById(participant.activeChoiceId) : null;
   const activeHidden = state.pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
-  const activeClass = participant.activeCast && !activeHidden && !isDown ? "cast-active" : "";
+  const activeResultVisible = participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
+  const activeClass = !activeResultVisible
+    ? ""
+    : participant.activeCast
+      ? "cast-active pvp-artifact-hit"
+      : participant.activeCast === false
+        ? "pvp-artifact-failed"
+        : "";
   const activeText = isDown
     ? "X"
     : activeHidden
