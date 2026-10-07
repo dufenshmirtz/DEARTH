@@ -11858,13 +11858,17 @@ function renderTopbar() {
         </div>
       </div>
       <div class="stat-card round-wrap">
-        <span class="stat-label">Round</span>
-        <span class="stat-value">${state.round}</span>
+        <div class="round-kos-grid">
+          <div class="round-kos-cell">
+            <span class="stat-label">Round</span>
+            <span class="stat-value">${state.round}</span>
+          </div>
+          <div class="round-kos-cell">
+            <span class="stat-label">KOs / BOSS</span>
+            <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
+          </div>
+        </div>
         <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">KOs / BOSS</span>
-        <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
@@ -11889,13 +11893,12 @@ function renderTargetPanel() {
       ? `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)} = ${target}`
       : `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)}`;
 
+  // One box: TARGET on top, the number beneath it, Previous / Modifier (and the calc) on the right
   return `
-    <section class="target-panel" aria-label="Target">
-      <div class="target-value">
-        <span class="stat-label">Target</span>
-        <strong>${target}</strong>
-      </div>
-      <div class="target-detail">
+    <section class="target-panel target-combined" aria-label="Target">
+      <span class="stat-label target-head">Target</span>
+      <strong class="target-big">${target}</strong>
+      <div class="target-side">
         <div class="target-line target-previous">Previous: <strong>${previousTarget}</strong></div>
         <div class="target-line target-modifier">Modifier: <strong>${modifier}</strong></div>
         <div class="target-calc-line">Calc: ${calculation}</div>
@@ -12108,6 +12111,7 @@ function renderConsole() {
           min="0"
           max="${maxGuess}"
           step="1"
+          placeholder=" "
           value="${value}"
           ${playerCloseness.style.trim()}
           ${nativeInputLock}

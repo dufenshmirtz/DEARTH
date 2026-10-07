@@ -5282,3 +5282,605 @@ body.native-arcade .main-menu {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   Game screen skin: hand-drawn frames, fewer boxes, ritual target & input,
+   chalk seal slots, blood-red / bone-white palette.
+   ========================================================================== */
+:root {
+  --blood: #b3141c;
+  --blood-bright: #dc2a2f;
+  --bone: #e9e3d6;
+  --ash: #8d877c;
+  /* one accent colour: semantic accents collapse into blood / bone / ash */
+  --accent-red: #c3181f;
+  --accent-gold: #c3181f;
+  --accent-green: #d9d3c7;
+  --accent-cyan: #d9d3c7;
+  --accent-purple: #a59e93;
+}
+
+/* ---------- 1. Hand-drawn frames ---------- */
+#app .arena,
+#app .passive-bar,
+#app .shop-panel,
+#app .active-panel,
+#app .bot-card,
+#app .stat-card,
+#app .target-panel,
+#app .item-card {
+  position: relative;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .arena::after,
+#app .shop-panel::after,
+#app .active-panel::after,
+#app .bot-card::after,
+#app .stat-card::after,
+#app .target-panel::after,
+#app .item-card::after {
+  content: "";
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+}
+
+/* large containers */
+#app .arena::after,
+#app .shop-panel::after,
+#app .active-panel::after {
+  inset: 0;
+  border-width: 30px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-outer-sharp.png") 14% fill / 30px stretch;
+  opacity: 0.85;
+}
+
+/* cards and stat boxes */
+#app .bot-card::after,
+#app .stat-card::after,
+#app .target-panel::after,
+#app .item-card::after {
+  inset: 0;
+  border-width: 26px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% fill / 26px stretch;
+  opacity: 0.95;
+}
+
+/* bosses get the frantic frame, tinted blood red */
+#app .bot-card.boss::after {
+  inset: 0;
+  border-width: 28px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 28px stretch;
+  opacity: 0.9;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(88%);
+}
+
+/* buttons */
+#app .primary-button,
+#app .small-button:not(.round-skip-button):not(.seal-sell-button),
+#app .mobile-numpad-key {
+  position: relative;
+}
+
+body.mobile-arcade #app .pause-button,
+body.mobile-arcade #app .mobile-offerings-button {
+  position: relative !important;
+  inset: auto !important;
+}
+
+#app .primary-button,
+#app .small-button,
+#app .pause-button,
+#app .mobile-offerings-button,
+#app .mobile-numpad-key {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .primary-button::after,
+#app .small-button::after,
+#app .pause-button::after,
+#app .mobile-offerings-button::after,
+#app .mobile-numpad-key::after {
+  content: "";
+  position: absolute;
+  inset: -4px -5px;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 12px 24px stretch;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+#app .primary-button:hover:not(:disabled)::after,
+#app .small-button:hover:not(:disabled)::after,
+#app .pause-button:hover::after,
+#app .mobile-offerings-button:hover::after,
+#app .mobile-numpad-key:active::after {
+  opacity: 1;
+}
+
+#app .primary-button:disabled::after,
+#app .small-button:disabled::after {
+  opacity: 0.32;
+}
+
+/* health tracks */
+#app .health-bar {
+  position: relative;
+  border-color: transparent !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+#app .health-bar::after {
+  content: "";
+  position: absolute;
+  inset: -8px -9px;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 9px 20px;
+  border-image: url("assets/occult-ui-border-kit/assets/progress-frame.png") 60 150 fill / 9px 20px stretch;
+  opacity: 0.8;
+}
+
+#app .health-fill {
+  background: var(--bone) !important;
+  border-radius: 999px;
+}
+
+#app .bot-card.boss .health-fill {
+  background: var(--blood-bright) !important;
+}
+
+/* ---------- 1b. Fewer boxes inside the Sinner cards ---------- */
+#app .bot-card .mini-stat {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .bot-card .bot-stats {
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 9px no-repeat;
+  padding-top: 8px;
+}
+
+#app .bot-card .mini-stat.bot-health {
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") top center / 100% 9px no-repeat !important;
+  padding-top: 10px;
+}
+
+#app .bot-card .mini-stat > span,
+#app .bot-card .bot-health-heading {
+  color: var(--ash);
+}
+
+#app .bot-card .mini-stat > strong {
+  color: var(--bone);
+}
+
+/* ---------- 3. Target: a big ritual number in a summoning circle ---------- */
+#app .target-panel .target-value strong {
+  color: var(--blood-bright) !important;
+  text-shadow: none !important;
+  z-index: 1;
+}
+
+body:not(.mobile-arcade) #app .target-panel .target-value strong {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  width: 1.7em;
+  transform: translateY(-50%);
+  text-align: center;
+  font-size: 54px !important;
+  line-height: 1;
+}
+
+body.mobile-arcade #app .target-panel .target-value strong {
+  position: relative;
+  width: 1.4em;
+  text-align: center;
+}
+
+/* keep the TARGET label inside the frame, clear of its lines */
+body:not(.mobile-arcade) #app .target-panel .target-value .stat-label {
+  transform: translate(6px, 2px) !important;
+}
+
+body.mobile-arcade #app .target-panel .target-value .stat-label {
+  transform: translate(4px, 1px) !important;
+}
+
+#app .target-panel .target-previous strong,
+#app .target-panel .target-modifier strong,
+#app .target-info-wrap .target-line,
+#app .target-info-wrap .target-line strong,
+#app .target-panel .target-calc-average,
+#app .target-panel .target-line,
+#app .target-panel .target-calc-line {
+  color: var(--bone) !important;
+}
+
+#app .target-panel .target-calc-line {
+  opacity: 0.6;
+}
+
+/* ---------- 4. Ritual number input ---------- */
+#app .center-console .guess-input {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") bottom center / 100% 10px no-repeat !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--bone);
+  text-align: center;
+  font-family: "Razor Keen", Inter, sans-serif;
+  caret-color: var(--blood-bright);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+body:not(.mobile-arcade) #app .center-console .guess-input {
+  font-size: 28px !important;
+  background-size: 3.4em 9px !important;
+}
+
+body.native-arcade #app .native-console-panel {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+#app .center-console .guess-input::-webkit-outer-spin-button,
+#app .center-console .guess-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* number field is only as wide as its underline, so field + Guess/Ready button sit centred together */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .console-row {
+  grid-template-columns: 120px clamp(132px, 10vw, 170px) !important;
+  justify-self: center !important;
+  width: auto !important;
+  gap: 16px !important;
+}
+
+body:not(.mobile-arcade) #app .center-console .guess-input {
+  padding: 0 !important;
+  background-position: center bottom !important;
+}
+
+/* fullscreen: the hint above the field is centred over it too */
+body.fullscreen-layout:not(.mobile-arcade) #app .arena:not(.pvp-arena) .console-hint {
+  justify-self: center !important;
+  justify-content: center;
+  text-align: center;
+}
+
+#app .center-console .guess-input:focus {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+}
+
+/* ---------- 6. Seal slots: chalk summoning circles, same size as an equipped seal ---------- */
+#app .passive-slot {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* the empty-slot image keeps its box but shows a chalk circle instead of the X */
+#app .passive-slot .empty-seal-slot-image {
+  object-position: -10000px 0;
+  background: url("assets/occult-ui-border-kit/assets/circle-frame.png") center / contain no-repeat;
+  opacity: 0.32;
+}
+
+body:not(.mobile-arcade) #app .passive-slot .empty-seal-slot-image {
+  width: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
+  height: min(calc(var(--seal-slot-width, var(--seal-slot-size, 132px)) + 16px), calc(100% + 16px)) !important;
+}
+
+body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
+  width: 62px !important;
+  height: 62px !important;
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+body.native-arcade #app .passive-slot .empty-seal-slot-image {
+  width: min(100px, calc(var(--native-seal-row-height) - 28px)) !important;
+  height: min(100px, calc(var(--native-seal-row-height) - 28px)) !important;
+}
+
+/* equipped seals glow blood red when they trigger */
+#app .passive-bar {
+  --seal-trigger-filter: brightness(1.2) drop-shadow(0 0 6px rgba(220, 42, 47, 0.95)) drop-shadow(0 0 18px rgba(160, 10, 16, 0.75));
+}
+
+/* the numpad Guess key keeps its emphasis, now in blood red */
+#app .mobile-numpad-action::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .mobile-numpad-action {
+  color: var(--blood-bright) !important;
+}
+
+/* ---------- 7. Palette: SIN and prices in blood red ---------- */
+#app .bot-reward,
+#app .reroll-cost,
+#app .credit-wrap .stat-value {
+  color: var(--blood-bright) !important;
+  text-shadow: 0 0 8px rgba(179, 20, 28, 0.45);
+}
+
+#app .shop-buy-button:not(:disabled),
+#app .item-card .price,
+#app .active-panel .price {
+  color: var(--blood-bright) !important;
+  text-shadow: none !important;
+}
+
+#app .shop-buy-button:disabled {
+  color: var(--ash) !important;
+  opacity: 0.7;
+}
+
+#app .stat-label,
+#app .panel-subtitle,
+#app .elite-chance-label,
+#app .bot-type {
+  color: var(--ash) !important;
+}
+
+#app .bot-name,
+#app .item-name,
+#app .panel-title,
+#app .stat-value,
+#app .health-row strong {
+  color: var(--bone);
+}
+
+/* ---------- Top bar: Target (with Previous / Modifier) | Health | Round & KOs | SIN ---------- */
+#app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(330px, 1.5fr)
+    minmax(172px, 1.2fr)
+    minmax(200px, 1.1fr)
+    minmax(118px, 0.8fr) !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(170px, 1.6fr)
+    minmax(100px, 1fr)
+    minmax(104px, 0.95fr)
+    minmax(58px, 0.6fr) !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(180px, 1.5fr)
+    minmax(118px, 1.1fr)
+    minmax(112px, 1fr)
+    minmax(76px, 0.7fr) !important;
+}
+
+/* combined Target box */
+#app .target-panel.target-combined {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  column-gap: 20px;
+  align-items: center;
+  padding: 16px 20px 12px !important;
+}
+
+#app .target-combined .target-head {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  font-size: 22px !important;
+  line-height: 1;
+  color: var(--ash) !important;
+  transform: none !important;
+}
+
+#app .target-combined .target-big {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--blood-bright) !important;
+}
+
+#app .target-combined .target-side {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  justify-self: end;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+}
+
+#app .target-combined .target-line {
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  color: var(--bone) !important;
+}
+
+#app .target-combined .target-line strong {
+  font-size: 24px !important;
+  color: var(--bone) !important;
+}
+
+#app .target-combined .target-calc-line {
+  font-size: 12px !important;
+  color: var(--ash) !important;
+}
+
+body.mobile-arcade #app .target-panel.target-combined {
+  column-gap: 10px;
+  padding: 7px 9px 5px !important;
+}
+
+body.mobile-arcade #app .target-combined .target-head {
+  font-size: 11px !important;
+}
+
+body.mobile-arcade #app .target-combined .target-big {
+  font-size: 22px;
+  line-height: 0.95;
+  align-self: start;
+}
+
+body.mobile-arcade #app .target-combined {
+  grid-template-rows: auto auto;
+  align-content: start;
+}
+
+body.mobile-arcade #app .target-combined .target-side {
+  gap: 1px;
+}
+
+body.mobile-arcade #app .target-combined .target-line {
+  font-size: 10px !important;
+}
+
+body.mobile-arcade #app .target-combined .target-line strong {
+  font-size: 13px !important;
+}
+
+body.mobile-arcade #app .target-combined .target-calc-line {
+  font-size: 8px !important;
+}
+
+/* a hand-drawn line between the main area and the seal slots
+   (drawn by the column holding both, placed in the seal row and lifted into the gap) */
+body:not(.mobile-arcade) #app .play-column {
+  position: relative;
+}
+
+body:not(.mobile-arcade) #app .play-column::after {
+  content: "";
+  position: absolute;
+  grid-row: 2;
+  grid-column: 1;
+  left: 2%;
+  right: 2%;
+  top: -12px;
+  height: 9px;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
+}
+
+#app .round-wrap .round-kos-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  column-gap: 28px;
+}
+
+body.mobile-arcade #app .round-wrap .round-kos-grid {
+  column-gap: 12px;
+}
+
+#app .round-wrap .round-kos-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* SIN reward on the Sinner cards: a little further in from the corner */
+#app .bot-card .bot-reward {
+  transform: translate(-9px, 8px);
+}
+
+body.mobile-arcade #app .bot-card .bot-reward {
+  transform: translate(-5px, 4px);
+}
+
+/* Boss cards: every line in blood red */
+#app .bot-card.boss .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+}
+
+#app .bot-card.boss .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
+}
+
+#app .bot-card.boss .health-bar::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+/* the big area holding the Sinner cards has no outline; each card keeps its own frame */
+#app .arena::after {
+  display: none;
+}
+
+/* ---------- Hover: buttons turn blood red (frame and text), seals turn red ---------- */
+#app .primary-button:hover:not(:disabled),
+#app .small-button:hover:not(:disabled),
+#app .pause-button:hover:not(:disabled),
+#app .mobile-offerings-button:hover:not(:disabled),
+#app .mobile-numpad-key:hover:not(:disabled),
+#app .menu-button:hover:not(:disabled),
+#app .run-slot-button:hover:not(:disabled),
+#app .run-remove-button:hover:not(:disabled) {
+  color: var(--blood-bright) !important;
+}
+
+#app .primary-button:hover:not(:disabled)::after,
+#app .small-button:hover:not(:disabled)::after,
+#app .pause-button:hover:not(:disabled)::after,
+#app .mobile-offerings-button:hover:not(:disabled)::after,
+#app .mobile-numpad-key:hover:not(:disabled)::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+/* seals: dim red on hover ... */
+#app .passive-slot:not(.suppressed):hover .equipped-seal-sigil,
+#app .item-card.passive:hover .shop-seal-sigil,
+#app .seal-sigil:hover {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) saturate(0.18) brightness(2.5) !important;
+}
+
+/* ... and deep red while they activate (stays deep red even when hovered) */
+#app .passive-slot.triggered:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.triggered:not(.suppressed) .equipped-seal-sigil.recolored-sigil,
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.triggered:not(.suppressed):hover .equipped-seal-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+/* critical hit: your guess and the line under it turn blood red */
+#app .center-console .guess-input.critical-guess {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
+}
