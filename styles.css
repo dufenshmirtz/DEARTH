@@ -5860,9 +5860,27 @@ body.mobile-arcade #app .bot-card .bot-reward {
   opacity: 1;
 }
 
+/* seals: dim red on hover ... */
 #app .passive-slot:not(.suppressed):hover .equipped-seal-sigil,
-#app .passive-slot.triggered:not(.suppressed):hover .equipped-seal-sigil,
 #app .item-card.passive:hover .shop-seal-sigil,
 #app .seal-sigil:hover {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) saturate(0.18) brightness(2.5) !important;
+}
+
+/* ... and deep red while they activate (stays deep red even when hovered) */
+#app .passive-slot.triggered:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.triggered:not(.suppressed) .equipped-seal-sigil.recolored-sigil,
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil,
+#app .passive-slot.triggered:not(.suppressed):hover .equipped-seal-sigil {
   filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+/* critical hit: your guess and the line under it turn blood red */
+#app .center-console .guess-input.critical-guess {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
 }
