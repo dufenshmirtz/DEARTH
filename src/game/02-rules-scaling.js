@@ -78,8 +78,19 @@ function directPassiveStack(id) {
   return passiveEntry(id)?.stack || 0;
 }
 
+function sealSlotCost(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return SATAN_SEAL_IDS.has(id) ? 2 : 1;
+}
+
 function ownedSealSlotCount() {
-  return state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
+  return state.player.passives
+    .filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id))
+    .reduce((sum, item) => sum + sealSlotCost(item), 0);
+}
+
+function hasSealSlotRoomFor(item) {
+  return ownedSealSlotCount() + sealSlotCost(item) <= passiveLimit();
 }
 
 function pruneRemovedPassives() {
@@ -220,6 +231,10 @@ function passiveEntryFlatDamage(entry, baseValue) {
   return flatDamageValue(entry, baseValue);
 }
 
+function passiveEntryEliteLevels(entry) {
+  return Math.max(0, (entry?.stack || 1) - 1);
+}
+
 function doubledStackPower(idOrItem) {
   const stack = simpleStackCount(idOrItem);
   return stack ? Math.pow(2, Math.max(0, stack - 1)) : 0;
@@ -341,6 +356,10 @@ function botHasLowSin(bot, limit = 3) {
   return botSin(bot) <= limit;
 }
 
+function andromaliusBountyLimit(idOrItem) {
+  return 2 + eliteLevels(idOrItem);
+}
+
 function wealthWeightBonus() {
   return 0;
 }
@@ -382,39 +401,62 @@ function applyBathinMemoryDamage(bot, entries) {
     const damage = bathinMemoryDamage(entry);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    damageBot(bot, damage, `Seal of Bathin dealt ${damage} damage to ${bot.name} for gaining MEMORY.`, "Seal of Bathin");
+    queueEndOfRoundBotDamage(bot, damage, `Seal of Bathin dealt ${damage} damage to ${bot.name} for gaining MEMORY.`, "Seal of Bathin");
   });
+}
+
+function reduceBotMemoryRecord(bot, amount) {
+  let remaining = Math.max(0, Math.ceil(amount));
+  if (!bot || remaining <= 0) return;
+  bot.lastMemoryDelta = Math.max(0, (bot.lastMemoryDelta || 0) - remaining);
+  if (!Array.isArray(bot.memorySources)) return;
+  for (let index = bot.memorySources.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const source = bot.memorySources[index];
+    const sourceAmount = Math.max(0, Math.ceil(source?.amount || 0));
+    const removed = Math.min(sourceAmount, remaining);
+    source.amount = sourceAmount - removed;
+    remaining -= removed;
+  }
+  bot.memorySources = bot.memorySources.filter((source) => Math.max(0, Math.ceil(source?.amount || 0)) > 0);
 }
 
 function applyMemoryToBountyMirror(bot, amount, options = {}) {
   const memoriesAdded = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || memoriesAdded <= 0) return;
-  orderedPassiveEffectEntries("p10").forEach((entry) => {
-    if (bot.eliminated) return;
-    const bounty = memoriesAdded * stackLinearMultiplier(entry);
-    if (bounty <= 0) return;
-    markPassiveEntryTriggered(entry);
-    changeBotSin(bot, bounty, `Seal of Gusion gave ${bot.name} +${bounty} bounty from memory growth.`, {
-      source: "Seal of Gusion",
-      triggerMemoryBountyMirror: false
-    });
+  const entry = orderedPassiveEffectEntries("p10")[0];
+  if (!entry) return;
+  const baseConverted = Math.floor(memoriesAdded / 2);
+  const converted = baseConverted > 0 ? Math.min(memoriesAdded, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  if (converted <= 0) return;
+  bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
+  reduceBotMemoryRecord(bot, converted);
+  markPassiveEntryTriggered(entry);
+  changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false
   });
 }
 
 function applyBountyToMemoryMirror(bot, amount, options = {}) {
   const bountyGained = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || bountyGained <= 0) return;
-  orderedPassiveEffectEntries("p10").forEach((entry) => {
-    if (bot.eliminated) return;
-    const memory = bountyGained * stackLinearMultiplier(entry);
-    if (memory <= 0) return;
-    markPassiveEntryTriggered(entry);
-    const added = addBotMemory(bot, memory, "", {
-      source: "Seal of Gusion",
-      triggerMemoryBountyMirror: false
-    });
-    if (added > 0) addRoundEvent(`Seal of Gusion gave ${bot.name} +${added} memory from bounty growth.`);
+  const entry = orderedPassiveEffectEntries("p10")[0];
+  if (!entry) return;
+  const baseConverted = Math.floor(bountyGained / 2);
+  const converted = baseConverted > 0 ? Math.min(bountyGained, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  if (converted <= 0) return;
+  markPassiveEntryTriggered(entry);
+  const result = changeBotSin(bot, -converted, "", {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false,
+    triggerLossDamage: false
   });
+  if (result.lost <= 0) return;
+  const added = addBotMemory(bot, result.lost, "", {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false
+  });
+  addRoundEvent(`Seal of Gusion converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
 function memoryRoundLimit() {
@@ -447,7 +489,7 @@ function applyExcessMemoryDamage(bot, excessMemory) {
     const damage = excess * sitriExcessMemoryDamage(entry);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    damageBot(
+    queueEndOfRoundBotDamage(
       bot,
       damage,
       `Seal of Sitri converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
@@ -518,14 +560,14 @@ function applyBotSinLossDamage(bot, lost, extraDamagePerSin = 0, extraSource = "
 
   if (extraDamagePerSin > 0) {
     const damage = Math.ceil(amount * extraDamagePerSin);
-    if (damage > 0) damageBot(bot, damage, `${extraSource} dealt ${damage} damage to ${bot.name}.`, extraSource || "SIN loss");
+    if (damage > 0) queueEndOfRoundBotDamage(bot, damage, `${extraSource} dealt ${damage} damage to ${bot.name}.`, extraSource || "SIN loss");
   }
 
   orderedPassiveEffectEntries("p43").forEach((entry) => {
     const damage = passiveEntryFlatDamage(entry, 20);
     if (damage <= 0 || bot.eliminated) return;
     markPassiveEntryTriggered(entry);
-    damageBot(bot, damage, `Seal of Raum dealt ${damage} damage to ${bot.name} for losing SIN.`, "Seal of Raum");
+    queueEndOfRoundBotDamage(bot, damage, `Seal of Raum dealt ${damage} damage to ${bot.name} for losing SIN.`, "Seal of Raum");
   });
 }
 
@@ -541,7 +583,7 @@ function applyBotSinGainDamage(bot, gained) {
     const damage = amount * agaresDamagePerSin(entry);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    damageBot(bot, damage, `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${amount} SIN.`, "Seal of Agares");
+    queueEndOfRoundBotDamage(bot, damage, `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${amount} SIN.`, "Seal of Agares");
   });
 }
 
@@ -566,7 +608,7 @@ function checkBalamMemoryBountyEliminations() {
     let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
     while (target) {
       entries.forEach((entry) => markPassiveEntryTriggered(entry));
-      const damagePool = Math.max(0, Math.ceil(target.maxHp || 0));
+      const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";
@@ -859,6 +901,20 @@ function halphasEliteCredits(entry) {
   return Math.max(0, ((entry?.stack || 1) - 1) * 2);
 }
 
+function satanSealMaxDivisor(entry) {
+  return Math.max(1, Math.floor(100 * Math.pow(0.8, passiveEntryEliteLevels(entry))));
+}
+
+function satanSealDamageRoll(entry) {
+  const maxDivisor = satanSealMaxDivisor(entry);
+  const divisor = randomInt(1, maxDivisor);
+  return {
+    divisor,
+    maxDivisor,
+    damage: Math.ceil(666 / divisor)
+  };
+}
+
 function randomDamageSpread(totalDamage, targets, broadSpread = false) {
   const total = Math.max(0, Math.ceil(totalDamage));
   const liveTargets = targets.filter((bot) => bot && !bot.eliminated && bot.hp > 0);
@@ -1035,12 +1091,12 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
-  const applyRedirectMultiplier = (multiplier, source, entry, targetBot) => {
+  const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
     if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
     const boostedDamage = Math.ceil(exactDamage * multiplier);
-    const extra = Math.max(0, boostedDamage - roundedDamage);
-    if (extra <= 0) return;
-    redirectEntries.push({ targetBotId: targetBot.id, amount: extra, source, kind: "bonus" });
+    const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
+    if (redirectedDamage <= 0) return;
+    redirectEntries.push({ targetBotId: targetBot.id, amount: redirectedDamage, source, kind: "bonus" });
     markPassiveEntryTriggered(entry);
   };
 
@@ -1094,7 +1150,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
         if (bot.isBoss || (bot.memory?.length || 0) < 10) return;
         const redirectBoss = blackHorseRedirectBoss(bot);
         if (redirectBoss) {
-          applyRedirectMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p76?.name, entry, redirectBoss);
+          applyRedirectMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p76?.name, entry, redirectBoss, true);
         } else {
           applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p76?.name, entry);
         }

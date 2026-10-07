@@ -114,7 +114,7 @@ function decodeArcadeSaveValue(key, value) {
 function arcadeRunSaveSnapshot() {
   const snapshot = {};
   Object.keys(state).forEach((key) => {
-    if (key === "sound" || key === "pvp") return;
+    if (key === "sound" || key === "pvp" || key === "roundRevealAnimation") return;
     snapshot[key] = state[key];
   });
   snapshot.mode = "arcade";
@@ -286,6 +286,7 @@ function normalizeLoadedRoundState(round) {
   if (!Array.isArray(round.temporaryBotSinBonuses)) round.temporaryBotSinBonuses = [];
   if (!Array.isArray(round.eliminationCreditRecords)) round.eliminationCreditRecords = [];
   if (!Array.isArray(round.eliminatedPersonalities)) round.eliminatedPersonalities = [];
+  if (!Array.isArray(round.pendingEndOfRoundBotDamages)) round.pendingEndOfRoundBotDamages = [];
   if (!Array.isArray(round.roundEvents)) round.roundEvents = [];
   if (!round.selfStackingConditionCounts || typeof round.selfStackingConditionCounts !== "object") {
     round.selfStackingConditionCounts = {};
@@ -294,6 +295,7 @@ function normalizeLoadedRoundState(round) {
     if (!Number.isFinite(round.selfStackingConditionCounts[spec.key])) round.selfStackingConditionCounts[spec.key] = 0;
   });
   if (!Number.isFinite(round.selfStackingCriticalDamage)) round.selfStackingCriticalDamage = 0;
+  round.resolvingEndOfRoundPassives = false;
   return round;
 }
 

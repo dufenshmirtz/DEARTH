@@ -110,6 +110,59 @@ function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, 
   applyPendingRedirectDamage(damageDetails.redirectEntries, botDamages, botDamageSources);
 }
 
+function queueEndOfRoundBotDamage(bot, amount, reason, source = undefined, playerDealt = true) {
+  const damage = Math.max(0, Math.ceil(amount));
+  const round = state.roundState;
+  if (!bot || bot.eliminated || damage <= 0) return 0;
+  if (!round || round.resolvingEndOfRoundPassives) {
+    return damageBot(bot, damage, reason, source, playerDealt);
+  }
+  if (!Array.isArray(round.pendingEndOfRoundBotDamages)) round.pendingEndOfRoundBotDamages = [];
+  round.pendingEndOfRoundBotDamages.push({
+    botId: bot.id,
+    amount: damage,
+    source: source === null ? null : source || sourceLabelFromReason(reason, "Damage"),
+    playerDealt
+  });
+  return damage;
+}
+
+function queueEndOfRoundBotDamages(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+  return (bots || []).reduce((total, bot) => {
+    if (!bot || bot.eliminated) return total;
+    const rawAmount = typeof amount === "function" ? amount(bot) : amount;
+    const damage = Math.max(0, Math.ceil(rawAmount));
+    if (damage <= 0) return total;
+    const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
+    const source =
+      sourceFactory === null
+        ? null
+        : typeof sourceFactory === "function"
+          ? sourceFactory(bot, damage)
+          : sourceFactory;
+    return total + queueEndOfRoundBotDamage(bot, damage, reason, source, playerDealt);
+  }, 0);
+}
+
+function applyQueuedEndOfRoundBotDamage() {
+  const round = state.roundState;
+  const queued = Array.isArray(round?.pendingEndOfRoundBotDamages) ? round.pendingEndOfRoundBotDamages : [];
+  if (!round || !queued.length) return 0;
+  round.pendingEndOfRoundBotDamages = [];
+  const botDamages = new Map();
+  const botDamageSources = new Map();
+  queued.forEach((entry) => {
+    const bot = state.bots.find((candidate) => candidate.id === entry.botId);
+    const damage = Math.max(0, Math.ceil(entry.amount || 0));
+    if (!bot || bot.eliminated || bot.hp <= 0 || damage <= 0) return;
+    addPendingBotDamage(botDamages, botDamageSources, bot, damage, entry.source || "Queued damage", entry.playerDealt !== false);
+  });
+  if (!botDamages.size) return 0;
+  const total = Array.from(botDamages.values()).reduce((sum, damage) => sum + Math.max(0, Math.ceil(damage || 0)), 0);
+  applyPendingBotDamageBatch(botDamages, botDamageSources, state.bots);
+  return total;
+}
+
 function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
   const baseDamage = Math.max(0, Math.ceil(amount));
   if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
@@ -740,7 +793,7 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
     const name = passiveName("p90", "Seal of Bifrons");
-    damageBot(bot, damage, `${name} dealt ${damage} damage to ${bot.name} after ${source} altered their personality.`, name);
+    queueEndOfRoundBotDamage(bot, damage, `${name} dealt ${damage} damage to ${bot.name} after ${source} altered their personality.`, name);
   });
 }
 
@@ -789,12 +842,22 @@ function applyFixedWillStart() {
   const entries = orderedPassiveEffectEntries("p107");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    for (let count = 0; count < (entry.stack || 1); count += 1) {
-      const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
-      if (!targets.length) return;
+    const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+    if (targets.length) {
       const target = randomFrom(targets);
       setBotPersonality(target, "Stubborn", passiveName("p107", "Seal of Ose"), { markEntry: entry });
     }
+    const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
+    if (eliteDamage <= 0) return;
+    const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
+    if (!stubbornTargets.length) return;
+    markPassiveEntryTriggered(entry);
+    queueEndOfRoundBotDamages(
+      stubbornTargets,
+      eliteDamage,
+      (bot, damage) => `${passiveName("p107", "Seal of Ose")} dealt ${damage} ELITE damage to ${bot.name}.`,
+      passiveName("p107", "Seal of Ose")
+    );
   });
 }
 

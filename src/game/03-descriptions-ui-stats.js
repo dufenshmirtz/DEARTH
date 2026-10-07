@@ -30,7 +30,7 @@ function artifactDescription(item) {
     return "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
-  if (item.id === "a25") return `Pick a DAMNED, heal it to full, and increase its BOUNTY by ${artifactValue(9)}.`;
+  if (item.id === "a25") return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
   }
@@ -54,6 +54,13 @@ function itemDescription(item) {
     return `Copies ${target.name} as ${copiedVersion}. If the copied SEAL is sold, Ose chooses another owned SEAL.`;
   }
   if (item.id === "p39") return `Seal of Purson stacks: ${item.counter || 0}. Rounds without buying from Devil's Offerings add 1 stack. Buying an offering resets stacks. End of round pays ${Math.ceil((item.counter || 0) * passivePower(item))} SIN.`;
+  if (item.id === "p111") {
+    const lastRoll =
+      item.lastSatanDivisor && item.lastSatanMaxDivisor
+        ? ` Last divisor: ${item.lastSatanDivisor}. Last damage: ${item.lastSatanDamage || 0}.`
+        : "";
+    return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
+  }
   if (stack <= 1) return item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
@@ -68,7 +75,10 @@ function itemDescription(item) {
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
   if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
-  if (item.id === "p10") return `MEMORY gained adds ${stackLinearMultiplier(item)}x that much BOUNTY. BOUNTY gained adds ${stackLinearMultiplier(item)}x that much MEMORY.`;
+  if (item.id === "p10") {
+    const bonus = eliteLevels(item);
+    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down${bonus ? `, plus ${bonus} extra when it triggers` : ""}.`;
+  }
   if (item.id === "p11") {
     return `When a DAMNED dies, gain ${stack} random ARTIFACT${stack === 1 ? "" : "S"} with 0 sell value if you have room.`;
   }
@@ -116,7 +126,7 @@ function itemDescription(item) {
     return `When a DAMNED with 3 or less MEMORY dies, gain ${Math.round(100 * passivePower(item))}% of its MEMORY as SIN. If it had more than 3 MEMORY, split its MEMORY between adjacent DAMNED.`;
   }
   if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
-  if (item.id === "p44") return `At end of round, non-boss DAMNED with 2 or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
+  if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
@@ -128,7 +138,10 @@ function itemDescription(item) {
     return `Whenever a DAMNED takes damage, it takes ${flatDamageValue(item, 3)} extra damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} extra damage per MEMORY instead.`;
   }
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
-  if (item.id === "p54") return "When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes that much damage too.";
+  if (item.id === "p54") {
+    const multiplier = Number(flatDamagePower(item).toFixed(2));
+    return `When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes ${multiplier}x that damage.`;
+  }
   if (item.id === "p55") {
     return `Each excess MEMORY becomes ${sitriExcessMemoryDamage(item)} damage to that DAMNED.`;
   }
@@ -136,7 +149,8 @@ function itemDescription(item) {
     return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
   }
   if (item.id === "p57") {
-    return "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.";
+    const multiplier = Number(flatDamagePower(item).toFixed(2));
+    return `If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. ${multiplier}x its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
   }
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;
@@ -182,7 +196,7 @@ function itemDescription(item) {
   if (item.id === "p74") return `DAMNED with 10 or more BOUNTY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   if (item.id === "p76") {
-    return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead.`;
+    return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead.`;
   }
   if (item.id === "p77") return `If you scored CRITICAL this round, DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources next round.`;
   if (item.id === "p78") {
@@ -232,7 +246,8 @@ function itemDescription(item) {
     return `At end of round, DAMNED with the most prevalent personality take ${flatDamageValue(item, 5)} damage for every DAMNED with that personality.`;
   }
   if (item.id === "p107") {
-    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At start of round, ${item.stack || 1} random DAMNED become STUBBORN.`;
+    const eliteDamage = eliteLevels(item) * 5;
+    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At start of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
   }
   if (item.id === "p108") {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
@@ -245,7 +260,10 @@ function itemDescription(item) {
     return `At reveal, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
   if (item.id === "p97") {
-    return `At reveal, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY.`;
+    return `At reveal, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
+  }
+  if (item.id === "p110") {
+    return `At reveal, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
   }
   return item.description;
 }
@@ -640,7 +658,12 @@ function renderSealSigil(item, extraClass = "") {
   const src = sealSigilPath(item);
   if (!src) return "";
   const id = typeof item === "string" ? item : item?.id;
-  const className = ["seal-sigil", DEV_SEAL_IDS.has(id) ? "dev-seal-sigil" : "", extraClass].filter(Boolean).join(" ");
+  const className = [
+    "seal-sigil",
+    DEV_SEAL_IDS.has(id) ? "dev-seal-sigil" : "",
+    SATAN_SEAL_IDS.has(id) ? "satan-seal-sigil" : "",
+    extraClass
+  ].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Seal" : item?.name || "Seal";
   return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
 }
@@ -717,17 +740,14 @@ function devTemporaryActiveCopy(id) {
 }
 
 function devSealChance(idOrItem) {
-  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   const stack = typeof idOrItem === "string" ? simpleStackCount(idOrItem) : idOrItem?.stack || 0;
   if (!stack) return 0;
-  if (id === "p92") return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
-  return 0.3;
+  return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
 }
 
 function devSealEntryChance(entry) {
   if (!entry?.stack) return 0;
-  if (entry.id === "p92") return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
-  return 0.3;
+  return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
 }
 
 function isSelfStackingSeal(idOrItem) {
@@ -805,7 +825,7 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
   if (!bot || bot.isBoss || bot.eliminated || beforeMemory > 10 || afterMemory <= 10) return;
   const damage = triggerSelfStackingSeal("p99");
   if (damage <= 0) return;
-  damageBot(
+  queueEndOfRoundBotDamage(
     bot,
     damage,
     `${ITEMS.p99.name} dealt ${damage} damage to ${bot.name} for exceeding 10 MEMORY.`,
@@ -855,10 +875,10 @@ function applySelfStackingRevealedDeath(bot) {
   if (damage <= 0) return;
   const targets = adjacentLivingBots(bot);
   if (!targets.length) return;
-  damageBots(
+  queueEndOfRoundBotDamages(
     targets,
     damage,
-    (target, dealt) => `${ITEMS.p102.name} dealt ${dealt} damage to ${target.name} from ${bot.name}'s revealed death.`,
+    (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
     ITEMS.p102.name
   );
 }
@@ -869,10 +889,10 @@ function applySelfStackingStubbornDeath(bot) {
   if (damage <= 0) return;
   const targets = activeBots().filter((target) => personalityType(target) !== "Stubborn");
   if (!targets.length) return;
-  damageBots(
+  queueEndOfRoundBotDamages(
     targets,
     damage,
-    (target, dealt) => `${ITEMS.p109.name} dealt ${dealt} damage to ${target.name} from ${bot.name}'s STUBBORN death.`,
+    (target, queued) => `${ITEMS.p109.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s STUBBORN death.`,
     ITEMS.p109.name
   );
 }
@@ -889,10 +909,10 @@ function recordArtifactUseForSelfStacking() {
   if (damage <= 0) return;
   const targets = activeBots();
   if (!targets.length) return;
-  damageBots(
+  queueEndOfRoundBotDamages(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p103.name} dealt ${dealt} damage to ${bot.name} from ARTIFACT use.`,
+    (bot, queued) => `${ITEMS.p103.name} dealt ${queued} damage to ${bot.name} from ARTIFACT use.`,
     ITEMS.p103.name
   );
 }
@@ -1028,6 +1048,7 @@ function sourceLabelFromReason(reason, fallback) {
     ["Seal of Pyros", "Seal of Pyros"],
     ["Seal of Padma", "Seal of Padma"],
     ["Seal of Threon", "Seal of Threon"],
+    ["Seal of Petros-Pavlos", "Seal of Petros-Pavlos"],
     ["Seal of Bathin", "Seal of Bathin"],
     ["The White-Hilted Knife", "The White-Hilted Knife"],
     ["The Philosopher's Stone", "The Philosopher's Stone"],
@@ -1176,6 +1197,10 @@ function sealContributionSummary(item) {
 function sealContributionDetails(item) {
   const stats = state.sealStats?.[item?.id];
   const parts = sealContributionParts(stats, { includeTriggers: true });
+  if (item?.id === "p111" && item.lastSatanDivisor && item.lastSatanMaxDivisor) {
+    parts.push(`last divisor ${item.lastSatanDivisor}`);
+    parts.push(`last Satan damage ${item.lastSatanDamage || 0}`);
+  }
   if (!parts.length) return "This run:\nNo tracked effect yet.";
   return `This run:\n${parts.map((part) => `- ${part}`).join("\n")}`;
 }

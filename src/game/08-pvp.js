@@ -166,6 +166,36 @@ function startPvpMode() {
   render();
 }
 
+function pvpLocalServerUrl() {
+  return "http://localhost:5177";
+}
+
+function pvpShouldAutoStartFromHash() {
+  return typeof location !== "undefined" && location.hash === "#pvp" && !isNativeArcadeApp();
+}
+
+async function pvpOpenServedHostIfAvailable() {
+  if (typeof location === "undefined" || location.protocol !== "file:" || typeof fetch !== "function") return false;
+  const url = pvpLocalServerUrl();
+  try {
+    await fetch(`${url}/api/room`, { cache: "no-store", mode: "no-cors" });
+    window.location.href = `${url}/#pvp`;
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function requestPvpMode() {
+  if (isNativeArcadeApp()) {
+    showMainMenu();
+    return;
+  }
+  if (await pvpOpenServedHostIfAvailable()) return;
+  startPvpMode();
+  if (!pvpServerEnabled()) pvpAddLog("Phone server is not running. Browser security cannot start it from a local file.");
+}
+
 function restartPvpMode() {
   resumeSoundtrack();
   pvpClearAutoTimer();

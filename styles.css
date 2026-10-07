@@ -3300,6 +3300,31 @@ body.mobile-arcade .passive-slot:hover {
   filter: none !important;
 }
 
+.passive-slot.round-reveal-active .equipped-seal-sigil,
+body.mobile-arcade .passive-slot.round-reveal-active .equipped-seal-sigil,
+body.native-arcade .passive-slot.round-reveal-active .equipped-seal-sigil {
+  filter: var(--seal-trigger-filter, sepia(100%) saturate(480%) hue-rotate(56deg) brightness(84%) contrast(110%)) !important;
+  animation: seal-reveal-pulse 1000ms ease-out both;
+}
+
+.passive-slot.round-reveal-effect .equipped-seal-sigil,
+body.mobile-arcade .passive-slot.round-reveal-effect .equipped-seal-sigil,
+body.native-arcade .passive-slot.round-reveal-effect .equipped-seal-sigil {
+  filter: var(--seal-trigger-filter, sepia(100%) saturate(480%) hue-rotate(56deg) brightness(84%) contrast(110%)) !important;
+  transform: scale(1.04);
+}
+
+@keyframes seal-reveal-pulse {
+  0% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
 .passive-slot.suppressed,
 body.mobile-arcade .passive-slot.suppressed {
   opacity: 0.58;
@@ -5022,4 +5047,33 @@ body.native-arcade .quit-copy {
 .arena.pvp-arena .pvp-slot .mini-stat strong.pvp-artifact-failed {
   color: #ef6f61 !important;
   text-shadow: none !important;
+}
+
+.passive-slot.wide-seal-slot,
+body:not(.mobile-arcade) .passive-slot.wide-seal-slot,
+body.mobile-arcade .passive-slot.wide-seal-slot,
+body.native-arcade .passive-slot.wide-seal-slot {
+  grid-column: span 2;
+  width: auto !important;
+  aspect-ratio: 2 / 0.9;
+}
+
+.passive-slot.wide-seal-slot .equipped-seal-sigil,
+body:not(.mobile-arcade) .passive-slot.wide-seal-slot .equipped-seal-sigil,
+body.mobile-arcade .passive-slot.wide-seal-slot .equipped-seal-sigil,
+body.native-arcade .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: min(calc((var(--seal-slot-width, 132px) * 2) - 12px), calc(100% - 10px)) !important;
+  max-width: calc(100% - 10px);
+  height: min(var(--seal-slot-height, 132px), calc(100% - 6px)) !important;
+  object-fit: contain;
+}
+
+body.mobile-arcade .passive-slot.wide-seal-slot {
+  width: 140px !important;
+}
+
+body.mobile-arcade .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: 134px !important;
+  height: 62px !important;
+}
 }

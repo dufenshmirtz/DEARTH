@@ -92,10 +92,12 @@ function renderPlayMenu() {
 }
 
 function renderArcadeOptionsMenu() {
-  const continueDisabled = hasSavedArcadeRun() ? "" : "disabled";
+  const primaryButton = hasSavedArcadeRun()
+    ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
+    : `<button class="menu-button" data-new-run="arcade-options">New Run</button>`;
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="continue-arcade" ${continueDisabled}>Continue</button>
+      ${primaryButton}
       <button class="menu-button" data-menu-action="load-run">Load Run</button>
       <button class="menu-button secondary-menu-button" data-menu-action="play">Back</button>
     </div>
@@ -359,6 +361,105 @@ function renderMobileOfferingsBackdrop() {
 
 function renderPauseButton() {
   return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
+}
+
+function currentRoundRevealStep() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active) return null;
+  return animation.sequence?.[animation.stepIndex] || null;
+}
+
+function roundRevealEffectActive() {
+  return state.roundRevealAnimation?.active && state.roundRevealAnimation.phase === "effect";
+}
+
+function roundRevealVisibleSealIds() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active) return null;
+  const visibleCount = Math.max(0, animation.stepIndex + (animation.phase === "effect" ? 1 : 0));
+  return new Set((animation.sequence || []).slice(0, visibleCount).map((step) => step.id));
+}
+
+function roundRevealFilterSources(sources) {
+  const visibleSealIds = roundRevealVisibleSealIds();
+  if (!visibleSealIds) return sources || [];
+  if (!visibleSealIds.size) return [];
+  return (sources || []).filter((entry) => visibleSealIds.has(sealIdFromStatSource(entry?.source)));
+}
+
+function roundRevealSourceTotal(sources, { signed = false, damage = false } = {}) {
+  return (sources || []).reduce((sum, entry) => {
+    if (damage && entry?.kind === "saved") return sum;
+    const raw = Number(entry?.amount || 0);
+    if (!Number.isFinite(raw) || raw === 0) return sum;
+    const amount = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+    return sum + (signed ? amount : Math.abs(amount));
+  }, 0);
+}
+
+function roundRevealBotSnapshot(bot) {
+  return state.roundRevealAnimation?.before?.bots?.find((entry) => entry.id === bot?.id) || null;
+}
+
+function roundRevealBotDisplay(bot) {
+  if (!roundRevealAnimationActive()) return null;
+  const before = roundRevealBotSnapshot(bot);
+  const damageSources = roundRevealFilterSources(bot.damageSources);
+  const healSources = roundRevealFilterSources(bot.healSources);
+  const sinSources = roundRevealFilterSources(bot.sinSources);
+  const memorySources = roundRevealFilterSources(bot.memorySources);
+  const damage = roundRevealSourceTotal(damageSources, { damage: true });
+  const healing = roundRevealSourceTotal(healSources);
+  const sin = roundRevealSourceTotal(sinSources, { signed: true });
+  const memory = roundRevealSourceTotal(memorySources);
+  const baseHp = Number.isFinite(before?.hp) ? before.hp : bot.hp;
+  const displayHp = Math.max(0, Math.ceil(baseHp - damage + healing));
+  return {
+    hp: displayHp,
+    maxHp: Number.isFinite(before?.maxHp) ? before.maxHp : bot.maxHp,
+    eliminated: before ? Boolean(before.eliminated) || displayHp <= 0 : bot.eliminated || displayHp <= 0,
+    damageTakenTotal: (before?.damageTakenTotal || 0) + damage,
+    lastDamage: damage,
+    lastHeal: healing,
+    lastSinDelta: sin,
+    lastMemoryDelta: memory,
+    damageSources,
+    healSources,
+    sinSources,
+    memorySources
+  };
+}
+
+function roundRevealPlayerDisplay() {
+  if (!roundRevealAnimationActive()) {
+    return {
+      hp: state.player.hp,
+      credits: state.player.credits,
+      lastDamage: state.playerLastDamage,
+      lastHeal: state.playerLastHeal,
+      lastCredits: state.playerLastCredits,
+      damageSources: state.playerDamageSources,
+      healSources: state.playerHealSources,
+      creditSources: state.playerCreditSources
+    };
+  }
+  const before = state.roundRevealAnimation.before?.player || {};
+  const damageSources = roundRevealFilterSources(state.playerDamageSources);
+  const healSources = roundRevealFilterSources(state.playerHealSources);
+  const creditSources = roundRevealFilterSources(state.playerCreditSources);
+  const damage = roundRevealSourceTotal(damageSources, { damage: true });
+  const healing = roundRevealSourceTotal(healSources);
+  const credits = roundRevealSourceTotal(creditSources);
+  return {
+    hp: Math.max(0, Math.ceil((before.hp ?? state.player.hp) - damage + healing)),
+    credits: Math.ceil((before.credits ?? state.player.credits) + credits),
+    lastDamage: damage,
+    lastHeal: healing,
+    lastCredits: credits,
+    damageSources,
+    healSources,
+    creditSources
+  };
 }
 
 function renderNativeInputPanel() {
@@ -848,23 +949,24 @@ function renderPvpLog() {
 }
 
 function renderTopbar() {
-  const playerDamageTooltip = sourceTooltip(state.playerDamageSources, "damage");
-  const playerHealTooltip = sourceTooltip(state.playerHealSources, "heal");
-  const playerCreditTooltip = sourceTooltip(state.playerCreditSources, "credits");
+  const playerDisplay = roundRevealPlayerDisplay();
+  const playerDamageTooltip = sourceTooltip(playerDisplay.damageSources, "damage");
+  const playerHealTooltip = sourceTooltip(playerDisplay.healSources, "heal");
+  const playerCreditTooltip = sourceTooltip(playerDisplay.creditSources, "credits");
   const playerDamageBadge =
-    state.playerLastDamage > 0
-      ? `<div class="player-damage-badge" ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${state.playerLastDamage}</div>`
+    playerDisplay.lastDamage > 0
+      ? `<div class="player-damage-badge" ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${playerDisplay.lastDamage}</div>`
       : "";
   const playerHealBadge =
-    state.playerLastHeal > 0
-      ? `<div class="player-heal-badge" ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${state.playerLastHeal}</div>`
+    playerDisplay.lastHeal > 0
+      ? `<div class="player-heal-badge" ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${playerDisplay.lastHeal}</div>`
       : "";
   const playerCreditBadge =
-    state.playerLastCredits > 0
-      ? `<div class="player-credit-badge" ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${state.playerLastCredits} SIN</div>`
+    playerDisplay.lastCredits > 0
+      ? `<div class="player-credit-badge" ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
       : "";
   const maxHp = playerMaxHp();
-  const healthPercent = maxHp > 0 ? clamp((state.player.hp / maxHp) * 100, 0, 100) : 0;
+  const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
   const playtestButtonClass = playtestMoneyModeActive() ? "active" : "";
   const skipTitle = state.finalBossPhase
     ? "Final phase is already active"
@@ -880,7 +982,7 @@ function renderTopbar() {
         ${playerHealBadge}
         <div class="health-row">
           <span class="stat-label">Health</span>
-          <strong>${state.player.hp}/${maxHp}</strong>
+          <strong>${playerDisplay.hp}/${maxHp}</strong>
         </div>
         <div class="health-bar">
           <div class="health-fill" style="width: ${healthPercent}%"></div>
@@ -898,7 +1000,7 @@ function renderTopbar() {
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
         <span class="stat-label">SIN</span>
-        <span class="stat-value">${state.player.credits}</span>
+        <span class="stat-value">${playerDisplay.credits}</span>
         <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
       </div>
     </section>
@@ -944,9 +1046,12 @@ function renderBots() {
 
 function renderBot(bot, pendingPick) {
   const round = state.roundState;
+  const display = roundRevealBotDisplay(bot);
   const submitted = round?.botSubmittedGuesses.get(bot.id);
   const effective = round?.botEffectiveGuesses.get(bot.id);
-  const isDown = bot.eliminated || bot.hp <= 0;
+  const displayHp = display?.hp ?? bot.hp;
+  const displayMaxHp = display?.maxHp ?? bot.maxHp;
+  const isDown = display ? display.eliminated : bot.eliminated || bot.hp <= 0;
   const revealed = Number.isFinite(effective)
     ? formatNumber(effective)
     : state.stage !== "guess"
@@ -974,39 +1079,49 @@ function renderBot(bot, pendingPick) {
   const criticalGuessLabelClass = isCriticalGuess ? "critical-guess-label" : "";
   const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
   const guessClass = [criticalGuessClass, guessCloseness.className].filter(Boolean).join(" ");
-  const damageTooltip = sourceTooltip(bot.damageSources, "damage");
-  const healTooltip = sourceTooltip(bot.healSources, "heal");
-  const sinTooltip = sourceTooltip(bot.sinSources, "signed-credits");
-  const memoryTooltip = sourceTooltip(bot.memorySources, "memory");
+  const botDamageSources = display?.damageSources ?? bot.damageSources;
+  const botHealSources = display?.healSources ?? bot.healSources;
+  const botSinSources = display?.sinSources ?? bot.sinSources;
+  const botMemorySources = display?.memorySources ?? bot.memorySources;
+  const botLastDamage = display?.lastDamage ?? bot.lastDamage;
+  const botLastHeal = display?.lastHeal ?? bot.lastHeal;
+  const botLastSinDelta = display?.lastSinDelta ?? bot.lastSinDelta;
+  const botLastMemoryDelta = display?.lastMemoryDelta ?? bot.lastMemoryDelta;
+  const damageTooltip = sourceTooltip(botDamageSources, "damage");
+  const healTooltip = sourceTooltip(botHealSources, "heal");
+  const sinTooltip = sourceTooltip(botSinSources, "signed-credits");
+  const memoryTooltip = sourceTooltip(botMemorySources, "memory");
   const damageBadge =
-    bot.lastDamage > 0 && state.stage !== "guess"
-      ? `<div class="damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${bot.lastDamage}</div>`
+    botLastDamage > 0 && state.stage !== "guess"
+      ? `<div class="damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${botLastDamage}</div>`
       : "";
   const healBadge =
-    bot.lastHeal > 0 && state.stage !== "guess"
-      ? `<div class="heal-badge" ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${bot.lastHeal}</div>`
+    botLastHeal > 0 && state.stage !== "guess"
+      ? `<div class="heal-badge" ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${botLastHeal}</div>`
       : "";
   const sinBadge =
-    bot.lastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge" ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${bot.lastSinDelta > 0 ? "+" : ""}${bot.lastSinDelta} SIN</div>`
+    botLastSinDelta && !bot.immortal
+      ? `<div class="bounty-badge" ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
       : "";
   const memoryBadge =
-    bot.lastMemoryDelta > 0
-      ? `<div class="memory-badge" ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${bot.lastMemoryDelta}</div>`
+    botLastMemoryDelta > 0
+      ? `<div class="memory-badge" ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
       : "";
   const poisonStackBadge =
     (bot.poisonCounters || 0) > 0
       ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
       : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
-  const deathBadge = bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
+  const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
   const flagHtml = bot.isBoss
     ? ""
     : `<span class="bot-flag" aria-label="${escapeAttr(bot.country)}" title="${escapeAttr(bot.country)}">${bot.flag}</span>`;
-  const healthLabel = bot.immortal ? `Damage ${bot.damageTakenTotal || 0}` : `HEALTH ${bot.hp}/${bot.maxHp}`;
-  const healthPercent = bot.immortal ? 100 : clamp((bot.hp / bot.maxHp) * 100, 0, 100);
+  const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
+  const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
+  const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
+  const healthPercent = bot.immortal ? 100 : clamp((displayHp / safeDisplayMaxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
   const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
@@ -1067,7 +1182,16 @@ function consoleActionState() {
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
 
-  if (state.stage === "active") {
+  if (roundRevealAnimationActive()) {
+    const step = currentRoundRevealStep();
+    buttonText = "Skip";
+    inputDisabled = "disabled";
+    hint = step
+      ? roundRevealEffectActive()
+        ? `${step.name} resolves.`
+        : `${step.name} is triggering.`
+      : "Revealing SEAL effects.";
+  } else if (state.stage === "active") {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
@@ -1140,7 +1264,7 @@ function renderPendingText() {
     const extra = sacrificialDaggerExtraDamage("p70");
     return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from Seal of Amy` : ""}.`;
   }
-  if (state.pendingActive.id === "a25") return `${item.name}: pick DAMNED to heal to full and give +${artifactValue(9)} BOUNTY.`;
+  if (state.pendingActive.id === "a25") return `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
   if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return `${item.name}: pick DAMNED to receive the drained BOUNTY.`;
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
@@ -1216,7 +1340,7 @@ function renderShopSlot(slot, index) {
   const ownedSelfStackingSeal = item.type === "passive" && isSelfStackingSeal(item.id) && passiveCopies > 0;
   const full =
     item.type === "passive"
-      ? passiveCopies === 0 && ownedSealSlotCount() >= passiveLimit()
+      ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
   const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
@@ -1226,6 +1350,7 @@ function renderShopSlot(slot, index) {
   const itemImage =
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
+  const kindLabel = item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : "SEAL") : "ARTIFACT";
 
   return `
     <article class="item-card ${item.type} ${imageClass}" data-tooltip="${escapeAttr(description)}">
@@ -1234,7 +1359,7 @@ function renderShopSlot(slot, index) {
         <div>
           <div class="item-name">${displayName}</div>
         </div>
-        <span class="item-kind">${item.type === "passive" ? "SEAL" : "ARTIFACT"}</span>
+        <span class="item-kind">${kindLabel}</span>
       </div>
       <div class="item-actions one">
         <button class="small-button shop-buy-button" data-buy="${index}" ${disabled}>${buttonText}</button>
@@ -1297,32 +1422,46 @@ function renderActiveItem(item, index) {
 function renderPassives() {
   pruneRemovedPassives();
   const slots = [];
-  for (let index = 0; index < passiveLimit(); index += 1) {
-    const item = state.player.passives[index];
-    if (!item) {
-      slots.push(`
-        <div class="passive-slot empty" data-tooltip="Empty SEAL slot" aria-label="Empty SEAL slot">
-          <img class="empty-seal-slot-image" src="assets/ui/empty-seal-slot-x.png" alt="" />
-        </div>
-      `);
-      continue;
-    }
+  const limit = passiveLimit();
+  let occupiedSlots = 0;
+  state.player.passives.forEach((item, index) => {
+    if (!item || REMOVED_PASSIVE_IDS.has(item.id) || occupiedSlots >= limit) return;
+    const slotCost = sealSlotCost(item);
+    occupiedSlots += slotCost;
     const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
     const displayName = passiveDisplayName(item);
     const description = itemDescription(item);
     const disabledNotice = sealSuppressionNotice(item.id);
     const tooltip = renderSealTooltipHtml(item, displayName, description, disabledNotice, sale);
-    const triggeredClass = state.roundState?.triggeredPassiveIds?.has(item.id) ? "triggered" : "";
+    const revealStep = currentRoundRevealStep();
+    const revealClass =
+      revealStep?.id === item.id ? (roundRevealEffectActive() ? "round-reveal-effect" : "round-reveal-active") : "";
+    const triggeredClass = roundRevealAnimationActive()
+      ? revealStep?.id === item.id
+        ? "triggered"
+        : ""
+      : state.roundState?.triggeredPassiveIds?.has(item.id)
+        ? "triggered"
+        : "";
     const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
     const sealImage = renderSealSigil(item, "equipped-seal-sigil");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
+    const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
     slots.push(`
-      <article class="passive-slot ${triggeredClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>
       </article>
+    `);
+  });
+  const emptyCount = Math.max(0, limit - occupiedSlots);
+  for (let index = 0; index < emptyCount; index += 1) {
+    slots.push(`
+      <div class="passive-slot empty" data-tooltip="Empty SEAL slot" aria-label="Empty SEAL slot">
+        <img class="empty-seal-slot-image" src="assets/ui/empty-seal-slot-x.png" alt="" />
+      </div>
     `);
   }
 
@@ -1330,6 +1469,7 @@ function renderPassives() {
 }
 
 function renderOverlay() {
+  if (roundRevealAnimationActive()) return `<div class="overlay"></div>`;
   if (!state.gameOver || state.inspectingGameOver) return `<div class="overlay"></div>`;
   return `
     <div class="overlay visible">
@@ -1431,11 +1571,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "pvp") {
-    if (isNativeArcadeApp()) {
-      showMainMenu();
-      return;
-    }
-    startPvpMode();
+    requestPvpMode();
     return;
   }
   if (action === "quit") {
@@ -1473,11 +1609,7 @@ function handlePauseAction(action) {
     return;
   }
   if (action === "pvp") {
-    if (isNativeArcadeApp()) {
-      showMainMenu();
-      return;
-    }
-    startPvpMode();
+    requestPvpMode();
     return;
   }
   if (action === "arcade") {

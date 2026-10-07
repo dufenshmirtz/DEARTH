@@ -2,6 +2,7 @@
 
 const BASE_PASSIVE_LIMIT = 3;
 const MAX_PASSIVE_LIMIT = 6;
+const MAX_REVEALED_DAMNED = 4;
 const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
@@ -13,13 +14,13 @@ const BASE_TARGET_MODIFIER = 0.8;
 const FINAL_BOSS_TARGET_MODIFIER = 0.666;
 const SCALING_BREAKPOINT_BOSSES = 4;
 const ENDLESS_SCALING_BREAKPOINT_BOSSES = 8;
-const BOT_HP_BONUS_PER_BOSS = 10;
-const BOT_HP_BONUS_PER_BOSS_LATE = 10;
-const BOT_HP_BONUS_PER_BOSS_ENDLESS = 30;
-const BOSS_HP_BONUS_PER_SPAWN = 30;
-const BOSS_HP_BONUS_PER_SPAWN_LATE = 30;
-const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 90;
-const HP_EXPONENTIAL_RATE = 1.12;
+const BOT_HP_BONUS_PER_BOSS = 17;
+const BOT_HP_BONUS_PER_BOSS_LATE = 18;
+const BOT_HP_BONUS_PER_BOSS_ENDLESS = 50;
+const BOSS_HP_BONUS_PER_SPAWN = 50;
+const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
+const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
+const HP_EXPONENTIAL_RATE = 1.2;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
@@ -164,7 +165,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 15,
-    description: "Whenever a DAMNED gains MEMORY, it gains that much BOUNTY too. Whenever a DAMNED gains BOUNTY, it gains that much MEMORY too. ELITE makes each point add +2, +3, and so on."
+    description: "Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. ELITE converts +1 extra MEMORY or BOUNTY each level when this triggers."
   },
   p11: {
     id: "p11",
@@ -404,7 +405,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Andromalius",
     price: 13,
-    description: "At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE does not change this effect."
+    description: "At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE increases the BOUNTY limit by +1 each level."
   },
   p45: {
     id: "p45",
@@ -474,7 +475,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zepar",
     price: 12,
-    description: "When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes that much damage too. ELITE does not change this effect."
+    description: "When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes that much damage too. ELITE multiplies the echoed damage by x1.5 each level, rounded up."
   },
   p55: {
     id: "p55",
@@ -497,7 +498,7 @@ const ITEMS = {
     name: "Seal of Balam",
     price: 15,
     description:
-      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE does not change this effect."
+      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
   p58: {
     id: "p58",
@@ -640,7 +641,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Black Horse",
     price: 20,
-    description: "Non-boss DAMNED with 10 or more MEMORY take x1.5 damage from all sources. If a BOSS is active, the extra damage is dealt to that BOSS instead. ELITE adds +0.2 to the multiplier."
+    description: "Non-boss DAMNED with 10 or more MEMORY take x1.5 damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead. ELITE adds +0.2 to the multiplier."
   },
   p77: {
     id: "p77",
@@ -752,35 +753,49 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zilon",
     price: 30,
-    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE does not change this effect."
+    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
     name: "Seal of Serafeim",
     price: 30,
-    description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
     name: "Seal of Pyros",
     price: 30,
-    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE does not change this effect."
+    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
     price: 30,
-    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE does not change this effect."
+    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
     price: 30,
-    description: "At reveal, 30% chance for all DAMNED to gain up to the highest current board MEMORY and take damage equal to their original MEMORY. ELITE does not change this effect."
+    description: "At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
+  },
+  p110: {
+    id: "p110",
+    type: "passive",
+    name: "Seal of Petros-Pavlos",
+    price: 30,
+    description: "At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+  },
+  p111: {
+    id: "p111",
+    type: "passive",
+    name: "Seal of Satan",
+    price: 50,
+    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
   },
   p98: {
     id: "p98",
@@ -850,7 +865,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Ose",
     price: 12,
-    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE changes one extra DAMNED each round."
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
   },
   p108: {
     id: "p108",
@@ -926,14 +941,14 @@ const ITEMS = {
     id: "a11",
     type: "active",
     name: "Vial of Blood",
-    price: 4,
+    price: 2,
     description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability."
   },
   a12: {
     id: "a12",
     type: "active",
     name: "Dark Talisman",
-    price: 2,
+    price: 4,
     description: "You take 50% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively."
   },
   a13: {
@@ -975,7 +990,7 @@ const ITEMS = {
     id: "a22",
     type: "active",
     name: "Cursed Chalice",
-    price: 4,
+    price: 7,
     description: "+1 CRITICAL range for the round."
   },
   a23: {
@@ -989,8 +1004,8 @@ const ITEMS = {
     id: "a25",
     type: "active",
     name: "Mummified Lamb",
-    price: 4,
-    description: "Pick a DAMNED, heal it to full, and increase its BOUNTY by 9."
+    price: 3,
+    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
   },
   a26: {
     id: "a26",
@@ -1095,6 +1110,8 @@ const PASSIVE_IDS = [
   "p95",
   "p96",
   "p97",
+  "p110",
+  "p111",
   "p98",
   "p99",
   "p100",
@@ -1108,8 +1125,9 @@ const PASSIVE_IDS = [
   "p108",
   "p109"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p3", "p4", "p5", "p8", "p18", "p24", "p27", "p28", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p82", "p83"]);
-const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97"]);
+const REMOVED_PASSIVE_IDS = new Set(["p3", "p4", "p5", "p8", "p18", "p24", "p27", "p28", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p81", "p82", "p83"]);
+const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
+const SATAN_SEAL_IDS = new Set(["p111"]);
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
@@ -1259,6 +1277,8 @@ const SEAL_SIGILS = {
   p95: "dev/PyrosSeal.png",
   p96: "dev/PadmaSeal.png",
   p97: "dev/ThreonSeal.png",
+  p110: "dev/PetrosPavlosSeal.png",
+  p111: "satan/lucifer.png",
   p98: "self-stacking/Samael-Star.png",
   p99: "self-stacking/Cassiel-Sigil.png",
   p100: "self-stacking/Bethor.png",
@@ -1733,6 +1753,7 @@ const state = {
   shop: [],
   log: [],
   roundState: null,
+  roundRevealAnimation: null,
   previousTarget: null,
   playerLastDamage: 0,
   playerLastHeal: 0,
@@ -1745,6 +1766,7 @@ const state = {
   currentRunSlotId: null,
   runStartedAt: null,
   pendingNextRoundMarbasBonuses: [],
+  pendingNextRoundLambReveals: [],
   pendingSelfStackingPentakillDamage: 0,
   gameMemory: [],
   nextBotId: 1,
@@ -1791,6 +1813,7 @@ let artifactSfx = {};
 let pentakillSfx = null;
 let nextClockTickIndex = 0;
 const activeOneShotSfxInstances = new Set();
+let roundRevealTimer = null;
 let sfxPrimed = false;
 let gameButtonTickInstalled = false;
 let soundtrackPausedByAppBackground = false;
