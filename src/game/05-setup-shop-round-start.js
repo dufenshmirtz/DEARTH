@@ -558,7 +558,7 @@ function activePurchaseCost(item) {
 }
 
 function arcadeActionLocked() {
-  return state.mode !== "arcade" || state.gameOver;
+  return state.mode !== "arcade" || state.gameOver || roundRevealAnimationActive();
 }
 
 function itemBuyValue(item) {
@@ -582,7 +582,7 @@ function applyActiveUsePassives(item) {
       const damage = passiveEntryFlatDamage(entry, activePurchaseCost(item));
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
-      damageBots(targets, damage, (target, dealt) => `Seal of Haagenti dealt ${dealt} damage to ${target.name}.`, "Seal of Haagenti");
+      queueEndOfRoundBotDamages(targets, damage, (target, queued) => `Seal of Haagenti dealt ${queued} damage to ${target.name}.`, "Seal of Haagenti");
       return;
     }
 
@@ -599,10 +599,10 @@ function applyActiveUsePassives(item) {
       const targets = activeBots();
       const damage = gaapDamage(entry);
       if (targets.length && damage > 0) {
-        damageBots(
+        queueEndOfRoundBotDamages(
           targets,
           damage,
-          (bot, dealt) => `Seal of Gaap dealt ${dealt} damage to ${bot.name}.`,
+          (bot, queued) => `Seal of Gaap dealt ${queued} damage to ${bot.name}.`,
           "Seal of Gaap"
         );
       }
@@ -622,10 +622,10 @@ function applyActiveUsePassives(item) {
       const targets = activeBots();
       if (!targets.length) return;
       markPassiveEntryTriggered(entry);
-      damageBots(
+      queueEndOfRoundBotDamages(
         targets,
         damage,
-        (bot, dealt) => `Seal of Amdusias dealt ${dealt} damage to ${bot.name}.`,
+        (bot, queued) => `Seal of Amdusias dealt ${queued} damage to ${bot.name}.`,
         "Seal of Amdusias"
       );
       return;
@@ -650,7 +650,7 @@ function applyActiveUsePassives(item) {
         }
         const target = randomFrom(targets);
         const damage = reactiveWarrantyDamage(entry);
-        damageBot(target, damage, `Seal of Zagan dealt ${damage} damage to ${target.name}.`);
+        queueEndOfRoundBotDamage(target, damage, `Seal of Zagan dealt ${damage} damage to ${target.name}.`, "Seal of Zagan");
         return;
       }
 
@@ -662,6 +662,7 @@ function applyActiveUsePassives(item) {
 }
 
 function startGame(options = {}) {
+  resetRoundRevealAnimation();
   resumeSoundtrack();
   pvpClearAutoTimer();
   pvpStopHostPolling();
@@ -690,6 +691,7 @@ function startGame(options = {}) {
   state.sealStats = {};
   state.runStats = defaultRunStats();
   state.pendingNextRoundMarbasBonuses = [];
+  state.pendingNextRoundLambReveals = [];
   state.pendingSelfStackingPentakillDamage = 0;
   state.gameMemory = [];
   state.pendingActive = null;
@@ -805,6 +807,8 @@ function beginRound() {
     previousRoundEliminationsForMartyrs: state.previousRoundEliminationsForMartyrs || 0,
     selfStackingConditionCounts: Object.fromEntries(Object.values(SELF_STACKING_SEAL_SPECS).map((spec) => [spec.key, 0])),
     selfStackingCriticalDamage: 0,
+    pendingEndOfRoundBotDamages: [],
+    resolvingEndOfRoundPassives: false,
     triggeredPassiveIds: new Set(),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
@@ -845,6 +849,7 @@ function beginRound() {
   applyPyrosBuffs();
   applyMarkedProspect();
   applyGuessReveals();
+  applyPendingNextRoundLambReveals();
   applyStartOfRoundPassives();
   applyGuessReveals();
   applyRevealPoisonCounters();
@@ -894,6 +899,36 @@ function applyPendingNextRoundMarbasBonuses() {
     if (sinSpread || memorySpread) {
       state.roundState.roundEvents.push(`${source} spread ${sinSpread} SIN and ${memorySpread} MEMORY among next-round DAMNED.`);
     }
+  });
+}
+
+function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25")) {
+  if (!bot) return;
+  state.pendingNextRoundLambReveals = state.pendingNextRoundLambReveals || [];
+  state.pendingNextRoundLambReveals.push({
+    botId: bot.id,
+    botName: bot.name,
+    bounty: 3,
+    source
+  });
+  state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
+}
+
+function applyPendingNextRoundLambReveals() {
+  const pending = state.pendingNextRoundLambReveals || [];
+  if (!pending.length || !state.roundState) return;
+  state.pendingNextRoundLambReveals = [];
+  pending.forEach((effect) => {
+    const source = effect.source || activeName("a25");
+    const bot = state.bots.find((candidate) => candidate.id === effect.botId && candidate.hp > 0 && !candidate.eliminated);
+    if (!bot) {
+      state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
+      return;
+    }
+    revealBotGuess(bot, source, null, { allowBoss: true });
+    const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
+    const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
+    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained} BOUNTY for its next-round mark.`);
   });
 }
 
@@ -977,7 +1012,7 @@ function applyFurcasLastTargetGuessSet() {
     round.roundEvents.push(`Seal of Furcas set ${target.name}'s guess to ${guess} because the previous TARGET was ${previous}.`);
     const damage = furcasSelectedDamage(entry);
     if (damage > 0) {
-      damageBot(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
+      queueEndOfRoundBotDamage(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
     }
   });
 }
@@ -1175,13 +1210,19 @@ function bossRevealAllowedBySeals() {
   return orderedPassiveEffectEntries("p61").length > 0;
 }
 
-function canRevealBotGuess(bot) {
-  if (!bot || bot.hp <= 0 || bot.eliminated || botHasPassive(bot, "shield")) return false;
-  return !bot.isBoss || bossRevealAllowedBySeals();
+function revealedDamnedCount() {
+  return activeBots().filter((bot) => bot.revealedByPassive).length;
 }
 
-function revealBotGuess(bot, source = "", entry = null) {
-  if (!canRevealBotGuess(bot)) return false;
+function canRevealBotGuess(bot, options = {}) {
+  if (!bot || bot.hp <= 0 || bot.eliminated || botHasPassive(bot, "shield")) return false;
+  if (bot.revealedByPassive) return true;
+  if (revealedDamnedCount() >= MAX_REVEALED_DAMNED) return false;
+  return options.allowBoss || !bot.isBoss || bossRevealAllowedBySeals();
+}
+
+function revealBotGuess(bot, source = "", entry = null, options = {}) {
+  if (!canRevealBotGuess(bot, options)) return false;
   const wasRevealed = Boolean(bot.revealedByPassive);
   bot.revealedByPassive = true;
   state.roundState?.revealedBotIds?.add(bot.id);
@@ -1216,7 +1257,7 @@ function applyGuessReveals() {
       !bot.eliminated &&
       !botHasPassive(bot, "shield")
   );
-  const desiredRevealCount = Math.min(revealableBots.length, 1 + amonEntries.length);
+  const desiredRevealCount = Math.min(revealableBots.length, MAX_REVEALED_DAMNED, 1 + amonEntries.length);
   const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
   const hiddenBots = shuffled(revealableBots.filter((bot) => !bot.revealedByPassive));
   const newlyRevealed = hiddenBots.slice(0, Math.max(0, desiredRevealCount - revealedCount));
@@ -1341,9 +1382,9 @@ function applyDevSealsAtReveal() {
       let total = 0;
       targets.forEach((bot) => {
         const damage = Math.ceil(bot.hp * 0.5);
-        total += damageBot(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+        total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
       });
-      addRoundEvent(total > 0 ? `${source} burned revealed DAMNED for ${total} total damage.` : `${source} found no revealed DAMNED.`);
+      addRoundEvent(total > 0 ? `${source} queued ${total} total damage to revealed DAMNED.` : `${source} found no revealed DAMNED.`);
       return;
     }
 
@@ -1364,19 +1405,188 @@ function applyDevSealsAtReveal() {
 
     if (entry.id === "p97") {
       const targets = devSealTargetDamned();
-      const maxMemory = Math.max(0, ...targets.map((bot) => bot.memory?.length || 0));
+      const memoryReferenceTargets = targets.filter((bot) => !bot.isBoss);
+      const maxMemory = Math.max(0, ...(memoryReferenceTargets.length ? memoryReferenceTargets : targets).map((bot) => bot.memory?.length || 0));
       let memoryAdded = 0;
       let damage = 0;
       targets.forEach((bot) => {
         const originalMemory = bot.memory?.length || 0;
         memoryAdded += addBotMemory(bot, Math.max(0, maxMemory - originalMemory), "", { source });
         if (originalMemory > 0) {
-          damage += damageBot(bot, originalMemory, `${source} dealt ${originalMemory} damage to ${bot.name}.`, source);
+          damage += queueEndOfRoundBotDamage(bot, originalMemory, `${source} dealt ${originalMemory} damage to ${bot.name}.`, source);
         }
       });
-      addRoundEvent(`${source} added ${memoryAdded} MEMORY and dealt ${damage} total damage.`);
+      addRoundEvent(`${source} used ${maxMemory} as the living MEMORY peak, added ${memoryAdded} MEMORY, and queued ${damage} total damage.`);
+      return;
+    }
+
+    if (entry.id === "p110") {
+      const targets = devSealTargetDamned();
+      let memoryRemoved = 0;
+      let bountyRemoved = 0;
+      targets.forEach((bot) => {
+        const memory = bot.memory?.length || 0;
+        if (memory > 0) {
+          memoryRemoved += memory;
+          bot.memory = [];
+        }
+        const bounty = botRegularBounty(bot);
+        if (bounty > 0) {
+          const result = changeBotSin(bot, -bounty, "", {
+            source,
+            triggerLossDamage: false
+          });
+          bountyRemoved += result.lost;
+        }
+      });
+      const damage = memoryRemoved + bountyRemoved;
+      if (damage > 0) {
+        queueEndOfRoundBotDamages(
+          targets,
+          damage,
+          (bot, dealt) => `${source} dealt ${dealt} removed MEMORY and BOUNTY damage to ${bot.name}.`,
+          source
+        );
+      }
+      addRoundEvent(
+        damage > 0
+          ? `${source} removed ${memoryRemoved} MEMORY and ${bountyRemoved} BOUNTY, then queued ${damage} damage to every DAMNED.`
+          : `${source} found no MEMORY or BOUNTY to remove.`
+      );
     }
   });
+}
+
+function cloneRoundRevealSources(sources) {
+  return (sources || []).map((entry) => ({ ...entry }));
+}
+
+function captureRoundRevealSnapshot() {
+  const round = state.roundState;
+  return {
+    stage: state.stage,
+    roundEventCount: round?.roundEvents?.length || 0,
+    triggeredPassiveIds: Array.from(round?.triggeredPassiveIds || []),
+    player: {
+      hp: state.player.hp,
+      credits: state.player.credits,
+      lastDamage: state.playerLastDamage || 0,
+      lastHeal: state.playerLastHeal || 0,
+      lastCredits: state.playerLastCredits || 0,
+      damageSources: cloneRoundRevealSources(state.playerDamageSources),
+      healSources: cloneRoundRevealSources(state.playerHealSources),
+      creditSources: cloneRoundRevealSources(state.playerCreditSources)
+    },
+    bots: state.bots.map((bot) => ({
+      id: bot.id,
+      hp: bot.hp,
+      maxHp: bot.maxHp,
+      eliminated: Boolean(bot.eliminated),
+      damageTakenTotal: bot.damageTakenTotal || 0,
+      lastDamage: bot.lastDamage || 0,
+      lastHeal: bot.lastHeal || 0,
+      lastSinDelta: bot.lastSinDelta || 0,
+      lastMemoryDelta: bot.lastMemoryDelta || 0,
+      damageSources: cloneRoundRevealSources(bot.damageSources),
+      healSources: cloneRoundRevealSources(bot.healSources),
+      sinSources: cloneRoundRevealSources(bot.sinSources),
+      memorySources: cloneRoundRevealSources(bot.memorySources)
+    }))
+  };
+}
+
+function roundRevealAnimationActive() {
+  return Boolean(state.roundRevealAnimation?.active);
+}
+
+function clearRoundRevealTimer() {
+  if (!roundRevealTimer) return;
+  clearTimeout(roundRevealTimer);
+  roundRevealTimer = null;
+}
+
+function resetRoundRevealAnimation() {
+  clearRoundRevealTimer();
+  state.roundRevealAnimation = null;
+}
+
+function roundRevealSealName(id) {
+  const entry = passiveEntry(id);
+  return entry ? passiveDisplayName(entry) : ITEMS[id]?.name || "Seal";
+}
+
+function roundRevealEventMatchesSeal(id, event) {
+  const text = normalizeGameText(event || "");
+  const baseName = ITEMS[id]?.name || "";
+  const displayName = roundRevealSealName(id);
+  return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
+}
+
+function buildRoundRevealSequence(beforeSnapshot) {
+  const round = state.roundState;
+  if (!round) return [];
+  const previousIds = new Set(beforeSnapshot?.triggeredPassiveIds || []);
+  const finalEvents = (round.roundEvents || []).slice();
+  const eventStart = beforeSnapshot?.roundEventCount || 0;
+  return Array.from(round.triggeredPassiveIds || [])
+    .filter((id) => PASSIVE_IDS.includes(id) && !previousIds.has(id))
+    .map((id) => ({
+      id,
+      name: roundRevealSealName(id),
+      events: finalEvents.slice(eventStart).filter((event) => roundRevealEventMatchesSeal(id, event))
+    }));
+}
+
+function playRoundRevealStepSfx() {
+  playArtifactSfx("a14");
+}
+
+function scheduleRoundRevealAnimation() {
+  clearRoundRevealTimer();
+  if (!roundRevealAnimationActive()) return;
+  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, 1000);
+}
+
+function startRoundRevealAnimation(beforeSnapshot) {
+  const sequence = buildRoundRevealSequence(beforeSnapshot);
+  if (!sequence.length) return false;
+  clearRoundRevealTimer();
+  state.roundRevealAnimation = {
+    active: true,
+    phase: "seal",
+    stepIndex: 0,
+    sequence,
+    before: beforeSnapshot
+  };
+  playRoundRevealStepSfx();
+  scheduleRoundRevealAnimation();
+  return true;
+}
+
+function advanceRoundRevealAnimation() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active) return;
+  if (animation.phase === "seal") {
+    animation.phase = "effect";
+    playRoundRevealStepSfx();
+    render();
+    scheduleRoundRevealAnimation();
+    return;
+  }
+  animation.stepIndex += 1;
+  if (animation.stepIndex >= animation.sequence.length) {
+    finishRoundRevealAnimation();
+    return;
+  }
+  animation.phase = "seal";
+  playRoundRevealStepSfx();
+  render();
+  scheduleRoundRevealAnimation();
+}
+
+function finishRoundRevealAnimation() {
+  resetRoundRevealAnimation();
+  render();
 }
 
 function submitGuess() {
@@ -1459,12 +1669,21 @@ function readyRound() {
     render();
     return;
   }
+  const beforeReveal = captureRoundRevealSnapshot();
   playReadySfx();
   applyPenalties();
+  if (startRoundRevealAnimation(beforeReveal)) {
+    render();
+    return;
+  }
   render();
 }
 
 function performMainAction() {
+  if (roundRevealAnimationActive()) {
+    finishRoundRevealAnimation();
+    return;
+  }
   if (state.stage === "guess") submitGuess();
   else if (state.stage === "active") readyRound();
   else if (state.stage === "summary") {

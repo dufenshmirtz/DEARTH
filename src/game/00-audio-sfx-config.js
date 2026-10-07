@@ -33,14 +33,14 @@ const ARTIFACT_SFX = {
   a14: { src: "assets/audio/artifacts/candle.mp3", volume: 0.45 },
   a15: { src: "assets/audio/artifacts/Dagger.mp3", volume: 0.5 },
   a18: { src: "assets/audio/artifacts/Crystal.mp3", volume: 0.5 },
-  a21: { src: "assets/audio/artifacts/voodoo.mp3", volume: 0.44 },
+  a21: { src: "assets/audio/artifacts/pentakill.mp3", volume: 0.44 },
   a22: { src: "assets/audio/artifacts/chalice.mp3", volume: 0.42 },
   a23: { src: "assets/audio/artifacts/book.mp3", volume: 0.48 },
-  a25: { src: "assets/audio/artifacts/pentakill.mp3", volume: 0.55 },
+  a25: { src: "assets/audio/artifacts/lamb.mp3", volume: 0.55 },
   a28: { src: "assets/audio/artifacts/skull.mp3", volume: 0.43 }
 };
 
 const PENTAKILL_SFX = {
-  src: "assets/audio/artifacts/lamb.mp3",
+  src: "assets/audio/artifacts/voodoo.mp3",
   volume: 0.43
 };

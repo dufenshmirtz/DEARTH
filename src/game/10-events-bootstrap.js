@@ -293,4 +293,11 @@ installArcadeEnterShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
 updateFullscreenLayoutClass();
-if (!resumeNativeArcadeOnForeground()) showMainMenu();
+if (!resumeNativeArcadeOnForeground()) {
+  if (pvpShouldAutoStartFromHash()) {
+    if (window.history?.replaceState) window.history.replaceState(null, "", `${location.pathname}${location.search}`);
+    startPvpMode();
+  } else {
+    showMainMenu();
+  }
+}

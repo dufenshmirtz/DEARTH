@@ -88,11 +88,12 @@ function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) 
     revealedDamageSources.forEach(({ bot: sourceBot, damage }) => {
       const targets = adjacentLivingBots(sourceBot);
       if (!targets.length) return;
+      const echoedDamage = passiveEntryFlatDamage(entry, damage);
       targets.forEach((bot) => {
-        addPendingBotDamage(botDamages, botDamageSources, bot, damage, "Seal of Zepar", false);
+        addPendingBotDamage(botDamages, botDamageSources, bot, echoedDamage, "Seal of Zepar", false);
       });
       echoed = true;
-      round.roundEvents.push(`Seal of Zepar echoed ${damage} damage from revealed ${sourceBot.name} to adjacent DAMNED.`);
+      round.roundEvents.push(`Seal of Zepar echoed ${echoedDamage} damage from revealed ${sourceBot.name} to adjacent DAMNED.`);
     });
     if (echoed) {
       markPassiveEntryTriggered(entry);
@@ -724,7 +725,7 @@ function applyKillRuleHealing(bot) {
     );
     return;
   }
-  const heal = bot?.isBoss ? 8 : 1;
+  const heal = bot?.isBoss ? 5 : 1;
   const source = bot?.isBoss ? "BOSS kill" : "DAMNED kill";
   const healed = healPlayer(heal, null, source);
   state.roundState.roundEvents.push(
@@ -986,7 +987,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -1088,6 +1089,20 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    if (entry.id === "p111") {
+      const targets = activeBots();
+      if (!targets.length) return;
+      const roll = satanSealDamageRoll(entry);
+      entry.item.lastSatanDivisor = roll.divisor;
+      entry.item.lastSatanMaxDivisor = roll.maxDivisor;
+      entry.item.lastSatanDamage = roll.damage;
+      markPassiveEntryTriggered(entry);
+      const name = passiveName("p111", "Seal of Satan");
+      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
+      state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
+      return;
+    }
+
     if (entry.id === "p61") {
       const targets = activeBots().filter((bot) => (bot.poisonCounters || 0) > 0);
       if (!targets.length) return;
@@ -1184,39 +1199,47 @@ function applyEndOfRoundPassiveDamageInOrder() {
 }
 
 function applyEndOfRoundPassives() {
-  applyPendingSelfStackingPentakillDamage();
-  applyEndOfRoundPassiveDamageInOrder();
+  const round = state.roundState;
+  if (!round) return;
+  round.resolvingEndOfRoundPassives = true;
+  try {
+    applyQueuedEndOfRoundBotDamage();
+    applyPendingSelfStackingPentakillDamage();
+    applyEndOfRoundPassiveDamageInOrder();
 
-  const relicStacks = passiveStack("p18");
-  if (relicStacks) {
-    const relic = passiveEntry("p18");
-    relic.saleBonus = (relic.saleBonus || 0) + scaledPassiveValue("p18", 3);
-    markPassiveTriggered("p18");
-    state.roundState.roundEvents.push(`Seal of Berith sell value rose by ${scaledPassiveValue("p18", 3)}.`);
-  }
-
-  const repairStacks = passiveStack("p8");
-  if (repairStacks) {
-    markPassiveTriggered("p8");
-    applyPassivePlayerHeal("p8", 5, "Seal of Buer");
-  }
-
-  activeBots().forEach((bot) => {
-    if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
-    if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
-    if (botHasPassive(bot, "thief")) {
-      loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+    const relicStacks = passiveStack("p18");
+    if (relicStacks) {
+      const relic = passiveEntry("p18");
+      relic.saleBonus = (relic.saleBonus || 0) + scaledPassiveValue("p18", 3);
+      markPassiveTriggered("p18");
+      state.roundState.roundEvents.push(`Seal of Berith sell value rose by ${scaledPassiveValue("p18", 3)}.`);
     }
-  });
 
-  applyEndOfRoundBotSinPassives();
-  applyForcedDoctrineEndRound();
-  applyInflationEngine();
-  applySelfStackingBountySumDamage();
-  applyLowProfileReward();
-  applyPursonReward();
-  applyPandoriumContractCleanup();
-  clearMarkedProspects();
+    const repairStacks = passiveStack("p8");
+    if (repairStacks) {
+      markPassiveTriggered("p8");
+      applyPassivePlayerHeal("p8", 5, "Seal of Buer");
+    }
+
+    activeBots().forEach((bot) => {
+      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
+      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
+      if (botHasPassive(bot, "thief")) {
+        loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+      }
+    });
+
+    applyEndOfRoundBotSinPassives();
+    applyForcedDoctrineEndRound();
+    applyInflationEngine();
+    applySelfStackingBountySumDamage();
+    applyLowProfileReward();
+    applyPursonReward();
+    applyPandoriumContractCleanup();
+    clearMarkedProspects();
+  } finally {
+    round.resolvingEndOfRoundPassives = false;
+  }
 }
 
 function applyBountyReaper() {
@@ -1298,7 +1321,8 @@ function applyRonoveDrain() {
 function applyAndromaliusLowSinEliminations() {
   const entries = orderedPassiveEffectEntries("p44");
   if (!entries.length) return;
-  const targets = activeBots().filter((bot) => !bot.isBoss && !bot.immortal && botSin(bot) <= 2);
+  const bountyLimit = Math.max(...entries.map((entry) => andromaliusBountyLimit(entry)));
+  const targets = activeBots().filter((bot) => !bot.isBoss && !bot.immortal && botSin(bot) <= bountyLimit);
   if (!targets.length) return;
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
   const targetIds = new Set(targets.map((bot) => bot.id));

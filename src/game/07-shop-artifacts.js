@@ -96,8 +96,8 @@ function buyShopItem(slotIndex) {
       render();
       return;
     }
-    if (!existing && ownedSealSlotCount() >= passiveLimit()) {
-      addLog("Seal slots are full.");
+    if (!existing && !hasSealSlotRoomFor(item)) {
+      addLog(SATAN_SEAL_IDS.has(item.id) ? "Need 2 empty Seal slots." : "Seal slots are full.");
       render();
       return;
     }
@@ -691,11 +691,9 @@ function chooseBot(botId) {
   }
 
   if (id === "a25") {
-    const bounty = artifactValue(9);
-    changeBotSin(bot, bounty, "", { triggerLossDamage: false, source: itemName });
-    const healed = healBot(bot, bot.maxHp, itemName);
+    queueMummifiedLambNextRoundReveal(bot, itemName);
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} healed ${bot.name} for ${healed} and added +${bounty} bounty.`);
+    finishActiveResolution(index, `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +3 BOUNTY.`);
     return;
   }
 
