@@ -900,7 +900,7 @@ function applyEliminationPassives(bot) {
       markPassiveEntryTriggered(entry);
       const target = highestHealthEnemy();
       const damage = passiveEntryFlatDamage(entry, 10);
-      const bounty = passiveEntryScaledValue(entry, 2);
+      const bounty = passiveEntryScaledValue(entry, 1);
       if (target && damage > 0) {
         damageBot(target, damage, `Seal of Gremory dealt ${damage} damage to ${target.name}.`, "Seal of Gremory");
       }
@@ -987,7 +987,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -1025,6 +1025,19 @@ function applyEndOfRoundPassiveDamageInOrder() {
         damage,
         (bot, damage) => `Seal of Dantalion dealt ${damage} damage to ${bot.name}.`,
         "Seal of Dantalion"
+      );
+      return;
+    }
+
+    if (entry.id === "p52") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 0);
+      if (!targets.length) return;
+      markPassiveEntryTriggered(entry);
+      damageBots(
+        targets,
+        (bot) => decarabiaMemoryExtraDamage(entry, bot),
+        (bot, damage) => `Seal of Decarabia dealt ${damage} MEMORY damage to ${bot.name}.`,
+        "Seal of Decarabia"
       );
       return;
     }

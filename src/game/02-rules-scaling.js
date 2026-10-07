@@ -548,7 +548,7 @@ function seedNewBotMemoryFromVassago(bot) {
   if (bot.memory?.length) return;
   const entries = orderedPassiveEffectEntries("p1");
   if (!entries.length) return;
-  const seedCount = Math.min(5, botMemoryLimit(bot));
+  const seedCount = Math.min(3, botMemoryLimit(bot));
   bot.memory = initialMemoryEntries(seedCount);
   recordBotMemorySource(bot, bot.memory.length, ITEMS.p1?.name || "Seal of Vassago");
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
@@ -576,15 +576,7 @@ function agaresDamagePerSin(entry) {
 }
 
 function applyBotSinGainDamage(bot, gained) {
-  const amount = Math.max(0, Math.ceil(gained));
-  if (!state.roundState || !bot || bot.eliminated || amount <= 0) return;
-  orderedPassiveEffectEntries("p50").forEach((entry) => {
-    if (bot.eliminated) return;
-    const damage = amount * agaresDamagePerSin(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamage(bot, damage, `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${amount} SIN.`, "Seal of Agares");
-  });
+  return 0;
 }
 
 function stubbornArtifactChance(idOrItem) {
@@ -654,9 +646,6 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
   if (gained > 0) {
     applyBountyToMemoryMirror(bot, gained, options);
   }
-  if (gained > 0 && options.triggerGainDamage !== false) {
-    applyBotSinGainDamage(bot, gained);
-  }
   checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
 }
@@ -708,7 +697,7 @@ function applyTargetedItemSinGain(item, targets) {
   const entries = orderedPassiveEffectEntries("p49");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const amount = passiveEntryScaledValue(entry, 4);
+    const amount = passiveEntryScaledValue(entry, 3);
     if (amount <= 0) return;
     markPassiveEntryTriggered(entry);
     uniqueTargets.forEach((bot) => {
@@ -1101,7 +1090,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68", "p52"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
       if (entry.id === "p46" && botSin(bot) >= 6) {
         applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
         return;
@@ -1124,10 +1113,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
           state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
         }
         return;
-      }
-
-      if (entry.id === "p52") {
-        applyFlatBonus(decarabiaMemoryExtraDamage(entry, bot), ITEMS.p52?.name || "Seal of Decarabia", entry);
       }
     });
 

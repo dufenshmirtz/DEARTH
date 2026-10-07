@@ -147,14 +147,14 @@ const ITEMS = {
     id: "p1",
     type: "passive",
     name: "Seal of Vassago",
-    price: 10,
-    description: "New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+    price: 13,
+    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p2: {
     id: "p2",
     type: "passive",
     name: "Seal of Paimon",
-    price: 11,
+    price: 15,
     description: "If your final guess is close to the TARGET, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact TARGET, gain 10 SIN. ELITE doubles all SIN gained."
   },
   p3: {
@@ -203,21 +203,21 @@ const ITEMS = {
     id: "p9",
     type: "passive",
     name: "Seal of Marbas",
-    price: 13,
+    price: 12,
     description: "Every DAMNED elimination spreads 3 SIN and 3 MEMORY randomly among the DAMNED of the next round. ELITE increases only the SIN spread by +20%."
   },
   p10: {
     id: "p10",
     type: "passive",
     name: "Seal of Gusion",
-    price: 15,
+    price: 11,
     description: "Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. ELITE converts +1 extra MEMORY or BOUNTY each level when this triggers."
   },
   p11: {
     id: "p11",
     type: "passive",
     name: "Seal of Valefor",
-    price: 10,
+    price: 12,
     description: "When a DAMNED dies, gain a random ARTIFACT with 0 sell value if you have room. ELITE gives +1 random ARTIFACT each level."
   },
   p12: {
@@ -238,14 +238,14 @@ const ITEMS = {
     id: "p14",
     type: "passive",
     name: "Seal of Leraje",
-    price: 9,
+    price: 12,
     description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",
     type: "passive",
     name: "Seal of Bathin",
-    price: 8,
+    price: 11,
     description:
       "Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
@@ -260,7 +260,7 @@ const ITEMS = {
     id: "p17",
     type: "passive",
     name: "Seal of Dantalion",
-    price: 12,
+    price: 15,
     description: "At end of round, deal damage equal to the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If any BOSSES are active, hit all active BOSSES instead and exclude BOSS MEMORY from the sum. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p18: {
@@ -316,7 +316,7 @@ const ITEMS = {
     id: "p25",
     type: "passive",
     name: "Seal of Valac",
-    price: 13,
+    price: 17,
     description: "Gain +2 ARTIFACT uses per round and +2 ARTIFACT inventory slots. Each ELITE level adds +2 more to both."
   },
   p26: {
@@ -358,35 +358,35 @@ const ITEMS = {
     id: "p31",
     type: "passive",
     name: "Seal of Murmur",
-    price: 10,
+    price: 14,
     description: "At end of round, two random DAMNED take damage equal to their BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p32: {
     id: "p32",
     type: "passive",
     name: "Seal of Foras",
-    price: 11,
+    price: 14,
     description: "Every time a DAMNED dies, all other DAMNED gain +1 or +2 BOUNTY. ELITE increases the BOUNTY gain by +20% each level, rounded up."
   },
   p33: {
     id: "p33",
     type: "passive",
     name: "Seal of Marchosias",
-    price: 13,
+    price: 17,
     description: "Every time a DAMNED is eliminated, all other DAMNED take damage equal to that DAMNED's BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p34: {
     id: "p34",
     type: "passive",
     name: "Seal of Gremory",
-    price: 14,
-    description: "Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +2 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%."
+    price: 16,
+    description: "Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%."
   },
   p35: {
     id: "p35",
     type: "passive",
     name: "Seal of Forneus",
-    price: 8,
+    price: 15,
     description: "At end of round, the two highest BOUNTY DAMNED gain +1 BOUNTY. ELITE levels add +1 BOUNTY."
   },
   p36: {
@@ -450,7 +450,7 @@ const ITEMS = {
     id: "p44",
     type: "passive",
     name: "Seal of Andromalius",
-    price: 13,
+    price: 15,
     description: "At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE increases the BOUNTY limit by +1 each level."
   },
   p45: {
@@ -471,29 +471,29 @@ const ITEMS = {
     id: "p47",
     type: "passive",
     name: "Seal of Ronove",
-    price: 10,
+    price: 11,
     description: "At end of round, a DAMNED loses half its BOUNTY and you gain double the SIN removed. ELITE adds one more DAMNED target each level."
   },
   p48: {
     id: "p48",
     type: "passive",
     name: "Seal of Cimejes",
-    price: 10,
+    price: 11,
     description: "At start of round, double a random DAMNED's BOUNTY for 1 round. ELITE levels double one extra random DAMNED."
   },
   p49: {
     id: "p49",
     type: "passive",
     name: "Seal of Phenex",
-    price: 10,
-    description: "Using an ARTIFACT that targets one or more DAMNED increases those DAMNED's BOUNTY by 4. ELITE increases the BOUNTY gain by +20% each level, rounded up."
+    price: 16,
+    description: "Using an ARTIFACT that targets one or more DAMNED increases those DAMNED's BOUNTY by 3. ELITE increases the BOUNTY gain by +20% each level, rounded up."
   },
   p50: {
     id: "p50",
     type: "passive",
     name: "Seal of Agares",
-    price: 9,
-    description: "At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, they take 5 damage per SIN. ELITE multiplies the damage by x1.5 each level, rounded up."
+    price: 14,
+    description: "At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take 5 damage per BOUNTY gained from this SEAL. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p51: {
     id: "p51",
@@ -507,13 +507,13 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Decarabia",
     price: 12,
-    description: "Whenever a DAMNED takes damage, it takes 3 extra damage per MEMORY. BOSSES take 1 extra damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up."
+    description: "At end of round, DAMNED take 3 damage per MEMORY. BOSSES take 1 damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up."
   },
   p53: {
     id: "p53",
     type: "passive",
     name: "Seal of Samigina",
-    price: 10,
+    price: 11,
     description: "When a non-boss DAMNED is eliminated, gain bonus SIN equal to its MEMORY. ELITE increases this SIN payout by +20% each level."
   },
   p54: {
@@ -542,7 +542,7 @@ const ITEMS = {
     id: "p57",
     type: "passive",
     name: "Seal of Balam",
-    price: 15,
+    price: 14,
     description:
       "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
@@ -749,28 +749,28 @@ const ITEMS = {
     id: "p86",
     type: "passive",
     name: "Seal of Haures",
-    price: 13,
+    price: 14,
     description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
   },
   p87: {
     id: "p87",
     type: "passive",
     name: "Seal of Purson",
-    price: 14,
+    price: 13,
     description: "When a DAMNED is eliminated, deal 30 damage to each other living DAMNED with the same personality. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p88: {
     id: "p88",
     type: "passive",
     name: "Seal of Raum",
-    price: 14,
+    price: 16,
     description: "When a DAMNED dies, half of their BOUNTY is added to each other living DAMNED with the same personality. You gain that dead DAMNED's BOUNTY. ELITE increases the added and gained SIN by +20%."
   },
   p89: {
     id: "p89",
     type: "passive",
     name: "Seal of Marax",
-    price: 13,
+    price: 16,
     description: "DAMNED can only have two personalities: ANALYST or STUBBORN. At end of round, a DAMNED takes 5 damage if both adjacent DAMNED have the same personality. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p90: {
@@ -791,49 +791,49 @@ const ITEMS = {
     id: "p92",
     type: "passive",
     name: "Seal of Dantre",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
     name: "Seal of Zilon",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
     name: "Seal of Serafeim",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
     name: "Seal of Pyros",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
     name: "Seal of Petros-Pavlos",
-    price: 30,
+    price: 16,
     description: "At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p111: {
@@ -847,42 +847,42 @@ const ITEMS = {
     id: "p98",
     type: "passive",
     name: "Seal of Samael Star",
-    price: 14,
+    price: 15,
     description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
   },
   p99: {
     id: "p99",
     type: "passive",
     name: "Seal of Cassiel Sigil",
-    price: 14,
+    price: 15,
     description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
   },
   p100: {
     id: "p100",
     type: "passive",
     name: "Seal of Bethor",
-    price: 14,
+    price: 15,
     description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
     type: "passive",
     name: "Seal of Aggiel Hexagram",
-    price: 14,
+    price: 15,
     description: "Whenever you make a PENTAKILL, this SEAL gains +5 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
     type: "passive",
     name: "Seal of Zachriel Triangle",
-    price: 14,
+    price: 15,
     description: "Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
     type: "passive",
     name: "Seal of Cassiel Pentagram",
-    price: 14,
+    price: 15,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
   },
   p104: {
@@ -903,14 +903,14 @@ const ITEMS = {
     id: "p106",
     type: "passive",
     name: "Seal of Zagan",
-    price: 14,
+    price: 15,
     description: "At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p107: {
     id: "p107",
     type: "passive",
     name: "Seal of Ose",
-    price: 12,
+    price: 14,
     description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
   },
   p108: {
@@ -924,7 +924,7 @@ const ITEMS = {
     id: "p109",
     type: "passive",
     name: "Seal of Samael Triangle",
-    price: 14,
+    price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
   a28: {
@@ -932,7 +932,7 @@ const ITEMS = {
     type: "active",
     name: "Engraved Skull",
     price: 4,
-    description: "Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
+    description: "Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
   },
   a14: {
     id: "a14",
@@ -1171,7 +1171,31 @@ const PASSIVE_IDS = [
   "p108",
   "p109"
 ];
-const REMOVED_PASSIVE_IDS = new Set(["p3", "p4", "p5", "p8", "p18", "p24", "p27", "p28", "p36", "p38", "p39", "p41", "p43", "p51", "p66", "p81", "p82", "p83"]);
+const REMOVED_PASSIVE_IDS = new Set([
+  "p3",
+  "p4",
+  "p5",
+  "p8",
+  "p18",
+  "p21",
+  "p22",
+  "p24",
+  "p27",
+  "p28",
+  "p29",
+  "p36",
+  "p37",
+  "p38",
+  "p39",
+  "p41",
+  "p43",
+  "p51",
+  "p56",
+  "p66",
+  "p81",
+  "p82",
+  "p83"
+]);
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
@@ -3234,7 +3258,7 @@ function seedNewBotMemoryFromVassago(bot) {
   if (bot.memory?.length) return;
   const entries = orderedPassiveEffectEntries("p1");
   if (!entries.length) return;
-  const seedCount = Math.min(5, botMemoryLimit(bot));
+  const seedCount = Math.min(3, botMemoryLimit(bot));
   bot.memory = initialMemoryEntries(seedCount);
   recordBotMemorySource(bot, bot.memory.length, ITEMS.p1?.name || "Seal of Vassago");
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
@@ -3262,15 +3286,7 @@ function agaresDamagePerSin(entry) {
 }
 
 function applyBotSinGainDamage(bot, gained) {
-  const amount = Math.max(0, Math.ceil(gained));
-  if (!state.roundState || !bot || bot.eliminated || amount <= 0) return;
-  orderedPassiveEffectEntries("p50").forEach((entry) => {
-    if (bot.eliminated) return;
-    const damage = amount * agaresDamagePerSin(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamage(bot, damage, `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${amount} SIN.`, "Seal of Agares");
-  });
+  return 0;
 }
 
 function stubbornArtifactChance(idOrItem) {
@@ -3340,9 +3356,6 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
   if (gained > 0) {
     applyBountyToMemoryMirror(bot, gained, options);
   }
-  if (gained > 0 && options.triggerGainDamage !== false) {
-    applyBotSinGainDamage(bot, gained);
-  }
   checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
 }
@@ -3394,7 +3407,7 @@ function applyTargetedItemSinGain(item, targets) {
   const entries = orderedPassiveEffectEntries("p49");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const amount = passiveEntryScaledValue(entry, 4);
+    const amount = passiveEntryScaledValue(entry, 3);
     if (amount <= 0) return;
     markPassiveEntryTriggered(entry);
     uniqueTargets.forEach((bot) => {
@@ -3787,7 +3800,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68", "p52"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
       if (entry.id === "p46" && botSin(bot) >= 6) {
         applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
         return;
@@ -3810,10 +3823,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
           state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
         }
         return;
-      }
-
-      if (entry.id === "p52") {
-        applyFlatBonus(decarabiaMemoryExtraDamage(entry, bot), ITEMS.p52?.name || "Seal of Decarabia", entry);
       }
     });
 
@@ -3974,7 +3983,7 @@ function artifactDescription(item) {
   }
   if (item.id === "a28") {
     const value = artifactValue(6);
-    return `Pick a non-boss DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
+    return `Pick a DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
   }
   return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
 }
@@ -4000,7 +4009,7 @@ function itemDescription(item) {
     return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
   }
   if (stack <= 1) return item.description;
-  if (item.id === "p1") return `New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
+  if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
   }
@@ -4052,7 +4061,7 @@ function itemDescription(item) {
   if (item.id === "p32") return `Every DAMNED death gives each other living DAMNED +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} BOUNTY.`;
   if (item.id === "p33") return `Every DAMNED elimination makes all other DAMNED take ${flatDamagePower(item)}x that DAMNED's BOUNTY as damage.`;
   if (item.id === "p34") {
-    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 2)} BOUNTY.`;
+    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 1)} BOUNTY.`;
   }
   if (item.id === "p35") return `At end of round, the two highest BOUNTY DAMNED gain +${stack} BOUNTY.`;
   if (item.id === "p36") return "Removed.";
@@ -4069,11 +4078,11 @@ function itemDescription(item) {
   if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
-  if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
-  if (item.id === "p50") return `At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, it takes ${agaresDamagePerSin(item)} damage per SIN.`;
+  if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
+  if (item.id === "p50") return `At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take ${agaresDamagePerSin(item)} damage per BOUNTY gained from this SEAL.`;
   if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
   if (item.id === "p52") {
-    return `Whenever a DAMNED takes damage, it takes ${flatDamageValue(item, 3)} extra damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} extra damage per MEMORY instead.`;
+    return `At end of round, DAMNED take ${flatDamageValue(item, 3)} damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} damage per MEMORY instead.`;
   }
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
   if (item.id === "p54") {
@@ -6564,7 +6573,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
   return gained;
 }
 
-function distributeSinAmongHighest(amount, targets) {
+function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
     .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
@@ -6577,7 +6586,18 @@ function distributeSinAmongHighest(amount, targets) {
     const gift = base + (remainder > 0 ? 1 : 0);
     if (remainder > 0) remainder -= 1;
     if (gift <= 0) return;
-    const result = changeBotSin(bot, gift, `Seal of Agares gave ${bot.name} +${gift} SIN.`);
+    const result = changeBotSin(bot, gift, `Seal of Agares gave ${bot.name} +${gift} SIN.`, {
+      source: "Seal of Agares"
+    });
+    const damage = result.gained * agaresDamagePerSin(entry);
+    if (damage > 0 && !bot.eliminated) {
+      damageBot(
+        bot,
+        damage,
+        `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${result.gained} BOUNTY from its effect.`,
+        "Seal of Agares"
+      );
+    }
     distributed += result.gained;
   });
   return distributed;
@@ -6588,13 +6608,13 @@ function applyAgaresEarnedSinSpread() {
   const entries = orderedPassiveEffectEntries("p50");
   if (!round || round.agaresSpreadApplied || !entries.length) return;
   const earned = Math.max(0, Math.ceil(round.earnedSinThisRound || 0));
-  const amount = Math.ceil(earned * 0.1);
+  const amount = Math.ceil(earned * 0.2);
   const targets = activeBots().filter((bot) => !bot.immortal);
   if (earned <= 0 || amount <= 0 || !targets.length) return;
   round.agaresSpreadApplied = true;
   entries.forEach((entry) => {
     markPassiveEntryTriggered(entry);
-    const distributed = distributeSinAmongHighest(amount, targets);
+    const distributed = distributeSinAmongHighest(amount, targets, entry);
     if (distributed > 0) {
       round.roundEvents.push(`Seal of Agares spread ${distributed} SIN from ${earned} round-earned SIN.`);
     }
@@ -8704,7 +8724,7 @@ function applyEliminationPassives(bot) {
       markPassiveEntryTriggered(entry);
       const target = highestHealthEnemy();
       const damage = passiveEntryFlatDamage(entry, 10);
-      const bounty = passiveEntryScaledValue(entry, 2);
+      const bounty = passiveEntryScaledValue(entry, 1);
       if (target && damage > 0) {
         damageBot(target, damage, `Seal of Gremory dealt ${damage} damage to ${target.name}.`, "Seal of Gremory");
       }
@@ -8791,7 +8811,7 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;
@@ -8829,6 +8849,19 @@ function applyEndOfRoundPassiveDamageInOrder() {
         damage,
         (bot, damage) => `Seal of Dantalion dealt ${damage} damage to ${bot.name}.`,
         "Seal of Dantalion"
+      );
+      return;
+    }
+
+    if (entry.id === "p52") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 0);
+      if (!targets.length) return;
+      markPassiveEntryTriggered(entry);
+      damageBots(
+        targets,
+        (bot) => decarabiaMemoryExtraDamage(entry, bot),
+        (bot, damage) => `Seal of Decarabia dealt ${damage} MEMORY damage to ${bot.name}.`,
+        "Seal of Decarabia"
       );
       return;
     }
@@ -9943,11 +9976,6 @@ function chooseBot(botId) {
   }
 
   if (id === "a28") {
-    if (bot.isBoss) {
-      addLog(`${itemName} cannot target BOSSES.`);
-      render();
-      return;
-    }
     const value = artifactValue(6);
     const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(6));
     const memoryAdded = addBotMemory(bot, value, "", { source: itemName });
@@ -12110,7 +12138,7 @@ function renderPendingText() {
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
     const value = artifactValue(6);
-    return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
+    return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
     return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;

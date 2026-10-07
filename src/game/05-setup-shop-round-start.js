@@ -475,7 +475,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
   return gained;
 }
 
-function distributeSinAmongHighest(amount, targets) {
+function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
     .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
@@ -488,7 +488,18 @@ function distributeSinAmongHighest(amount, targets) {
     const gift = base + (remainder > 0 ? 1 : 0);
     if (remainder > 0) remainder -= 1;
     if (gift <= 0) return;
-    const result = changeBotSin(bot, gift, `Seal of Agares gave ${bot.name} +${gift} SIN.`);
+    const result = changeBotSin(bot, gift, `Seal of Agares gave ${bot.name} +${gift} SIN.`, {
+      source: "Seal of Agares"
+    });
+    const damage = result.gained * agaresDamagePerSin(entry);
+    if (damage > 0 && !bot.eliminated) {
+      damageBot(
+        bot,
+        damage,
+        `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${result.gained} BOUNTY from its effect.`,
+        "Seal of Agares"
+      );
+    }
     distributed += result.gained;
   });
   return distributed;
@@ -499,13 +510,13 @@ function applyAgaresEarnedSinSpread() {
   const entries = orderedPassiveEffectEntries("p50");
   if (!round || round.agaresSpreadApplied || !entries.length) return;
   const earned = Math.max(0, Math.ceil(round.earnedSinThisRound || 0));
-  const amount = Math.ceil(earned * 0.1);
+  const amount = Math.ceil(earned * 0.2);
   const targets = activeBots().filter((bot) => !bot.immortal);
   if (earned <= 0 || amount <= 0 || !targets.length) return;
   round.agaresSpreadApplied = true;
   entries.forEach((entry) => {
     markPassiveEntryTriggered(entry);
-    const distributed = distributeSinAmongHighest(amount, targets);
+    const distributed = distributeSinAmongHighest(amount, targets, entry);
     if (distributed > 0) {
       round.roundEvents.push(`Seal of Agares spread ${distributed} SIN from ${earned} round-earned SIN.`);
     }

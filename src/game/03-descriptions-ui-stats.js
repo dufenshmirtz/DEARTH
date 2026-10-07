@@ -36,7 +36,7 @@ function artifactDescription(item) {
   }
   if (item.id === "a28") {
     const value = artifactValue(6);
-    return `Pick a non-boss DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
+    return `Pick a DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
   }
   return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
 }
@@ -62,7 +62,7 @@ function itemDescription(item) {
     return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
   }
   if (stack <= 1) return item.description;
-  if (item.id === "p1") return `New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
+  if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
   }
@@ -114,7 +114,7 @@ function itemDescription(item) {
   if (item.id === "p32") return `Every DAMNED death gives each other living DAMNED +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} BOUNTY.`;
   if (item.id === "p33") return `Every DAMNED elimination makes all other DAMNED take ${flatDamagePower(item)}x that DAMNED's BOUNTY as damage.`;
   if (item.id === "p34") {
-    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 2)} BOUNTY.`;
+    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 1)} BOUNTY.`;
   }
   if (item.id === "p35") return `At end of round, the two highest BOUNTY DAMNED gain +${stack} BOUNTY.`;
   if (item.id === "p36") return "Removed.";
@@ -131,11 +131,11 @@ function itemDescription(item) {
   if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
-  if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
-  if (item.id === "p50") return `At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, it takes ${agaresDamagePerSin(item)} damage per SIN.`;
+  if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
+  if (item.id === "p50") return `At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take ${agaresDamagePerSin(item)} damage per BOUNTY gained from this SEAL.`;
   if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
   if (item.id === "p52") {
-    return `Whenever a DAMNED takes damage, it takes ${flatDamageValue(item, 3)} extra damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} extra damage per MEMORY instead.`;
+    return `At end of round, DAMNED take ${flatDamageValue(item, 3)} damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} damage per MEMORY instead.`;
   }
   if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
   if (item.id === "p54") {

@@ -717,11 +717,6 @@ function chooseBot(botId) {
   }
 
   if (id === "a28") {
-    if (bot.isBoss) {
-      addLog(`${itemName} cannot target BOSSES.`);
-      render();
-      return;
-    }
     const value = artifactValue(6);
     const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(6));
     const memoryAdded = addBotMemory(bot, value, "", { source: itemName });

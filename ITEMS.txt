@@ -4,14 +4,14 @@ Generated from main.js. main.js is the gameplay source of truth; update this fil
 
 Player Seals
 
-Seal of Agares (9 SIN)
-At end of round, 10% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. Whenever a DAMNED gains SIN, they take 5 damage per SIN. ELITE multiplies the damage by x1.5 each level, rounded up.
-
-Seal of Alloces (13 SIN)
-At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains.
+Seal of Agares (14 SIN)
+At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take 5 damage per BOUNTY gained from this SEAL. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Aim (14 SIN)
 Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage.
+
+Seal of Alloces (13 SIN)
+At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains.
 
 Seal of Amdusias (14 SIN)
 Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 damage to all DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -28,7 +28,7 @@ Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to ST
 Seal of Andrealphus (9 SIN)
 Every time a DAMNED is eliminated, deal 10 damage to the DAMNED on its left and right. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Andromalius (13 SIN)
+Seal of Andromalius (15 SIN)
 At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE increases the BOUNTY limit by +1 each level.
 
 Seal of Asmoday (12 SIN)
@@ -40,13 +40,13 @@ At end of round, every revealed DAMNED makes each adjacent DAMNED take damage eq
 Seal of Bael (10 SIN)
 If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Balam (15 SIN)
+Seal of Balam (14 SIN)
 If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up.
 
 Seal of Barbatos (12 SIN)
 Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
 
-Seal of Bathin (8 SIN)
+Seal of Bathin (11 SIN)
 Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Beleth (12 SIN)
@@ -61,26 +61,23 @@ At end of round, each DAMNED takes 10 damage for every other living DAMNED with 
 Seal of Bifrons (15 SIN)
 Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the end of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Botis (14 SIN)
-Avoid 20% of damage you would take in a round, rounded down, and convert the avoided damage into MEMORY for the living DAMNED with the most MEMORY. ELITE doubles only the MEMORY added each level.
-
 Seal of Bune (14 SIN)
 If two or more DAMNED are eliminated in a round, gain 8 SIN. If two or more with the same personality were eliminated, gain 16 SIN. ELITE increases the payout by +20%.
 
 Seal of Caim (11 SIN)
 DAMNED with 8 or more MEMORY pay double BOUNTY SIN when eliminated. ELITE increases the payout multiplier by +20%.
 
-Seal of Cimejes (10 SIN)
+Seal of Cimejes (11 SIN)
 At start of round, double a random DAMNED's BOUNTY for 1 round. ELITE levels double one extra random DAMNED.
 
 Seal of Crocell (11 SIN)
 DAMNED with 3 or less BOUNTY pay double BOUNTY SIN when eliminated. ELITE increases the payout multiplier by +20% each level.
 
-Seal of Dantalion (12 SIN)
+Seal of Dantalion (15 SIN)
 At end of round, deal damage equal to the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If any BOSSES are active, hit all active BOSSES instead and exclude BOSS MEMORY from the sum. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Decarabia (12 SIN)
-Whenever a DAMNED takes damage, it takes 3 extra damage per MEMORY. BOSSES take 1 extra damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up.
+At end of round, DAMNED take 3 damage per MEMORY. BOSSES take 1 damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up.
 
 Seal of Eligos (14 SIN)
 Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET. ELITE adds +/-1 to the DAMNED CRITICAL range.
@@ -88,17 +85,14 @@ Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CR
 Seal of Focalor (14 SIN)
 At end of round, deal half the total BOUNTY of living DAMNED to every enemy. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Foras (11 SIN)
+Seal of Foras (14 SIN)
 Every time a DAMNED dies, all other DAMNED gain +1 or +2 BOUNTY. ELITE increases the BOUNTY gain by +20% each level, rounded up.
 
-Seal of Forneus (8 SIN)
+Seal of Forneus (15 SIN)
 At end of round, the two highest BOUNTY DAMNED gain +1 BOUNTY. ELITE levels add +1 BOUNTY.
 
 Seal of Furcas (11 SIN)
 Every round, if the previous TARGET was below 40, one random non-boss DAMNED guess becomes 100. If it was above 40, one random DAMNED guess becomes 0. ELITE deals 5 damage per level to the selected DAMNED.
-
-Seal of Furfur (10 SIN)
-For every 2 SIN you spend in a round, deal 1 damage to the highest-HEALTH DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -106,40 +100,34 @@ Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventor
 Seal of Glasya-Labolas (12 SIN)
 When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Gremory (14 SIN)
-Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +2 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.
+Seal of Gremory (16 SIN)
+Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.
 
-Seal of Gusion (15 SIN)
+Seal of Gusion (11 SIN)
 Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. ELITE converts +1 extra MEMORY or BOUNTY each level when this triggers.
 
 Seal of Haagenti (12 SIN)
 Devil's Offerings has one more ARTIFACT slot. Whenever you use an ARTIFACT, all DAMNED take damage equal to that ARTIFACT's purchase cost. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Halphas (14 SIN)
-At end of round, deal round x BOSSES defeated total damage, spread randomly among enemies. ELITE gives +2 SIN each round per upgrade.
-
-Seal of Haures (13 SIN)
+Seal of Haures (14 SIN)
 When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance.
 
 Seal of Ipos (13 SIN)
 The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, the next two take 10. ELITE multiplies both damage values by x1.5 each level, rounded up.
 
-Seal of Leraje (9 SIN)
+Seal of Leraje (12 SIN)
 At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%.
 
-Seal of Malphas (11 SIN)
-When you take 4 or less TARGET-difference damage in a round, gain 7 SIN. ELITE increases this payout by +20%.
-
-Seal of Marax (13 SIN)
+Seal of Marax (16 SIN)
 DAMNED can only have two personalities: ANALYST or STUBBORN. At end of round, a DAMNED takes 5 damage if both adjacent DAMNED have the same personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Marbas (13 SIN)
+Seal of Marbas (12 SIN)
 Every DAMNED elimination spreads 3 SIN and 3 MEMORY randomly among the DAMNED of the next round. ELITE increases only the SIN spread by +20%.
 
-Seal of Marchosias (13 SIN)
+Seal of Marchosias (17 SIN)
 Every time a DAMNED is eliminated, all other DAMNED take damage equal to that DAMNED's BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Murmur (10 SIN)
+Seal of Murmur (14 SIN)
 At end of round, two random DAMNED take damage equal to their BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Naberius (10 SIN)
@@ -151,22 +139,22 @@ Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELI
 Seal of Orobas (14 SIN)
 When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Ose (12 SIN)
+Seal of Ose (14 SIN)
 STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level.
 
-Seal of Paimon (11 SIN)
+Seal of Paimon (15 SIN)
 If your final guess is close to the TARGET, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact TARGET, gain 10 SIN. ELITE doubles all SIN gained.
 
-Seal of Phenex (10 SIN)
-Using an ARTIFACT that targets one or more DAMNED increases those DAMNED's BOUNTY by 4. ELITE increases the BOUNTY gain by +20% each level, rounded up.
+Seal of Phenex (16 SIN)
+Using an ARTIFACT that targets one or more DAMNED increases those DAMNED's BOUNTY by 3. ELITE increases the BOUNTY gain by +20% each level, rounded up.
 
-Seal of Purson (14 SIN)
+Seal of Purson (13 SIN)
 When a DAMNED is eliminated, deal 30 damage to each other living DAMNED with the same personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
-Seal of Raum (14 SIN)
+Seal of Raum (16 SIN)
 When a DAMNED dies, half of their BOUNTY is added to each other living DAMNED with the same personality. You gain that dead DAMNED's BOUNTY. ELITE increases the added and gained SIN by +20%.
 
-Seal of Ronove (10 SIN)
+Seal of Ronove (11 SIN)
 At end of round, a DAMNED loses half its BOUNTY and you gain double the SIN removed. ELITE adds one more DAMNED target each level.
 
 Seal of Sabnock (13 SIN)
@@ -175,14 +163,11 @@ Every time a DAMNED dies, deal 5 damage to every other DAMNED. ELITE multiplies 
 Seal of Sallos (14 SIN)
 Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level.
 
-Seal of Samigina (10 SIN)
+Seal of Samigina (11 SIN)
 When a non-boss DAMNED is eliminated, gain bonus SIN equal to its MEMORY. ELITE increases this SIN payout by +20% each level.
 
 Seal of Seere (10 SIN)
 New non-boss DAMNED have a 33% chance to spawn with +6 BOUNTY. ELITE increases the spawn chance by +20% each level, capped at 100%.
-
-Seal of Shax (10 SIN)
-Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Sitri (11 SIN)
 Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level.
@@ -190,17 +175,17 @@ Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMOR
 Seal of Stolas (13 SIN)
 When a DAMNED with 3 or less MEMORY dies, gain SIN equal to its MEMORY. If it had more than 3 MEMORY, split its MEMORY between the DAMNED on its left and right; with only one side, only half is transferred and the rest is lost. ELITE increases only the low-MEMORY SIN payout by +20%.
 
-Seal of Valac (13 SIN)
+Seal of Valac (17 SIN)
 Gain +2 ARTIFACT uses per round and +2 ARTIFACT inventory slots. Each ELITE level adds +2 more to both.
 
-Seal of Valefor (10 SIN)
+Seal of Valefor (12 SIN)
 When a DAMNED dies, gain a random ARTIFACT with 0 sell value if you have room. ELITE gives +1 random ARTIFACT each level.
 
 Seal of Vapula (13 SIN)
 Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up.
 
-Seal of Vassago (10 SIN)
-New non-boss DAMNED arrive with 5 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up.
+Seal of Vassago (13 SIN)
+New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Vepar (13 SIN)
 BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage. ELITE adds +2% per poison.
@@ -211,7 +196,7 @@ Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout m
 Seal of Vual (10 SIN)
 Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
 
-Seal of Zagan (14 SIN)
+Seal of Zagan (15 SIN)
 At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Zepar (12 SIN)
@@ -242,25 +227,25 @@ DAMNED with 10 or more BOUNTY take x1.5 damage from all sources. ELITE adds +0.2
 
 Dev Seals
 
-Seal of Dantre (30 SIN)
+Seal of Dantre (16 SIN)
 At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
-Seal of Padma (30 SIN)
+Seal of Padma (16 SIN)
 At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
-Seal of Petros-Pavlos (30 SIN)
+Seal of Petros-Pavlos (16 SIN)
 At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Pyros (30 SIN)
+Seal of Pyros (16 SIN)
 At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
 
-Seal of Serafeim (30 SIN)
+Seal of Serafeim (16 SIN)
 At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%.
 
-Seal of Threon (30 SIN)
+Seal of Threon (16 SIN)
 At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Zilon (30 SIN)
+Seal of Zilon (16 SIN)
 At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%.
 
 Satan Seals
@@ -270,25 +255,25 @@ Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100
 
 Self-Stacking Seals
 
-Seal of Aggiel Hexagram (14 SIN)
+Seal of Aggiel Hexagram (15 SIN)
 Whenever you make a PENTAKILL, this SEAL gains +5 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
 
-Seal of Bethor (14 SIN)
+Seal of Bethor (15 SIN)
 At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
 
-Seal of Cassiel Pentagram (14 SIN)
+Seal of Cassiel Pentagram (15 SIN)
 Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded.
 
-Seal of Cassiel Sigil (14 SIN)
+Seal of Cassiel Sigil (15 SIN)
 Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded.
 
-Seal of Samael Star (14 SIN)
+Seal of Samael Star (15 SIN)
 Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded.
 
-Seal of Samael Triangle (14 SIN)
+Seal of Samael Triangle (15 SIN)
 Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
 
-Seal of Zachriel Triangle (14 SIN)
+Seal of Zachriel Triangle (15 SIN)
 Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
 
 Artifacts
@@ -312,7 +297,7 @@ Demonic Idol (6 SIN)
 Pick a non-boss DAMNED and swap your effective guess with theirs.
 
 Engraved Skull (4 SIN)
-Pick a non-boss DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH.
+Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH.
 
 Funeral Coin (4 SIN)
 Gain 3 to 10 SIN.

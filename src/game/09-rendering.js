@@ -1271,7 +1271,7 @@ function renderPendingText() {
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
     const value = artifactValue(6);
-    return `${item.name}: pick a non-boss DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
+    return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
     return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;
