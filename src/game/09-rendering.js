@@ -4,6 +4,7 @@ function render() {
   app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
   app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
   bindEvents();
+  if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   saveArcadeRun();
 }
@@ -36,6 +37,7 @@ function renderMenuApp() {
   const screen = state.menuScreen || "main";
   return `
     <main class="main-menu" aria-label="main menu">
+      ${menuBackdropState.node ? `<div class="menu-backdrop-slot"></div>` : renderMenuBackdrop()}
       <section class="main-menu-panel">
         ${
           screen === "play"
@@ -1621,3 +1623,384 @@ function handlePauseAction(action) {
   }
 }
 
+/* ---------- Animated main menu: rotating background + glitching title ---------- */
+// Layout is in artwork pixels (1672x941), scaled like background-size: cover.
+const MENU_ART_W = 1672;
+const MENU_ART_H = 941;
+const MENU_BG_PIVOT = { x: 837, y: 312 }; // centre of the circle behind the title
+const MENU_BG_COVER = 780; // radius around the pivot that menu-bg-spin.jpg fully covers
+const MENU_BG_SPIN_MS = 240000;
+// node: the live backdrop (background, doorway, figures, logo). It is built once and moved into each
+// re-rendered menu so clicking buttons never reloads or restarts it.
+const menuBackdropState = { startedAt: 0, resizeBound: false, glitchStarted: false, node: null };
+// fixed dark doorway behind the buttons (art pixels): matches .menu-door in styles.css
+const MENU_DOOR = { cx: 696 + 283 / 2, top: 476, solidTop: 55, solidBottom: 388 };
+
+function menuReducedMotion() {
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function renderMenuBackdrop() {
+  return `
+      <div class="menu-backdrop" aria-hidden="true">
+        <svg width="0" height="0" style="position:absolute">
+          <filter id="menuGlitchRed" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
+          <filter id="menuGlitchCyan" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+        </svg>
+        <div class="menu-stage">
+          <div class="menu-bg-spin"><img class="menu-bg-img" src="assets/ui/menu/menu-bg-spin.jpg" alt=""></div>
+          <img class="menu-door" src="assets/ui/menu/menu-door.webp" alt="">
+          ${renderMenuFigure("jesus")}
+          ${renderMenuFigure("satan")}
+          <div class="menu-logo">
+            <img class="logo-base" src="assets/ui/menu/menu-logo.webp" alt="">
+            <img class="logo-red" src="assets/ui/menu/menu-logo.webp" alt="">
+            <img class="logo-cyan" src="assets/ui/menu/menu-logo.webp" alt="">
+            <img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt=""><img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt=""><img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt="">
+            <img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt=""><img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt=""><img class="logo-slice" src="assets/ui/menu/menu-logo.webp" alt="">
+          </div>
+        </div>
+      </div>`;
+}
+
+function initMenuBackdrop() {
+  if (!menuBackdropState.startedAt) menuBackdropState.startedAt = Date.now();
+  const slot = document.querySelector(".menu-backdrop-slot");
+  if (slot && menuBackdropState.node) slot.replaceWith(menuBackdropState.node);
+  else menuBackdropState.node = document.querySelector(".menu-backdrop");
+  // keep the rotation continuous when the menu re-renders (switching screens)
+  const spinImg = document.querySelector(".menu-bg-img");
+  if (spinImg) {
+    const elapsed = (Date.now() - menuBackdropState.startedAt) % MENU_BG_SPIN_MS;
+    spinImg.style.animationDelay = `-${elapsed}ms`;
+  }
+  // CSS animations restart when the backdrop is moved into the new menu, so resume them where they were
+  const crown = document.querySelector(".menu-fig .fig-crown-shimmer");
+  if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
+  layoutMenuBackdrop();
+  initMenuFigures(menuReducedMotion());
+  if (!menuBackdropState.resizeBound) {
+    menuBackdropState.resizeBound = true;
+    window.addEventListener("resize", layoutMenuBackdrop);
+    // button heights change once the menu font has loaded
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutMenuBackdrop);
+  }
+  if (!menuBackdropState.glitchStarted && !menuReducedMotion()) {
+    menuBackdropState.glitchStarted = true;
+    setTimeout(menuLogoGlitchBurst, 1400);
+  }
+}
+
+function layoutMenuBackdrop() {
+  const backdrop = document.querySelector(".menu-backdrop");
+  const stage = backdrop?.querySelector(".menu-stage");
+  if (!backdrop || !stage) return;
+  const vw = backdrop.clientWidth || window.innerWidth;
+  const vh = backdrop.clientHeight || window.innerHeight;
+  const s = Math.max(vw / MENU_ART_W, vh / MENU_ART_H);
+  const ox = (vw - MENU_ART_W * s) / 2;
+  const oy = (vh - MENU_ART_H * s) / 2;
+  stage.style.transform = `translate(${ox}px, ${oy}px) scale(${s})`;
+  // smallest zoom that keeps the visible screen covered at every angle of the spin
+  const x0 = Math.max(0, -ox / s);
+  const y0 = Math.max(0, -oy / s);
+  const x1 = Math.min(MENU_ART_W, (vw - ox) / s);
+  const y1 = Math.min(MENU_ART_H, (vh - oy) / s);
+  let far = 0;
+  for (const x of [x0, x1]) {
+    for (const y of [y0, y1]) far = Math.max(far, Math.hypot(x - MENU_BG_PIVOT.x, y - MENU_BG_PIVOT.y));
+  }
+  const zoom = Math.max(1, (far + 2) / MENU_BG_COVER);
+  const spin = stage.querySelector(".menu-bg-spin");
+  if (spin) spin.style.transform = `scale(${zoom.toFixed(4)})`;
+  // centre the menu buttons inside the solid part of the fixed dark doorway
+  const panel = document.querySelector(".main-menu-panel");
+  const menu = document.querySelector(".main-menu");
+  if (panel && menu) {
+    const doorX = ox + MENU_DOOR.cx * s;
+    const doorMid = oy + (MENU_DOOR.top + (MENU_DOOR.solidTop + MENU_DOOR.solidBottom) / 2) * s;
+    const h = panel.offsetHeight;
+    const top = Math.max(8, Math.min(doorMid - h / 2, vh - h - 12));
+    panel.classList.add("door-anchored");
+    panel.style.left = `${doorX}px`;
+    panel.style.top = `${top}px`;
+  }
+}
+
+function menuLogoGlitchBurst() {
+  const logo = document.querySelector(".menu-logo");
+  const schedule = () => setTimeout(menuLogoGlitchBurst, 2600 + Math.random() * 4400);
+  if (!logo || document.hidden) {
+    schedule();
+    return;
+  }
+  const base = logo.querySelector(".logo-base");
+  const red = logo.querySelector(".logo-red");
+  const cyan = logo.querySelector(".logo-cyan");
+  const slices = [...logo.querySelectorAll(".logo-slice")];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const reset = () => {
+    logo.style.opacity = "";
+    for (const el of [base, red, cyan, ...slices]) if (el) el.style.cssText = "";
+  };
+  const frame = (strength) => {
+    const cuts = [0, ...Array.from({ length: slices.length - 1 }, () => rnd(4, 96)).sort((a, b) => a - b), 100];
+    slices.forEach((el, i) => {
+      const shift = Math.random() < 0.45 ? rnd(-1, 1) * rnd(6, 34) * strength : 0;
+      el.style.clipPath = `inset(${cuts[i]}% 0 ${100 - cuts[i + 1]}% 0)`;
+      el.style.transform = `translateX(${shift.toFixed(1)}px)`;
+      el.style.opacity = "1";
+    });
+    base.style.opacity = "0";
+    const dx = rnd(3, 11) * strength;
+    const dy = rnd(-2, 2) * strength;
+    red.style.opacity = String(rnd(0.45, 0.85));
+    red.style.transform = `translate(${-dx}px, ${dy}px)`;
+    cyan.style.opacity = String(rnd(0.45, 0.85));
+    cyan.style.transform = `translate(${dx}px, ${-dy}px)`;
+    logo.style.opacity = Math.random() < 0.15 ? String(rnd(0.35, 0.7)) : "";
+  };
+  const strength = Math.random() < 0.25 ? 1.6 : 1;
+  const frames = Math.round(rnd(4, 9) * strength);
+  let n = 0;
+  const step = () => {
+    if (!logo.isConnected) {
+      schedule();
+      return;
+    }
+    if (n++ < frames) {
+      if (Math.random() < 0.2) reset();
+      else frame(strength);
+      setTimeout(step, rnd(35, 85));
+    } else {
+      reset();
+      schedule();
+    }
+  };
+  step();
+}
+
+/* ---------- Menu figures: cloth drift, tail, claw, crown, hover (all slow and subtle) ---------- */
+// Coordinates in each figure's padded frame (pixels of its base image).
+const MENU_FIGURES = {
+  jesus: {
+    side: "left",
+    stage: { left: -34, top: 62, width: 836, srcW: 866 },
+    files: ["base", "cloth", "head", "crown"],
+    meta: {"W": 898, "H": 1229, "pad": 16, "head": {"x": 343, "y": 16, "w": 228, "h": 214}, "head_pivot": [425, 190], "eyes": [[462, 113, 16, 8]], "crown_y": 88, "crown": {"x": 364, "y": 16, "w": 205, "h": 88}},
+    leanDeg: 0.4,
+    feet: [420, 1150],
+    clothAmp: 1.3,
+  },
+  satan: {
+    side: "right",
+    stage: { left: 1006, top: 78, width: 716, srcW: 747 },
+    files: ["base", "cloth", "head", "claw", "tailA", "tailB"],
+    meta: {"W": 779, "H": 1206, "pad": 16, "head": {"x": 222, "y": 16, "w": 247, "h": 229}, "claw": {"x": 271, "y": 216, "w": 115, "h": 128}, "tailA": {"x": 500, "y": 600, "w": 44, "h": 169}, "tailB": {"x": 528, "y": 754, "w": 115, "h": 172}, "head_pivot": [350, 205], "claw_pivot": [282, 312], "tailA_pivot": [500, 600], "tailB_pivot": [519, 745], "eyes": [[323, 106, 15, 10], [303, 143, 16, 11]]},
+    leanDeg: -0.4,
+    feet: [330, 1130],
+    clothAmp: 1.1,
+  },
+};
+
+function menuFigureSrc(name, file) {
+  return `assets/ui/menu/${name}-${file}${file === "cloth" ? ".png" : ".webp"}`;
+}
+
+function renderMenuFigure(name) {
+  const f = MENU_FIGURES[name];
+  const m = f.meta;
+  const P = m.pad;
+  const k = f.stage.width / f.stage.srcW;
+  const part = (key, cls = key) => m[key]
+    ? `<img class="fig-part fig-${cls}" src="${menuFigureSrc(name, key)}" alt="" style="left:${m[key].x}px;top:${m[key].y}px;width:${m[key].w}px;height:${m[key].h}px">`
+    : "";
+  const origin = (p) => `transform-origin:${p[0] + P}px ${p[1] + P}px`;
+  const tail = m.tailA ? `
+      <div class="fig-group fig-tailA-group" style="${origin(m.tailA_pivot)}">
+        ${part("tailA")}
+        <div class="fig-group fig-tailB-group" style="${origin(m.tailB_pivot)}">${part("tailB")}</div>
+      </div>` : "";
+  const claw = m.claw ? `<div class="fig-group fig-claw-group" style="${origin(m.claw_pivot)}">${part("claw")}</div>` : "";
+  const crown = m.crown ? part("crown", "crown-shimmer") : "";
+  return `
+    <div class="menu-fig menu-fig-${name}" data-fig="${name}"
+         style="left:${f.stage.left - P * k}px;top:${f.stage.top - P * k}px;width:${m.W}px;height:${m.H}px;transform:scale(${k})">
+      <div class="fig-lean" style="transform-origin:${f.feet[0] + P}px ${f.feet[1] + P}px">
+        <div class="fig-live">
+          <img class="fig-base-img" src="${menuFigureSrc(name, "base")}" alt="">
+          <canvas class="fig-cloth" width="${m.W}" height="${m.H}"></canvas>
+          ${tail}
+          ${claw}
+          <div class="fig-group fig-head-group" style="${origin(m.head_pivot)}">
+            ${part("head")}
+            ${crown}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---- runtime ---- */
+const menuFigState = { started: false, rigs: {}, raf: 0, last: 0, hoverBound: false };
+const figRnd = (a, b) => a + Math.random() * (b - a);
+const figEase = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+
+function initMenuFigures(reduceMotion) {
+  for (const name of Object.keys(MENU_FIGURES)) {
+    const el = document.querySelector(`.menu-fig-${name}`);
+    if (!el) continue;
+    const prev = menuFigState.rigs[name];
+    if (prev && prev.el === el) continue; // same live figure moved into the new menu: keep it as is
+    // free the WebGL context of the figure from the previous render
+    if (prev && prev.gl && prev.el !== el) {
+      const lose = prev.gl.gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+    }
+    const rig = {
+      name, el, cfg: MENU_FIGURES[name],
+      lean: el.querySelector(".fig-lean"),
+      live: el.querySelector(".fig-live"),
+      head: el.querySelector(".fig-head-group"),
+      claw: el.querySelector(".fig-claw-group"),
+      tailA: el.querySelector(".fig-tailA-group"),
+      tailB: el.querySelector(".fig-tailB-group"),
+      // keep timers/state across menu re-renders
+      flick: prev ? prev.flick : { start: -1 },
+      curl: prev ? prev.curl : { start: -1 },
+    };
+    rig.gl = reduceMotion ? null : setupClothGL(rig);
+    if (!rig.gl) el.querySelector(".fig-cloth").style.display = "none";
+    else el.querySelector(".fig-base-img").style.visibility = "hidden";
+    menuFigState.rigs[name] = rig;
+  }
+  bindMenuFigureHover();
+  if (reduceMotion) return;
+  if (!menuFigState.raf) menuFigState.raf = requestAnimationFrame(menuFigureFrame);
+  if (menuFigState.started) return;
+  menuFigState.started = true;
+  scheduleFig("flick", () => { menuFigState.rigs.satan && (menuFigState.rigs.satan.flick.start = performance.now() / 1000); }, 14000, 26000);
+  scheduleFig("curl", () => { menuFigState.rigs.satan && (menuFigState.rigs.satan.curl.start = performance.now() / 1000); }, 11000, 20000);
+}
+
+function scheduleFig(kind, fn, min, max) {
+  const loop = () => {
+    if (!document.hidden && document.querySelector(".menu-fig")) fn();
+    setTimeout(loop, figRnd(min, max));
+  };
+  setTimeout(loop, figRnd(min * 0.4, max * 0.6));
+}
+
+function menuFigureFrame(now) {
+  const t = now / 1000;
+  let any = false;
+  for (const rig of Object.values(menuFigState.rigs)) {
+    if (!rig.el.isConnected) continue;
+    any = true;
+    if (rig.gl) drawCloth(rig, t);
+    if (rig.tailA) {
+      const fp = t - rig.flick.start;
+      const flick = rig.flick.start > 0 && fp < 5 ? Math.sin(fp * 2.6) * Math.exp(-fp * 0.9) * 6 : 0;
+      rig.tailA.style.transform = `rotate(${(1.1 * Math.sin(t * 0.3) + flick * 0.25).toFixed(2)}deg)`;
+      rig.tailB.style.transform = `rotate(${(2.4 * Math.sin(t * 0.3 - 1.1) + flick).toFixed(2)}deg)`;
+    }
+    if (rig.claw) {
+      const cp = t - rig.curl.start;
+      let c = 0;
+      if (rig.curl.start > 0 && cp < 7.5) c = cp < 2.2 ? figEase(cp / 2.2) : cp < 3.6 ? 1 : 1 - figEase((cp - 3.6) / 3.9);
+      const idle = Math.sin(t * 0.45) * 0.35;
+      rig.claw.style.transform = `rotate(${(-3 * c + idle).toFixed(2)}deg) scale(${(1 - 0.015 * c).toFixed(3)}, ${(1 - 0.025 * c).toFixed(3)})`;
+    }
+  }
+  // stop animating once the menu is gone; initMenuFigures restarts it
+  menuFigState.raf = any ? requestAnimationFrame(menuFigureFrame) : 0;
+}
+
+
+function bindMenuFigureHover() {
+  if (menuFigState.hoverBound) return;
+  menuFigState.hoverBound = true;
+  const set = (btn) => {
+    const action = btn ? (btn.dataset.menuAction || btn.dataset.go || "") : "";
+    for (const rig of Object.values(menuFigState.rigs)) {
+      if (!rig.el.isConnected) continue;
+      rig.el.classList.toggle("leaning", !!btn);
+      rig.el.classList.toggle("favored", (rig.name === "jesus" && action === "play") || (rig.name === "satan" && action === "quit"));
+    }
+  };
+  document.addEventListener("pointerover", (e) => {
+    const btn = e.target.closest && e.target.closest(".main-menu .menu-button");
+    set(btn);
+  });
+  document.addEventListener("focusin", (e) => {
+    const btn = e.target.closest && e.target.closest(".main-menu .menu-button");
+    set(btn);
+  });
+}
+
+/* ---- cloth & hair drift (WebGL displacement, weighted so face/hands/feet never move) ---- */
+function setupClothGL(rig) {
+  const canvas = rig.el.querySelector(".fig-cloth");
+  let gl;
+  try { gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false }); } catch (e) { gl = null; }
+  if (!gl) return null;
+  const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*0.5+0.5, 0.5-p.y*0.5); gl_Position = vec4(p,0.,1.); }`;
+  const fs = `precision mediump float; varying vec2 uv; uniform sampler2D tex; uniform sampler2D wt; uniform vec2 size; uniform float t; uniform float amp;
+    void main(){
+      vec2 px = uv * size;
+      float w = texture2D(wt, uv).r;
+      float sway = sin(px.y * 0.035 + t * 1.5 + sin(px.x * 0.012 + t * 0.4) * 1.5);
+      float flutter = sin(px.y * 0.11 - t * 3.1 + px.x * 0.02) * 0.35;
+      vec2 off = w * vec2((sway + flutter) * amp, sin(px.x * 0.05 + t * 1.2) * amp * 0.35);
+      gl_FragColor = texture2D(tex, (px + off) / size);
+    }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+  gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const state = { gl, prog, ready: 0, uT: gl.getUniformLocation(prog, "t"), amp: rig.cfg.clothAmp };
+  gl.uniform2f(gl.getUniformLocation(prog, "size"), canvas.width, canvas.height);
+  gl.uniform1f(gl.getUniformLocation(prog, "amp"), rig.cfg.clothAmp);
+  const load = (file, unit, uniform) => {
+    const img = new Image();
+    img.onload = () => {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      try {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      } catch (err) {
+        // e.g. game opened straight from disk (file://): fall back to the still drawing
+        state.failed = true;
+        canvas.style.display = "none";
+        const still = rig.el.querySelector(".fig-base-img");
+        if (still) still.style.visibility = "";
+        return;
+      }
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.useProgram(prog); gl.uniform1i(gl.getUniformLocation(prog, uniform), unit);
+      state.ready++;
+    };
+    img.src = menuFigureSrc(rig.name, file);
+  };
+  load("base", 0, "tex");
+  load("cloth", 1, "wt");
+  return state;
+}
+
+function drawCloth(rig, t) {
+  const s = rig.gl;
+  if (s.failed || s.ready < 2) return;
+  const gl = s.gl;
+  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform1f(s.uT, (t + (rig.name === "satan" ? 17.3 : 0)) * 0.4);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}

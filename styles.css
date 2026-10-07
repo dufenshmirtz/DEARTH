@@ -5077,3 +5077,208 @@ body.mobile-arcade .passive-slot.wide-seal-slot .equipped-seal-sigil {
   height: 62px !important;
 }
 }
+
+/* ---------- Animated main menu (rotating background, fixed doorway, glitching title) ---------- */
+.main-menu,
+body.native-arcade .main-menu {
+  background: #000;
+  background-image: none;
+}
+
+.menu-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.menu-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1672px;
+  height: 941px;
+  transform-origin: 0 0;
+}
+
+.menu-stage > * {
+  position: absolute;
+}
+
+/* 2200px square background centred on the circle behind the title (837, 312) */
+.menu-bg-spin {
+  left: -263px;
+  top: -788px;
+  width: 2200px;
+  height: 2200px;
+  transform-origin: 50% 50%;
+}
+
+.menu-bg-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: menuBgSpin 240s linear infinite;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+@keyframes menuBgSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* the dark doorway behind the buttons stays fixed while the background turns */
+.menu-door {
+  left: 696px;
+  top: 476px;
+  width: 283px;
+  height: 452px;
+}
+
+.menu-door,
+.menu-logo img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.menu-logo {
+  left: 548px;
+  top: 118px;
+  width: 600px;
+}
+
+.menu-logo img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 100%;
+  opacity: 0;
+}
+
+.menu-logo img.logo-base {
+  position: relative;
+  opacity: 1;
+}
+
+.menu-logo img.logo-red {
+  filter: url("#menuGlitchRed");
+  mix-blend-mode: screen;
+}
+
+.menu-logo img.logo-cyan {
+  filter: url("#menuGlitchCyan");
+  mix-blend-mode: screen;
+}
+
+.main-menu .menu-button {
+  text-shadow: 0 0 6px #000, 0 0 14px #000, 0 2px 3px #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-bg-img {
+    animation: none;
+  }
+}
+
+/* Menu buttons sit centred in the fixed dark doorway (position set by layoutMenuBackdrop) */
+.main-menu-panel.door-anchored {
+  position: absolute;
+  z-index: 2;
+  grid-row: auto;
+  align-self: auto;
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+/* ---------- Animated menu figures (Jesus and Satan) ---------- */
+.menu-fig {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.menu-fig .fig-lean,
+.menu-fig .fig-live,
+.menu-fig .fig-group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-fig .fig-lean {
+  transition: transform 2.4s cubic-bezier(0.3, 0.6, 0.3, 1), filter 1.6s ease;
+}
+
+.menu-fig-jesus.leaning .fig-lean {
+  transform: rotate(0.4deg);
+}
+
+.menu-fig-satan.leaning .fig-lean {
+  transform: rotate(-0.4deg);
+}
+
+.menu-fig-jesus.favored .fig-lean {
+  filter: brightness(1.16) drop-shadow(0 0 16px rgba(255, 244, 225, 0.35));
+}
+
+.menu-fig-satan.favored .fig-lean {
+  filter: brightness(1.08) drop-shadow(0 0 18px rgba(190, 25, 15, 0.55));
+}
+
+.menu-fig .fig-base-img,
+.menu-fig .fig-cloth {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-fig .fig-part {
+  position: absolute;
+  display: block;
+  -webkit-user-drag: none;
+}
+
+.menu-fig .fig-crown-shimmer {
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  filter: brightness(1.5) drop-shadow(0 0 3px rgba(255, 236, 200, 0.9));
+  -webkit-mask-image: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%);
+  mask-image: linear-gradient(100deg, transparent 40%, #000 50%, transparent 60%);
+  -webkit-mask-size: 400% 100%;
+  mask-size: 400% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: menuCrownSweep 7.5s ease-in-out infinite;
+}
+
+@keyframes menuCrownSweep {
+  0% {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  55%,
+  100% {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-fig .fig-crown-shimmer {
+    animation: none;
+    opacity: 0;
+  }
+
+  .menu-fig .fig-lean {
+    transition: none;
+  }
+}
