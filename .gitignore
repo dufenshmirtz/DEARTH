@@ -19,3 +19,6 @@ dist/
 build/
 native-www/
 coverage/
+
+# Claude deliverables (local only)
+Claude outputs/
