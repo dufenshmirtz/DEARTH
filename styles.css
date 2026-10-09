@@ -5884,3 +5884,114 @@ body.mobile-arcade #app .bot-card .bot-reward {
   box-shadow: none !important;
   background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
 }
+
+/* ==========================================================================
+   Frame & top bar refresh: one solid hand-drawn outline everywhere,
+   taller DAMNED cards, a tighter Target box and a roomier Health box.
+   ========================================================================== */
+
+/* ---------- Solid, thicker outline (the boss frame) on every card and top panel ---------- */
+#app .bot-card::after,
+#app .stat-card::after,
+#app .target-panel::after,
+#app .item-card::after {
+  inset: 0;
+  border-width: 28px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 28px stretch;
+  opacity: 0.92;
+}
+
+/* small boxes get a slightly thinner border box so the corners don't swallow the content */
+#app .item-card::after,
+body.mobile-arcade #app .bot-card::after,
+body.mobile-arcade #app .stat-card::after,
+body.mobile-arcade #app .target-panel::after {
+  border-width: 20px;
+  border-image-width: 20px;
+}
+
+/* ---------- DAMNED / boss cards: a little taller, growing both up and down ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+  padding-top: 19px;
+  padding-bottom: 19px;
+}
+
+/* ---------- Top bar: smaller Target, wider Health ---------- */
+#app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(250px, 1.05fr)
+    minmax(250px, 1.45fr)
+    minmax(190px, 1fr)
+    minmax(118px, 0.75fr) !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(150px, 1.2fr)
+    minmax(124px, 1.3fr)
+    minmax(104px, 0.95fr)
+    minmax(58px, 0.6fr) !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(160px, 1.15fr)
+    minmax(150px, 1.4fr)
+    minmax(112px, 1fr)
+    minmax(76px, 0.7fr) !important;
+}
+
+/* Target: number and Previous / Modifier sit together in the middle instead of at the two edges */
+#app .target-panel.target-combined {
+  grid-template-columns: auto auto;
+  justify-content: space-evenly;
+  column-gap: 18px;
+}
+
+#app .target-combined .target-side {
+  justify-self: start;
+}
+
+body.mobile-arcade #app .target-panel.target-combined {
+  column-gap: 8px;
+}
+
+/* Health: room on both sides so the bar's frame never touches the panel outline,
+   label row + bar centred vertically in the box */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 30px 22px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .health-wrap {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+#app .arena:not(.pvp-arena) .health-wrap .health-row {
+  margin: 0;
+}
+
+#app .arena:not(.pvp-arena) .health-wrap .health-bar {
+  margin: 0;
+}
+
+/* DAMNED health bars: keep the bar's frame clear of the card outline */
+#app .bot-card .bot-health .health-bar {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+body.mobile-arcade #app .bot-card .bot-health .health-bar {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+/* phone: labels in the small stat boxes sit inside the outline, not on it */
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap {
+  padding: 7px 9px !important;
+}
