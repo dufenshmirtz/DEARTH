@@ -5995,3 +5995,506 @@ body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap,
 body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap {
   padding: 7px 9px !important;
 }
+
+/* ==========================================================================
+   Picked layouts: Round/SIN centred numerals, guess-first DAMNED cards,
+   ink-numeral popups, big-numeral guess bar.
+   ========================================================================== */
+
+/* ---------- Round / SIN: centred numerals ---------- */
+#app .arena:not(.pvp-arena) .round-wrap,
+#app .arena:not(.pvp-arena) .credit-wrap {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .round-wrap,
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap {
+  padding: 10px 16px !important;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .round-kos-grid {
+  width: 100%;
+  grid-template-columns: 1fr 1fr !important;
+  justify-items: center;
+  column-gap: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-vertical-a.png") center / 9px 84% no-repeat;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .round-kos-cell {
+  align-items: center;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .stat-value,
+#app .arena:not(.pvp-arena) .credit-wrap .stat-value {
+  font-size: 40px !important;
+  line-height: 1 !important;
+  margin-top: 4px !important;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .stat-label,
+#app .arena:not(.pvp-arena) .credit-wrap .stat-label {
+  font-size: 15px !important;
+  letter-spacing: 0.14em !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap .stat-value,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .stat-value {
+  font-size: 22px !important;
+  margin-top: 1px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap .stat-label,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .stat-label {
+  font-size: 9px !important;
+}
+
+/* ---------- DAMNED cards: guess first, memory as a quiet line ---------- */
+#app .bot-card .bot-stats {
+  grid-template-columns: 1fr !important;
+  row-gap: 2px !important;
+}
+
+#app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4px 0 0 !important;
+}
+
+#app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+  font-size: 36px !important;
+  line-height: 1 !important;
+}
+
+#app .bot-card .mini-stat.memory-stat {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 0 6px !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > span {
+  font-size: 13px !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > strong {
+  font-size: 15px !important;
+  color: var(--ash) !important;
+}
+
+#app .bot-card.boss .mini-stat.memory-stat > strong {
+  color: var(--blood-bright) !important;
+}
+
+#app .bot-card .bot-health-heading {
+  justify-content: center !important;
+  text-align: center;
+}
+
+/* phone: guess label and number on one line to keep the card height */
+body.mobile-arcade #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) {
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0 0 !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat {
+  gap: 5px;
+  padding: 0 0 3px !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat > span,
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat > strong {
+  font-size: 10px !important;
+}
+
+/* ---------- Popups: ink numerals, no boxes ---------- */
+#app .damage-badge,
+#app .heal-badge,
+#app .memory-badge,
+#app .bounty-badge,
+#app .player-damage-badge,
+#app .player-heal-badge,
+#app .player-credit-badge,
+#app .death-badge {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  padding: 0 4px !important;
+  font-family: "Razor Keen", Inter, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  rotate: -6deg;
+  text-shadow: 0 0 2px #000, 0 0 6px #000, 0 0 12px #000 !important;
+}
+
+#app .damage-badge,
+#app .player-damage-badge,
+#app .death-badge,
+#app .bounty-badge,
+#app .player-credit-badge {
+  color: var(--blood-bright) !important;
+}
+
+#app .heal-badge,
+#app .player-heal-badge {
+  color: var(--bone) !important;
+}
+
+#app .memory-badge {
+  color: var(--ash) !important;
+  font-size: 18px !important;
+}
+
+#app .death-badge {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .damage-badge,
+body.mobile-arcade #app .heal-badge,
+body.mobile-arcade #app .bounty-badge,
+body.mobile-arcade #app .player-damage-badge,
+body.mobile-arcade #app .player-heal-badge,
+body.mobile-arcade #app .player-credit-badge {
+  font-size: 16px !important;
+}
+
+body.mobile-arcade #app .memory-badge,
+body.mobile-arcade #app .death-badge {
+  font-size: 13px !important;
+}
+
+/* ---------- Guess bar: the number at Target size, button in blood red ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .console-row {
+  grid-template-columns: 170px clamp(132px, 10vw, 170px) !important;
+  gap: 22px !important;
+  align-items: end;
+}
+
+body:not(.mobile-arcade) #app .center-console .guess-input {
+  font-size: 58px !important;
+  height: auto !important;
+  min-height: 64px;
+  line-height: 1 !important;
+  background-size: 100% 10px !important;
+  padding: 0 0 6px !important;
+}
+
+#app .center-console .console-hint {
+  color: var(--ash) !important;
+  letter-spacing: 0.06em;
+}
+
+body:not(.mobile-arcade) #app .center-console .console-hint {
+  font-size: 14px !important;
+}
+
+#app .center-console #mainAction.primary-button {
+  color: var(--blood-bright) !important;
+}
+
+#app .center-console #mainAction.primary-button::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .center-console #mainAction.primary-button:disabled::after {
+  opacity: 0.32;
+}
+
+/* phone: the number above the numpad gets bigger too */
+body.native-arcade #app .native-console-panel .guess-input,
+body.mobile-arcade #app .center-console .guess-input {
+  font-size: 34px !important;
+  line-height: 1 !important;
+}
+
+/* popups sit inside their panels, clear of the outlines */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-damage-badge {
+  top: 14px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  right: 30px !important;
+  bottom: 12px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 14px !important;
+  right: 16px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  right: 16px !important;
+  bottom: 3px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 5px !important;
+  right: 8px !important;
+}
+
+/* KO notice: written over a faded X instead of a pill on the card edge */
+#app .bot-card .death-badge {
+  top: 18px !important;
+}
+
+body.mobile-arcade #app .bot-card .death-badge {
+  top: 10px !important;
+}
+
+#app .bot-card.eliminated .bot-face {
+  opacity: 0.45;
+}
+
+#app .bot-card .death-badge {
+  font-size: 17px !important;
+}
+
+/* ==========================================================================
+   Layout pass: vertical rhythm, cards that always fit, seals in one row,
+   Pause in the corner, quieter disabled Buy buttons.
+   ========================================================================== */
+
+/* ---------- Pause moves to the top-right corner, beside the top bar ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar {
+  right: 100px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button {
+  top: 47px !important;
+  right: 14px !important;
+  bottom: auto !important;
+  min-width: 74px;
+}
+
+/* ---------- Even gaps: top bar / cards / guess bar ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+  top: 136px !important;
+  bottom: 128px !important;
+  align-content: center !important;
+  align-items: center !important;
+}
+
+/* ---------- Cards that always fit the screen height ---------- */
+@media (max-height: 849px) {
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 72px !important;
+    height: 76px !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 30px !important;
+  }
+}
+
+@media (max-height: 759px) {
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 58px !important;
+    height: 60px !important;
+    margin-bottom: 4px !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 26px !important;
+  }
+
+  body:not(.mobile-arcade) #app .center-console .guess-input {
+    font-size: 44px !important;
+    min-height: 50px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+    bottom: 112px !important;
+  }
+}
+
+/* ---------- Seals: six always fit on one row ---------- */
+body:not(.mobile-arcade) #app .passive-bar {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(var(--seal-slot-width), calc((100% - 50px) / 6)),
+      min(var(--seal-slot-width), calc((100% - 50px) / 6))
+    )
+  ) !important;
+  align-content: center !important;
+}
+
+body.native-arcade #app .passive-bar {
+  grid-auto-columns: min(108px, calc((100% - 20px) / 6)) !important;
+}
+
+body.native-arcade #app .passive-slot .equipped-seal-sigil,
+body.native-arcade #app .passive-slot .empty-seal-slot-image {
+  max-width: calc(100% - 4px) !important;
+  max-height: calc(100% - 4px) !important;
+}
+
+/* ---------- Devil's Offerings: an unaffordable Buy shows only the price, no empty bar ---------- */
+#app .shop-buy-button:disabled::after {
+  display: none;
+}
+
+#app .shop-buy-button:disabled {
+  opacity: 1 !important;
+  color: var(--ash) !important;
+  text-decoration: line-through;
+  text-decoration-color: rgba(141, 135, 124, 0.6);
+}
+
+@media (max-height: 689px) {
+  body:not(.mobile-arcade) {
+    --seal-slot-width: 104px;
+    --seal-slot-height: 108px;
+  }
+
+  body:not(.mobile-arcade) #app .play-column {
+    grid-template-rows: minmax(0, 1fr) minmax(120px, auto) !important;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 46px !important;
+    height: 48px !important;
+    margin-bottom: 2px !important;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-type {
+    display: none !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 22px !important;
+  }
+
+  body:not(.mobile-arcade) #app .center-console .guess-input {
+    font-size: 36px !important;
+    min-height: 42px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+    bottom: 100px !important;
+  }
+}
+
+/* the sigil follows the fitted slot width instead of the height-based size */
+body:not(.mobile-arcade) #app .passive-bar {
+  container-type: inline-size;
+}
+
+body:not(.mobile-arcade) #app .passive-slot {
+  --seal-fit: min(var(--seal-slot-width), calc((100cqw - 50px) / 6));
+}
+
+body:not(.mobile-arcade) #app .passive-slot .equipped-seal-sigil,
+body:not(.mobile-arcade) #app .passive-slot .empty-seal-slot-image {
+  width: calc(var(--seal-fit) - 4px) !important;
+  height: calc(var(--seal-fit) - 4px) !important;
+}
+
+body:not(.mobile-arcade) #app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: calc(var(--seal-fit) * 2 + 6px) !important;
+}
+
+/* phone: the X fades right back so the KO notice can be read over it */
+body.mobile-arcade #app .bot-card.eliminated .bot-face {
+  opacity: 0.2;
+}
+
+/* SIN gain sits under the number */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 12px !important;
+  right: 14px !important;
+  font-size: 18px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  right: auto !important;
+  left: 8px !important;
+  bottom: 4px !important;
+}
+
+body:not(.mobile-arcade) #app .passive-slot:not(.wide-seal-slot) {
+  aspect-ratio: auto;
+  width: auto;
+  min-width: 0;
+}
+
+/* ---------- Test-only SKIP / INF: one small group, out of the panels ---------- */
+#app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  gap: 6px;
+}
+
+#app .arena:not(.pvp-arena) .topbar > .dev-quick .small-button {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  opacity: 0.8;
+}
+
+/* desktop: under Pause, in the corner column */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: -86px;
+  bottom: 0;
+  width: 74px;
+  justify-content: center;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button {
+  top: 16px !important;
+}
+
+/* phone: bottom-right corner of the SIN box */
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: 10px;
+  bottom: 7px;
+  gap: 3px;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick .small-button {
+  min-height: 16px !important;
+  padding: 0 5px !important;
+  font-size: 8px !important;
+}

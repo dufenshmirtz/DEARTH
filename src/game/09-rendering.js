@@ -1001,12 +1001,14 @@ function renderTopbar() {
             <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
           </div>
         </div>
-        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
         <span class="stat-label">SIN</span>
         <span class="stat-value">${playerDisplay.credits}</span>
+      </div>
+      <div class="dev-quick" aria-label="Test controls">
+        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
         <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
       </div>
     </section>
@@ -1066,7 +1068,7 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? "Revealed" : "Guess";
-  const memoryText = bot.memory.length ? `${bot.memory.length} rounds` : "No memory";
+  const memoryText = bot.memory.length ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}` : "No memory";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
