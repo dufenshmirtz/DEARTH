@@ -44,3 +44,27 @@ const PENTAKILL_SFX = {
   src: "assets/audio/artifacts/voodoo.mp3",
   volume: 0.43
 };
+
+// Sounds for game moments (hits, KOs, CRITICAL, bosses, shop...).
+// Every file in assets/audio/sfx/ is a placeholder Claude synthesised; drop a real
+// recording in with the same file name to replace it, or point `srcs` at a new file.
+// `srcs`: one is picked at random each time. `pitch`: random +/- playback-rate variation.
+// `duck`: lowers the music for that many milliseconds so big stingers cut through.
+const GAME_SFX = {
+  hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], volume: 0.32, pitch: 0.07 },
+  hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], volume: 0.42, pitch: 0.05 },
+  hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], volume: 0.5, pitch: 0.04 },
+  ko: { srcs: ["assets/audio/sfx/ko.mp3"], volume: 0.42, pitch: 0.03 },
+  critical: { srcs: ["assets/audio/sfx/critical.mp3"], volume: 0.6, duck: 900 },
+  targetLand: { srcs: ["assets/audio/sfx/target-land.mp3"], volume: 0.42 },
+  sinGain: { srcs: ["assets/audio/sfx/sin-gain-1.mp3", "assets/audio/sfx/sin-gain-2.mp3"], volume: 0.26, pitch: 0.04 },
+  heal: { srcs: ["assets/audio/sfx/heal.mp3"], volume: 0.3 },
+  reroll: { srcs: ["assets/audio/sfx/reroll.mp3"], volume: 0.38, pitch: 0.05 },
+  sell: { srcs: ["assets/audio/sfx/sell.mp3"], volume: 0.32 },
+  artifactBuy: { srcs: ["assets/audio/sfx/artifact-buy.mp3"], volume: 0.4, pitch: 0.04 },
+  bossArrive: { srcs: ["assets/audio/sfx/boss-arrive.mp3"], volume: 0.5, duck: 1800 },
+  finalBosses: { srcs: ["assets/audio/sfx/final-bosses.mp3"], volume: 0.5, duck: 3600 },
+  shopSealed: { srcs: ["assets/audio/sfx/shop-sealed.mp3"], volume: 0.42 },
+  gameOver: { srcs: ["assets/audio/sfx/game-over.mp3"], volume: 0.5, duck: 4500 },
+  uiHover: { srcs: ["assets/audio/sfx/ui-hover.mp3"], volume: 0.12, pitch: 0.1 }
+};

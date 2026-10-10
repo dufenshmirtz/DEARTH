@@ -628,9 +628,70 @@ function playPentakillSfx() {
   playClonedOneShot(audio, pentakillSfxVolume(), PENTAKILL_SFX.startOffset || 0);
 }
 
+// ---------- moment sounds (GAME_SFX) ----------
+const gameSfxCache = {};
+let musicDuckTimer = null;
+
+function ensureGameSfx(key) {
+  const config = GAME_SFX[key];
+  if (!config?.srcs?.length) return [];
+  if (!gameSfxCache[key]) {
+    gameSfxCache[key] = config.srcs.map((src) => {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      return loadAudioElement(audio);
+    });
+  }
+  return gameSfxCache[key];
+}
+
+function duckMusic(ms) {
+  if (!soundtrackAudio || !(ms > 0)) return;
+  soundtrackAudio.volume = musicVolume() * 0.35;
+  clearTimeout(musicDuckTimer);
+  musicDuckTimer = setTimeout(() => {
+    if (soundtrackAudio) soundtrackAudio.volume = musicVolume();
+  }, ms);
+}
+
+function playGameSfx(key) {
+  const config = GAME_SFX[key];
+  const pool = ensureGameSfx(key);
+  if (!config || !pool.length || state.sound.muted) return;
+  const audio = pool[Math.floor(Math.random() * pool.length)];
+  if (!audio) return;
+  try {
+    const instance = audio.cloneNode(true);
+    instance.volume = sfxVolume(config.volume ?? 0.4);
+    if (config.pitch) {
+      instance.preservesPitch = false;
+      instance.playbackRate = 1 + (Math.random() * 2 - 1) * config.pitch;
+    }
+    activeOneShotSfxInstances.add(instance);
+    const cleanup = () => activeOneShotSfxInstances.delete(instance);
+    instance.addEventListener("ended", cleanup, { once: true });
+    instance.addEventListener("error", cleanup, { once: true });
+    instance.play().catch(cleanup);
+  } catch (error) {}
+  if (config.duck) duckMusic(config.duck);
+}
+
+// a faint chalk tick when the pointer moves onto a menu button
+function installMenuHoverSfx() {
+  let lastHovered = null;
+  document.addEventListener("pointerover", (event) => {
+    if (event.pointerType && event.pointerType !== "mouse") return;
+    const button = event.target?.closest?.(".menu-button, .run-slot-button");
+    if (button === lastHovered) return;
+    lastHovered = button;
+    if (button && !button.disabled) playGameSfx("uiHover");
+  });
+}
+
 function installGameButtonTickSfx() {
   if (gameButtonTickInstalled) return;
   gameButtonTickInstalled = true;
+  installMenuHoverSfx();
   document.addEventListener(
     "click",
     (event) => {
@@ -651,6 +712,7 @@ function installSoundtrack() {
   CLOCK_TICK_SFX_SRCS.forEach((_, index) => ensureClockTickSfx(index));
   Object.keys(ARTIFACT_SFX).forEach((id) => ensureArtifactSfx(id));
   ensurePentakillSfx();
+  Object.keys(GAME_SFX).forEach((key) => ensureGameSfx(key));
   installGameButtonTickSfx();
   document.addEventListener("pointerdown", unlockSoundtrack);
   document.addEventListener("keydown", unlockSoundtrack);

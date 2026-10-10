@@ -1,5 +1,7 @@
 "use strict";
 
+const GAME_VERSION = "0.1.0";
+
 const BASE_PASSIVE_LIMIT = 3;
 const MAX_PASSIVE_LIMIT = 6;
 const MAX_REVEALED_DAMNED = 4;
@@ -1306,7 +1308,7 @@ const SEAL_SIGILS = {
   p96: "dev/PadmaSeal.png",
   p97: "dev/ThreonSeal.png",
   p110: "dev/PetrosPavlosSeal.png",
-  p111: "satan/lucifer.png",
+  p111: "satan/lucifer-wide.png",
   p98: "self-stacking/Samael-Star.png",
   p99: "self-stacking/Cassiel-Sigil.png",
   p100: "self-stacking/Bethor.png",

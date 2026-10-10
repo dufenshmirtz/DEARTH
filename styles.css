@@ -7008,3 +7008,1250 @@ body.mobile-arcade #app .bot-card .hit-flash {
   42% { transform: scale(1.1); }
   75%, 100% { transform: scale(1); }
 }
+
+/* ==========================================================================
+   UI polish pass (feature/ui-polish)
+   ========================================================================== */
+
+/* ---------- Seal of Satan: one wide seal across its two slots ---------- */
+body.mobile-arcade #app .passive-slot.wide-seal-slot {
+  width: auto !important;
+  justify-self: stretch;
+  aspect-ratio: auto !important;
+}
+
+body.mobile-arcade #app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: 100% !important;
+  max-width: none;
+  height: calc(100% - 3px) !important;
+}
+
+#app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  object-fit: contain;
+}
+
+/* ---------- Panel header lines: frame to frame, and they tremble with the outlines ---------- */
+#app .panel-header {
+  background-size: calc(100% - 8px) 8px !important;
+}
+
+@keyframes divider-boil {
+  0% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png"); }
+  33.333% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png"); }
+  66.666% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png"); }
+}
+
+@keyframes divider-boil-red {
+  0% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png"); }
+  33.333% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png"); }
+  66.666% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png"); }
+}
+
+body.outline-boil #app .panel-header,
+body.outline-boil #app .bot-card .bot-stats,
+body.outline-boil #app .bot-card .mini-stat.bot-health,
+body.outline-boil:not(.mobile-arcade) #app .play-column::after {
+  background-image: var(--divider-img) !important;
+  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+body.outline-boil #app .bot-card.boss .bot-stats,
+body.outline-boil #app .bot-card.boss .mini-stat.bot-health {
+  animation-name: divider-boil-red;
+}
+
+body.outline-boil #app .bot-card .mini-stat.bot-health,
+body.outline-boil #app .active-panel .panel-header {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+body.outline-boil #app .bot-card:nth-child(3n + 2) .bot-stats,
+body.outline-boil:not(.mobile-arcade) #app .play-column::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
+}
+
+body.outline-boil::after {
+  content: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png") url("assets/occult-ui-border-kit/assets/boil/frantic-1.png") url("assets/occult-ui-border-kit/assets/boil/frantic-2.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+
+/* ==========================================================================
+   Type system
+   Razor Keen = display (names, numbers, labels, buttons)
+   Alegreya   = book face for sentences (tooltips, hints, notices), readable small
+   ========================================================================== */
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: "Razor Keen", "Alegreya", Georgia, serif;
+  --font-book: "Alegreya", Georgia, "Times New Roman", serif;
+  /* SIN has its own colour: a deep wine red. Bright blood red is kept for danger and the one action that moves the round on. */
+  --sin: #b0414c;
+  --sin-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 5.6v12.8M8.4 14.6h7.2'/%3E%3C/svg%3E");
+  --ui-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* sentences in the book face */
+body #app .console-hint,
+body #app .pending-panel span,
+body #app .empty-state,
+body #app .end-copy,
+body #app .quit-copy,
+body #app .run-remove-confirm,
+body #app .shop-lock-message span,
+body #app .artifact-memory-line {
+  font-family: var(--font-book) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+body:not(.mobile-arcade) #app .console-hint {
+  font-size: 17px !important;
+  font-style: italic;
+  color: var(--ash) !important;
+}
+
+body #app .target-calc-line,
+body #app .target-calc-line * {
+  font-family: var(--font-book) !important;
+  letter-spacing: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .target-calc-line {
+  font-size: 13.5px !important;
+  color: var(--ash) !important;
+}
+
+body:not(.mobile-arcade) #app .elite-chance-label,
+body:not(.mobile-arcade) #app .seal-sell-button,
+body:not(.mobile-arcade) #app .sell-button {
+  font-size: 13px !important;
+}
+
+/* phone: nothing under 10.5px, labels that carry meaning at 11px+ */
+body.mobile-arcade #app .target-calc-line { font-size: 10px !important; }
+body.mobile-arcade #app .stat-label { font-size: 10.5px !important; }
+body.mobile-arcade #app .target-line { font-size: 11px !important; }
+body.mobile-arcade #app .bot-type { font-size: 9.5px !important; line-height: 1 !important; }
+body.mobile-arcade #app .bot-name { font-size: 11px !important; }
+body.mobile-arcade #app .bot-stats .mini-stat > span { font-size: 10px !important; }
+body.mobile-arcade #app .bot-stats .memory-stat strong { font-size: 10px !important; }
+body.mobile-arcade #app .item-kind,
+body.mobile-arcade #app .panel-subtitle { font-size: 11px !important; }
+body.mobile-arcade #app .console-hint {
+  font-size: 12px !important;
+  font-style: italic;
+  color: var(--ash) !important;
+}
+
+/* ==========================================================================
+   Tooltips: a framed page of the grimoire, not a grey web box
+   ========================================================================== */
+body #app .floating-tooltip {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #040405 !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85) !important;
+  padding: 18px 22px 16px !important;
+  font-family: var(--font-book) !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.42 !important;
+  letter-spacing: 0 !important;
+  color: var(--bone) !important;
+  isolation: isolate;
+}
+
+body #app .floating-tooltip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 22px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% / 22px stretch;
+  opacity: 0.9;
+}
+
+body #app .floating-tooltip * {
+  font-family: var(--font-book) !important;
+  color: var(--bone) !important;
+}
+
+body #app .floating-tooltip .tooltip-keyword {
+  font-family: var(--font-display) !important;
+  font-size: 0.98em !important;
+  letter-spacing: 0.04em !important;
+  color: #fff !important;
+}
+
+body #app .floating-tooltip .tooltip-title,
+body #app .floating-tooltip .tooltip-title * {
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+body #app .floating-tooltip .tooltip-heading {
+  align-items: baseline !important;
+  padding-bottom: 9px !important;
+  margin-bottom: 9px !important;
+  border: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") bottom center / 100% 7px no-repeat !important;
+}
+
+body #app .floating-tooltip .tooltip-shift-hint {
+  font-style: italic !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--ash) !important;
+}
+
+body #app .floating-tooltip .tooltip-elite-line,
+body #app .floating-tooltip .tooltip-stat-line {
+  font-size: 14.5px !important;
+}
+
+body #app .floating-tooltip .tooltip-elite-line,
+body #app .floating-tooltip .tooltip-elite-line * {
+  color: #d9c6a8 !important;
+}
+
+body #app .floating-tooltip .tooltip-stat-line,
+body #app .floating-tooltip .tooltip-stat-line * {
+  color: var(--ash) !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer {
+  margin-top: 10px !important;
+  padding-top: 9px !important;
+  border: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") top center / 100% 7px no-repeat !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer span {
+  font-family: var(--font-display) !important;
+  font-size: 15px !important;
+  letter-spacing: 0.03em !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer span:last-child {
+  color: var(--sin) !important;
+}
+
+body.mobile-arcade #app .floating-tooltip {
+  padding: 13px 16px 12px !important;
+  font-size: 13.5px !important;
+}
+
+body.mobile-arcade #app .floating-tooltip .tooltip-title,
+body.mobile-arcade #app .floating-tooltip .tooltip-title * {
+  font-size: 17px !important;
+}
+
+/* ==========================================================================
+   Buttons: disabled reads as "not now", not as an empty grey bar
+   ========================================================================== */
+#app .small-button:disabled,
+#app .primary-button:disabled {
+  color: rgba(141, 135, 124, 0.75) !important;
+}
+
+#app .small-button:disabled::after,
+#app .primary-button:disabled::after {
+  opacity: 0.2;
+}
+
+#app .primary-button:not(:disabled):active,
+#app .small-button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
+}
+
+#app .primary-button,
+#app .small-button {
+  transition: color 0.12s ease, transform 0.09s ease;
+}
+
+/* kind labels (SEAL / ARTIFACT): quiet small caps, no grey pill */
+#app .item-kind {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.16em !important;
+  color: var(--ash) !important;
+}
+
+/* ==========================================================================
+   Personality glyphs (instead of emoji flags)
+   ========================================================================== */
+#app .bot-glyph {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  margin-right: 5px;
+  color: var(--ash) !important;
+  vertical-align: -3px;
+}
+
+#app .bot-glyph svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#app .bot-glyph svg * {
+  stroke: var(--ash);
+}
+
+body.mobile-arcade #app .bot-glyph {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+}
+
+#app .bot-flag {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Red discipline: SIN is wine red with its own coin mark
+   ========================================================================== */
+#app .credit-wrap .stat-value,
+#app .bot-reward,
+#app .bounty-badge,
+#app .player-credit-badge,
+#app .mobile-offerings-sin,
+#app .reroll-cost,
+#app .item-card .price {
+  color: var(--sin) !important;
+}
+
+#app .credit-wrap .stat-value::before,
+#app .bot-reward::before,
+#app .mobile-offerings-sin::before,
+#app .reroll-cost::before,
+#app .item-card .price::before,
+#app .shop-buy-button:not(:disabled)::before {
+  content: "";
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-right: 0.22em;
+  vertical-align: 0.02em;
+  background: var(--sin);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+}
+
+#app .credit-wrap .stat-value::before {
+  width: 0.42em;
+  height: 0.42em;
+  margin-right: 0.12em;
+  vertical-align: 0.18em;
+}
+
+/* Buy is an ordinary action now: bone text, the coin carries the colour */
+#app .shop-buy-button:not(:disabled):not(:hover) {
+  color: var(--bone) !important;
+}
+
+/* ==========================================================================
+   Devil's Offerings
+   ========================================================================== */
+#app .reroll-control {
+  display: flex;
+  align-items: center;
+}
+
+#app .reroll-button {
+  display: inline-flex !important;
+  align-items: baseline;
+  gap: 7px;
+  padding: 3px 14px !important;
+  white-space: nowrap;
+}
+
+#app .reroll-button .reroll-cost {
+  font-size: 0.92em;
+}
+
+#app .reroll-button:disabled .reroll-cost {
+  color: rgba(141, 135, 124, 0.75) !important;
+}
+
+#app .reroll-button:disabled .reroll-cost::before {
+  background: rgba(141, 135, 124, 0.75);
+}
+
+/* phone drawer: the drawer already says Devil's Offerings */
+body.mobile-arcade #app .side-panel .shop-panel .shop-title-wrap {
+  display: none !important;
+}
+
+body.mobile-arcade #app .side-panel .shop-panel .panel-header {
+  justify-content: flex-end !important;
+}
+
+/* ELITE offerings: a second, red frame inside the first and a slow shimmer */
+#app .item-card.elite-offer::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 5;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 20px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% / 20px stretch;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 0.85;
+}
+
+#app .item-card.elite-offer .shop-seal-sigil {
+  animation: elite-shimmer 3.2s ease-in-out infinite;
+}
+
+@keyframes elite-shimmer {
+  0%, 100% { filter: brightness(1); }
+  45% { filter: brightness(1.45) drop-shadow(0 0 5px rgba(220, 42, 47, 0.55)); }
+}
+
+#app .item-card.elite-offer .item-name {
+  color: #fff !important;
+}
+
+/* the wide Seal of Satan sigil in the shop */
+#app .item-card.satan-offer .shop-seal-sigil {
+  object-fit: contain;
+}
+
+/* Satan's lock on the shop: the sigil, sealed in red */
+#app .shop-lock-message {
+  display: grid !important;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px 14px !important;
+  border: 0 !important;
+  background: none !important;
+  text-align: center;
+}
+
+#app .shop-lock-message .shop-lock-sigil {
+  width: min(78%, 240px);
+  height: auto;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  animation: lock-breathe 3.6s ease-in-out infinite;
+}
+
+#app .shop-lock-message span {
+  font-size: 17px !important;
+  font-style: italic;
+  color: var(--bone) !important;
+}
+
+@keyframes lock-breathe {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   ARTIFACTS: compact rows, a clear ready / waiting / spent state
+   ========================================================================== */
+#app .item-card.active.artifact-ready [data-use-active] {
+  color: var(--blood-bright) !important;
+}
+
+#app .item-card.active.artifact-ready [data-use-active]::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-ready .inventory-artifact-icon {
+  filter: drop-shadow(0 0 6px rgba(220, 42, 47, 0.45));
+}
+
+#app .item-card.active.artifact-spent {
+  opacity: 0.5;
+}
+
+#app .item-card.active.artifact-waiting [data-use-active] {
+  visibility: hidden;
+}
+
+/* ==========================================================================
+   Pause, sliders, checkbox
+   ========================================================================== */
+#app .pause-overlay {
+  background: rgba(0, 0, 0, 0.78) !important;
+  backdrop-filter: none;
+}
+
+#app .end-card {
+  position: relative;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(2, 2, 3, 0.96) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9) !important;
+}
+
+#app .end-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 30px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 30px stretch;
+  opacity: 0.92;
+}
+
+#app .end-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app .pause-card {
+  padding: 30px 34px 28px !important;
+  width: min(440px, 92vw) !important;
+}
+
+#app .pause-card .end-title,
+#app .end-card .end-title {
+  font-size: 46px !important;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px !important;
+}
+
+#app .pause-actions {
+  gap: 14px !important;
+}
+
+#app .pause-actions .primary-button {
+  min-height: 42px;
+  font-size: 19px !important;
+}
+
+#app .pause-actions .primary-button[data-pause-action="resume"] {
+  color: #fff !important;
+}
+
+#app .pause-sound-settings {
+  border-top: 0 !important;
+  padding-top: 18px !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+}
+
+/* range inputs: a chalk line with a small ring for a thumb */
+body .sound-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") center / 100% 8px no-repeat !important;
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
+}
+
+body .sound-slider::-webkit-slider-runnable-track {
+  height: 18px;
+  background: transparent;
+  border: 0;
+}
+
+body .sound-slider::-moz-range-track {
+  height: 18px;
+  background: transparent;
+  border: 0;
+}
+
+body .sound-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -1px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 42%, var(--bone) 46% 62%, transparent 66%);
+  transition: transform 0.12s ease;
+}
+
+body .sound-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 42%, var(--bone) 46% 62%, transparent 66%);
+}
+
+body .sound-slider:hover::-webkit-slider-thumb,
+body .sound-slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.15);
+  background: radial-gradient(circle, #000 0 42%, var(--blood-bright) 46% 62%, transparent 66%);
+}
+
+body .sound-toggle input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+  cursor: pointer;
+}
+
+body .sound-toggle input[type="checkbox"]:checked {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M4.5 4.8 15.2 15.4M15.6 4.4 4.8 15.6'/%3E%3C/svg%3E") center / 70% 70% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
+body .sound-toggle input[type="checkbox"]:focus-visible,
+body .sound-slider:focus-visible {
+  outline: 1px dashed var(--ash);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Game over: the run told over the menu art
+   ========================================================================== */
+#app .overlay.game-over-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 30000 !important;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.94) 70%),
+    url("assets/ui/menu/menu-bg-spin.jpg") center / cover no-repeat,
+    #000 !important;
+  animation: game-over-in 900ms ease-out both;
+}
+
+#app .game-over-overlay .end-figure {
+  position: absolute;
+  bottom: -2vh;
+  height: 96vh;
+  width: auto;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: end-figure-in 1600ms var(--ui-ease) both;
+}
+
+#app .game-over-overlay .end-figure-left {
+  left: -6vw;
+}
+
+#app .game-over-overlay .end-figure-right {
+  right: -6vw;
+  animation-delay: 120ms;
+}
+
+#app .game-over-card {
+  width: min(560px, 92vw) !important;
+  padding: 34px 40px 30px !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+#app .game-over-card .end-title {
+  font-size: clamp(54px, 7vw, 86px) !important;
+  line-height: 0.95;
+  color: var(--blood-bright) !important;
+  animation: stamp-in 700ms 250ms var(--ui-ease) both;
+}
+
+#app .game-over-card .end-copy {
+  margin: 6px 0 18px !important;
+  font-size: 19px !important;
+  font-style: italic;
+  color: var(--bone) !important;
+}
+
+#app .end-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 18px;
+  padding: 16px 0 6px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+}
+
+#app .end-stat {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+
+#app .end-stat span {
+  font-size: 13px !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+}
+
+#app .end-stat strong {
+  font-size: 30px !important;
+  line-height: 1;
+  font-weight: 400 !important;
+  color: var(--bone) !important;
+}
+
+#app .end-stat.end-stat-wide {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+}
+
+#app .end-stat.end-stat-wide strong {
+  font-size: 22px !important;
+  color: var(--blood-bright) !important;
+}
+
+#app .game-over-card .end-actions {
+  margin-top: 22px !important;
+}
+
+#app .game-over-card .end-restart {
+  color: var(--blood-bright) !important;
+}
+
+#app .game-over-card .end-restart::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+@keyframes game-over-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes end-figure-in {
+  from { opacity: 0; transform: translateY(4vh); }
+  to { opacity: 0.5; transform: none; }
+}
+
+@keyframes stamp-in {
+  0% { opacity: 0; transform: scale(1.35); filter: blur(6px); }
+  60% { opacity: 1; transform: scale(0.98); filter: blur(0); }
+  100% { opacity: 1; transform: none; }
+}
+
+body.mobile-arcade #app .game-over-card {
+  padding: 18px 24px 16px !important;
+}
+
+body.mobile-arcade #app .game-over-card .end-title {
+  font-size: 44px !important;
+}
+
+body.mobile-arcade #app .game-over-card .end-copy {
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+body.mobile-arcade #app .end-stats {
+  gap: 6px 12px;
+  padding-top: 10px;
+}
+
+body.mobile-arcade #app .end-stat strong {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .end-stat span {
+  font-size: 10.5px !important;
+}
+
+/* ==========================================================================
+   Big moments: CRITICAL, boss arrival, PENTAKILL, the final bosses
+   A full-screen beat over everything; never blocks input.
+   ========================================================================== */
+#app .moment-card {
+  position: fixed;
+  inset: 0;
+  z-index: 30020;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  --moment-ms: 1600ms;
+  animation: moment-veil var(--moment-ms) ease-out both;
+  background: radial-gradient(ellipse at 50% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.82) 72%);
+}
+
+#app .moment-card.moment-critical { --moment-ms: 1500ms; }
+#app .moment-card.moment-boss { --moment-ms: 2000ms; }
+#app .moment-card.moment-pentakill { --moment-ms: 1900ms; }
+#app .moment-card.moment-finals { --moment-ms: 3400ms; }
+
+#app .moment-text {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0 0 18px;
+  animation: moment-text var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-text::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  bottom: 0;
+  height: 12px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") center / 100% 100% no-repeat;
+  transform-origin: 50% 50%;
+  animation: moment-rule var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(64px, 11vw, 150px) !important;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bone) !important;
+  text-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+#app .moment-sub {
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(16px, 1.7vw, 24px) !important;
+  color: var(--bone) !important;
+  letter-spacing: 0.01em;
+}
+
+#app .moment-critical .moment-title,
+#app .moment-pentakill .moment-title {
+  color: var(--blood-bright) !important;
+}
+
+#app .moment-critical .moment-text::after,
+#app .moment-pentakill .moment-text::after {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+
+#app .moment-boss .moment-title {
+  font-size: clamp(54px, 8vw, 116px) !important;
+  text-transform: none;
+}
+
+#app .moment-finals .moment-title {
+  color: var(--blood-bright) !important;
+}
+
+#app .moment-figure {
+  position: absolute;
+  bottom: -4vh;
+  height: 100vh;
+  width: auto;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: moment-figure var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-figure-left {
+  left: -4vw;
+  --from: -10vw;
+}
+
+#app .moment-figure-right {
+  right: -4vw;
+  --from: 10vw;
+}
+
+@keyframes moment-veil {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes moment-text {
+  0% { opacity: 0; transform: scale(1.4); filter: blur(8px); }
+  11% { opacity: 1; transform: scale(0.97); filter: blur(0); }
+  16% { transform: scale(1); }
+  78% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 0; transform: scale(1.07); filter: blur(3px); }
+}
+
+@keyframes moment-rule {
+  0%, 10% { transform: scaleX(0); }
+  30% { transform: scaleX(1); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes moment-figure {
+  0% { opacity: 0; translate: var(--from) 0; }
+  22% { opacity: 0.62; translate: 0 0; }
+  80% { opacity: 0.62; }
+  100% { opacity: 0; }
+}
+
+body.mobile-arcade #app .moment-title {
+  font-size: 64px !important;
+}
+
+body.mobile-arcade #app .moment-boss .moment-title {
+  font-size: 46px !important;
+}
+
+body.mobile-arcade #app .moment-sub {
+  font-size: 15px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .moment-text,
+  #app .moment-text::after,
+  #app .moment-figure {
+    animation-name: moment-veil;
+  }
+  #app .item-card.elite-offer .shop-seal-sigil,
+  #app .shop-lock-message .shop-lock-sigil {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Main menu finish: framed buttons, embers, a breathing glow behind the title
+   ========================================================================== */
+#app .main-menu .menu-button {
+  position: relative;
+  min-height: 52px;
+  font-size: 27px !important;
+  letter-spacing: 0.04em;
+  transition: color 0.15s ease, transform 0.15s var(--ui-ease);
+}
+
+#app .main-menu .menu-button::after {
+  content: "";
+  position: absolute;
+  inset: 2px 8px;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 12px solid transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+#app .main-menu .menu-button:hover:not(:disabled),
+#app .main-menu .menu-button:focus-visible {
+  transform: scale(1.04);
+  outline: none;
+}
+
+#app .main-menu .menu-button:hover:not(:disabled)::after,
+#app .main-menu .menu-button:focus-visible::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .main-menu .menu-button:focus-visible {
+  color: var(--blood-bright) !important;
+}
+
+#app .main-menu .secondary-menu-button {
+  min-height: 44px;
+  font-size: 22px !important;
+}
+
+#app .main-menu .secondary-menu-button::after {
+  inset: 3px 26px;
+  opacity: 0.5;
+}
+
+.menu-logo-glow {
+  left: 560px;
+  top: 40px;
+  width: 580px;
+  height: 460px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 52%, rgba(255, 238, 214, 0.16) 0%, rgba(220, 42, 47, 0.07) 38%, transparent 68%);
+  animation: menu-glow-breathe 7s ease-in-out infinite;
+}
+
+@keyframes menu-glow-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.menu-embers {
+  left: 0;
+  top: 0;
+  width: 1672px;
+  height: 941px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.menu-ember {
+  position: absolute;
+  bottom: -12px;
+  width: var(--ember-size, 2px);
+  height: var(--ember-size, 2px);
+  border-radius: 50%;
+  background: #f3e6cf;
+  box-shadow: 0 0 6px 1px rgba(255, 220, 170, 0.55);
+  opacity: 0;
+  animation-name: menu-ember-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.menu-ember.ember-red {
+  background: #ff5a3c;
+  box-shadow: 0 0 7px 1px rgba(220, 42, 47, 0.7);
+}
+
+@keyframes menu-ember-rise {
+  0% { opacity: 0; transform: translate(0, 0); }
+  8% { opacity: 0.85; }
+  60% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--ember-drift, 0px), -760px); }
+}
+
+#app .menu-version {
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  bottom: 12px;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 13px !important;
+  letter-spacing: 0.02em;
+  color: rgba(141, 135, 124, 0.85) !important;
+  pointer-events: none;
+}
+
+/* Records: a framed page centred on the screen, nothing cut off */
+#app .main-menu-panel.menu-screen-records {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(600px, 92vw) !important;
+  z-index: 5;
+}
+
+#app .records-menu {
+  position: relative;
+  width: 100% !important;
+  transform: none !important;
+  padding: 26px 30px 22px;
+  background: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+  justify-items: center;
+}
+
+#app .records-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 30px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 30px stretch;
+  opacity: 0.92;
+}
+
+#app .records-title {
+  margin: 0;
+  font-size: 40px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.03em;
+}
+
+#app .records-list {
+  max-height: min(58vh, 520px) !important;
+  padding: 10px 6px 4px !important;
+  border-radius: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat !important;
+  box-shadow: none !important;
+  gap: 0 !important;
+}
+
+#app .record-row {
+  min-height: 36px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(233, 227, 214, 0.1);
+}
+
+#app .record-row span {
+  font-family: var(--font-book) !important;
+  font-size: 17px !important;
+  color: var(--bone) !important;
+}
+
+#app .record-row strong {
+  font-size: 20px !important;
+  font-weight: 400 !important;
+}
+
+body.mobile-arcade #app .records-menu,
+body.native-arcade #app .records-menu {
+  padding: 16px 20px 14px;
+}
+
+body.mobile-arcade #app .records-title,
+body.native-arcade #app .records-title {
+  font-size: 28px !important;
+}
+
+body.mobile-arcade #app .record-row span,
+body.native-arcade #app .record-row span {
+  font-size: 14px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-ember,
+  .menu-logo-glow {
+    animation: none;
+  }
+  .menu-ember {
+    display: none;
+  }
+}
+
+/* ARTIFACTS: compact rows so five fit without scrolling on a 1080p-class screen */
+body:not(.mobile-arcade) #app .active-panel .item-card.active {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 5px 12px !important;
+  min-height: 0 !important;
+  padding: 9px 14px 9px 12px !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .inventory-artifact-icon {
+  grid-row: 1 / span 2;
+  width: 44px !important;
+  height: 44px !important;
+  align-self: center;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-top {
+  min-height: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-top > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-kind {
+  display: none !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .price {
+  margin: 0 !important;
+  white-space: nowrap;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-actions {
+  margin: 0 !important;
+  min-height: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-actions .small-button {
+  min-height: 24px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .active-list {
+  gap: 7px !important;
+}
+
+/* menu buttons and run slots: one hand-drawn frame everywhere (no rounded web border underneath) */
+#app .main-menu .menu-button,
+#app .main-menu .run-slot-button,
+#app .main-menu .run-remove-button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .main-menu .run-slot-button,
+#app .main-menu .run-remove-button {
+  position: relative;
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+
+#app .main-menu .run-slot-button::after,
+#app .main-menu .run-remove-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 12px solid transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+  opacity: 0.75;
+}
+
+#app .main-menu .run-remove-button::after {
+  border-width: 12px;
+  border-image-width: 12px;
+}
+
+#app .main-menu .run-slot-button:hover:not(:disabled)::after,
+#app .main-menu .run-remove-button:hover:not(:disabled)::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .main-menu .run-slot-date {
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  color: var(--ash) !important;
+}
+
+#app .main-menu .empty-run-slot .run-slot-label {
+  color: var(--ash) !important;
+}
