@@ -6983,3 +6983,28 @@ body.mobile-arcade #app .bot-card .hit-flash {
   #app .passive-slot.seal-summoned::after { display: none; }
   #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
 }
+
+/* Effect step: the seal simply stays red, still and centred (no ring, no scale).
+   The flare now settles back to its normal size, so nothing jumps between the two steps. */
+#app .passive-slot.round-reveal-effect::before {
+  content: none !important;
+}
+
+#app .passive-slot.round-reveal-effect .equipped-seal-sigil {
+  transform: none !important;
+  animation: none !important;
+}
+
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.1); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%); transform: scale(1.04); }
+  75%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%); transform: scale(1); }
+}
+
+@keyframes seal-ignite-scale {
+  0%, 41% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  75%, 100% { transform: scale(1); }
+}
