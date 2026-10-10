@@ -12485,25 +12485,31 @@ function glyphTooltipHtml(title, label, body, note = "") {
   `;
 }
 
+// late-game (Goetic) bosses are titled by their ability; the named bosses by their name
+function bossTooltipTitle(bot) {
+  if (bot.finalKey || bot.uniqueKey || !bot.passiveKeys?.length) return bot.name;
+  return bot.passiveKeys.map((key) => botPassiveKeyName(key)).join(" + ");
+}
+
 function bossGlyphHtml(bot) {
-  const tooltip = glyphTooltipHtml(bot.name, "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
+  const tooltip = glyphTooltipHtml(bossTooltipTitle(bot), "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
 // what each personality does, in plain words (see planBotGuess)
 const PERSONALITY_HINTS = {
-  Anchor: "Has a favourite number and keeps coming back to it, pulled only partly towards the last TARGET.",
-  Analyst: "Reads the trend. Expects the TARGET to keep moving the way it has been moving.",
-  Follower: "Follows you. Guesses between your last guess and the last TARGET.",
-  Stubborn: "Sticks to their own number round after round and barely listens to the table.",
-  Drifter: "Wanders. Mixes the last TARGET with the mood of the table, with big random swings.",
-  Caller: "Watches the other DAMNED and guesses close to what they guessed last round."
+  Anchor: "Has a favourite number and likes to play around it.",
+  Analyst: "Reads the trend and the way the TARGET is moving.",
+  Follower: "Has noticed your success and takes your guesses seriously.",
+  Stubborn: "Sticks to their instinct, no matter what.",
+  Drifter: "Likes to take chances. Hard to predict.",
+  Caller: "Keeps a close eye on what the other DAMNED are guessing."
 };
 
 function personalityGlyphHtml(type) {
   const paths = PERSONALITY_GLYPHS[type];
   if (!paths) return "";
-  const tooltip = glyphTooltipHtml(type, "PERSONALITY", PERSONALITY_HINTS[type] || "", "Any DAMNED can panic now and then and throw a wild guess.");
+  const tooltip = glyphTooltipHtml(type, "PERSONALITY", PERSONALITY_HINTS[type] || "");
   return `<span class="bot-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></span>`;
 }
 

@@ -8546,3 +8546,14 @@ body #app .floating-tooltip .tooltip-glyph-note {
 #app .passive-bar:has(.passive-slot.round-reveal-active) {
   overflow: visible !important;
 }
+
+/* after the slam the seal is plainly red: no glow */
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil.equipped-seal-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+/* line breaks come from <br> in descriptionHtml; the markup's own newlines must not add blank lines */
+body #app .floating-tooltip {
+  min-height: 0 !important;
+  white-space: normal !important;
+}
