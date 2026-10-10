@@ -2,7 +2,9 @@
 
 // Central audio tuning. Edit volumes here, then run `pnpm run build:game`.
 // Values are multiplied by the in-game Sfx slider and muted by the mute toggle.
-const SOUNDTRACK_SRC = "assets/audio/Zingaresca_1910_loop.ogg";
+// PLACEHOLDER for the vibe (Tricky, "Hell Is Round the Corner" instrumental): not licensed, replace before release.
+// The previous track is still in assets/audio/Zingaresca_1910_loop.ogg.
+const SOUNDTRACK_SRC = "assets/audio/music/hell-is-round-the-corner-placeholder.mp3";
 const SOUNDTRACK_VOLUME = 0.55;
 
 const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
@@ -12305,38 +12307,12 @@ function watchMoments() {
 }
 
 // ==========================================================================
-// Seal trigger "Blood fill": the seal fills with red from its centre (CSS),
-// while the screen leans in towards it; when it is full the screen slams back
-// with a shockwave and cracks around the seal.
+// Seal trigger: the seal's lines turn red from the centre out while the seal
+// grows, then it slams down (CSS keyframes on the slot); at the moment it hits,
+// a small shockwave rolls out and the screen gives a short jolt.
 // ==========================================================================
-const SEAL_FILL_MS = 620;
+const SEAL_SLAM_AT_MS = 710;
 let lastSealSlamKey = "";
-
-function sealCrackSvg(size) {
-  const c = size / 2;
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  const lines = [];
-  const count = 7 + Math.floor(Math.random() * 3);
-  for (let k = 0; k < count; k += 1) {
-    let angle = (k / count) * Math.PI * 2 + rnd(-0.25, 0.25);
-    let r = c * rnd(0.3, 0.36);
-    const end = c * rnd(0.72, 0.98);
-    const points = [[c + Math.cos(angle) * r, c + Math.sin(angle) * r]];
-    while (r < end) {
-      r += c * rnd(0.08, 0.16);
-      angle += rnd(-0.22, 0.22);
-      points.push([c + Math.cos(angle) * r, c + Math.sin(angle) * r]);
-      if (Math.random() < 0.22) {
-        const branchAngle = angle + rnd(0.35, 0.7) * (Math.random() < 0.5 ? -1 : 1);
-        const br = r + c * rnd(0.08, 0.18);
-        lines.push(`M${points[points.length - 1].map((v) => v.toFixed(1)).join(" ")}L${(c + Math.cos(branchAngle) * br).toFixed(1)} ${(c + Math.sin(branchAngle) * br).toFixed(1)}`);
-      }
-    }
-    lines.push(`M${points.map((point) => point.map((v) => v.toFixed(1)).join(" ")).join("L")}`);
-  }
-  const d = lines.join("");
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="crack-glow" d="${d}"/><path class="crack-line" d="${d}"/></svg>`;
-}
 
 function sealSlamEffects(slot) {
   const sigil = slot?.querySelector(".equipped-seal-sigil");
@@ -12344,45 +12320,14 @@ function sealSlamEffects(slot) {
   const rect = sigil.getBoundingClientRect();
   const diameter = Math.min(rect.width, rect.height);
   if (!diameter) return;
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
   playGameSfx("sealSlam");
-  if (!motionReduced()) {
-    hitStop(55);
-    setTimeout(() => screenShake(Math.max(4, diameter / 18), 340), 55);
-  }
-  const size = Math.round(diameter * 3);
+  if (!motionReduced()) screenShake(Math.max(3, diameter / 32), 260);
   const fx = document.createElement("div");
   fx.className = "seal-slam-fx";
-  fx.style.cssText = `left:${cx}px;top:${cy}px;--fx-size:${size}px;--fx-d:${diameter}px`;
-  fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span><span class="slam-cracks">${sealCrackSvg(size)}</span>`;
+  fx.style.cssText = `left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;--fx-d:${diameter * 0.92}px`;
+  fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span>`;
   document.body.appendChild(fx);
-  setTimeout(() => fx.remove(), 1100);
-}
-
-function sealLeanIn(slot) {
-  const app = document.querySelector("#app");
-  const sigil = slot?.querySelector(".equipped-seal-sigil");
-  if (!app?.animate || !sigil || motionReduced()) return;
-  const appRect = app.getBoundingClientRect();
-  const rect = sigil.getBoundingClientRect();
-  app.style.transformOrigin = `${rect.left + rect.width / 2 - appRect.left}px ${rect.top + rect.height / 2 - appRect.top}px`;
-  app.style.willChange = "transform";
-  document.body.classList.add("seal-leaning");
-  const lean = app.animate(
-    [
-      { transform: "scale(1)", easing: "cubic-bezier(0.55, 0, 0.9, 0.55)" },
-      { transform: "scale(1.035)", offset: 0.66, easing: "cubic-bezier(0.2, 0, 0.1, 1)" },
-      { transform: "scale(0.988)", offset: 0.74, easing: "ease-out" },
-      { transform: "scale(1)" }
-    ],
-    { duration: Math.round(SEAL_FILL_MS / 0.66) }
-  );
-  lean.onfinish = lean.oncancel = () => {
-    app.style.transformOrigin = "";
-    app.style.willChange = "";
-    document.body.classList.remove("seal-leaning");
-  };
+  setTimeout(() => fx.remove(), 800);
 }
 
 function watchSealTrigger() {
@@ -12391,11 +12336,10 @@ function watchSealTrigger() {
   const key = `${state.round}:${animation.stepIndex}:${currentRoundRevealStep()?.id || ""}`;
   if (key === lastSealSlamKey) return;
   lastSealSlamKey = key;
-  const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed):not(.wide-seal-slot)") ||
-    document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
-  if (!slot) return;
-  sealLeanIn(slot);
-  setTimeout(() => sealSlamEffects(document.querySelector(".passive-slot.round-reveal-active") || slot), SEAL_FILL_MS);
+  setTimeout(() => {
+    const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
+    if (slot) sealSlamEffects(slot);
+  }, SEAL_SLAM_AT_MS);
 }
 
 function afterRenderEffects() {
@@ -12522,53 +12466,45 @@ function sinValueHtml(text) {
   return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;
 }
 
-// bosses: an inverted pentagram instead of a personality mark
-const BOSS_GLYPH_HTML = `<span class="bot-glyph boss-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg></span>`;
-
-// TEMPORARY look test: each boss shows a small seal (its own Goetic seal, or a stand-in) whose
-// tooltip explains the boss's ability. These seals are only pictures here; the player's seals are unchanged.
-const BOSS_STAND_IN_SEALS = {
-  zilon: "p93",
-  dantre: "p92",
-  serafim: "p94",
-  pyros: "p95",
-  padma: "p96",
-  threon: "p97",
-  petros: "p110",
-  pavlos: "p110",
-  kalha: "p16",
-  jesus: "p75",
-  satan: "p111"
-};
-
-function bossSealId(bot) {
-  if (!bot?.isBoss) return null;
-  if (bot.goeticPassiveId && SEAL_SIGILS[bot.goeticPassiveId]) return bot.goeticPassiveId;
-  return BOSS_STAND_IN_SEALS[bot.finalKey || bot.uniqueKey || bot.copiedUniqueKey] || null;
-}
+// bosses: an inverted pentagram instead of a personality mark; hovering it explains the boss
+const BOSS_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg>`;
 
 function bossAbilityText(bot) {
   if (bot.finalKey) return (FINAL_BOSS_SPECS[bot.finalKey]?.descriptions || []).join(" ");
   return botPassiveDescription(bot) || "No special ability.";
 }
 
-function bossSealBadgeHtml(bot) {
-  const sealId = bossSealId(bot);
-  if (!sealId) return "";
-  const tooltip = `
+function glyphTooltipHtml(title, label, body, note = "") {
+  return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${escapeHtml(bot.name)}</div>
-      <div class="tooltip-shift-hint">BOSS</div>
+      <div class="tooltip-title">${escapeHtml(title)}</div>
+      <div class="tooltip-shift-hint">${escapeHtml(label)}</div>
     </div>
-    <div class="tooltip-body">${descriptionHtml(bossAbilityText(bot))}</div>
+    <div class="tooltip-body">${descriptionHtml(body)}</div>
+    ${note ? `<div class="tooltip-glyph-note">${escapeHtml(note)}</div>` : ""}
   `;
-  return `<span class="boss-seal ${SATAN_SEAL_IDS.has(sealId) ? "boss-seal-wide" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">${renderSealSigil(sealId, "boss-seal-sigil")}</span>`;
 }
+
+function bossGlyphHtml(bot) {
+  const tooltip = glyphTooltipHtml(bot.name, "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
+  return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
+}
+
+// what each personality does, in plain words (see planBotGuess)
+const PERSONALITY_HINTS = {
+  Anchor: "Has a favourite number and keeps coming back to it, pulled only partly towards the last TARGET.",
+  Analyst: "Reads the trend. Expects the TARGET to keep moving the way it has been moving.",
+  Follower: "Follows you. Guesses between your last guess and the last TARGET.",
+  Stubborn: "Sticks to their own number round after round and barely listens to the table.",
+  Drifter: "Wanders. Mixes the last TARGET with the mood of the table, with big random swings.",
+  Caller: "Watches the other DAMNED and guesses close to what they guessed last round."
+};
 
 function personalityGlyphHtml(type) {
   const paths = PERSONALITY_GLYPHS[type];
   if (!paths) return "";
-  return `<span class="bot-glyph" title="${escapeAttr(type)}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></span>`;
+  const tooltip = glyphTooltipHtml(type, "PERSONALITY", PERSONALITY_HINTS[type] || "", "Any DAMNED can panic now and then and throw a wild guess.");
+  return `<span class="bot-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></span>`;
 }
 
 function renderBots() {
@@ -12643,7 +12579,7 @@ function renderBot(bot, pendingPick) {
       : "";
   const sinBadge =
     botLastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta}${SIN_MARK}</div>`
+      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta}</div>`
       : "";
   const memoryBadge =
     botLastMemoryDelta > 0
@@ -12657,8 +12593,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? BOSS_GLYPH_HTML : personalityGlyphHtml(bot.type);
-  const bossSealHtml = bot.isBoss ? bossSealBadgeHtml(bot) : "";
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : personalityGlyphHtml(bot.type);
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -12682,7 +12617,6 @@ function renderBot(bot, pendingPick) {
   return `
     <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass} ${hit.className}" data-bot-id="${bot.id}" style="--bot-color: ${bot.color}${hit.style}"${tooltipAttr}>
       ${hit.flash}
-      ${bossSealHtml}
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>

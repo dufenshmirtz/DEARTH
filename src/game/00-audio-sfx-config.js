@@ -2,7 +2,9 @@
 
 // Central audio tuning. Edit volumes here, then run `pnpm run build:game`.
 // Values are multiplied by the in-game Sfx slider and muted by the mute toggle.
-const SOUNDTRACK_SRC = "assets/audio/Zingaresca_1910_loop.ogg";
+// PLACEHOLDER for the vibe (Tricky, "Hell Is Round the Corner" instrumental): not licensed, replace before release.
+// The previous track is still in assets/audio/Zingaresca_1910_loop.ogg.
+const SOUNDTRACK_SRC = "assets/audio/music/hell-is-round-the-corner-placeholder.mp3";
 const SOUNDTRACK_VOLUME = 0.55;
 
 const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
