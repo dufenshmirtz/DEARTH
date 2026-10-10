@@ -7116,7 +7116,7 @@ body.outline-boil::after {
   --font-book: "Alegreya", Georgia, "Times New Roman", serif;
   /* SIN has its own colour: a deep wine red. Bright blood red is kept for danger and the one action that moves the round on. */
   --sin: #b0414c;
-  --sin-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 5.6v12.8M8.4 14.6h7.2'/%3E%3C/svg%3E");
+  --sin-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2.1' d='M13.4 2.5C18.6 3 22 7.2 21.5 12.6c-.5 5.2-4.9 8.9-10.1 8.5C6.2 20.7 2.4 16.4 2.8 11.2 3.2 6.1 7.6 2.3 12.6 2.7l2.2.9'/%3E%3Cpath stroke-width='1.1' d='M4.6 6.6c-1.7 2.4-2.3 5.4-1.5 8.4M19.9 17.2c-1.2 1.6-2.7 2.7-4.4 3.4'/%3E%3Cpath stroke-width='2.3' d='M12.5 4.9 11.6 19.4'/%3E%3Cpath stroke-width='2.2' d='M7.6 15.1 16.7 14.2'/%3E%3Cpath stroke-width='1.2' d='M7.9 13.6 7.3 16.3M16.3 12.9 16.9 15.6M10.4 4.6l3.6.7'/%3E%3C/svg%3E");
   --ui-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
@@ -7363,30 +7363,6 @@ body.mobile-arcade #app .bot-glyph {
   color: var(--sin) !important;
 }
 
-#app .credit-wrap .stat-value::before,
-#app .bot-reward::before,
-#app .mobile-offerings-sin::before,
-#app .reroll-cost::before,
-#app .item-card .price::before,
-#app .shop-buy-button:not(:disabled)::before {
-  content: "";
-  display: inline-block;
-  width: 0.62em;
-  height: 0.62em;
-  margin-right: 0.22em;
-  vertical-align: 0.02em;
-  background: var(--sin);
-  -webkit-mask: var(--sin-coin) center / contain no-repeat;
-  mask: var(--sin-coin) center / contain no-repeat;
-}
-
-#app .credit-wrap .stat-value::before {
-  width: 0.42em;
-  height: 0.42em;
-  margin-right: 0.12em;
-  vertical-align: 0.18em;
-}
-
 /* Buy is an ordinary action now: bone text, the coin carries the colour */
 #app .shop-buy-button:not(:disabled):not(:hover) {
   color: var(--bone) !important;
@@ -7416,7 +7392,7 @@ body.mobile-arcade #app .bot-glyph {
   color: rgba(141, 135, 124, 0.75) !important;
 }
 
-#app .reroll-button:disabled .reroll-cost::before {
+#app .reroll-button:disabled .sin-mark {
   background: rgba(141, 135, 124, 0.75);
 }
 
@@ -8254,4 +8230,307 @@ body:not(.mobile-arcade) #app .active-panel .active-list {
 
 #app .main-menu .empty-run-slot .run-slot-label {
   color: var(--ash) !important;
+}
+
+
+/* SIN mark: drawn after the value instead of the word */
+#app .sin-mark {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.16em;
+  vertical-align: -0.12em;
+  background: var(--sin);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+  flex: 0 0 auto;
+}
+
+#app .bot-reward .sin-mark,
+#app .bounty-badge .sin-mark {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.22em;
+}
+
+/* player SIN panel: the mark sits after the word, the number stays centred under it */
+#app .credit-wrap .stat-label .sin-mark {
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: 0.25em;
+  vertical-align: -0.2em;
+}
+
+#app .shop-buy-button:disabled .sin-mark,
+#app .floating-tooltip .sin-mark {
+  background: currentColor;
+}
+
+#app .floating-tooltip .seal-tooltip-footer .sin-mark {
+  background: var(--sin);
+}
+
+/* main menu: no boxes around the buttons, just the words (red on hover) */
+#app .main-menu .menu-button::after {
+  content: none !important;
+}
+
+#app .main-menu .menu-button {
+  min-height: 46px;
+}
+
+/* ---------- Boss cards: pentagram mark, "Boss", a small seal whose tooltip tells the ability ---------- */
+#app .bot-card.boss .boss-glyph,
+#app .bot-card.boss .boss-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+#app .bot-card .boss-seal {
+  position: absolute;
+  z-index: 8;
+  top: 11px;
+  left: 12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  cursor: help;
+}
+
+#app .bot-card .boss-seal.boss-seal-wide {
+  width: 52px;
+}
+
+#app .bot-card .boss-seal .boss-seal-sigil.boss-seal-sigil {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.15s var(--ui-ease);
+}
+
+#app .bot-card .boss-seal:hover .boss-seal-sigil {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+body.mobile-arcade #app .bot-card .boss-seal {
+  top: 6px;
+  left: 7px;
+  width: 20px;
+  height: 20px;
+}
+
+body.mobile-arcade #app .bot-card .boss-seal.boss-seal-wide {
+  width: 30px;
+}
+
+#app .bot-card.eliminated .boss-seal {
+  opacity: 0.3;
+}
+
+/* GUESS / READY / NEXT: white like every button, red on hover, red on its own only when the guess is CRITICAL */
+#app .center-console #mainAction.primary-button,
+#app #mainAction.mobile-numpad-action {
+  color: var(--bone) !important;
+}
+
+#app .center-console #mainAction.primary-button::after,
+#app #mainAction.mobile-numpad-action::after {
+  filter: none;
+  opacity: 0.9;
+}
+
+#app .center-console #mainAction.primary-button:hover:not(:disabled),
+#app #mainAction.mobile-numpad-action:hover:not(:disabled),
+body:has(#app .guess-input.critical-guess) #app #mainAction {
+  color: var(--blood-bright) !important;
+}
+
+#app .center-console #mainAction.primary-button:hover:not(:disabled)::after,
+#app #mainAction.mobile-numpad-action:hover:not(:disabled)::after,
+body:has(#app .guess-input.critical-guess) #app #mainAction::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .center-console #mainAction.primary-button:disabled::after {
+  opacity: 0.25;
+}
+
+/* ==========================================================================
+   Seal trigger "Blood fill" (replaces the Ignition ring)
+   The seal fills with red from its centre for 620 ms while the screen leans in;
+   then the screen slams back with a shockwave and cracks (JS: watchSealTrigger).
+   ========================================================================== */
+@property --seal-fill {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* no ring, no ring-hold, no old shockwave */
+#app .passive-slot.round-reveal-active::after,
+#app .passive-slot.round-reveal-effect::after {
+  content: none !important;
+}
+
+/* the white seal stays still underneath while the red one grows over it */
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil.equipped-seal-sigil:not(.seal-fill-sigil) {
+  filter: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+#app .passive-slot .equipped-seal-sigil {
+  grid-area: 1 / 1;
+}
+
+#app .passive-slot .seal-fill-sigil.seal-fill-sigil {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  transform: none !important;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(105%) !important;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 var(--seal-fill), transparent calc(var(--seal-fill) + 7%));
+  mask-image: radial-gradient(circle at 50% 50%, #000 var(--seal-fill), transparent calc(var(--seal-fill) + 7%));
+  --seal-fill: 80%;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .seal-fill-sigil.seal-fill-sigil {
+  animation: seal-blood-fill 620ms cubic-bezier(0.5, 0, 0.85, 0.6) both !important;
+}
+
+/* a pool of deep red spreads inside the seal's circle with the lines */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  content: "" !important;
+  position: absolute;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  z-index: 1;
+  width: calc(var(--ring-d, 100%) * 0.9) !important;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(150, 8, 16, 0.5) 0%, rgba(110, 4, 10, 0.38) calc(var(--seal-fill) * 0.62), transparent calc(var(--seal-fill) * 0.62 + 2%)) !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  opacity: 1 !important;
+  --seal-fill: 160%;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before {
+  animation: seal-blood-fill-pool 620ms cubic-bezier(0.5, 0, 0.85, 0.6) both !important;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  animation: seal-pool-settle 1000ms ease-out both !important;
+}
+
+@keyframes seal-blood-fill {
+  from { --seal-fill: 0%; }
+  to { --seal-fill: 80%; }
+}
+
+@keyframes seal-blood-fill-pool {
+  from { --seal-fill: 0%; }
+  to { --seal-fill: 160%; }
+}
+
+@keyframes seal-pool-settle {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+/* shockwave and cracks at the slam (lives on <body>, outside the screen that zooms) */
+.seal-slam-fx {
+  position: fixed;
+  z-index: 30010;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.seal-slam-fx .slam-wave {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--fx-d);
+  height: var(--fx-d);
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid rgba(233, 227, 214, 0.85);
+  animation: slam-wave 520ms cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+
+.seal-slam-fx .slam-wave-red {
+  border: 6px solid rgba(220, 42, 47, 0.55);
+  filter: blur(2px);
+  animation-duration: 700ms;
+}
+
+.seal-slam-fx .slam-cracks {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  animation: slam-cracks 950ms ease-out both;
+}
+
+.seal-slam-fx .slam-cracks svg {
+  display: block;
+  overflow: visible;
+}
+
+.seal-slam-fx .crack-line {
+  stroke: rgba(233, 227, 214, 0.9);
+  stroke-width: 1.4;
+}
+
+.seal-slam-fx .crack-glow {
+  stroke: rgba(220, 42, 47, 0.75);
+  stroke-width: 4;
+  filter: blur(2.5px);
+}
+
+@keyframes slam-wave {
+  0% { opacity: 1; scale: 0.9; }
+  100% { opacity: 0; scale: 3.1; }
+}
+
+@keyframes slam-cracks {
+  0% { opacity: 0; scale: 0.82; }
+  6% { opacity: 1; scale: 1; }
+  55% { opacity: 0.85; }
+  100% { opacity: 0; scale: 1.02; }
+}
+
+body.mobile-arcade .seal-slam-fx .crack-line {
+  stroke-width: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seal-slam-fx { display: none; }
+  #app .passive-slot.round-reveal-active:not(.suppressed) .seal-fill-sigil.seal-fill-sigil,
+  #app .passive-slot.round-reveal-active:not(.suppressed)::before {
+    animation-duration: 1ms !important;
+  }
+}
+
+/* while the screen leans in on a seal the outlines hold still (cheaper to scale, and it reads as a held breath) */
+body.seal-leaning #app .bot-card::after,
+body.seal-leaning #app .stat-card::after,
+body.seal-leaning #app .target-panel::after,
+body.seal-leaning #app .item-card::after,
+body.seal-leaning #app .shop-panel::after,
+body.seal-leaning #app .active-panel::after,
+body.seal-leaning #app .panel-header,
+body.seal-leaning #app .bot-card .bot-stats,
+body.seal-leaning #app .bot-card .mini-stat.bot-health,
+body.seal-leaning #app .play-column::after {
+  animation-play-state: paused !important;
 }

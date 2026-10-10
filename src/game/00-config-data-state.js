@@ -1623,7 +1623,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "zilon",
     name: "Zilon",
     image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
-    personality: "Caller",
     modifierOverride: 1.5,
     descriptions: [
       "Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive.",
@@ -1634,7 +1633,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "dantre",
     name: "Dantre",
     image: "assets/bots/occult-stickmen-pack/boss-dantre.png",
-    personality: "Stubborn",
     modifierOverride: 0.5,
     eliminationDamage: 2,
     descriptions: [
@@ -1646,7 +1644,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pyros",
     name: "Pyros",
     image: "assets/bots/occult-stickmen-pack/boss-pyros.png",
-    personality: "Analyst",
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
@@ -1658,7 +1655,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "threon",
     name: "Threon",
     image: "assets/bots/occult-stickmen-pack/boss-threon.png",
-    personality: "Drifter",
     descriptions: [
       "Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3.",
       "Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal 3 damage to you."
@@ -1668,7 +1664,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "kalha",
     name: "Kalha",
     image: "assets/bots/new-red-bosses-5/Kalha-vibrant.png",
-    personality: "Drifter",
     modifierOverride: 1.2,
     descriptions: [
       "Each round, half your equipped SEALS rounded down are deactivated until the round ends.",
@@ -1679,7 +1674,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "serafim",
     name: "Serafim",
     image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
-    personality: "Caller",
     modifierOverride: 0.7,
     descriptions: [
       "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
@@ -1691,7 +1685,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "padma",
     name: "Padma",
     image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
-    personality: "Stubborn",
     modifierOverride: 0.6,
     descriptions: [
       "While Padma is alive, non-boss healing cannot restore your HEALTH.",
@@ -1703,7 +1696,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "petros",
     name: "Petros",
     image: "assets/bots/new-red-bosses-5/Petros-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     descriptions: [
@@ -1717,7 +1709,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pavlos",
     name: "Pavlos",
     image: "assets/bots/new-red-bosses-5/Pavlos-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     countsAsBossProgress: false,
@@ -1740,7 +1731,6 @@ const FINAL_BOSS_SPECS = {
     name: "Jesus",
     image: FINAL_BOSS_JESUS_SRC,
     color: "#d64f45",
-    personality: "Analyst",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "Jesus's guess counts three times when calculating the TARGET average."
@@ -1751,7 +1741,6 @@ const FINAL_BOSS_SPECS = {
     name: "Satan",
     image: FINAL_BOSS_SATAN_SRC,
     color: "#d64f45",
-    personality: "Caller",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "The Devil disables Devil's Offerings while Satan is alive."

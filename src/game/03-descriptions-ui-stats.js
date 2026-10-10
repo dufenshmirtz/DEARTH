@@ -643,7 +643,7 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
     <div class="tooltip-stat-line">${descriptionHtml(runDetails)}</div>
     <div class="seal-tooltip-footer">
       <span>${contribution ? escapeHtml(contribution) : ""}</span>
-      <span>Sell ${sale} SIN</span>
+      <span>Sell ${sale}${SIN_MARK}</span>
     </div>
   `;
 }

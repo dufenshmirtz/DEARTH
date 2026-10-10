@@ -456,7 +456,7 @@ function renderMobileOfferingsHeader() {
         <div class="panel-title">Devil's Offerings</div>
         <div class="elite-chance-label">${Math.round(eliteShopChance() * 100)}% ELITE</div>
       </div>
-      <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
+      <div class="mobile-offerings-sin">${formatNumber(playerSin)}${SIN_MARK}</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
   `;
@@ -1338,6 +1338,100 @@ function watchMoments() {
   if (!before.gameOver && now.gameOver) momentSfx("gameOver");
 }
 
+// ==========================================================================
+// Seal trigger "Blood fill": the seal fills with red from its centre (CSS),
+// while the screen leans in towards it; when it is full the screen slams back
+// with a shockwave and cracks around the seal.
+// ==========================================================================
+const SEAL_FILL_MS = 620;
+let lastSealSlamKey = "";
+
+function sealCrackSvg(size) {
+  const c = size / 2;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const lines = [];
+  const count = 7 + Math.floor(Math.random() * 3);
+  for (let k = 0; k < count; k += 1) {
+    let angle = (k / count) * Math.PI * 2 + rnd(-0.25, 0.25);
+    let r = c * rnd(0.3, 0.36);
+    const end = c * rnd(0.72, 0.98);
+    const points = [[c + Math.cos(angle) * r, c + Math.sin(angle) * r]];
+    while (r < end) {
+      r += c * rnd(0.08, 0.16);
+      angle += rnd(-0.22, 0.22);
+      points.push([c + Math.cos(angle) * r, c + Math.sin(angle) * r]);
+      if (Math.random() < 0.22) {
+        const branchAngle = angle + rnd(0.35, 0.7) * (Math.random() < 0.5 ? -1 : 1);
+        const br = r + c * rnd(0.08, 0.18);
+        lines.push(`M${points[points.length - 1].map((v) => v.toFixed(1)).join(" ")}L${(c + Math.cos(branchAngle) * br).toFixed(1)} ${(c + Math.sin(branchAngle) * br).toFixed(1)}`);
+      }
+    }
+    lines.push(`M${points.map((point) => point.map((v) => v.toFixed(1)).join(" ")).join("L")}`);
+  }
+  const d = lines.join("");
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="crack-glow" d="${d}"/><path class="crack-line" d="${d}"/></svg>`;
+}
+
+function sealSlamEffects(slot) {
+  const sigil = slot?.querySelector(".equipped-seal-sigil");
+  if (!sigil || !slot.isConnected) return;
+  const rect = sigil.getBoundingClientRect();
+  const diameter = Math.min(rect.width, rect.height);
+  if (!diameter) return;
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  playGameSfx("sealSlam");
+  if (!motionReduced()) {
+    hitStop(55);
+    setTimeout(() => screenShake(Math.max(4, diameter / 18), 340), 55);
+  }
+  const size = Math.round(diameter * 3);
+  const fx = document.createElement("div");
+  fx.className = "seal-slam-fx";
+  fx.style.cssText = `left:${cx}px;top:${cy}px;--fx-size:${size}px;--fx-d:${diameter}px`;
+  fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span><span class="slam-cracks">${sealCrackSvg(size)}</span>`;
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 1100);
+}
+
+function sealLeanIn(slot) {
+  const app = document.querySelector("#app");
+  const sigil = slot?.querySelector(".equipped-seal-sigil");
+  if (!app?.animate || !sigil || motionReduced()) return;
+  const appRect = app.getBoundingClientRect();
+  const rect = sigil.getBoundingClientRect();
+  app.style.transformOrigin = `${rect.left + rect.width / 2 - appRect.left}px ${rect.top + rect.height / 2 - appRect.top}px`;
+  app.style.willChange = "transform";
+  document.body.classList.add("seal-leaning");
+  const lean = app.animate(
+    [
+      { transform: "scale(1)", easing: "cubic-bezier(0.55, 0, 0.9, 0.55)" },
+      { transform: "scale(1.035)", offset: 0.66, easing: "cubic-bezier(0.2, 0, 0.1, 1)" },
+      { transform: "scale(0.988)", offset: 0.74, easing: "ease-out" },
+      { transform: "scale(1)" }
+    ],
+    { duration: Math.round(SEAL_FILL_MS / 0.66) }
+  );
+  lean.onfinish = lean.oncancel = () => {
+    app.style.transformOrigin = "";
+    app.style.willChange = "";
+    document.body.classList.remove("seal-leaning");
+  };
+}
+
+function watchSealTrigger() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active || animation.phase !== "seal") return;
+  const key = `${state.round}:${animation.stepIndex}:${currentRoundRevealStep()?.id || ""}`;
+  if (key === lastSealSlamKey) return;
+  lastSealSlamKey = key;
+  const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed):not(.wide-seal-slot)") ||
+    document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
+  if (!slot) return;
+  sealLeanIn(slot);
+  setTimeout(() => sealSlamEffects(document.querySelector(".passive-slot.round-reveal-active") || slot), SEAL_FILL_MS);
+}
+
 function afterRenderEffects() {
   if (state.mode !== "arcade") {
     lastEquippedSealIds = null;
@@ -1345,6 +1439,7 @@ function afterRenderEffects() {
     return;
   }
   syncSealRings();
+  watchSealTrigger();
   watchMoments();
 }
 
@@ -1366,7 +1461,7 @@ function renderTopbar() {
       : "";
   const playerCreditBadge =
     playerDisplay.lastCredits > 0
-      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
+      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits}${SIN_MARK}</div>`
       : "";
   const maxHp = playerMaxHp();
   const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
@@ -1406,7 +1501,7 @@ function renderTopbar() {
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
-        <span class="stat-label">SIN</span>
+        <span class="stat-label">SIN${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
       </div>
       <div class="dev-quick" aria-label="Test controls">
@@ -1454,6 +1549,56 @@ const PERSONALITY_GLYPHS = {
   Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
 };
 
+// SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
+const SIN_MARK = `<span class="sin-mark" role="img" aria-label="SIN"></span>`;
+
+function sinValueHtml(text) {
+  return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;
+}
+
+// bosses: an inverted pentagram instead of a personality mark
+const BOSS_GLYPH_HTML = `<span class="bot-glyph boss-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg></span>`;
+
+// TEMPORARY look test: each boss shows a small seal (its own Goetic seal, or a stand-in) whose
+// tooltip explains the boss's ability. These seals are only pictures here; the player's seals are unchanged.
+const BOSS_STAND_IN_SEALS = {
+  zilon: "p93",
+  dantre: "p92",
+  serafim: "p94",
+  pyros: "p95",
+  padma: "p96",
+  threon: "p97",
+  petros: "p110",
+  pavlos: "p110",
+  kalha: "p16",
+  jesus: "p75",
+  satan: "p111"
+};
+
+function bossSealId(bot) {
+  if (!bot?.isBoss) return null;
+  if (bot.goeticPassiveId && SEAL_SIGILS[bot.goeticPassiveId]) return bot.goeticPassiveId;
+  return BOSS_STAND_IN_SEALS[bot.finalKey || bot.uniqueKey || bot.copiedUniqueKey] || null;
+}
+
+function bossAbilityText(bot) {
+  if (bot.finalKey) return (FINAL_BOSS_SPECS[bot.finalKey]?.descriptions || []).join(" ");
+  return botPassiveDescription(bot) || "No special ability.";
+}
+
+function bossSealBadgeHtml(bot) {
+  const sealId = bossSealId(bot);
+  if (!sealId) return "";
+  const tooltip = `
+    <div class="tooltip-heading">
+      <div class="tooltip-title">${escapeHtml(bot.name)}</div>
+      <div class="tooltip-shift-hint">BOSS</div>
+    </div>
+    <div class="tooltip-body">${descriptionHtml(bossAbilityText(bot))}</div>
+  `;
+  return `<span class="boss-seal ${SATAN_SEAL_IDS.has(sealId) ? "boss-seal-wide" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">${renderSealSigil(sealId, "boss-seal-sigil")}</span>`;
+}
+
 function personalityGlyphHtml(type) {
   const paths = PERSONALITY_GLYPHS[type];
   if (!paths) return "";
@@ -1496,8 +1641,8 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  const typeLabel = normalizeGameText(hasVisiblePassive ? `${bot.isBoss ? "BOSS" : bot.type}: ${passiveSummary}` : bot.type);
-  const passiveDescription = hasVisiblePassive ? botPassiveDescription(bot) : "";
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(hasVisiblePassive ? `${bot.type}: ${passiveSummary}` : bot.type);
+  const passiveDescription = hasVisiblePassive && !bot.isBoss ? botPassiveDescription(bot) : "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
   const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
@@ -1532,7 +1677,7 @@ function renderBot(bot, pendingPick) {
       : "";
   const sinBadge =
     botLastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
+      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta}${SIN_MARK}</div>`
       : "";
   const memoryBadge =
     botLastMemoryDelta > 0
@@ -1546,7 +1691,8 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? "" : personalityGlyphHtml(bot.type);
+  const flagHtml = bot.isBoss ? BOSS_GLYPH_HTML : personalityGlyphHtml(bot.type);
+  const bossSealHtml = bot.isBoss ? bossSealBadgeHtml(bot) : "";
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -1570,13 +1716,14 @@ function renderBot(bot, pendingPick) {
   return `
     <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass} ${hit.className}" data-bot-id="${bot.id}" style="--bot-color: ${bot.color}${hit.style}"${tooltipAttr}>
       ${hit.flash}
+      ${bossSealHtml}
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
         <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${bot.country})`))}">${bot.name}</div>
-        <div class="bot-reward" title="SIN">${rewardLabel}</div>
+        <div class="bot-reward" title="SIN">${sinValueHtml(rewardLabel)}</div>
         ${sinBadge}
       </div>
       <div class="bot-type ${bot.isBoss ? "boss-type" : ""}" title="${typeLabel}">${typeLabel}</div>
@@ -1753,7 +1900,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()} SIN</span></button>
+          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()}${SIN_MARK}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -1777,7 +1924,7 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   const description = itemDescription(previewItem);
@@ -1847,7 +1994,7 @@ function renderActiveItem(item, index) {
         <div>
           <div class="item-name">${item.name}</div>
           ${memoryLine}
-          <div class="price">Sell ${sale} SIN</div>
+          <div class="price">Sell ${sale}${SIN_MARK}</div>
         </div>
         <span class="item-kind">ARTIFACT</span>
       </div>
@@ -1888,7 +2035,9 @@ function renderPassives() {
         : "";
     const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
-    const sealImage = renderSealSigil(item, "equipped-seal-sigil");
+    const sealImage =
+      renderSealSigil(item, "equipped-seal-sigil") +
+      (revealClass && !SATAN_SEAL_IDS.has(item.id) ? renderSealSigil(item, "equipped-seal-sigil seal-fill-sigil") : "");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
     const summon = sealSummonAttrs(item.id);

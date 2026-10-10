@@ -94,7 +94,6 @@ function applyKalhaSealSuppression() {
 
 function createFinalBoss(key) {
   const spec = FINAL_BOSS_SPECS[key];
-  const archetype = archetypeByType(spec.personality);
   return {
     id: state.nextBotId++,
     name: spec.name,
@@ -103,9 +102,9 @@ function createFinalBoss(key) {
     type: "Final Boss",
     color: spec.color,
     image: spec.image,
-    anchor: archetype.anchor,
-    aggression: Math.min(0.82, archetype.aggression + 0.18),
-    noise: Math.max(6, archetype.noise - 1),
+    anchor: 50,
+    aggression: 0,
+    noise: 0,
     hp: 100,
     maxHp: 100,
     reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
@@ -225,8 +224,9 @@ function createBot(options = {}) {
   const copiedUniqueSpec = bossSpec?.copiedUniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.copiedUniqueKey] : null;
   const powerSpec = copiedUniqueSpec || uniqueSpec;
   const profile = isBoss ? null : inherited ? inherited : randomBotProfile();
-  const archetype = uniqueSpec
-    ? archetypeByType((powerSpec || uniqueSpec).personality)
+  // bosses have no personality: they play the optimal guess (planBossGuess)
+  const archetype = isBoss
+    ? null
     : inherited
       ? archetypeByType(inherited.type)
       : passiveStack("p89")
@@ -256,9 +256,9 @@ function createBot(options = {}) {
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
     image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
-    anchor: clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
-    aggression: inherited?.aggression ?? (isBoss ? Math.min(0.75, archetype.aggression + 0.12) : archetype.aggression),
-    noise: inherited?.noise ?? (isBoss ? Math.max(7, archetype.noise - 1) : archetype.noise),
+    anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
+    aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
+    noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
     hp: maxHp,
     maxHp,
     reward: reward + loadedSpawnBonus,
@@ -1088,80 +1088,57 @@ function weightedMemoryAverage(entries, readValue) {
   return totalWeight ? weighted / totalWeight : null;
 }
 
-function selfConsistentBossGuess(otherAverage, participantCount, modifier, offset) {
-  const count = Math.max(2, participantCount);
-  const others = Math.max(1, count - 1);
-  const denominator = 1 - modifier / count;
-  if (denominator <= 0.05) return otherAverage * modifier + offset;
-  return (modifier * otherAverage * others / count + offset) / denominator;
+// Bosses have no personality. They play the best reply to what the table is likely to do:
+// estimate the other players' weighted average from the rounds they remember (or a level-1
+// guess when they remember nothing), then pick the whole number closest to the TARGET their
+// own guess would produce. No noise, no bluffing.
+function bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset) {
+  const total = othersWeight + ownWeight;
+  if (total <= 0) return guess;
+  return Math.ceil(Math.min(200, ((othersSum + guess * ownWeight) / total) * modifier + offset));
+}
+
+function bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset) {
+  const othersSum = othersAverage * othersWeight;
+  const total = othersWeight + ownWeight;
+  const denominator = 1 - (modifier * ownWeight) / total;
+  const solved = Math.abs(denominator) > 0.05 ? ((modifier * othersSum) / total + offset) / denominator : othersAverage * modifier + offset;
+  let best = clamp(Math.round(solved), 0, 100);
+  let bestMiss = Infinity;
+  for (let guess = Math.max(0, best - 6); guess <= Math.min(100, best + 6); guess += 1) {
+    const miss = Math.abs(guess - bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset));
+    if (miss < bestMiss || (miss === bestMiss && Math.abs(guess - solved) < Math.abs(best - solved))) {
+      best = guess;
+      bestMiss = miss;
+    }
+  }
+  return best;
 }
 
 function planBossGuess(bot) {
   const memory = bot.memory || [];
-  const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
-  const currentOffset = state.roundState?.targetOffset ?? 0;
-  const participantCount = Math.max(2, activeBots().length + 1);
-  const recent = memory.slice(-Math.min(8, memory.length));
-  const assumedOpeningAverage = bot.anchor * 0.28 + 50 * 0.72;
-
-  if (!recent.length) {
-    const openingGuess = selfConsistentBossGuess(assumedOpeningAverage, participantCount, currentModifier, currentOffset);
-    return Math.ceil(clamp(openingGuess + randomInt(-4, 4), 0, 100));
-  }
-
-  const estimatedOtherAverage =
-    weightedMemoryAverage(recent, (entry) => {
-      const rawAverage = memoryRawAverage(entry);
-      if (!Number.isFinite(rawAverage)) return null;
-      if (Number.isFinite(entry.ownGuess) && participantCount > 1) {
-        return (rawAverage * participantCount - entry.ownGuess) / (participantCount - 1);
-      }
-      return rawAverage;
-    }) ?? assumedOpeningAverage;
-  const selfConsistentGuess = selfConsistentBossGuess(
-    clamp(estimatedOtherAverage, 0, 100),
-    participantCount,
-    currentModifier,
-    currentOffset
-  );
-  const projectedTarget = weightedMemoryAverage(recent, (entry) => projectedMemoryTarget(entry, currentModifier, currentOffset));
-  const last = recent[recent.length - 1];
-  const prev = recent[recent.length - 2] || last;
-  const lastTarget = projectedMemoryTarget(last, currentModifier, currentOffset) ?? projectedTarget ?? selfConsistentGuess;
-  const prevTarget = projectedMemoryTarget(prev, currentModifier, currentOffset) ?? lastTarget;
-  const trendTarget = lastTarget + (lastTarget - prevTarget) * 0.35;
-  const playerPull = weightedMemoryAverage(recent, (entry) => entry.playerGuess);
-  const targetPlan = projectedTarget ?? lastTarget;
-  let guess;
-
-  if (bot.type === "Analyst") {
-    guess = selfConsistentGuess * 0.72 + trendTarget * 0.28;
-  } else if (bot.type === "Follower") {
-    guess = selfConsistentGuess * 0.78 + (playerPull ?? targetPlan) * 0.22;
-  } else if (bot.type === "Stubborn") {
-    guess = selfConsistentGuess * 0.7 + bot.anchor * 0.3;
-  } else if (bot.type === "Drifter") {
-    const sample = projectedMemoryTarget(randomFrom(recent), currentModifier, currentOffset) ?? targetPlan;
-    guess = selfConsistentGuess * 0.66 + sample * 0.34;
-  } else if (bot.type === "Caller") {
-    guess = selfConsistentGuess * 0.74 + targetPlan * 0.26;
-  } else {
-    guess = selfConsistentGuess * 0.76 + bot.anchor * 0.24;
-  }
-
-  const smartNoise = Math.max(2, Math.ceil(bot.noise * 0.45));
-  const pressured = bot.hp <= bot.maxHp * 0.35;
-  guess += randomInt(-smartNoise, smartNoise);
-
-  if (!pressured && Math.random() < bot.aggression * 0.14) {
-    guess += randomFrom([-1, 1]) * randomInt(4, 10);
-  }
-
-  if (!pressured && Math.random() < bot.aggression * 0.025) {
-    guess = selfConsistentGuess + randomFrom([-1, 1]) * randomInt(10, 18);
-  }
-
-  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+  const modifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const offset = state.roundState?.targetOffset ?? 0;
+  const ownWeight = botTargetWeight(bot);
+  const playerWeight = 1 + wealthWeightBonus();
+  const othersWeight =
+    playerWeight +
+    activeBots()
+      .filter((other) => other.id !== bot.id)
+      .reduce((sum, other) => sum + botTargetWeight(other), 0);
+  const participantWeight = othersWeight + ownWeight;
+  const recent = memory.slice(-Math.min(6, memory.length));
+  const remembered = weightedMemoryAverage(recent, (entry) => {
+    const rawAverage = memoryRawAverage(entry);
+    if (!Number.isFinite(rawAverage)) return null;
+    if (Number.isFinite(entry.ownGuess) && participantWeight > ownWeight) {
+      return (rawAverage * participantWeight - entry.ownGuess * ownWeight) / (participantWeight - ownWeight);
+    }
+    return rawAverage;
+  });
+  // nothing remembered: assume the table plays one step of reasoning (50 x modifier)
+  const othersAverage = clamp(remembered ?? 50 * clamp(modifier, 0.2, 1.5), 0, 100);
+  return clampFixedWillGuess(bot, bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset));
 }
 
 function clampFixedWillGuess(bot, guess) {
@@ -1578,8 +1555,8 @@ function advanceRoundRevealAnimation() {
   const animation = state.roundRevealAnimation;
   if (!animation?.active) return;
   if (animation.phase === "seal") {
+    // the slam at the end of the fill is the sound of this step now
     animation.phase = "effect";
-    playRoundRevealStepSfx();
     render();
     scheduleRoundRevealAnimation();
     return;

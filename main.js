@@ -55,6 +55,7 @@ const GAME_SFX = {
   hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], volume: 0.42, pitch: 0.05 },
   hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], volume: 0.5, pitch: 0.04 },
   ko: { srcs: ["assets/audio/sfx/ko.mp3"], volume: 0.42, pitch: 0.03 },
+  sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], volume: 0.5, pitch: 0.05 },
   critical: { srcs: ["assets/audio/sfx/critical.mp3"], volume: 0.6, duck: 900 },
   targetLand: { srcs: ["assets/audio/sfx/target-land.mp3"], volume: 0.42 },
   sinGain: { srcs: ["assets/audio/sfx/sin-gain-1.mp3", "assets/audio/sfx/sin-gain-2.mp3"], volume: 0.26, pitch: 0.04 },
@@ -1693,7 +1694,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "zilon",
     name: "Zilon",
     image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
-    personality: "Caller",
     modifierOverride: 1.5,
     descriptions: [
       "Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive.",
@@ -1704,7 +1704,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "dantre",
     name: "Dantre",
     image: "assets/bots/occult-stickmen-pack/boss-dantre.png",
-    personality: "Stubborn",
     modifierOverride: 0.5,
     eliminationDamage: 2,
     descriptions: [
@@ -1716,7 +1715,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pyros",
     name: "Pyros",
     image: "assets/bots/occult-stickmen-pack/boss-pyros.png",
-    personality: "Analyst",
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
@@ -1728,7 +1726,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "threon",
     name: "Threon",
     image: "assets/bots/occult-stickmen-pack/boss-threon.png",
-    personality: "Drifter",
     descriptions: [
       "Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3.",
       "Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal 3 damage to you."
@@ -1738,7 +1735,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "kalha",
     name: "Kalha",
     image: "assets/bots/new-red-bosses-5/Kalha-vibrant.png",
-    personality: "Drifter",
     modifierOverride: 1.2,
     descriptions: [
       "Each round, half your equipped SEALS rounded down are deactivated until the round ends.",
@@ -1749,7 +1745,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "serafim",
     name: "Serafim",
     image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
-    personality: "Caller",
     modifierOverride: 0.7,
     descriptions: [
       "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
@@ -1761,7 +1756,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "padma",
     name: "Padma",
     image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
-    personality: "Stubborn",
     modifierOverride: 0.6,
     descriptions: [
       "While Padma is alive, non-boss healing cannot restore your HEALTH.",
@@ -1773,7 +1767,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "petros",
     name: "Petros",
     image: "assets/bots/new-red-bosses-5/Petros-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     descriptions: [
@@ -1787,7 +1780,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pavlos",
     name: "Pavlos",
     image: "assets/bots/new-red-bosses-5/Pavlos-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     countsAsBossProgress: false,
@@ -1810,7 +1802,6 @@ const FINAL_BOSS_SPECS = {
     name: "Jesus",
     image: FINAL_BOSS_JESUS_SRC,
     color: "#d64f45",
-    personality: "Analyst",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "Jesus's guess counts three times when calculating the TARGET average."
@@ -1821,7 +1812,6 @@ const FINAL_BOSS_SPECS = {
     name: "Satan",
     image: FINAL_BOSS_SATAN_SRC,
     color: "#d64f45",
-    personality: "Caller",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "The Devil disables Devil's Offerings while Satan is alive."
@@ -4714,7 +4704,7 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
     <div class="tooltip-stat-line">${descriptionHtml(runDetails)}</div>
     <div class="seal-tooltip-footer">
       <span>${contribution ? escapeHtml(contribution) : ""}</span>
-      <span>Sell ${sale} SIN</span>
+      <span>Sell ${sale}${SIN_MARK}</span>
     </div>
   `;
 }
@@ -6038,8 +6028,10 @@ function archetypeByType(type) {
   return BOT_ARCHETYPES.find((archetype) => archetype.type === type) || randomFrom(BOT_ARCHETYPES);
 }
 
+// bosses have no personality, so every personality seal skips them
 function personalityType(bot) {
-  return bot?.type || "";
+  if (!bot || bot.isBoss) return "";
+  return bot.type || "";
 }
 
 function samePersonalityBots(bot) {
@@ -6076,13 +6068,13 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
 }
 
 function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
-  if (!bot || bot.eliminated || !type || personalityType(bot) === type) return false;
+  if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
   const archetype = archetypeByType(type);
   bot.type = archetype.type;
-  if (!bot.isBoss) bot.color = archetype.color;
+  bot.color = archetype.color;
   bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
-  bot.aggression = bot.isBoss ? Math.min(0.75, archetype.aggression + 0.12) : archetype.aggression;
-  bot.noise = bot.isBoss ? Math.max(7, archetype.noise - 1) : archetype.noise;
+  bot.aggression = archetype.aggression;
+  bot.noise = archetype.noise;
   if (markEntry) markPassiveEntryTriggered(markEntry);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
@@ -6316,7 +6308,6 @@ function applyKalhaSealSuppression() {
 
 function createFinalBoss(key) {
   const spec = FINAL_BOSS_SPECS[key];
-  const archetype = archetypeByType(spec.personality);
   return {
     id: state.nextBotId++,
     name: spec.name,
@@ -6325,9 +6316,9 @@ function createFinalBoss(key) {
     type: "Final Boss",
     color: spec.color,
     image: spec.image,
-    anchor: archetype.anchor,
-    aggression: Math.min(0.82, archetype.aggression + 0.18),
-    noise: Math.max(6, archetype.noise - 1),
+    anchor: 50,
+    aggression: 0,
+    noise: 0,
     hp: 100,
     maxHp: 100,
     reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
@@ -6447,8 +6438,9 @@ function createBot(options = {}) {
   const copiedUniqueSpec = bossSpec?.copiedUniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.copiedUniqueKey] : null;
   const powerSpec = copiedUniqueSpec || uniqueSpec;
   const profile = isBoss ? null : inherited ? inherited : randomBotProfile();
-  const archetype = uniqueSpec
-    ? archetypeByType((powerSpec || uniqueSpec).personality)
+  // bosses have no personality: they play the optimal guess (planBossGuess)
+  const archetype = isBoss
+    ? null
     : inherited
       ? archetypeByType(inherited.type)
       : passiveStack("p89")
@@ -6478,9 +6470,9 @@ function createBot(options = {}) {
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
     image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
-    anchor: clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
-    aggression: inherited?.aggression ?? (isBoss ? Math.min(0.75, archetype.aggression + 0.12) : archetype.aggression),
-    noise: inherited?.noise ?? (isBoss ? Math.max(7, archetype.noise - 1) : archetype.noise),
+    anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
+    aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
+    noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
     hp: maxHp,
     maxHp,
     reward: reward + loadedSpawnBonus,
@@ -7310,80 +7302,57 @@ function weightedMemoryAverage(entries, readValue) {
   return totalWeight ? weighted / totalWeight : null;
 }
 
-function selfConsistentBossGuess(otherAverage, participantCount, modifier, offset) {
-  const count = Math.max(2, participantCount);
-  const others = Math.max(1, count - 1);
-  const denominator = 1 - modifier / count;
-  if (denominator <= 0.05) return otherAverage * modifier + offset;
-  return (modifier * otherAverage * others / count + offset) / denominator;
+// Bosses have no personality. They play the best reply to what the table is likely to do:
+// estimate the other players' weighted average from the rounds they remember (or a level-1
+// guess when they remember nothing), then pick the whole number closest to the TARGET their
+// own guess would produce. No noise, no bluffing.
+function bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset) {
+  const total = othersWeight + ownWeight;
+  if (total <= 0) return guess;
+  return Math.ceil(Math.min(200, ((othersSum + guess * ownWeight) / total) * modifier + offset));
+}
+
+function bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset) {
+  const othersSum = othersAverage * othersWeight;
+  const total = othersWeight + ownWeight;
+  const denominator = 1 - (modifier * ownWeight) / total;
+  const solved = Math.abs(denominator) > 0.05 ? ((modifier * othersSum) / total + offset) / denominator : othersAverage * modifier + offset;
+  let best = clamp(Math.round(solved), 0, 100);
+  let bestMiss = Infinity;
+  for (let guess = Math.max(0, best - 6); guess <= Math.min(100, best + 6); guess += 1) {
+    const miss = Math.abs(guess - bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset));
+    if (miss < bestMiss || (miss === bestMiss && Math.abs(guess - solved) < Math.abs(best - solved))) {
+      best = guess;
+      bestMiss = miss;
+    }
+  }
+  return best;
 }
 
 function planBossGuess(bot) {
   const memory = bot.memory || [];
-  const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
-  const currentOffset = state.roundState?.targetOffset ?? 0;
-  const participantCount = Math.max(2, activeBots().length + 1);
-  const recent = memory.slice(-Math.min(8, memory.length));
-  const assumedOpeningAverage = bot.anchor * 0.28 + 50 * 0.72;
-
-  if (!recent.length) {
-    const openingGuess = selfConsistentBossGuess(assumedOpeningAverage, participantCount, currentModifier, currentOffset);
-    return Math.ceil(clamp(openingGuess + randomInt(-4, 4), 0, 100));
-  }
-
-  const estimatedOtherAverage =
-    weightedMemoryAverage(recent, (entry) => {
-      const rawAverage = memoryRawAverage(entry);
-      if (!Number.isFinite(rawAverage)) return null;
-      if (Number.isFinite(entry.ownGuess) && participantCount > 1) {
-        return (rawAverage * participantCount - entry.ownGuess) / (participantCount - 1);
-      }
-      return rawAverage;
-    }) ?? assumedOpeningAverage;
-  const selfConsistentGuess = selfConsistentBossGuess(
-    clamp(estimatedOtherAverage, 0, 100),
-    participantCount,
-    currentModifier,
-    currentOffset
-  );
-  const projectedTarget = weightedMemoryAverage(recent, (entry) => projectedMemoryTarget(entry, currentModifier, currentOffset));
-  const last = recent[recent.length - 1];
-  const prev = recent[recent.length - 2] || last;
-  const lastTarget = projectedMemoryTarget(last, currentModifier, currentOffset) ?? projectedTarget ?? selfConsistentGuess;
-  const prevTarget = projectedMemoryTarget(prev, currentModifier, currentOffset) ?? lastTarget;
-  const trendTarget = lastTarget + (lastTarget - prevTarget) * 0.35;
-  const playerPull = weightedMemoryAverage(recent, (entry) => entry.playerGuess);
-  const targetPlan = projectedTarget ?? lastTarget;
-  let guess;
-
-  if (bot.type === "Analyst") {
-    guess = selfConsistentGuess * 0.72 + trendTarget * 0.28;
-  } else if (bot.type === "Follower") {
-    guess = selfConsistentGuess * 0.78 + (playerPull ?? targetPlan) * 0.22;
-  } else if (bot.type === "Stubborn") {
-    guess = selfConsistentGuess * 0.7 + bot.anchor * 0.3;
-  } else if (bot.type === "Drifter") {
-    const sample = projectedMemoryTarget(randomFrom(recent), currentModifier, currentOffset) ?? targetPlan;
-    guess = selfConsistentGuess * 0.66 + sample * 0.34;
-  } else if (bot.type === "Caller") {
-    guess = selfConsistentGuess * 0.74 + targetPlan * 0.26;
-  } else {
-    guess = selfConsistentGuess * 0.76 + bot.anchor * 0.24;
-  }
-
-  const smartNoise = Math.max(2, Math.ceil(bot.noise * 0.45));
-  const pressured = bot.hp <= bot.maxHp * 0.35;
-  guess += randomInt(-smartNoise, smartNoise);
-
-  if (!pressured && Math.random() < bot.aggression * 0.14) {
-    guess += randomFrom([-1, 1]) * randomInt(4, 10);
-  }
-
-  if (!pressured && Math.random() < bot.aggression * 0.025) {
-    guess = selfConsistentGuess + randomFrom([-1, 1]) * randomInt(10, 18);
-  }
-
-  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+  const modifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const offset = state.roundState?.targetOffset ?? 0;
+  const ownWeight = botTargetWeight(bot);
+  const playerWeight = 1 + wealthWeightBonus();
+  const othersWeight =
+    playerWeight +
+    activeBots()
+      .filter((other) => other.id !== bot.id)
+      .reduce((sum, other) => sum + botTargetWeight(other), 0);
+  const participantWeight = othersWeight + ownWeight;
+  const recent = memory.slice(-Math.min(6, memory.length));
+  const remembered = weightedMemoryAverage(recent, (entry) => {
+    const rawAverage = memoryRawAverage(entry);
+    if (!Number.isFinite(rawAverage)) return null;
+    if (Number.isFinite(entry.ownGuess) && participantWeight > ownWeight) {
+      return (rawAverage * participantWeight - entry.ownGuess * ownWeight) / (participantWeight - ownWeight);
+    }
+    return rawAverage;
+  });
+  // nothing remembered: assume the table plays one step of reasoning (50 x modifier)
+  const othersAverage = clamp(remembered ?? 50 * clamp(modifier, 0.2, 1.5), 0, 100);
+  return clampFixedWillGuess(bot, bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset));
 }
 
 function clampFixedWillGuess(bot, guess) {
@@ -7800,8 +7769,8 @@ function advanceRoundRevealAnimation() {
   const animation = state.roundRevealAnimation;
   if (!animation?.active) return;
   if (animation.phase === "seal") {
+    // the slam at the end of the fill is the sound of this step now
     animation.phase = "effect";
-    playRoundRevealStepSfx();
     render();
     scheduleRoundRevealAnimation();
     return;
@@ -11453,7 +11422,7 @@ function renderMobileOfferingsHeader() {
         <div class="panel-title">Devil's Offerings</div>
         <div class="elite-chance-label">${Math.round(eliteShopChance() * 100)}% ELITE</div>
       </div>
-      <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
+      <div class="mobile-offerings-sin">${formatNumber(playerSin)}${SIN_MARK}</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
   `;
@@ -12335,6 +12304,100 @@ function watchMoments() {
   if (!before.gameOver && now.gameOver) momentSfx("gameOver");
 }
 
+// ==========================================================================
+// Seal trigger "Blood fill": the seal fills with red from its centre (CSS),
+// while the screen leans in towards it; when it is full the screen slams back
+// with a shockwave and cracks around the seal.
+// ==========================================================================
+const SEAL_FILL_MS = 620;
+let lastSealSlamKey = "";
+
+function sealCrackSvg(size) {
+  const c = size / 2;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const lines = [];
+  const count = 7 + Math.floor(Math.random() * 3);
+  for (let k = 0; k < count; k += 1) {
+    let angle = (k / count) * Math.PI * 2 + rnd(-0.25, 0.25);
+    let r = c * rnd(0.3, 0.36);
+    const end = c * rnd(0.72, 0.98);
+    const points = [[c + Math.cos(angle) * r, c + Math.sin(angle) * r]];
+    while (r < end) {
+      r += c * rnd(0.08, 0.16);
+      angle += rnd(-0.22, 0.22);
+      points.push([c + Math.cos(angle) * r, c + Math.sin(angle) * r]);
+      if (Math.random() < 0.22) {
+        const branchAngle = angle + rnd(0.35, 0.7) * (Math.random() < 0.5 ? -1 : 1);
+        const br = r + c * rnd(0.08, 0.18);
+        lines.push(`M${points[points.length - 1].map((v) => v.toFixed(1)).join(" ")}L${(c + Math.cos(branchAngle) * br).toFixed(1)} ${(c + Math.sin(branchAngle) * br).toFixed(1)}`);
+      }
+    }
+    lines.push(`M${points.map((point) => point.map((v) => v.toFixed(1)).join(" ")).join("L")}`);
+  }
+  const d = lines.join("");
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="crack-glow" d="${d}"/><path class="crack-line" d="${d}"/></svg>`;
+}
+
+function sealSlamEffects(slot) {
+  const sigil = slot?.querySelector(".equipped-seal-sigil");
+  if (!sigil || !slot.isConnected) return;
+  const rect = sigil.getBoundingClientRect();
+  const diameter = Math.min(rect.width, rect.height);
+  if (!diameter) return;
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  playGameSfx("sealSlam");
+  if (!motionReduced()) {
+    hitStop(55);
+    setTimeout(() => screenShake(Math.max(4, diameter / 18), 340), 55);
+  }
+  const size = Math.round(diameter * 3);
+  const fx = document.createElement("div");
+  fx.className = "seal-slam-fx";
+  fx.style.cssText = `left:${cx}px;top:${cy}px;--fx-size:${size}px;--fx-d:${diameter}px`;
+  fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span><span class="slam-cracks">${sealCrackSvg(size)}</span>`;
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 1100);
+}
+
+function sealLeanIn(slot) {
+  const app = document.querySelector("#app");
+  const sigil = slot?.querySelector(".equipped-seal-sigil");
+  if (!app?.animate || !sigil || motionReduced()) return;
+  const appRect = app.getBoundingClientRect();
+  const rect = sigil.getBoundingClientRect();
+  app.style.transformOrigin = `${rect.left + rect.width / 2 - appRect.left}px ${rect.top + rect.height / 2 - appRect.top}px`;
+  app.style.willChange = "transform";
+  document.body.classList.add("seal-leaning");
+  const lean = app.animate(
+    [
+      { transform: "scale(1)", easing: "cubic-bezier(0.55, 0, 0.9, 0.55)" },
+      { transform: "scale(1.035)", offset: 0.66, easing: "cubic-bezier(0.2, 0, 0.1, 1)" },
+      { transform: "scale(0.988)", offset: 0.74, easing: "ease-out" },
+      { transform: "scale(1)" }
+    ],
+    { duration: Math.round(SEAL_FILL_MS / 0.66) }
+  );
+  lean.onfinish = lean.oncancel = () => {
+    app.style.transformOrigin = "";
+    app.style.willChange = "";
+    document.body.classList.remove("seal-leaning");
+  };
+}
+
+function watchSealTrigger() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active || animation.phase !== "seal") return;
+  const key = `${state.round}:${animation.stepIndex}:${currentRoundRevealStep()?.id || ""}`;
+  if (key === lastSealSlamKey) return;
+  lastSealSlamKey = key;
+  const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed):not(.wide-seal-slot)") ||
+    document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
+  if (!slot) return;
+  sealLeanIn(slot);
+  setTimeout(() => sealSlamEffects(document.querySelector(".passive-slot.round-reveal-active") || slot), SEAL_FILL_MS);
+}
+
 function afterRenderEffects() {
   if (state.mode !== "arcade") {
     lastEquippedSealIds = null;
@@ -12342,6 +12405,7 @@ function afterRenderEffects() {
     return;
   }
   syncSealRings();
+  watchSealTrigger();
   watchMoments();
 }
 
@@ -12363,7 +12427,7 @@ function renderTopbar() {
       : "";
   const playerCreditBadge =
     playerDisplay.lastCredits > 0
-      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
+      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits}${SIN_MARK}</div>`
       : "";
   const maxHp = playerMaxHp();
   const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
@@ -12403,7 +12467,7 @@ function renderTopbar() {
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
-        <span class="stat-label">SIN</span>
+        <span class="stat-label">SIN${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
       </div>
       <div class="dev-quick" aria-label="Test controls">
@@ -12451,6 +12515,56 @@ const PERSONALITY_GLYPHS = {
   Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
 };
 
+// SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
+const SIN_MARK = `<span class="sin-mark" role="img" aria-label="SIN"></span>`;
+
+function sinValueHtml(text) {
+  return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;
+}
+
+// bosses: an inverted pentagram instead of a personality mark
+const BOSS_GLYPH_HTML = `<span class="bot-glyph boss-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg></span>`;
+
+// TEMPORARY look test: each boss shows a small seal (its own Goetic seal, or a stand-in) whose
+// tooltip explains the boss's ability. These seals are only pictures here; the player's seals are unchanged.
+const BOSS_STAND_IN_SEALS = {
+  zilon: "p93",
+  dantre: "p92",
+  serafim: "p94",
+  pyros: "p95",
+  padma: "p96",
+  threon: "p97",
+  petros: "p110",
+  pavlos: "p110",
+  kalha: "p16",
+  jesus: "p75",
+  satan: "p111"
+};
+
+function bossSealId(bot) {
+  if (!bot?.isBoss) return null;
+  if (bot.goeticPassiveId && SEAL_SIGILS[bot.goeticPassiveId]) return bot.goeticPassiveId;
+  return BOSS_STAND_IN_SEALS[bot.finalKey || bot.uniqueKey || bot.copiedUniqueKey] || null;
+}
+
+function bossAbilityText(bot) {
+  if (bot.finalKey) return (FINAL_BOSS_SPECS[bot.finalKey]?.descriptions || []).join(" ");
+  return botPassiveDescription(bot) || "No special ability.";
+}
+
+function bossSealBadgeHtml(bot) {
+  const sealId = bossSealId(bot);
+  if (!sealId) return "";
+  const tooltip = `
+    <div class="tooltip-heading">
+      <div class="tooltip-title">${escapeHtml(bot.name)}</div>
+      <div class="tooltip-shift-hint">BOSS</div>
+    </div>
+    <div class="tooltip-body">${descriptionHtml(bossAbilityText(bot))}</div>
+  `;
+  return `<span class="boss-seal ${SATAN_SEAL_IDS.has(sealId) ? "boss-seal-wide" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">${renderSealSigil(sealId, "boss-seal-sigil")}</span>`;
+}
+
 function personalityGlyphHtml(type) {
   const paths = PERSONALITY_GLYPHS[type];
   if (!paths) return "";
@@ -12493,8 +12607,8 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  const typeLabel = normalizeGameText(hasVisiblePassive ? `${bot.isBoss ? "BOSS" : bot.type}: ${passiveSummary}` : bot.type);
-  const passiveDescription = hasVisiblePassive ? botPassiveDescription(bot) : "";
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(hasVisiblePassive ? `${bot.type}: ${passiveSummary}` : bot.type);
+  const passiveDescription = hasVisiblePassive && !bot.isBoss ? botPassiveDescription(bot) : "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
   const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
@@ -12529,7 +12643,7 @@ function renderBot(bot, pendingPick) {
       : "";
   const sinBadge =
     botLastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
+      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta}${SIN_MARK}</div>`
       : "";
   const memoryBadge =
     botLastMemoryDelta > 0
@@ -12543,7 +12657,8 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? "" : personalityGlyphHtml(bot.type);
+  const flagHtml = bot.isBoss ? BOSS_GLYPH_HTML : personalityGlyphHtml(bot.type);
+  const bossSealHtml = bot.isBoss ? bossSealBadgeHtml(bot) : "";
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -12567,13 +12682,14 @@ function renderBot(bot, pendingPick) {
   return `
     <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass} ${hit.className}" data-bot-id="${bot.id}" style="--bot-color: ${bot.color}${hit.style}"${tooltipAttr}>
       ${hit.flash}
+      ${bossSealHtml}
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
         <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${bot.country})`))}">${bot.name}</div>
-        <div class="bot-reward" title="SIN">${rewardLabel}</div>
+        <div class="bot-reward" title="SIN">${sinValueHtml(rewardLabel)}</div>
         ${sinBadge}
       </div>
       <div class="bot-type ${bot.isBoss ? "boss-type" : ""}" title="${typeLabel}">${typeLabel}</div>
@@ -12750,7 +12866,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()} SIN</span></button>
+          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()}${SIN_MARK}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -12774,7 +12890,7 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   const description = itemDescription(previewItem);
@@ -12844,7 +12960,7 @@ function renderActiveItem(item, index) {
         <div>
           <div class="item-name">${item.name}</div>
           ${memoryLine}
-          <div class="price">Sell ${sale} SIN</div>
+          <div class="price">Sell ${sale}${SIN_MARK}</div>
         </div>
         <span class="item-kind">ARTIFACT</span>
       </div>
@@ -12885,7 +13001,9 @@ function renderPassives() {
         : "";
     const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
-    const sealImage = renderSealSigil(item, "equipped-seal-sigil");
+    const sealImage =
+      renderSealSigil(item, "equipped-seal-sigil") +
+      (revealClass && !SATAN_SEAL_IDS.has(item.id) ? renderSealSigil(item, "equipped-seal-sigil seal-fill-sigil") : "");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
     const summon = sealSummonAttrs(item.id);

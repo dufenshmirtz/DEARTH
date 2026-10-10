@@ -55,6 +55,7 @@ const GAME_SFX = {
   hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], volume: 0.42, pitch: 0.05 },
   hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], volume: 0.5, pitch: 0.04 },
   ko: { srcs: ["assets/audio/sfx/ko.mp3"], volume: 0.42, pitch: 0.03 },
+  sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], volume: 0.5, pitch: 0.05 },
   critical: { srcs: ["assets/audio/sfx/critical.mp3"], volume: 0.6, duck: 900 },
   targetLand: { srcs: ["assets/audio/sfx/target-land.mp3"], volume: 0.42 },
   sinGain: { srcs: ["assets/audio/sfx/sin-gain-1.mp3", "assets/audio/sfx/sin-gain-2.mp3"], volume: 0.26, pitch: 0.04 },
