@@ -8580,3 +8580,20 @@ body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
   max-width: 100% !important;
   object-fit: contain;
 }
+
+/* pause: the test-only DEV button sits in the card's top-right corner, clear of the title */
+#app .pause-card > .pause-dev-button {
+  position: absolute !important;
+  z-index: 2;
+  top: 14px !important;
+  right: 16px !important;
+  left: auto !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+#app .pause-card .end-title {
+  margin-top: 6px !important;
+}
