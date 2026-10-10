@@ -8557,3 +8557,26 @@ body #app .floating-tooltip {
   min-height: 0 !important;
   white-space: normal !important;
 }
+
+/* the seal row never shows a scrollbar: slots fit their grid column, and anything
+   that pokes out for a moment (a growing or newly bought seal) just draws over */
+#app .passive-bar {
+  overflow: visible !important;
+  scrollbar-width: none;
+}
+
+#app .passive-bar::-webkit-scrollbar {
+  display: none;
+}
+
+body.mobile-arcade #app .passive-slot:not(.wide-seal-slot) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+body.mobile-arcade #app .passive-slot:not(.wide-seal-slot) .equipped-seal-sigil,
+body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
+  max-width: 100% !important;
+  object-fit: contain;
+}
