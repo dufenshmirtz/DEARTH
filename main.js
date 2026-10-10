@@ -80,6 +80,7 @@ const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
+const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -1808,6 +1809,9 @@ const state = {
     sfxVolume: 1,
     muted: false
   },
+  display: {
+    outlineBoil: true
+  },
   pauseOpen: false,
   pauseDevOpen: false,
   round: 1,
@@ -1920,6 +1924,31 @@ function loadSoundSettings() {
     if (Number.isFinite(saved.sfxVolume)) state.sound.sfxVolume = clamp(saved.sfxVolume, 0, 1);
     if (typeof saved.muted === "boolean") state.sound.muted = saved.muted;
   } catch (error) {}
+}
+
+// Display settings: trembling (line-boil) outlines. Off by default for players who ask their system to reduce motion.
+function loadDisplaySettings() {
+  const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  state.display.outlineBoil = !prefersReducedMotion;
+  try {
+    const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil;
+    }
+  } catch (error) {}
+  applyDisplaySettings();
+}
+
+function saveDisplaySettings() {
+  try {
+    window.localStorage?.setItem(DISPLAY_SETTINGS_STORAGE_KEY, JSON.stringify(state.display));
+  } catch (error) {}
+}
+
+function applyDisplaySettings() {
+  if (typeof document === "undefined" || !document.body) return;
+  document.body.classList.toggle("outline-boil", Boolean(state.display.outlineBoil));
 }
 
 function saveSoundSettings() {
@@ -11029,7 +11058,7 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">Sound Settings</button>
+      <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
@@ -11104,6 +11133,10 @@ function renderSoundSettings(prefix) {
       <label class="sound-toggle">
         <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
         <span>Mute Sound</span>
+      </label>
+      <label class="sound-toggle">
+        <input id="${prefix}OutlineBoil" data-display-setting="outlineBoil" type="checkbox" ${state.display.outlineBoil ? "checked" : ""} />
+        <span>Trembling Outlines</span>
       </label>
   `;
 }
@@ -12456,6 +12489,13 @@ function handleMenuAction(action) {
   }
 }
 
+function updateDisplaySetting(key, value) {
+  if (!(key in state.display)) return;
+  state.display[key] = Boolean(value);
+  saveDisplaySettings();
+  applyDisplaySettings();
+}
+
 function updateSoundSetting(key, value, renderAfter = true) {
   if (key === "muted") {
     state.sound.muted = Boolean(value);
@@ -12980,6 +13020,10 @@ function bindEvents() {
     button.addEventListener("click", cancelRunRemoval);
   });
 
+  document.querySelectorAll("[data-display-setting]").forEach((control) => {
+    control.addEventListener("change", () => updateDisplaySetting(control.dataset.displaySetting, control.checked));
+  });
+
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {
     const key = control.dataset.soundSetting;
     if (key === "muted") {
@@ -13167,6 +13211,7 @@ window.addEventListener("focus", () => {
 });
 
 loadSoundSettings();
+loadDisplaySettings();
 installSoundtrack();
 installArcadeEnterShortcut();
 installShiftTooltipMore();

@@ -162,7 +162,7 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">Sound Settings</button>
+      <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
@@ -237,6 +237,10 @@ function renderSoundSettings(prefix) {
       <label class="sound-toggle">
         <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
         <span>Mute Sound</span>
+      </label>
+      <label class="sound-toggle">
+        <input id="${prefix}OutlineBoil" data-display-setting="outlineBoil" type="checkbox" ${state.display.outlineBoil ? "checked" : ""} />
+        <span>Trembling Outlines</span>
       </label>
   `;
 }
@@ -1587,6 +1591,13 @@ function handleMenuAction(action) {
     render();
     window.close();
   }
+}
+
+function updateDisplaySetting(key, value) {
+  if (!(key in state.display)) return;
+  state.display[key] = Boolean(value);
+  saveDisplaySettings();
+  applyDisplaySettings();
 }
 
 function updateSoundSetting(key, value, renderAfter = true) {

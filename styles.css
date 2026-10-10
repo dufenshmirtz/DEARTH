@@ -6507,3 +6507,174 @@ body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick .small-butto
   background-size: calc(100% - 16px) 8px !important;
   background-repeat: no-repeat !important;
 }
+
+/* ==========================================================================
+   Seal trigger "Ignition": a red ring sweeps round the seal, the sigil flares
+   and turns red, a shockwave rolls out; during the effect the ring stays lit.
+   Same 1 s + 1 s timing as before, driven by round-reveal-active / -effect.
+   ========================================================================== */
+@property --seal-sweep {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: calc(100% + 8px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/circle-frame-red.png") center / contain no-repeat;
+  -webkit-mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+  mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before {
+  animation: seal-ring-sweep 480ms ease-in-out both;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  --seal-sweep: 360deg;
+  animation: seal-ring-hold 1000ms ease-out both;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: calc(100% - 4px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--blood-bright);
+  box-shadow: 0 0 18px rgba(220, 42, 47, 0.7), inset 0 0 18px rgba(220, 42, 47, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  animation: seal-shockwave 650ms ease-out 420ms both;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil:not(.recolored-sigil) {
+  filter: var(--seal-ignite-filter, brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%)) !important;
+  animation: seal-ignite 1000ms linear both !important;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil.recolored-sigil {
+  animation: seal-ignite-scale 1000ms linear both !important;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil:not(.recolored-sigil) {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) drop-shadow(0 0 8px rgba(220, 42, 47, 0.75)) !important;
+}
+
+@keyframes seal-ring-sweep {
+  from { --seal-sweep: 0deg; }
+  to { --seal-sweep: 360deg; }
+}
+
+@keyframes seal-ring-hold {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+@keyframes seal-shockwave {
+  from { opacity: 0.95; scale: 1; }
+  to { opacity: 0; scale: 1.9; }
+}
+
+/* the sigil stays white while the ring is drawn, then flares red (the filter swaps through a custom property) */
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.12); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%) drop-shadow(0 0 10px rgba(220, 42, 47, 0.9)); transform: scale(1.06); }
+  70%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) drop-shadow(0 0 8px rgba(220, 42, 47, 0.75)); transform: scale(1.04); }
+}
+
+@keyframes seal-ignite-scale {
+  0%, 41% { transform: scale(1); }
+  42% { transform: scale(1.12); }
+  70%, 100% { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .passive-slot.round-reveal-active:not(.suppressed)::before {
+    --seal-sweep: 360deg;
+    animation: none;
+  }
+
+  #app .passive-slot.round-reveal-active:not(.suppressed)::after {
+    display: none;
+  }
+
+  #app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   Side panels get the same continuous frame as the cards
+   ========================================================================== */
+#app .shop-panel::after,
+#app .active-panel::after {
+  border-width: 28px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 28px stretch;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   Trembling outlines (line boil): three slightly different drawings of the
+   frame swapped 8 times a second. Toggle: Settings > Trembling Outlines
+   (body.outline-boil). Off by default when the system asks for reduced motion.
+   ========================================================================== */
+@keyframes outline-boil {
+  0% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png"); }
+  33.333% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-1.png"); }
+  66.666% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-2.png"); }
+}
+
+body.outline-boil #app .bot-card::after,
+body.outline-boil #app .stat-card::after,
+body.outline-boil #app .target-panel::after,
+body.outline-boil #app .item-card::after,
+body.outline-boil #app .shop-panel::after,
+body.outline-boil #app .active-panel::after {
+  animation: outline-boil 375ms steps(1) infinite;
+}
+
+/* out of step with each other, so the screen never pulses as one */
+body.outline-boil #app .bot-card:nth-child(3n + 2)::after,
+body.outline-boil #app .item-card:nth-child(3n + 2)::after,
+body.outline-boil #app .health-wrap::after,
+body.outline-boil #app .active-panel::after {
+  animation-delay: -125ms;
+}
+
+body.outline-boil #app .bot-card:nth-child(3n)::after,
+body.outline-boil #app .item-card:nth-child(3n)::after,
+body.outline-boil #app .credit-wrap::after,
+body.outline-boil #app .shop-panel::after {
+  animation-delay: -250ms;
+}
+
+body.outline-boil #app .round-wrap::after {
+  animation-delay: -60ms;
+}
+
+/* load the three drawings up front so the first cycle doesn't flicker */
+body.outline-boil::after {
+  content: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png") url("assets/occult-ui-border-kit/assets/boil/frantic-1.png") url("assets/occult-ui-border-kit/assets/boil/frantic-2.png");
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}

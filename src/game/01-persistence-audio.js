@@ -32,6 +32,31 @@ function loadSoundSettings() {
   } catch (error) {}
 }
 
+// Display settings: trembling (line-boil) outlines. Off by default for players who ask their system to reduce motion.
+function loadDisplaySettings() {
+  const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  state.display.outlineBoil = !prefersReducedMotion;
+  try {
+    const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil;
+    }
+  } catch (error) {}
+  applyDisplaySettings();
+}
+
+function saveDisplaySettings() {
+  try {
+    window.localStorage?.setItem(DISPLAY_SETTINGS_STORAGE_KEY, JSON.stringify(state.display));
+  } catch (error) {}
+}
+
+function applyDisplaySettings() {
+  if (typeof document === "undefined" || !document.body) return;
+  document.body.classList.toggle("outline-boil", Boolean(state.display.outlineBoil));
+}
+
 function saveSoundSettings() {
   try {
     window.localStorage?.setItem(SOUND_SETTINGS_STORAGE_KEY, JSON.stringify(state.sound));

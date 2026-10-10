@@ -101,6 +101,10 @@ function bindEvents() {
     button.addEventListener("click", cancelRunRemoval);
   });
 
+  document.querySelectorAll("[data-display-setting]").forEach((control) => {
+    control.addEventListener("change", () => updateDisplaySetting(control.dataset.displaySetting, control.checked));
+  });
+
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {
     const key = control.dataset.soundSetting;
     if (key === "muted") {
@@ -288,6 +292,7 @@ window.addEventListener("focus", () => {
 });
 
 loadSoundSettings();
+loadDisplaySettings();
 installSoundtrack();
 installArcadeEnterShortcut();
 installShiftTooltipMore();

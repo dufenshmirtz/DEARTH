@@ -34,6 +34,7 @@ const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
+const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -1761,6 +1762,9 @@ const state = {
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
     muted: false
+  },
+  display: {
+    outlineBoil: true
   },
   pauseOpen: false,
   pauseDevOpen: false,
