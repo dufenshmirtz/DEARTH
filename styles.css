@@ -6772,3 +6772,67 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-b
 #app .passive-slot.wide-seal-slot::after {
   display: none !important;
 }
+
+/* ==========================================================================
+   Seal ring geometry: the ring is laid exactly over the seal's own circle.
+   --ring-d / --ring-x / --ring-y are measured from the drawn sigil after
+   each render (syncSealRings). The seal art's circle is 91% of the image,
+   the ring art's circle is 95.5% of its image, hence the 0.953 factor.
+   ========================================================================== */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before,
+#app .passive-slot.seal-summoned::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.953);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/circle-frame-red.png") center / contain no-repeat;
+  -webkit-mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+  mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  scale: 1.04;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.91);
+}
+
+/* ==========================================================================
+   Buying a seal ("Summoned"): a red ring glows where the seal will sit,
+   then the sigil comes into focus inside it. Plays once per newly bought seal.
+   ========================================================================== */
+#app .passive-slot.seal-summoned::before {
+  --seal-sweep: 360deg;
+  opacity: 0;
+  animation: seal-summon-ring 1100ms ease-out var(--summon-delay, 0ms) both;
+}
+
+#app .passive-slot.seal-summoned .equipped-seal-sigil {
+  animation: seal-summon-sigil 1100ms ease-out var(--summon-delay, 0ms) both !important;
+}
+
+@keyframes seal-summon-ring {
+  0% { opacity: 0; scale: 0.94; }
+  25% { opacity: 1; scale: 1.04; }
+  45% { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 1; }
+}
+
+@keyframes seal-summon-sigil {
+  0%, 22% { opacity: 0; filter: blur(8px); transform: scale(0.86); }
+  65%, 100% { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .passive-slot.seal-summoned::before { display: none; }
+  #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
+}

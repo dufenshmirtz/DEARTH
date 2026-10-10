@@ -10907,6 +10907,7 @@ function render() {
   app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
   app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
   bindEvents();
+  afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   saveArcadeRun();
@@ -11897,6 +11898,53 @@ function hudPopAttrs(key, value) {
   return { className: "hud-pop", style: ` style="--pop-delay: ${-Math.round(Math.min(change.elapsed, HUD_POP_MS))}ms"` };
 }
 
+// ---------- seals: purchase animation + Ignition ring geometry ----------
+let lastEquippedSealIds = null;
+const sealSummonedAt = new Map();
+const SEAL_SUMMON_MS = 1100;
+
+// remembers which seals were equipped last render; a seal that wasn't there before was just bought
+function sealSummonAttrs(id) {
+  const at = sealSummonedAt.get(id);
+  if (at === undefined) return { className: "", style: "" };
+  const elapsed = performance.now() - at;
+  if (elapsed >= SEAL_SUMMON_MS) return { className: "", style: "" };
+  return { className: "seal-summoned", style: ` style="--summon-delay: ${-Math.round(elapsed)}ms"` };
+}
+
+function trackEquippedSeals(ids) {
+  const now = performance.now();
+  if (lastEquippedSealIds) {
+    ids.forEach((id) => {
+      if (!lastEquippedSealIds.has(id)) sealSummonedAt.set(id, now);
+    });
+  }
+  lastEquippedSealIds = new Set(ids);
+}
+
+// the red ring and shockwave are sized from the sigil as drawn, so they sit on the seal's own circle in every layout
+function syncSealRings() {
+  document.querySelectorAll(".passive-slot.round-reveal-active, .passive-slot.round-reveal-effect, .passive-slot.seal-summoned").forEach((slot) => {
+    const sigil = slot.querySelector(".equipped-seal-sigil");
+    if (!sigil) return;
+    const slotRect = slot.getBoundingClientRect();
+    const sigilRect = sigil.getBoundingClientRect();
+    const drawn = Math.min(sigil.offsetWidth || sigilRect.width, sigil.offsetHeight || sigilRect.height);
+    if (!drawn) return;
+    slot.style.setProperty("--ring-d", `${drawn}px`);
+    slot.style.setProperty("--ring-x", `${(sigilRect.left + sigilRect.width / 2) - (slotRect.left + slotRect.width / 2)}px`);
+    slot.style.setProperty("--ring-y", `${(sigilRect.top + sigilRect.height / 2) - (slotRect.top + slotRect.height / 2)}px`);
+  });
+}
+
+function afterRenderEffects() {
+  if (state.mode !== "arcade") {
+    lastEquippedSealIds = null;
+    return;
+  }
+  syncSealRings();
+}
+
 function renderTopbar() {
   const playerDisplay = roundRevealPlayerDisplay();
   const playerDamageTooltip = sourceTooltip(playerDisplay.damageSources, "damage");
@@ -12390,6 +12438,9 @@ function renderPassives() {
   const slots = [];
   const limit = passiveLimit();
   let occupiedSlots = 0;
+  if (state.mode === "arcade") {
+    trackEquippedSeals(state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).map((item) => item.id));
+  }
   state.player.passives.forEach((item, index) => {
     if (!item || REMOVED_PASSIVE_IDS.has(item.id) || occupiedSlots >= limit) return;
     const slotCost = sealSlotCost(item);
@@ -12414,8 +12465,9 @@ function renderPassives() {
     const sealImage = renderSealSigil(item, "equipped-seal-sigil");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
+    const summon = sealSummonAttrs(item.id);
     slots.push(`
-      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass} ${summon.className}"${summon.style} data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>
