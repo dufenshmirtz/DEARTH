@@ -6498,3 +6498,12 @@ body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick .small-butto
   padding: 0 5px !important;
   font-size: 8px !important;
 }
+
+/* panel headers (Devil's Offerings, Artifacts, ...): hand-drawn underline instead of a plain 1px rule */
+#app .panel-header {
+  border-bottom-color: transparent !important;
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+  background-position: center bottom !important;
+  background-size: calc(100% - 16px) 8px !important;
+  background-repeat: no-repeat !important;
+}
