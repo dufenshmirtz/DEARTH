@@ -5884,22 +5884,3 @@ body.mobile-arcade #app .bot-card .bot-reward {
   box-shadow: none !important;
   background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
 }
-
-/* Sinner cards: same frantic hand-drawn frame as bosses (white for normal Sinners, red for bosses),
-   drawn a little outside the card so the content has more room */
-#app .bot-card::after {
-  inset: -8px;
-  border-width: 30px;
-  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 30px stretch;
-  opacity: 1;
-}
-
-#app .bot-card:not(.boss)::after {
-  filter: none;
-}
-
-body.mobile-arcade #app .bot-card::after {
-  inset: -4px;
-  border-width: 22px;
-  border-image-width: 22px;
-}
