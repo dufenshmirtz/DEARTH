@@ -6836,3 +6836,150 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-b
   #app .passive-slot.seal-summoned::before { display: none; }
   #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
 }
+
+/* ==========================================================================
+   Pass 3: seal slot clean-up, Ignition ring around the seal (as in the lab),
+   lighter trigger animation, Flash on purchase, damage shake.
+   ========================================================================== */
+
+/* nothing is drawn behind an equipped seal: no slot background, border or leftover ring */
+#app .passive-slot:not(.empty) {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .passive-slot:not(.empty):not(.round-reveal-active):not(.round-reveal-effect)::before,
+#app .passive-slot:not(.empty):not(.round-reveal-active):not(.seal-summoned)::after {
+  content: none !important;
+}
+
+/* Ignition ring: a little outside the seal, centred on it (like the Seal Lab preview) */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  width: calc(var(--ring-d, 100%) * 1.1);
+  will-change: opacity;
+}
+
+/* lighter on the GPU: no animated drop-shadow while the seal flares, glow only once it has settled */
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.12); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%); transform: scale(1.06); }
+  70%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%); transform: scale(1.04); }
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil {
+  will-change: transform;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  will-change: transform, opacity;
+}
+
+/* the red ring is loaded with the page, so the first trigger doesn't wait for it */
+body::before {
+  content: url("assets/occult-ui-border-kit/assets/circle-frame-red.png");
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Buying a seal: Flash — a white-hot flash and a small shockwave, then it settles */
+#app .passive-slot.seal-summoned::before {
+  content: none !important;
+}
+
+#app .passive-slot.seal-summoned::after {
+  content: "" !important;
+  position: absolute;
+  z-index: 2;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.91);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--bone);
+  box-shadow: 0 0 14px rgba(233, 227, 214, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  animation: seal-bought-wave 520ms ease-out var(--summon-delay, 0ms) both;
+}
+
+#app .passive-slot.seal-summoned .equipped-seal-sigil {
+  animation: seal-bought-flash 380ms ease-out var(--summon-delay, 0ms) both !important;
+}
+
+@keyframes seal-bought-flash {
+  from { filter: brightness(4); transform: scale(1.2); }
+  to { filter: brightness(1); transform: scale(1); }
+}
+
+@keyframes seal-bought-wave {
+  from { opacity: 0.9; scale: 1; }
+  to { opacity: 0; scale: 1.8; }
+}
+
+/* Damage shake, scaled by damage: small hits nudge, medium shake with a red flash, big hits jolt */
+#app .bot-card.hit-shake {
+  animation: hit-shake-x 220ms linear var(--shake-delay, 0ms) both;
+}
+
+#app .bot-card.hit-mid {
+  animation-duration: 300ms;
+}
+
+#app .bot-card.hit-big {
+  animation: hit-shake-big 380ms linear var(--shake-delay, 0ms) both;
+}
+
+@keyframes hit-shake-x {
+  0%, 100% { translate: 0 0; }
+  20% { translate: calc(var(--shake-px, 3px) * -1) 0; }
+  40% { translate: var(--shake-px, 3px) 0; }
+  60% { translate: calc(var(--shake-px, 3px) * -0.6) 0; }
+  80% { translate: calc(var(--shake-px, 3px) * 0.4) 0; }
+}
+
+@keyframes hit-shake-big {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  20% { translate: calc(var(--shake-px, 8px) * -1) 0; rotate: -1.2deg; }
+  40% { translate: var(--shake-px, 8px) 0; rotate: 1deg; }
+  60% { translate: calc(var(--shake-px, 8px) * -0.6) 0; rotate: -0.6deg; }
+  80% { translate: calc(var(--shake-px, 8px) * 0.4) 0; rotate: 0deg; }
+}
+
+#app .bot-card .hit-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 28px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 28px stretch;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(110%);
+  opacity: 0;
+  animation: hit-flash 650ms ease-out var(--shake-delay, 0ms) both;
+}
+
+body.mobile-arcade #app .bot-card .hit-flash {
+  border-width: 20px;
+  border-image-width: 20px;
+}
+
+@keyframes hit-flash {
+  0% { opacity: 1; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .bot-card.hit-shake { animation: none !important; }
+  #app .passive-slot.seal-summoned::after { display: none; }
+  #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
+}

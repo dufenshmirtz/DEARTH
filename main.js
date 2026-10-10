@@ -11898,10 +11898,25 @@ function hudPopAttrs(key, value) {
   return { className: "hud-pop", style: ` style="--pop-delay: ${-Math.round(Math.min(change.elapsed, HUD_POP_MS))}ms"` };
 }
 
+// ---------- DAMNED cards: shake when hit, scaled by how big the hit was ----------
+const HIT_SHAKE_MS = 420;
+
+function hitShakeAttrs(key, value, maxHp, rising = false) {
+  const change = trackHudChange(`shake:${key}`, value);
+  if (change.elapsed >= HIT_SHAKE_MS) return { className: "", style: "", flash: "" };
+  const lost = rising ? value - change.from : change.from - value;
+  if (!(lost > 0)) return { className: "", style: "", flash: "" };
+  const ratio = lost / Math.max(1, maxHp);
+  const size = ratio >= 0.4 ? "hit-big" : ratio >= 0.15 ? "hit-mid" : "hit-small";
+  const px = (2 + Math.min(10, Math.round(ratio * 10))).toFixed(0);
+  const flash = size === "hit-small" ? "" : `<span class="hit-flash"></span>`;
+  return { className: `hit-shake ${size}`, style: `; --shake-px: ${px}px; --shake-delay: ${-Math.round(change.elapsed)}ms`, flash };
+}
+
 // ---------- seals: purchase animation + Ignition ring geometry ----------
 let lastEquippedSealIds = null;
 const sealSummonedAt = new Map();
-const SEAL_SUMMON_MS = 1100;
+const SEAL_SUMMON_MS = 700;
 
 // remembers which seals were equipped last render; a seal that wasn't there before was just bought
 function sealSummonAttrs(id) {
@@ -12141,6 +12156,9 @@ function renderBot(bot, pendingPick) {
     ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
+  const hit = bot.immortal
+    ? hitShakeAttrs(`bot-${bot.id}`, displayDamageTaken, Math.max(100, displayMaxHp || 100), true)
+    : hitShakeAttrs(`bot-${bot.id}`, displayHp, safeDisplayMaxHp);
   const faceInner = isDown
     ? bot.deathCause === "contract"
       ? `<span class="contract-mark">PC</span>`
@@ -12148,7 +12166,8 @@ function renderBot(bot, pendingPick) {
     : `<img class="bot-image" src="${escapeAttr(botImagePath(bot))}" alt="" loading="lazy" />`;
 
   return `
-    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass}" style="--bot-color: ${bot.color}"${tooltipAttr}>
+    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass} ${hit.className}" style="--bot-color: ${bot.color}${hit.style}"${tooltipAttr}>
+      ${hit.flash}
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>
