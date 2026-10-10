@@ -6631,8 +6631,9 @@ body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick .small-butto
 
 /* ==========================================================================
    Trembling outlines (line boil): three slightly different drawings of the
-   frame swapped 8 times a second. Toggle: Settings > Trembling Outlines
-   (body.outline-boil). Off by default when the system asks for reduced motion.
+   frame swapped in steps. Settings > Outlines: Off / Slow / Normal / Fast
+   (body.outline-boil + --boil-duration). Off by default when the system asks
+   for reduced motion.
    ========================================================================== */
 @keyframes outline-boil {
   0% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png"); }
@@ -6646,7 +6647,7 @@ body.outline-boil #app .target-panel::after,
 body.outline-boil #app .item-card::after,
 body.outline-boil #app .shop-panel::after,
 body.outline-boil #app .active-panel::after {
-  animation: outline-boil 375ms steps(1) infinite;
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
 }
 
 /* out of step with each other, so the screen never pulses as one */
@@ -6654,18 +6655,18 @@ body.outline-boil #app .bot-card:nth-child(3n + 2)::after,
 body.outline-boil #app .item-card:nth-child(3n + 2)::after,
 body.outline-boil #app .health-wrap::after,
 body.outline-boil #app .active-panel::after {
-  animation-delay: -125ms;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
 }
 
 body.outline-boil #app .bot-card:nth-child(3n)::after,
 body.outline-boil #app .item-card:nth-child(3n)::after,
 body.outline-boil #app .credit-wrap::after,
 body.outline-boil #app .shop-panel::after {
-  animation-delay: -250ms;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
 }
 
 body.outline-boil #app .round-wrap::after {
-  animation-delay: -60ms;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.16);
 }
 
 /* load the three drawings up front so the first cycle doesn't flicker */
@@ -6677,4 +6678,97 @@ body.outline-boil::after {
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+
+/* seal sigils sit exactly in the middle of their slot, so the Ignition ring is centred on them */
+body:not(.mobile-arcade) #app .passive-slot {
+  justify-content: center !important;
+  align-content: center !important;
+}
+
+/* ==========================================================================
+   Health bars: the health just lost shows as a dark red under-bar that
+   drains away a moment later (desktop and phone, DAMNED and player).
+   ========================================================================== */
+#app .health-bar .health-fill {
+  position: relative;
+  z-index: 1;
+}
+
+#app .health-bar .health-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: var(--ghost-to);
+  border-radius: 999px;
+  background: #7a2226;
+  pointer-events: none;
+  animation: health-ghost-drain 520ms ease-in-out both;
+}
+
+#app .bot-card.boss .health-bar .health-ghost {
+  background: rgba(233, 227, 214, 0.55);
+}
+
+@keyframes health-ghost-drain {
+  from { width: var(--ghost-from); }
+  to { width: var(--ghost-to); }
+}
+
+/* ==========================================================================
+   Popup numbers pop in and rise into place once, when their value changes
+   (the render code adds .hud-pop and resumes it with --pop-delay).
+   ========================================================================== */
+#app .damage-badge,
+#app .heal-badge,
+#app .memory-badge,
+#app .bounty-badge,
+#app .player-damage-badge,
+#app .player-heal-badge,
+#app .player-credit-badge {
+  animation: none !important;
+}
+
+#app .damage-badge.hud-pop,
+#app .heal-badge.hud-pop,
+#app .memory-badge.hud-pop,
+#app .bounty-badge.hud-pop,
+#app .player-damage-badge.hud-pop,
+#app .player-heal-badge.hud-pop,
+#app .player-credit-badge.hud-pop {
+  animation: hud-pop 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) var(--pop-delay, 0ms) both !important;
+}
+
+@keyframes hud-pop {
+  0% { opacity: 0; scale: 0.6; translate: 0 14px; }
+  12% { opacity: 1; scale: 1.15; translate: 0 4px; }
+  28% { scale: 1; }
+  100% { opacity: 1; scale: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .health-bar .health-ghost {
+    display: none;
+  }
+
+  #app .hud-pop {
+    animation: none !important;
+  }
+}
+
+/* player heal sits on the label row, right of the damage number, clear of the bar */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  top: 14px !important;
+  bottom: auto !important;
+  right: auto !important;
+  left: calc(50% + 34px) !important;
+}
+
+/* the two-slot Seal of Satan is not round: no ring or shockwave on it */
+#app .passive-slot.wide-seal-slot::before,
+#app .passive-slot.wide-seal-slot::after {
+  display: none !important;
 }

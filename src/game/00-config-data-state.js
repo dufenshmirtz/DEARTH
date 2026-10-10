@@ -35,6 +35,9 @@ const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
+// Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
+const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
+const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -1764,7 +1767,7 @@ const state = {
     muted: false
   },
   display: {
-    outlineBoil: true
+    outlineBoil: 2
   },
   pauseOpen: false,
   pauseDevOpen: false,

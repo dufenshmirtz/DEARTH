@@ -102,7 +102,7 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-display-setting]").forEach((control) => {
-    control.addEventListener("change", () => updateDisplaySetting(control.dataset.displaySetting, control.checked));
+    control.addEventListener("input", () => updateDisplaySetting(control.dataset.displaySetting, control.value));
   });
 
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {

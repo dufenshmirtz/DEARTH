@@ -238,10 +238,11 @@ function renderSoundSettings(prefix) {
         <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
         <span>Mute Sound</span>
       </label>
-      <label class="sound-toggle">
-        <input id="${prefix}OutlineBoil" data-display-setting="outlineBoil" type="checkbox" ${state.display.outlineBoil ? "checked" : ""} />
-        <span>Trembling Outlines</span>
-      </label>
+      <div class="sound-setting">
+        <label for="${prefix}OutlineBoil">Outlines</label>
+        <input id="${prefix}OutlineBoil" class="sound-slider" data-display-setting="outlineBoil" type="range" min="0" max="3" step="1" value="${state.display.outlineBoil}" />
+        <strong data-display-value="outlineBoil">${OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off"}</strong>
+      </div>
   `;
 }
 
@@ -954,22 +955,64 @@ function renderPvpLog() {
   return `<div class="pvp-log">${state.pvp.log.map((entry) => `<div>${escapeHtml(normalizeGameText(entry))}</div>`).join("")}</div>`;
 }
 
+// ---------- HUD change tracking: animate only when a value actually changes ----------
+// Renders rebuild the DOM, so CSS animations would replay on every render.
+// We remember each value and when it last changed, and resume the animation
+// with a negative delay instead of restarting it.
+const hudChangeTracker = new Map();
+const HEALTH_GHOST_DELAY_MS = 320;
+const HEALTH_GHOST_DRAIN_MS = 520;
+const HUD_POP_MS = 1100;
+
+function trackHudChange(key, value) {
+  const now = performance.now();
+  const previous = hudChangeTracker.get(key);
+  if (!previous) {
+    hudChangeTracker.set(key, { value, from: value, changedAt: -Infinity });
+    return { from: value, elapsed: Infinity };
+  }
+  if (value !== previous.value) {
+    hudChangeTracker.set(key, { value, from: previous.value, changedAt: now });
+    return { from: previous.value, elapsed: 0 };
+  }
+  return { from: previous.from, elapsed: now - previous.changedAt };
+}
+
+// red under-bar that shows the health just lost, then drains away
+function healthGhostHtml(key, percent) {
+  const change = trackHudChange(`hp:${key}`, Math.round(percent * 10) / 10);
+  const total = HEALTH_GHOST_DELAY_MS + HEALTH_GHOST_DRAIN_MS;
+  if (!(change.from > percent) || change.elapsed >= total) return "";
+  const delay = Math.round(HEALTH_GHOST_DELAY_MS - change.elapsed);
+  return `<div class="health-ghost" style="--ghost-from: ${change.from}%; --ghost-to: ${percent}%; animation-delay: ${delay}ms"></div>`;
+}
+
+// popup numbers pop in and rise into place once, when their value changes
+function hudPopAttrs(key, value) {
+  const change = trackHudChange(`pop:${key}`, `${state.round}:${value}`);
+  if (change.elapsed >= HUD_POP_MS) return { className: "", style: "" };
+  return { className: "hud-pop", style: ` style="--pop-delay: ${-Math.round(Math.min(change.elapsed, HUD_POP_MS))}ms"` };
+}
+
 function renderTopbar() {
   const playerDisplay = roundRevealPlayerDisplay();
   const playerDamageTooltip = sourceTooltip(playerDisplay.damageSources, "damage");
   const playerHealTooltip = sourceTooltip(playerDisplay.healSources, "heal");
   const playerCreditTooltip = sourceTooltip(playerDisplay.creditSources, "credits");
+  const playerDamagePop = hudPopAttrs("player-damage", playerDisplay.lastDamage);
+  const playerHealPop = hudPopAttrs("player-heal", playerDisplay.lastHeal);
+  const playerCreditPop = hudPopAttrs("player-credit", playerDisplay.lastCredits);
   const playerDamageBadge =
     playerDisplay.lastDamage > 0
-      ? `<div class="player-damage-badge" ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${playerDisplay.lastDamage}</div>`
+      ? `<div class="player-damage-badge ${playerDamagePop.className}"${playerDamagePop.style} ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${playerDisplay.lastDamage}</div>`
       : "";
   const playerHealBadge =
     playerDisplay.lastHeal > 0
-      ? `<div class="player-heal-badge" ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${playerDisplay.lastHeal}</div>`
+      ? `<div class="player-heal-badge ${playerHealPop.className}"${playerHealPop.style} ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${playerDisplay.lastHeal}</div>`
       : "";
   const playerCreditBadge =
     playerDisplay.lastCredits > 0
-      ? `<div class="player-credit-badge" ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
+      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
       : "";
   const maxHp = playerMaxHp();
   const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
@@ -991,6 +1034,7 @@ function renderTopbar() {
           <strong>${playerDisplay.hp}/${maxHp}</strong>
         </div>
         <div class="health-bar">
+          ${healthGhostHtml("player", healthPercent)}
           <div class="health-fill" style="width: ${healthPercent}%"></div>
         </div>
       </div>
@@ -1102,21 +1146,27 @@ function renderBot(bot, pendingPick) {
   const healTooltip = sourceTooltip(botHealSources, "heal");
   const sinTooltip = sourceTooltip(botSinSources, "signed-credits");
   const memoryTooltip = sourceTooltip(botMemorySources, "memory");
+  const botPops = {
+    damage: hudPopAttrs(`bot-${bot.id}-damage`, botLastDamage),
+    heal: hudPopAttrs(`bot-${bot.id}-heal`, botLastHeal),
+    sin: hudPopAttrs(`bot-${bot.id}-sin`, botLastSinDelta),
+    memory: hudPopAttrs(`bot-${bot.id}-memory`, botLastMemoryDelta)
+  };
   const damageBadge =
     botLastDamage > 0 && state.stage !== "guess"
-      ? `<div class="damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${botLastDamage}</div>`
+      ? `<div class="damage-badge ${botPops.damage.className}"${botPops.damage.style} ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${botLastDamage}</div>`
       : "";
   const healBadge =
     botLastHeal > 0 && state.stage !== "guess"
-      ? `<div class="heal-badge" ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${botLastHeal}</div>`
+      ? `<div class="heal-badge ${botPops.heal.className}"${botPops.heal.style} ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${botLastHeal}</div>`
       : "";
   const sinBadge =
     botLastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge" ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
+      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
       : "";
   const memoryBadge =
     botLastMemoryDelta > 0
-      ? `<div class="memory-badge" ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
+      ? `<div class="memory-badge ${botPops.memory.className}"${botPops.memory.style} ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
       : "";
   const poisonStackBadge =
     (bot.poisonCounters || 0) > 0
@@ -1176,6 +1226,7 @@ function renderBot(bot, pendingPick) {
             ${poisonStackBadge}
           </div>
           <div class="health-bar">
+            ${healthGhostHtml(`bot-${bot.id}`, healthPercent)}
             <div class="health-fill" style="width: ${healthPercent}%"></div>
           </div>
         </div>
@@ -1595,9 +1646,15 @@ function handleMenuAction(action) {
 
 function updateDisplaySetting(key, value) {
   if (!(key in state.display)) return;
-  state.display[key] = Boolean(value);
+  if (key === "outlineBoil") state.display.outlineBoil = clamp(Math.round(Number(value) || 0), 0, 3);
   saveDisplaySettings();
   applyDisplaySettings();
+  document.querySelectorAll(`[data-display-value="${key}"]`).forEach((label) => {
+    label.textContent = OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off";
+  });
+  document.querySelectorAll(`[data-display-setting="${key}"]`).forEach((control) => {
+    if (Number(control.value) !== state.display.outlineBoil) control.value = String(state.display.outlineBoil);
+  });
 }
 
 function updateSoundSetting(key, value, renderAfter = true) {

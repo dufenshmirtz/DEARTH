@@ -35,12 +35,13 @@ function loadSoundSettings() {
 // Display settings: trembling (line-boil) outlines. Off by default for players who ask their system to reduce motion.
 function loadDisplaySettings() {
   const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
-  state.display.outlineBoil = !prefersReducedMotion;
+  state.display.outlineBoil = prefersReducedMotion ? 0 : 2;
   try {
     const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil;
+      if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil ? 2 : 0;
+      else if (Number.isFinite(saved.outlineBoil)) state.display.outlineBoil = clamp(Math.round(saved.outlineBoil), 0, 3);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -54,7 +55,10 @@ function saveDisplaySettings() {
 
 function applyDisplaySettings() {
   if (typeof document === "undefined" || !document.body) return;
-  document.body.classList.toggle("outline-boil", Boolean(state.display.outlineBoil));
+  const level = clamp(Math.round(Number(state.display.outlineBoil) || 0), 0, 3);
+  document.body.classList.toggle("outline-boil", level > 0);
+  if (level > 0) document.body.style.setProperty("--boil-duration", `${OUTLINE_BOIL_DURATIONS_MS[level]}ms`);
+  else document.body.style.removeProperty("--boil-duration");
 }
 
 function saveSoundSettings() {
