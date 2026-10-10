@@ -1525,8 +1525,9 @@ function buildRoundRevealSequence(beforeSnapshot) {
     }));
 }
 
+// a dark swell that rises while the seal fills and grows; the slam has its own sound
 function playRoundRevealStepSfx() {
-  playArtifactSfx("a14");
+  playGameSfx("sealCharge");
 }
 
 function scheduleRoundRevealAnimation() {
