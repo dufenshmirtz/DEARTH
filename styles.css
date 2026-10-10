@@ -7396,14 +7396,6 @@ body.mobile-arcade #app .bot-glyph {
   background: rgba(141, 135, 124, 0.75);
 }
 
-/* phone drawer: the drawer already says Devil's Offerings */
-body.mobile-arcade #app .side-panel .shop-panel .shop-title-wrap {
-  display: none !important;
-}
-
-body.mobile-arcade #app .side-panel .shop-panel .panel-header {
-  justify-content: flex-end !important;
-}
 
 /* ELITE offerings: a second, red frame inside the first and a slow shimmer */
 #app .item-card.elite-offer::before {
@@ -8596,4 +8588,281 @@ body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
 
 #app .pause-card .end-title {
   margin-top: 6px !important;
+}
+
+/* ==========================================================================
+   Phone layout (app / APK): Pause and Items sit to the right of the top
+   panels, so the DAMNED cards get the full height with a line under them;
+   the bottom row holds the seals, your guess and a 4 x 3 number pad.
+   ========================================================================== */
+body.native-arcade {
+  --native-top-actions-width: clamp(84px, 10.5vw, 118px);
+  --native-seal-row-height: clamp(108px, 30vh, 132px);
+}
+
+body.native-arcade .native-arcade-frame {
+  position: relative;
+  grid-template-rows: minmax(0, 1fr) var(--native-seal-row-height) !important;
+}
+
+body.native-arcade .native-arcade-frame.target-picking {
+  grid-template-rows: minmax(0, 1fr) 52px !important;
+}
+
+/* top panels make room for the two buttons */
+body.native-arcade #app .arena:not(.pvp-arena) .topbar {
+  right: calc(var(--native-top-actions-width) + 10px) !important;
+}
+
+body.native-arcade .native-seal-actions {
+  position: absolute !important;
+  z-index: 5;
+  top: 9px;
+  right: 6px;
+  width: var(--native-top-actions-width);
+  height: 60px;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+body.native-arcade .native-seal-actions .pause-button,
+body.native-arcade .native-seal-actions .mobile-offerings-button {
+  font-size: 14px !important;
+  letter-spacing: 0.04em;
+}
+
+/* the bottom row: seals | your guess | number pad */
+body.native-arcade .passive-bar {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  position: relative;
+}
+
+body.native-arcade .native-console-panel {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  align-content: center;
+}
+
+body.native-arcade .mobile-numpad {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  padding: 9px 10px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* hand-drawn outline like every other panel */
+body.native-arcade .mobile-numpad::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 22px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 22px stretch;
+  opacity: 0.85;
+}
+
+body.outline-boil.native-arcade .mobile-numpad::after {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.5);
+}
+
+/* 1 2 3 4 / 5 6 7 8 / 9 0 DEL GUESS */
+body.native-arcade .mobile-numpad .mobile-numpad-key { order: 0; }
+body.native-arcade .mobile-numpad [data-numpad-key="backspace"] { order: 1; }
+body.native-arcade .mobile-numpad .mobile-numpad-action { order: 2; }
+
+body.native-arcade .mobile-numpad .mobile-numpad-key {
+  min-height: 0 !important;
+  font-size: 17px !important;
+}
+
+body.native-arcade .mobile-numpad .mobile-numpad-action {
+  font-size: 12px !important;
+}
+
+/* a hand-drawn line between the cards and the bottom row */
+body.native-arcade .passive-bar::before {
+  content: "";
+  position: absolute;
+  left: 1%;
+  right: calc(-1 * (var(--native-control-width) + var(--native-numpad-width) + 10px) + 1%);
+  top: -6px;
+  height: 7px;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
+  opacity: 0.85;
+}
+
+/* test-only SKIP / INF: tucked above your guess, out of the panels */
+body.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  position: fixed !important;
+  left: auto !important;
+  top: auto !important;
+  right: calc(var(--native-numpad-width) + 14px) !important;
+  bottom: calc(var(--native-seal-row-height) - 18px) !important;
+}
+
+/* health box: label and numbers inside the outline */
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-row {
+  padding: 9px 14px 0 !important;
+  align-items: center !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-row strong {
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-bar {
+  margin: 6px 16px 0 !important;
+  width: auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .target-panel .target-head {
+  margin-top: 4px !important;
+}
+
+/* cards use the full height they now have; the figure gets the extra room */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-grid {
+  grid-template-rows: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card {
+  height: auto !important;
+  max-height: none !important;
+  grid-template-rows: minmax(0, 1fr) auto auto auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
+  width: 52px !important;
+  height: 52px !important;
+  align-self: center;
+}
+
+/* the line runs under the cards, from the seals to the guess; it stops before the number pad */
+body.native-arcade .passive-bar::before {
+  right: calc(-1 * (var(--native-control-width) + 5px)) !important;
+}
+
+/* your guess sits in the middle of its column */
+body.native-arcade .native-console-panel .center-console,
+body.native-arcade .native-console-panel .console-row {
+  align-content: center !important;
+  align-items: center !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: calc(var(--native-numpad-width) + 30px) !important;
+  bottom: calc(var(--native-seal-row-height) - 20px) !important;
+}
+
+/* card health label sits under its line, not on it */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .mini-stat.bot-health {
+  padding-top: 9px !important;
+}
+
+/* phone: popups stay inside their outlines */
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .player-damage-badge {
+  top: 9px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 46% !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  top: 9px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 36% !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  bottom: 9px !important;
+  left: 14px !important;
+  right: auto !important;
+  font-size: 13px !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .damage-badge,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .heal-badge {
+  right: 14px !important;
+  left: auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .death-badge {
+  left: 10px !important;
+  right: 42px !important;
+  top: 9px !important;
+  font-size: 12px !important;
+  white-space: normal !important;
+  text-align: left !important;
+  rotate: 0deg !important;
+  line-height: 1.05 !important;
+}
+
+/* the Items drawer gets the hand-drawn outline instead of a grey box */
+body.native-arcade #app .side-panel.mobile-open {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9) !important;
+}
+
+body.native-arcade #app .side-panel.mobile-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 26px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 26px stretch;
+  opacity: 0.9;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .death-badge {
+  translate: none !important;
+  transform: none !important;
+  left: 10px !important;
+  right: 44px !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+body.native-arcade #app .mobile-offerings-header {
+  padding-left: 22px !important;
+  padding-right: 16px !important;
+  padding-top: 8px !important;
+}
+
+/* the figure grows with the card on taller screens */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
+  width: clamp(46px, 13.5vh, 120px) !important;
+  height: clamp(46px, 13.5vh, 120px) !important;
+}
+
+/* desktop: SIN gained sits bottom-right inside the SIN box, clear of the outline */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  bottom: 14px !important;
+  right: 18px !important;
 }

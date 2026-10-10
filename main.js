@@ -11414,7 +11414,7 @@ function closeMobileOfferingsForTargetPick() {
 
 function renderMobileOfferingsButton() {
   if (!isMobileArcadeView()) return "";
-  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open Devil's Offerings">Offerings</button>`;
+  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open items">Items</button>`;
 }
 
 function renderMobileOfferingsHeader() {
@@ -11423,8 +11423,7 @@ function renderMobileOfferingsHeader() {
   return `
     <div class="mobile-offerings-header">
       <div class="shop-title-wrap">
-        <div class="panel-title">Devil's Offerings</div>
-        <div class="elite-chance-label">${Math.round(eliteShopChance() * 100)}% ELITE</div>
+        <div class="panel-title">Items</div>
       </div>
       <div class="mobile-offerings-sin">${formatNumber(playerSin)}${SIN_MARK}</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
