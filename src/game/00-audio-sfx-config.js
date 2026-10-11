@@ -110,7 +110,9 @@ const GAME_SFX = {
   bountyDown: { srcs: ["assets/audio/sfx/bounty-down.mp3"], tier: "effect", pitch: 0.04 },
   memoryUp: { srcs: ["assets/audio/sfx/memory-up.mp3"], tier: "effect" },
   memoryDown: { srcs: ["assets/audio/sfx/memory-down.mp3"], tier: "effect" },
-  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" }
+  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" },
+  // a SEAL sold: a soft ghostly breath under the coin sound
+  sealSellGhost: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "effect" }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)

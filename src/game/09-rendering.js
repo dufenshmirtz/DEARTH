@@ -1135,6 +1135,36 @@ function hitShakeAttrs(key, value, maxHp, rising = false) {
   return { className: `hit-shake ${size}`, style: `; --shake-px: ${px}px; --shake-delay: ${-Math.round(change.elapsed)}ms`, flash };
 }
 
+// ---------- seals: a sold SEAL leaves like a ghost ----------
+// The slot re-renders empty straight away; a copy of the sigil is left floating over it,
+// which drifts up, blurs and thins out (two faint after-images peel away to the sides).
+const SEAL_GHOST_MS = 1300;
+
+function ghostSealOut(index) {
+  try {
+    const slot = document.querySelector(`[data-sell-passive="${index}"]`)?.closest(".passive-slot");
+    const sigil = slot?.querySelector(".equipped-seal-sigil:not(.seal-fill-sigil)");
+    if (!sigil) return;
+    const rect = sigil.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const look = getComputedStyle(sigil);
+    const ghost = document.createElement("div");
+    ghost.className = `seal-ghost${motionReduced() ? " reduced" : ""}`;
+    ghost.style.cssText = `left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px`;
+    ["main", "left", "right"].forEach((part) => {
+      const copy = document.createElement("img");
+      copy.src = sigil.currentSrc || sigil.src;
+      copy.alt = "";
+      copy.className = `seal-ghost-${part}`;
+      copy.style.filter = look.filter === "none" ? "" : look.filter;
+      copy.style.objectFit = look.objectFit;
+      ghost.appendChild(copy);
+    });
+    document.body.appendChild(ghost);
+    setTimeout(() => ghost.remove(), SEAL_GHOST_MS + 100);
+  } catch (error) {}
+}
+
 // ---------- seals: purchase animation + Ignition ring geometry ----------
 let lastEquippedSealIds = null;
 const sealSummonedAt = new Map();

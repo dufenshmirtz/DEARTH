@@ -45,6 +45,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/personality-change.mp3": { m: -21, i: -24.1 },
   "assets/audio/sfx/reroll.mp3": { m: -17.4, i: -20.2 },
   "assets/audio/sfx/seal-charge.mp3": { m: -14.7, i: -17 },
+  "assets/audio/sfx/seal-sell-ghost.mp3": { m: -21, i: -23.4 },
   "assets/audio/sfx/seal-slam.mp3": { m: -15.1, i: -19 },
   "assets/audio/sfx/sell.mp3": { m: -14.7, i: -16.6 },
   "assets/audio/sfx/shop-sealed.mp3": { m: -15.5, i: -19.1 },
@@ -168,7 +169,9 @@ const GAME_SFX = {
   bountyDown: { srcs: ["assets/audio/sfx/bounty-down.mp3"], tier: "effect", pitch: 0.04 },
   memoryUp: { srcs: ["assets/audio/sfx/memory-up.mp3"], tier: "effect" },
   memoryDown: { srcs: ["assets/audio/sfx/memory-down.mp3"], tier: "effect" },
-  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" }
+  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" },
+  // a SEAL sold: a soft ghostly breath under the coin sound
+  sealSellGhost: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "effect" }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)
@@ -9657,12 +9660,14 @@ function sellPassive(index) {
   const item = state.player.passives[index];
   if (!item) return;
   const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  ghostSealOut(index);
   state.player.passives.splice(index, 1);
   refreshMimicTarget();
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
   playGameSfx("sell");
+  playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
 }
@@ -12225,6 +12230,36 @@ function hitShakeAttrs(key, value, maxHp, rising = false) {
   const flash = size === "hit-small" ? "" : `<span class="hit-flash"></span>`;
   if (change.elapsed === 0) noteRenderHit(size === "hit-big" ? 3 : size === "hit-mid" ? 2 : 1);
   return { className: `hit-shake ${size}`, style: `; --shake-px: ${px}px; --shake-delay: ${-Math.round(change.elapsed)}ms`, flash };
+}
+
+// ---------- seals: a sold SEAL leaves like a ghost ----------
+// The slot re-renders empty straight away; a copy of the sigil is left floating over it,
+// which drifts up, blurs and thins out (two faint after-images peel away to the sides).
+const SEAL_GHOST_MS = 1300;
+
+function ghostSealOut(index) {
+  try {
+    const slot = document.querySelector(`[data-sell-passive="${index}"]`)?.closest(".passive-slot");
+    const sigil = slot?.querySelector(".equipped-seal-sigil:not(.seal-fill-sigil)");
+    if (!sigil) return;
+    const rect = sigil.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const look = getComputedStyle(sigil);
+    const ghost = document.createElement("div");
+    ghost.className = `seal-ghost${motionReduced() ? " reduced" : ""}`;
+    ghost.style.cssText = `left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px`;
+    ["main", "left", "right"].forEach((part) => {
+      const copy = document.createElement("img");
+      copy.src = sigil.currentSrc || sigil.src;
+      copy.alt = "";
+      copy.className = `seal-ghost-${part}`;
+      copy.style.filter = look.filter === "none" ? "" : look.filter;
+      copy.style.objectFit = look.objectFit;
+      ghost.appendChild(copy);
+    });
+    document.body.appendChild(ghost);
+    setTimeout(() => ghost.remove(), SEAL_GHOST_MS + 100);
+  } catch (error) {}
 }
 
 // ---------- seals: purchase animation + Ignition ring geometry ----------

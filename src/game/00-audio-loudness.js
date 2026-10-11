@@ -45,6 +45,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/personality-change.mp3": { m: -21, i: -24.1 },
   "assets/audio/sfx/reroll.mp3": { m: -17.4, i: -20.2 },
   "assets/audio/sfx/seal-charge.mp3": { m: -14.7, i: -17 },
+  "assets/audio/sfx/seal-sell-ghost.mp3": { m: -21, i: -23.4 },
   "assets/audio/sfx/seal-slam.mp3": { m: -15.1, i: -19 },
   "assets/audio/sfx/sell.mp3": { m: -14.7, i: -16.6 },
   "assets/audio/sfx/shop-sealed.mp3": { m: -15.5, i: -19.1 },

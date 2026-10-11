@@ -179,12 +179,14 @@ function sellPassive(index) {
   const item = state.player.passives[index];
   if (!item) return;
   const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  ghostSealOut(index);
   state.player.passives.splice(index, 1);
   refreshMimicTarget();
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
   playGameSfx("sell");
+  playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
 }
