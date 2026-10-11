@@ -8866,3 +8866,38 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit
   bottom: 14px !important;
   right: 18px !important;
 }
+
+/* Pyros's gift: a small red diamond before the personality mark */
+#app .bot-glyph.gift-glyph,
+#app .bot-glyph.gift-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+#app .bot-glyph.gift-glyph {
+  margin-right: 2px;
+}
+
+#app .bot-glyph.gift-glyph svg path:last-child {
+  fill: var(--blood-bright);
+}
+
+#app .bot-glyph.gift-glyph:hover svg * {
+  stroke: #ff6a5c;
+}
+
+/* phone: the cards reach a little further down */
+body.native-arcade {
+  --native-seal-row-height: clamp(100px, 27vh, 124px);
+}
+
+body.native-arcade .mobile-numpad {
+  padding: 6px 9px !important;
+  gap: 4px !important;
+}
+
+/* phone: the line under the cards trembles with the outlines */
+body.outline-boil.native-arcade .passive-bar::before {
+  background-image: var(--divider-img) !important;
+  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
+}

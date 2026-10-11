@@ -1527,6 +1527,19 @@ function bossGlyphHtml(bot) {
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
+// a DAMNED that was given an ability (Pyros's gift) shows a diamond; hovering it names the ability
+const GIFT_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.2 12 12 21.4 4.8 12Z"/><path d="M12 7.4 15.6 12 12 16.6 8.4 12Z" fill="currentColor" stroke="none" opacity="0.55"/></svg>`;
+
+function giftGlyphHtml(bot) {
+  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean);
+  if (!keys.length) return "";
+  const title = keys.map((key) => botPassiveKeyName(key)).join(" + ");
+  const body = keys.map((key) => botPassiveKeyDescription(key)).filter(Boolean).join(" ");
+  const label = bot.buffPassiveKey ? "PYROS'S GIFT" : "ABILITY";
+  const tooltip = glyphTooltipHtml(title, label, body);
+  return `<span class="bot-glyph gift-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${GIFT_GLYPH_SVG}</span>`;
+}
+
 // what each personality does, in plain words (see planBotGuess)
 const PERSONALITY_HINTS = {
   Anchor: "Has a favourite number and likes to play around it.",
@@ -1580,8 +1593,9 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(hasVisiblePassive ? `${bot.type}: ${passiveSummary}` : bot.type);
-  const passiveDescription = hasVisiblePassive && !bot.isBoss ? botPassiveDescription(bot) : "";
+  // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
+  const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
   const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
@@ -1630,7 +1644,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : personalityGlyphHtml(bot.type);
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(bot.type)}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
