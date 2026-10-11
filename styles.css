@@ -8901,3 +8901,12 @@ body.outline-boil.native-arcade .passive-bar::before {
   background-image: var(--divider-img) !important;
   animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
 }
+
+/* anyone who CRITs (or is about to, once the TARGET is out) wears the TARGET's red */
+#app .critical-guess,
+#app .guess-input.critical-guess,
+#app .mini-stat span.critical-guess-label,
+body.mobile-arcade #app .mini-stat span.critical-guess-label {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+}

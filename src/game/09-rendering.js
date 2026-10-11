@@ -380,7 +380,7 @@ function renderArcadeApp() {
         <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
       `;
     }
-    const playerGuessCritical = Boolean(state.roundState?.criticalHitKeys?.has("player"));
+    const playerGuessCritical = criticalKeysForDisplay().has("player");
     return `
       <div class="native-arcade-frame">
         <main class="arena native-board-panel">
@@ -1240,6 +1240,26 @@ function screenShake(px = 6, ms = 380) {
   );
 }
 
+// Who CRITs this round, for colouring the numbers. Once READY resolves the round it is the real
+// result; before that, everyone whose guess already sits inside their CRITICAL window around the
+// revealed TARGET (the random +1 bonus chance can't be known in advance, so it isn't counted).
+function criticalKeysForDisplay(round = state.roundState) {
+  if (!round) return new Set();
+  if (round.penaltiesApplied || round.criticalHitKeys?.size) return round.criticalHitKeys || new Set();
+  if (state.stage !== "active" || state.mode === "pvp") return new Set();
+  const integer = Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
+  if (!Number.isFinite(integer)) return new Set();
+  const keys = new Set();
+  try {
+    getParticipants().forEach((participant) => {
+      if (Number.isFinite(participant.guess) && Math.abs(participant.guess - integer) <= participant.window) keys.add(participant.key);
+    });
+    // Seal of Eligos: a DAMNED's CRIT is mirrored onto you
+    if (passiveStack("p69") && [...keys].some((key) => key.startsWith("bot-")) && Number.isFinite(round.playerEffectiveGuess)) keys.add("player");
+  } catch (error) {}
+  return keys;
+}
+
 function readMomentSnapshot() {
   const round = state.roundState;
   const revealing = roundRevealAnimationActive();
@@ -1275,19 +1295,20 @@ function watchMoments() {
   let beat = 0;
   if (before.target === null && now.target !== null) {
     beat = 260;
-    if (now.playerCritical) {
-      momentSfx("critical");
-      momentSfx("criticalBell");
-      startMoment("critical", "Critical", "You named the TARGET");
-      hitStop(80);
-      screenShake(9, 420);
-    } else {
-      momentSfx("targetLand");
-      if (now.anyCritical) {
-        momentSfx("critical", 120);
-        screenShake(5, 320);
-      }
-    }
+    momentSfx("targetLand");
+  }
+  // CRITICAL is decided when READY is pressed (the TARGET is already on screen by then)
+  if (now.playerCritical && !before.playerCritical) {
+    beat = Math.max(beat, 260);
+    momentSfx("critical");
+    momentSfx("criticalBell");
+    startMoment("critical", "Critical", "You named the TARGET");
+    hitStop(80);
+    screenShake(9, 420);
+  } else if (now.anyCritical && !before.anyCritical) {
+    beat = Math.max(beat, 260);
+    momentSfx("critical");
+    screenShake(5, 320);
   }
 
   const newDowns = now.downIds.filter((id) => !before.downIds.includes(id));
@@ -1599,7 +1620,7 @@ function renderBot(bot, pendingPick) {
   const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
-  const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
+  const isCriticalGuess = criticalKeysForDisplay(round).has(`bot-${bot.id}`);
   const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
   const criticalGuessLabelClass = isCriticalGuess ? "critical-guess-label" : "";
   const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
@@ -1750,7 +1771,7 @@ function consoleActionState() {
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
   const value = round?.playerSubmittedGuess ?? "";
-  const playerCritical = round?.criticalHitKeys?.has("player");
+  const playerCritical = criticalKeysForDisplay(round).has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
   const criticalInputClass = playerCritical ? "critical-guess" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
