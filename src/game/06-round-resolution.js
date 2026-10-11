@@ -1244,6 +1244,7 @@ function applyEndOfRoundPassives() {
 
     applyEndOfRoundBotSinPassives();
     applyForcedDoctrineEndRound();
+    applyFixedWillEndRound();
     applyInflationEngine();
     applySelfStackingBountySumDamage();
     applyLowProfileReward();

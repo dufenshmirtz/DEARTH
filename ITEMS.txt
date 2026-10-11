@@ -140,7 +140,7 @@ Seal of Orobas (14 SIN)
 When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Ose (14 SIN)
-STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level.
+STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the end of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level.
 
 Seal of Paimon (15 SIN)
 If your final guess is close to the TARGET, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact TARGET, gain 10 SIN. ELITE doubles all SIN gained.

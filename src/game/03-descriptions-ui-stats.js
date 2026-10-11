@@ -247,7 +247,7 @@ function itemDescription(item) {
   }
   if (item.id === "p107") {
     const eliteDamage = eliteLevels(item) * 5;
-    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At start of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
+    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At end of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
   }
   if (item.id === "p108") {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;

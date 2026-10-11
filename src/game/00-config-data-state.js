@@ -871,7 +871,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Ose",
     price: 14,
-    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the end of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
   },
   p108: {
     id: "p108",

@@ -847,7 +847,6 @@ function beginRound() {
   });
 
   enforceTwinTemperPersonalities();
-  applyFixedWillStart();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;

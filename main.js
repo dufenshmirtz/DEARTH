@@ -1051,7 +1051,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Ose",
     price: 14,
-    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the start of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the end of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
   },
   p108: {
     id: "p108",
@@ -4418,7 +4418,7 @@ function itemDescription(item) {
   }
   if (item.id === "p107") {
     const eliteDamage = eliteLevels(item) * 5;
-    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At start of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
+    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At end of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
   }
   if (item.id === "p108") {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
@@ -6233,26 +6233,24 @@ function applyForcedDoctrineEndRound() {
   });
 }
 
-function applyFixedWillStart() {
+// Seal of Ose: at end of round one random DAMNED becomes STUBBORN (so the clamp bites from next round),
+// then ELITE hits every STUBBORN DAMNED, the new one included.
+function applyFixedWillEndRound() {
   const entries = orderedPassiveEffectEntries("p107");
   if (!entries.length) return;
   entries.forEach((entry) => {
+    const name = passiveName("p107", "Seal of Ose");
     const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
     if (targets.length) {
       const target = randomFrom(targets);
-      setBotPersonality(target, "Stubborn", passiveName("p107", "Seal of Ose"), { markEntry: entry });
+      setBotPersonality(target, "Stubborn", name, { markEntry: entry });
     }
     const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
     if (eliteDamage <= 0) return;
     const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
     if (!stubbornTargets.length) return;
     markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamages(
-      stubbornTargets,
-      eliteDamage,
-      (bot, damage) => `${passiveName("p107", "Seal of Ose")} dealt ${damage} ELITE damage to ${bot.name}.`,
-      passiveName("p107", "Seal of Ose")
-    );
+    damageBots(stubbornTargets, eliteDamage, (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
   });
 }
 
@@ -7186,7 +7184,6 @@ function beginRound() {
   });
 
   enforceTwinTemperPersonalities();
-  applyFixedWillStart();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -9290,6 +9287,7 @@ function applyEndOfRoundPassives() {
 
     applyEndOfRoundBotSinPassives();
     applyForcedDoctrineEndRound();
+    applyFixedWillEndRound();
     applyInflationEngine();
     applySelfStackingBountySumDamage();
     applyLowProfileReward();

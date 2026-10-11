@@ -855,26 +855,24 @@ function applyForcedDoctrineEndRound() {
   });
 }
 
-function applyFixedWillStart() {
+// Seal of Ose: at end of round one random DAMNED becomes STUBBORN (so the clamp bites from next round),
+// then ELITE hits every STUBBORN DAMNED, the new one included.
+function applyFixedWillEndRound() {
   const entries = orderedPassiveEffectEntries("p107");
   if (!entries.length) return;
   entries.forEach((entry) => {
+    const name = passiveName("p107", "Seal of Ose");
     const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
     if (targets.length) {
       const target = randomFrom(targets);
-      setBotPersonality(target, "Stubborn", passiveName("p107", "Seal of Ose"), { markEntry: entry });
+      setBotPersonality(target, "Stubborn", name, { markEntry: entry });
     }
     const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
     if (eliteDamage <= 0) return;
     const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
     if (!stubbornTargets.length) return;
     markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamages(
-      stubbornTargets,
-      eliteDamage,
-      (bot, damage) => `${passiveName("p107", "Seal of Ose")} dealt ${damage} ELITE damage to ${bot.name}.`,
-      passiveName("p107", "Seal of Ose")
-    );
+    damageBots(stubbornTargets, eliteDamage, (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
   });
 }
 
