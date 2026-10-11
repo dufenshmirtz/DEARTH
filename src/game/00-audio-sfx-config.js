@@ -86,9 +86,9 @@ const PENTAKILL_SFX = {
 // `tier`: loudness group (SFX_LEVELS). `trim`: optional extra dB for one sound.
 // `duck`: lowers the music for that many milliseconds so big stingers cut through.
 const GAME_SFX = {
-  hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], tier: "feedback", pitch: 0.07 },
-  hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], tier: "accent", pitch: 0.05 },
-  hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], tier: "big", pitch: 0.04 },
+  hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], tier: "feedback", trim: 3, pitch: 0.07 },
+  hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], tier: "accent", trim: 3, pitch: 0.05 },
+  hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], tier: "big", trim: 3, pitch: 0.04 },
   ko: { srcs: ["assets/audio/sfx/ko.mp3"], tier: "big", pitch: 0.03 },
   sealCharge: { srcs: ["assets/audio/sfx/seal-charge.mp3"], tier: "big", pitch: 0.03 },
   sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "stinger", pitch: 0.04 },

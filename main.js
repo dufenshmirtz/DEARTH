@@ -33,8 +33,8 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/final-bosses.mp3": { m: -13.6, i: -16 },
   "assets/audio/sfx/game-over.mp3": { m: -12.7, i: -15 },
   "assets/audio/sfx/heal.mp3": { m: -15, i: -16.9 },
-  "assets/audio/sfx/hit-big-1.mp3": { m: -16.6, i: -21.1 },
-  "assets/audio/sfx/hit-big-2.mp3": { m: -17.4, i: -22.5 },
+  "assets/audio/sfx/hit-big-1.mp3": { m: -13.5, i: -17.6 },
+  "assets/audio/sfx/hit-big-2.mp3": { m: -14.7, i: -19.4 },
   "assets/audio/sfx/hit-mid-1.mp3": { m: -18.4, i: -21.3 },
   "assets/audio/sfx/hit-mid-2.mp3": { m: -16.7, i: -19.6 },
   "assets/audio/sfx/hit-small-1.mp3": { m: -20.1, i: -20.1 },
@@ -145,9 +145,9 @@ const PENTAKILL_SFX = {
 // `tier`: loudness group (SFX_LEVELS). `trim`: optional extra dB for one sound.
 // `duck`: lowers the music for that many milliseconds so big stingers cut through.
 const GAME_SFX = {
-  hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], tier: "feedback", pitch: 0.07 },
-  hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], tier: "accent", pitch: 0.05 },
-  hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], tier: "big", pitch: 0.04 },
+  hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], tier: "feedback", trim: 3, pitch: 0.07 },
+  hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], tier: "accent", trim: 3, pitch: 0.05 },
+  hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], tier: "big", trim: 3, pitch: 0.04 },
   ko: { srcs: ["assets/audio/sfx/ko.mp3"], tier: "big", pitch: 0.03 },
   sealCharge: { srcs: ["assets/audio/sfx/seal-charge.mp3"], tier: "big", pitch: 0.03 },
   sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "stinger", pitch: 0.04 },
@@ -11179,11 +11179,17 @@ function morphNode(current, next) {
   morphChildren(current, next);
 }
 
+// nodes that live outside the render cycle (the moment cards): renders never touch or rebuild them
+function isMorphKept(node) {
+  return node?.nodeType === 1 && node.hasAttribute("data-morph-keep");
+}
+
 function morphChildren(current, next) {
   let a = current.firstChild;
   let b = next.firstChild;
   while (b) {
     const nextB = b.nextSibling;
+    while (isMorphKept(a)) a = a.nextSibling;
     if (!a) {
       current.appendChild(b);
     } else if (morphSameNode(a, b)) {
@@ -11198,7 +11204,7 @@ function morphChildren(current, next) {
   }
   while (a) {
     const nextA = a.nextSibling;
-    current.removeChild(a);
+    if (!isMorphKept(a)) current.removeChild(a);
     a = nextA;
   }
 }
@@ -11217,7 +11223,11 @@ function render() {
   const canPatch = window.dearthDomMorph !== false && state.mode === "arcade" && lastRenderedMode === "arcade" && app.className === className && app.firstElementChild;
   if (app.className !== className) app.className = className;
   if (canPatch) patchAppHtml(app, html);
-  else app.innerHTML = html;
+  else {
+    app.innerHTML = html;
+    // a full rebuild wipes the moment card; put a running one back
+    if (state.mode === "arcade" && activeMoment && activeMoment.until > performance.now()) app.insertAdjacentHTML("beforeend", renderMoment());
+  }
   lastRenderedMode = state.mode;
   bindEvents();
   afterRenderEffects();
@@ -11526,7 +11536,6 @@ function renderArcadeApp() {
         ${renderActives()}
       </aside>
       <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
-      ${renderMoment()}
     `;
   }
   return `
@@ -11550,7 +11559,6 @@ function renderArcadeApp() {
       ${renderActives()}
     </aside>
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
-    ${renderMoment()}
   `;
 }
 
@@ -12360,8 +12368,8 @@ function startMoment(kind, title, sub = "") {
   momentSeq += 1;
   const duration = MOMENT_DURATIONS_MS[kind] || 1600;
   activeMoment = { id: momentSeq, kind, title, sub, until: performance.now() + duration };
-  // moments start after a render has been drawn, so the card is put on screen straight away;
-  // later renders carry the same card (same data-morph-key) and leave it running
+  // the card is put on screen straight away and lives outside the render cycle (data-morph-keep),
+  // so later renders never rebuild it and its animation plays exactly once
   const app = document.querySelector("#app");
   if (app) {
     app.querySelectorAll(".moment-card").forEach((element) => element.remove());
@@ -12382,7 +12390,7 @@ function renderMoment() {
       ? `<img class="moment-figure moment-figure-left" src="assets/ui/jesus.png" alt="" /><img class="moment-figure moment-figure-right" src="assets/ui/devil.png" alt="" />`
       : "";
   return `
-    <div class="moment-card moment-${moment.kind}" data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
+    <div class="moment-card moment-${moment.kind}" data-morph-keep data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
       ${figures}
       <div class="moment-text">
         <div class="moment-title">${escapeHtml(moment.title)}</div>
