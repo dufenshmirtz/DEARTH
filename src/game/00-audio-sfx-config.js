@@ -15,7 +15,7 @@ const SFX_LEVELS = {
   accent: -21,  // medium hits, TARGET, GUESS, next round, shop sealed
   item: -22,    // seals and items triggering
   feedback: -24,// small hits, SIN, heal, shop buttons, READY
-  tick: -27,    // the clock
+  tick: -33,    // the click on every button (the clock tick sound)
   quiet: -29,   // background layers (the laugh when a seal is bought)
   ui: -34,      // menu hover
   music: -24    // the soundtrack at the default Music slider
@@ -40,7 +40,7 @@ const SOUNDTRACK_LEVEL = levelVolume(SOUNDTRACK_SRC, "music") / SOUNDTRACK_VOLUM
 
 const SEAL_PURCHASE_SFX_SRC = "assets/audio/dragon-studio-evil-laughter-353177.mp3";
 const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
-const READY_SFX_SRC = "assets/audio/sfx/ko.mp3"; // swapped with the KO sound
+const READY_SFX_SRC = "assets/audio/Ready.mp3";
 const NEXT_ROUND_SFX_SRC = "assets/audio/nextroundSound.mp3";
 const CLOCK_TICK_SFX_SRCS = [
   "assets/audio/tickinclock_RdeIBkld.mp3",
@@ -88,7 +88,7 @@ const GAME_SFX = {
   hitSmall: { srcs: ["assets/audio/sfx/hit-small-1.mp3", "assets/audio/sfx/hit-small-2.mp3"], tier: "feedback", pitch: 0.07 },
   hitMid: { srcs: ["assets/audio/sfx/hit-mid-1.mp3", "assets/audio/sfx/hit-mid-2.mp3"], tier: "accent", pitch: 0.05 },
   hitBig: { srcs: ["assets/audio/sfx/hit-big-1.mp3", "assets/audio/sfx/hit-big-2.mp3"], tier: "big", pitch: 0.04 },
-  ko: { srcs: ["assets/audio/Ready.mp3"], tier: "big", pitch: 0.03 },
+  ko: { srcs: ["assets/audio/sfx/ko.mp3"], tier: "big", pitch: 0.03 },
   sealCharge: { srcs: ["assets/audio/sfx/seal-charge.mp3"], tier: "big", pitch: 0.03 },
   sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "stinger", pitch: 0.04 },
   critical: { srcs: ["assets/audio/sfx/critical.mp3"], tier: "stinger", duck: 900 },
