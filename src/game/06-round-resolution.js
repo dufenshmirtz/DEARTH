@@ -700,7 +700,7 @@ function checkRoundPentakillBonus() {
   if (!round || round.pentakillAwarded || round.eliminationsThisRound < BOT_COUNT) return;
   round.pentakillAwarded = true;
   round.pentakillPopup = true;
-  playPentakillSfx();
+  // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
   const healed = healPlayer(5, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");

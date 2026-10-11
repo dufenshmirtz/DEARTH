@@ -1,5 +1,5 @@
 function musicVolume() {
-  return state.sound.muted ? 0 : clamp(state.sound.musicVolume, 0, 1);
+  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL, 0, 1);
 }
 
 function sfxVolume(baseVolume) {
@@ -30,6 +30,35 @@ function loadSoundSettings() {
     if (Number.isFinite(saved.sfxVolume)) state.sound.sfxVolume = clamp(saved.sfxVolume, 0, 1);
     if (typeof saved.muted === "boolean") state.sound.muted = saved.muted;
   } catch (error) {}
+}
+
+// Display settings: trembling (line-boil) outlines. Off by default for players who ask their system to reduce motion.
+function loadDisplaySettings() {
+  const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  state.display.outlineBoil = prefersReducedMotion ? 0 : 2;
+  try {
+    const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil ? 2 : 0;
+      else if (Number.isFinite(saved.outlineBoil)) state.display.outlineBoil = clamp(Math.round(saved.outlineBoil), 0, 3);
+    }
+  } catch (error) {}
+  applyDisplaySettings();
+}
+
+function saveDisplaySettings() {
+  try {
+    window.localStorage?.setItem(DISPLAY_SETTINGS_STORAGE_KEY, JSON.stringify(state.display));
+  } catch (error) {}
+}
+
+function applyDisplaySettings() {
+  if (typeof document === "undefined" || !document.body) return;
+  const level = clamp(Math.round(Number(state.display.outlineBoil) || 0), 0, 3);
+  document.body.classList.toggle("outline-boil", level > 0);
+  if (level > 0) document.body.style.setProperty("--boil-duration", `${OUTLINE_BOIL_DURATIONS_MS[level]}ms`);
+  else document.body.style.removeProperty("--boil-duration");
 }
 
 function saveSoundSettings() {
@@ -599,9 +628,70 @@ function playPentakillSfx() {
   playClonedOneShot(audio, pentakillSfxVolume(), PENTAKILL_SFX.startOffset || 0);
 }
 
+// ---------- moment sounds (GAME_SFX) ----------
+const gameSfxCache = {};
+let musicDuckTimer = null;
+
+function ensureGameSfx(key) {
+  const config = GAME_SFX[key];
+  if (!config?.srcs?.length) return [];
+  if (!gameSfxCache[key]) {
+    gameSfxCache[key] = config.srcs.map((src) => {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      return loadAudioElement(audio);
+    });
+  }
+  return gameSfxCache[key];
+}
+
+function duckMusic(ms) {
+  if (!soundtrackAudio || !(ms > 0)) return;
+  soundtrackAudio.volume = musicVolume() * 0.35;
+  clearTimeout(musicDuckTimer);
+  musicDuckTimer = setTimeout(() => {
+    if (soundtrackAudio) soundtrackAudio.volume = musicVolume();
+  }, ms);
+}
+
+function playGameSfx(key) {
+  const config = GAME_SFX[key];
+  const pool = ensureGameSfx(key);
+  if (!config || !pool.length || state.sound.muted) return;
+  const audio = pool[Math.floor(Math.random() * pool.length)];
+  if (!audio) return;
+  try {
+    const instance = audio.cloneNode(true);
+    instance.volume = sfxVolume(config.volume ?? 0.4);
+    if (config.pitch) {
+      instance.preservesPitch = false;
+      instance.playbackRate = 1 + (Math.random() * 2 - 1) * config.pitch;
+    }
+    activeOneShotSfxInstances.add(instance);
+    const cleanup = () => activeOneShotSfxInstances.delete(instance);
+    instance.addEventListener("ended", cleanup, { once: true });
+    instance.addEventListener("error", cleanup, { once: true });
+    instance.play().catch(cleanup);
+  } catch (error) {}
+  if (config.duck) duckMusic(config.duck);
+}
+
+// a faint chalk tick when the pointer moves onto a menu button
+function installMenuHoverSfx() {
+  let lastHovered = null;
+  document.addEventListener("pointerover", (event) => {
+    if (event.pointerType && event.pointerType !== "mouse") return;
+    const button = event.target?.closest?.(".menu-button, .run-slot-button");
+    if (button === lastHovered) return;
+    lastHovered = button;
+    if (button && !button.disabled) playGameSfx("uiHover");
+  });
+}
+
 function installGameButtonTickSfx() {
   if (gameButtonTickInstalled) return;
   gameButtonTickInstalled = true;
+  installMenuHoverSfx();
   document.addEventListener(
     "click",
     (event) => {
@@ -622,6 +712,7 @@ function installSoundtrack() {
   CLOCK_TICK_SFX_SRCS.forEach((_, index) => ensureClockTickSfx(index));
   Object.keys(ARTIFACT_SFX).forEach((id) => ensureArtifactSfx(id));
   ensurePentakillSfx();
+  Object.keys(GAME_SFX).forEach((key) => ensureGameSfx(key));
   installGameButtonTickSfx();
   document.addEventListener("pointerdown", unlockSoundtrack);
   document.addEventListener("keydown", unlockSoundtrack);

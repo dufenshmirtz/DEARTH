@@ -1,5 +1,7 @@
 "use strict";
 
+const GAME_VERSION = "0.1.0";
+
 const BASE_PASSIVE_LIMIT = 3;
 const MAX_PASSIVE_LIMIT = 6;
 const MAX_REVEALED_DAMNED = 4;
@@ -34,6 +36,10 @@ const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
+const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
+// Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
+const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
+const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -1302,7 +1308,7 @@ const SEAL_SIGILS = {
   p96: "dev/PadmaSeal.png",
   p97: "dev/ThreonSeal.png",
   p110: "dev/PetrosPavlosSeal.png",
-  p111: "satan/lucifer.png",
+  p111: "satan/lucifer-wide.png",
   p98: "self-stacking/Samael-Star.png",
   p99: "self-stacking/Cassiel-Sigil.png",
   p100: "self-stacking/Bethor.png",
@@ -1617,7 +1623,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "zilon",
     name: "Zilon",
     image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
-    personality: "Caller",
     modifierOverride: 1.5,
     descriptions: [
       "Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive.",
@@ -1628,7 +1633,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "dantre",
     name: "Dantre",
     image: "assets/bots/occult-stickmen-pack/boss-dantre.png",
-    personality: "Stubborn",
     modifierOverride: 0.5,
     eliminationDamage: 2,
     descriptions: [
@@ -1640,7 +1644,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pyros",
     name: "Pyros",
     image: "assets/bots/occult-stickmen-pack/boss-pyros.png",
-    personality: "Analyst",
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
@@ -1652,7 +1655,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "threon",
     name: "Threon",
     image: "assets/bots/occult-stickmen-pack/boss-threon.png",
-    personality: "Drifter",
     descriptions: [
       "Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3.",
       "Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal 3 damage to you."
@@ -1662,7 +1664,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "kalha",
     name: "Kalha",
     image: "assets/bots/new-red-bosses-5/Kalha-vibrant.png",
-    personality: "Drifter",
     modifierOverride: 1.2,
     descriptions: [
       "Each round, half your equipped SEALS rounded down are deactivated until the round ends.",
@@ -1673,7 +1674,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "serafim",
     name: "Serafim",
     image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
-    personality: "Caller",
     modifierOverride: 0.7,
     descriptions: [
       "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
@@ -1685,7 +1685,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "padma",
     name: "Padma",
     image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
-    personality: "Stubborn",
     modifierOverride: 0.6,
     descriptions: [
       "While Padma is alive, non-boss healing cannot restore your HEALTH.",
@@ -1697,7 +1696,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "petros",
     name: "Petros",
     image: "assets/bots/new-red-bosses-5/Petros-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     descriptions: [
@@ -1711,7 +1709,6 @@ const UNIQUE_BOSS_SPECS = {
     key: "pavlos",
     name: "Pavlos",
     image: "assets/bots/new-red-bosses-5/Pavlos-vibrant.png",
-    personality: "Anchor",
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     countsAsBossProgress: false,
@@ -1734,7 +1731,6 @@ const FINAL_BOSS_SPECS = {
     name: "Jesus",
     image: FINAL_BOSS_JESUS_SRC,
     color: "#d64f45",
-    personality: "Analyst",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "Jesus's guess counts three times when calculating the TARGET average."
@@ -1745,7 +1741,6 @@ const FINAL_BOSS_SPECS = {
     name: "Satan",
     image: FINAL_BOSS_SATAN_SRC,
     color: "#d64f45",
-    personality: "Caller",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
       "The Devil disables Devil's Offerings while Satan is alive."
@@ -1761,6 +1756,9 @@ const state = {
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
     muted: false
+  },
+  display: {
+    outlineBoil: 2
   },
   pauseOpen: false,
   pauseDevOpen: false,

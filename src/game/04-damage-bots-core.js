@@ -760,8 +760,10 @@ function archetypeByType(type) {
   return BOT_ARCHETYPES.find((archetype) => archetype.type === type) || randomFrom(BOT_ARCHETYPES);
 }
 
+// bosses have no personality, so every personality seal skips them
 function personalityType(bot) {
-  return bot?.type || "";
+  if (!bot || bot.isBoss) return "";
+  return bot.type || "";
 }
 
 function samePersonalityBots(bot) {
@@ -798,13 +800,13 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
 }
 
 function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
-  if (!bot || bot.eliminated || !type || personalityType(bot) === type) return false;
+  if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
   const archetype = archetypeByType(type);
   bot.type = archetype.type;
-  if (!bot.isBoss) bot.color = archetype.color;
+  bot.color = archetype.color;
   bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
-  bot.aggression = bot.isBoss ? Math.min(0.75, archetype.aggression + 0.12) : archetype.aggression;
-  bot.noise = bot.isBoss ? Math.max(7, archetype.noise - 1) : archetype.noise;
+  bot.aggression = archetype.aggression;
+  bot.noise = archetype.noise;
   if (markEntry) markPassiveEntryTriggered(markEntry);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");

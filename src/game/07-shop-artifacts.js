@@ -142,6 +142,7 @@ function buyShopItem(slotIndex) {
   slot.sold = true;
   syncShopSlotCount();
   addLog(`Bought ${item.name}.`);
+  playGameSfx("artifactBuy");
   applyOfferingTollDamage(item);
   if (state.player.hp <= 0) finishGameOverRound();
   render();
@@ -165,6 +166,7 @@ function rerollShopClick() {
     state.roundState.rerollSinSpentThisRound = (state.roundState.rerollSinSpentThisRound || 0) + Math.max(0, Math.ceil(cost));
   }
   rerollShop();
+  playGameSfx("reroll");
   state.rerollBaseCost += 1;
   addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
   applyRerollTollDamage();
@@ -182,6 +184,8 @@ function sellPassive(index) {
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
+  playGameSfx("sell");
+  quietMomentSfx("sinGain");
   render();
 }
 
@@ -194,6 +198,8 @@ function sellActive(index) {
   gainCredits(sale, false, `Sold ${item.name}`);
   normalizeActiveCarouselIndex();
   addLog(`Sold ${item.name} for ${sale} SIN.`);
+  playGameSfx("sell");
+  quietMomentSfx("sinGain");
   render();
 }
 

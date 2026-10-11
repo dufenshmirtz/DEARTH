@@ -46,6 +46,16 @@ Runs syntax checks for the browser game, phone controller, and local server scri
 - `fonts/` - bundled display font used by the game UI.
 - `ITEMS.txt` - working design catalog for Seals and Artifacts.
 
+## Sound Balance
+
+Every sound has a loudness tier (`SFX_LEVELS` in `src/game/00-audio-sfx-config.js`) instead of a raw volume, and the game sets each volume from how loud the file really is. After adding or replacing any file in `assets/audio/`, run:
+
+```
+pnpm run audio:levels
+```
+
+It measures every audio file with ffmpeg, writes `src/game/00-audio-loudness.js` and rebuilds `main.js`. Then give a new sound a tier in the config. To make a whole group louder or quieter, change its tier number (in dB); for one sound, add a `trim`.
+
 ## Development Roadmap
 
 - Refine PvP room flow, reconnection behavior, and lobby state clarity.

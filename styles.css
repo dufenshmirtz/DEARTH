@@ -5884,3 +5884,3036 @@ body.mobile-arcade #app .bot-card .bot-reward {
   box-shadow: none !important;
   background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
 }
+
+/* ==========================================================================
+   Frame & top bar refresh: one solid hand-drawn outline everywhere,
+   taller DAMNED cards, a tighter Target box and a roomier Health box.
+   ========================================================================== */
+
+/* ---------- Solid, thicker outline (the boss frame) on every card and top panel ---------- */
+#app .bot-card::after,
+#app .stat-card::after,
+#app .target-panel::after,
+#app .item-card::after {
+  inset: 0;
+  border-width: 28px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 28px stretch;
+  opacity: 0.92;
+}
+
+/* small boxes get a slightly thinner border box so the corners don't swallow the content */
+#app .item-card::after,
+body.mobile-arcade #app .bot-card::after,
+body.mobile-arcade #app .stat-card::after,
+body.mobile-arcade #app .target-panel::after {
+  border-width: 20px;
+  border-image-width: 20px;
+}
+
+/* ---------- DAMNED / boss cards: a little taller, growing both up and down ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+  padding-top: 19px;
+  padding-bottom: 19px;
+}
+
+/* ---------- Top bar: smaller Target, wider Health ---------- */
+#app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(250px, 1.05fr)
+    minmax(250px, 1.45fr)
+    minmax(190px, 1fr)
+    minmax(118px, 0.75fr) !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(150px, 1.2fr)
+    minmax(124px, 1.3fr)
+    minmax(104px, 0.95fr)
+    minmax(58px, 0.6fr) !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .topbar {
+  grid-template-columns:
+    minmax(160px, 1.15fr)
+    minmax(150px, 1.4fr)
+    minmax(112px, 1fr)
+    minmax(76px, 0.7fr) !important;
+}
+
+/* Target: number and Previous / Modifier sit together in the middle instead of at the two edges */
+#app .target-panel.target-combined {
+  grid-template-columns: auto auto;
+  justify-content: space-evenly;
+  column-gap: 18px;
+}
+
+#app .target-combined .target-side {
+  justify-self: start;
+}
+
+body.mobile-arcade #app .target-panel.target-combined {
+  column-gap: 8px;
+}
+
+/* Health: room on both sides so the bar's frame never touches the panel outline,
+   label row + bar centred vertically in the box */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 30px 22px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .health-wrap {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+#app .arena:not(.pvp-arena) .health-wrap .health-row {
+  margin: 0;
+}
+
+#app .arena:not(.pvp-arena) .health-wrap .health-bar {
+  margin: 0;
+}
+
+/* DAMNED health bars: keep the bar's frame clear of the card outline */
+#app .bot-card .bot-health .health-bar {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+body.mobile-arcade #app .bot-card .bot-health .health-bar {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+/* phone: labels in the small stat boxes sit inside the outline, not on it */
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap {
+  padding: 7px 9px !important;
+}
+
+/* ==========================================================================
+   Picked layouts: Round/SIN centred numerals, guess-first DAMNED cards,
+   ink-numeral popups, big-numeral guess bar.
+   ========================================================================== */
+
+/* ---------- Round / SIN: centred numerals ---------- */
+#app .arena:not(.pvp-arena) .round-wrap,
+#app .arena:not(.pvp-arena) .credit-wrap {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .round-wrap,
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap {
+  padding: 10px 16px !important;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .round-kos-grid {
+  width: 100%;
+  grid-template-columns: 1fr 1fr !important;
+  justify-items: center;
+  column-gap: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-vertical-a.png") center / 9px 84% no-repeat;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .round-kos-cell {
+  align-items: center;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .stat-value,
+#app .arena:not(.pvp-arena) .credit-wrap .stat-value {
+  font-size: 40px !important;
+  line-height: 1 !important;
+  margin-top: 4px !important;
+}
+
+#app .arena:not(.pvp-arena) .round-wrap .stat-label,
+#app .arena:not(.pvp-arena) .credit-wrap .stat-label {
+  font-size: 15px !important;
+  letter-spacing: 0.14em !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap .stat-value,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .stat-value {
+  font-size: 22px !important;
+  margin-top: 1px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .round-wrap .stat-label,
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .stat-label {
+  font-size: 9px !important;
+}
+
+/* ---------- DAMNED cards: guess first, memory as a quiet line ---------- */
+#app .bot-card .bot-stats {
+  grid-template-columns: 1fr !important;
+  row-gap: 2px !important;
+}
+
+#app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4px 0 0 !important;
+}
+
+#app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+  font-size: 36px !important;
+  line-height: 1 !important;
+}
+
+#app .bot-card .mini-stat.memory-stat {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 0 6px !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > span {
+  font-size: 13px !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > strong {
+  font-size: 15px !important;
+  color: var(--ash) !important;
+}
+
+#app .bot-card.boss .mini-stat.memory-stat > strong {
+  color: var(--blood-bright) !important;
+}
+
+#app .bot-card .bot-health-heading {
+  justify-content: center !important;
+  text-align: center;
+}
+
+/* phone: guess label and number on one line to keep the card height */
+body.mobile-arcade #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) {
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0 0 !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat {
+  gap: 5px;
+  padding: 0 0 3px !important;
+}
+
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat > span,
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat > strong {
+  font-size: 10px !important;
+}
+
+/* ---------- Popups: ink numerals, no boxes ---------- */
+#app .damage-badge,
+#app .heal-badge,
+#app .memory-badge,
+#app .bounty-badge,
+#app .player-damage-badge,
+#app .player-heal-badge,
+#app .player-credit-badge,
+#app .death-badge {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  padding: 0 4px !important;
+  font-family: "Razor Keen", Inter, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  rotate: -6deg;
+  text-shadow: 0 0 2px #000, 0 0 6px #000, 0 0 12px #000 !important;
+}
+
+#app .damage-badge,
+#app .player-damage-badge,
+#app .death-badge,
+#app .bounty-badge,
+#app .player-credit-badge {
+  color: var(--blood-bright) !important;
+}
+
+#app .heal-badge,
+#app .player-heal-badge {
+  color: var(--bone) !important;
+}
+
+#app .memory-badge {
+  color: var(--ash) !important;
+  font-size: 18px !important;
+}
+
+#app .death-badge {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .damage-badge,
+body.mobile-arcade #app .heal-badge,
+body.mobile-arcade #app .bounty-badge,
+body.mobile-arcade #app .player-damage-badge,
+body.mobile-arcade #app .player-heal-badge,
+body.mobile-arcade #app .player-credit-badge {
+  font-size: 16px !important;
+}
+
+body.mobile-arcade #app .memory-badge,
+body.mobile-arcade #app .death-badge {
+  font-size: 13px !important;
+}
+
+/* ---------- Guess bar: the number at Target size, button in blood red ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .console-row {
+  grid-template-columns: 170px clamp(132px, 10vw, 170px) !important;
+  gap: 22px !important;
+  align-items: end;
+}
+
+body:not(.mobile-arcade) #app .center-console .guess-input {
+  font-size: 58px !important;
+  height: auto !important;
+  min-height: 64px;
+  line-height: 1 !important;
+  background-size: 100% 10px !important;
+  padding: 0 0 6px !important;
+}
+
+#app .center-console .console-hint {
+  color: var(--ash) !important;
+  letter-spacing: 0.06em;
+}
+
+body:not(.mobile-arcade) #app .center-console .console-hint {
+  font-size: 14px !important;
+}
+
+#app .center-console #mainAction.primary-button {
+  color: var(--blood-bright) !important;
+}
+
+#app .center-console #mainAction.primary-button::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .center-console #mainAction.primary-button:disabled::after {
+  opacity: 0.32;
+}
+
+/* phone: the number above the numpad gets bigger too */
+body.native-arcade #app .native-console-panel .guess-input,
+body.mobile-arcade #app .center-console .guess-input {
+  font-size: 34px !important;
+  line-height: 1 !important;
+}
+
+/* popups sit inside their panels, clear of the outlines */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-damage-badge {
+  top: 14px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  right: 30px !important;
+  bottom: 12px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 14px !important;
+  right: 16px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  right: 16px !important;
+  bottom: 3px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 5px !important;
+  right: 8px !important;
+}
+
+/* KO notice: written over a faded X instead of a pill on the card edge */
+#app .bot-card .death-badge {
+  top: 18px !important;
+}
+
+body.mobile-arcade #app .bot-card .death-badge {
+  top: 10px !important;
+}
+
+#app .bot-card.eliminated .bot-face {
+  opacity: 0.45;
+}
+
+#app .bot-card .death-badge {
+  font-size: 17px !important;
+}
+
+/* ==========================================================================
+   Layout pass: vertical rhythm, cards that always fit, seals in one row,
+   Pause in the corner, quieter disabled Buy buttons.
+   ========================================================================== */
+
+/* ---------- Pause moves to the top-right corner, beside the top bar ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar {
+  right: 100px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button {
+  top: 47px !important;
+  right: 14px !important;
+  bottom: auto !important;
+  min-width: 74px;
+}
+
+/* ---------- Even gaps: top bar / cards / guess bar ---------- */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+  top: 136px !important;
+  bottom: 128px !important;
+  align-content: center !important;
+  align-items: center !important;
+}
+
+/* ---------- Cards that always fit the screen height ---------- */
+@media (max-height: 849px) {
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 72px !important;
+    height: 76px !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 30px !important;
+  }
+}
+
+@media (max-height: 759px) {
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 58px !important;
+    height: 60px !important;
+    margin-bottom: 4px !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 26px !important;
+  }
+
+  body:not(.mobile-arcade) #app .center-console .guess-input {
+    font-size: 44px !important;
+    min-height: 50px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+    bottom: 112px !important;
+  }
+}
+
+/* ---------- Seals: six always fit on one row ---------- */
+body:not(.mobile-arcade) #app .passive-bar {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(var(--seal-slot-width), calc((100% - 50px) / 6)),
+      min(var(--seal-slot-width), calc((100% - 50px) / 6))
+    )
+  ) !important;
+  align-content: center !important;
+}
+
+body.native-arcade #app .passive-bar {
+  grid-auto-columns: min(108px, calc((100% - 20px) / 6)) !important;
+}
+
+body.native-arcade #app .passive-slot .equipped-seal-sigil,
+body.native-arcade #app .passive-slot .empty-seal-slot-image {
+  max-width: calc(100% - 4px) !important;
+  max-height: calc(100% - 4px) !important;
+}
+
+/* ---------- Devil's Offerings: an unaffordable Buy shows only the price, no empty bar ---------- */
+#app .shop-buy-button:disabled::after {
+  display: none;
+}
+
+#app .shop-buy-button:disabled {
+  opacity: 1 !important;
+  color: var(--ash) !important;
+  text-decoration: line-through;
+  text-decoration-color: rgba(141, 135, 124, 0.6);
+}
+
+@media (max-height: 689px) {
+  body:not(.mobile-arcade) {
+    --seal-slot-width: 104px;
+    --seal-slot-height: 108px;
+  }
+
+  body:not(.mobile-arcade) #app .play-column {
+    grid-template-rows: minmax(0, 1fr) minmax(120px, auto) !important;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-card {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-face {
+    width: 46px !important;
+    height: 48px !important;
+    margin-bottom: 2px !important;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-type {
+    display: none !important;
+  }
+
+  body:not(.mobile-arcade) #app .bot-card .mini-stat:not(.bot-health):not(.memory-stat) > strong {
+    font-size: 22px !important;
+  }
+
+  body:not(.mobile-arcade) #app .center-console .guess-input {
+    font-size: 36px !important;
+    min-height: 42px;
+  }
+
+  body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .bot-grid {
+    bottom: 100px !important;
+  }
+}
+
+/* the sigil follows the fitted slot width instead of the height-based size */
+body:not(.mobile-arcade) #app .passive-bar {
+  container-type: inline-size;
+}
+
+body:not(.mobile-arcade) #app .passive-slot {
+  --seal-fit: min(var(--seal-slot-width), calc((100cqw - 50px) / 6));
+}
+
+body:not(.mobile-arcade) #app .passive-slot .equipped-seal-sigil,
+body:not(.mobile-arcade) #app .passive-slot .empty-seal-slot-image {
+  width: calc(var(--seal-fit) - 4px) !important;
+  height: calc(var(--seal-fit) - 4px) !important;
+}
+
+body:not(.mobile-arcade) #app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: calc(var(--seal-fit) * 2 + 6px) !important;
+}
+
+/* phone: the X fades right back so the KO notice can be read over it */
+body.mobile-arcade #app .bot-card.eliminated .bot-face {
+  opacity: 0.2;
+}
+
+/* SIN gain sits under the number */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: 12px !important;
+  right: 14px !important;
+  font-size: 18px !important;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  right: auto !important;
+  left: 8px !important;
+  bottom: 4px !important;
+}
+
+body:not(.mobile-arcade) #app .passive-slot:not(.wide-seal-slot) {
+  aspect-ratio: auto;
+  width: auto;
+  min-width: 0;
+}
+
+/* ---------- Test-only SKIP / INF: one small group, out of the panels ---------- */
+#app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  gap: 6px;
+}
+
+#app .arena:not(.pvp-arena) .topbar > .dev-quick .small-button {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  opacity: 0.8;
+}
+
+/* desktop: under Pause, in the corner column */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: -86px;
+  bottom: 0;
+  width: 74px;
+  justify-content: center;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button {
+  top: 16px !important;
+}
+
+/* phone: bottom-right corner of the SIN box */
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: 10px;
+  bottom: 7px;
+  gap: 3px;
+}
+
+body.mobile-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick .small-button {
+  min-height: 16px !important;
+  padding: 0 5px !important;
+  font-size: 8px !important;
+}
+
+/* panel headers (Devil's Offerings, Artifacts, ...): hand-drawn underline instead of a plain 1px rule */
+#app .panel-header {
+  border-bottom-color: transparent !important;
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+  background-position: center bottom !important;
+  background-size: calc(100% - 16px) 8px !important;
+  background-repeat: no-repeat !important;
+}
+
+/* ==========================================================================
+   Seal trigger "Ignition": a red ring sweeps round the seal, the sigil flares
+   and turns red, a shockwave rolls out; during the effect the ring stays lit.
+   Same 1 s + 1 s timing as before, driven by round-reveal-active / -effect.
+   ========================================================================== */
+@property --seal-sweep {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: calc(100% + 8px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/circle-frame-red.png") center / contain no-repeat;
+  -webkit-mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+  mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before {
+  animation: seal-ring-sweep 480ms ease-in-out both;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  --seal-sweep: 360deg;
+  animation: seal-ring-hold 1000ms ease-out both;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: calc(100% - 4px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--blood-bright);
+  box-shadow: 0 0 18px rgba(220, 42, 47, 0.7), inset 0 0 18px rgba(220, 42, 47, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  animation: seal-shockwave 650ms ease-out 420ms both;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil:not(.recolored-sigil) {
+  filter: var(--seal-ignite-filter, brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%)) !important;
+  animation: seal-ignite 1000ms linear both !important;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil.recolored-sigil {
+  animation: seal-ignite-scale 1000ms linear both !important;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil:not(.recolored-sigil) {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) drop-shadow(0 0 8px rgba(220, 42, 47, 0.75)) !important;
+}
+
+@keyframes seal-ring-sweep {
+  from { --seal-sweep: 0deg; }
+  to { --seal-sweep: 360deg; }
+}
+
+@keyframes seal-ring-hold {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+@keyframes seal-shockwave {
+  from { opacity: 0.95; scale: 1; }
+  to { opacity: 0; scale: 1.9; }
+}
+
+/* the sigil stays white while the ring is drawn, then flares red (the filter swaps through a custom property) */
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.12); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%) drop-shadow(0 0 10px rgba(220, 42, 47, 0.9)); transform: scale(1.06); }
+  70%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) drop-shadow(0 0 8px rgba(220, 42, 47, 0.75)); transform: scale(1.04); }
+}
+
+@keyframes seal-ignite-scale {
+  0%, 41% { transform: scale(1); }
+  42% { transform: scale(1.12); }
+  70%, 100% { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .passive-slot.round-reveal-active:not(.suppressed)::before {
+    --seal-sweep: 360deg;
+    animation: none;
+  }
+
+  #app .passive-slot.round-reveal-active:not(.suppressed)::after {
+    display: none;
+  }
+
+  #app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   Side panels get the same continuous frame as the cards
+   ========================================================================== */
+#app .shop-panel::after,
+#app .active-panel::after {
+  border-width: 28px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 28px stretch;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   Trembling outlines (line boil): three slightly different drawings of the
+   frame swapped in steps. Settings > Outlines: Off / Slow / Normal / Fast
+   (body.outline-boil + --boil-duration). Off by default when the system asks
+   for reduced motion.
+   ========================================================================== */
+@keyframes outline-boil {
+  0% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png"); }
+  33.333% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-1.png"); }
+  66.666% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-2.png"); }
+}
+
+body.outline-boil #app .bot-card::after,
+body.outline-boil #app .stat-card::after,
+body.outline-boil #app .target-panel::after,
+body.outline-boil #app .item-card::after,
+body.outline-boil #app .shop-panel::after,
+body.outline-boil #app .active-panel::after {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+/* out of step with each other, so the screen never pulses as one */
+body.outline-boil #app .bot-card:nth-child(3n + 2)::after,
+body.outline-boil #app .item-card:nth-child(3n + 2)::after,
+body.outline-boil #app .health-wrap::after,
+body.outline-boil #app .active-panel::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+body.outline-boil #app .bot-card:nth-child(3n)::after,
+body.outline-boil #app .item-card:nth-child(3n)::after,
+body.outline-boil #app .credit-wrap::after,
+body.outline-boil #app .shop-panel::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
+}
+
+body.outline-boil #app .round-wrap::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.16);
+}
+
+/* load the three drawings up front so the first cycle doesn't flicker */
+body.outline-boil::after {
+  content: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png") url("assets/occult-ui-border-kit/assets/boil/frantic-1.png") url("assets/occult-ui-border-kit/assets/boil/frantic-2.png");
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* seal sigils sit exactly in the middle of their slot, so the Ignition ring is centred on them */
+body:not(.mobile-arcade) #app .passive-slot {
+  justify-content: center !important;
+  align-content: center !important;
+}
+
+/* ==========================================================================
+   Health bars: the health just lost shows as a dark red under-bar that
+   drains away a moment later (desktop and phone, DAMNED and player).
+   ========================================================================== */
+#app .health-bar .health-fill {
+  position: relative;
+  z-index: 1;
+}
+
+#app .health-bar .health-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: var(--ghost-to);
+  border-radius: 999px;
+  background: #7a2226;
+  pointer-events: none;
+  animation: health-ghost-drain 520ms ease-in-out both;
+}
+
+#app .bot-card.boss .health-bar .health-ghost {
+  background: rgba(233, 227, 214, 0.55);
+}
+
+@keyframes health-ghost-drain {
+  from { width: var(--ghost-from); }
+  to { width: var(--ghost-to); }
+}
+
+/* ==========================================================================
+   Popup numbers pop in and rise into place once, when their value changes
+   (the render code adds .hud-pop and resumes it with --pop-delay).
+   ========================================================================== */
+#app .damage-badge,
+#app .heal-badge,
+#app .memory-badge,
+#app .bounty-badge,
+#app .player-damage-badge,
+#app .player-heal-badge,
+#app .player-credit-badge {
+  animation: none !important;
+}
+
+#app .damage-badge.hud-pop,
+#app .heal-badge.hud-pop,
+#app .memory-badge.hud-pop,
+#app .bounty-badge.hud-pop,
+#app .player-damage-badge.hud-pop,
+#app .player-heal-badge.hud-pop,
+#app .player-credit-badge.hud-pop {
+  animation: hud-pop 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) var(--pop-delay, 0ms) both !important;
+}
+
+@keyframes hud-pop {
+  0% { opacity: 0; scale: 0.6; translate: 0 14px; }
+  12% { opacity: 1; scale: 1.15; translate: 0 4px; }
+  28% { scale: 1; }
+  100% { opacity: 1; scale: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .health-bar .health-ghost {
+    display: none;
+  }
+
+  #app .hud-pop {
+    animation: none !important;
+  }
+}
+
+/* player heal sits on the label row, right of the damage number, clear of the bar */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  top: 14px !important;
+  bottom: auto !important;
+  right: auto !important;
+  left: calc(50% + 34px) !important;
+}
+
+/* the two-slot Seal of Satan is not round: no ring or shockwave on it */
+#app .passive-slot.wide-seal-slot::before,
+#app .passive-slot.wide-seal-slot::after {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Seal ring geometry: the ring is laid exactly over the seal's own circle.
+   --ring-d / --ring-x / --ring-y are measured from the drawn sigil after
+   each render (syncSealRings). The seal art's circle is 91% of the image,
+   the ring art's circle is 95.5% of its image, hence the 0.953 factor.
+   ========================================================================== */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before,
+#app .passive-slot.seal-summoned::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.953);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/circle-frame-red.png") center / contain no-repeat;
+  -webkit-mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+  mask: conic-gradient(#000 var(--seal-sweep), transparent 0);
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  scale: 1.04;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.91);
+}
+
+/* ==========================================================================
+   Buying a seal ("Summoned"): a red ring glows where the seal will sit,
+   then the sigil comes into focus inside it. Plays once per newly bought seal.
+   ========================================================================== */
+#app .passive-slot.seal-summoned::before {
+  --seal-sweep: 360deg;
+  opacity: 0;
+  animation: seal-summon-ring 1100ms ease-out var(--summon-delay, 0ms) both;
+}
+
+#app .passive-slot.seal-summoned .equipped-seal-sigil {
+  animation: seal-summon-sigil 1100ms ease-out var(--summon-delay, 0ms) both !important;
+}
+
+@keyframes seal-summon-ring {
+  0% { opacity: 0; scale: 0.94; }
+  25% { opacity: 1; scale: 1.04; }
+  45% { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 1; }
+}
+
+@keyframes seal-summon-sigil {
+  0%, 22% { opacity: 0; filter: blur(8px); transform: scale(0.86); }
+  65%, 100% { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .passive-slot.seal-summoned::before { display: none; }
+  #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
+}
+
+/* ==========================================================================
+   Pass 3: seal slot clean-up, Ignition ring around the seal (as in the lab),
+   lighter trigger animation, Flash on purchase, damage shake.
+   ========================================================================== */
+
+/* nothing is drawn behind an equipped seal: no slot background, border or leftover ring */
+#app .passive-slot:not(.empty) {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .passive-slot:not(.empty):not(.round-reveal-active):not(.round-reveal-effect)::before,
+#app .passive-slot:not(.empty):not(.round-reveal-active):not(.seal-summoned)::after {
+  content: none !important;
+}
+
+/* Ignition ring: a little outside the seal, centred on it (like the Seal Lab preview) */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  width: calc(var(--ring-d, 100%) * 1.1);
+  will-change: opacity;
+}
+
+/* lighter on the GPU: no animated drop-shadow while the seal flares, glow only once it has settled */
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.12); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%); transform: scale(1.06); }
+  70%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%); transform: scale(1.04); }
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil {
+  will-change: transform;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::after {
+  will-change: transform, opacity;
+}
+
+/* the red ring is loaded with the page, so the first trigger doesn't wait for it */
+body::before {
+  content: url("assets/occult-ui-border-kit/assets/circle-frame-red.png");
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Buying a seal: Flash — a white-hot flash and a small shockwave, then it settles */
+#app .passive-slot.seal-summoned::before {
+  content: none !important;
+}
+
+#app .passive-slot.seal-summoned::after {
+  content: "" !important;
+  position: absolute;
+  z-index: 2;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  width: calc(var(--ring-d, 100%) * 0.91);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--bone);
+  box-shadow: 0 0 14px rgba(233, 227, 214, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  animation: seal-bought-wave 520ms ease-out var(--summon-delay, 0ms) both;
+}
+
+#app .passive-slot.seal-summoned .equipped-seal-sigil {
+  animation: seal-bought-flash 380ms ease-out var(--summon-delay, 0ms) both !important;
+}
+
+@keyframes seal-bought-flash {
+  from { filter: brightness(4); transform: scale(1.2); }
+  to { filter: brightness(1); transform: scale(1); }
+}
+
+@keyframes seal-bought-wave {
+  from { opacity: 0.9; scale: 1; }
+  to { opacity: 0; scale: 1.8; }
+}
+
+/* Damage shake, scaled by damage: small hits nudge, medium shake with a red flash, big hits jolt */
+#app .bot-card.hit-shake {
+  animation: hit-shake-x 220ms linear var(--shake-delay, 0ms) both;
+}
+
+#app .bot-card.hit-mid {
+  animation-duration: 300ms;
+}
+
+#app .bot-card.hit-big {
+  animation: hit-shake-big 380ms linear var(--shake-delay, 0ms) both;
+}
+
+@keyframes hit-shake-x {
+  0%, 100% { translate: 0 0; }
+  20% { translate: calc(var(--shake-px, 3px) * -1) 0; }
+  40% { translate: var(--shake-px, 3px) 0; }
+  60% { translate: calc(var(--shake-px, 3px) * -0.6) 0; }
+  80% { translate: calc(var(--shake-px, 3px) * 0.4) 0; }
+}
+
+@keyframes hit-shake-big {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  20% { translate: calc(var(--shake-px, 8px) * -1) 0; rotate: -1.2deg; }
+  40% { translate: var(--shake-px, 8px) 0; rotate: 1deg; }
+  60% { translate: calc(var(--shake-px, 8px) * -0.6) 0; rotate: -0.6deg; }
+  80% { translate: calc(var(--shake-px, 8px) * 0.4) 0; rotate: 0deg; }
+}
+
+#app .bot-card .hit-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 28px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 28px stretch;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(110%);
+  opacity: 0;
+  animation: hit-flash 650ms ease-out var(--shake-delay, 0ms) both;
+}
+
+body.mobile-arcade #app .bot-card .hit-flash {
+  border-width: 20px;
+  border-image-width: 20px;
+}
+
+@keyframes hit-flash {
+  0% { opacity: 1; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .bot-card.hit-shake { animation: none !important; }
+  #app .passive-slot.seal-summoned::after { display: none; }
+  #app .passive-slot.seal-summoned .equipped-seal-sigil { animation: none !important; }
+}
+
+/* Effect step: the seal simply stays red, still and centred (no ring, no scale).
+   The flare now settles back to its normal size, so nothing jumps between the two steps. */
+#app .passive-slot.round-reveal-effect::before {
+  content: none !important;
+}
+
+#app .passive-slot.round-reveal-effect .equipped-seal-sigil {
+  transform: none !important;
+  animation: none !important;
+}
+
+@keyframes seal-ignite {
+  0% { --seal-ignite-filter: none; transform: scale(1); }
+  41% { --seal-ignite-filter: none; transform: scale(1); }
+  42% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(260%); transform: scale(1.1); }
+  58% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(150%); transform: scale(1.04); }
+  75%, 100% { --seal-ignite-filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%); transform: scale(1); }
+}
+
+@keyframes seal-ignite-scale {
+  0%, 41% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  75%, 100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   UI polish pass (feature/ui-polish)
+   ========================================================================== */
+
+/* ---------- Seal of Satan: one wide seal across its two slots ---------- */
+body.mobile-arcade #app .passive-slot.wide-seal-slot {
+  width: auto !important;
+  justify-self: stretch;
+  aspect-ratio: auto !important;
+}
+
+body.mobile-arcade #app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  width: 100% !important;
+  max-width: none;
+  height: calc(100% - 3px) !important;
+}
+
+#app .passive-slot.wide-seal-slot .equipped-seal-sigil {
+  object-fit: contain;
+}
+
+/* ---------- Panel header lines: frame to frame, and they tremble with the outlines ---------- */
+#app .panel-header {
+  background-size: calc(100% - 8px) 8px !important;
+}
+
+@keyframes divider-boil {
+  0% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png"); }
+  33.333% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png"); }
+  66.666% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png"); }
+}
+
+@keyframes divider-boil-red {
+  0% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png"); }
+  33.333% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png"); }
+  66.666% { --divider-img: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png"); }
+}
+
+body.outline-boil #app .panel-header,
+body.outline-boil #app .bot-card .bot-stats,
+body.outline-boil #app .bot-card .mini-stat.bot-health,
+body.outline-boil:not(.mobile-arcade) #app .play-column::after {
+  background-image: var(--divider-img) !important;
+  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+body.outline-boil #app .bot-card.boss .bot-stats,
+body.outline-boil #app .bot-card.boss .mini-stat.bot-health {
+  animation-name: divider-boil-red;
+}
+
+body.outline-boil #app .bot-card .mini-stat.bot-health,
+body.outline-boil #app .active-panel .panel-header {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+body.outline-boil #app .bot-card:nth-child(3n + 2) .bot-stats,
+body.outline-boil:not(.mobile-arcade) #app .play-column::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
+}
+
+body.outline-boil::after {
+  content: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png") url("assets/occult-ui-border-kit/assets/boil/frantic-1.png") url("assets/occult-ui-border-kit/assets/boil/frantic-2.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+
+/* ==========================================================================
+   Type system
+   Razor Keen = display (names, numbers, labels, buttons)
+   Alegreya   = book face for sentences (tooltips, hints, notices), readable small
+   ========================================================================== */
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/alegreya/alegreya-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: "Razor Keen", "Alegreya", Georgia, serif;
+  --font-book: "Alegreya", Georgia, "Times New Roman", serif;
+  /* SIN has its own colour: a deep wine red. Bright blood red is kept for danger and the one action that moves the round on. */
+  --sin: #b0414c;
+  --sin-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2.1' d='M13.4 2.5C18.6 3 22 7.2 21.5 12.6c-.5 5.2-4.9 8.9-10.1 8.5C6.2 20.7 2.4 16.4 2.8 11.2 3.2 6.1 7.6 2.3 12.6 2.7l2.2.9'/%3E%3Cpath stroke-width='1.1' d='M4.6 6.6c-1.7 2.4-2.3 5.4-1.5 8.4M19.9 17.2c-1.2 1.6-2.7 2.7-4.4 3.4'/%3E%3Cpath stroke-width='2.3' d='M12.5 4.9 11.6 19.4'/%3E%3Cpath stroke-width='2.2' d='M7.6 15.1 16.7 14.2'/%3E%3Cpath stroke-width='1.2' d='M7.9 13.6 7.3 16.3M16.3 12.9 16.9 15.6M10.4 4.6l3.6.7'/%3E%3C/svg%3E");
+  --ui-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* sentences in the book face */
+body #app .console-hint,
+body #app .pending-panel span,
+body #app .empty-state,
+body #app .end-copy,
+body #app .quit-copy,
+body #app .run-remove-confirm,
+body #app .shop-lock-message span,
+body #app .artifact-memory-line {
+  font-family: var(--font-book) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+body:not(.mobile-arcade) #app .console-hint {
+  font-size: 17px !important;
+  font-style: italic;
+  color: var(--ash) !important;
+}
+
+body #app .target-calc-line,
+body #app .target-calc-line * {
+  font-family: var(--font-book) !important;
+  letter-spacing: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .target-calc-line {
+  font-size: 13.5px !important;
+  color: var(--ash) !important;
+}
+
+body:not(.mobile-arcade) #app .elite-chance-label,
+body:not(.mobile-arcade) #app .seal-sell-button,
+body:not(.mobile-arcade) #app .sell-button {
+  font-size: 13px !important;
+}
+
+/* phone: nothing under 10.5px, labels that carry meaning at 11px+ */
+body.mobile-arcade #app .target-calc-line { font-size: 10px !important; }
+body.mobile-arcade #app .stat-label { font-size: 10.5px !important; }
+body.mobile-arcade #app .target-line { font-size: 11px !important; }
+body.mobile-arcade #app .bot-type { font-size: 9.5px !important; line-height: 1 !important; }
+body.mobile-arcade #app .bot-name { font-size: 11px !important; }
+body.mobile-arcade #app .bot-stats .mini-stat > span { font-size: 10px !important; }
+body.mobile-arcade #app .bot-stats .memory-stat strong { font-size: 10px !important; }
+body.mobile-arcade #app .item-kind,
+body.mobile-arcade #app .panel-subtitle { font-size: 11px !important; }
+body.mobile-arcade #app .console-hint {
+  font-size: 12px !important;
+  font-style: italic;
+  color: var(--ash) !important;
+}
+
+/* ==========================================================================
+   Tooltips: a framed page of the grimoire, not a grey web box
+   ========================================================================== */
+body #app .floating-tooltip {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #040405 !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85) !important;
+  padding: 18px 22px 16px !important;
+  font-family: var(--font-book) !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.42 !important;
+  letter-spacing: 0 !important;
+  color: var(--bone) !important;
+  isolation: isolate;
+}
+
+body #app .floating-tooltip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 22px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% / 22px stretch;
+  opacity: 0.9;
+}
+
+body #app .floating-tooltip * {
+  font-family: var(--font-book) !important;
+  color: var(--bone) !important;
+}
+
+body #app .floating-tooltip .tooltip-keyword {
+  font-family: var(--font-display) !important;
+  font-size: 0.98em !important;
+  letter-spacing: 0.04em !important;
+  color: #fff !important;
+}
+
+body #app .floating-tooltip .tooltip-title,
+body #app .floating-tooltip .tooltip-title * {
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+body #app .floating-tooltip .tooltip-heading {
+  align-items: baseline !important;
+  padding-bottom: 9px !important;
+  margin-bottom: 9px !important;
+  border: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") bottom center / 100% 7px no-repeat !important;
+}
+
+body #app .floating-tooltip .tooltip-shift-hint {
+  font-style: italic !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--ash) !important;
+}
+
+body #app .floating-tooltip .tooltip-elite-line,
+body #app .floating-tooltip .tooltip-stat-line {
+  font-size: 14.5px !important;
+}
+
+body #app .floating-tooltip .tooltip-elite-line,
+body #app .floating-tooltip .tooltip-elite-line * {
+  color: #d9c6a8 !important;
+}
+
+body #app .floating-tooltip .tooltip-stat-line,
+body #app .floating-tooltip .tooltip-stat-line * {
+  color: var(--ash) !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer {
+  margin-top: 10px !important;
+  padding-top: 9px !important;
+  border: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") top center / 100% 7px no-repeat !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer span {
+  font-family: var(--font-display) !important;
+  font-size: 15px !important;
+  letter-spacing: 0.03em !important;
+}
+
+body #app .floating-tooltip .seal-tooltip-footer span:last-child {
+  color: var(--sin) !important;
+}
+
+body.mobile-arcade #app .floating-tooltip {
+  padding: 13px 16px 12px !important;
+  font-size: 13.5px !important;
+}
+
+body.mobile-arcade #app .floating-tooltip .tooltip-title,
+body.mobile-arcade #app .floating-tooltip .tooltip-title * {
+  font-size: 17px !important;
+}
+
+/* ==========================================================================
+   Buttons: disabled reads as "not now", not as an empty grey bar
+   ========================================================================== */
+#app .small-button:disabled,
+#app .primary-button:disabled {
+  color: rgba(141, 135, 124, 0.75) !important;
+}
+
+#app .small-button:disabled::after,
+#app .primary-button:disabled::after {
+  opacity: 0.2;
+}
+
+#app .primary-button:not(:disabled):active,
+#app .small-button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
+}
+
+#app .primary-button,
+#app .small-button {
+  transition: color 0.12s ease, transform 0.09s ease;
+}
+
+/* kind labels (SEAL / ARTIFACT): quiet small caps, no grey pill */
+#app .item-kind {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.16em !important;
+  color: var(--ash) !important;
+}
+
+/* ==========================================================================
+   Personality glyphs (instead of emoji flags)
+   ========================================================================== */
+#app .bot-glyph {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  margin-right: 5px;
+  color: var(--ash) !important;
+  vertical-align: -3px;
+}
+
+#app .bot-glyph svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#app .bot-glyph svg * {
+  stroke: var(--ash);
+}
+
+body.mobile-arcade #app .bot-glyph {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+}
+
+#app .bot-flag {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Red discipline: SIN is wine red with its own coin mark
+   ========================================================================== */
+#app .credit-wrap .stat-value,
+#app .bot-reward,
+#app .bounty-badge,
+#app .player-credit-badge,
+#app .mobile-offerings-sin,
+#app .reroll-cost,
+#app .item-card .price {
+  color: var(--sin) !important;
+}
+
+/* Buy is an ordinary action now: bone text, the coin carries the colour */
+#app .shop-buy-button:not(:disabled):not(:hover) {
+  color: var(--bone) !important;
+}
+
+/* ==========================================================================
+   Devil's Offerings
+   ========================================================================== */
+#app .reroll-control {
+  display: flex;
+  align-items: center;
+}
+
+#app .reroll-button {
+  display: inline-flex !important;
+  align-items: baseline;
+  gap: 7px;
+  padding: 3px 14px !important;
+  white-space: nowrap;
+}
+
+#app .reroll-button .reroll-cost {
+  font-size: 0.92em;
+}
+
+#app .reroll-button:disabled .reroll-cost {
+  color: rgba(141, 135, 124, 0.75) !important;
+}
+
+#app .reroll-button:disabled .sin-mark {
+  background: rgba(141, 135, 124, 0.75);
+}
+
+
+/* ELITE offerings: a second, red frame inside the first and a slow shimmer */
+#app .item-card.elite-offer::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 5;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 20px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% / 20px stretch;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 0.85;
+}
+
+#app .item-card.elite-offer .shop-seal-sigil {
+  animation: elite-shimmer 3.2s ease-in-out infinite;
+}
+
+@keyframes elite-shimmer {
+  0%, 100% { filter: brightness(1); }
+  45% { filter: brightness(1.45) drop-shadow(0 0 5px rgba(220, 42, 47, 0.55)); }
+}
+
+#app .item-card.elite-offer .item-name {
+  color: #fff !important;
+}
+
+/* the wide Seal of Satan sigil in the shop */
+#app .item-card.satan-offer .shop-seal-sigil {
+  object-fit: contain;
+}
+
+/* Satan's lock on the shop: the sigil, sealed in red */
+#app .shop-lock-message {
+  display: grid !important;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px 14px !important;
+  border: 0 !important;
+  background: none !important;
+  text-align: center;
+}
+
+#app .shop-lock-message .shop-lock-sigil {
+  width: min(78%, 240px);
+  height: auto;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  animation: lock-breathe 3.6s ease-in-out infinite;
+}
+
+#app .shop-lock-message span {
+  font-size: 17px !important;
+  font-style: italic;
+  color: var(--bone) !important;
+}
+
+@keyframes lock-breathe {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   ARTIFACTS: compact rows, a clear ready / waiting / spent state
+   ========================================================================== */
+#app .item-card.active.artifact-ready [data-use-active] {
+  color: var(--blood-bright) !important;
+}
+
+#app .item-card.active.artifact-ready [data-use-active]::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-ready .inventory-artifact-icon {
+  filter: drop-shadow(0 0 6px rgba(220, 42, 47, 0.45));
+}
+
+#app .item-card.active.artifact-spent {
+  opacity: 0.5;
+}
+
+#app .item-card.active.artifact-waiting [data-use-active] {
+  visibility: hidden;
+}
+
+/* ==========================================================================
+   Pause, sliders, checkbox
+   ========================================================================== */
+#app .pause-overlay {
+  background: rgba(0, 0, 0, 0.78) !important;
+  backdrop-filter: none;
+}
+
+#app .end-card {
+  position: relative;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(2, 2, 3, 0.96) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9) !important;
+}
+
+#app .end-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 30px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 30px stretch;
+  opacity: 0.92;
+}
+
+#app .end-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app .pause-card {
+  padding: 30px 34px 28px !important;
+  width: min(440px, 92vw) !important;
+}
+
+#app .pause-card .end-title,
+#app .end-card .end-title {
+  font-size: 46px !important;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px !important;
+}
+
+#app .pause-actions {
+  gap: 14px !important;
+}
+
+#app .pause-actions .primary-button {
+  min-height: 42px;
+  font-size: 19px !important;
+}
+
+#app .pause-actions .primary-button[data-pause-action="resume"] {
+  color: #fff !important;
+}
+
+#app .pause-sound-settings {
+  border-top: 0 !important;
+  padding-top: 18px !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+}
+
+/* range inputs: a chalk line with a small ring for a thumb */
+body .sound-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") center / 100% 8px no-repeat !important;
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
+}
+
+body .sound-slider::-webkit-slider-runnable-track {
+  height: 18px;
+  background: transparent;
+  border: 0;
+}
+
+body .sound-slider::-moz-range-track {
+  height: 18px;
+  background: transparent;
+  border: 0;
+}
+
+body .sound-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -1px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 42%, var(--bone) 46% 62%, transparent 66%);
+  transition: transform 0.12s ease;
+}
+
+body .sound-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 42%, var(--bone) 46% 62%, transparent 66%);
+}
+
+body .sound-slider:hover::-webkit-slider-thumb,
+body .sound-slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.15);
+  background: radial-gradient(circle, #000 0 42%, var(--blood-bright) 46% 62%, transparent 66%);
+}
+
+body .sound-toggle input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+  cursor: pointer;
+}
+
+body .sound-toggle input[type="checkbox"]:checked {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M4.5 4.8 15.2 15.4M15.6 4.4 4.8 15.6'/%3E%3C/svg%3E") center / 70% 70% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
+body .sound-toggle input[type="checkbox"]:focus-visible,
+body .sound-slider:focus-visible {
+  outline: 1px dashed var(--ash);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Game over: the run told over the menu art
+   ========================================================================== */
+#app .overlay.game-over-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 30000 !important;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.94) 70%),
+    url("assets/ui/menu/menu-bg-spin.jpg") center / cover no-repeat,
+    #000 !important;
+  animation: game-over-in 900ms ease-out both;
+}
+
+#app .game-over-overlay .end-figure {
+  position: absolute;
+  bottom: -2vh;
+  height: 96vh;
+  width: auto;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: end-figure-in 1600ms var(--ui-ease) both;
+}
+
+#app .game-over-overlay .end-figure-left {
+  left: -6vw;
+}
+
+#app .game-over-overlay .end-figure-right {
+  right: -6vw;
+  animation-delay: 120ms;
+}
+
+#app .game-over-card {
+  width: min(560px, 92vw) !important;
+  padding: 34px 40px 30px !important;
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+#app .game-over-card .end-title {
+  font-size: clamp(54px, 7vw, 86px) !important;
+  line-height: 0.95;
+  color: var(--blood-bright) !important;
+  animation: stamp-in 700ms 250ms var(--ui-ease) both;
+}
+
+#app .game-over-card .end-copy {
+  margin: 6px 0 18px !important;
+  font-size: 19px !important;
+  font-style: italic;
+  color: var(--bone) !important;
+}
+
+#app .end-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 18px;
+  padding: 16px 0 6px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+}
+
+#app .end-stat {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+
+#app .end-stat span {
+  font-size: 13px !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+}
+
+#app .end-stat strong {
+  font-size: 30px !important;
+  line-height: 1;
+  font-weight: 400 !important;
+  color: var(--bone) !important;
+}
+
+#app .end-stat.end-stat-wide {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+}
+
+#app .end-stat.end-stat-wide strong {
+  font-size: 22px !important;
+  color: var(--blood-bright) !important;
+}
+
+#app .game-over-card .end-actions {
+  margin-top: 22px !important;
+}
+
+#app .game-over-card .end-restart {
+  color: var(--blood-bright) !important;
+}
+
+#app .game-over-card .end-restart::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+@keyframes game-over-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes end-figure-in {
+  from { opacity: 0; transform: translateY(4vh); }
+  to { opacity: 0.5; transform: none; }
+}
+
+@keyframes stamp-in {
+  0% { opacity: 0; transform: scale(1.35); filter: blur(6px); }
+  60% { opacity: 1; transform: scale(0.98); filter: blur(0); }
+  100% { opacity: 1; transform: none; }
+}
+
+body.mobile-arcade #app .game-over-card {
+  padding: 18px 24px 16px !important;
+}
+
+body.mobile-arcade #app .game-over-card .end-title {
+  font-size: 44px !important;
+}
+
+body.mobile-arcade #app .game-over-card .end-copy {
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+body.mobile-arcade #app .end-stats {
+  gap: 6px 12px;
+  padding-top: 10px;
+}
+
+body.mobile-arcade #app .end-stat strong {
+  font-size: 20px !important;
+}
+
+body.mobile-arcade #app .end-stat span {
+  font-size: 10.5px !important;
+}
+
+/* ==========================================================================
+   Big moments: CRITICAL, boss arrival, PENTAKILL, the final bosses
+   A full-screen beat over everything; never blocks input.
+   ========================================================================== */
+#app .moment-card {
+  position: fixed;
+  inset: 0;
+  z-index: 30020;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  --moment-ms: 1600ms;
+  animation: moment-veil var(--moment-ms) ease-out both;
+  background: radial-gradient(ellipse at 50% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.82) 72%);
+}
+
+#app .moment-card.moment-critical { --moment-ms: 1500ms; }
+#app .moment-card.moment-boss { --moment-ms: 2000ms; }
+#app .moment-card.moment-pentakill { --moment-ms: 1900ms; }
+#app .moment-card.moment-finals { --moment-ms: 3400ms; }
+
+#app .moment-text {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0 0 18px;
+  animation: moment-text var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-text::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  bottom: 0;
+  height: 12px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") center / 100% 100% no-repeat;
+  transform-origin: 50% 50%;
+  animation: moment-rule var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(64px, 11vw, 150px) !important;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bone) !important;
+  text-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+#app .moment-sub {
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(16px, 1.7vw, 24px) !important;
+  color: var(--bone) !important;
+  letter-spacing: 0.01em;
+}
+
+#app .moment-critical .moment-title,
+#app .moment-pentakill .moment-title {
+  color: var(--blood-bright) !important;
+}
+
+#app .moment-critical .moment-text::after,
+#app .moment-pentakill .moment-text::after {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+
+#app .moment-boss .moment-title {
+  font-size: clamp(54px, 8vw, 116px) !important;
+  text-transform: none;
+}
+
+#app .moment-finals .moment-title {
+  color: var(--blood-bright) !important;
+}
+
+#app .moment-figure {
+  position: absolute;
+  bottom: -4vh;
+  height: 100vh;
+  width: auto;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: moment-figure var(--moment-ms) var(--ui-ease) both;
+}
+
+#app .moment-figure-left {
+  left: -4vw;
+  --from: -10vw;
+}
+
+#app .moment-figure-right {
+  right: -4vw;
+  --from: 10vw;
+}
+
+@keyframes moment-veil {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes moment-text {
+  0% { opacity: 0; transform: scale(1.4); filter: blur(8px); }
+  11% { opacity: 1; transform: scale(0.97); filter: blur(0); }
+  16% { transform: scale(1); }
+  78% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 0; transform: scale(1.07); filter: blur(3px); }
+}
+
+@keyframes moment-rule {
+  0%, 10% { transform: scaleX(0); }
+  30% { transform: scaleX(1); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes moment-figure {
+  0% { opacity: 0; translate: var(--from) 0; }
+  22% { opacity: 0.62; translate: 0 0; }
+  80% { opacity: 0.62; }
+  100% { opacity: 0; }
+}
+
+body.mobile-arcade #app .moment-title {
+  font-size: 64px !important;
+}
+
+body.mobile-arcade #app .moment-boss .moment-title {
+  font-size: 46px !important;
+}
+
+body.mobile-arcade #app .moment-sub {
+  font-size: 15px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .moment-text,
+  #app .moment-text::after,
+  #app .moment-figure {
+    animation-name: moment-veil;
+  }
+  #app .item-card.elite-offer .shop-seal-sigil,
+  #app .shop-lock-message .shop-lock-sigil {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Main menu finish: framed buttons, embers, a breathing glow behind the title
+   ========================================================================== */
+#app .main-menu .menu-button {
+  position: relative;
+  min-height: 52px;
+  font-size: 27px !important;
+  letter-spacing: 0.04em;
+  transition: color 0.15s ease, transform 0.15s var(--ui-ease);
+}
+
+#app .main-menu .menu-button::after {
+  content: "";
+  position: absolute;
+  inset: 2px 8px;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 12px solid transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+#app .main-menu .menu-button:hover:not(:disabled),
+#app .main-menu .menu-button:focus-visible {
+  transform: scale(1.04);
+  outline: none;
+}
+
+#app .main-menu .menu-button:hover:not(:disabled)::after,
+#app .main-menu .menu-button:focus-visible::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .main-menu .menu-button:focus-visible {
+  color: var(--blood-bright) !important;
+}
+
+#app .main-menu .secondary-menu-button {
+  min-height: 44px;
+  font-size: 22px !important;
+}
+
+#app .main-menu .secondary-menu-button::after {
+  inset: 3px 26px;
+  opacity: 0.5;
+}
+
+.menu-logo-glow {
+  left: 560px;
+  top: 40px;
+  width: 580px;
+  height: 460px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 52%, rgba(255, 238, 214, 0.16) 0%, rgba(220, 42, 47, 0.07) 38%, transparent 68%);
+  animation: menu-glow-breathe 7s ease-in-out infinite;
+}
+
+@keyframes menu-glow-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.menu-embers {
+  left: 0;
+  top: 0;
+  width: 1672px;
+  height: 941px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.menu-ember {
+  position: absolute;
+  bottom: -12px;
+  width: var(--ember-size, 2px);
+  height: var(--ember-size, 2px);
+  border-radius: 50%;
+  background: #f3e6cf;
+  box-shadow: 0 0 6px 1px rgba(255, 220, 170, 0.55);
+  opacity: 0;
+  animation-name: menu-ember-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.menu-ember.ember-red {
+  background: #ff5a3c;
+  box-shadow: 0 0 7px 1px rgba(220, 42, 47, 0.7);
+}
+
+@keyframes menu-ember-rise {
+  0% { opacity: 0; transform: translate(0, 0); }
+  8% { opacity: 0.85; }
+  60% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--ember-drift, 0px), -760px); }
+}
+
+#app .menu-version {
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  bottom: 12px;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 13px !important;
+  letter-spacing: 0.02em;
+  color: rgba(141, 135, 124, 0.85) !important;
+  pointer-events: none;
+}
+
+/* Records: a framed page centred on the screen, nothing cut off */
+#app .main-menu-panel.menu-screen-records {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(600px, 92vw) !important;
+  z-index: 5;
+}
+
+#app .records-menu {
+  position: relative;
+  width: 100% !important;
+  transform: none !important;
+  padding: 26px 30px 22px;
+  background: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+  justify-items: center;
+}
+
+#app .records-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 30px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 30px stretch;
+  opacity: 0.92;
+}
+
+#app .records-title {
+  margin: 0;
+  font-size: 40px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.03em;
+}
+
+#app .records-list {
+  max-height: min(58vh, 520px) !important;
+  padding: 10px 6px 4px !important;
+  border-radius: 0 !important;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat !important;
+  box-shadow: none !important;
+  gap: 0 !important;
+}
+
+#app .record-row {
+  min-height: 36px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(233, 227, 214, 0.1);
+}
+
+#app .record-row span {
+  font-family: var(--font-book) !important;
+  font-size: 17px !important;
+  color: var(--bone) !important;
+}
+
+#app .record-row strong {
+  font-size: 20px !important;
+  font-weight: 400 !important;
+}
+
+body.mobile-arcade #app .records-menu,
+body.native-arcade #app .records-menu {
+  padding: 16px 20px 14px;
+}
+
+body.mobile-arcade #app .records-title,
+body.native-arcade #app .records-title {
+  font-size: 28px !important;
+}
+
+body.mobile-arcade #app .record-row span,
+body.native-arcade #app .record-row span {
+  font-size: 14px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-ember,
+  .menu-logo-glow {
+    animation: none;
+  }
+  .menu-ember {
+    display: none;
+  }
+}
+
+/* ARTIFACTS: compact rows so five fit without scrolling on a 1080p-class screen */
+body:not(.mobile-arcade) #app .active-panel .item-card.active {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 5px 12px !important;
+  min-height: 0 !important;
+  padding: 9px 14px 9px 12px !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .inventory-artifact-icon {
+  grid-row: 1 / span 2;
+  width: 44px !important;
+  height: 44px !important;
+  align-self: center;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-top {
+  min-height: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-top > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-kind {
+  display: none !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .price {
+  margin: 0 !important;
+  white-space: nowrap;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-actions {
+  margin: 0 !important;
+  min-height: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .item-card.active .item-actions .small-button {
+  min-height: 24px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body:not(.mobile-arcade) #app .active-panel .active-list {
+  gap: 7px !important;
+}
+
+/* menu buttons and run slots: one hand-drawn frame everywhere (no rounded web border underneath) */
+#app .main-menu .menu-button,
+#app .main-menu .run-slot-button,
+#app .main-menu .run-remove-button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#app .main-menu .run-slot-button,
+#app .main-menu .run-remove-button {
+  position: relative;
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+
+#app .main-menu .run-slot-button::after,
+#app .main-menu .run-remove-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 12px solid transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+  opacity: 0.75;
+}
+
+#app .main-menu .run-remove-button::after {
+  border-width: 12px;
+  border-image-width: 12px;
+}
+
+#app .main-menu .run-slot-button:hover:not(:disabled)::after,
+#app .main-menu .run-remove-button:hover:not(:disabled)::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .main-menu .run-slot-date {
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  color: var(--ash) !important;
+}
+
+#app .main-menu .empty-run-slot .run-slot-label {
+  color: var(--ash) !important;
+}
+
+
+/* SIN mark: drawn after the value instead of the word */
+#app .sin-mark {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.16em;
+  vertical-align: -0.12em;
+  background: var(--sin);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+  flex: 0 0 auto;
+}
+
+#app .bot-reward .sin-mark,
+#app .bounty-badge .sin-mark {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.22em;
+}
+
+/* player SIN panel: the mark sits after the word, the number stays centred under it */
+#app .credit-wrap .stat-label .sin-mark {
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: 0.25em;
+  vertical-align: -0.2em;
+}
+
+#app .shop-buy-button:disabled .sin-mark,
+#app .floating-tooltip .sin-mark {
+  background: currentColor;
+}
+
+#app .floating-tooltip .seal-tooltip-footer .sin-mark {
+  background: var(--sin);
+}
+
+/* main menu: no boxes around the buttons, just the words (red on hover) */
+#app .main-menu .menu-button::after {
+  content: none !important;
+}
+
+#app .main-menu .menu-button {
+  min-height: 46px;
+}
+
+/* ---------- Boss cards: pentagram mark, "Boss", a small seal whose tooltip tells the ability ---------- */
+#app .bot-card.boss .boss-glyph,
+#app .bot-card.boss .boss-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+
+
+/* GUESS / READY / NEXT: white like every button, red on hover, red on its own only when the guess is CRITICAL */
+#app .center-console #mainAction.primary-button,
+#app #mainAction.mobile-numpad-action {
+  color: var(--bone) !important;
+}
+
+#app .center-console #mainAction.primary-button::after,
+#app #mainAction.mobile-numpad-action::after {
+  filter: none;
+  opacity: 0.9;
+}
+
+#app .center-console #mainAction.primary-button:hover:not(:disabled),
+#app #mainAction.mobile-numpad-action:hover:not(:disabled),
+body:has(#app .guess-input.critical-guess) #app #mainAction {
+  color: var(--blood-bright) !important;
+}
+
+#app .center-console #mainAction.primary-button:hover:not(:disabled)::after,
+#app #mainAction.mobile-numpad-action:hover:not(:disabled)::after,
+body:has(#app .guess-input.critical-guess) #app #mainAction::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .center-console #mainAction.primary-button:disabled::after {
+  opacity: 0.25;
+}
+
+/* ==========================================================================
+   Seal trigger "Blood fill" (replaces the Ignition ring)
+   The seal fills with red from its centre for 620 ms while the screen leans in;
+   then the screen slams back with a shockwave and cracks (JS: watchSealTrigger).
+   ========================================================================== */
+@property --seal-fill {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* no ring, no ring-hold, no old shockwave */
+#app .passive-slot.round-reveal-active::after,
+#app .passive-slot.round-reveal-effect::after {
+  content: none !important;
+}
+
+/* the white seal stays still underneath while the red one grows over it */
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil.equipped-seal-sigil:not(.seal-fill-sigil) {
+  filter: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+#app .passive-slot .equipped-seal-sigil {
+  grid-area: 1 / 1;
+}
+
+#app .passive-slot .seal-fill-sigil.seal-fill-sigil {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  transform: none !important;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(105%) !important;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 var(--seal-fill), transparent calc(var(--seal-fill) + 7%));
+  mask-image: radial-gradient(circle at 50% 50%, #000 var(--seal-fill), transparent calc(var(--seal-fill) + 7%));
+  --seal-fill: 80%;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .seal-fill-sigil.seal-fill-sigil {
+  animation: seal-blood-fill 620ms cubic-bezier(0.5, 0, 0.85, 0.6) both !important;
+}
+
+/* a pool of deep red spreads inside the seal's circle with the lines */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  content: "" !important;
+  position: absolute;
+  left: calc(50% + var(--ring-x, 0px));
+  top: calc(50% + var(--ring-y, 0px));
+  z-index: 1;
+  width: calc(var(--ring-d, 100%) * 0.9) !important;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(150, 8, 16, 0.5) 0%, rgba(110, 4, 10, 0.38) calc(var(--seal-fill) * 0.62), transparent calc(var(--seal-fill) * 0.62 + 2%)) !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  opacity: 1 !important;
+  --seal-fill: 160%;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed)::before {
+  animation: seal-blood-fill-pool 620ms cubic-bezier(0.5, 0, 0.85, 0.6) both !important;
+}
+
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  animation: seal-pool-settle 1000ms ease-out both !important;
+}
+
+@keyframes seal-blood-fill {
+  from { --seal-fill: 0%; }
+  to { --seal-fill: 80%; }
+}
+
+@keyframes seal-blood-fill-pool {
+  from { --seal-fill: 0%; }
+  to { --seal-fill: 160%; }
+}
+
+@keyframes seal-pool-settle {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+/* shockwave and cracks at the slam (lives on <body>, outside the screen that zooms) */
+.seal-slam-fx {
+  position: fixed;
+  z-index: 30010;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.seal-slam-fx .slam-wave {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--fx-d);
+  height: var(--fx-d);
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid rgba(233, 227, 214, 0.85);
+  animation: slam-wave 520ms cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+
+.seal-slam-fx .slam-wave-red {
+  border: 6px solid rgba(220, 42, 47, 0.55);
+  filter: blur(2px);
+  animation-duration: 700ms;
+}
+
+
+
+
+
+@keyframes slam-wave {
+  0% { opacity: 1; scale: 0.9; }
+  100% { opacity: 0; scale: 3.1; }
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .seal-slam-fx { display: none; }
+  #app .passive-slot.round-reveal-active:not(.suppressed) .seal-fill-sigil.seal-fill-sigil,
+  #app .passive-slot.round-reveal-active:not(.suppressed)::before {
+    animation-duration: 1ms !important;
+  }
+}
+
+
+
+
+/* ==========================================================================
+   Seal trigger v3: only the seal's lines turn red, from the centre out, while
+   the seal grows; then it slams down and a small shockwave rolls out.
+   ========================================================================== */
+#app .passive-slot.round-reveal-active:not(.suppressed)::before,
+#app .passive-slot.round-reveal-effect:not(.suppressed)::before {
+  content: none !important;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) {
+  z-index: 6;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .equipped-seal-sigil.equipped-seal-sigil:not(.seal-fill-sigil) {
+  animation: seal-grow-slam 1000ms linear both !important;
+}
+
+#app .passive-slot.round-reveal-active:not(.suppressed) .seal-fill-sigil.seal-fill-sigil {
+  animation:
+    seal-blood-fill 620ms cubic-bezier(0.45, 0, 0.8, 0.6) both,
+    seal-grow-slam 1000ms linear both !important;
+}
+
+@keyframes seal-grow-slam {
+  0% { scale: 1; animation-timing-function: cubic-bezier(0.4, 0, 0.75, 0.6); }
+  62% { scale: 1.3; animation-timing-function: ease-out; }
+  66% { scale: 1.33; animation-timing-function: cubic-bezier(0.7, 0, 1, 0.5); }
+  71% { scale: 0.9; animation-timing-function: ease-out; }
+  79% { scale: 1.04; animation-timing-function: ease-in-out; }
+  87%, 100% { scale: 1; }
+}
+
+.seal-slam-fx .slam-wave {
+  border-width: 2px;
+  animation: slam-wave 430ms cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+
+.seal-slam-fx .slam-wave-red {
+  border-width: 4px;
+  animation-duration: 560ms;
+}
+
+@keyframes slam-wave {
+  0% { opacity: 0.95; scale: 0.95; }
+  100% { opacity: 0; scale: 1.75; }
+}
+
+/* the bounty a DAMNED just gained: "+x" under its SIN value */
+#app .bot-card .bot-title .bounty-badge {
+  position: absolute !important;
+  top: 40px !important;
+  right: 18px !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  rotate: 0deg !important;
+  font-size: 19px !important;
+  color: var(--sin) !important;
+}
+
+body.mobile-arcade #app .bot-card .bot-title .bounty-badge {
+  top: 22px !important;
+  right: 8px !important;
+  font-size: 13px !important;
+}
+
+/* glyph tooltips (personality / boss) */
+#app .bot-glyph[data-tooltip-html] {
+  cursor: help;
+}
+
+#app .bot-glyph[data-tooltip-html]:hover {
+  color: var(--bone) !important;
+}
+
+#app .bot-glyph[data-tooltip-html]:hover svg * {
+  stroke: var(--bone);
+}
+
+#app .bot-card.boss .boss-glyph:hover svg * {
+  stroke: #ff5a4f;
+}
+
+body #app .floating-tooltip .tooltip-glyph-note {
+  margin-top: 8px;
+  font-style: italic;
+  font-size: 14px !important;
+  color: var(--ash) !important;
+}
+
+/* let a growing seal rise out of its row */
+#app .passive-bar:has(.passive-slot.round-reveal-active) {
+  overflow: visible !important;
+}
+
+/* after the slam the seal is plainly red: no glow */
+#app .passive-slot.round-reveal-effect:not(.suppressed) .equipped-seal-sigil.equipped-seal-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+/* line breaks come from <br> in descriptionHtml; the markup's own newlines must not add blank lines */
+body #app .floating-tooltip {
+  min-height: 0 !important;
+  white-space: normal !important;
+}
+
+/* the seal row never shows a scrollbar: slots fit their grid column, and anything
+   that pokes out for a moment (a growing or newly bought seal) just draws over */
+#app .passive-bar {
+  overflow: visible !important;
+  scrollbar-width: none;
+}
+
+#app .passive-bar::-webkit-scrollbar {
+  display: none;
+}
+
+body.mobile-arcade #app .passive-slot:not(.wide-seal-slot) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+body.mobile-arcade #app .passive-slot:not(.wide-seal-slot) .equipped-seal-sigil,
+body.mobile-arcade #app .passive-slot .empty-seal-slot-image {
+  max-width: 100% !important;
+  object-fit: contain;
+}
+
+/* pause: the test-only DEV button sits in the card's top-right corner, clear of the title */
+#app .pause-card > .pause-dev-button {
+  position: absolute !important;
+  z-index: 2;
+  top: 14px !important;
+  right: 16px !important;
+  left: auto !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+#app .pause-card .end-title {
+  margin-top: 6px !important;
+}
+
+/* ==========================================================================
+   Phone layout (app / APK): Pause and Items sit to the right of the top
+   panels, so the DAMNED cards get the full height with a line under them;
+   the bottom row holds the seals, your guess and a 4 x 3 number pad.
+   ========================================================================== */
+body.native-arcade {
+  --native-top-actions-width: clamp(84px, 10.5vw, 118px);
+  --native-seal-row-height: clamp(108px, 30vh, 132px);
+}
+
+body.native-arcade .native-arcade-frame {
+  position: relative;
+  grid-template-rows: minmax(0, 1fr) var(--native-seal-row-height) !important;
+}
+
+body.native-arcade .native-arcade-frame.target-picking {
+  grid-template-rows: minmax(0, 1fr) 52px !important;
+}
+
+/* top panels make room for the two buttons */
+body.native-arcade #app .arena:not(.pvp-arena) .topbar {
+  right: calc(var(--native-top-actions-width) + 10px) !important;
+}
+
+body.native-arcade .native-seal-actions {
+  position: absolute !important;
+  z-index: 5;
+  top: 9px;
+  right: 6px;
+  width: var(--native-top-actions-width);
+  height: 60px;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+body.native-arcade .native-seal-actions .pause-button,
+body.native-arcade .native-seal-actions .mobile-offerings-button {
+  font-size: 14px !important;
+  letter-spacing: 0.04em;
+}
+
+/* the bottom row: seals | your guess | number pad */
+body.native-arcade .passive-bar {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  position: relative;
+}
+
+body.native-arcade .native-console-panel {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  align-content: center;
+}
+
+body.native-arcade .mobile-numpad {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  padding: 9px 10px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* hand-drawn outline like every other panel */
+body.native-arcade .mobile-numpad::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 22px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 22px stretch;
+  opacity: 0.85;
+}
+
+body.outline-boil.native-arcade .mobile-numpad::after {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.5);
+}
+
+/* 1 2 3 4 / 5 6 7 8 / 9 0 DEL GUESS */
+body.native-arcade .mobile-numpad .mobile-numpad-key { order: 0; }
+body.native-arcade .mobile-numpad [data-numpad-key="backspace"] { order: 1; }
+body.native-arcade .mobile-numpad .mobile-numpad-action { order: 2; }
+
+body.native-arcade .mobile-numpad .mobile-numpad-key {
+  min-height: 0 !important;
+  font-size: 17px !important;
+}
+
+body.native-arcade .mobile-numpad .mobile-numpad-action {
+  font-size: 12px !important;
+}
+
+/* a hand-drawn line between the cards and the bottom row */
+body.native-arcade .passive-bar::before {
+  content: "";
+  position: absolute;
+  left: 1%;
+  right: calc(-1 * (var(--native-control-width) + var(--native-numpad-width) + 10px) + 1%);
+  top: -6px;
+  height: 7px;
+  pointer-events: none;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
+  opacity: 0.85;
+}
+
+/* test-only SKIP / INF: tucked above your guess, out of the panels */
+body.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  position: fixed !important;
+  left: auto !important;
+  top: auto !important;
+  right: calc(var(--native-numpad-width) + 14px) !important;
+  bottom: calc(var(--native-seal-row-height) - 18px) !important;
+}
+
+/* health box: label and numbers inside the outline */
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-row {
+  padding: 9px 14px 0 !important;
+  align-items: center !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-row strong {
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .health-bar {
+  margin: 6px 16px 0 !important;
+  width: auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .target-panel .target-head {
+  margin-top: 4px !important;
+}
+
+/* cards use the full height they now have; the figure gets the extra room */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-grid {
+  grid-template-rows: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card {
+  height: auto !important;
+  max-height: none !important;
+  grid-template-rows: minmax(0, 1fr) auto auto auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
+  width: 52px !important;
+  height: 52px !important;
+  align-self: center;
+}
+
+/* the line runs under the cards, from the seals to the guess; it stops before the number pad */
+body.native-arcade .passive-bar::before {
+  right: calc(-1 * (var(--native-control-width) + 5px)) !important;
+}
+
+/* your guess sits in the middle of its column */
+body.native-arcade .native-console-panel .center-console,
+body.native-arcade .native-console-panel .console-row {
+  align-content: center !important;
+  align-items: center !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  right: calc(var(--native-numpad-width) + 30px) !important;
+  bottom: calc(var(--native-seal-row-height) - 20px) !important;
+}
+
+/* card health label sits under its line, not on it */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .mini-stat.bot-health {
+  padding-top: 9px !important;
+}
+
+/* phone: popups stay inside their outlines */
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .player-damage-badge {
+  top: 9px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 46% !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .health-wrap .player-heal-badge {
+  top: 9px !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 36% !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  bottom: 9px !important;
+  left: 14px !important;
+  right: auto !important;
+  font-size: 13px !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .damage-badge,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .heal-badge {
+  right: 14px !important;
+  left: auto !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .death-badge {
+  left: 10px !important;
+  right: 42px !important;
+  top: 9px !important;
+  font-size: 12px !important;
+  white-space: normal !important;
+  text-align: left !important;
+  rotate: 0deg !important;
+  line-height: 1.05 !important;
+}
+
+/* the Items drawer gets the hand-drawn outline instead of a grey box */
+body.native-arcade #app .side-panel.mobile-open {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9) !important;
+}
+
+body.native-arcade #app .side-panel.mobile-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 26px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 26px stretch;
+  opacity: 0.9;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card .death-badge {
+  translate: none !important;
+  transform: none !important;
+  left: 10px !important;
+  right: 44px !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+body.native-arcade #app .mobile-offerings-header {
+  padding-left: 22px !important;
+  padding-right: 16px !important;
+  padding-top: 8px !important;
+}
+
+/* the figure grows with the card on taller screens */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
+body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
+  width: clamp(46px, 13.5vh, 120px) !important;
+  height: clamp(46px, 13.5vh, 120px) !important;
+}
+
+/* desktop: SIN gained sits bottom-right inside the SIN box, clear of the outline */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  top: auto !important;
+  bottom: 14px !important;
+  right: 18px !important;
+}
+
+/* Pyros's gift: a small red diamond before the personality mark */
+#app .bot-glyph.gift-glyph,
+#app .bot-glyph.gift-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+#app .bot-glyph.gift-glyph {
+  margin-right: 2px;
+}
+
+#app .bot-glyph.gift-glyph svg path:last-child {
+  fill: var(--blood-bright);
+}
+
+#app .bot-glyph.gift-glyph:hover svg * {
+  stroke: #ff6a5c;
+}
+
+/* phone: the cards reach a little further down */
+body.native-arcade {
+  --native-seal-row-height: clamp(100px, 27vh, 124px);
+}
+
+body.native-arcade .mobile-numpad {
+  padding: 6px 9px !important;
+  gap: 4px !important;
+}
+
+/* phone: the line under the cards trembles with the outlines */
+body.outline-boil.native-arcade .passive-bar::before {
+  background-image: var(--divider-img) !important;
+  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+/* anyone who CRITs (or is about to, once the TARGET is out) wears the TARGET's red */
+#app .critical-guess,
+#app .guess-input.critical-guess,
+#app .mini-stat span.critical-guess-label,
+body.mobile-arcade #app .mini-stat span.critical-guess-label {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+}
+
+/* about to CRIT (TARGET out, READY not pressed yet): only the number is red */
+#app .critical-pending,
+#app .guess-input.critical-pending {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+}

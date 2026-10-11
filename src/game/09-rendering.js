@@ -1,9 +1,106 @@
+/* ---------- In-place screen updates ----------
+   During a run the screen is patched instead of rebuilt: elements that did not
+   change stay in the page (no image re-decode, no layout from scratch, running
+   animations keep running). An element whose inline style changed is swapped
+   for a fresh one, because inline styles carry the animation timing
+   (hudPopAttrs, hitShakeAttrs, sealSummonAttrs) and those rely on a new element. */
+const MORPH_LIVE_STYLE = /--ring-[a-z]+\s*:\s*[^;]*;?/g;
+let lastRenderedMode = null;
+
+function bindOn(element, type, handler, options) {
+  const store = element.__dearthHandlers || (element.__dearthHandlers = {});
+  if (store[type]) element.removeEventListener(type, store[type]);
+  store[type] = handler;
+  element.addEventListener(type, handler, options);
+}
+
+function morphStyleKey(element) {
+  return (element.getAttribute("style") || "").replace(MORPH_LIVE_STYLE, "").replace(/\s+/g, "");
+}
+
+function morphSameNode(current, next) {
+  if (current.nodeType !== next.nodeType) return false;
+  if (current.nodeType !== 1) return true;
+  if (current.nodeName !== next.nodeName) return false;
+  if ((current.getAttribute("id") || "") !== (next.getAttribute("id") || "")) return false;
+  if (current.getAttribute("data-morph-key") !== next.getAttribute("data-morph-key")) return false;
+  if (morphStyleKey(current) !== morphStyleKey(next)) return false;
+  if (current.nodeName === "IMG" && current.getAttribute("src") !== next.getAttribute("src")) return false;
+  return true;
+}
+
+function morphAttributes(current, next) {
+  const liveStyle = (current.getAttribute("style") || "").match(MORPH_LIVE_STYLE);
+  for (const attr of Array.from(current.attributes)) {
+    if (attr.name === "style") continue;
+    if (!next.hasAttribute(attr.name)) current.removeAttribute(attr.name);
+  }
+  for (const attr of Array.from(next.attributes)) {
+    if (attr.name === "style") continue;
+    if (current.getAttribute(attr.name) !== attr.value) {
+      if (current.nodeName === "INPUT" && attr.name === "value") current.value = attr.value;
+      current.setAttribute(attr.name, attr.value);
+    }
+  }
+  if (!liveStyle && !next.hasAttribute("style") && current.hasAttribute("style")) current.removeAttribute("style");
+  if (current.nodeName === "INPUT") {
+    if (!next.hasAttribute("value") && current.type !== "checkbox" && current.type !== "range" && current.value && document.activeElement !== current) current.value = "";
+    if (current.type === "checkbox") current.checked = next.hasAttribute("checked");
+    if (current.type === "range" && next.hasAttribute("value")) current.value = next.getAttribute("value");
+  }
+}
+
+function morphNode(current, next) {
+  if (current.nodeType !== 1) {
+    if (current.nodeValue !== next.nodeValue) current.nodeValue = next.nodeValue;
+    return;
+  }
+  morphAttributes(current, next);
+  morphChildren(current, next);
+}
+
+function morphChildren(current, next) {
+  let a = current.firstChild;
+  let b = next.firstChild;
+  while (b) {
+    const nextB = b.nextSibling;
+    if (!a) {
+      current.appendChild(b);
+    } else if (morphSameNode(a, b)) {
+      morphNode(a, b);
+      a = a.nextSibling;
+    } else {
+      const nextA = a.nextSibling;
+      current.replaceChild(b, a);
+      a = nextA;
+    }
+    b = nextB;
+  }
+  while (a) {
+    const nextA = a.nextSibling;
+    current.removeChild(a);
+    a = nextA;
+  }
+}
+
+function patchAppHtml(app, html) {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  morphChildren(app, template.content);
+}
+
 function render() {
   updateFullscreenLayoutClass();
   const app = document.querySelector("#app");
-  app.className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
-  app.innerHTML = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
+  const className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
+  const html = state.mode === "menu" ? renderMenuApp() : state.mode === "pvp" ? renderPvpApp() : renderArcadeApp();
+  const canPatch = window.dearthDomMorph !== false && state.mode === "arcade" && lastRenderedMode === "arcade" && app.className === className && app.firstElementChild;
+  if (app.className !== className) app.className = className;
+  if (canPatch) patchAppHtml(app, html);
+  else app.innerHTML = html;
+  lastRenderedMode = state.mode;
   bindEvents();
+  afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   saveArcadeRun();
@@ -38,7 +135,7 @@ function renderMenuApp() {
   return `
     <main class="main-menu" aria-label="main menu">
       ${menuBackdropState.node ? `<div class="menu-backdrop-slot"></div>` : renderMenuBackdrop()}
-      <section class="main-menu-panel">
+      <section class="main-menu-panel menu-screen-${escapeAttr(screen)}">
         ${
           screen === "play"
             ? renderPlayMenu()
@@ -58,6 +155,7 @@ function renderMenuApp() {
         }
       </section>
     </main>
+    ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
@@ -162,7 +260,7 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">Sound Settings</button>
+      <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
@@ -211,6 +309,7 @@ function renderRecordsMenu() {
   ].join("");
   return `
     <div class="records-menu">
+      <h2 class="records-title">Records</h2>
       <div class="records-list">${rows}</div>
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
@@ -238,6 +337,11 @@ function renderSoundSettings(prefix) {
         <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
         <span>Mute Sound</span>
       </label>
+      <div class="sound-setting">
+        <label for="${prefix}OutlineBoil">Outlines</label>
+        <input id="${prefix}OutlineBoil" class="sound-slider" data-display-setting="outlineBoil" type="range" min="0" max="3" step="1" value="${state.display.outlineBoil}" />
+        <strong data-display-value="outlineBoil">${OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off"}</strong>
+      </div>
   `;
 }
 
@@ -302,6 +406,7 @@ function renderArcadeApp() {
         ${renderActives()}
       </aside>
       <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
+      ${renderMoment()}
     `;
   }
   return `
@@ -325,6 +430,7 @@ function renderArcadeApp() {
       ${renderActives()}
     </aside>
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
+    ${renderMoment()}
   `;
 }
 
@@ -338,7 +444,7 @@ function closeMobileOfferingsForTargetPick() {
 
 function renderMobileOfferingsButton() {
   if (!isMobileArcadeView()) return "";
-  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open Devil's Offerings">Offerings</button>`;
+  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open items">Items</button>`;
 }
 
 function renderMobileOfferingsHeader() {
@@ -347,10 +453,9 @@ function renderMobileOfferingsHeader() {
   return `
     <div class="mobile-offerings-header">
       <div class="shop-title-wrap">
-        <div class="panel-title">Devil's Offerings</div>
-        <div class="elite-chance-label">${Math.round(eliteShopChance() * 100)}% ELITE</div>
+        <div class="panel-title">Items</div>
       </div>
-      <div class="mobile-offerings-sin">${formatNumber(playerSin)} SIN</div>
+      <div class="mobile-offerings-sin">${formatNumber(playerSin)}${SIN_MARK}</div>
       <button class="small-button" id="mobileOfferingsClose">Close</button>
     </div>
   `;
@@ -950,22 +1055,377 @@ function renderPvpLog() {
   return `<div class="pvp-log">${state.pvp.log.map((entry) => `<div>${escapeHtml(normalizeGameText(entry))}</div>`).join("")}</div>`;
 }
 
+// ---------- HUD change tracking: animate only when a value actually changes ----------
+// Renders rebuild the DOM, so CSS animations would replay on every render.
+// We remember each value and when it last changed, and resume the animation
+// with a negative delay instead of restarting it.
+const hudChangeTracker = new Map();
+const HEALTH_GHOST_DELAY_MS = 320;
+const HEALTH_GHOST_DRAIN_MS = 520;
+const HUD_POP_MS = 1100;
+
+function trackHudChange(key, value) {
+  const now = performance.now();
+  const previous = hudChangeTracker.get(key);
+  if (!previous) {
+    hudChangeTracker.set(key, { value, from: value, changedAt: -Infinity });
+    return { from: value, elapsed: Infinity };
+  }
+  if (value !== previous.value) {
+    hudChangeTracker.set(key, { value, from: previous.value, changedAt: now });
+    return { from: previous.value, elapsed: 0 };
+  }
+  return { from: previous.from, elapsed: now - previous.changedAt };
+}
+
+// red under-bar that shows the health just lost, then drains away
+function healthGhostHtml(key, percent) {
+  const change = trackHudChange(`hp:${key}`, Math.round(percent * 10) / 10);
+  const total = HEALTH_GHOST_DELAY_MS + HEALTH_GHOST_DRAIN_MS;
+  if (!(change.from > percent) || change.elapsed >= total) return "";
+  const delay = Math.round(HEALTH_GHOST_DELAY_MS - change.elapsed);
+  return `<div class="health-ghost" style="--ghost-from: ${change.from}%; --ghost-to: ${percent}%; animation-delay: ${delay}ms"></div>`;
+}
+
+// popup numbers pop in and rise into place once, when their value changes
+function hudPopAttrs(key, value) {
+  const change = trackHudChange(`pop:${key}`, `${state.round}:${value}`);
+  if (change.elapsed >= HUD_POP_MS) return { className: "", style: "" };
+  return { className: "hud-pop", style: ` style="--pop-delay: ${-Math.round(Math.min(change.elapsed, HUD_POP_MS))}ms"` };
+}
+
+// ---------- DAMNED cards: shake when hit, scaled by how big the hit was ----------
+const HIT_SHAKE_MS = 420;
+
+function hitShakeAttrs(key, value, maxHp, rising = false) {
+  const change = trackHudChange(`shake:${key}`, value);
+  if (change.elapsed >= HIT_SHAKE_MS) return { className: "", style: "", flash: "" };
+  const lost = rising ? value - change.from : change.from - value;
+  if (!(lost > 0)) return { className: "", style: "", flash: "" };
+  const ratio = lost / Math.max(1, maxHp);
+  const size = ratio >= 0.4 ? "hit-big" : ratio >= 0.15 ? "hit-mid" : "hit-small";
+  const px = (2 + Math.min(10, Math.round(ratio * 10))).toFixed(0);
+  const flash = size === "hit-small" ? "" : `<span class="hit-flash"></span>`;
+  if (change.elapsed === 0) noteRenderHit(size === "hit-big" ? 3 : size === "hit-mid" ? 2 : 1);
+  return { className: `hit-shake ${size}`, style: `; --shake-px: ${px}px; --shake-delay: ${-Math.round(change.elapsed)}ms`, flash };
+}
+
+// ---------- seals: purchase animation + Ignition ring geometry ----------
+let lastEquippedSealIds = null;
+const sealSummonedAt = new Map();
+const SEAL_SUMMON_MS = 700;
+
+// remembers which seals were equipped last render; a seal that wasn't there before was just bought
+function sealSummonAttrs(id) {
+  const at = sealSummonedAt.get(id);
+  if (at === undefined) return { className: "", style: "" };
+  const elapsed = performance.now() - at;
+  if (elapsed >= SEAL_SUMMON_MS) return { className: "", style: "" };
+  return { className: "seal-summoned", style: ` style="--summon-delay: ${-Math.round(elapsed)}ms"` };
+}
+
+function trackEquippedSeals(ids) {
+  const now = performance.now();
+  if (lastEquippedSealIds) {
+    ids.forEach((id) => {
+      if (!lastEquippedSealIds.has(id)) sealSummonedAt.set(id, now);
+    });
+  }
+  lastEquippedSealIds = new Set(ids);
+}
+
+// the red ring and shockwave are sized from the sigil as drawn, so they sit on the seal's own circle in every layout
+function syncSealRings() {
+  document.querySelectorAll(".passive-slot.round-reveal-active, .passive-slot.round-reveal-effect, .passive-slot.seal-summoned").forEach((slot) => {
+    const sigil = slot.querySelector(".equipped-seal-sigil");
+    if (!sigil) return;
+    const slotRect = slot.getBoundingClientRect();
+    const sigilRect = sigil.getBoundingClientRect();
+    const drawn = Math.min(sigil.offsetWidth || sigilRect.width, sigil.offsetHeight || sigilRect.height);
+    if (!drawn) return;
+    slot.style.setProperty("--ring-d", `${drawn}px`);
+    slot.style.setProperty("--ring-x", `${(sigilRect.left + sigilRect.width / 2) - (slotRect.left + slotRect.width / 2)}px`);
+    slot.style.setProperty("--ring-y", `${(sigilRect.top + sigilRect.height / 2) - (slotRect.top + slotRect.height / 2)}px`);
+  });
+}
+
+// ==========================================================================
+// Big moments and moment sounds.
+// After every render the screen is compared with the previous one (what the
+// player actually sees, including the step-by-step reveal) and the matching
+// sound, title card, hit-stop and screen shake are fired once.
+// ==========================================================================
+const MOMENT_DURATIONS_MS = { critical: 1500, boss: 2000, finals: 3400, pentakill: 1900 };
+let momentWatch = null;
+let activeMoment = null;
+let momentSeq = 0;
+let momentClearTimer = null;
+let renderHitTier = 0;
+const quietSfxUntil = {};
+
+function noteRenderHit(tier) {
+  renderHitTier = Math.max(renderHitTier, tier);
+}
+
+function quietMomentSfx(key, ms = 500) {
+  quietSfxUntil[key] = performance.now() + ms;
+}
+
+function momentSfx(key, delayMs = 0) {
+  if ((quietSfxUntil[key] || 0) > performance.now()) return;
+  if (delayMs > 0) setTimeout(() => playGameSfx(key), delayMs);
+  else playGameSfx(key);
+}
+
+function motionReduced() {
+  return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+}
+
+function startMoment(kind, title, sub = "") {
+  momentSeq += 1;
+  const duration = MOMENT_DURATIONS_MS[kind] || 1600;
+  activeMoment = { id: momentSeq, kind, title, sub, until: performance.now() + duration };
+  // moments start after a render has been drawn, so the card is put on screen straight away;
+  // later renders carry the same card (same data-morph-key) and leave it running
+  const app = document.querySelector("#app");
+  if (app) {
+    app.querySelectorAll(".moment-card").forEach((element) => element.remove());
+    app.insertAdjacentHTML("beforeend", renderMoment());
+  }
+  clearTimeout(momentClearTimer);
+  momentClearTimer = setTimeout(() => {
+    activeMoment = null;
+    document.querySelectorAll(".moment-card").forEach((element) => element.remove());
+  }, duration);
+}
+
+function renderMoment() {
+  const moment = activeMoment;
+  if (!moment || moment.until <= performance.now()) return "";
+  const figures =
+    moment.kind === "finals"
+      ? `<img class="moment-figure moment-figure-left" src="assets/ui/jesus.png" alt="" /><img class="moment-figure moment-figure-right" src="assets/ui/devil.png" alt="" />`
+      : "";
+  return `
+    <div class="moment-card moment-${moment.kind}" data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
+      ${figures}
+      <div class="moment-text">
+        <div class="moment-title">${escapeHtml(moment.title)}</div>
+        ${moment.sub ? `<div class="moment-sub">${escapeHtml(moment.sub)}</div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+// freeze every running animation for a beat, so a big hit lands
+function hitStop(ms = 70) {
+  if (motionReduced() || typeof document.getAnimations !== "function") return;
+  const running = document.getAnimations().filter((animation) => animation.playState === "running");
+  running.forEach((animation) => animation.pause());
+  setTimeout(() => running.forEach((animation) => {
+    try {
+      if (animation.playState === "paused") animation.play();
+    } catch (error) {}
+  }), ms);
+}
+
+function screenShake(px = 6, ms = 380) {
+  if (motionReduced()) return;
+  const app = document.querySelector("#app");
+  if (!app?.animate) return;
+  const k = [0, -1, 0.8, -0.6, 0.45, -0.3, 0.15, 0];
+  app.animate(
+    k.map((f, index) => ({ transform: `translate(${(f * px).toFixed(1)}px, ${((index % 2 ? 0.5 : -0.5) * f * px).toFixed(1)}px)` })),
+    { duration: ms, easing: "ease-out" }
+  );
+}
+
+// Who CRITs this round, for colouring the numbers. Once READY resolves the round it is the real
+// result; before that, everyone whose guess already sits inside their CRITICAL window around the
+// revealed TARGET (the random +1 bonus chance can't be known in advance, so it isn't counted).
+function criticalKeysForDisplay(round = state.roundState) {
+  if (!round) return new Set();
+  if (round.penaltiesApplied || round.criticalHitKeys?.size) return round.criticalHitKeys || new Set();
+  if (state.stage !== "active" || state.mode === "pvp") return new Set();
+  const integer = Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
+  if (!Number.isFinite(integer)) return new Set();
+  const keys = new Set();
+  try {
+    getParticipants().forEach((participant) => {
+      if (Number.isFinite(participant.guess) && Math.abs(participant.guess - integer) <= participant.window) keys.add(participant.key);
+    });
+    // Seal of Eligos: a DAMNED's CRIT is mirrored onto you
+    if (passiveStack("p69") && [...keys].some((key) => key.startsWith("bot-")) && Number.isFinite(round.playerEffectiveGuess)) keys.add("player");
+  } catch (error) {}
+  return keys;
+}
+
+function readMomentSnapshot() {
+  const round = state.roundState;
+  const revealing = roundRevealAnimationActive();
+  const shown = roundRevealPlayerDisplay();
+  return {
+    round: state.round,
+    eliminations: state.eliminations,
+    target: round && round.target !== null && round.target !== undefined ? round.target : null,
+    playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
+    anyCritical: Boolean(round?.criticalHitKeys?.size),
+    bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name })),
+    finals: Boolean(state.finalBossPhase),
+    downIds: Array.from(document.querySelectorAll(".bot-card.eliminated")).map((card) => card.dataset.botId),
+    downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated")).map((card) => card.dataset.botId),
+    hp: Number(shown.hp) || 0,
+    credits: Number(shown.credits) || 0,
+    pentakill: Boolean(round?.pentakillPopup) && !revealing,
+    gameOver: Boolean(state.gameOver) && !revealing,
+    sealed: shopDisabledBySatan()
+  };
+}
+
+function watchMoments() {
+  const now = readMomentSnapshot();
+  const before = momentWatch;
+  momentWatch = now;
+  const hitTier = renderHitTier;
+  renderHitTier = 0;
+  // first frame of a run (new game, loaded save): just remember what is on screen
+  if (!before || now.round < before.round || now.eliminations < before.eliminations) return;
+
+  // sounds in the same frame are spaced out: TARGET first, then the hits, the KO, the SIN
+  let beat = 0;
+  if (before.target === null && now.target !== null) {
+    beat = 260;
+    momentSfx("targetLand");
+  }
+  // CRITICAL is decided when READY is pressed (the TARGET is already on screen by then)
+  if (now.playerCritical && !before.playerCritical) {
+    beat = Math.max(beat, 260);
+    momentSfx("critical");
+    momentSfx("criticalBell");
+    startMoment("critical", "Critical", "You named the TARGET");
+    hitStop(80);
+    screenShake(9, 420);
+  } else if (now.anyCritical && !before.anyCritical) {
+    beat = Math.max(beat, 260);
+    momentSfx("critical");
+    screenShake(5, 320);
+  }
+
+  const newDowns = now.downIds.filter((id) => !before.downIds.includes(id));
+  const newBossDowns = now.downBossIds.filter((id) => !before.downBossIds.includes(id));
+  const lostHp = before.hp - now.hp;
+  const playerTier = lostHp > 0 ? (lostHp >= playerMaxHp() * 0.25 ? 3 : lostHp >= playerMaxHp() * 0.1 ? 2 : 1) : 0;
+  const tier = Math.max(hitTier, playerTier);
+  if (newBossDowns.length) {
+    momentSfx("hitBig", beat);
+    momentSfx("ko", beat + 90);
+    setTimeout(() => {
+      hitStop(75);
+      screenShake(8, 400);
+    }, beat);
+    beat += 90;
+  } else if (newDowns.length) {
+    momentSfx(tier >= 3 ? "hitBig" : "hitMid", beat);
+    momentSfx("ko", beat + 80);
+    beat += 80;
+  } else if (tier) {
+    momentSfx(tier >= 3 ? "hitBig" : tier === 2 ? "hitMid" : "hitSmall", beat);
+  }
+  if (playerTier >= 3) screenShake(6, 340);
+
+  if (now.hp > before.hp && !now.gameOver) momentSfx("heal", beat);
+  if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
+
+  if (!before.pentakill && now.pentakill) {
+    startMoment("pentakill", "Pentakill", "+5 HEALTH   +8 SIN");
+    playPentakillSfx();
+    hitStop(80);
+    screenShake(10, 460);
+  }
+
+  if (!before.finals && now.finals) {
+    momentSfx("finalBosses");
+    if (now.sealed) momentSfx("shopSealed", 1500);
+    startMoment("finals", "Judgement", "Jesus and Satan take the table");
+    screenShake(5, 600);
+  } else if (!now.finals) {
+    const arrived = now.bosses.find((boss) => !before.bosses.some((old) => old.id === boss.id));
+    if (arrived) {
+      momentSfx("bossArrive");
+      startMoment("boss", arrived.name, "takes a seat at the table");
+      screenShake(4, 500);
+    }
+  }
+
+  if (!before.gameOver && now.gameOver) momentSfx("gameOver");
+}
+
+// ==========================================================================
+// Seal trigger: the seal's lines turn red from the centre out while the seal
+// grows, then it slams down (CSS keyframes on the slot); at the moment it hits,
+// a small shockwave rolls out and the screen gives a short jolt.
+// ==========================================================================
+const SEAL_SLAM_AT_MS = 710;
+let lastSealSlamKey = "";
+
+function sealSlamEffects(slot) {
+  const sigil = slot?.querySelector(".equipped-seal-sigil");
+  if (!sigil || !slot.isConnected) return;
+  const rect = sigil.getBoundingClientRect();
+  const diameter = Math.min(rect.width, rect.height);
+  if (!diameter) return;
+  playGameSfx("sealSlam");
+  if (!motionReduced()) screenShake(Math.max(3, diameter / 32), 260);
+  const fx = document.createElement("div");
+  fx.className = "seal-slam-fx";
+  fx.style.cssText = `left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;--fx-d:${diameter * 0.92}px`;
+  fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span>`;
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 800);
+}
+
+function watchSealTrigger() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active || animation.phase !== "seal") return;
+  const key = `${state.round}:${animation.stepIndex}:${currentRoundRevealStep()?.id || ""}`;
+  if (key === lastSealSlamKey) return;
+  lastSealSlamKey = key;
+  setTimeout(() => {
+    const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
+    if (slot) sealSlamEffects(slot);
+  }, SEAL_SLAM_AT_MS);
+}
+
+function afterRenderEffects() {
+  if (state.mode !== "arcade") {
+    lastEquippedSealIds = null;
+    momentWatch = null;
+    return;
+  }
+  syncSealRings();
+  watchSealTrigger();
+  watchMoments();
+}
+
 function renderTopbar() {
   const playerDisplay = roundRevealPlayerDisplay();
   const playerDamageTooltip = sourceTooltip(playerDisplay.damageSources, "damage");
   const playerHealTooltip = sourceTooltip(playerDisplay.healSources, "heal");
   const playerCreditTooltip = sourceTooltip(playerDisplay.creditSources, "credits");
+  const playerDamagePop = hudPopAttrs("player-damage", playerDisplay.lastDamage);
+  const playerHealPop = hudPopAttrs("player-heal", playerDisplay.lastHeal);
+  const playerCreditPop = hudPopAttrs("player-credit", playerDisplay.lastCredits);
   const playerDamageBadge =
     playerDisplay.lastDamage > 0
-      ? `<div class="player-damage-badge" ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${playerDisplay.lastDamage}</div>`
+      ? `<div class="player-damage-badge ${playerDamagePop.className}"${playerDamagePop.style} ${playerDamageTooltip ? `data-tooltip="${escapeAttr(playerDamageTooltip)}"` : ""}>-${playerDisplay.lastDamage}</div>`
       : "";
   const playerHealBadge =
     playerDisplay.lastHeal > 0
-      ? `<div class="player-heal-badge" ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${playerDisplay.lastHeal}</div>`
+      ? `<div class="player-heal-badge ${playerHealPop.className}"${playerHealPop.style} ${playerHealTooltip ? `data-tooltip="${escapeAttr(playerHealTooltip)}"` : ""}>+${playerDisplay.lastHeal}</div>`
       : "";
   const playerCreditBadge =
     playerDisplay.lastCredits > 0
-      ? `<div class="player-credit-badge" ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits} SIN</div>`
+      ? `<div class="player-credit-badge ${playerCreditPop.className}"${playerCreditPop.style} ${playerCreditTooltip ? `data-tooltip="${escapeAttr(playerCreditTooltip)}"` : ""}>+${playerDisplay.lastCredits}${SIN_MARK}</div>`
       : "";
   const maxHp = playerMaxHp();
   const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
@@ -987,6 +1447,7 @@ function renderTopbar() {
           <strong>${playerDisplay.hp}/${maxHp}</strong>
         </div>
         <div class="health-bar">
+          ${healthGhostHtml("player", healthPercent)}
           <div class="health-fill" style="width: ${healthPercent}%"></div>
         </div>
       </div>
@@ -1001,12 +1462,14 @@ function renderTopbar() {
             <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
           </div>
         </div>
-        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
-        <span class="stat-label">SIN</span>
+        <span class="stat-label">SIN${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
+      </div>
+      <div class="dev-quick" aria-label="Test controls">
+        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
         <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
       </div>
     </section>
@@ -1040,6 +1503,83 @@ function renderTargetPanel() {
   `;
 }
 
+// ---------- personality glyphs: one small chalk mark per DAMNED type (replaces the emoji flags) ----------
+const PERSONALITY_GLYPHS = {
+  Anchor: '<circle cx="12" cy="4.2" r="1.7"/><path d="M12 6v14.5M7.6 9.2h8.8M4.6 13.4c.4 4.3 3.4 7.2 7.4 7.3 4-.1 7-3 7.4-7.3M4.6 13.4l-1.3 1.5M19.4 13.4l1.3 1.5"/>',
+  Analyst: '<path d="M12 2.8 21.4 19.6H2.6Z"/><path d="M7.4 14.4c2.6-3.1 6.6-3.1 9.2 0-2.6 3.1-6.6 3.1-9.2 0Z"/><circle cx="12" cy="14.4" r="1.15"/>',
+  Follower: '<path d="M3.5 6.2 9.6 12l-6.1 5.8M10.6 6.2l6.1 5.8-6.1 5.8"/><path d="M19.2 9.4v5.2"/>',
+  Stubborn: '<path d="M12 21v-8.6M12 12.4C10.2 6 3 5.7 3 10.6c0 2.9 3.7 3.2 4.1.4M12 12.4C13.8 6 21 5.7 21 10.6c0 2.9-3.7 3.2-4.1.4"/><path d="M8.6 21h6.8"/>',
+  Drifter: '<path d="M2.6 9.2c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4M2.6 15.6c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4"/>',
+  Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
+};
+
+// SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
+const SIN_MARK = `<span class="sin-mark" role="img" aria-label="SIN"></span>`;
+
+function sinValueHtml(text) {
+  return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;
+}
+
+// bosses: an inverted pentagram instead of a personality mark; hovering it explains the boss
+const BOSS_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg>`;
+
+function bossAbilityText(bot) {
+  if (bot.finalKey) return (FINAL_BOSS_SPECS[bot.finalKey]?.descriptions || []).join(" ");
+  return botPassiveDescription(bot) || "No special ability.";
+}
+
+function glyphTooltipHtml(title, label, body, note = "") {
+  return `
+    <div class="tooltip-heading">
+      <div class="tooltip-title">${escapeHtml(title)}</div>
+      <div class="tooltip-shift-hint">${escapeHtml(label)}</div>
+    </div>
+    <div class="tooltip-body">${descriptionHtml(body)}</div>
+    ${note ? `<div class="tooltip-glyph-note">${escapeHtml(note)}</div>` : ""}
+  `;
+}
+
+// late-game (Goetic) bosses are titled by their ability; the named bosses by their name
+function bossTooltipTitle(bot) {
+  if (bot.finalKey || bot.uniqueKey || !bot.passiveKeys?.length) return bot.name;
+  return bot.passiveKeys.map((key) => botPassiveKeyName(key)).join(" + ");
+}
+
+function bossGlyphHtml(bot) {
+  const tooltip = glyphTooltipHtml(bossTooltipTitle(bot), "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
+  return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
+}
+
+// a DAMNED that was given an ability (Pyros's gift) shows a diamond; hovering it names the ability
+const GIFT_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.2 12 12 21.4 4.8 12Z"/><path d="M12 7.4 15.6 12 12 16.6 8.4 12Z" fill="currentColor" stroke="none" opacity="0.55"/></svg>`;
+
+function giftGlyphHtml(bot) {
+  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean);
+  if (!keys.length) return "";
+  const title = keys.map((key) => botPassiveKeyName(key)).join(" + ");
+  const body = keys.map((key) => botPassiveKeyDescription(key)).filter(Boolean).join(" ");
+  const label = bot.buffPassiveKey ? "PYROS'S GIFT" : "ABILITY";
+  const tooltip = glyphTooltipHtml(title, label, body);
+  return `<span class="bot-glyph gift-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${GIFT_GLYPH_SVG}</span>`;
+}
+
+// what each personality does, in plain words (see planBotGuess)
+const PERSONALITY_HINTS = {
+  Anchor: "Has a favourite number and likes to play around it.",
+  Analyst: "Reads the trend and the way the TARGET is moving.",
+  Follower: "Has noticed your success and takes your guesses seriously.",
+  Stubborn: "Sticks to their instinct, no matter what.",
+  Drifter: "Likes to take chances. Hard to predict.",
+  Caller: "Keeps a close eye on what the other DAMNED are guessing."
+};
+
+function personalityGlyphHtml(type) {
+  const paths = PERSONALITY_GLYPHS[type];
+  if (!paths) return "";
+  const tooltip = glyphTooltipHtml(type, "PERSONALITY", PERSONALITY_HINTS[type] || "");
+  return `<span class="bot-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></span>`;
+}
+
 function renderBots() {
   const pendingPick = state.pendingActive && state.pendingActive.mode === "bot";
   return `
@@ -1066,7 +1606,7 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? "Revealed" : "Guess";
-  const memoryText = bot.memory.length ? `${bot.memory.length} rounds` : "No memory";
+  const memoryText = bot.memory.length ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}` : "No memory";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -1076,12 +1616,15 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  const typeLabel = normalizeGameText(hasVisiblePassive ? `${bot.isBoss ? "BOSS" : bot.type}: ${passiveSummary}` : bot.type);
-  const passiveDescription = hasVisiblePassive ? botPassiveDescription(bot) : "";
+  // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
+  const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
-  const isCriticalGuess = round?.criticalHitKeys?.has(`bot-${bot.id}`);
-  const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
-  const criticalGuessLabelClass = isCriticalGuess ? "critical-guess-label" : "";
+  const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
+  const isCriticalGuess = isConfirmedCritical || criticalKeysForDisplay(round).has(`bot-${bot.id}`);
+  // before READY only the number turns red; the full CRITICAL look comes once it is decided
+  const criticalGuessClass = isConfirmedCritical ? "critical-guess" : isCriticalGuess ? "critical-pending" : "";
+  const criticalGuessLabelClass = isConfirmedCritical ? "critical-guess-label" : "";
   const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
   const guessClass = [criticalGuessClass, guessCloseness.className].filter(Boolean).join(" ");
   const botDamageSources = display?.damageSources ?? bot.damageSources;
@@ -1096,21 +1639,27 @@ function renderBot(bot, pendingPick) {
   const healTooltip = sourceTooltip(botHealSources, "heal");
   const sinTooltip = sourceTooltip(botSinSources, "signed-credits");
   const memoryTooltip = sourceTooltip(botMemorySources, "memory");
+  const botPops = {
+    damage: hudPopAttrs(`bot-${bot.id}-damage`, botLastDamage),
+    heal: hudPopAttrs(`bot-${bot.id}-heal`, botLastHeal),
+    sin: hudPopAttrs(`bot-${bot.id}-sin`, botLastSinDelta),
+    memory: hudPopAttrs(`bot-${bot.id}-memory`, botLastMemoryDelta)
+  };
   const damageBadge =
     botLastDamage > 0 && state.stage !== "guess"
-      ? `<div class="damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${botLastDamage}</div>`
+      ? `<div class="damage-badge ${botPops.damage.className}"${botPops.damage.style} ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${botLastDamage}</div>`
       : "";
   const healBadge =
     botLastHeal > 0 && state.stage !== "guess"
-      ? `<div class="heal-badge" ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${botLastHeal}</div>`
+      ? `<div class="heal-badge ${botPops.heal.className}"${botPops.heal.style} ${healTooltip ? `data-tooltip="${escapeAttr(healTooltip)}"` : ""}>+${botLastHeal}</div>`
       : "";
   const sinBadge =
     botLastSinDelta && !bot.immortal
-      ? `<div class="bounty-badge" ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta} SIN</div>`
+      ? `<div class="bounty-badge ${botPops.sin.className}"${botPops.sin.style} ${sinTooltip ? `data-tooltip="${escapeAttr(sinTooltip)}"` : ""}>${botLastSinDelta > 0 ? "+" : ""}${botLastSinDelta}</div>`
       : "";
   const memoryBadge =
     botLastMemoryDelta > 0
-      ? `<div class="memory-badge" ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
+      ? `<div class="memory-badge ${botPops.memory.className}"${botPops.memory.style} ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
       : "";
   const poisonStackBadge =
     (bot.poisonCounters || 0) > 0
@@ -1120,9 +1669,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss
-    ? ""
-    : `<span class="bot-flag" aria-label="${escapeAttr(bot.country)}" title="${escapeAttr(bot.country)}">${bot.flag}</span>`;
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(bot.type)}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -1134,6 +1681,9 @@ function renderBot(bot, pendingPick) {
     ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
+  const hit = bot.immortal
+    ? hitShakeAttrs(`bot-${bot.id}`, displayDamageTaken, Math.max(100, displayMaxHp || 100), true)
+    : hitShakeAttrs(`bot-${bot.id}`, displayHp, safeDisplayMaxHp);
   const faceInner = isDown
     ? bot.deathCause === "contract"
       ? `<span class="contract-mark">PC</span>`
@@ -1141,14 +1691,15 @@ function renderBot(bot, pendingPick) {
     : `<img class="bot-image" src="${escapeAttr(botImagePath(bot))}" alt="" loading="lazy" />`;
 
   return `
-    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass}" style="--bot-color: ${bot.color}"${tooltipAttr}>
+    <article class="bot-card ${pickClass} ${freshClass} ${bossClass} ${diffMarkedClass} ${downClass} ${deathCauseClass} ${hit.className}" data-bot-id="${bot.id}" style="--bot-color: ${bot.color}${hit.style}"${tooltipAttr}>
+      ${hit.flash}
       ${deathBadge}
       ${markBadge}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
         <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${bot.country})`))}">${bot.name}</div>
-        <div class="bot-reward" title="SIN">${rewardLabel}</div>
+        <div class="bot-reward" title="SIN">${sinValueHtml(rewardLabel)}</div>
         ${sinBadge}
       </div>
       <div class="bot-type ${bot.isBoss ? "boss-type" : ""}" title="${typeLabel}">${typeLabel}</div>
@@ -1170,6 +1721,7 @@ function renderBot(bot, pendingPick) {
             ${poisonStackBadge}
           </div>
           <div class="health-bar">
+            ${healthGhostHtml(`bot-${bot.id}`, healthPercent)}
             <div class="health-fill" style="width: ${healthPercent}%"></div>
           </div>
         </div>
@@ -1221,9 +1773,11 @@ function consoleActionState() {
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
   const value = round?.playerSubmittedGuess ?? "";
-  const playerCritical = round?.criticalHitKeys?.has("player");
+  const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
+  const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
-  const criticalInputClass = playerCritical ? "critical-guess" : "";
+  // about to CRIT: just the number in red; after READY the line and the button turn red too
+  const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
@@ -1324,12 +1878,11 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <span class="reroll-cost">${currentRerollCost()} SIN</span>
-          <button class="small-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll</button>
+          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()}${SIN_MARK}</span></button>
         </div>
       </div>
       <div class="shop-slots">
-        ${locked ? `<div class="shop-lock-message">Satan has sealed Devil's Offerings.</div>` : state.shop.map((slot, index) => renderShopSlot(slot, index)).join("")}
+        ${locked ? `<div class="shop-lock-message"><img class="shop-lock-sigil" src="assets/seals/satan/lucifer-wide.png" alt="" /><span>Satan has sealed Devil's Offerings.</span></div>` : state.shop.map((slot, index) => renderShopSlot(slot, index)).join("")}
       </div>
     </section>
   `;
@@ -1349,7 +1902,7 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost} SIN` : full ? "Full" : `Buy ${cost} SIN`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   const description = itemDescription(previewItem);
@@ -1359,7 +1912,7 @@ function renderShopSlot(slot, index) {
   const kindLabel = item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : "SEAL") : "ARTIFACT";
 
   return `
-    <article class="item-card ${item.type} ${imageClass}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
@@ -1397,6 +1950,12 @@ function renderActives() {
   `;
 }
 
+function artifactStateClass(index, actionLocked) {
+  if (canUseActive(index) && !actionLocked) return "artifact-ready";
+  if (state.stage === "active" && state.roundState && !state.roundState.penaltiesApplied) return "artifact-spent";
+  return "artifact-waiting";
+}
+
 function renderActiveItem(item, index) {
   const actionLocked = Boolean(state.pendingActive);
   const useDisabled = canUseActive(index) && !actionLocked ? "" : "disabled";
@@ -1407,13 +1966,13 @@ function renderActiveItem(item, index) {
   const memoryLine =
     item.id === "a18" ? `<div class="artifact-memory-line">Last: ${escapeHtml(lastUsedArtifactName())}</div>` : "";
   return `
-    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""} ${artifactStateClass(index, actionLocked)}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
           <div class="item-name">${item.name}</div>
           ${memoryLine}
-          <div class="price">Sell ${sale} SIN</div>
+          <div class="price">Sell ${sale}${SIN_MARK}</div>
         </div>
         <span class="item-kind">ARTIFACT</span>
       </div>
@@ -1430,6 +1989,9 @@ function renderPassives() {
   const slots = [];
   const limit = passiveLimit();
   let occupiedSlots = 0;
+  if (state.mode === "arcade") {
+    trackEquippedSeals(state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).map((item) => item.id));
+  }
   state.player.passives.forEach((item, index) => {
     if (!item || REMOVED_PASSIVE_IDS.has(item.id) || occupiedSlots >= limit) return;
     const slotCost = sealSlotCost(item);
@@ -1451,11 +2013,14 @@ function renderPassives() {
         : "";
     const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
-    const sealImage = renderSealSigil(item, "equipped-seal-sigil");
+    const sealImage =
+      renderSealSigil(item, "equipped-seal-sigil") +
+      (revealClass && !SATAN_SEAL_IDS.has(item.id) ? renderSealSigil(item, "equipped-seal-sigil seal-fill-sigil") : "");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
+    const summon = sealSummonAttrs(item.id);
     slots.push(`
-      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass}" data-tooltip-html="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass} ${summon.className}"${summon.style} data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>
@@ -1477,23 +2042,37 @@ function renderPassives() {
 function renderOverlay() {
   if (roundRevealAnimationActive()) return `<div class="overlay"></div>`;
   if (!state.gameOver || state.inspectingGameOver) return `<div class="overlay"></div>`;
+  const stats = ensureRunStats();
+  const bestSeal = stats.maxSealRoundDamage?.value > 0 ? `${stats.maxSealRoundDamage.name} (${formatNumber(stats.maxSealRoundDamage.value)})` : "None";
+  const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
-    <div class="overlay visible">
-      <section class="end-card">
+    <div class="overlay visible game-over-overlay">
+      <img class="end-figure end-figure-left" src="assets/ui/jesus.png" alt="" />
+      <img class="end-figure end-figure-right" src="assets/ui/devil.png" alt="" />
+      <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
-        <p class="end-copy">You reached round ${state.round} with ${state.eliminations} eliminations.</p>
+        <p class="end-copy">The table solved you in round ${state.round}.</p>
+        <div class="end-stats">
+          ${statRow("Round", state.round)}
+          ${statRow("KOs", formatNumber(state.eliminations))}
+          ${statRow("Bosses", formatNumber(state.bossKills))}
+          ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
+          ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
+          ${statRow("Best round", formatNumber(stats.singleRoundDamage || 0))}
+          <div class="end-stat end-stat-wide"><span>Strongest seal</span><strong>${escapeHtml(bestSeal)}</strong></div>
+        </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
-          <button class="primary-button" id="restartGame">Restart</button>
+          <button class="primary-button end-restart" id="restartGame">Restart</button>
         </div>
       </section>
     </div>
   `;
 }
 
+// PENTAKILL is now a full-screen moment (see startMoment in watchMoments)
 function renderPentakillPopup() {
-  if (!state.roundState?.pentakillPopup) return "";
-  return `<div class="pentakill-popup" aria-live="polite">PENTAKILL</div>`;
+  return "";
 }
 
 function showMainMenu(screen = "main") {
@@ -1587,6 +2166,19 @@ function handleMenuAction(action) {
   }
 }
 
+function updateDisplaySetting(key, value) {
+  if (!(key in state.display)) return;
+  if (key === "outlineBoil") state.display.outlineBoil = clamp(Math.round(Number(value) || 0), 0, 3);
+  saveDisplaySettings();
+  applyDisplaySettings();
+  document.querySelectorAll(`[data-display-value="${key}"]`).forEach((label) => {
+    label.textContent = OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off";
+  });
+  document.querySelectorAll(`[data-display-setting="${key}"]`).forEach((control) => {
+    if (Number(control.value) !== state.display.outlineBoil) control.value = String(state.display.outlineBoil);
+  });
+}
+
 function updateSoundSetting(key, value, renderAfter = true) {
   if (key === "muted") {
     state.sound.muted = Boolean(value);
@@ -1644,18 +2236,34 @@ function menuReducedMotion() {
   return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+// slow embers drifting up through the menu art (positions picked once, the backdrop node is reused)
+function renderMenuEmbers() {
+  const embers = Array.from({ length: 22 }, (_, index) => {
+    const x = Math.round(80 + Math.random() * 1510);
+    const size = (1.6 + Math.random() * 2.6).toFixed(1);
+    const duration = (9 + Math.random() * 10).toFixed(1);
+    const delay = (-Math.random() * 19).toFixed(1);
+    const drift = Math.round(-60 + Math.random() * 120);
+    const red = index % 4 === 0 ? " ember-red" : "";
+    return `<span class="menu-ember${red}" style="left:${x}px;--ember-size:${size}px;--ember-drift:${drift}px;animation-duration:${duration}s;animation-delay:${delay}s"></span>`;
+  }).join("");
+  return `<div class="menu-embers">${embers}</div>`;
+}
+
 function renderMenuBackdrop() {
   return `
       <div class="menu-backdrop" aria-hidden="true">
         <svg width="0" height="0" style="position:absolute">
-          <filter id="menuGlitchRed" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
-          <filter id="menuGlitchCyan" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+          <filter id="menuGlitchRed" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.86 0 0 0 0  0.1 0 0 0 0  0.12 0 0 0 0  0 0 0 1 0"/></filter>
+          <filter id="menuGlitchCyan" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.91 0 0 0 0  0.89 0 0 0 0  0.84 0 0 0 0  0 0 0 0.75 0"/></filter>
         </svg>
         <div class="menu-stage">
           <div class="menu-bg-spin"><img class="menu-bg-img" src="assets/ui/menu/menu-bg-spin.jpg" alt=""></div>
           <img class="menu-door" src="assets/ui/menu/menu-door.webp" alt="">
+          <div class="menu-logo-glow"></div>
           ${renderMenuFigure("jesus")}
           ${renderMenuFigure("satan")}
+          ${renderMenuEmbers()}
           <div class="menu-logo">
             <img class="logo-base" src="assets/ui/menu/menu-logo.webp" alt="">
             <img class="logo-red" src="assets/ui/menu/menu-logo.webp" alt="">
