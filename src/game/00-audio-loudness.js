@@ -39,7 +39,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/ko.mp3": { m: -13.3, i: -19.3 },
   "assets/audio/sfx/reroll.mp3": { m: -17.4, i: -20.2 },
   "assets/audio/sfx/seal-charge.mp3": { m: -14.7, i: -17 },
-  "assets/audio/sfx/seal-slam.mp3": { m: -11.9, i: -18.9 },
+  "assets/audio/sfx/seal-slam.mp3": { m: -15.1, i: -19 },
   "assets/audio/sfx/sell.mp3": { m: -14.7, i: -16.6 },
   "assets/audio/sfx/shop-sealed.mp3": { m: -15.5, i: -19.1 },
   "assets/audio/sfx/sin-gain-1.mp3": { m: -17.4, i: -19.8 },

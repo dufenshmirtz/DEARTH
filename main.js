@@ -39,7 +39,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/ko.mp3": { m: -13.3, i: -19.3 },
   "assets/audio/sfx/reroll.mp3": { m: -17.4, i: -20.2 },
   "assets/audio/sfx/seal-charge.mp3": { m: -14.7, i: -17 },
-  "assets/audio/sfx/seal-slam.mp3": { m: -11.9, i: -18.9 },
+  "assets/audio/sfx/seal-slam.mp3": { m: -15.1, i: -19 },
   "assets/audio/sfx/sell.mp3": { m: -14.7, i: -16.6 },
   "assets/audio/sfx/shop-sealed.mp3": { m: -15.5, i: -19.1 },
   "assets/audio/sfx/sin-gain-1.mp3": { m: -17.4, i: -19.8 },
@@ -101,7 +101,7 @@ const CLOCK_TICK_SFX_SRCS = [
 
 const SEAL_PURCHASE_SFX_VOLUME = levelVolume(SEAL_PURCHASE_SFX_SRC, "quiet");
 const GUESS_SFX_VOLUME = levelVolume(GUESS_SFX_SRC, "accent");
-const READY_SFX_VOLUME = levelVolume(READY_SFX_SRC, "feedback");
+const READY_SFX_VOLUME = levelVolume(READY_SFX_SRC, "feedback", -3); // the bell a bit lower
 const NEXT_ROUND_SFX_VOLUME = levelVolume(NEXT_ROUND_SFX_SRC, "accent");
 const CLOCK_TICK_SFX_VOLUME = levelVolume(CLOCK_TICK_SFX_SRCS, "tick");
 const GUESS_SFX_START_OFFSET = 0.12;

@@ -49,7 +49,7 @@ const CLOCK_TICK_SFX_SRCS = [
 
 const SEAL_PURCHASE_SFX_VOLUME = levelVolume(SEAL_PURCHASE_SFX_SRC, "quiet");
 const GUESS_SFX_VOLUME = levelVolume(GUESS_SFX_SRC, "accent");
-const READY_SFX_VOLUME = levelVolume(READY_SFX_SRC, "feedback");
+const READY_SFX_VOLUME = levelVolume(READY_SFX_SRC, "feedback", -3); // the bell a bit lower
 const NEXT_ROUND_SFX_VOLUME = levelVolume(NEXT_ROUND_SFX_SRC, "accent");
 const CLOCK_TICK_SFX_VOLUME = levelVolume(CLOCK_TICK_SFX_SRCS, "tick");
 const GUESS_SFX_START_OFFSET = 0.12;
