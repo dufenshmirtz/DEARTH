@@ -1302,7 +1302,8 @@ function criticalKeysForDisplay(round = state.roundState) {
   if (!round) return new Set();
   if (round.penaltiesApplied || round.criticalHitKeys?.size) return round.criticalHitKeys || new Set();
   if (state.stage !== "active" || state.mode === "pvp") return new Set();
-  const integer = Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
+  const held = targetHeldBySealAnimation(round);
+  const integer = held ? held.target : Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
   if (!Number.isFinite(integer)) return new Set();
   const keys = new Set();
   try {
@@ -1322,7 +1323,7 @@ function readMomentSnapshot() {
   return {
     round: state.round,
     eliminations: state.eliminations,
-    target: round && round.target !== null && round.target !== undefined ? round.target : null,
+    target: round && round.target !== null && round.target !== undefined ? shownTargetValue(round) : null,
     playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
     anyCritical: Boolean(round?.criticalHitKeys?.size),
     bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name })),
@@ -1350,6 +1351,10 @@ function watchMoments() {
   // sounds in the same frame are spaced out: TARGET first, then the hits, the KO, the SIN
   let beat = 0;
   if (before.target === null && now.target !== null) {
+    beat = 260;
+    momentSfx("targetLand");
+  } else if (before.target !== null && now.target !== null && now.target !== before.target && now.round === before.round) {
+    // a SEAL moved the TARGET (Seal of Dantre at the end of its animation)
     beat = 260;
     momentSfx("targetLand");
   }
@@ -1548,13 +1553,28 @@ function renderTopbar() {
   `;
 }
 
+// While a seal acting at reveal (Seal of Dantre) fills and slams, the TARGET it is about to move is
+// still shown; the new TARGET appears when its animation ends.
+function targetHeldBySealAnimation(round = state.roundState) {
+  const held = round?.targetBeforeRevealSeals;
+  const animation = state.roundRevealAnimation;
+  if (!held || !animation?.active || round.penaltiesApplied || animation.phase !== "seal") return null;
+  return held;
+}
+
+function shownTargetValue(round = state.roundState) {
+  const held = targetHeldBySealAnimation(round);
+  return held ? held.target : round?.target ?? null;
+}
+
 function renderTargetPanel() {
   const round = state.roundState;
-  const target = round && round.target !== null ? formatNumber(round.target) : "?";
+  const held = targetHeldBySealAnimation(round);
+  const target = round && round.target !== null ? formatNumber(held ? held.target : round.target) : "?";
   const previousTarget = state.previousTarget !== null ? formatNumber(state.previousTarget) : "?";
   const avg = round && round.tableAverage !== null ? formatNumber(round.tableAverage) : "average";
   const modifier = round ? formatModifier(round.targetModifier) : formatModifier(BASE_TARGET_MODIFIER);
-  const offset = round ? round.targetOffset : 0;
+  const offset = round ? (held ? held.offset : round.targetOffset) : 0;
   const calcAverage = `<span class="target-calc-average">${escapeHtml(avg)}</span>`;
   const calculation =
     round && round.target !== null
@@ -1697,7 +1717,7 @@ function renderBot(bot, pendingPick) {
   // before READY only the number turns red; the full CRITICAL look comes once it is decided
   const criticalGuessClass = isConfirmedCritical ? "critical-guess" : isCriticalGuess ? "critical-pending" : "";
   const criticalGuessLabelClass = isConfirmedCritical ? "critical-guess-label" : "";
-  const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
+  const guessCloseness = guessClosenessAttrs(effective, shownTargetValue(round), isCriticalGuess);
   const guessClass = [criticalGuessClass, guessCloseness.className].filter(Boolean).join(" ");
   const botDamageSources = display?.damageSources ?? bot.damageSources;
   const botHealSources = display?.healSources ?? bot.healSources;
@@ -1847,7 +1867,7 @@ function renderConsole() {
   const value = round?.playerSubmittedGuess ?? "";
   const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
   const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
-  const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
+  const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, shownTargetValue(round), playerCritical);
   // about to CRIT: just the number in red; after READY the line and the button turn red too
   const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");

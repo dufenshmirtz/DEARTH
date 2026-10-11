@@ -159,6 +159,7 @@ function applyPenalties() {
   round.penaltiesApplied = true;
   recalculateTarget();
   state.previousTarget = round.target;
+  applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applySallosGuessShiftAwayFromTarget();
 

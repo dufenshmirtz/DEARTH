@@ -812,6 +812,8 @@ function beginRound() {
     resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
     devSealsRolled: false,
+    devSealsAfterReadyRolled: false,
+    targetBeforeRevealSeals: null,
     devTemporaryActiveUids: new Set(),
     padmaVulnerableBotIds: new Set(),
     paleHorseDamageBoostActive,
@@ -1317,11 +1319,28 @@ function devSealTargetDamned() {
   return activeBots().filter((bot) => !bot.immortal);
 }
 
+// Dev SEALs that still act the moment the TARGET is revealed (GUESS): Dantre moves the TARGET itself,
+// Serafeim's ARTIFACTS must arrive while they can still be used this round.
+// Every other dev SEAL acts when READY is pressed, so it plays in the seal animation like the rest.
+const DEV_SEALS_AT_REVEAL = new Set(["p92", "p94"]);
+
 function applyDevSealsAtReveal() {
   const round = state.roundState;
   if (!round || round.devSealsRolled) return;
   round.devSealsRolled = true;
-  const entries = orderedPassiveEffectEntries(Array.from(DEV_SEAL_IDS));
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealsAfterReady() {
+  const round = state.roundState;
+  if (!round || round.devSealsAfterReadyRolled) return;
+  round.devSealsAfterReadyRolled = true;
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => !DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealEntries(ids) {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries(ids);
   if (!entries.length) return;
 
   entries.forEach((entry) => {
@@ -1606,9 +1625,14 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
+  const beforeReveal = captureRoundRevealSnapshot();
+  const shownBefore = { target: round.target, offset: round.targetOffset };
   applyDevSealsAtReveal();
+  round.targetBeforeRevealSeals = round.target !== shownBefore.target ? shownBefore : null;
   state.stage = "active";
   addLog(`Target revealed at ${formatNumber(round.target)}. CRITICAL integer: ${round.criticalInteger}.`);
+  startRoundRevealAnimation(beforeReveal);
   render();
 }
 

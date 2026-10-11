@@ -253,17 +253,17 @@ function itemDescription(item) {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
   }
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
-  if (item.id === "p93") return `At reveal, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
+  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `At reveal, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
+  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
   if (item.id === "p96") {
-    return `At reveal, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
+    return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
   if (item.id === "p97") {
-    return `At reveal, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
+    return `When you press READY, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
   }
   if (item.id === "p110") {
-    return `At reveal, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
+    return `When you press READY, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
   }
   return item.description;
 }

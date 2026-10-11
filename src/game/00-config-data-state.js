@@ -759,7 +759,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zilon",
     price: 16,
-    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
@@ -773,28 +773,28 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Pyros",
     price: 16,
-    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
     price: 16,
-    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
     price: 16,
-    description: "At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
     name: "Seal of Petros-Pavlos",
     price: 16,
-    description: "At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p111: {
     id: "p111",

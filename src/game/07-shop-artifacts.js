@@ -185,7 +185,7 @@ function sellPassive(index) {
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
-  playGameSfx("sell");
+  // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();

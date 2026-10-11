@@ -231,22 +231,22 @@ Seal of Dantre (16 SIN)
 At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
 Seal of Padma (16 SIN)
-At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
 Seal of Petros-Pavlos (16 SIN)
-At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
 
 Seal of Pyros (16 SIN)
-At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
 
 Seal of Serafeim (16 SIN)
 At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%.
 
 Seal of Threon (16 SIN)
-At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
 
 Seal of Zilon (16 SIN)
-At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%.
 
 Satan Seals
 

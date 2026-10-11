@@ -939,7 +939,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zilon",
     price: 16,
-    description: "At reveal, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
@@ -953,28 +953,28 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Pyros",
     price: 16,
-    description: "At reveal, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
     name: "Seal of Padma",
     price: 16,
-    description: "At reveal, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
     name: "Seal of Threon",
     price: 16,
-    description: "At reveal, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
     name: "Seal of Petros-Pavlos",
     price: 16,
-    description: "At reveal, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p111: {
     id: "p111",
@@ -4424,17 +4424,17 @@ function itemDescription(item) {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
   }
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
-  if (item.id === "p93") return `At reveal, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
+  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `At reveal, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
+  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
   if (item.id === "p96") {
-    return `At reveal, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
+    return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
   if (item.id === "p97") {
-    return `At reveal, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
+    return `When you press READY, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
   }
   if (item.id === "p110") {
-    return `At reveal, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
+    return `When you press READY, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
   }
   return item.description;
 }
@@ -7149,6 +7149,8 @@ function beginRound() {
     resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
     devSealsRolled: false,
+    devSealsAfterReadyRolled: false,
+    targetBeforeRevealSeals: null,
     devTemporaryActiveUids: new Set(),
     padmaVulnerableBotIds: new Set(),
     paleHorseDamageBoostActive,
@@ -7654,11 +7656,28 @@ function devSealTargetDamned() {
   return activeBots().filter((bot) => !bot.immortal);
 }
 
+// Dev SEALs that still act the moment the TARGET is revealed (GUESS): Dantre moves the TARGET itself,
+// Serafeim's ARTIFACTS must arrive while they can still be used this round.
+// Every other dev SEAL acts when READY is pressed, so it plays in the seal animation like the rest.
+const DEV_SEALS_AT_REVEAL = new Set(["p92", "p94"]);
+
 function applyDevSealsAtReveal() {
   const round = state.roundState;
   if (!round || round.devSealsRolled) return;
   round.devSealsRolled = true;
-  const entries = orderedPassiveEffectEntries(Array.from(DEV_SEAL_IDS));
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealsAfterReady() {
+  const round = state.roundState;
+  if (!round || round.devSealsAfterReadyRolled) return;
+  round.devSealsAfterReadyRolled = true;
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => !DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealEntries(ids) {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries(ids);
   if (!entries.length) return;
 
   entries.forEach((entry) => {
@@ -7943,9 +7962,14 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
+  const beforeReveal = captureRoundRevealSnapshot();
+  const shownBefore = { target: round.target, offset: round.targetOffset };
   applyDevSealsAtReveal();
+  round.targetBeforeRevealSeals = round.target !== shownBefore.target ? shownBefore : null;
   state.stage = "active";
   addLog(`Target revealed at ${formatNumber(round.target)}. CRITICAL integer: ${round.criticalInteger}.`);
+  startRoundRevealAnimation(beforeReveal);
   render();
 }
 
@@ -8202,6 +8226,7 @@ function applyPenalties() {
   round.penaltiesApplied = true;
   recalculateTarget();
   state.previousTarget = round.target;
+  applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applySallosGuessShiftAwayFromTarget();
 
@@ -9664,7 +9689,7 @@ function sellPassive(index) {
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
-  playGameSfx("sell");
+  // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
@@ -12397,7 +12422,8 @@ function criticalKeysForDisplay(round = state.roundState) {
   if (!round) return new Set();
   if (round.penaltiesApplied || round.criticalHitKeys?.size) return round.criticalHitKeys || new Set();
   if (state.stage !== "active" || state.mode === "pvp") return new Set();
-  const integer = Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
+  const held = targetHeldBySealAnimation(round);
+  const integer = held ? held.target : Number.isFinite(round.criticalInteger) ? round.criticalInteger : round.target;
   if (!Number.isFinite(integer)) return new Set();
   const keys = new Set();
   try {
@@ -12417,7 +12443,7 @@ function readMomentSnapshot() {
   return {
     round: state.round,
     eliminations: state.eliminations,
-    target: round && round.target !== null && round.target !== undefined ? round.target : null,
+    target: round && round.target !== null && round.target !== undefined ? shownTargetValue(round) : null,
     playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
     anyCritical: Boolean(round?.criticalHitKeys?.size),
     bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name })),
@@ -12445,6 +12471,10 @@ function watchMoments() {
   // sounds in the same frame are spaced out: TARGET first, then the hits, the KO, the SIN
   let beat = 0;
   if (before.target === null && now.target !== null) {
+    beat = 260;
+    momentSfx("targetLand");
+  } else if (before.target !== null && now.target !== null && now.target !== before.target && now.round === before.round) {
+    // a SEAL moved the TARGET (Seal of Dantre at the end of its animation)
     beat = 260;
     momentSfx("targetLand");
   }
@@ -12643,13 +12673,28 @@ function renderTopbar() {
   `;
 }
 
+// While a seal acting at reveal (Seal of Dantre) fills and slams, the TARGET it is about to move is
+// still shown; the new TARGET appears when its animation ends.
+function targetHeldBySealAnimation(round = state.roundState) {
+  const held = round?.targetBeforeRevealSeals;
+  const animation = state.roundRevealAnimation;
+  if (!held || !animation?.active || round.penaltiesApplied || animation.phase !== "seal") return null;
+  return held;
+}
+
+function shownTargetValue(round = state.roundState) {
+  const held = targetHeldBySealAnimation(round);
+  return held ? held.target : round?.target ?? null;
+}
+
 function renderTargetPanel() {
   const round = state.roundState;
-  const target = round && round.target !== null ? formatNumber(round.target) : "?";
+  const held = targetHeldBySealAnimation(round);
+  const target = round && round.target !== null ? formatNumber(held ? held.target : round.target) : "?";
   const previousTarget = state.previousTarget !== null ? formatNumber(state.previousTarget) : "?";
   const avg = round && round.tableAverage !== null ? formatNumber(round.tableAverage) : "average";
   const modifier = round ? formatModifier(round.targetModifier) : formatModifier(BASE_TARGET_MODIFIER);
-  const offset = round ? round.targetOffset : 0;
+  const offset = round ? (held ? held.offset : round.targetOffset) : 0;
   const calcAverage = `<span class="target-calc-average">${escapeHtml(avg)}</span>`;
   const calculation =
     round && round.target !== null
@@ -12792,7 +12837,7 @@ function renderBot(bot, pendingPick) {
   // before READY only the number turns red; the full CRITICAL look comes once it is decided
   const criticalGuessClass = isConfirmedCritical ? "critical-guess" : isCriticalGuess ? "critical-pending" : "";
   const criticalGuessLabelClass = isConfirmedCritical ? "critical-guess-label" : "";
-  const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
+  const guessCloseness = guessClosenessAttrs(effective, shownTargetValue(round), isCriticalGuess);
   const guessClass = [criticalGuessClass, guessCloseness.className].filter(Boolean).join(" ");
   const botDamageSources = display?.damageSources ?? bot.damageSources;
   const botHealSources = display?.healSources ?? bot.healSources;
@@ -12942,7 +12987,7 @@ function renderConsole() {
   const value = round?.playerSubmittedGuess ?? "";
   const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
   const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
-  const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
+  const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, shownTargetValue(round), playerCritical);
   // about to CRIT: just the number in red; after READY the line and the button turn red too
   const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
