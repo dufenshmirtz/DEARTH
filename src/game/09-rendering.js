@@ -380,7 +380,7 @@ function renderArcadeApp() {
         <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
       `;
     }
-    const playerGuessCritical = criticalKeysForDisplay().has("player");
+    const playerGuessCritical = Boolean(state.roundState?.criticalHitKeys?.has("player"));
     return `
       <div class="native-arcade-frame">
         <main class="arena native-board-panel">
@@ -1620,9 +1620,11 @@ function renderBot(bot, pendingPick) {
   const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
-  const isCriticalGuess = criticalKeysForDisplay(round).has(`bot-${bot.id}`);
-  const criticalGuessClass = isCriticalGuess ? "critical-guess" : "";
-  const criticalGuessLabelClass = isCriticalGuess ? "critical-guess-label" : "";
+  const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
+  const isCriticalGuess = isConfirmedCritical || criticalKeysForDisplay(round).has(`bot-${bot.id}`);
+  // before READY only the number turns red; the full CRITICAL look comes once it is decided
+  const criticalGuessClass = isConfirmedCritical ? "critical-guess" : isCriticalGuess ? "critical-pending" : "";
+  const criticalGuessLabelClass = isConfirmedCritical ? "critical-guess-label" : "";
   const guessCloseness = guessClosenessAttrs(effective, round?.target, isCriticalGuess);
   const guessClass = [criticalGuessClass, guessCloseness.className].filter(Boolean).join(" ");
   const botDamageSources = display?.damageSources ?? bot.damageSources;
@@ -1771,9 +1773,11 @@ function consoleActionState() {
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
   const value = round?.playerSubmittedGuess ?? "";
-  const playerCritical = criticalKeysForDisplay(round).has("player");
+  const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
+  const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, round?.target, playerCritical);
-  const criticalInputClass = playerCritical ? "critical-guess" : "";
+  // about to CRIT: just the number in red; after READY the line and the button turn red too
+  const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
   const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()

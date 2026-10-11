@@ -8910,3 +8910,10 @@ body.mobile-arcade #app .mini-stat span.critical-guess-label {
   color: var(--blood-bright) !important;
   -webkit-text-fill-color: var(--blood-bright) !important;
 }
+
+/* about to CRIT (TARGET out, READY not pressed yet): only the number is red */
+#app .critical-pending,
+#app .guess-input.critical-pending {
+  color: var(--blood-bright) !important;
+  -webkit-text-fill-color: var(--blood-bright) !important;
+}
