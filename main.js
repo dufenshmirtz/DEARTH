@@ -26,6 +26,8 @@ const AUDIO_LOUDNESS = {
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
   "assets/audio/sfx/boss-arrive.mp3": { m: -15.7, i: -18.1 },
+  "assets/audio/sfx/bounty-down.mp3": { m: -21, i: -24.1 },
+  "assets/audio/sfx/bounty-up.mp3": { m: -21, i: -23.5 },
   "assets/audio/sfx/critical-bell.mp3": { m: -6.1, i: -14 },
   "assets/audio/sfx/critical.mp3": { m: -14, i: -17.2 },
   "assets/audio/sfx/final-bosses.mp3": { m: -13.6, i: -16 },
@@ -38,6 +40,9 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/hit-small-1.mp3": { m: -20.1, i: -20.1 },
   "assets/audio/sfx/hit-small-2.mp3": { m: -20.5, i: -20.5 },
   "assets/audio/sfx/ko.mp3": { m: -13.3, i: -19.3 },
+  "assets/audio/sfx/memory-down.mp3": { m: -21, i: -22.7 },
+  "assets/audio/sfx/memory-up.mp3": { m: -21, i: -24.5 },
+  "assets/audio/sfx/personality-change.mp3": { m: -21, i: -24.1 },
   "assets/audio/sfx/reroll.mp3": { m: -17.4, i: -20.2 },
   "assets/audio/sfx/seal-charge.mp3": { m: -14.7, i: -17 },
   "assets/audio/sfx/seal-slam.mp3": { m: -15.1, i: -19 },
@@ -68,6 +73,7 @@ const SFX_LEVELS = {
   accent: -21,  // medium hits, TARGET, GUESS, next round, shop sealed
   item: -22,    // seals and items triggering
   feedback: -24,// small hits, SIN, heal, shop buttons, READY
+  effect: -26,  // what SEALs do to a DAMNED (BOUNTY, MEMORY, personality), just under a small hit
   tick: -33,    // the click on every button (the clock tick sound)
   quiet: -29,   // background layers (the laugh when a seal is bought)
   ui: -34,      // menu hover
@@ -156,7 +162,13 @@ const GAME_SFX = {
   finalBosses: { srcs: ["assets/audio/sfx/final-bosses.mp3"], tier: "stinger", duck: 3600 },
   shopSealed: { srcs: ["assets/audio/sfx/shop-sealed.mp3"], tier: "accent" },
   gameOver: { srcs: ["assets/audio/sfx/game-over.mp3"], tier: "stinger", duck: 4500 },
-  uiHover: { srcs: ["assets/audio/sfx/ui-hover.mp3"], tier: "ui", pitch: 0.1 }
+  uiHover: { srcs: ["assets/audio/sfx/ui-hover.mp3"], tier: "ui", pitch: 0.1 },
+  // what SEALs do to a DAMNED, during the seal animation
+  bountyUp: { srcs: ["assets/audio/sfx/bounty-up.mp3"], tier: "effect", pitch: 0.04 },
+  bountyDown: { srcs: ["assets/audio/sfx/bounty-down.mp3"], tier: "effect", pitch: 0.04 },
+  memoryUp: { srcs: ["assets/audio/sfx/memory-up.mp3"], tier: "effect" },
+  memoryDown: { srcs: ["assets/audio/sfx/memory-down.mp3"], tier: "effect" },
+  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)
@@ -3348,6 +3360,7 @@ function applyMemoryToBountyMirror(bot, amount, options = {}) {
   if (converted <= 0) return;
   bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
   reduceBotMemoryRecord(bot, converted);
+  recordBotMemoryLoss(bot, converted, "Seal of Gusion");
   markPassiveEntryTriggered(entry);
   changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
     source: "Seal of Gusion",
@@ -5403,10 +5416,20 @@ function recordBotMemorySource(bot, amount, source) {
   recordSealStatFromSource("memory", memory, source);
 }
 
+// MEMORY taken away by a SEAL, kept like the gains so the seal animation can show (and sound) it at its step
+function recordBotMemoryLoss(bot, amount, source) {
+  const memory = Math.max(0, Math.ceil(amount));
+  if (!bot || memory <= 0 || !sealIdFromStatSource(source)) return;
+  bot.memoryLossSources = bot.memoryLossSources || [];
+  bot.memoryLossSources.push({ amount: memory, source });
+}
+
 function clearBotMemoryBadges() {
   state.bots.forEach((bot) => {
     bot.lastMemoryDelta = 0;
     bot.memorySources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
   });
 }
 
@@ -6164,6 +6187,11 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
 function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
   if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
   const archetype = archetypeByType(type);
+  // changes made while READY resolves the round are shown at their SEAL's step of the seal animation
+  if (state.roundState?.penaltiesApplied && source) {
+    bot.personalityChanges = bot.personalityChanges || [];
+    bot.personalityChanges.push({ from: personalityType(bot) || bot.type, to: archetype.type, source });
+  }
   bot.type = archetype.type;
   bot.color = archetype.color;
   bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
@@ -7144,6 +7172,8 @@ function beginRound() {
     bot.damageSources = [];
     bot.healSources = [];
     bot.sinSources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
     bot.deathCause = null;
     bot.deathNotice = null;
     bot.markedByPlayer = false;
@@ -7725,6 +7755,7 @@ function applyDevSealsAtReveal() {
         if (memory > 0) {
           memoryRemoved += memory;
           bot.memory = [];
+          recordBotMemoryLoss(bot, memory, source);
         }
         const bounty = botRegularBounty(bot);
         if (bounty > 0) {
@@ -11598,6 +11629,31 @@ function roundRevealBotDisplay(bot) {
   };
 }
 
+// personality as the card should show it: during the seal animation, a change waits for its SEAL's step
+function displayedBotType(bot) {
+  const changes = bot?.personalityChanges || [];
+  if (!changes.length || !roundRevealAnimationActive()) return bot?.type;
+  const visible = roundRevealVisibleSealIds() || new Set();
+  const hidden = changes.find((change) => !visible.has(sealIdFromStatSource(change.source)));
+  return hidden ? hidden.from : bot.type;
+}
+
+// what SEALs have done to a DAMNED so far this round, as far as the seal animation has shown it
+function botSealEffectTotals(bot) {
+  const display = roundRevealBotDisplay(bot);
+  const fromSeal = (entry) => Boolean(sealIdFromStatSource(entry?.source));
+  const sinSources = (display ? display.sinSources : bot.sinSources || []).filter(fromSeal);
+  const memorySources = (display ? display.memorySources : bot.memorySources || []).filter(fromSeal);
+  const lossSources = display ? roundRevealFilterSources(bot.memoryLossSources) : bot.memoryLossSources || [];
+  const signed = sinSources.map((entry) => Number(entry?.amount || 0)).filter(Number.isFinite);
+  return {
+    bountyUp: signed.filter((amount) => amount > 0).reduce((sum, amount) => sum + amount, 0),
+    bountyDown: signed.filter((amount) => amount < 0).reduce((sum, amount) => sum - amount, 0),
+    memoryUp: roundRevealSourceTotal(memorySources),
+    memoryDown: roundRevealSourceTotal(lossSources)
+  };
+}
+
 function roundRevealPlayerDisplay() {
   if (!roundRevealAnimationActive()) {
     return {
@@ -12339,7 +12395,8 @@ function readMomentSnapshot() {
     credits: Number(shown.credits) || 0,
     pentakill: Boolean(round?.pentakillPopup) && !revealing,
     gameOver: Boolean(state.gameOver) && !revealing,
-    sealed: shopDisabledBySatan()
+    sealed: shopDisabledBySatan(),
+    effects: state.bots.filter((bot) => !bot.eliminated && !bot.isBoss).map((bot) => ({ id: bot.id, type: displayedBotType(bot), ...botSealEffectTotals(bot) }))
   };
 }
 
@@ -12393,6 +12450,22 @@ function watchMoments() {
     momentSfx(tier >= 3 ? "hitBig" : tier === 2 ? "hitMid" : "hitSmall", beat);
   }
   if (playerTier >= 3) screenShake(6, 340);
+
+  // what SEALs do to the DAMNED: one sound per kind per frame, just after the hits
+  const effectBeat = beat ? beat + 140 : 0;
+  const played = new Set();
+  now.effects.forEach((after) => {
+    const prior = before.effects?.find((entry) => entry.id === after.id);
+    if (!prior) return;
+    if (after.bountyUp > prior.bountyUp) played.add("bountyUp");
+    if (after.bountyDown > prior.bountyDown) played.add("bountyDown");
+    if (after.memoryUp > prior.memoryUp) played.add("memoryUp");
+    if (after.memoryDown > prior.memoryDown) played.add("memoryDown");
+    if (after.type && prior.type && after.type !== prior.type) played.add("personalityChange");
+  });
+  ["bountyUp", "bountyDown", "memoryUp", "memoryDown", "personalityChange"].forEach((key, index) => {
+    if (played.has(key)) momentSfx(key, effectBeat + index * 40);
+  });
 
   if (now.hp > before.hp && !now.gameOver) momentSfx("heal", beat);
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
@@ -12678,7 +12751,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotType(bot));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
@@ -12730,7 +12803,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(bot.type)}`;
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(displayedBotType(bot))}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;

@@ -836,6 +836,8 @@ function beginRound() {
     bot.damageSources = [];
     bot.healSources = [];
     bot.sinSources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
     bot.deathCause = null;
     bot.deathNotice = null;
     bot.markedByPlayer = false;
@@ -1417,6 +1419,7 @@ function applyDevSealsAtReveal() {
         if (memory > 0) {
           memoryRemoved += memory;
           bot.memory = [];
+          recordBotMemoryLoss(bot, memory, source);
         }
         const bounty = botRegularBounty(bot);
         if (bounty > 0) {

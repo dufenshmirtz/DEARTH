@@ -537,6 +537,31 @@ function roundRevealBotDisplay(bot) {
   };
 }
 
+// personality as the card should show it: during the seal animation, a change waits for its SEAL's step
+function displayedBotType(bot) {
+  const changes = bot?.personalityChanges || [];
+  if (!changes.length || !roundRevealAnimationActive()) return bot?.type;
+  const visible = roundRevealVisibleSealIds() || new Set();
+  const hidden = changes.find((change) => !visible.has(sealIdFromStatSource(change.source)));
+  return hidden ? hidden.from : bot.type;
+}
+
+// what SEALs have done to a DAMNED so far this round, as far as the seal animation has shown it
+function botSealEffectTotals(bot) {
+  const display = roundRevealBotDisplay(bot);
+  const fromSeal = (entry) => Boolean(sealIdFromStatSource(entry?.source));
+  const sinSources = (display ? display.sinSources : bot.sinSources || []).filter(fromSeal);
+  const memorySources = (display ? display.memorySources : bot.memorySources || []).filter(fromSeal);
+  const lossSources = display ? roundRevealFilterSources(bot.memoryLossSources) : bot.memoryLossSources || [];
+  const signed = sinSources.map((entry) => Number(entry?.amount || 0)).filter(Number.isFinite);
+  return {
+    bountyUp: signed.filter((amount) => amount > 0).reduce((sum, amount) => sum + amount, 0),
+    bountyDown: signed.filter((amount) => amount < 0).reduce((sum, amount) => sum - amount, 0),
+    memoryUp: roundRevealSourceTotal(memorySources),
+    memoryDown: roundRevealSourceTotal(lossSources)
+  };
+}
+
 function roundRevealPlayerDisplay() {
   if (!roundRevealAnimationActive()) {
     return {
@@ -1278,7 +1303,8 @@ function readMomentSnapshot() {
     credits: Number(shown.credits) || 0,
     pentakill: Boolean(round?.pentakillPopup) && !revealing,
     gameOver: Boolean(state.gameOver) && !revealing,
-    sealed: shopDisabledBySatan()
+    sealed: shopDisabledBySatan(),
+    effects: state.bots.filter((bot) => !bot.eliminated && !bot.isBoss).map((bot) => ({ id: bot.id, type: displayedBotType(bot), ...botSealEffectTotals(bot) }))
   };
 }
 
@@ -1332,6 +1358,22 @@ function watchMoments() {
     momentSfx(tier >= 3 ? "hitBig" : tier === 2 ? "hitMid" : "hitSmall", beat);
   }
   if (playerTier >= 3) screenShake(6, 340);
+
+  // what SEALs do to the DAMNED: one sound per kind per frame, just after the hits
+  const effectBeat = beat ? beat + 140 : 0;
+  const played = new Set();
+  now.effects.forEach((after) => {
+    const prior = before.effects?.find((entry) => entry.id === after.id);
+    if (!prior) return;
+    if (after.bountyUp > prior.bountyUp) played.add("bountyUp");
+    if (after.bountyDown > prior.bountyDown) played.add("bountyDown");
+    if (after.memoryUp > prior.memoryUp) played.add("memoryUp");
+    if (after.memoryDown > prior.memoryDown) played.add("memoryDown");
+    if (after.type && prior.type && after.type !== prior.type) played.add("personalityChange");
+  });
+  ["bountyUp", "bountyDown", "memoryUp", "memoryDown", "personalityChange"].forEach((key, index) => {
+    if (played.has(key)) momentSfx(key, effectBeat + index * 40);
+  });
 
   if (now.hp > before.hp && !now.gameOver) momentSfx("heal", beat);
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
@@ -1617,7 +1659,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(bot.type);
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotType(bot));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
@@ -1669,7 +1711,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(bot.type)}`;
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(displayedBotType(bot))}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;

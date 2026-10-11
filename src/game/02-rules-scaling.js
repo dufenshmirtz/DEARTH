@@ -430,6 +430,7 @@ function applyMemoryToBountyMirror(bot, amount, options = {}) {
   if (converted <= 0) return;
   bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
   reduceBotMemoryRecord(bot, converted);
+  recordBotMemoryLoss(bot, converted, "Seal of Gusion");
   markPassiveEntryTriggered(entry);
   changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
     source: "Seal of Gusion",

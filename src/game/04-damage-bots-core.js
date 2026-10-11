@@ -41,10 +41,20 @@ function recordBotMemorySource(bot, amount, source) {
   recordSealStatFromSource("memory", memory, source);
 }
 
+// MEMORY taken away by a SEAL, kept like the gains so the seal animation can show (and sound) it at its step
+function recordBotMemoryLoss(bot, amount, source) {
+  const memory = Math.max(0, Math.ceil(amount));
+  if (!bot || memory <= 0 || !sealIdFromStatSource(source)) return;
+  bot.memoryLossSources = bot.memoryLossSources || [];
+  bot.memoryLossSources.push({ amount: memory, source });
+}
+
 function clearBotMemoryBadges() {
   state.bots.forEach((bot) => {
     bot.lastMemoryDelta = 0;
     bot.memorySources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
   });
 }
 
@@ -802,6 +812,11 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
 function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
   if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
   const archetype = archetypeByType(type);
+  // changes made while READY resolves the round are shown at their SEAL's step of the seal animation
+  if (state.roundState?.penaltiesApplied && source) {
+    bot.personalityChanges = bot.personalityChanges || [];
+    bot.personalityChanges.push({ from: personalityType(bot) || bot.type, to: archetype.type, source });
+  }
   bot.type = archetype.type;
   bot.color = archetype.color;
   bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);

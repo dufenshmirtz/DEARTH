@@ -15,6 +15,7 @@ const SFX_LEVELS = {
   accent: -21,  // medium hits, TARGET, GUESS, next round, shop sealed
   item: -22,    // seals and items triggering
   feedback: -24,// small hits, SIN, heal, shop buttons, READY
+  effect: -26,  // what SEALs do to a DAMNED (BOUNTY, MEMORY, personality), just under a small hit
   tick: -33,    // the click on every button (the clock tick sound)
   quiet: -29,   // background layers (the laugh when a seal is bought)
   ui: -34,      // menu hover
@@ -103,7 +104,13 @@ const GAME_SFX = {
   finalBosses: { srcs: ["assets/audio/sfx/final-bosses.mp3"], tier: "stinger", duck: 3600 },
   shopSealed: { srcs: ["assets/audio/sfx/shop-sealed.mp3"], tier: "accent" },
   gameOver: { srcs: ["assets/audio/sfx/game-over.mp3"], tier: "stinger", duck: 4500 },
-  uiHover: { srcs: ["assets/audio/sfx/ui-hover.mp3"], tier: "ui", pitch: 0.1 }
+  uiHover: { srcs: ["assets/audio/sfx/ui-hover.mp3"], tier: "ui", pitch: 0.1 },
+  // what SEALs do to a DAMNED, during the seal animation
+  bountyUp: { srcs: ["assets/audio/sfx/bounty-up.mp3"], tier: "effect", pitch: 0.04 },
+  bountyDown: { srcs: ["assets/audio/sfx/bounty-down.mp3"], tier: "effect", pitch: 0.04 },
+  memoryUp: { srcs: ["assets/audio/sfx/memory-up.mp3"], tier: "effect" },
+  memoryDown: { srcs: ["assets/audio/sfx/memory-down.mp3"], tier: "effect" },
+  personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)
