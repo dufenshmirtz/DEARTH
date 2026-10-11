@@ -1,5 +1,5 @@
 function musicVolume() {
-  return state.sound.muted ? 0 : clamp(state.sound.musicVolume, 0, 1);
+  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL, 0, 1);
 }
 
 function sfxVolume(baseVolume) {

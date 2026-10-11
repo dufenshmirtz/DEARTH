@@ -1316,6 +1316,7 @@ function watchMoments() {
 
   if (!before.pentakill && now.pentakill) {
     startMoment("pentakill", "Pentakill", "+5 HEALTH   +8 SIN");
+    playPentakillSfx();
     hitStop(80);
     screenShake(10, 460);
   }
