@@ -26,6 +26,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
   "assets/audio/sfx/boss-arrive.mp3": { m: -15.7, i: -18.1 },
+  "assets/audio/sfx/critical-bell.mp3": { m: -6.1, i: -14 },
   "assets/audio/sfx/critical.mp3": { m: -14, i: -17.2 },
   "assets/audio/sfx/final-bosses.mp3": { m: -13.6, i: -16 },
   "assets/audio/sfx/game-over.mp3": { m: -12.7, i: -15 },

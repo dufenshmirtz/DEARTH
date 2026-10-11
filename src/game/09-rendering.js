@@ -1277,6 +1277,7 @@ function watchMoments() {
     beat = 260;
     if (now.playerCritical) {
       momentSfx("critical");
+      momentSfx("criticalBell");
       startMoment("critical", "Critical", "You named the TARGET");
       hitStop(80);
       screenShake(9, 420);

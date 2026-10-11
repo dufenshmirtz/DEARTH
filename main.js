@@ -26,6 +26,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
   "assets/audio/sfx/boss-arrive.mp3": { m: -15.7, i: -18.1 },
+  "assets/audio/sfx/critical-bell.mp3": { m: -6.1, i: -14 },
   "assets/audio/sfx/critical.mp3": { m: -14, i: -17.2 },
   "assets/audio/sfx/final-bosses.mp3": { m: -13.6, i: -16 },
   "assets/audio/sfx/game-over.mp3": { m: -12.7, i: -15 },
@@ -144,6 +145,7 @@ const GAME_SFX = {
   sealCharge: { srcs: ["assets/audio/sfx/seal-charge.mp3"], tier: "big", pitch: 0.03 },
   sealSlam: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "stinger", pitch: 0.04 },
   critical: { srcs: ["assets/audio/sfx/critical.mp3"], tier: "stinger", duck: 900 },
+  criticalBell: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "stinger" }, // plays together with `critical` when YOU score a CRITICAL
   targetLand: { srcs: ["assets/audio/sfx/target-land.mp3"], tier: "accent" },
   sinGain: { srcs: ["assets/audio/sfx/sin-gain-1.mp3", "assets/audio/sfx/sin-gain-2.mp3"], tier: "feedback", pitch: 0.04 },
   heal: { srcs: ["assets/audio/sfx/heal.mp3"], tier: "feedback" },
@@ -12336,6 +12338,7 @@ function watchMoments() {
     beat = 260;
     if (now.playerCritical) {
       momentSfx("critical");
+      momentSfx("criticalBell");
       startMoment("critical", "Critical", "You named the TARGET");
       hitStop(80);
       screenShake(9, 420);
