@@ -8967,7 +8967,7 @@ body.mobile-arcade #app .mini-stat span.critical-guess-label {
    ========================================================================== */
 :root {
   --intro-white: #ece6d8;
-  --intro-blue: #8fb8ff;
+  --intro-yellow: #ffd23f;
   --intro-red: #e0262d;
 }
 
@@ -9019,12 +9019,12 @@ body.mobile-arcade #app .mini-stat span.critical-guess-label {
 }
 
 .intro-layer.intro-lit[data-speaker="jesus"] .intro-portrait-jesus,
-.intro-layer.intro-lit[data-speaker="sinner"] .intro-portrait-sinner {
+.intro-layer.intro-lit[data-speaker="you"] .intro-portrait-sinner {
   opacity: 1;
   filter: brightness(1);
 }
 
-.intro-layer.intro-lit[data-speaker="sinner"] .intro-portrait-sinner {
+.intro-layer.intro-lit[data-speaker="you"] .intro-portrait-sinner {
   transform: translateY(-4px);
 }
 
@@ -9096,22 +9096,23 @@ body.outline-boil .intro-box::before {
   color: var(--intro-white) !important;
 }
 
-.intro-box.intro-color-blue .intro-text,
-.intro-box.intro-color-blue .intro-text * {
-  color: var(--intro-blue) !important;
+/* Jesus speaks in the yellow of his eyes, Satan in red, you in white */
+.intro-box.intro-says-jesus .intro-text,
+.intro-box.intro-says-jesus .intro-text * {
+  color: var(--intro-yellow) !important;
 }
 
-.intro-box.intro-color-red .intro-text,
-.intro-box.intro-color-red .intro-text * {
+.intro-box.intro-says-satan .intro-text,
+.intro-box.intro-says-satan .intro-text * {
   color: var(--intro-red) !important;
 }
 
-.intro-box.intro-color-red .intro-text {
-  text-shadow: 0 0 10px rgba(200, 20, 20, 0.35);
+.intro-box.intro-says-jesus .intro-text {
+  text-shadow: 0 0 8px rgba(255, 196, 30, 0.45);
 }
 
-.intro-box.intro-color-blue .intro-text {
-  text-shadow: 0 0 10px rgba(110, 160, 255, 0.25);
+.intro-box.intro-says-satan .intro-text {
+  text-shadow: 0 0 10px rgba(200, 20, 20, 0.35);
 }
 
 .intro-text .intro-ghost {
@@ -9138,7 +9139,7 @@ body.outline-boil .intro-box::before {
   mask: var(--sin-coin) center / contain no-repeat;
 }
 
-.intro-box.intro-color-red .sin-mark {
+.intro-box.intro-says-satan .sin-mark {
   background: var(--intro-red);
 }
 
@@ -9157,8 +9158,8 @@ body.outline-boil .intro-box::before {
   opacity: 0;
 }
 
-.intro-box.intro-color-blue .intro-next { color: var(--intro-blue) !important; }
-.intro-box.intro-color-red .intro-next { color: var(--intro-red) !important; }
+.intro-box.intro-says-jesus .intro-next { color: var(--intro-yellow) !important; }
+.intro-box.intro-says-satan .intro-next { color: var(--intro-red) !important; }
 
 .intro-box.intro-waiting .intro-next {
   animation: intro-next-blink 1.1s ease-in-out infinite;
@@ -9363,4 +9364,114 @@ body.mobile-arcade .intro-box-pact {
 body.mobile-arcade .intro-box-pact::before {
   border-width: 18px;
   border-image-width: 18px;
+}
+
+/* small "skip" in the corner of each conversation box */
+.intro-skip {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 14px;
+  padding: 4px 8px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-size: 14px !important;
+  line-height: 1;
+  color: #8d877c !important;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.intro-skip:hover,
+.intro-skip:focus-visible {
+  opacity: 1;
+  color: #ece6d8 !important;
+}
+
+.intro-box-pact .intro-skip {
+  color: #b5545a !important;
+}
+
+.intro-box-pact .intro-skip:hover {
+  color: #ff5a5f !important;
+}
+
+.intro-layer.intro-shutting .intro-skip,
+.intro-box-leave .intro-skip {
+  visibility: hidden;
+}
+
+/* Satan's conversation: the table dims, he stands on the right, his box sits over the SEAL slots */
+.intro-pact-layer {
+  background: rgba(0, 0, 0, 0.38);
+  animation: intro-pact-veil 0.9s ease-out both;
+}
+
+@keyframes intro-pact-veil {
+  from { background: rgba(0, 0, 0, 0); }
+}
+
+.intro-pact-layer.intro-pact-leaving {
+  background: rgba(0, 0, 0, 0);
+  transition: background 1.3s ease;
+}
+
+.intro-satan {
+  position: fixed;
+  right: max(0.5vw, 4px);
+  bottom: 0;
+  height: min(96vh, 1195px);
+  aspect-ratio: 768 / 1195;
+  max-width: 34vw;
+  pointer-events: none;
+  animation: intro-satan-in 1.1s ease-out both;
+}
+
+/* a pool of darkness behind him so the table does not show through his lines */
+.intro-satan::before {
+  content: "";
+  position: absolute;
+  inset: -6% -14% -2% -22%;
+  background: radial-gradient(ellipse at 55% 55%, rgba(0, 0, 0, 0.92) 0, rgba(0, 0, 0, 0.8) 42%, rgba(0, 0, 0, 0) 70%);
+}
+
+.intro-satan img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right bottom;
+  -webkit-user-drag: none;
+  filter: brightness(0.62) drop-shadow(0 0 18px rgba(200, 20, 20, 0.25));
+  transition: filter 0.7s ease;
+}
+
+.intro-pact-layer[data-speaker="satan"] .intro-satan img {
+  filter: brightness(1) drop-shadow(0 0 22px rgba(220, 25, 25, 0.45));
+}
+
+@keyframes intro-satan-in {
+  0% { opacity: 0; transform: translateY(10px); filter: brightness(3); }
+  18% { opacity: 0.7; }
+  26% { opacity: 0.15; }
+  45% { opacity: 1; filter: brightness(1.5); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+.intro-pact-leaving .intro-satan {
+  animation: intro-satan-out 1.3s ease-in both;
+}
+
+@keyframes intro-satan-out {
+  0% { opacity: 1; filter: none; }
+  30% { opacity: 1; filter: brightness(1.7); }
+  100% { opacity: 0; filter: brightness(0.3) blur(3px); }
+}
+
+body.mobile-arcade .intro-satan {
+  height: 98vh;
+  max-width: 40vw;
 }

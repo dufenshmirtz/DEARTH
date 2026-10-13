@@ -13879,12 +13879,14 @@ function drawCloth(rig, t) {
    1. Black screen, silence. After INTRO_BLACK_MS the bell tolls and the judgement dialogue starts
       (Jesus on the left, the sinner on the right, one text box in the middle).
    2. The game boots with the Devil's Offerings, ARTIFACTS and SEAL slots blacked out and no music.
-   3. When round 2 is resolved, Satan's red text box opens where the offerings will be (desktop)
-      or where the SEALS will be (mobile). After the pact the hidden parts burn back into place,
-      the music starts and the run goes on as a normal, saved run.
+   3. When round 2 is resolved, Satan stands on the right of the screen and his text box opens over
+      the SEAL slots. After the pact the hidden parts burn back into place, the music starts and
+      the run goes on as a normal, saved run.
+   A small "skip" on each box (or Esc): in the judgement it boots the game, in the pact it seals it.
    Text: each box types letter by letter up to the next punctuation (. , ! ? and runs like ?? ...),
    a click/tap anywhere continues; after the last part of a box the next click replaces it.
-   The first word of every line below is the colour: white = Jesus, blue = you, red = Satan.
+   The first word of every line is who speaks, which sets the colour: jesus = yellow, you = white,
+   satan = red.
    {SIN} draws the SIN icon. Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
@@ -13895,60 +13897,60 @@ const INTRO_BOOT_REVEAL_MS = 1250; // the boot sound's power chord: the game swi
 const INTRO_BURN_MS = 1900; // offerings / ARTIFACTS / SEALS burning back into place
 
 const INTRO_JUDGEMENT_LINES = [
-  ["white", "You died on ______ after _______"],
-  ["white", "You are going to HELL."],
-  ["blue", "Huh, what, no??"],
-  ["blue", "This can't be true, wait what do you even mean there is an afterlife?"],
-  ["white", "There is, you are in it, it is over, only eternal damnation awaits you."],
-  ["blue", "Why?? No!! Who the hell even are you?"],
-  ["white", "I am He, the One you know as Jesus."],
-  ["blue", "What do you mean, after all of this Christianity was just right, every other God was bullshit and I'll be judged by your specific values. That's stupid I want the other afterlives."],
-  ["white", "There are no other afterlives you insolent fool. Only Heaven and Hell, and there are no other Gods but me. You had your chance to follow my truth, now you shall face my punishment."],
-  ["blue", "Hey hey I am sorry, I didn't mean it alright? Look I did make some mistakes, and I wasn't always the better person, but you can't forsake me like this!"],
-  ["blue", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
-  ["white", "SILENCE. My word is final. And during the Easter of 2023 you fasted only because you had gotten food poisoning from eating 10 day old pizza."],
-  ["blue", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
-  ["blue", "One year from now I'll have a big ass beard, I'll stop taking drugs, I'll stop having sex and... and go work at a church. I'll even diddle kids if that's what you want, most of your favorite children seem to do that nowadays anyway."],
-  ["blue", "Hey please, talk to me!"],
-  ["blue", "Don't leave me hanging!"],
-  ["blue", "God answer me! Big man! Father! Big daddy!!!"],
-  ["white", "Shut. the. fuck. up. The next time you try to insult me or twist my word or whine, I'll make you wish you've never been created."],
-  ["blue", "Okay got it whatever you want almighty, I just truly believe if you give me one last chance I'll make you proud, and maybe not face eternal torture."],
-  ["blue", "If I knew you were real I would be going to church every day, having faith and doubt not, loving my neighbor, killing all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at muslims..."],
-  ["white", "So you want your second chance that bad?"],
-  ["blue", "OH PLEASE, I will do literally anything and everything!"],
-  ["white", "Listen here worm, I'll grant you your chance."],
-  ["blue", "FUCK YEAH, ready to go home and be the best chr-"],
-  ["white", "But you will have to earn it. Do you know how many ungrateful souls like you appear before me and beg like dogs to be forgiven? All of them. So be thankful for once you are even getting the chance to prove yourself before me."],
-  ["white", "To go back all you have to do is defeat all other Damned in the game I've devised for all you heedless."],
-  ["white", "You are all in the same situation and the only way out is to outsmart the others or be purged into the fires of the underworld."],
-  ["white", "What you have to do is enter a number from 1 to 100, and be the closest to 0.8 of the average of all the guesses. Any deviation from the target will bring you closer to your doom."],
-  ["white", "Be ready, the game is about to start."],
-  ["blue", "Alright that's great and all, but how many enemies do I have to defeat again?"]
+  ["jesus", "You died on ______ after _______"],
+  ["jesus", "You are going to HELL."],
+  ["you", "Huh, what, no??"],
+  ["you", "This can't be true, wait what do you even mean there is an afterlife?"],
+  ["jesus", "There is, you are in it, it is over, only eternal damnation awaits you."],
+  ["you", "Why?? No!! Who the hell even are you?"],
+  ["jesus", "I am He, the One you know as Jesus."],
+  ["you", "What do you mean, after all of this Christianity was just right, every other God was bullshit and I'll be judged by your specific values. That's stupid I want the other afterlives."],
+  ["jesus", "There are no other afterlives you insolent fool. Only Heaven and Hell, and there are no other Gods but me. You had your chance to follow my truth, now you shall face my punishment."],
+  ["you", "Hey hey I am sorry, I didn't mean it alright? Look I did make some mistakes, and I wasn't always the better person, but you can't forsake me like this!"],
+  ["you", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
+  ["jesus", "SILENCE. My word is final. And during the Easter of 2023 you fasted only because you had gotten food poisoning from eating 10 day old pizza."],
+  ["you", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
+  ["you", "One year from now I'll have a big ass beard, I'll stop taking drugs, I'll stop having sex and... and go work at a church. I'll even diddle kids if that's what you want, most of your favorite children seem to do that nowadays anyway."],
+  ["you", "Hey please, talk to me!"],
+  ["you", "Don't leave me hanging!"],
+  ["you", "God answer me! Big man! Father! Big daddy!!!"],
+  ["jesus", "Shut. the. fuck. up. The next time you try to insult me or twist my word or whine, I'll make you wish you've never been created."],
+  ["you", "Okay got it whatever you want almighty, I just truly believe if you give me one last chance I'll make you proud, and maybe not face eternal torture."],
+  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, loving my neighbor, killing all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at muslims..."],
+  ["jesus", "So you want your second chance that bad?"],
+  ["you", "OH PLEASE, I will do literally anything and everything!"],
+  ["jesus", "Listen here worm, I'll grant you your chance."],
+  ["you", "FUCK YEAH, ready to go home and be the best chr-"],
+  ["jesus", "But you will have to earn it. Do you know how many ungrateful souls like you appear before me and beg like dogs to be forgiven? All of them. So be thankful for once you are even getting the chance to prove yourself before me."],
+  ["jesus", "To go back all you have to do is defeat all other Damned in the game I've devised for all you heedless."],
+  ["jesus", "You are all in the same situation and the only way out is to outsmart the others or be purged into the fires of the underworld."],
+  ["jesus", "What you have to do is enter a number from 1 to 100, and be the closest to 0.8 of the average of all the guesses. Any deviation from the target will bring you closer to your doom."],
+  ["jesus", "Be ready, the game is about to start."],
+  ["you", "Alright that's great and all, but how many enemies do I have to defeat again?"]
 ];
 
 // third item: what happens on the click after the line ("evil": the pact sound before the next line)
 const INTRO_PACT_LINES = [
-  ["red", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
-  ["blue", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
-  ["red", "Hey hey no reason to bring the big guy's name in here. I am here to help you. Think of me as your only chance of actually doing anything meaningful in this here place."],
-  ["red", "Our goals happen to align this fine time. You want all the other wretches to be eliminated and I want more meat for the grinder, the faster the better!"],
-  ["red", "So listen here, I got you a little offer. I will give you a little bit of an edge against all the other sinners here, and in exchange I want their SIN{SIN}. The more decadent they were the more valuable they are."],
-  ["blue", "Wait a second, red eyes, twisting horns, pointy tail! You're Satan! No way I am trusting you after what the holy trio said to me. He was angry enough before, if he finds out I've been dealing with the devil it's over for me."],
-  ["red", "No need to get defensive here you little flesh puppet! Me and Jesus are cool, I am sure he will turn the other cheek. It's not like he even cares what happens in here..."],
-  ["blue", "Wait what do you mean?"],
-  ["red", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive you are free to do so. I'll find some other scum in here soon enough."],
-  ["blue", "No no, wait please! I need to get back. What's the deal?"],
-  ["red", "Okay listen here and listen well. You eliminate the other sinners and in exchange I'll give you the strength of my demons in the form of their SEALS. They will help you passively and the better you do the stronger you become."],
-  ["red", "Also I humbly accept rituals to my name, so I would recommend using occult ARTIFACTS right after all the guesses have been revealed, whenever need be."],
-  ["blue", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
-  ["red", "Yea yea definitely, or whatever the other guy promised you."],
-  ["blue", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["red", "Great. And just beware, you are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
-  ["red", "Wishing you all the best, and I'll be seeing you soon enough..."]
+  ["satan", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
+  ["you", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
+  ["satan", "Hey hey no reason to bring the big guy's name in here. I am here to help you. Think of me as your only chance of actually doing anything meaningful in this here place."],
+  ["satan", "Our goals happen to align this fine time. You want all the other wretches to be eliminated and I want more meat for the grinder, the faster the better!"],
+  ["satan", "So listen here, I got you a little offer. I will give you a little bit of an edge against all the other sinners here, and in exchange I want their SIN{SIN}. The more decadent they were the more valuable they are."],
+  ["you", "Wait a second, red eyes, twisting horns, pointy tail! You're Satan! No way I am trusting you after what the holy trio said to me. He was angry enough before, if he finds out I've been dealing with the devil it's over for me."],
+  ["satan", "No need to get defensive here you little flesh puppet! Me and Jesus are cool, I am sure he will turn the other cheek. It's not like he even cares what happens in here..."],
+  ["you", "Wait what do you mean?"],
+  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive you are free to do so. I'll find some other scum in here soon enough."],
+  ["you", "No no, wait please! I need to get back. What's the deal?"],
+  ["satan", "Okay listen here and listen well. You eliminate the other sinners and in exchange I'll give you the strength of my demons in the form of their SEALS. They will help you passively and the better you do the stronger you become."],
+  ["satan", "Also I humbly accept rituals to my name, so I would recommend using occult ARTIFACTS right after all the guesses have been revealed, whenever need be."],
+  ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
+  ["satan", "Yea yea definitely, or whatever the other guy promised you."],
+  ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
+  ["satan", "Great. And just beware, you are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
-const INTRO_SPEAKER_BY_COLOR = { white: "jesus", blue: "sinner", red: "satan" };
+const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal
 const introState = {
@@ -14186,16 +14188,15 @@ function introSetWaiting(waiting) {
 }
 
 function introShowLine(index) {
-  const [color, text] = introState.lines[index];
+  const [speaker, text] = introState.lines[index];
   introState.lineIndex = index;
   introState.glyphs = introGlyphs(text);
   introState.ends = introChunkEnds(introState.glyphs);
   introState.chunk = 0;
   introState.shown = 0;
   const box = introState.box;
-  box.classList.remove("intro-color-white", "intro-color-blue", "intro-color-red", "intro-box-hush");
-  box.classList.add(`intro-color-${color}`);
-  const speaker = INTRO_SPEAKER_BY_COLOR[color] || "";
+  box.classList.remove(...INTRO_SPEAKERS.map((name) => `intro-says-${name}`), "intro-box-hush");
+  box.classList.add(`intro-says-${speaker}`);
   if (introState.layer) introState.layer.dataset.speaker = speaker;
   introDrawText();
   introFitText();
@@ -14275,6 +14276,10 @@ function introBindKeys() {
         event.stopPropagation();
         if (introState.phase === "black" && introState.layer?.classList.contains("intro-needs-tap")) introState.layer.click();
         else introAdvance();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        introSkip();
       } else if (event.key === "Tab") {
         event.preventDefault();
       }
@@ -14288,7 +14293,33 @@ function introBoxHtml(kind) {
     <div class="intro-box intro-box-${kind}" role="dialog" aria-live="polite">
       <div class="intro-text"></div>
       <span class="intro-next" aria-hidden="true"></span>
+      <button class="intro-skip" type="button" aria-label="Skip the conversation">skip</button>
     </div>`;
+}
+
+function introBindSkip(layer) {
+  const skip = layer.querySelector(".intro-skip");
+  if (!skip) return;
+  // its own click: it must not also advance the text underneath
+  skip.addEventListener("click", (event) => {
+    event.stopPropagation();
+    skip.blur();
+    introSkip();
+  });
+}
+
+// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end
+function introSkip() {
+  if (introState.phase === "judgement") {
+    introClearTimers();
+    introState.typing = false;
+    introBootGame();
+  } else if (introState.phase === "pact") {
+    introClearTimers();
+    introState.typing = false;
+    introState.box?.classList.remove("intro-box-pulse");
+    introSealPact();
+  }
 }
 
 /* ---- 1. judgement ---- */
@@ -14321,6 +14352,7 @@ function startIntroSequence(options = {}) {
     introAdvance();
   });
   if (options.fromMenu) layer.classList.add("intro-from-flash");
+  introBindSkip(layer);
   document.body.appendChild(layer);
   document.body.classList.add("intro-running");
   introState.layer = layer;
@@ -14388,16 +14420,28 @@ function introAfterRender() {
 }
 
 /* ---- 3. Satan's pact ---- */
-function introPactAnchor() {
-  return isMobileArcadeView() ? document.querySelector(".passive-bar") : document.querySelector(".shop-panel");
+// the box covers the SEAL slots (desktop and mobile); the whole SEAL bar if the slots can't be measured
+function introPactRect() {
+  const slots = [...document.querySelectorAll(".passive-bar .passive-slot")]
+    .map((slot) => slot.getBoundingClientRect())
+    .filter((rect) => rect.width && rect.height);
+  if (slots.length) {
+    const pad = 10;
+    const left = Math.max(4, Math.min(...slots.map((rect) => rect.left)) - pad);
+    const top = Math.max(4, Math.min(...slots.map((rect) => rect.top)) - pad);
+    const right = Math.min(window.innerWidth - 4, Math.max(...slots.map((rect) => rect.right)) + pad);
+    const bottom = Math.min(window.innerHeight - 4, Math.max(...slots.map((rect) => rect.bottom)) + pad);
+    return { left, top, width: right - left, height: bottom - top };
+  }
+  const bar = document.querySelector(".passive-bar")?.getBoundingClientRect();
+  return bar && bar.width && bar.height ? bar : null;
 }
 
 function introPlacePactBox() {
   const box = introState.box;
-  const anchor = introPactAnchor();
-  if (!box || !anchor || !box.classList.contains("intro-box-pact")) return;
-  const rect = anchor.getBoundingClientRect();
-  if (!rect.width || !rect.height) return;
+  if (!box || !box.classList.contains("intro-box-pact")) return;
+  const rect = introPactRect();
+  if (!rect) return;
   box.style.left = `${rect.left}px`;
   box.style.top = `${rect.top}px`;
   box.style.width = `${rect.width}px`;
@@ -14413,8 +14457,11 @@ function introStartPact() {
   if (floatingTooltip) floatingTooltip.classList.remove("visible");
   const layer = document.createElement("div");
   layer.className = "intro-pact-layer";
-  layer.innerHTML = introBoxHtml("pact");
+  layer.innerHTML = `
+    <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
   layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
   document.body.appendChild(layer);
   introState.layer = layer;
   introState.box = layer.querySelector(".intro-box");
@@ -14443,6 +14490,7 @@ function introSealPact() {
   introState.phase = "reveal";
   introPlaySfx("introLaugh");
   introState.box.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
   introLater(() => {
     introState.layer?.remove();
     introState.layer = null;
