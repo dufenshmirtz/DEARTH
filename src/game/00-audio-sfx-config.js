@@ -112,7 +112,21 @@ const GAME_SFX = {
   memoryDown: { srcs: ["assets/audio/sfx/memory-down.mp3"], tier: "effect" },
   personalityChange: { srcs: ["assets/audio/sfx/personality-change.mp3"], tier: "effect" },
   // a SEAL sold: a soft ghostly breath under the coin sound
-  sealSellGhost: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "effect" }
+  sealSellGhost: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "effect" },
+  // first-launch story (09-intro-story.js), synthesised placeholders like the rest of sfx/.
+  // Satan's laugh reuses the seal-purchase laugh, slowed down. `rate`: fixed playback speed (below 1 = deeper)
+  introBell: { srcs: ["assets/audio/intro/intro-bell.mp3"], tier: "stinger" },
+  introPencil: {
+    srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`),
+    tier: "tick",
+    trim: -8, // one per letter, so they pile up into a continuous scratch
+    pitch: 0.12
+  },
+  introBoot: { srcs: ["assets/audio/intro/intro-boot.mp3"], tier: "stinger" },
+  introEvil: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
+  introLaugh: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "big", rate: 0.84 },
+  introBurn: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
+  menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)

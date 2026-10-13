@@ -96,6 +96,7 @@ function patchAppHtml(app, html) {
 }
 
 function render() {
+  introGuardMode();
   updateFullscreenLayoutClass();
   const app = document.querySelector("#app");
   const className = `app ${state.mode === "pvp" ? "pvp-app" : ""} ${state.mode === "menu" ? "menu-app" : ""}`;
@@ -1490,6 +1491,7 @@ function afterRenderEffects() {
   syncSealRings();
   watchSealTrigger();
   watchMoments();
+  introAfterRender();
 }
 
 function renderTopbar() {
@@ -2391,6 +2393,7 @@ function initMenuBackdrop() {
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
   initMenuFigures(menuReducedMotion());
+  bindMenuJesusTrigger();
   if (!menuBackdropState.resizeBound) {
     menuBackdropState.resizeBound = true;
     window.addEventListener("resize", layoutMenuBackdrop);
@@ -2535,6 +2538,10 @@ function renderMenuFigure(name) {
       </div>` : "";
   const claw = m.claw ? `<div class="fig-group fig-claw-group" style="${origin(m.claw_pivot)}">${part("claw")}</div>` : "";
   const crown = m.crown ? part("crown", "crown-shimmer") : "";
+  // Jesus' eyes: turn yellow while the pointer is on him (see bindMenuJesusTrigger)
+  const eyes = name === "jesus"
+    ? `<img class="fig-part fig-eyes" src="assets/ui/menu/jesus-eyes.webp" alt="" style="left:${m.head.x}px;top:${m.head.y}px;width:${m.head.w}px;height:${m.head.h}px">`
+    : "";
   return `
     <div class="menu-fig menu-fig-${name}" data-fig="${name}"
          style="left:${f.stage.left - P * k}px;top:${f.stage.top - P * k}px;width:${m.W}px;height:${m.H}px;transform:scale(${k})">
@@ -2546,6 +2553,7 @@ function renderMenuFigure(name) {
           ${claw}
           <div class="fig-group fig-head-group" style="${origin(m.head_pivot)}">
             ${part("head")}
+            ${eyes}
             ${crown}
           </div>
         </div>

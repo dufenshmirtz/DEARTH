@@ -302,6 +302,8 @@ if (!resumeNativeArcadeOnForeground()) {
   if (pvpShouldAutoStartFromHash()) {
     if (window.history?.replaceState) window.history.replaceState(null, "", `${location.pathname}${location.search}`);
     startPvpMode();
+  } else if (shouldPlayIntroOnLaunch()) {
+    startIntroSequence();
   } else {
     showMainMenu();
   }

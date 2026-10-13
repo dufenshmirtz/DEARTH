@@ -35,6 +35,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
   - `07-shop-artifacts.js` buying/selling, artifact use & targeting
   - `08-pvp.js` local PvP mode (host side)
   - `09-rendering.js` all DOM rendering
+  - `09-intro-story.js` first-launch story (Jesus' judgement dialogue, 2 tutorial rounds with offerings/ARTIFACTS/SEALS hidden, Satan's pact, burn-in reveal) and the menu Jesus that replays it. Dialogue lines live at the top of the file. Seen-flag: localStorage `dearthIntroSeenV1`
   - `10-events-bootstrap.js` event binding, startup
 - `styles.css` — all styling. `controller.html/js` — phone controller. `server.js` — zero-dependency Node HTTP/API server for PvP.
 - `assets/` (artifacts, audio, bots, seals, ui), `fonts/`.

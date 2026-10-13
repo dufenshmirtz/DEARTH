@@ -352,7 +352,7 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
     resolvePlayerDamageMemoryConversions(conversion.conversions);
     return 0;
   }
-  state.player.hp = Math.max(0, state.player.hp - damage);
+  state.player.hp = Math.max(introPlayerHpFloor(), state.player.hp - damage);
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordPlayerDamageSource(sourceDamage, sourceLabel);

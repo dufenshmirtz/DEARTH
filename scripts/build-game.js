@@ -21,6 +21,7 @@ const SOURCE_FILES = [
   "07-shop-artifacts.js",
   "08-pvp.js",
   "09-rendering.js",
+  "09-intro-story.js",
   "10-events-bootstrap.js",
 ];
 

@@ -673,6 +673,8 @@ function applyActiveUsePassives(item) {
 }
 
 function startGame(options = {}) {
+  // a restart in the middle of the first-launch story ends the story
+  if (!options.intro) introAbort();
   resetRoundRevealAnimation();
   resumeSoundtrack();
   pvpClearAutoTimer();
@@ -1712,6 +1714,7 @@ function performMainAction() {
 function shouldUseArcadeEnterShortcut(event) {
   if (event.key !== "Enter" || event.defaultPrevented) return false;
   if (state.mode !== "arcade" || state.pauseOpen) return false;
+  if (introCapturesInput()) return false;
   if (!["guess", "active", "summary", "ended"].includes(state.stage)) return false;
   const target = event.target;
   if (target?.closest?.("button, a, select, textarea, [contenteditable='true']")) return false;

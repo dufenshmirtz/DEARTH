@@ -239,6 +239,8 @@ function removeArcadeRunSlot(slotId) {
 
 function saveArcadeRun() {
   if (state.mode !== "arcade") return;
+  // the story's two tutorial rounds are not a saved run until the pact is made
+  if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
   if (state.gameOver) {
     removeArcadeRunSlot(state.currentRunSlotId);
     return;
@@ -415,6 +417,8 @@ function ensureSoundtrack() {
 }
 
 function playSoundtrack() {
+  // the first-launch story keeps the music off until Satan's pact is sealed
+  if (typeof introHoldsMusic === "function" && introHoldsMusic()) return;
   const audio = ensureSoundtrack();
   audio.play().catch(() => {});
 }
@@ -663,9 +667,9 @@ function playGameSfx(key) {
   try {
     const instance = audio.cloneNode(true);
     instance.volume = sfxVolume(config.volume ?? 0.4);
-    if (config.pitch) {
+    if (config.pitch || config.rate) {
       instance.preservesPitch = false;
-      instance.playbackRate = 1 + (Math.random() * 2 - 1) * config.pitch;
+      instance.playbackRate = (config.rate || 1) * (1 + (Math.random() * 2 - 1) * (config.pitch || 0));
     }
     activeOneShotSfxInstances.add(instance);
     const cleanup = () => activeOneShotSfxInstances.delete(instance);
