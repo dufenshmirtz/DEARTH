@@ -683,6 +683,7 @@ function renderPauseMenu() {
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
         <button class="small-button pause-dev-button" data-pause-action="dev">DEV</button>
+        ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
@@ -2318,6 +2319,13 @@ function handlePauseAction(action) {
   }
   if (action === "back") {
     state.pauseScreen = "main";
+    render();
+    return;
+  }
+  if (action === "unlock-all") {
+    // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
+    state.devUnlockAllSeals = true;
+    addLog("Testing: all SEALS unlocked for this run.");
     render();
     return;
   }

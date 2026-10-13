@@ -1764,6 +1764,7 @@ const state = {
   pauseScreen: "main",
   menuCollectionOpen: false,
   pauseDevOpen: false,
+  devUnlockAllSeals: false,
   round: 1,
   stage: "guess",
   player: {

@@ -1970,6 +1970,7 @@ const state = {
   pauseScreen: "main",
   menuCollectionOpen: false,
   pauseDevOpen: false,
+  devUnlockAllSeals: false,
   round: 1,
   stage: "guess",
   player: {
@@ -7062,6 +7063,7 @@ function startGame(options = {}) {
   state.runStartedAt = Date.now();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
+  state.devUnlockAllSeals = false;
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
@@ -11851,6 +11853,7 @@ function renderPauseMenu() {
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
         <button class="small-button pause-dev-button" data-pause-action="dev">DEV</button>
+        ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
@@ -13489,6 +13492,13 @@ function handlePauseAction(action) {
     render();
     return;
   }
+  if (action === "unlock-all") {
+    // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
+    state.devUnlockAllSeals = true;
+    addLog("Testing: all SEALS unlocked for this run.");
+    render();
+    return;
+  }
   if (action === "dev") {
     state.pauseDevOpen = !state.pauseDevOpen;
     render();
@@ -14952,6 +14962,8 @@ function isUnlockableSeal(id) {
 
 function isSealUnlocked(id) {
   if (!isUnlockableSeal(id)) return true;
+  // Pause > Unlock (testing): every SEAL counts as unlocked for the rest of this run
+  if (state.devUnlockAllSeals && state.mode !== "menu") return true;
   return loadCollectionProgress().unlocked.includes(id);
 }
 
@@ -15071,7 +15083,7 @@ function showNextCollectionToast() {
   toast.className = "collection-toast";
   toast.setAttribute("role", "status");
   toast.innerHTML = `
-    <span class="collection-toast-sigil" style="--sigil:url('${escapeAttr(sealSigilPath(id))}')"></span>
+    <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">Seal unlocked</span>
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
@@ -15152,7 +15164,7 @@ function renderCollectionScreen(from) {
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
                 return `
                   <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}" aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
-                    <span class="collection-sigil" style="--sigil:url('${escapeAttr(sealSigilPath(id))}')"></span>
+                    <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
               })

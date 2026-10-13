@@ -686,6 +686,7 @@ function startGame(options = {}) {
   state.runStartedAt = Date.now();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
+  state.devUnlockAllSeals = false;
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;

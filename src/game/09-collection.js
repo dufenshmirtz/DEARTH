@@ -144,6 +144,8 @@ function isUnlockableSeal(id) {
 
 function isSealUnlocked(id) {
   if (!isUnlockableSeal(id)) return true;
+  // Pause > Unlock (testing): every SEAL counts as unlocked for the rest of this run
+  if (state.devUnlockAllSeals && state.mode !== "menu") return true;
   return loadCollectionProgress().unlocked.includes(id);
 }
 
@@ -263,7 +265,7 @@ function showNextCollectionToast() {
   toast.className = "collection-toast";
   toast.setAttribute("role", "status");
   toast.innerHTML = `
-    <span class="collection-toast-sigil" style="--sigil:url('${escapeAttr(sealSigilPath(id))}')"></span>
+    <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">Seal unlocked</span>
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
@@ -344,7 +346,7 @@ function renderCollectionScreen(from) {
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
                 return `
                   <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}" aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
-                    <span class="collection-sigil" style="--sigil:url('${escapeAttr(sealSigilPath(id))}')"></span>
+                    <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
               })
