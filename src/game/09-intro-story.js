@@ -789,61 +789,77 @@ function introFinish() {
   saveArcadeRun();
 }
 
-/* ---------- Main menu: Jesus' eyes turn yellow on hover; a click replays the story ---------- */
-// Silhouette of the menu Jesus for hit testing: one [left, right] span per 32 px row of his frame (0 = none).
-const MENU_JESUS_HIT = {
-  cell: 32,
-  spans: [
+/* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
+   Clicking Jesus replays the story (triggerMenuJesus), clicking Satan opens the SEAL collection
+   (openCollectionFromMenu in 09-collection.js). */
+// Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
+const MENU_FIGURE_HIT = {
+  jesus: [
     [414, 500], [374, 543], [378, 558], [371, 545], [359, 541], [321, 527], [292, 498], [283, 437], [273, 429], [285, 437],
     [282, 447], [280, 452], [272, 459], [263, 476], [259, 498], [269, 495], [267, 503], [253, 507], [243, 515], [241, 522],
     [240, 523], [296, 495], [281, 494], [277, 494], [289, 499], [360, 500], [352, 502], [338, 506], [320, 511], [213, 461],
     [210, 560], [209, 560], [180, 560], [174, 560], [180, 560], [180, 560], [178, 560], [169, 560], 0
+  ],
+  satan: [
+    [260, 360], [278, 390], [222, 447], [232, 469], [268, 484], [275, 510], [304, 534], [381, 563], [381, 598], [380, 603],
+    [276, 598], [288, 591], [301, 587], [313, 583], [325, 578], [335, 587], [321, 603], [318, 638], [318, 651], [315, 639],
+    [312, 624], [306, 465], [304, 466], [298, 466], [294, 466], [309, 468], [320, 482], [327, 496], [322, 508], [323, 524],
+    [323, 503], [344, 493], [171, 604], [150, 650], [150, 650], [150, 650], [222, 650], 0
   ]
 };
-const menuJesusState = { bound: false, triggering: false };
+const MENU_FIGURE_HIT_CELL = 32;
+const menuFigureTrigger = { bound: false, busy: false };
 
-function menuJesusHit(clientX, clientY, target) {
-  if (state.mode !== "menu" || introActive() || menuJesusState.triggering) return false;
-  if (target?.closest?.(".main-menu-panel, .menu-version, button, input, a")) return false;
-  const fig = document.querySelector(".menu-fig-jesus");
-  if (!fig) return false;
-  const rect = fig.getBoundingClientRect();
-  const meta = MENU_FIGURES.jesus.meta;
-  const fx = ((clientX - rect.left) / rect.width) * meta.W;
-  const fy = ((clientY - rect.top) / rect.height) * meta.H;
-  if (fx < 0 || fy < 0 || fx > meta.W || fy > meta.H) return false;
-  const span = MENU_JESUS_HIT.spans[Math.floor(fy / MENU_JESUS_HIT.cell)];
-  return Boolean(span && fx >= span[0] && fx <= span[1]);
+// which menu figure (if any) is under the pointer
+function menuFigureAt(clientX, clientY, target) {
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen()) return null;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, button, input, a")) return null;
+  for (const name of Object.keys(MENU_FIGURE_HIT)) {
+    const fig = document.querySelector(`.menu-fig-${name}`);
+    if (!fig) continue;
+    const rect = fig.getBoundingClientRect();
+    const meta = MENU_FIGURES[name].meta;
+    const fx = ((clientX - rect.left) / rect.width) * meta.W;
+    const fy = ((clientY - rect.top) / rect.height) * meta.H;
+    if (fx < 0 || fy < 0 || fx > meta.W || fy > meta.H) continue;
+    const span = MENU_FIGURE_HIT[name][Math.floor(fy / MENU_FIGURE_HIT_CELL)];
+    if (span && fx >= span[0] && fx <= span[1]) return name;
+  }
+  return null;
 }
 
-function setMenuJesusLit(lit) {
-  const fig = document.querySelector(".menu-fig-jesus");
-  if (fig) fig.classList.toggle("eyes-lit", lit);
-  document.querySelector(".main-menu")?.classList.toggle("jesus-hover", lit);
+function setMenuFigureLit(name) {
+  for (const fig of Object.keys(MENU_FIGURE_HIT)) {
+    document.querySelector(`.menu-fig-${fig}`)?.classList.toggle("eyes-lit", fig === name);
+  }
+  document.querySelector(".main-menu")?.classList.toggle("figure-hover", Boolean(name));
 }
 
-function bindMenuJesusTrigger() {
-  if (menuJesusState.bound) return;
-  menuJesusState.bound = true;
+function bindMenuFigureTriggers() {
+  if (menuFigureTrigger.bound) return;
+  menuFigureTrigger.bound = true;
   document.addEventListener("pointermove", (event) => {
-    if (state.mode !== "menu" || menuJesusState.triggering) return;
-    setMenuJesusLit(menuJesusHit(event.clientX, event.clientY, event.target));
+    if (state.mode !== "menu" || menuFigureTrigger.busy) return;
+    setMenuFigureLit(menuFigureAt(event.clientX, event.clientY, event.target));
   });
   document.addEventListener("pointerdown", (event) => {
-    if (menuJesusHit(event.clientX, event.clientY, event.target)) setMenuJesusLit(true);
+    const name = menuFigureAt(event.clientX, event.clientY, event.target);
+    if (name) setMenuFigureLit(name);
   });
   document.addEventListener("click", (event) => {
-    if (!menuJesusHit(event.clientX, event.clientY, event.target)) return;
+    const name = menuFigureAt(event.clientX, event.clientY, event.target);
+    if (!name) return;
     event.preventDefault();
-    triggerMenuJesus();
+    if (name === "jesus") triggerMenuJesus();
+    else triggerMenuSatan();
   });
 }
 
 function triggerMenuJesus() {
   const fig = document.querySelector(".menu-fig-jesus");
   if (!fig) return;
-  menuJesusState.triggering = true;
-  setMenuJesusLit(true);
+  menuFigureTrigger.busy = true;
+  setMenuFigureLit("jesus");
   fig.classList.add("eyes-flare");
   playGameSfx("menuJesusFlash");
   if (soundtrackAudio) duckMusic(1200);
@@ -865,7 +881,7 @@ function triggerMenuJesus() {
     flash.classList.add("fading");
     setTimeout(() => flash.remove(), 1400);
     fig.classList.remove("eyes-flare");
-    setMenuJesusLit(false);
-    menuJesusState.triggering = false;
+    setMenuFigureLit(null);
+    menuFigureTrigger.busy = false;
   }, 520);
 }

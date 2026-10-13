@@ -126,7 +126,10 @@ const GAME_SFX = {
   introEvil: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
   introLaugh: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "big", rate: 0.84 },
   introBurn: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
-  menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" }
+  menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" },
+  // SEAL collection: a SEAL unlocked for good; Satan opening the collection from the menu
+  sealUnlock: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "item" },
+  menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)

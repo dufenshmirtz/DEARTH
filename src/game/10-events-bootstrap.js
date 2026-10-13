@@ -123,6 +123,7 @@ function bindEvents() {
   if (pauseButton) {
     bindOn(pauseButton, "click", () => {
       state.pauseOpen = true;
+      state.pauseScreen = "main";
       render();
     });
   }
@@ -162,6 +163,7 @@ function bindEvents() {
   });
 
   bindPvpEvents();
+  bindCollectionEvents();
 
   const mainAction = document.querySelector("#mainAction");
   if (mainAction) {

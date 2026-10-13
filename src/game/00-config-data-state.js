@@ -1761,6 +1761,8 @@ const state = {
     outlineBoil: 2
   },
   pauseOpen: false,
+  pauseScreen: "main",
+  menuCollectionOpen: false,
   pauseDevOpen: false,
   round: 1,
   stage: "guess",

@@ -148,6 +148,8 @@ function arcadeRunSaveSnapshot() {
   });
   snapshot.mode = "arcade";
   snapshot.pauseOpen = false;
+  snapshot.pauseScreen = "main";
+  snapshot.menuCollectionOpen = false;
   snapshot.pauseDevOpen = false;
   snapshot.mobileOfferingsOpen = false;
   return snapshot;

@@ -167,6 +167,7 @@ function renderMenuApp() {
       </section>
     </main>
     ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
+    ${state.menuCollectionOpen ? renderCollectionScreen("menu") : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
@@ -656,6 +657,23 @@ function renderMobileNumpad() {
 
 function renderPauseMenu() {
   if (!state.pauseOpen) return "";
+  const screen = state.pauseScreen || "main";
+  if (screen === "collection") return renderCollectionScreen("pause");
+  if (screen === "settings") {
+    return `
+    <div class="overlay visible pause-overlay">
+      <section class="end-card pause-card pause-settings-card">
+        <h1 class="end-title">Settings</h1>
+        <div class="pause-sound-settings">
+          ${renderSoundSettings("pause")}
+        </div>
+        <div class="pause-actions pause-back-row">
+          <button class="primary-button" data-pause-action="back">Back</button>
+        </div>
+      </section>
+    </div>
+  `;
+  }
   const modeButton = state.mode === "pvp" ? "Arcade" : "PvP";
   const modeAction = state.mode === "pvp" ? "arcade" : "pvp";
   const modeSwitchButton = isNativeArcadeApp()
@@ -670,10 +688,9 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="resume">Resume</button>
           <button class="primary-button" data-pause-action="restart">Restart</button>
           ${modeSwitchButton}
+          <button class="primary-button" data-pause-action="collection">Collection</button>
+          <button class="primary-button" data-pause-action="settings">Settings</button>
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
-        </div>
-        <div class="pause-sound-settings">
-          ${renderSoundSettings("pause")}
         </div>
         ${state.pauseDevOpen ? renderSelfStackingDevPanel() : ""}
       </section>
@@ -1492,6 +1509,7 @@ function afterRenderEffects() {
   watchSealTrigger();
   watchMoments();
   introAfterRender();
+  collectionAfterRender();
 }
 
 function renderTopbar() {
@@ -2293,6 +2311,16 @@ function updateSoundSetting(key, value, renderAfter = true) {
 }
 
 function handlePauseAction(action) {
+  if (action === "settings" || action === "collection") {
+    state.pauseScreen = action;
+    render();
+    return;
+  }
+  if (action === "back") {
+    state.pauseScreen = "main";
+    render();
+    return;
+  }
   if (action === "dev") {
     state.pauseDevOpen = !state.pauseDevOpen;
     render();
@@ -2300,6 +2328,7 @@ function handlePauseAction(action) {
   }
   if (action === "resume") {
     state.pauseOpen = false;
+    state.pauseScreen = "main";
     render();
     return;
   }
@@ -2393,7 +2422,7 @@ function initMenuBackdrop() {
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
   initMenuFigures(menuReducedMotion());
-  bindMenuJesusTrigger();
+  bindMenuFigureTriggers();
   if (!menuBackdropState.resizeBound) {
     menuBackdropState.resizeBound = true;
     window.addEventListener("resize", layoutMenuBackdrop);
@@ -2538,10 +2567,8 @@ function renderMenuFigure(name) {
       </div>` : "";
   const claw = m.claw ? `<div class="fig-group fig-claw-group" style="${origin(m.claw_pivot)}">${part("claw")}</div>` : "";
   const crown = m.crown ? part("crown", "crown-shimmer") : "";
-  // Jesus' eyes: turn yellow while the pointer is on him (see bindMenuJesusTrigger)
-  const eyes = name === "jesus"
-    ? `<img class="fig-part fig-eyes" src="assets/ui/menu/jesus-eyes.webp" alt="" style="left:${m.head.x}px;top:${m.head.y}px;width:${m.head.w}px;height:${m.head.h}px">`
-    : "";
+  // eyes that light up while the pointer is on the figure (Jesus yellow, Satan red; see bindMenuFigureTriggers)
+  const eyes = `<img class="fig-part fig-eyes" src="assets/ui/menu/${name}-eyes.webp" alt="" style="left:${m.head.x}px;top:${m.head.y}px;width:${m.head.w}px;height:${m.head.h}px">`;
   return `
     <div class="menu-fig menu-fig-${name}" data-fig="${name}"
          style="left:${f.stage.left - P * k}px;top:${f.stage.top - P * k}px;width:${m.W}px;height:${m.H}px;transform:scale(${k})">

@@ -612,6 +612,8 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (!item) return;
   playArtifactSfx(item.id);
   recordPlayedArtifact(item.id);
+  // Seal of Valac never triggers on its own; using ARTIFACTS while holding it is what it does
+  if (passiveStack("p25")) collectionDiscover("p25");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);

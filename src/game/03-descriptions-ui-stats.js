@@ -1154,6 +1154,8 @@ function sealStatsFor(id) {
 function recordSealStat(id, kind, amount) {
   const value = Math.max(0, Math.ceil(amount));
   if (!PASSIVE_IDS.includes(id) || value <= 0) return;
+  // a SEAL that did damage / healed / paid SIN has been seen working: discovered
+  collectionDiscover(id);
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats[kind] = (stats[kind] || 0) + value;
@@ -1162,6 +1164,7 @@ function recordSealStat(id, kind, amount) {
 
 function recordSealTrigger(id) {
   if (!PASSIVE_IDS.includes(id)) return;
+  collectionDiscover(id);
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats.triggers = (stats.triggers || 0) + 1;

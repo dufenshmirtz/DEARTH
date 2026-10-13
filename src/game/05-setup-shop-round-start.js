@@ -380,7 +380,8 @@ function drawActiveShopItem() {
 }
 
 function drawPassiveShopItem(eliteBoosted = false) {
-  const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id));
+  // locked SEALS (see SEAL_UNLOCKS in 09-collection.js) never show up until unlocked
+  const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && !isSealLocked(id));
   const availablePool = passivePool.filter((id) => !isSelfStackingSeal(id) || directPassiveStack(id) === 0);
   const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isSelfStackingSeal(id));
   const freshPassives = availablePool.filter((id) => directPassiveStack(id) === 0);

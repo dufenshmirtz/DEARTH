@@ -276,6 +276,33 @@ Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBOR
 Seal of Zachriel Triangle (15 SIN)
 Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
 
+Unlockable Seals
+
+These SEALS start locked and never appear in the Devil's Offerings until their achievement is met once; then they stay unlocked forever. The list lives in SEAL_UNLOCKS (src/game/09-collection.js).
+
+Seal of Zilon: Eliminate the BOSS Zilon.
+Seal of Dantre: Eliminate the BOSS Dantre.
+Seal of Pyros: Eliminate the BOSS Pyros.
+Seal of Threon: Eliminate the BOSS Threon.
+Seal of Serafeim: Eliminate the BOSS Serafeim.
+Seal of Padma: Eliminate the BOSS Padma.
+Seal of Petros-Pavlos: Eliminate both twin BOSSES, Petros and Pavlos.
+Seal of Satan: Reach the final table against Jesus and Satan.
+Seal of the White Horse: Eliminate 100 DAMNED across all runs.
+Seal of the Red Horse: Deal 300 damage in a single round.
+Seal of the Black Horse: Hold 60 SIN at once.
+Seal of the Pale Horse: Die at the table.
+Seal of the Souls of Martyrs: End a round alive with 10 HEALTH or less.
+Seal of Creation Uncreated: Reach round 25.
+Seal of Silence in Heaven: Eliminate 3 Goetic demon BOSSES in one run.
+Seal of Samael Star: Score 10 CRITICALS across all runs.
+Seal of Cassiel Sigil: See a DAMNED reach 15 MEMORY.
+Seal of Bethor: See the DAMNED carry 60 BOUNTY between them.
+Seal of Aggiel Hexagram: Score 3 PENTAKILLS across all runs.
+Seal of Zachriel Triangle: Eliminate 30 DAMNED in a single run.
+Seal of Cassiel Pentagram: Use 100 ARTIFACTS across all runs.
+Seal of Samael Triangle: Eliminate 20 STUBBORN DAMNED across all runs.
+
 Artifacts
 
 Black Candle (4 SIN)

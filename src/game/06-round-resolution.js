@@ -245,6 +245,7 @@ function applyPenalties() {
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   if (playerCritThisRound) {
+    collectionBump("criticals");
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
@@ -398,6 +399,7 @@ function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
   updateArcadeRecordsFromCurrentRun();
   removeArcadeRunSlot(state.currentRunSlotId);
+  collectionBump("deaths");
   state.gameOver = true;
   state.inspectingGameOver = false;
   state.stage = "ended";
@@ -556,6 +558,7 @@ function resolveEliminatedBots(eliminated) {
     const rewardDetails = bot.skipEliminationReward ? { amount: 0, sourceEntries: [] } : botRewardDetails(bot, true);
     const reward = rewardDetails.amount > 0 ? gainEliminationCreditsFromSourceEntries(rewardDetails.sourceEntries, true) : 0;
     state.eliminations += 1;
+    collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
     state.roundState.eliminatedPersonalities.push(personalityType(bot));
