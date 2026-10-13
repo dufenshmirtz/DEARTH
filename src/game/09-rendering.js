@@ -2576,7 +2576,10 @@ function renderMenuFigure(name) {
   const claw = m.claw ? `<div class="fig-group fig-claw-group" style="${origin(m.claw_pivot)}">${part("claw")}</div>` : "";
   const crown = m.crown ? part("crown", "crown-shimmer") : "";
   // eyes that light up while the pointer is on the figure (Jesus yellow, Satan red; see bindMenuFigureTriggers)
-  const eyes = `<img class="fig-part fig-eyes" src="assets/ui/menu/${name}-eyes.webp" alt="" style="left:${m.head.x}px;top:${m.head.y}px;width:${m.head.w}px;height:${m.head.h}px">`;
+  const eyeBox = `left:${m.head.x}px;top:${m.head.y}px;width:${m.head.w}px;height:${m.head.h}px`;
+  // Satan's eyes also get a soft bloom layer that breathes while they glow
+  const eyes = `<img class="fig-part fig-eyes" src="assets/ui/menu/${name}-eyes.webp" alt="" style="${eyeBox}">` +
+    (name === "satan" ? `<img class="fig-part fig-eyes-bloom" src="assets/ui/menu/${name}-eyes.webp" alt="" style="${eyeBox}">` : "");
   return `
     <div class="menu-fig menu-fig-${name}" data-fig="${name}"
          style="left:${f.stage.left - P * k}px;top:${f.stage.top - P * k}px;width:${m.W}px;height:${m.H}px;transform:scale(${k})">

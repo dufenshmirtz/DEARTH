@@ -9231,7 +9231,7 @@ body.intro-crt-on #app {
 .intro-box-pact {
   position: fixed;
   padding: 22px 24px;
-  animation: intro-pact-in 0.9s ease-out both;
+  animation: intro-pact-in 1.1s ease-out both;
 }
 
 .intro-box-pact::before {
@@ -9253,11 +9253,9 @@ body.intro-crt-on #app {
 }
 
 @keyframes intro-pact-in {
-  0% { opacity: 0; filter: brightness(3); }
-  18% { opacity: 0.8; }
-  26% { opacity: 0.2; }
-  40% { opacity: 1; filter: brightness(1.6); }
-  100% { opacity: 1; filter: none; }
+  0% { opacity: 0; filter: brightness(1.8) blur(2px); transform: translateY(8px); }
+  60% { opacity: 1; filter: brightness(1.15); }
+  100% { opacity: 1; filter: none; transform: none; }
 }
 
 .intro-box-pact.intro-box-pulse::after {
@@ -9449,7 +9447,7 @@ body.mobile-arcade .intro-box-pact::before {
   aspect-ratio: 768 / 1195;
   max-width: 34vw;
   pointer-events: none;
-  animation: intro-satan-in 1.1s ease-out both;
+  animation: intro-satan-in 2.2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
 }
 
 /* a pool of darkness behind him so the table does not show through his lines */
@@ -9470,6 +9468,16 @@ body.mobile-arcade .intro-box-pact::before {
   -webkit-user-drag: none;
   filter: brightness(0.62) drop-shadow(0 0 18px rgba(200, 20, 20, 0.25));
   transition: filter 0.7s ease;
+  /* he rises out of his circle: a soft edge sweeps up from the feet to the horns */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 38%, #000 62%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 38%, #000 62%, #000 100%);
+  -webkit-mask-size: 100% 260%;
+  mask-size: 100% 260%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 100%;
+  mask-position: 0 100%;
+  animation: intro-satan-rise 2.2s cubic-bezier(0.3, 0.55, 0.25, 1) both;
 }
 
 .intro-pact-layer[data-speaker="satan"] .intro-satan img {
@@ -9477,11 +9485,14 @@ body.mobile-arcade .intro-box-pact::before {
 }
 
 @keyframes intro-satan-in {
-  0% { opacity: 0; transform: translateY(10px); filter: brightness(3); }
-  18% { opacity: 0.7; }
-  26% { opacity: 0.15; }
-  45% { opacity: 1; filter: brightness(1.5); }
-  100% { opacity: 1; transform: none; filter: none; }
+  0% { opacity: 0; filter: blur(5px); }
+  55% { opacity: 1; }
+  100% { opacity: 1; filter: none; }
+}
+
+@keyframes intro-satan-rise {
+  0% { -webkit-mask-position: 0 0%; mask-position: 0 0%; transform: translateY(22px); }
+  100% { -webkit-mask-position: 0 100%; mask-position: 0 100%; transform: none; }
 }
 
 .intro-pact-leaving .intro-satan {
@@ -9489,9 +9500,9 @@ body.mobile-arcade .intro-box-pact::before {
 }
 
 @keyframes intro-satan-out {
-  0% { opacity: 1; filter: none; }
-  30% { opacity: 1; filter: brightness(1.7); }
-  100% { opacity: 0; filter: brightness(0.3) blur(3px); }
+  0% { opacity: 1; filter: none; transform: none; }
+  25% { opacity: 1; filter: brightness(1.35); }
+  100% { opacity: 0; filter: brightness(0.4) blur(4px); transform: translateY(16px); }
 }
 
 body.mobile-arcade .intro-satan {
@@ -9905,34 +9916,93 @@ body.mobile-arcade .collection-grid {
   color: #ece6d8 !important;
 }
 
-/* main menu Satan: red eyes on hover, a red pulse when he opens the collection */
+/* main menu Satan: the eyes kindle on hover (with a breathing bloom), flare on click,
+   then a dark red bloom swells from them and the collection surfaces */
 .menu-fig-satan .fig-eyes {
-  filter: drop-shadow(0 0 2px rgba(255, 40, 30, 0.95)) drop-shadow(0 0 7px rgba(230, 20, 10, 0.7)) !important;
+  filter: drop-shadow(0 0 1.5px rgba(255, 60, 40, 0.9)) !important;
+  transition: opacity 0.45s ease, filter 0.45s ease, transform 0.45s ease;
+}
+
+.menu-fig .fig-eyes-bloom {
+  opacity: 0;
+  mix-blend-mode: screen;
+  filter: blur(4px) brightness(1.5) saturate(1.3);
+  transform: scale(1.04);
+  transition: opacity 0.6s ease;
+  pointer-events: none;
 }
 
 .menu-fig-satan.eyes-lit .fig-eyes {
   opacity: 1;
 }
 
+.menu-fig-satan.eyes-lit .fig-eyes-bloom {
+  opacity: 0.85;
+  animation: satan-eye-breathe 2.6s ease-in-out 0.45s infinite;
+}
+
+@keyframes satan-eye-breathe {
+  0%, 100% { opacity: 0.85; }
+  40% { opacity: 0.55; }
+  55% { opacity: 0.95; }
+}
+
 .menu-fig-satan.eyes-flare .fig-eyes {
   opacity: 1;
-  filter: brightness(1.5) drop-shadow(0 0 4px #ff8a70) drop-shadow(0 0 14px rgba(255, 30, 20, 1)) drop-shadow(0 0 30px rgba(220, 0, 0, 0.9)) !important;
+  filter: brightness(1.35) drop-shadow(0 0 2px #ff9a80) !important;
 }
 
-.menu-satan-pulse {
+.menu-fig-satan.eyes-flare .fig-eyes-bloom {
+  opacity: 1;
+  animation: none;
+  filter: blur(7px) brightness(2.2) saturate(1.4);
+  transform: scale(1.12);
+  transition: opacity 0.2s ease, filter 0.45s ease, transform 0.45s ease;
+}
+
+.menu-satan-veil {
   position: fixed;
   inset: 0;
-  z-index: 30004;
+  z-index: 30010;
   pointer-events: none;
-  background: radial-gradient(ellipse at 72% 30%, rgba(200, 10, 10, 0.55), rgba(90, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0) 75%);
-  animation: menu-satan-pulse 0.9s ease-out both;
+  overflow: hidden;
 }
 
-@keyframes menu-satan-pulse {
-  0% { opacity: 0; }
-  30% { opacity: 1; }
+.menu-satan-veil::before {
+  content: "";
+  position: absolute;
+  left: var(--veil-x, 72%);
+  top: var(--veil-y, 25%);
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  /* dark core with a hot red rim that sweeps outward like a shockwave */
+  background: radial-gradient(circle closest-side, #0d0000 0, #1c0000 58%, rgba(150, 10, 6, 0.95) 76%, rgba(230, 30, 15, 0.9) 84%, rgba(120, 0, 0, 0.45) 92%, rgba(0, 0, 0, 0) 100%);
+  transform: scale(0.3);
+  animation: menu-satan-bloom 0.64s cubic-bezier(0.55, 0, 0.75, 0.4) forwards;
+}
+
+@keyframes menu-satan-bloom {
+  0% { transform: scale(0.4); opacity: 0; }
+  18% { transform: scale(3); opacity: 1; }
+  100% { transform: scale(240); opacity: 1; }
+}
+
+.menu-satan-veil.clearing {
+  background: #0d0000;
+  animation: menu-satan-clear 0.85s ease-out forwards;
+}
+
+.menu-satan-veil.clearing::before {
+  display: none;
+}
+
+@keyframes menu-satan-clear {
+  0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
 
 /* pause: the test-only Unlock button, top-left corner (DEV is top-right) */
 #app .pause-card > .pause-unlock-button {
@@ -9952,4 +10022,8 @@ body.mobile-arcade .collection-grid {
   opacity: 0.85;
   color: #e0383d !important;
   cursor: default;
+}
+
+.collection-seal.wide .collection-lock {
+  width: 13%;
 }

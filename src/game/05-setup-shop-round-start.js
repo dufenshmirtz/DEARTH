@@ -44,6 +44,7 @@ function applySerafimEntrySteal(bot) {
     Math.ceil(Math.max(0, state.player.credits || 0) / 2),
     uniquePowerSourceName(bot, "serafim")
   );
+  collectionNoteSerafimEntry(bot, stolen);
   if (stolen <= 0) return;
   const hpGain = stolen * 2;
   bot.maxHp += hpGain;
@@ -327,6 +328,7 @@ function applyPyrosBuffs() {
   const target = randomFrom(candidates);
   const key = grantRandomPyrosGift(target);
   if (!key) return;
+  target.pyrosGifted = true;
   if (state.roundState) {
     state.roundState.pyrosGiftGranted = true;
     state.roundState.roundEvents.push(`${pyrosSource.name} gave ${target.name} ${botPassiveKeyName(key)}.`);
@@ -334,6 +336,7 @@ function applyPyrosBuffs() {
 }
 
 function rerollShop() {
+  collectionNoteShopReroll();
   if (shopDisabledBySatan()) {
     state.shop = [];
     return;
@@ -405,6 +408,7 @@ function spendCredits(amount) {
   const cost = Math.max(0, Math.ceil(amount));
   if (!canSpendCredits(cost)) return false;
   state.player.credits -= cost;
+  collectionNoteSpend(cost);
   applyCreditLashSpent(cost);
   return true;
 }
@@ -687,6 +691,7 @@ function startGame(options = {}) {
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
+  resetCollectionRun();
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
@@ -745,6 +750,7 @@ function startGame(options = {}) {
 
 function beginRound() {
   beginRunRoundStats();
+  collectionBeginRound();
   resetNegativePlaytestSin();
   pruneRemovedPassives();
   state.stage = "guess";

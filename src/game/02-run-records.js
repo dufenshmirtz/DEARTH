@@ -167,7 +167,7 @@ function recordRunSealDamage(id, amount) {
 function recordRunPentakill() {
   if (state.mode !== "arcade") return;
   ensureRunStats().pentakills += 1;
-  collectionBump("pentakills");
+  collectionNotePentakill();
 }
 
 function recordPlayedSeal(id) {
@@ -180,7 +180,6 @@ function recordPlayedArtifact(id) {
   if (!id || state.mode !== "arcade") return;
   const stats = ensureRunStats();
   stats.artifactPlays[id] = (Number(stats.artifactPlays[id]) || 0) + 1;
-  collectionBump("artifactsUsed");
 }
 
 function recordEliteLevelBought(id, stack) {

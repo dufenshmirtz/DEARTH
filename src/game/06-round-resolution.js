@@ -245,7 +245,6 @@ function applyPenalties() {
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   if (playerCritThisRound) {
-    collectionBump("criticals");
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
@@ -399,7 +398,6 @@ function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
   updateArcadeRecordsFromCurrentRun();
   removeArcadeRunSlot(state.currentRunSlotId);
-  collectionBump("deaths");
   state.gameOver = true;
   state.inspectingGameOver = false;
   state.stage = "ended";

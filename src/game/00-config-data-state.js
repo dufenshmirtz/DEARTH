@@ -1765,6 +1765,7 @@ const state = {
   menuCollectionOpen: false,
   pauseDevOpen: false,
   devUnlockAllSeals: false,
+  collectionRun: null,
   round: 1,
   stage: "guess",
   player: {

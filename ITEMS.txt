@@ -280,28 +280,28 @@ Unlockable Seals
 
 These SEALS start locked and never appear in the Devil's Offerings until their achievement is met once; then they stay unlocked forever. The list lives in SEAL_UNLOCKS (src/game/09-collection.js).
 
-Seal of Zilon: Eliminate the BOSS Zilon.
-Seal of Dantre: Eliminate the BOSS Dantre.
-Seal of Pyros: Eliminate the BOSS Pyros.
-Seal of Threon: Eliminate the BOSS Threon.
-Seal of Serafeim: Eliminate the BOSS Serafeim.
-Seal of Padma: Eliminate the BOSS Padma.
-Seal of Petros-Pavlos: Eliminate both twin BOSSES, Petros and Pavlos.
-Seal of Satan: Reach the final table against Jesus and Satan.
-Seal of the White Horse: Eliminate 100 DAMNED across all runs.
-Seal of the Red Horse: Deal 300 damage in a single round.
-Seal of the Black Horse: Hold 60 SIN at once.
-Seal of the Pale Horse: Die at the table.
-Seal of the Souls of Martyrs: End a round alive with 10 HEALTH or less.
-Seal of Creation Uncreated: Reach round 25.
-Seal of Silence in Heaven: Eliminate 3 Goetic demon BOSSES in one run.
-Seal of Samael Star: Score 10 CRITICALS across all runs.
-Seal of Cassiel Sigil: See a DAMNED reach 15 MEMORY.
-Seal of Bethor: See the DAMNED carry 60 BOUNTY between them.
-Seal of Aggiel Hexagram: Score 3 PENTAKILLS across all runs.
-Seal of Zachriel Triangle: Eliminate 30 DAMNED in a single run.
-Seal of Cassiel Pentagram: Use 100 ARTIFACTS across all runs.
-Seal of Samael Triangle: Eliminate 20 STUBBORN DAMNED across all runs.
+Seal of the White Horse: Spend 160 SIN in one round.
+Seal of the Red Horse: Have exactly 1 HEALTH.
+Seal of the Black Horse: Score 8 CRITICAL hits in a row.
+Seal of the Pale Horse: Eliminate a BOSS that was at max HEALTH.
+Seal of the Souls of Martyrs: Be at 100 HEALTH and eliminate a DAMNED.
+Seal of Creation Uncreated: Beat the game without using a single ARTIFACT (defeat the 8 BOSSES).
+Seal of Silence in Heaven: Score 3 PENTAKILLS in a row.
+Seal of Dantre: Score a PENTAKILL while Dantre is active.
+Seal of Zilon: Buy out three entire Devil's Offerings while Zilon is active.
+Seal of Serafeim: Have Serafeim steal 0 SIN from you when he is first summoned.
+Seal of Pyros: Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability.
+Seal of Padma: Don't get a KO for 8 rounds in a row.
+Seal of Threon: Use 4 ARTIFACTS in one round while Threon is active.
+Seal of Petros-Pavlos: Have 5 BOSSES active at the same time.
+Seal of Satan: Have 666 SIN.
+Seal of Samael Star: Score 3 CRITICAL hits in a row.
+Seal of Cassiel Sigil: Beat the game 8 times (defeat the 8 BOSSES).
+Seal of Bethor: Get a SEAL to ELITE level 6.
+Seal of Aggiel Hexagram: Eliminate 66 demons (Goetic BOSSES) in total.
+Seal of Zachriel Triangle: Eliminate 666 DAMNED in total.
+Seal of Samael Triangle: Eliminate 8 DAMNED named Yannis in total.
+Seal of Kalha (not made yet): Get six SEALS that are all ELITE level 1 or more.
 
 Artifacts
 

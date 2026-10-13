@@ -7,69 +7,80 @@
    discovered (red).
 
    To lock another SEAL or change an achievement, edit SEAL_UNLOCKS below. Each entry is one of:
-     stat: lifetime counter across all runs   (COLLECTION_STAT_LABELS lists them)
-     best: best value reached in any one run  (COLLECTION_BEST_LABELS lists them)
-     bosses: unique BOSS keys that must have been eliminated (any run)
-     flag: something that happened at least once (finalTable, martyr)
-   with `goal` for stat/best. */
+     stat: lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
+     best: best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
+     flag: something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
+   with `goal` for stat/best. A new kind of achievement needs its counter recorded below
+   (search for collectionBump / collectionRaise / collectionFlag). */
 
-const COLLECTION_STORAGE_KEY = "dearthCollectionV1";
+const COLLECTION_STORAGE_KEY = "dearthCollectionV2";
+const COLLECTION_OLD_STORAGE_KEYS = ["dearthCollectionV1"]; // discovered SEALS are carried over
 
 const SEAL_UNLOCKS = {
-  // unique BOSS seals: beat the BOSS
-  p93: { bosses: ["zilon"], text: "Eliminate the BOSS Zilon." },
-  p92: { bosses: ["dantre"], text: "Eliminate the BOSS Dantre." },
-  p95: { bosses: ["pyros"], text: "Eliminate the BOSS Pyros." },
-  p97: { bosses: ["threon"], text: "Eliminate the BOSS Threon." },
-  p94: { bosses: ["serafim"], text: "Eliminate the BOSS Serafeim." },
-  p96: { bosses: ["padma"], text: "Eliminate the BOSS Padma." },
-  p110: { bosses: ["petros", "pavlos"], text: "Eliminate both twin BOSSES, Petros and Pavlos." },
-  // Seal of Satan
-  p111: { flag: "finalTable", text: "Reach the final table against Jesus and Satan." },
-  // the Seven Seals of Revelation
-  p74: { stat: "eliminations", goal: 100, text: "Eliminate 100 DAMNED across all runs." },
-  p75: { best: "roundDamage", goal: 300, text: "Deal 300 damage in a single round." },
-  p76: { best: "sinHeld", goal: 60, text: "Hold 60 SIN at once." },
-  p77: { stat: "deaths", goal: 1, text: "Die at the table." },
-  p78: { flag: "martyr", text: "End a round alive with 10 HEALTH or less." },
-  p79: { best: "round", goal: 25, text: "Reach round 25." },
-  p80: { best: "goeticInRun", goal: 3, text: "Eliminate 3 Goetic demon BOSSES in one run." },
-  // the angelic, self-stacking seals
-  p98: { stat: "criticals", goal: 10, text: "Score 10 CRITICALS across all runs." },
-  p99: { best: "maxMemory", goal: 15, text: "See a DAMNED reach 15 MEMORY." },
-  p100: { best: "bountySum", goal: 60, text: "See the DAMNED carry 60 BOUNTY between them." },
-  p101: { stat: "pentakills", goal: 3, text: "Score 3 PENTAKILLS across all runs." },
-  p102: { best: "eliminationsInRun", goal: 30, text: "Eliminate 30 DAMNED in a single run." },
-  p103: { stat: "artifactsUsed", goal: 100, text: "Use 100 ARTIFACTS across all runs." },
-  p109: { stat: "stubbornEliminations", goal: 20, text: "Eliminate 20 STUBBORN DAMNED across all runs." }
+  // Apocalypse Seals
+  p74: { best: "roundSpent", goal: 160, text: "Spend 160 SIN in one round." },
+  p75: { flag: "oneHealth", text: "Have exactly 1 HEALTH." },
+  p76: { best: "critStreak", goal: 8, text: "Score 8 CRITICAL hits in a row." },
+  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max HEALTH." },
+  p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
+  p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
+  // Boss Seals
+  p92: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
+  p93: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
+  p94: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
+  p95: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
+  p96: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
+  p97: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
+  p110: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  // Satan Seals
+  p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
+  p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
+  p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
+  p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
+  p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
+  p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
+  p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
+  // Still to come: "Get six SEALS that are all ELITE level 1 or more" for a Seal of Kalha
+  // (there is no Seal of Kalha yet; the counter is recorded as flag sixEliteSeals).
 };
 
 const COLLECTION_STAT_LABELS = {
   eliminations: "DAMNED eliminated",
-  stubbornEliminations: "STUBBORN DAMNED eliminated",
-  criticals: "CRITICALS",
-  pentakills: "PENTAKILLS",
-  artifactsUsed: "ARTIFACTS used",
-  deaths: "deaths"
+  yannisKills: "Yannis eliminated",
+  goeticKills: "Goetic BOSSES eliminated",
+  gamesBeaten: "games beaten"
 };
 
 const COLLECTION_BEST_LABELS = {
-  round: "best round",
-  roundDamage: "best round damage",
+  roundSpent: "most SIN spent in a round",
   sinHeld: "most SIN held",
-  eliminationsInRun: "most eliminations in a run",
-  goeticInRun: "most Goetic BOSSES in a run",
-  maxMemory: "highest MEMORY seen",
-  bountySum: "most BOUNTY on the table"
+  critStreak: "CRITICALS in a row",
+  pentakillStreak: "PENTAKILLS in a row",
+  noKoStreak: "rounds in a row without a KO",
+  bossesAtOnce: "BOSSES active at once",
+  eliteLevel: "highest ELITE level"
 };
 
-// sections of the collection, in order; any purchasable SEAL not listed lands in "Goetic Seals"
+const COLLECTION_FLAG_LABELS = {
+  oneHealth: "had exactly 1 HEALTH",
+  fullHealthBossKill: "one-shot a full-HEALTH BOSS",
+  fullHealthKill: "eliminated at 100 HEALTH",
+  beatNoArtifacts: "beat the game with no ARTIFACTS",
+  dantrePentakill: "PENTAKILL with Dantre active",
+  zilonBuyouts: "3 buyouts with Zilon active",
+  serafimNoSteal: "Serafeim stole nothing",
+  pyrosGiftBossKill: "beat a PYROS-TECH BOSS",
+  threonArtifacts: "4 ARTIFACTS with Threon active",
+  sixEliteSeals: "six ELITE SEALS"
+};
+
+// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Player Seals"
 const COLLECTION_SECTIONS = [
-  { key: "goetic", title: "Goetic Seals" },
-  { key: "revelation", title: "The Seven Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
-  { key: "angelic", title: "Angelic Sigils", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
-  { key: "bosses", title: "Seals of the Bosses", ids: ["p93", "p92", "p95", "p97", "p94", "p96", "p110"] },
-  { key: "satan", title: "The Seal of Satan", ids: ["p111"] }
+  { key: "player", title: "Player Seals" },
+  { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
+  { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  { key: "satan", title: "Satan Seals", ids: ["p111", "p101", "p100", "p103", "p99", "p98", "p109", "p102"] }
 ];
 
 /* ---- stored progress ---- */
@@ -77,12 +88,11 @@ let collectionProgressCache = null;
 
 function defaultCollectionProgress() {
   return {
-    version: 1,
+    version: 2,
     unlocked: [],
     discovered: [],
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
-    bosses: [],
     flags: {}
   };
 }
@@ -90,15 +100,12 @@ function defaultCollectionProgress() {
 function loadCollectionProgress() {
   if (collectionProgressCache) return collectionProgressCache;
   const progress = defaultCollectionProgress();
-  let fresh = true;
   try {
     const raw = window.localStorage?.getItem(COLLECTION_STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      fresh = false;
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
-      if (Array.isArray(saved.bosses)) progress.bosses = saved.bosses.filter((key) => typeof key === "string");
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       for (const group of ["stats", "best"]) {
         const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
@@ -106,24 +113,16 @@ function loadCollectionProgress() {
           progress[group][key] = Math.max(0, Math.floor(Number(source[key]) || 0));
         });
       }
+    } else {
+      // the first version had other achievements: keep only what was discovered
+      COLLECTION_OLD_STORAGE_KEYS.forEach((key) => {
+        const old = JSON.parse(window.localStorage?.getItem(key) || "null");
+        if (Array.isArray(old?.discovered)) progress.discovered = old.discovered.filter((id) => typeof id === "string");
+      });
     }
   } catch (error) {}
   collectionProgressCache = progress;
-  // players from before the collection keep credit for what their records already show
-  if (fresh) seedCollectionFromRecords(progress);
   return progress;
-}
-
-function seedCollectionFromRecords(progress) {
-  try {
-    const records = loadArcadeRecords();
-    progress.best.round = Math.max(progress.best.round, records.highestRoundReached?.value || 0);
-    progress.best.roundDamage = Math.max(progress.best.roundDamage, records.mostSingleRoundDamage?.value || 0);
-    progress.best.eliminationsInRun = Math.max(progress.best.eliminationsInRun, records.mostEliminations?.value || 0);
-    progress.stats.pentakills = Math.max(progress.stats.pentakills, records.mostPentakills?.value || 0);
-  } catch (error) {}
-  evaluateSealUnlocks(false);
-  saveCollectionProgress();
 }
 
 function saveCollectionProgress() {
@@ -163,7 +162,6 @@ function sealUnlockProgress(id) {
   const progress = loadCollectionProgress();
   if (rule.stat) return { value: progress.stats[rule.stat] || 0, goal: rule.goal };
   if (rule.best) return { value: progress.best[rule.best] || 0, goal: rule.goal };
-  if (rule.bosses) return { value: rule.bosses.filter((key) => progress.bosses.includes(key)).length, goal: rule.bosses.length };
   if (rule.flag) return { value: progress.flags[rule.flag] ? 1 : 0, goal: 1 };
   return null;
 }
@@ -175,11 +173,16 @@ function sealUnlockMet(id) {
 
 /* ---- recording (called from the game) ---- */
 function collectionCounts() {
-  // only real arcade runs count: not PvP, not the story's tutorial rounds
+  // only real arcade runs count: not PvP, not the story's tutorial rounds, not infinite-SIN testing
   if (state.mode !== "arcade") return false;
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
+  if (typeof playtestMoneyModeActive === "function" && playtestMoneyModeActive()) return false;
   return true;
 }
+
+let collectionDirty = false;
+const collectionToastQueue = [];
+let collectionToastBusy = false;
 
 function collectionBump(stat, amount = 1) {
   if (!collectionCounts() || !(stat in COLLECTION_STAT_LABELS)) return;
@@ -188,14 +191,107 @@ function collectionBump(stat, amount = 1) {
   collectionDirty = true;
 }
 
+function collectionRaise(key, value) {
+  if (!collectionCounts() || !(key in COLLECTION_BEST_LABELS)) return;
+  const best = loadCollectionProgress().best;
+  const next = Math.max(0, Math.floor(Number(value) || 0));
+  if (next <= (best[key] || 0)) return;
+  best[key] = next;
+  collectionDirty = true;
+}
+
+function collectionFlag(key) {
+  if (!collectionCounts() || !(key in COLLECTION_FLAG_LABELS)) return;
+  const flags = loadCollectionProgress().flags;
+  if (flags[key]) return;
+  flags[key] = true;
+  collectionDirty = true;
+}
+
+// per-run counters (saved with the run)
+function collectionRun() {
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0 };
+  if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
+  else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  return state.collectionRun;
+}
+
+function resetCollectionRun() {
+  state.collectionRun = null;
+  collectionRun();
+}
+
+// a unique BOSS (alive or knocked out this round) is on the table
+function collectionBossPresent(key, aliveOnly = false) {
+  return (state.bots || []).some((bot) => bot?.isBoss && bot.uniqueKey === key && (!aliveOnly || (!bot.eliminated && bot.hp > 0)));
+}
+
+function collectionBeginRound() {
+  if (state.mode !== "arcade") return;
+  collectionRun().roundSpent = 0;
+  // BOSSES at full HEALTH when the round starts: knocking one out this round counts as a one-shot
+  (state.bots || []).forEach((bot) => {
+    if (bot?.isBoss) bot.fullHealthAtRoundStart = !bot.immortal && bot.hp >= bot.maxHp;
+  });
+}
+
+function collectionNoteSpend(cost) {
+  if (!collectionCounts() || !(cost > 0)) return;
+  const run = collectionRun();
+  run.roundSpent += cost;
+  collectionRaise("roundSpent", run.roundSpent);
+}
+
 function collectionNoteElimination(bot) {
   if (!collectionCounts() || !bot) return;
   collectionBump("eliminations");
-  if (personalityType(bot) === "Stubborn") collectionBump("stubbornEliminations");
-  if (bot.isBoss && bot.uniqueKey) {
-    const progress = loadCollectionProgress();
-    if (!progress.bosses.includes(bot.uniqueKey)) progress.bosses.push(bot.uniqueKey);
+  if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
+  if (state.player.hp >= 100) collectionFlag("fullHealthKill");
+  if (!bot.isBoss) return;
+  if (bot.goeticKey) collectionBump("goeticKills");
+  if (bot.fullHealthAtRoundStart) collectionFlag("fullHealthBossKill");
+  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionFlag("pyrosGiftBossKill");
+  if (bot.uniqueKey) {
+    const run = collectionRun();
+    if (!run.uniqueKills.includes(bot.uniqueKey)) run.uniqueKills.push(bot.uniqueKey);
+    // beating the game = all 8 unique BOSSES defeated in one run (Petros and Pavlos both)
+    const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
+    if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
+      run.beaten = true;
+      collectionBump("gamesBeaten");
+      if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
+    }
   }
+}
+
+function collectionNotePentakill() {
+  if (!collectionCounts()) return;
+  if (state.roundState) state.roundState.collectionPentakill = true;
+  if (collectionBossPresent("dantre")) collectionFlag("dantrePentakill");
+}
+
+function collectionNoteArtifactUse() {
+  if (!collectionCounts() || !state.roundState) return;
+  if ((state.roundState.activeUses || 0) >= 4 && collectionBossPresent("threon", true)) collectionFlag("threonArtifacts");
+}
+
+function collectionNoteShopBuy() {
+  if (!collectionCounts()) return;
+  const run = collectionRun();
+  const shop = state.shop || [];
+  if (!shop.length || run.buyoutCounted || !shop.every((slot) => slot?.sold)) return;
+  run.buyoutCounted = true;
+  if (!collectionBossPresent("zilon", true)) return;
+  run.zilonBuyouts += 1;
+  if (run.zilonBuyouts >= 3) collectionFlag("zilonBuyouts");
+}
+
+function collectionNoteShopReroll() {
+  if (state.mode === "arcade") collectionRun().buyoutCounted = false;
+}
+
+function collectionNoteSerafimEntry(bot, stolen) {
+  if (bot?.uniqueKey === "serafim" && !(stolen > 0)) collectionFlag("serafimNoSteal");
 }
 
 // a SEAL triggered: it is discovered for good
@@ -207,38 +303,26 @@ function collectionDiscover(id) {
   saveCollectionProgress();
 }
 
-let collectionDirty = false;
-const collectionToastQueue = [];
-let collectionToastBusy = false;
-
-// after every render of a run: note the bests, unlock what is now earned
+// after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
 function collectionAfterRender() {
   if (!collectionCounts()) return;
-  const progress = loadCollectionProgress();
-  const best = progress.best;
-  const raise = (key, value) => {
-    const next = Math.max(0, Math.floor(Number(value) || 0));
-    if (next > (best[key] || 0)) {
-      best[key] = next;
-      collectionDirty = true;
-    }
-  };
-  const stats = ensureRunStats();
-  raise("round", state.round);
-  raise("roundDamage", stats.singleRoundDamage);
-  raise("sinHeld", state.player.credits);
-  raise("eliminationsInRun", state.eliminations);
-  raise("goeticInRun", state.goeticBossKills);
-  const living = (state.bots || []).filter((bot) => bot && !bot.isBoss && !bot.eliminated && bot.hp > 0);
-  raise("maxMemory", Math.max(0, ...living.map((bot) => (Array.isArray(bot.memory) ? bot.memory.length : 0))));
-  raise("bountySum", living.reduce((sum, bot) => sum + botRegularBounty(bot), 0));
-  if (state.finalBossPhase && !progress.flags.finalTable) {
-    progress.flags.finalTable = true;
-    collectionDirty = true;
-  }
-  if (state.stage === "summary" && !state.gameOver && state.player.hp > 0 && state.player.hp <= 10 && !progress.flags.martyr) {
-    progress.flags.martyr = true;
-    collectionDirty = true;
+  const run = collectionRun();
+  if (state.player.hp === 1) collectionFlag("oneHealth");
+  collectionRaise("sinHeld", state.player.credits);
+  collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
+  collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
+  const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
+  if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
+  // once per round, when it is resolved
+  const round = state.roundState;
+  if (state.stage === "summary" && round && !roundRevealAnimationActive() && run.roundProcessed !== state.round) {
+    run.roundProcessed = state.round;
+    run.critStreak = round.criticalHitKeys?.has?.("player") ? run.critStreak + 1 : 0;
+    run.pentakillStreak = round.collectionPentakill ? run.pentakillStreak + 1 : 0;
+    run.noKoStreak = (round.eliminationsThisRound || 0) === 0 ? run.noKoStreak + 1 : 0;
+    collectionRaise("critStreak", run.critStreak);
+    collectionRaise("pentakillStreak", run.pentakillStreak);
+    collectionRaise("noKoStreak", run.noKoStreak);
   }
   if (!collectionDirty) return;
   collectionDirty = false;
@@ -450,7 +534,9 @@ document.addEventListener("keydown", (event) => {
   closeCollection(state.mode === "menu" ? "menu" : "pause");
 });
 
-/* ---- main menu: Satan opens the collection (eyes flare red, a red pulse) ---- */
+/* ---- main menu: Satan opens the collection ----
+   His eyes flare, a dark red bloom swells out of them over the screen, and the collection
+   surfaces from it. */
 function triggerMenuSatan() {
   const fig = document.querySelector(".menu-fig-satan");
   if (!fig) return;
@@ -458,16 +544,27 @@ function triggerMenuSatan() {
   setMenuFigureLit("satan");
   fig.classList.add("eyes-flare");
   playGameSfx("menuSatanOpen");
-  const pulse = document.createElement("div");
-  pulse.className = "menu-satan-pulse";
-  document.body.appendChild(pulse);
+  const eyes = fig.querySelector(".fig-eyes");
+  const rect = (eyes || fig).getBoundingClientRect();
+  const meta = MENU_FIGURES.satan.meta;
+  // between his two eyes (head-image pixels 104, 123)
+  const ex = eyes ? rect.left + (rect.width * 104) / meta.head.w : rect.left + rect.width * 0.4;
+  const ey = eyes ? rect.top + (rect.height * 123) / meta.head.h : rect.top + rect.height * 0.12;
+  const veil = document.createElement("div");
+  veil.className = "menu-satan-veil";
+  veil.style.setProperty("--veil-x", `${Math.round(ex)}px`);
+  veil.style.setProperty("--veil-y", `${Math.round(ey)}px`);
+  document.body.appendChild(veil);
   setTimeout(() => {
     fig.classList.remove("eyes-flare");
     setMenuFigureLit(null);
     menuFigureTrigger.busy = false;
     openCollectionFromMenu();
-  }, 360);
-  setTimeout(() => pulse.remove(), 900);
+    // keep the veil above the collection while it clears
+    document.body.appendChild(veil);
+    veil.classList.add("clearing");
+    setTimeout(() => veil.remove(), 900);
+  }, 640);
 }
 
 function openCollectionFromMenu() {

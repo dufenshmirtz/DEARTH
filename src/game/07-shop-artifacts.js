@@ -117,6 +117,7 @@ function buyShopItem(slotIndex) {
     state.itemsBought += 1;
     slot.sold = true;
     syncShopSlotCount();
+    collectionNoteShopBuy();
     applyGuessReveals();
     checkBalamMemoryBountyEliminations();
     playSealPurchaseSfx();
@@ -141,6 +142,7 @@ function buyShopItem(slotIndex) {
   state.itemsBought += 1;
   slot.sold = true;
   syncShopSlotCount();
+  collectionNoteShopBuy();
   addLog(`Bought ${item.name}.`);
   playGameSfx("artifactBuy");
   applyOfferingTollDamage(item);
@@ -615,6 +617,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   // Seal of Valac never triggers on its own; using ARTIFACTS while holding it is what it does
   if (passiveStack("p25")) collectionDiscover("p25");
   if (!item.devTemporary) state.roundState.activeUses += 1;
+  collectionNoteArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
   addLog(message);
