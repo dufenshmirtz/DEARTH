@@ -403,7 +403,7 @@ function finishGameOverRound() {
   state.stage = "ended";
   state.pendingActive = null;
   state.currentRunSlotId = null;
-  addLog("Game over. Welcome to HELL!");
+  addLog("Game over. Welcome to Hell...");
 }
 
 function currentRoundParticipants(activeBotList = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated)) {

@@ -8521,7 +8521,7 @@ function finishGameOverRound() {
   state.stage = "ended";
   state.pendingActive = null;
   state.currentRunSlotId = null;
-  addLog("Game over. Welcome to HELL!");
+  addLog("Game over. Welcome to Hell...");
 }
 
 function currentRoundParticipants(activeBotList = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated)) {
@@ -13185,7 +13185,7 @@ function renderOverlay() {
       <img class="end-figure end-figure-right" src="assets/ui/devil.png" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
-        <p class="end-copy">Welcome to HELL!</p>
+        <p class="end-copy">Welcome to Hell...</p>
         <div class="end-stats">
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
