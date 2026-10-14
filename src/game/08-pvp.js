@@ -136,20 +136,6 @@ function pvpMaybeAutoAdvance() {
   pvpClearAutoTimer();
 }
 
-function pvpToggleWait() {
-  if (!state.pvp) return;
-  state.pvp.waitForHost = !state.pvp.waitForHost;
-  if (state.pvp.waitForHost) {
-    pvpClearAutoTimer();
-    pvpAddLog("Wait is on. Host signal required.");
-  } else {
-    pvpAddLog("Wait is off. Auto flow resumed.");
-    pvpMaybeAutoAdvance();
-  }
-  pvpPostHostState();
-  render();
-}
-
 function startPvpMode() {
   if (isNativeArcadeApp()) {
     showMainMenu();
@@ -160,7 +146,7 @@ function startPvpMode() {
   state.mode = "pvp";
   state.pauseOpen = false;
   state.pvp = pvpInitialState();
-  pvpAddLog("PvP lobby opened. Add or remove slots before starting.");
+  pvpAddLog("The lobby is open.");
   pvpHostResetRoom();
   pvpStartHostPolling();
   render();
@@ -225,12 +211,12 @@ function pvpNormalizeSlots() {
 function pvpAddEmptySlot() {
   if (!state.pvp || state.pvp.stage !== "lobby") return;
   if (state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) {
-    pvpAddLog(`PvP lobby supports up to ${PVP_MAX_SLOT_COUNT} slots.`);
+    pvpAddLog(`The table seats up to ${PVP_MAX_SLOT_COUNT}.`);
     render();
     return;
   }
   state.pvp.slots.push(null);
-  pvpAddLog(`Added slot ${state.pvp.slots.length}.`);
+  pvpAddLog(`Seat ${state.pvp.slots.length} added.`);
   pvpPostHostState();
   render();
 }
@@ -244,11 +230,30 @@ function pvpRemoveRemotePlayer(remoteId) {
   }).catch(() => {});
 }
 
+function pvpRemoveEmptySlot() {
+  if (!state.pvp || state.pvp.stage !== "lobby") return;
+  for (let slot = state.pvp.slots.length - 1; slot >= 0; slot -= 1) {
+    if (!state.pvp.slots[slot]) {
+      pvpRemoveLobbySlot(slot);
+      return;
+    }
+  }
+}
+
+// The host's Pause holds the automatic flow; phones are told the game is paused.
+function pvpSetHostPaused(paused) {
+  if (!state.pvp) return;
+  state.pvp.waitForHost = Boolean(paused);
+  if (paused) pvpClearAutoTimer();
+  else pvpMaybeAutoAdvance();
+  pvpPostHostState();
+}
+
 function pvpRemoveLobbySlot(slot) {
   if (!state.pvp || state.pvp.stage !== "lobby") return;
   if (slot < 0 || slot >= state.pvp.slots.length) return;
-  if (state.pvp.slots.length <= 1) {
-    pvpAddLog("Keep at least one lobby slot.");
+  if (state.pvp.slots.length <= 2) {
+    pvpAddLog("The table needs at least two seats.");
     render();
     return;
   }
@@ -258,40 +263,20 @@ function pvpRemoveLobbySlot(slot) {
     pvpRemoveRemotePlayer(removed.remoteId);
   }
   pvpNormalizeSlots();
-  pvpAddLog(removed ? `${removed.name} was removed from the lobby.` : `Removed empty slot ${slot + 1}.`);
-  pvpPostHostState();
-  render();
-}
-
-function pvpAddLocalPlayer(name) {
-  const trimmed = String(name || "").trim();
-  if (!trimmed) {
-    pvpAddLog("Enter a name first.");
-    render();
-    return;
-  }
-  const slot = state.pvp.slots.findIndex((participant) => !participant);
-  if (slot < 0 && state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) {
-    pvpAddLog(`PvP lobby supports up to ${PVP_MAX_SLOT_COUNT} players.`);
-    render();
-    return;
-  }
-  const targetSlot = slot >= 0 ? slot : state.pvp.slots.length;
-  state.pvp.slots[targetSlot] = pvpParticipant(targetSlot, trimmed, true);
-  pvpAddLog(`${trimmed} joined slot ${targetSlot + 1}.`);
+  pvpAddLog(removed ? `${removed.name} was removed from the table.` : `Seat ${slot + 1} removed.`);
   pvpPostHostState();
   render();
 }
 
 function pvpFillBotsAndStart() {
   if (state.pvp.slots.length < 2) {
-    pvpAddLog("PvP needs at least two slots.");
+    pvpAddLog("The table needs at least two seats.");
     render();
     return;
   }
   state.pvp.slots = state.pvp.slots.map((participant, slot) => participant || pvpBot(slot));
   pvpNormalizeSlots();
-  pvpAddLog("Empty slots filled with DAMNED.");
+  pvpAddLog("The DAMNED took the open seats.");
   pvpStartRound();
 }
 
@@ -372,23 +357,6 @@ function pvpBotGuess(participant) {
   return Math.ceil(clamp(anchor + jitter, 0, 100));
 }
 
-function pvpSetLocalGuess(slot, value) {
-  const participant = state.pvp.slots[slot];
-  const rawGuess = (value || "").trim();
-  const guess = Math.ceil(Number(rawGuess));
-  if (!rawGuess || !participant || participant.eliminated || !participant.human || !Number.isFinite(guess) || guess < 0 || guess > 100) {
-    pvpAddLog("Invalid PvP guess.");
-    render();
-    return;
-  }
-  playGuessSfx();
-  participant.guess = guess;
-  pvpAddLog(`${participant.name} is ready.`);
-  pvpMaybeAutoAdvance();
-  pvpPostHostState();
-  render();
-}
-
 function pvpAllGuessesReady() {
   return pvpAliveParticipants().every((participant) => Number.isFinite(participant.guess));
 }
@@ -435,28 +403,6 @@ function pvpChooseBotActive(participant) {
     const targets = pvpAliveParticipants().filter((candidate) => candidate.id !== participant.id);
     participant.activeTargetId = targets.length ? randomFrom(targets).id : null;
   }
-}
-
-function pvpSetActiveChoice(slot, activeId, targetId = null) {
-  const participant = state.pvp.slots[slot];
-  if (!participant || participant.eliminated || !participant.human) return;
-  const active = pvpSelectableActives(participant).find((option) => option.id === activeId);
-  if (!active) {
-    pvpAddLog("That Artifact is not available.");
-    render();
-    return;
-  }
-  if (active.needsTarget && !targetId) {
-    pvpAddLog(`${active.name} needs a target.`);
-    render();
-    return;
-  }
-  participant.activeChoiceId = activeId;
-  participant.activeTargetId = targetId;
-  pvpAddLog(`${participant.name} is ready.`);
-  pvpMaybeAutoAdvance();
-  pvpPostHostState();
-  render();
 }
 
 function pvpAllActivesReady() {
@@ -768,7 +714,7 @@ function pvpImportRemotePlayers(players) {
     if (slotIndex < 0 && state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) return;
     const targetSlot = slotIndex >= 0 ? slotIndex : state.pvp.slots.length;
     state.pvp.slots[targetSlot] = pvpParticipant(targetSlot, player.name, true, player.id);
-    pvpAddLog(`${player.name} joined from phone in slot ${targetSlot + 1}.`);
+    pvpAddLog(`${player.name} took seat ${targetSlot + 1}.`);
     changed = true;
   });
   if (changed) pvpNormalizeSlots();

@@ -10027,3 +10027,606 @@ body.mobile-arcade .collection-grid {
 .collection-seal.wide .collection-lock {
   width: 13%;
 }
+
+/* ==========================================================================
+   PvP host screen, release pass: the arcade table look.
+   One column: a top row (big TARGET box, Round / Alive / Phase, Pause), the
+   players, and a framed console at the bottom. Same hand-drawn frames and
+   trembling lines as arcade. Everything here is scoped to .pvp-arena.
+   ========================================================================== */
+#app .arena.pvp-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 18px 26px 20px;
+  overflow: hidden;
+}
+
+#app .arena.pvp-arena > .pvp-top,
+#app .arena.pvp-arena > .pvp-grid,
+#app .arena.pvp-arena > .pvp-console {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+/* ---------- top row ---------- */
+#app .arena.pvp-arena .pvp-top {
+  display: grid;
+  grid-template-columns: minmax(420px, 1.7fr) repeat(3, minmax(130px, 0.62fr)) auto;
+  align-items: stretch;
+  gap: 14px;
+  flex: 0 0 auto;
+  height: 138px;
+}
+
+#app .arena.pvp-arena .pvp-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px 12px;
+  box-sizing: border-box;
+}
+
+#app .arena.pvp-arena .pvp-stat .stat-label {
+  font-family: var(--font-display);
+  font-size: 19px !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#app .arena.pvp-arena .pvp-stat .stat-value {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  font-family: var(--font-display);
+  font-size: 46px !important;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#app .arena.pvp-arena .pvp-phase-stat .stat-value {
+  font-size: 36px !important;
+}
+
+#app .arena.pvp-arena .pvp-top > .pause-button {
+  position: relative !important;
+  inset: auto !important;
+  align-self: start;
+  margin: 6px 0 0 4px;
+}
+
+/* the TARGET: a big blood-red number, its history beside it */
+#app .arena.pvp-arena .pvp-target {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-content: center;
+  align-items: center;
+  column-gap: 54px;
+  min-width: 0;
+  padding: 14px 30px 16px 32px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#app .arena.pvp-arena .pvp-target-head {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  font-family: var(--font-display);
+  font-size: 22px !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+#app .arena.pvp-arena .pvp-target-number {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  min-width: 1.6em;
+  font-family: var(--font-display);
+  font-size: 84px;
+  font-weight: 400;
+  line-height: 0.95;
+  text-align: center;
+  color: var(--blood-bright) !important;
+}
+
+#app .arena.pvp-arena .pvp-target-side {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  align-content: center;
+  gap: 8px 44px;
+  min-width: 0;
+}
+
+#app .arena.pvp-arena .pvp-target-line {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#app .arena.pvp-arena .pvp-target-line span {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+#app .arena.pvp-arena .pvp-target-line strong {
+  font-family: var(--font-display);
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--bone);
+}
+
+#app .arena.pvp-arena .pvp-target-first strong {
+  color: var(--ash);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- the players ---------- */
+#app .arena.pvp-arena .pvp-grid {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: grid !important;
+  grid-template-columns: repeat(var(--pvp-cols, 5), minmax(0, 232px)) !important;
+  grid-auto-rows: max-content;
+  justify-content: center;
+  align-content: start;
+  gap: 16px !important;
+  padding: 4px 2px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#app .arena.pvp-arena .pvp-slot {
+  min-height: 0;
+  height: auto !important;
+  padding: 16px 16px 14px;
+  row-gap: 4px;
+}
+
+#app .arena.pvp-arena .pvp-slot .bot-face {
+  height: 78px !important;
+  min-height: 0 !important;
+}
+
+#app .arena.pvp-arena .pvp-slot .bot-image {
+  height: 100% !important;
+  width: auto !important;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+#app .arena.pvp-arena .pvp-slot .bot-stats {
+  gap: 4px !important;
+  padding-top: 8px !important;
+}
+
+#app .arena.pvp-arena .pvp-slot .mini-stat strong {
+  font-size: 30px !important;
+  line-height: 1.05 !important;
+}
+
+/* big tables (7+ seats): two rows of compact cards, no figure, GUESS and ARTIFACT side by side */
+#app .arena.pvp-arena.pvp-many .pvp-grid {
+  grid-template-columns: repeat(var(--pvp-cols, 6), minmax(0, 206px)) !important;
+  gap: 12px !important;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-slot {
+  padding: 14px 12px 10px;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-slot .bot-face {
+  display: none !important;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-slot .bot-stats {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-slot .bot-health {
+  grid-column: 1 / -1;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-slot .mini-stat strong {
+  font-size: 22px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+#app .arena.pvp-arena.pvp-many .empty-pvp-slot {
+  min-height: 150px;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-seat-number {
+  font-size: 36px;
+}
+
+#app .arena.pvp-arena.pvp-many .pvp-seat-note {
+  display: none;
+}
+
+#app .arena.pvp-arena .pvp-slot .bot-title {
+  justify-content: center;
+}
+
+#app .arena.pvp-arena .pvp-slot .bot-type {
+  text-align: center;
+}
+
+#app .arena.pvp-arena .pvp-slot .mini-stat strong.pvp-ready {
+  color: var(--bone) !important;
+}
+
+#app .arena.pvp-arena .pvp-slot-remove {
+  justify-self: center;
+  margin-top: 10px;
+  font-size: 15px;
+  opacity: 0.72;
+}
+
+#app .arena.pvp-arena .pvp-slot-remove:hover {
+  opacity: 1;
+}
+
+/* open seats: a quieter frame and a seat number */
+#app .arena.pvp-arena .empty-pvp-slot {
+  display: grid;
+  place-items: center;
+  min-height: 230px;
+}
+
+#app .arena.pvp-arena .empty-pvp-slot::after {
+  opacity: 0.32 !important;
+}
+
+#app .arena.pvp-arena .pvp-empty-seat {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+#app .arena.pvp-arena .pvp-seat-number {
+  font-family: var(--font-display);
+  font-size: 54px;
+  line-height: 1;
+  color: var(--ash);
+  opacity: 0.55;
+}
+
+#app .arena.pvp-arena .pvp-seat-note {
+  max-width: 15em;
+  font-family: var(--font-book);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--ash);
+  opacity: 0.8;
+}
+
+/* ---------- the console ---------- */
+#app .arena.pvp-arena .pvp-console {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+  max-height: none;
+  padding: 20px 30px 20px;
+  box-sizing: border-box;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+#app .arena.pvp-arena .pvp-console::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 28px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 28px stretch;
+  opacity: 0.9;
+}
+
+body.outline-boil #app .arena.pvp-arena .pvp-console::after {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+#app .arena.pvp-arena .pvp-console > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app .arena.pvp-arena .pvp-console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 4px 14px;
+  margin: 0 -10px;
+  flex: 0 0 auto;
+}
+
+body.outline-boil #app .arena.pvp-arena .pvp-console-head {
+  background-image: var(--divider-img) !important;
+  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+#app .arena.pvp-arena .pvp-console-heading {
+  display: grid;
+  gap: 4px;
+  padding-left: 10px;
+  min-width: 0;
+}
+
+#app .arena.pvp-arena .pvp-console .panel-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+#app .arena.pvp-arena .pvp-console .panel-subtitle {
+  font-family: var(--font-book);
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+#app .arena.pvp-arena .pvp-console-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 10px;
+}
+
+#app .arena.pvp-arena .pvp-console-actions .primary-button {
+  min-width: 170px;
+  padding: 10px 26px;
+  font-size: 22px;
+}
+
+#app .arena.pvp-arena .pvp-console-body {
+  display: grid;
+  gap: 12px;
+  max-height: none;
+  min-height: 0;
+  padding: 14px 6px 0;
+  overflow-y: auto;
+}
+
+/* lobby: how to join, and the number of seats */
+#app .arena.pvp-arena .pvp-lobby {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+#app .arena.pvp-arena .pvp-join {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+#app .arena.pvp-arena .pvp-join-label,
+#app .arena.pvp-arena .pvp-seats-label {
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+#app .arena.pvp-arena .pvp-join-url {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--bone);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+#app .arena.pvp-arena .pvp-join-note {
+  font-family: var(--font-book);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--ash);
+}
+
+#app .arena.pvp-arena .pvp-seats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#app .arena.pvp-arena .pvp-seat-button {
+  width: 50px;
+  height: 42px;
+  padding: 0 0 3px;
+  font-family: var(--font-book);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+#app .arena.pvp-arena .pvp-seats-count {
+  min-width: 1.4em;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 400;
+  text-align: center;
+  color: var(--bone);
+}
+
+/* guess / artifact phases: who is still deciding */
+#app .arena.pvp-arena .pvp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+#app .arena.pvp-arena .pvp-chip {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 22px;
+}
+
+#app .arena.pvp-arena .pvp-chip::after {
+  content: "";
+  position: absolute;
+  inset: -2px -3px;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: solid transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+  opacity: 0.45;
+}
+
+#app .arena.pvp-arena .pvp-chip.ready::after {
+  opacity: 0.9;
+}
+
+#app .arena.pvp-arena .pvp-chip-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--bone);
+}
+
+#app .arena.pvp-arena .pvp-chip-state {
+  font-family: var(--font-book);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--ash);
+}
+
+#app .arena.pvp-arena .pvp-chip.ready .pvp-chip-state {
+  font-style: normal;
+  color: var(--bone);
+}
+
+#app .arena.pvp-arena .pvp-chips-empty {
+  font-family: var(--font-book);
+  font-style: italic;
+  color: var(--ash);
+}
+
+/* results, the lobby feed and the winner */
+#app .arena.pvp-arena .pvp-results,
+#app .arena.pvp-arena .pvp-log {
+  display: grid;
+  gap: 3px;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  font-family: var(--font-book);
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ash);
+}
+
+#app .arena.pvp-arena .pvp-results {
+  columns: 2;
+  column-gap: 40px;
+  display: block;
+}
+
+#app .arena.pvp-arena .pvp-results > div {
+  break-inside: avoid;
+  padding: 1px 0;
+}
+
+#app .arena.pvp-arena .pvp-log {
+  font-size: 15px;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+#app .arena.pvp-arena .pvp-winner {
+  font-family: var(--font-display);
+  font-size: 52px;
+  line-height: 1;
+  color: var(--blood-bright);
+}
+
+/* tall screens: big tables keep their figures */
+@media (min-height: 1000px) {
+  #app .arena.pvp-arena.pvp-many .pvp-slot .bot-face {
+    display: block !important;
+    height: 58px !important;
+  }
+}
+
+/* short screens (720p and laptops): a lower top row and smaller cards */
+@media (max-height: 820px) {
+  #app .arena.pvp-arena { gap: 12px; padding-top: 14px; padding-bottom: 14px; }
+  #app .arena.pvp-arena .pvp-top { height: 112px; }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 66px; }
+  #app .arena.pvp-arena .pvp-target-line strong { font-size: 23px; }
+  #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
+  #app .arena.pvp-arena .pvp-target-side { gap: 4px 34px; }
+  #app .arena.pvp-arena .pvp-stat .stat-value { height: 42px; }
+  #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
+  #app .arena.pvp-arena .pvp-phase-stat .stat-value { font-size: 30px !important; }
+  #app .arena.pvp-arena .pvp-slot .bot-face { height: 54px !important; }
+  #app .arena.pvp-arena .pvp-slot { padding: 12px 12px 10px; }
+  #app .arena.pvp-arena .pvp-slot .mini-stat strong { font-size: 25px !important; }
+  #app .arena.pvp-arena .empty-pvp-slot { min-height: 190px; }
+  #app .arena.pvp-arena .pvp-console { min-height: 128px; padding: 16px 26px 16px; }
+  #app .arena.pvp-arena .pvp-join-url { font-size: 28px; }
+}
+
+/* smaller desktop windows */
+@media (max-width: 1180px) {
+  #app .arena.pvp-arena .pvp-top {
+    grid-template-columns: minmax(360px, 1.6fr) repeat(3, minmax(100px, 0.6fr)) auto;
+    height: 124px;
+  }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 70px; }
+  #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
+  #app .arena.pvp-arena .pvp-join-url { font-size: 26px; }
+}
+
+/* opened from Pause, the collection covers the board completely (the paused table no longer shows through) */
+.collection-screen.collection-from-pause {
+  background: #000;
+}

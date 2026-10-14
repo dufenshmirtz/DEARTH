@@ -1,61 +1,18 @@
 function bindPvpEvents() {
   if (state.mode !== "pvp" || !state.pvp) return;
 
-  const addLocal = document.querySelector("#pvpAddLocal");
-  if (addLocal) {
-    bindOn(addLocal, "click", () => {
-      const input = document.querySelector("#pvpLocalName");
-      pvpAddLocalPlayer(input?.value || "");
-    });
-  }
-
-  const localName = document.querySelector("#pvpLocalName");
-  if (localName) {
-    bindOn(localName, "keydown", (event) => {
-      if (event.key === "Enter") pvpAddLocalPlayer(localName.value);
-    });
-  }
-
-  const readyLobby = document.querySelector("#pvpReadyLobby");
-  if (readyLobby) bindOn(readyLobby, "click", pvpFillBotsAndStart);
+  const start = document.querySelector("#pvpReadyLobby");
+  if (start) bindOn(start, "click", pvpFillBotsAndStart);
 
   const addSlot = document.querySelector("#pvpAddSlot");
   if (addSlot) bindOn(addSlot, "click", pvpAddEmptySlot);
 
+  const removeSlot = document.querySelector("#pvpRemoveSlot");
+  if (removeSlot) bindOn(removeSlot, "click", pvpRemoveEmptySlot);
+
   document.querySelectorAll("[data-pvp-remove-slot]").forEach((button) => {
     bindOn(button, "click", () => pvpRemoveLobbySlot(Number(button.dataset.pvpRemoveSlot)));
   });
-
-  document.querySelectorAll("[data-pvp-save-guess]").forEach((button) => {
-    bindOn(button, "click", () => {
-      const slot = Number(button.dataset.pvpSaveGuess);
-      const input = document.querySelector(`#pvpGuess-${slot}`);
-      pvpSetLocalGuess(slot, input?.value);
-    });
-  });
-
-  const revealTarget = document.querySelector("#pvpRevealTarget");
-  if (revealTarget) bindOn(revealTarget, "click", pvpPrepareActivePhase);
-
-  const waitToggle = document.querySelector("#pvpWaitToggle");
-  if (waitToggle) bindOn(waitToggle, "click", pvpToggleWait);
-
-  document.querySelectorAll("[data-pvp-active-choice]").forEach((button) => {
-    bindOn(button, "click", () => {
-      const [slotText, activeId] = button.dataset.pvpActiveChoice.split(":");
-      const slot = Number(slotText);
-      const select = document.querySelector(`[data-pvp-target-for="${slot}-${activeId}"]`);
-      pvpSetActiveChoice(slot, activeId, select?.value || null);
-    });
-  });
-
-  const resolveActives = document.querySelector("#pvpResolveActives");
-  if (resolveActives) {
-    bindOn(resolveActives, "click", () => {
-      playReadySfx();
-      pvpResolveActives();
-    });
-  }
 
   const nextRound = document.querySelector("#pvpNextRound");
   if (nextRound) {
@@ -124,6 +81,7 @@ function bindEvents() {
     bindOn(pauseButton, "click", () => {
       state.pauseOpen = true;
       state.pauseScreen = "main";
+      if (state.mode === "pvp") pvpSetHostPaused(true);
       render();
     });
   }

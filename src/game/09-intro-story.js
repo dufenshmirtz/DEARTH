@@ -543,6 +543,20 @@ function introAfterRender() {
   }
 }
 
+// Satan speaks after round 2's results. If the player moves on before he does (Next Round within the
+// short pause, easy after skipping Jesus), the round would advance and he would come a round late or
+// never; so the results hold until the pact, and moving on brings him in at once.
+function introHoldsSummary() {
+  return introState.phase === "tutorial" && state.mode === "arcade" && state.round >= 2 && state.stage === "summary";
+}
+
+function introStartPactNow() {
+  if (!introHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  introStartPact();
+}
+
 /* ---- 3. Satan's pact ---- */
 // the box covers the SEAL slots (desktop and mobile); the whole SEAL bar if the slots can't be measured
 function introPactRect() {

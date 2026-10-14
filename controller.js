@@ -353,7 +353,7 @@ function renderHeader() {
         <div class="stat guess-stat"><span>Your Guess</span><strong>${guess ?? "-"}</strong></div>
       </div>
       ${renderCastBanner(player)}
-      ${host?.waitForHost ? `<p class="warning">Host wait is on.</p>` : ""}
+      ${host?.waitForHost ? `<p class="warning">The host paused the game.</p>` : ""}
       ${player?.activeGuaranteeThisRound ? `<p class="cast">Skip bonus ready: your ARTIFACT will cast for sure.</p>` : ""}
       ${player?.activeGuaranteeNextRound ? `<p class="cast">Skip bonus armed for next round.</p>` : ""}
       ${controllerState.message ? `<p class="cast">${escapeHtml(normalizeGameText(controllerState.message))}</p>` : ""}
@@ -389,7 +389,7 @@ function renderGuess() {
   const remote = remotePlayer();
   const submitted = remote?.guessRound === host.round && Number.isFinite(remote.guess);
   const readyText = host.waitForHost
-    ? "Ready. Waiting for the host to reveal."
+    ? "Ready."
     : "Ready. Guesses reveal automatically when everyone is ready.";
   return `
     ${renderHeader()}
@@ -452,7 +452,7 @@ function renderActive() {
       ${renderHeader()}
       <section class="panel">
         <h2>ARTIFACT Phase</h2>
-        <p class="muted">${host.waitForHost ? "Ready. Waiting for the host." : "Ready. ARTIFACTS resolve automatically when everyone is ready."}</p>
+        <p class="muted">${host.waitForHost ? "Ready." : "Ready. ARTIFACTS resolve automatically when everyone is ready."}</p>
         <button disabled>Ready</button>
       </section>
     `;
@@ -461,7 +461,7 @@ function renderActive() {
     ${renderHeader()}
     <section class="panel">
       <h2>ARTIFACT Phase</h2>
-      <p class="muted">${host.waitForHost ? "Choose one ARTIFACT. The host will resolve when ready." : "Choose one ARTIFACT. The phase resolves automatically when everyone chooses."}</p>
+      <p class="muted">${host.waitForHost ? "Choose one ARTIFACT." : "Choose one ARTIFACT. The phase resolves automatically when everyone chooses."}</p>
       ${player.activeOptions.map((active) => renderActiveChoice(active, submitted)).join("")}
       ${submitted ? `<p class="cast">Choice sent. Watch the host screen to see if it casts.</p>` : ""}
     </section>
@@ -479,7 +479,7 @@ function renderResults() {
     ${renderHeader()}
     <section class="panel">
       <h2>${host?.stage === "ended" ? "Game Over" : "Round Summary"}</h2>
-      ${host?.winner ? `<p class="cast">Winner: ${escapeHtml(host.winner)}</p>` : `<p class="muted">${host?.waitForHost ? "Waiting for host signal." : "Next round starts automatically after 10 seconds."}</p>`}
+      ${host?.winner ? `<p class="cast">Winner: ${escapeHtml(host.winner)}</p>` : `<p class="muted">${host?.waitForHost ? "Waiting for the next round." : "Next round starts automatically after 10 seconds."}</p>`}
       <div class="results">
         ${castRows}
         ${results.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}

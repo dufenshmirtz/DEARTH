@@ -403,7 +403,7 @@ function finishGameOverRound() {
   state.stage = "ended";
   state.pendingActive = null;
   state.currentRunSlotId = null;
-  addLog("Game over. The table solved you first.");
+  addLog("Game over. Welcome to HELL!");
 }
 
 function currentRoundParticipants(activeBotList = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated)) {
@@ -1420,6 +1420,11 @@ function clearMarkedProspects() {
 
 function advanceAfterSummary() {
   if (state.stage !== "summary") return;
+  // first-launch story: from round 2 the results wait for Satan; moving on brings him in now
+  if (introHoldsSummary()) {
+    introStartPactNow();
+    return;
+  }
   clearDevTemporaryArtifacts();
   rememberRound();
   if (state.player.hp <= 0) {
