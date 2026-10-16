@@ -35,6 +35,7 @@ const SEAL_UNLOCKS = {
   p110: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
   // Satan Seals
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
+  // Seals of Saturn
   p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
   p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
   p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
@@ -80,7 +81,9 @@ const COLLECTION_SECTIONS = [
   { key: "player", title: "Player Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
-  { key: "satan", title: "Satan Seals", ids: ["p111", "p101", "p100", "p103", "p99", "p98", "p109", "p102"] }
+  { key: "satan", title: "Satan Seals", ids: ["p111"] },
+  // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
 ];
 
 /* ---- stored progress ---- */
