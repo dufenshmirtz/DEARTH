@@ -272,6 +272,7 @@ function applyPenalties() {
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
+    applyEligosCriticalReward(hitter);
     getParticipants().forEach((victim) => {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
@@ -448,7 +449,7 @@ function getParticipants() {
         bot,
         name: bot.name,
         guess: round.botEffectiveGuesses.get(bot.id),
-        window: Math.max(eligosBotCriticalWindow("p69"), botHasPassive(bot, "wideCrit") ? 2 : 0),
+        window: botHasPassive(bot, "wideCrit") ? 2 : 0,
         bonusWindowChance: 0,
         damage: 0
       }))
@@ -492,14 +493,16 @@ function findCriticalHits() {
     const distance = Math.abs(participant.guess - rightInteger);
     return distance <= participant.window || (distance <= participant.window + 1 && Math.random() < participant.bonusWindowChance);
   });
-  if (passiveStack("p69") && hits.some((participant) => participant.kind === "bot")) {
-    const player = participants.find((participant) => participant.key === "player");
-    if (player && Number.isFinite(player.guess) && !hits.some((participant) => participant.key === "player")) {
-      hits.push({ ...player, mirroredByEligos: true });
-    }
-    markPassiveTriggered("p69");
-  }
   return hits;
+}
+
+function applyEligosCriticalReward(hitter) {
+  if (hitter.kind !== "bot") return;
+  orderedPassiveEffectEntries("p69").forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    const gained = gainCredits(passiveEntryScaledValue(entry, 1), true, ITEMS.p69.name);
+    state.roundState.roundEvents.push(`${ITEMS.p69.name} paid ${gained} SIN for ${hitter.name}'s CRITICAL.`);
+  });
 }
 
 function equalDamageSplit(totalDamage, targets) {
@@ -727,7 +730,7 @@ function applyKillRuleHealing(bot) {
     );
     return;
   }
-  const heal = bot?.isBoss ? 5 : 1;
+  const heal = bot?.isBoss ? 8 : 1;
   const source = bot?.isBoss ? "BOSS kill" : "DAMNED kill";
   const healed = healPlayer(heal, null, source);
   state.roundState.roundEvents.push(
@@ -791,6 +794,20 @@ function applyRoundEliminationBonus() {
   });
 }
 
+function resetBossKillInterval() {
+  state.killsSinceBossSpawn = 0;
+  state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+}
+
+function ensureBossKillInterval() {
+  if (!Number.isInteger(state.nextBossKillInterval) ||
+      state.nextBossKillInterval < BOSS_KILL_INTERVAL_MIN ||
+      state.nextBossKillInterval > BOSS_KILL_INTERVAL_MAX) {
+    state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+  }
+  return state.nextBossKillInterval;
+}
+
 function nextBossSpecIfNeeded() {
   if (state.finalBossPhase || state.finalBossQueued) return null;
 
@@ -798,14 +815,14 @@ function nextBossSpecIfNeeded() {
     const bossSpec = takeNextBossSpec();
     if (!bossSpec) return null;
     state.bossQueued = false;
-    state.killsSinceBossSpawn = 0;
+    resetBossKillInterval();
     return bossSpec;
   }
 
-  if (state.killsSinceBossSpawn >= ENDLESS_BOSS_INTERVAL) {
+  if (state.killsSinceBossSpawn >= ensureBossKillInterval()) {
     const bossSpec = takeNextBossSpec();
     if (!bossSpec) return null;
-    state.killsSinceBossSpawn = 0;
+    resetBossKillInterval();
     return bossSpec;
   }
   return null;
@@ -989,7 +1006,38 @@ function applyEliminationPassives(bot) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115"]).forEach((entry) => {
+    if (entry.id === "p112" || entry.id === "p113" || entry.id === "p115") {
+      const round = state.roundState;
+      const damages = new Map();
+      const living = activeBots();
+      living.forEach((bot) => {
+        const guess = round.botEffectiveGuesses.get(bot.id);
+        let damage = 0;
+        if (entry.id === "p112" && Number.isFinite(guess)) {
+          [3, 5, 7].forEach((divisor) => {
+            if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, divisor);
+          });
+        } else if (entry.id === "p113") {
+          if (Math.random() < 0.3) damage += passiveEntryFlatDamage(entry, 5);
+          if (Math.random() < 0.1) damage += passiveEntryFlatDamage(entry, 10);
+        } else if (entry.id === "p115" && Number.isFinite(guess) && Math.abs(guess - round.target) <= 5) {
+          damage = passiveEntryFlatDamage(entry, 4);
+        }
+        if (damage > 0) damages.set(bot.id, damage);
+      });
+      const targets = living.filter((bot) => damages.has(bot.id));
+      if (!targets.length) return;
+      const name = ITEMS[entry.id].name;
+      markPassiveEntryTriggered(entry);
+      if (entry.id === "p115") {
+        const gained = gainCredits(targets.length * passiveEntryScaledValue(entry, 2), true, name);
+        round.roundEvents.push(`${name} paid ${gained} SIN for ${targets.length} DAMNED within +/-5 of the TARGET.`);
+      }
+      damageBots(targets, (bot) => damages.get(bot.id), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name}.`, name);
+      return;
+    }
+
     if (entry.id === "p1") {
       const targets = activeBots().filter((bot) => bot.memory.length > 0);
       if (!targets.length) return;

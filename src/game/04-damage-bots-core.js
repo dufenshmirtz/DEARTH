@@ -76,6 +76,14 @@ function recordBotRoundDamage(bot, amount) {
   const previous = round.botDamageTotals.get(bot.id) || 0;
   const next = previous + damage;
   round.botDamageTotals.set(bot.id, next);
+  const buerThreshold = Math.max(0, (bot.maxHp || 0) * 0.2);
+  if (previous <= buerThreshold && next > buerThreshold) {
+    orderedPassiveEffectEntries("p114").forEach((entry) => {
+      markPassiveEntryTriggered(entry);
+      const gained = gainCredits(passiveEntryScaledValue(entry, 2), true, ITEMS.p114.name);
+      round.roundEvents.push(`${ITEMS.p114.name} paid ${gained} SIN after ${bot.name} took more than 20% max-HEALTH damage.`);
+    });
+  }
   const maraxThreshold = Math.max(0, (bot.maxHp || 0) * 0.3);
   if (previous <= maraxThreshold && next > maraxThreshold) {
     applyHighDamageSinGain(bot);

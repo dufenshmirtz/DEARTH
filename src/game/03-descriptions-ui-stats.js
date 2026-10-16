@@ -61,7 +61,7 @@ function itemDescription(item) {
         : "";
     return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
   }
-  if (stack <= 1) return item.description;
+  if (stack <= 1) return ["p64", "p65", "p69", "p75", "p95", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -169,17 +169,21 @@ function itemDescription(item) {
     return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
   }
   if (item.id === "p64") {
-    return `Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+    return `Reveal one extra DAMNED each round. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `Reveal one extra DAMNED each round. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
     return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
   if (item.id === "p69") {
-    return `Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-${eligosBotCriticalWindow(item)} of the TARGET.`;
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
   }
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
+  if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
+  if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
+  if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p70") {
     return `Sacrificial Dagger deals ${sacrificialDaggerExtraDamage(item)} extra flat damage and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
   }
@@ -194,7 +198,7 @@ function itemDescription(item) {
     return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
   }
   if (item.id === "p74") return `DAMNED with 10 or more BOUNTY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
-  if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  if (item.id === "p75") return `Reveal one extra DAMNED each round. Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   if (item.id === "p76") {
     return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead.`;
   }
@@ -255,7 +259,7 @@ function itemDescription(item) {
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
   if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
+  if (item.id === "p95") return `Reveal one extra DAMNED each round. When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
   if (item.id === "p96") {
     return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
@@ -769,7 +773,8 @@ function selfStackingCurrentDamageForId(id) {
 }
 
 function selfStackingSealDescription(item) {
-  return `${item.description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
+  const description = item.id === "p102" ? ITEMS.p102.description : item.description;
+  return `${description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
 }
 
 function selfStackingConditionCounts(round = state.roundState) {
@@ -1128,6 +1133,7 @@ function sealIdFromStatSource(source) {
   if (!sourceText) return "";
   return (
     PASSIVE_IDS.find((id) => {
+      if (REMOVED_PASSIVE_IDS.has(id)) return false;
       const name = ITEMS[id]?.name;
       return name && (sourceText === name || sourceText.startsWith(`${name} `));
     }) || ""

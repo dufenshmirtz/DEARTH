@@ -27,7 +27,8 @@ const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
-const ENDLESS_BOSS_INTERVAL = 8;
+const BOSS_KILL_INTERVAL_MIN = 8;
+const BOSS_KILL_INTERVAL_MAX = 12;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -558,14 +559,14 @@ const ITEMS = {
     name: "Seal of Vine",
     price: 10,
     description:
-      "Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
+      "Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
   },
   p65: {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "Reveal one extra DAMNED each round. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -595,7 +596,7 @@ const ITEMS = {
     name: "Seal of Eligos",
     price: 14,
     description:
-      "Whenever a DAMNED hits CRITICAL, your guess counts as CRITICAL too and DAMNED CRITICAL damage cannot hurt you. DAMNED hit CRITICAL within +/-1 of the TARGET. ELITE adds +/-1 to the DAMNED CRITICAL range."
+      "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p70: {
     id: "p70",
@@ -640,7 +641,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+    description: "Reveal one extra DAMNED each round. Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
@@ -773,7 +774,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Pyros",
     price: 16,
-    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+    description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
@@ -836,7 +837,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zachriel Triangle",
     price: 15,
-    description: "Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
+    description: "Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
@@ -887,60 +888,88 @@ const ITEMS = {
     price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
+  p112: {
+    id: "p112",
+    type: "passive",
+    name: "Seal of Furfur",
+    price: 12,
+    description: "At end of round, DAMNED whose guesses are multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+  },
+  p113: {
+    id: "p113",
+    type: "passive",
+    name: "Seal of Halphas",
+    price: 12,
+    description: "At end of round, each DAMNED independently has a 30% chance to take 5 damage and a separate 10% chance to take 10 damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+  },
+  p114: {
+    id: "p114",
+    type: "passive",
+    name: "Seal of Buer",
+    price: 12,
+    description: "Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up."
+  },
+  p115: {
+    id: "p115",
+    type: "passive",
+    name: "Seal of Botis",
+    price: 12,
+    description: "At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes 4 damage and gives you 2 SIN. ELITE multiplies the damage by x1.5 and increases the SIN gained by +20% each level, rounded up."
+  },
   a28: {
     id: "a28",
     type: "active",
     name: "Engraved Skull",
-    price: 4,
+    price: 3,
     description: "Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
   },
   a14: {
     id: "a14",
     type: "active",
     name: "Black Candle",
-    price: 4,
+    price: 3,
     description: "During reveal, reduce the TARGET by 10."
   },
   a15: {
     id: "a15",
     type: "active",
     name: "Sacrificial Dagger",
-    price: 4,
+    price: 3,
     description: "Pick a DAMNED. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES."
   },
   a6: {
     id: "a6",
     type: "active",
     name: "Ceremonial Altar",
-    price: 4,
+    price: 3,
     description: "During reveal, add 20 to the TARGET."
   },
   a7: {
     id: "a7",
     type: "active",
     name: "Demonic Idol",
-    price: 6,
+    price: 5,
     description: "Pick a non-boss DAMNED and swap your effective guess with theirs."
   },
   a8: {
     id: "a8",
     type: "active",
     name: "Goat Head",
-    price: 3,
+    price: 2,
     description: "Pick a DAMNED; their guess counts five times for the TARGET average."
   },
   a9: {
     id: "a9",
     type: "active",
     name: "Inverted Cross",
-    price: 3,
+    price: 2,
     description: "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage."
   },
   a10: {
     id: "a10",
     type: "active",
     name: "Funeral Coin",
-    price: 4,
+    price: 3,
     description: "Gain 3 to 10 SIN."
   },
   a11: {
@@ -954,7 +983,7 @@ const ITEMS = {
     id: "a12",
     type: "active",
     name: "Dark Talisman",
-    price: 4,
+    price: 3,
     description: "You take 50% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively."
   },
   a13: {
@@ -975,7 +1004,7 @@ const ITEMS = {
     id: "a18",
     type: "active",
     name: "Corrupted Crystal",
-    price: 4,
+    price: 3,
     description: "Instantly copy the effect of the last non-Crystal ARTIFACT you used."
   },
   a24: {
@@ -989,28 +1018,28 @@ const ITEMS = {
     id: "a21",
     type: "active",
     name: "Voodoo Doll",
-    price: 4,
+    price: 3,
     description: "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took."
   },
   a22: {
     id: "a22",
     type: "active",
     name: "Cursed Chalice",
-    price: 7,
+    price: 6,
     description: "+1 CRITICAL range for the round."
   },
   a23: {
     id: "a23",
     type: "active",
     name: "Satanic Bible",
-    price: 3,
+    price: 2,
     description: "Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll."
   },
   a25: {
     id: "a25",
     type: "active",
     name: "Mummified Lamb",
-    price: 3,
+    price: 2,
     description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
   },
   a26: {
@@ -1129,7 +1158,11 @@ const PASSIVE_IDS = [
   "p106",
   "p107",
   "p108",
-  "p109"
+  "p109",
+  "p112",
+  "p113",
+  "p114",
+  "p115"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1151,6 +1184,7 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p43",
   "p51",
   "p56",
+  "p62",
   "p66",
   "p81",
   "p82",
@@ -1320,7 +1354,11 @@ const SEAL_SIGILS = {
   p106: "071_Zagan.png",
   p107: "050_Ose.png",
   p108: "049_Orobas.png",
-  p109: "self-stacking/Samael-Triangle.png"
+  p109: "self-stacking/Samael-Triangle.png",
+  p112: "034_Furfur.png",
+  p113: "039_Halphas.png",
+  p114: "022_Buer.png",
+  p115: "021_Botis.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -1401,7 +1439,11 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p105: "63-andras.png",
   p106: "61-zagan.png",
   p107: "57-ose.png",
-  p108: "55-orobas.png"
+  p108: "55-orobas.png",
+  p112: "34-furfur.png",
+  p113: "38-halphas.png",
+  p114: "10-buer.png",
+  p115: "17-botis.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -1413,14 +1455,14 @@ const GOETIC_BOSS_SPECS = [
   { key: "amon", name: "Amon", image: "07-amon.png", passiveId: "p59" },
   { key: "barbatos", name: "Barbatos", image: "08-barbatos.png", passiveId: "p46" },
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
-  { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p81" },
+  { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
   { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
   { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p55" },
   { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p62" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
   { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p69" },
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
-  { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p22" },
+  { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p115" },
   { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
   { key: "sallos", name: "Sallos", image: "19-sallos.png", passiveId: "p71" },
   { key: "purson", name: "Purson", image: "20-purson.png", passiveId: "p87" },
@@ -1437,11 +1479,11 @@ const GOETIC_BOSS_SPECS = [
   { key: "foras", name: "Foras", image: "31-foras.png", passiveId: "p32" },
   { key: "asmoday", name: "Asmoday", image: "32-asmoday.png", passiveId: "p73" },
   { key: "gaap", name: "Gaap", image: "33-gaap.png", passiveId: "p60" },
-  { key: "furfur", name: "Furfur", image: "34-furfur.png", passiveId: "p29" },
+  { key: "furfur", name: "Furfur", image: "34-furfur.png", passiveId: "p112" },
   { key: "marchosias", name: "Marchosias", image: "35-marchosias.png", passiveId: "p33" },
   { key: "stolas", name: "Stolas", image: "36-stolas.png", passiveId: "p42" },
   { key: "phenex", name: "Phenex", image: "37-phenex-phoenix.png", passiveId: "p49" },
-  { key: "halphas", name: "Halphas", image: "38-halphas.png", passiveId: "p56" },
+  { key: "halphas", name: "Halphas", image: "38-halphas.png", passiveId: "p113" },
   { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p37" },
   { key: "raum", name: "Raum", image: "40-raum.png", passiveId: "p88" },
   { key: "focalor", name: "Focalor", image: "41-focalor.png", passiveId: "p40" },
@@ -1656,7 +1698,7 @@ const UNIQUE_BOSS_SPECS = {
     name: "Threon",
     image: "assets/bots/occult-stickmen-pack/boss-threon.png",
     descriptions: [
-      "Each round, Threon applies a hidden mystery TARGET modifier from 0.7 to 1.3.",
+      "Each round, Threon applies a hidden mystery TARGET modifier from 0.6 to 1.0.",
       "Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal 3 damage to you."
     ]
   },
@@ -1810,6 +1852,7 @@ const state = {
   goeticBossQueue: [],
   goeticBossKills: 0,
   killsSinceBossSpawn: 0,
+  nextBossKillInterval: null,
   nextBossPairId: 1,
   finalBossPhase: false,
   finalBossQueued: false,

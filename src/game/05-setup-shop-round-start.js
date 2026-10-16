@@ -157,6 +157,7 @@ function enterFinalBossPhase() {
   state.finalBossPhase = true;
   state.bossQueued = false;
   state.killsSinceBossSpawn = 0;
+  state.nextBossKillInterval = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = [];
   state.pendingActive = null;
@@ -172,7 +173,7 @@ function skipToFirstGoeticBoss() {
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
   state.goeticBossKills = 0;
-  state.killsSinceBossSpawn = 0;
+  resetBossKillInterval();
   state.finalBossPhase = false;
   state.finalBossQueued = false;
   state.bossQueued = false;
@@ -736,7 +737,7 @@ function startGame(options = {}) {
   state.finalBossPhase = false;
   state.finalBossQueued = false;
   state.bossQueued = false;
-  state.killsSinceBossSpawn = 0;
+  resetBossKillInterval();
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.critMomentumBonus = 0;
@@ -771,7 +772,7 @@ function beginRound() {
     playerEffectiveGuess: null,
     botSubmittedGuesses: new Map(),
     botEffectiveGuesses: new Map(),
-    targetModifier: twinModifier ?? (threonMystery ? randomInt(7, 13) / 10 : currentTargetModifier()),
+    targetModifier: twinModifier ?? (threonMystery ? randomInt(6, 10) / 10 : currentTargetModifier()),
     mysteryModifier: twinModifier === null && threonMystery,
     targetOffset: 0,
     target: null,
@@ -1251,6 +1252,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
+  const extraReveals = orderedPassiveEffectEntries(["p59", "p64", "p65", "p75", "p95", "p102"]).length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -1258,7 +1260,7 @@ function applyGuessReveals() {
       !bot.eliminated &&
       !botHasPassive(bot, "shield")
   );
-  const desiredRevealCount = Math.min(revealableBots.length, MAX_REVEALED_DAMNED, 1 + amonEntries.length);
+  const desiredRevealCount = Math.min(revealableBots.length, MAX_REVEALED_DAMNED, 1 + extraReveals);
   const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
   const hiddenBots = shuffled(revealableBots.filter((bot) => !bot.revealedByPassive));
   const newlyRevealed = hiddenBots.slice(0, Math.max(0, desiredRevealCount - revealedCount));
@@ -1536,8 +1538,8 @@ function roundRevealSealName(id) {
 
 function roundRevealEventMatchesSeal(id, event) {
   const text = normalizeGameText(event || "");
-  const baseName = ITEMS[id]?.name || "";
-  const displayName = roundRevealSealName(id);
+  const baseName = normalizeGameText(ITEMS[id]?.name || "");
+  const displayName = normalizeGameText(roundRevealSealName(id));
   return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
 }
 

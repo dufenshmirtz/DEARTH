@@ -363,6 +363,10 @@ function normalizeLoadedArcadeRun() {
   }
   if (!state.sealStats || typeof state.sealStats !== "object") state.sealStats = {};
   state.roundState = normalizeLoadedRoundState(state.roundState);
+  if (!state.finalBossPhase && !state.finalBossQueued) ensureBossKillInterval();
+  [...state.player.actives, ...state.shop.map((slot) => slot?.item), state.lastUsedArtifact].forEach((item) => {
+    if (item?.type === "active" && ACTIVE_IDS.includes(item.id)) item.price = ITEMS[item.id].price;
+  });
   state.bots.forEach((bot) => {
     if (!Array.isArray(bot.passiveKeys)) bot.passiveKeys = [];
     bot.passiveKeys = bot.passiveKeys.filter((key) => BOSS_PASSIVES[key]);

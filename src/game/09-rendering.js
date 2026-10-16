@@ -1222,8 +1222,6 @@ function criticalKeysForDisplay(round = state.roundState) {
     getParticipants().forEach((participant) => {
       if (Number.isFinite(participant.guess) && Math.abs(participant.guess - integer) <= participant.window) keys.add(participant.key);
     });
-    // Seal of Eligos: a DAMNED's CRIT is mirrored onto you
-    if (passiveStack("p69") && [...keys].some((key) => key.startsWith("bot-")) && Number.isFinite(round.playerEffectiveGuess)) keys.add("player");
   } catch (error) {}
   return keys;
 }

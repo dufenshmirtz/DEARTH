@@ -758,11 +758,6 @@ function criticalCalipersWindow(idOrItem) {
   return stack ? stack + 1 : 0;
 }
 
-function eligosBotCriticalWindow(idOrItem = "p69") {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? stack : 0;
-}
-
 function pressureSpikeDamage(idOrItem) {
   return flatDamageValue(idOrItem, 20);
 }
