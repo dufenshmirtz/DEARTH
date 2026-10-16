@@ -77,14 +77,7 @@ function bindEvents() {
   });
 
   const pauseButton = document.querySelector("#pauseButton");
-  if (pauseButton) {
-    bindOn(pauseButton, "click", () => {
-      state.pauseOpen = true;
-      state.pauseScreen = "main";
-      if (state.mode === "pvp") pvpSetHostPaused(true);
-      render();
-    });
-  }
+  if (pauseButton) bindOn(pauseButton, "click", openPauseMenu);
 
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
@@ -213,6 +206,40 @@ function bindEvents() {
   }
 }
 
+function openPauseMenu() {
+  state.pauseOpen = true;
+  state.pauseScreen = "main";
+  if (state.mode === "pvp") pvpSetHostPaused(true);
+  render();
+}
+
+// Esc: opens Pause during a run; inside Pause it goes back one screen, then resumes.
+// While an ARTIFACT is waiting for its target, Esc cancels that first.
+// The intro and the collection handle their own Esc (they mark the event as handled).
+function installPauseEscapeShortcut() {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || event.defaultPrevented || event.repeat) return;
+    if (state.mode !== "arcade" && state.mode !== "pvp") return;
+    if (introCapturesInput()) return;
+    if (state.gameOver && !state.inspectingGameOver && !state.pauseOpen) return;
+    event.preventDefault();
+    if (state.pauseOpen) {
+      handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
+      return;
+    }
+    if (state.pendingActive) {
+      cancelPendingActive();
+      return;
+    }
+    if (state.mobileOfferingsOpen) {
+      state.mobileOfferingsOpen = false;
+      render();
+      return;
+    }
+    openPauseMenu();
+  });
+}
+
 function saveArcadeRunForNativeExit() {
   markNativeArcadeResumeOnForeground();
   saveArcadeRun();
@@ -255,6 +282,7 @@ loadSoundSettings();
 loadDisplaySettings();
 installSoundtrack();
 installArcadeEnterShortcut();
+installPauseEscapeShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
 updateFullscreenLayoutClass();

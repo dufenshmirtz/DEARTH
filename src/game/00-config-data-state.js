@@ -27,8 +27,11 @@ const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 6-10 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
 const BOSS_KILL_INTERVAL_MAX = 12;
+const ENDLESS_BOSS_KILL_INTERVAL_MIN = 6;
+const ENDLESS_BOSS_KILL_INTERVAL_MAX = 10;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -893,7 +896,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 12,
-    description: "At end of round, DAMNED whose guesses are multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
   },
   p113: {
     id: "p113",
@@ -1743,8 +1746,7 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Petros enters with Pavlos. Each twin has half BOSS HEALTH and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
-      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
-      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
   },
   pavlos: {
@@ -1758,8 +1760,7 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Pavlos enters with Petros. Each twin has half BOSS HEALTH and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
-      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
-      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
   }
 };
@@ -1833,6 +1834,7 @@ const state = {
   runStats: null,
   currentRunSlotId: null,
   runStartedAt: null,
+  recordsAtRunStart: null,
   pendingNextRoundMarbasBonuses: [],
   pendingNextRoundLambReveals: [],
   pendingSelfStackingPentakillDamage: 0,
@@ -1853,6 +1855,7 @@ const state = {
   goeticBossKills: 0,
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
+  nextBossKillIntervalEndless: false,
   nextBossPairId: 1,
   finalBossPhase: false,
   finalBossQueued: false,

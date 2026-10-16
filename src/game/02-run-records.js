@@ -120,22 +120,63 @@ function updateRecordIfHigher(records, key, candidate) {
   records[key] = { ...current, ...candidate, value };
 }
 
+// what this run has reached for each record
+function currentRunRecordCandidates() {
+  const stats = ensureRunStats();
+  return {
+    mostEliminations: { value: state.eliminations || 0 },
+    mostBossEliminations: { value: state.bossKills || 0 },
+    mostOverallDamage: { value: stats.overallDamage || 0 },
+    mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
+    highestRoundReached: { value: state.round || 0 },
+    mostPentakills: { value: stats.pentakills || 0 },
+    mostOverallSealDamage: bestOverallSealDamageEntry(),
+    mostRoundSealDamage: stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: stats.highestEliteLevel || emptyRecord({ id: "", name: "" }),
+    mostPlayedSeal: bestCountEntry(stats.sealPlays, "SEAL"),
+    mostPlayedArtifact: bestCountEntry(stats.artifactPlays, "ARTIFACT")
+  };
+}
+
 function updateArcadeRecordsFromCurrentRun() {
   if (state.mode !== "arcade") return;
-  const stats = ensureRunStats();
   const records = loadArcadeRecords();
-  updateRecordIfHigher(records, "mostEliminations", { value: state.eliminations || 0 });
-  updateRecordIfHigher(records, "mostBossEliminations", { value: state.bossKills || 0 });
-  updateRecordIfHigher(records, "mostOverallDamage", { value: stats.overallDamage || 0 });
-  updateRecordIfHigher(records, "mostSingleRoundDamage", { value: stats.singleRoundDamage || 0 });
-  updateRecordIfHigher(records, "highestRoundReached", { value: state.round || 0 });
-  updateRecordIfHigher(records, "mostPentakills", { value: stats.pentakills || 0 });
-  updateRecordIfHigher(records, "mostOverallSealDamage", bestOverallSealDamageEntry());
-  updateRecordIfHigher(records, "mostRoundSealDamage", stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }));
-  updateRecordIfHigher(records, "highestEliteLevel", stats.highestEliteLevel || emptyRecord({ id: "", name: "" }));
-  updateRecordIfHigher(records, "mostPlayedSeal", bestCountEntry(stats.sealPlays, "SEAL"));
-  updateRecordIfHigher(records, "mostPlayedArtifact", bestCountEntry(stats.artifactPlays, "ARTIFACT"));
+  Object.entries(currentRunRecordCandidates()).forEach(([key, candidate]) => updateRecordIfHigher(records, key, candidate));
   saveArcadeRecords(records);
+}
+
+// the records as they stood when this run began (kept in the run's save), so the death card can say
+// which ones this run broke
+function snapshotRecordsAtRunStart() {
+  state.recordsAtRunStart = loadArcadeRecords();
+}
+
+// short names for the death card, in the order they are listed there
+const NEW_RECORD_LABELS = {
+  highestRoundReached: "Highest round",
+  mostEliminations: "Most KOs",
+  mostBossEliminations: "Most BOSS kills",
+  mostOverallDamage: "Most damage dealt",
+  mostSingleRoundDamage: "Most damage in one round",
+  mostPentakills: "Most PENTAKILLS",
+  mostOverallSealDamage: "Most damage by one SEAL",
+  mostRoundSealDamage: "Most SEAL damage in one round",
+  highestEliteLevel: "Highest ELITE level"
+};
+
+// records this run beat. A record that was still 0 before the run (a first run) does not count.
+function newRecordsThisRun() {
+  if (state.mode !== "arcade") return [];
+  const before = normalizeArcadeRecords(state.recordsAtRunStart || loadArcadeRecords());
+  const reached = currentRunRecordCandidates();
+  return Object.keys(NEW_RECORD_LABELS)
+    .map((key) => {
+      const previous = Math.max(0, Math.ceil(Number(before[key]?.value) || 0));
+      const value = Math.max(0, Math.ceil(Number(reached[key]?.value) || 0));
+      if (previous <= 0 || value <= previous) return null;
+      return { key, label: NEW_RECORD_LABELS[key], value, previous, name: reached[key]?.name || "" };
+    })
+    .filter(Boolean);
 }
 
 function beginRunRoundStats() {

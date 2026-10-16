@@ -689,6 +689,7 @@ function startGame(options = {}) {
   state.mode = "arcade";
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
+  snapshotRecordsAtRunStart();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -817,10 +818,6 @@ function beginRound() {
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),
     kalhaSuppressedById: null,
-    pavlosProtectedBotId: null,
-    pavlosStartHpById: new Map(),
-    pavlosDeferredBotIds: new Set(),
-    resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
     devSealsRolled: false,
     devSealsAfterReadyRolled: false,
@@ -856,7 +853,6 @@ function beginRound() {
     bot.markedByPlayer = false;
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
-    if (bot.uniqueKey === "pavlos") state.roundState.pavlosStartHpById.set(bot.id, bot.hp);
   });
 
   enforceTwinTemperPersonalities();

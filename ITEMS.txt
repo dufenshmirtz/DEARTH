@@ -98,7 +98,7 @@ Seal of Furcas (11 SIN)
 Every round, if the previous TARGET was below 40, one random non-boss DAMNED guess becomes 100. If it was above 40, one random DAMNED guess becomes 0. ELITE deals 5 damage per level to the selected DAMNED.
 
 Seal of Furfur (12 SIN)
-At end of round, DAMNED whose guesses are multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up.
+At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up.
 
 Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.

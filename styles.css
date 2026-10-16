@@ -10630,3 +10630,115 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
 .collection-screen.collection-from-pause {
   background: #000;
 }
+
+/* Petros and Pavlos: the stolen ability, on the card (top centre) and in the BOSS tooltip */
+#app .bot-card .boss-stolen-tag {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  white-space: nowrap;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 17px !important;
+  letter-spacing: 0.05em;
+  color: var(--blood-bright, #dc2a2f) !important;
+  cursor: help;
+}
+#app .bot-card .boss-stolen-tag span {
+  font-size: 13px !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  margin-right: 2px;
+}
+.floating-tooltip .tooltip-stolen {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(220, 42, 47, 0.55);
+}
+body #app .floating-tooltip .tooltip-stolen .tooltip-stolen-title {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 17px !important;
+  letter-spacing: 0.04em;
+  text-transform: none !important;
+  color: var(--blood-bright, #dc2a2f) !important;
+  margin-bottom: 4px;
+}
+
+/* death card: records this run broke */
+#app .game-over-card .new-records {
+  width: min(400px, 100%);
+  margin: 14px auto 0;
+  padding-top: 12px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+  display: grid;
+  gap: 5px;
+}
+#app .game-over-card .new-records-title {
+  text-align: center;
+  font-size: 16px !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blood-bright) !important;
+  animation: stamp-in 700ms 900ms var(--ui-ease, ease-out) both;
+}
+#app .game-over-card .new-record-row {
+  display: grid;
+  grid-template-columns: 1fr auto 72px;
+  align-items: baseline;
+  gap: 12px;
+}
+#app .game-over-card .new-record-row span {
+  font-size: 13px !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+  text-align: left;
+}
+#app .game-over-card .new-record-row em {
+  font-style: normal;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--bone) !important;
+}
+#app .game-over-card .new-record-row strong {
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  line-height: 1;
+  color: var(--blood-bright) !important;
+}
+#app .game-over-card .new-record-row small {
+  font-size: 12px !important;
+  color: var(--ash) !important;
+  opacity: 0.7;
+  text-align: right;
+}
+
+/* phone: the card has little height, so the records run as one wrapped line */
+body.mobile-arcade #app .game-over-card .new-records {
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+body.mobile-arcade #app .game-over-card .new-records-title {
+  font-size: 11px !important;
+  letter-spacing: 0.12em;
+}
+body.mobile-arcade #app .game-over-card .new-record-row {
+  display: inline-flex;
+  gap: 4px;
+}
+body.mobile-arcade #app .game-over-card .new-record-row span {
+  font-size: 10px !important;
+  letter-spacing: 0.06em;
+}
+body.mobile-arcade #app .game-over-card .new-record-row strong {
+  font-size: 13px !important;
+}
+body.mobile-arcade #app .game-over-card .new-record-row small {
+  display: none;
+}

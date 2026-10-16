@@ -180,7 +180,7 @@ function itemDescription(item) {
   if (item.id === "p69") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
   }
-  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
   if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
   if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
@@ -537,17 +537,23 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
-  if (bot.isBoss && bot.copiedUniqueKey) {
-    const copiedSpec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
-    const borrowedText = copiedSpec.descriptions
-      .join(" ")
-      .replaceAll(copiedSpec.name, bot.name)
-      .replaceAll(`${copiedSpec.name}'s`, `${bot.name}'s`);
-    descriptions.push(`Borrowed power: ${borrowedText}`);
-  }
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
+}
+
+// Petros and Pavlos each steal one other unique BOSS's ability. It is shown apart from their own rules.
+// The stolen TARGET modifier is left out: while a twin is alive their own 0.9 / 1.1 cycle sets the modifier.
+function bossBorrowedPower(bot) {
+  if (!bot?.isBoss || !bot.copiedUniqueKey) return null;
+  const spec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
+  if (!spec) return null;
+  const ownName = new RegExp(`\\b${spec.name}\\b(?!'s own gift| Gift)`, "g");
+  const text = spec.descriptions
+    .filter((line) => !/TARGET modifier/i.test(line))
+    .map((line) => line.replace(ownName, bot.name))
+    .join(" ");
+  return { key: spec.key, name: spec.name, text };
 }
 
 function bossPassiveSummary(bot) {

@@ -233,8 +233,11 @@ const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 6-10 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
 const BOSS_KILL_INTERVAL_MAX = 12;
+const ENDLESS_BOSS_KILL_INTERVAL_MIN = 6;
+const ENDLESS_BOSS_KILL_INTERVAL_MAX = 10;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -1099,7 +1102,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 12,
-    description: "At end of round, DAMNED whose guesses are multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
   },
   p113: {
     id: "p113",
@@ -1949,8 +1952,7 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Petros enters with Pavlos. Each twin has half BOSS HEALTH and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
-      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
-      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
   },
   pavlos: {
@@ -1964,8 +1966,7 @@ const UNIQUE_BOSS_SPECS = {
     descriptions: [
       "Pavlos enters with Petros. Each twin has half BOSS HEALTH and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
-      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9.",
-      "If both twins would take lethal damage in the same round, Pavlos takes no damage for the rest of that round."
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
   }
 };
@@ -2039,6 +2040,7 @@ const state = {
   runStats: null,
   currentRunSlotId: null,
   runStartedAt: null,
+  recordsAtRunStart: null,
   pendingNextRoundMarbasBonuses: [],
   pendingNextRoundLambReveals: [],
   pendingSelfStackingPentakillDamage: 0,
@@ -2059,6 +2061,7 @@ const state = {
   goeticBossKills: 0,
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
+  nextBossKillIntervalEndless: false,
   nextBossPairId: 1,
   finalBossPhase: false,
   finalBossQueued: false,
@@ -2386,8 +2389,7 @@ function normalizeLoadedRoundState(round) {
     "activeUseItemCounts",
     "artifactTargetCountsByBotId",
     "botDamageTotals",
-    "targetDifferenceDamageByBotId",
-    "pavlosStartHpById"
+    "targetDifferenceDamageByBotId"
   ].forEach((key) => {
     round[key] = ensureMap(round[key]);
   });
@@ -2402,7 +2404,6 @@ function normalizeLoadedRoundState(round) {
     "belethTriggeredBotIds",
     "vapulaTriggeredBotIds",
     "kalhaSuppressedPassiveIds",
-    "pavlosDeferredBotIds",
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
     "triggeredPassiveIds",
@@ -2457,6 +2458,8 @@ function normalizeLoadedArcadeRun() {
     state.lastUsedArtifact = null;
   }
   if (!state.sealStats || typeof state.sealStats !== "object") state.sealStats = {};
+  // older saves have no snapshot; the records as they are now are the closest guess
+  if (!state.recordsAtRunStart || typeof state.recordsAtRunStart !== "object") snapshotRecordsAtRunStart();
   state.roundState = normalizeLoadedRoundState(state.roundState);
   if (!state.finalBossPhase && !state.finalBossQueued) ensureBossKillInterval();
   [...state.player.actives, ...state.shop.map((slot) => slot?.item), state.lastUsedArtifact].forEach((item) => {
@@ -2945,22 +2948,63 @@ function updateRecordIfHigher(records, key, candidate) {
   records[key] = { ...current, ...candidate, value };
 }
 
+// what this run has reached for each record
+function currentRunRecordCandidates() {
+  const stats = ensureRunStats();
+  return {
+    mostEliminations: { value: state.eliminations || 0 },
+    mostBossEliminations: { value: state.bossKills || 0 },
+    mostOverallDamage: { value: stats.overallDamage || 0 },
+    mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
+    highestRoundReached: { value: state.round || 0 },
+    mostPentakills: { value: stats.pentakills || 0 },
+    mostOverallSealDamage: bestOverallSealDamageEntry(),
+    mostRoundSealDamage: stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: stats.highestEliteLevel || emptyRecord({ id: "", name: "" }),
+    mostPlayedSeal: bestCountEntry(stats.sealPlays, "SEAL"),
+    mostPlayedArtifact: bestCountEntry(stats.artifactPlays, "ARTIFACT")
+  };
+}
+
 function updateArcadeRecordsFromCurrentRun() {
   if (state.mode !== "arcade") return;
-  const stats = ensureRunStats();
   const records = loadArcadeRecords();
-  updateRecordIfHigher(records, "mostEliminations", { value: state.eliminations || 0 });
-  updateRecordIfHigher(records, "mostBossEliminations", { value: state.bossKills || 0 });
-  updateRecordIfHigher(records, "mostOverallDamage", { value: stats.overallDamage || 0 });
-  updateRecordIfHigher(records, "mostSingleRoundDamage", { value: stats.singleRoundDamage || 0 });
-  updateRecordIfHigher(records, "highestRoundReached", { value: state.round || 0 });
-  updateRecordIfHigher(records, "mostPentakills", { value: stats.pentakills || 0 });
-  updateRecordIfHigher(records, "mostOverallSealDamage", bestOverallSealDamageEntry());
-  updateRecordIfHigher(records, "mostRoundSealDamage", stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }));
-  updateRecordIfHigher(records, "highestEliteLevel", stats.highestEliteLevel || emptyRecord({ id: "", name: "" }));
-  updateRecordIfHigher(records, "mostPlayedSeal", bestCountEntry(stats.sealPlays, "SEAL"));
-  updateRecordIfHigher(records, "mostPlayedArtifact", bestCountEntry(stats.artifactPlays, "ARTIFACT"));
+  Object.entries(currentRunRecordCandidates()).forEach(([key, candidate]) => updateRecordIfHigher(records, key, candidate));
   saveArcadeRecords(records);
+}
+
+// the records as they stood when this run began (kept in the run's save), so the death card can say
+// which ones this run broke
+function snapshotRecordsAtRunStart() {
+  state.recordsAtRunStart = loadArcadeRecords();
+}
+
+// short names for the death card, in the order they are listed there
+const NEW_RECORD_LABELS = {
+  highestRoundReached: "Highest round",
+  mostEliminations: "Most KOs",
+  mostBossEliminations: "Most BOSS kills",
+  mostOverallDamage: "Most damage dealt",
+  mostSingleRoundDamage: "Most damage in one round",
+  mostPentakills: "Most PENTAKILLS",
+  mostOverallSealDamage: "Most damage by one SEAL",
+  mostRoundSealDamage: "Most SEAL damage in one round",
+  highestEliteLevel: "Highest ELITE level"
+};
+
+// records this run beat. A record that was still 0 before the run (a first run) does not count.
+function newRecordsThisRun() {
+  if (state.mode !== "arcade") return [];
+  const before = normalizeArcadeRecords(state.recordsAtRunStart || loadArcadeRecords());
+  const reached = currentRunRecordCandidates();
+  return Object.keys(NEW_RECORD_LABELS)
+    .map((key) => {
+      const previous = Math.max(0, Math.ceil(Number(before[key]?.value) || 0));
+      const value = Math.max(0, Math.ceil(Number(reached[key]?.value) || 0));
+      if (previous <= 0 || value <= previous) return null;
+      return { key, label: NEW_RECORD_LABELS[key], value, previous, name: reached[key]?.name || "" };
+    })
+    .filter(Boolean);
 }
 
 function beginRunRoundStats() {
@@ -4430,7 +4474,7 @@ function itemDescription(item) {
   if (item.id === "p69") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
   }
-  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
   if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
   if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
@@ -4787,17 +4831,23 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
-  if (bot.isBoss && bot.copiedUniqueKey) {
-    const copiedSpec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
-    const borrowedText = copiedSpec.descriptions
-      .join(" ")
-      .replaceAll(copiedSpec.name, bot.name)
-      .replaceAll(`${copiedSpec.name}'s`, `${bot.name}'s`);
-    descriptions.push(`Borrowed power: ${borrowedText}`);
-  }
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
+}
+
+// Petros and Pavlos each steal one other unique BOSS's ability. It is shown apart from their own rules.
+// The stolen TARGET modifier is left out: while a twin is alive their own 0.9 / 1.1 cycle sets the modifier.
+function bossBorrowedPower(bot) {
+  if (!bot?.isBoss || !bot.copiedUniqueKey) return null;
+  const spec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
+  if (!spec) return null;
+  const ownName = new RegExp(`\\b${spec.name}\\b(?!'s own gift| Gift)`, "g");
+  const text = spec.descriptions
+    .filter((line) => !/TARGET modifier/i.test(line))
+    .map((line) => line.replace(ownName, bot.name))
+    .join(" ");
+  return { key: spec.key, name: spec.name, text };
 }
 
 function bossPassiveSummary(bot) {
@@ -5708,10 +5758,8 @@ function recordBotExcessDamage(bot, damage, hpBefore) {
 
 function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZero = false } = {}) {
   const eliminated = [];
-  maybeActivatePavlosProtection(botDamages);
   bots.forEach((bot) => {
     if (!bot || bot.eliminated || bot.hp <= 0) return;
-    if (pavlosDamageBlocked(bot)) return;
     const damage = botDamages.get(bot.id) || 0;
     if (damage <= 0) {
       if (logZero) state.roundState.roundEvents.push(`${bot.name} took 0 damage.`);
@@ -6025,111 +6073,12 @@ function activeBots() {
   return state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
 }
 
-function activeBossByOwnKey(key) {
-  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.hp > 0 && !bot.eliminated) || null;
-}
-
-function pairedBossByKey(key, pairGroupId) {
-  if (!pairGroupId) return null;
-  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.pairGroupId === pairGroupId) || null;
-}
-
-function restoreProtectedPavlos(pavlos) {
-  const round = state.roundState;
-  if (!round || !pavlos || round.pavlosProtectedBotId === pavlos.id) return false;
-  const startingHp = round.pavlosStartHpById?.get(pavlos.id);
-  round.pavlosDeferredBotIds?.delete(pavlos.id);
-  pavlos.eliminated = false;
-  pavlos.hp = Math.max(1, Math.ceil(startingHp || pavlos.hp || pavlos.maxHp / 2 || 1));
-  pavlos.lastDamage = 0;
-  pavlos.damageSources = [];
-  pavlos.deathCause = null;
-  pavlos.deathNotice = null;
-  pavlos.pendingReplacementSpec = null;
-  round.pavlosProtectedBotId = pavlos.id;
-  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
-  return true;
-}
-
-function protectPavlosAcrossRound(freshEliminations) {
-  const round = state.roundState;
-  if (!round || round.pavlosProtectedBotId) return freshEliminations;
-  if (round.resolvingDeferredPavlos) return freshEliminations;
-  const fallingIds = new Set(freshEliminations.map((bot) => bot.id));
-
-  const protectedEliminations = freshEliminations.filter((bot) => {
-    if (bot.uniqueKey !== "pavlos") return true;
-    const petros = pairedBossByKey("petros", bot.pairGroupId);
-    const petrosFalling = petros && (fallingIds.has(petros.id) || petros.eliminated || petros.hp <= 0);
-    if (!petrosFalling && petros && !petros.eliminated && petros.hp > 0) {
-      round.pavlosDeferredBotIds?.add(bot.id);
-      bot.hp = 1;
-      return false;
-    }
-    if (!petrosFalling) return true;
-    restoreProtectedPavlos(bot);
-    return false;
-  });
-
-  freshEliminations.forEach((bot) => {
-    if (bot.uniqueKey !== "petros") return;
-    const pavlos = pairedBossByKey("pavlos", bot.pairGroupId);
-    if (pavlos && (pavlos.eliminated || pavlos.hp <= 0 || round.pavlosDeferredBotIds?.has(pavlos.id))) {
-      restoreProtectedPavlos(pavlos);
-    }
-  });
-
-  return protectedEliminations;
-}
-
-function resolveDeferredPavlosEliminations() {
-  const round = state.roundState;
-  const deferredIds = Array.from(round?.pavlosDeferredBotIds || []);
-  if (!round || !deferredIds.length) return;
-  round.pavlosDeferredBotIds.clear();
-  deferredIds.forEach((id) => {
-    const pavlos = state.bots.find((bot) => bot.id === id && bot.uniqueKey === "pavlos");
-    if (!pavlos || pavlos.eliminated || round.pavlosProtectedBotId === pavlos.id) return;
-    const petros = pairedBossByKey("petros", pavlos.pairGroupId);
-    if (!petros || petros.eliminated || petros.hp <= 0) {
-      restoreProtectedPavlos(pavlos);
-      return;
-    }
-    round.resolvingDeferredPavlos = true;
-    pavlos.hp = 0;
-    resolveEliminatedBots([pavlos]);
-    round.resolvingDeferredPavlos = false;
-  });
-}
-
-function maybeActivatePavlosProtection(incomingDamageById) {
-  const round = state.roundState;
-  if (!round || round.pavlosProtectedBotId) return null;
-  const petros = activeBossByOwnKey("petros");
-  const pavlos = activeBossByOwnKey("pavlos");
-  if (!petros || !pavlos || petros.pairGroupId !== pavlos.pairGroupId) return null;
-  const petrosDamage = Math.max(0, Math.ceil(incomingDamageById.get(petros.id) || 0));
-  const pavlosDamage = Math.max(0, Math.ceil(incomingDamageById.get(pavlos.id) || 0));
-  if (petrosDamage < petros.hp || pavlosDamage < pavlos.hp) return null;
-  round.pavlosProtectedBotId = pavlos.id;
-  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
-  return pavlos.id;
-}
-
-function pavlosDamageBlocked(bot) {
-  return Boolean(
-    bot &&
-      (state.roundState?.pavlosProtectedBotId === bot.id || state.roundState?.pavlosDeferredBotIds?.has(bot.id))
-  );
-}
-
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
   if (!bot || bot.eliminated || rawDamage <= 0) return 0;
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (damage <= 0) return 0;
-  if (pavlosDamageBlocked(bot)) return 0;
   bot.lastDamage = (bot.lastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
@@ -6160,7 +6109,6 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (damage <= 0) return 0;
-  if (pavlosDamageBlocked(bot)) return 0;
   if (bot.immortal) {
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
@@ -6195,9 +6143,8 @@ function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, play
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
   });
-  maybeActivatePavlosProtection(new Map(planned.map(({ bot, damage }) => [bot?.id, damage])));
   planned.forEach(({ bot, damageDetails, damage }) => {
-    if (!bot || bot.eliminated || damage <= 0 || pavlosDamageBlocked(bot)) return;
+    if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
@@ -7122,6 +7069,7 @@ function startGame(options = {}) {
   state.mode = "arcade";
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
+  snapshotRecordsAtRunStart();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -7250,10 +7198,6 @@ function beginRound() {
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),
     kalhaSuppressedById: null,
-    pavlosProtectedBotId: null,
-    pavlosStartHpById: new Map(),
-    pavlosDeferredBotIds: new Set(),
-    resolvingDeferredPavlos: false,
     pyrosGiftGranted: false,
     devSealsRolled: false,
     devSealsAfterReadyRolled: false,
@@ -7289,7 +7233,6 @@ function beginRound() {
     bot.markedByPlayer = false;
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
-    if (bot.uniqueKey === "pavlos") state.roundState.pavlosStartHpById.set(bot.id, bot.hp);
   });
 
   enforceTwinTemperPersonalities();
@@ -8560,7 +8503,6 @@ function applyPenalties() {
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   clearTemporaryBotSinBonuses();
-  resolveDeferredPavlosEliminations();
 
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -8724,9 +8666,7 @@ function applyExcessDamageSpread(eliminations) {
 }
 
 function resolveEliminatedBots(eliminated) {
-  const freshEliminations = protectPavlosAcrossRound(
-    eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated)
-  );
+  const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
   if (!freshEliminations.length) return;
   const eliminatedIds = new Set(freshEliminations.map((bot) => bot.id));
   const dantreSources = activeBossesWithPower("dantre", eliminatedIds);
@@ -8970,16 +8910,33 @@ function applyRoundEliminationBonus() {
   });
 }
 
-function resetBossKillInterval() {
-  state.killsSinceBossSpawn = 0;
-  state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+// after the main game (all 8 unique BOSSES beaten) BOSSES come sooner
+function bossKillIntervalRange() {
+  return allSpecialBossesKilled()
+    ? [ENDLESS_BOSS_KILL_INTERVAL_MIN, ENDLESS_BOSS_KILL_INTERVAL_MAX]
+    : [BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX];
 }
 
+function rollBossKillInterval() {
+  const [min, max] = bossKillIntervalRange();
+  state.nextBossKillInterval = randomInt(min, max);
+  state.nextBossKillIntervalEndless = allSpecialBossesKilled();
+}
+
+function resetBossKillInterval() {
+  state.killsSinceBossSpawn = 0;
+  rollBossKillInterval();
+}
+
+// the KOs already counted are kept; the interval is rolled again only when it is missing, out of
+// range, or was rolled before the main game was beaten
 function ensureBossKillInterval() {
+  const [min, max] = bossKillIntervalRange();
   if (!Number.isInteger(state.nextBossKillInterval) ||
-      state.nextBossKillInterval < BOSS_KILL_INTERVAL_MIN ||
-      state.nextBossKillInterval > BOSS_KILL_INTERVAL_MAX) {
-    state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+      state.nextBossKillInterval < min ||
+      state.nextBossKillInterval > max ||
+      Boolean(state.nextBossKillIntervalEndless) !== allSpecialBossesKilled()) {
+    rollBossKillInterval();
   }
   return state.nextBossKillInterval;
 }
@@ -9191,7 +9148,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const guess = round.botEffectiveGuesses.get(bot.id);
         let damage = 0;
         if (entry.id === "p112" && Number.isFinite(guess)) {
-          [3, 5, 7].forEach((divisor) => {
+          [2, 3, 5, 7].forEach((divisor) => {
             if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, divisor);
           });
         } else if (entry.id === "p113") {
@@ -12470,7 +12427,7 @@ function readMomentSnapshot() {
     target: round && round.target !== null && round.target !== undefined ? shownTargetValue(round) : null,
     playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
     anyCritical: Boolean(round?.criticalHitKeys?.size),
-    bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name })),
+    bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name, twinOrder: bot.uniqueKey === "pavlos" ? 1 : 0 })),
     finals: Boolean(state.finalBossPhase),
     downIds: Array.from(document.querySelectorAll(".bot-card.eliminated")).map((card) => card.dataset.botId),
     downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated")).map((card) => card.dataset.botId),
@@ -12570,10 +12527,15 @@ function watchMoments() {
     startMoment("finals", "Judgement", "Jesus and Satan take the table");
     screenShake(5, 600);
   } else if (!now.finals) {
-    const arrived = now.bosses.find((boss) => !before.bosses.some((old) => old.id === boss.id));
-    if (arrived) {
+    // bosses that come together (Petros and Pavlos) arrive in one card
+    const arrived = now.bosses
+      .filter((boss) => !before.bosses.some((old) => old.id === boss.id))
+      .sort((left, right) => (left.twinOrder || 0) - (right.twinOrder || 0));
+    if (arrived.length) {
       momentSfx("bossArrive");
-      startMoment("boss", arrived.name, "takes a seat at the table");
+      const names = arrived.map((boss) => boss.name);
+      const title = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+      startMoment("boss", title, names.length > 1 ? "take their seats at the table" : "takes a seat at the table");
       screenShake(4, 500);
     }
   }
@@ -12766,15 +12728,34 @@ function bossAbilityText(bot) {
   return botPassiveDescription(bot) || "No special ability.";
 }
 
-function glyphTooltipHtml(title, label, body, note = "") {
+function glyphTooltipHtml(title, label, body, note = "", extraHtml = "") {
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(title)}</div>
       <div class="tooltip-shift-hint">${escapeHtml(label)}</div>
     </div>
     <div class="tooltip-body">${descriptionHtml(body)}</div>
+    ${extraHtml}
     ${note ? `<div class="tooltip-glyph-note">${escapeHtml(note)}</div>` : ""}
   `;
+}
+
+// the ability a twin stole, as its own block under the twin's rules
+function bossStolenTooltipHtml(borrowed) {
+  return `
+    <div class="tooltip-stolen">
+      <div class="tooltip-stolen-title">Stolen from ${escapeHtml(borrowed.name)}</div>
+      <div class="tooltip-body">${descriptionHtml(borrowed.text)}</div>
+    </div>
+  `;
+}
+
+// top centre of a twin's card: whose ability it stole (hover for what it does)
+function bossStolenTagHtml(bot) {
+  const borrowed = bossBorrowedPower(bot);
+  if (!borrowed) return "";
+  const tooltip = glyphTooltipHtml(`${bot.name} stole ${borrowed.name}'s power`, "STOLEN", borrowed.text);
+  return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>Stole</span> ${escapeHtml(borrowed.name)}</div>`;
 }
 
 // late-game (Goetic) bosses are titled by their ability; the named bosses by their name
@@ -12784,7 +12765,14 @@ function bossTooltipTitle(bot) {
 }
 
 function bossGlyphHtml(bot) {
-  const tooltip = glyphTooltipHtml(bossTooltipTitle(bot), "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
+  const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
+  const tooltip = glyphTooltipHtml(
+    bossTooltipTitle(bot),
+    "BOSS",
+    bossAbilityText(bot),
+    "No personality: always plays the best guess it can work out.",
+    borrowed ? bossStolenTooltipHtml(borrowed) : ""
+  );
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
@@ -12933,6 +12921,7 @@ function renderBot(bot, pendingPick) {
       ${hit.flash}
       ${deathBadge}
       ${markBadge}
+      ${bot.isBoss && !isDown ? bossStolenTagHtml(bot) : ""}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
@@ -13285,8 +13274,8 @@ function renderOverlay() {
   const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
-      <img class="end-figure end-figure-left" src="assets/ui/jesus.png" alt="" />
-      <img class="end-figure end-figure-right" src="assets/ui/devil.png" alt="" />
+      <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
+      <img class="end-figure end-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
@@ -13296,14 +13285,35 @@ function renderOverlay() {
           ${statRow("Bosses", formatNumber(state.bossKills))}
           ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
-          ${statRow("Best round", formatNumber(stats.singleRoundDamage || 0))}
-          <div class="end-stat end-stat-wide"><span>Strongest seal</span><strong>${escapeHtml(bestSeal)}</strong></div>
+          ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
+          <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
         </div>
+        ${renderNewRecordsHtml()}
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-restart" id="restartGame">Restart</button>
         </div>
       </section>
+    </div>
+  `;
+}
+
+// records this run broke, under the run's stats on the death card
+function renderNewRecordsHtml() {
+  const broken = newRecordsThisRun();
+  if (!broken.length) return "";
+  const rows = broken
+    .map((record) => {
+      const format = (number) => (record.key === "highestEliteLevel" ? `ELITE ${number}` : formatNumber(number));
+      const value = format(record.value);
+      const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
+      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
+    })
+    .join("");
+  return `
+    <div class="new-records">
+      <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
+      ${rows}
     </div>
   `;
 }
@@ -15435,14 +15445,7 @@ function bindEvents() {
   });
 
   const pauseButton = document.querySelector("#pauseButton");
-  if (pauseButton) {
-    bindOn(pauseButton, "click", () => {
-      state.pauseOpen = true;
-      state.pauseScreen = "main";
-      if (state.mode === "pvp") pvpSetHostPaused(true);
-      render();
-    });
-  }
+  if (pauseButton) bindOn(pauseButton, "click", openPauseMenu);
 
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
@@ -15571,6 +15574,40 @@ function bindEvents() {
   }
 }
 
+function openPauseMenu() {
+  state.pauseOpen = true;
+  state.pauseScreen = "main";
+  if (state.mode === "pvp") pvpSetHostPaused(true);
+  render();
+}
+
+// Esc: opens Pause during a run; inside Pause it goes back one screen, then resumes.
+// While an ARTIFACT is waiting for its target, Esc cancels that first.
+// The intro and the collection handle their own Esc (they mark the event as handled).
+function installPauseEscapeShortcut() {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || event.defaultPrevented || event.repeat) return;
+    if (state.mode !== "arcade" && state.mode !== "pvp") return;
+    if (introCapturesInput()) return;
+    if (state.gameOver && !state.inspectingGameOver && !state.pauseOpen) return;
+    event.preventDefault();
+    if (state.pauseOpen) {
+      handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
+      return;
+    }
+    if (state.pendingActive) {
+      cancelPendingActive();
+      return;
+    }
+    if (state.mobileOfferingsOpen) {
+      state.mobileOfferingsOpen = false;
+      render();
+      return;
+    }
+    openPauseMenu();
+  });
+}
+
 function saveArcadeRunForNativeExit() {
   markNativeArcadeResumeOnForeground();
   saveArcadeRun();
@@ -15613,6 +15650,7 @@ loadSoundSettings();
 loadDisplaySettings();
 installSoundtrack();
 installArcadeEnterShortcut();
+installPauseEscapeShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
 updateFullscreenLayoutClass();

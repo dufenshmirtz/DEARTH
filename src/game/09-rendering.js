@@ -1236,7 +1236,7 @@ function readMomentSnapshot() {
     target: round && round.target !== null && round.target !== undefined ? shownTargetValue(round) : null,
     playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
     anyCritical: Boolean(round?.criticalHitKeys?.size),
-    bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name })),
+    bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name, twinOrder: bot.uniqueKey === "pavlos" ? 1 : 0 })),
     finals: Boolean(state.finalBossPhase),
     downIds: Array.from(document.querySelectorAll(".bot-card.eliminated")).map((card) => card.dataset.botId),
     downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated")).map((card) => card.dataset.botId),
@@ -1336,10 +1336,15 @@ function watchMoments() {
     startMoment("finals", "Judgement", "Jesus and Satan take the table");
     screenShake(5, 600);
   } else if (!now.finals) {
-    const arrived = now.bosses.find((boss) => !before.bosses.some((old) => old.id === boss.id));
-    if (arrived) {
+    // bosses that come together (Petros and Pavlos) arrive in one card
+    const arrived = now.bosses
+      .filter((boss) => !before.bosses.some((old) => old.id === boss.id))
+      .sort((left, right) => (left.twinOrder || 0) - (right.twinOrder || 0));
+    if (arrived.length) {
       momentSfx("bossArrive");
-      startMoment("boss", arrived.name, "takes a seat at the table");
+      const names = arrived.map((boss) => boss.name);
+      const title = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+      startMoment("boss", title, names.length > 1 ? "take their seats at the table" : "takes a seat at the table");
       screenShake(4, 500);
     }
   }
@@ -1532,15 +1537,34 @@ function bossAbilityText(bot) {
   return botPassiveDescription(bot) || "No special ability.";
 }
 
-function glyphTooltipHtml(title, label, body, note = "") {
+function glyphTooltipHtml(title, label, body, note = "", extraHtml = "") {
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(title)}</div>
       <div class="tooltip-shift-hint">${escapeHtml(label)}</div>
     </div>
     <div class="tooltip-body">${descriptionHtml(body)}</div>
+    ${extraHtml}
     ${note ? `<div class="tooltip-glyph-note">${escapeHtml(note)}</div>` : ""}
   `;
+}
+
+// the ability a twin stole, as its own block under the twin's rules
+function bossStolenTooltipHtml(borrowed) {
+  return `
+    <div class="tooltip-stolen">
+      <div class="tooltip-stolen-title">Stolen from ${escapeHtml(borrowed.name)}</div>
+      <div class="tooltip-body">${descriptionHtml(borrowed.text)}</div>
+    </div>
+  `;
+}
+
+// top centre of a twin's card: whose ability it stole (hover for what it does)
+function bossStolenTagHtml(bot) {
+  const borrowed = bossBorrowedPower(bot);
+  if (!borrowed) return "";
+  const tooltip = glyphTooltipHtml(`${bot.name} stole ${borrowed.name}'s power`, "STOLEN", borrowed.text);
+  return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>Stole</span> ${escapeHtml(borrowed.name)}</div>`;
 }
 
 // late-game (Goetic) bosses are titled by their ability; the named bosses by their name
@@ -1550,7 +1574,14 @@ function bossTooltipTitle(bot) {
 }
 
 function bossGlyphHtml(bot) {
-  const tooltip = glyphTooltipHtml(bossTooltipTitle(bot), "BOSS", bossAbilityText(bot), "No personality: always plays the best guess it can work out.");
+  const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
+  const tooltip = glyphTooltipHtml(
+    bossTooltipTitle(bot),
+    "BOSS",
+    bossAbilityText(bot),
+    "No personality: always plays the best guess it can work out.",
+    borrowed ? bossStolenTooltipHtml(borrowed) : ""
+  );
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
@@ -1699,6 +1730,7 @@ function renderBot(bot, pendingPick) {
       ${hit.flash}
       ${deathBadge}
       ${markBadge}
+      ${bot.isBoss && !isDown ? bossStolenTagHtml(bot) : ""}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
@@ -2051,8 +2083,8 @@ function renderOverlay() {
   const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
-      <img class="end-figure end-figure-left" src="assets/ui/jesus.png" alt="" />
-      <img class="end-figure end-figure-right" src="assets/ui/devil.png" alt="" />
+      <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
+      <img class="end-figure end-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
@@ -2062,14 +2094,35 @@ function renderOverlay() {
           ${statRow("Bosses", formatNumber(state.bossKills))}
           ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
-          ${statRow("Best round", formatNumber(stats.singleRoundDamage || 0))}
-          <div class="end-stat end-stat-wide"><span>Strongest seal</span><strong>${escapeHtml(bestSeal)}</strong></div>
+          ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
+          <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
         </div>
+        ${renderNewRecordsHtml()}
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-restart" id="restartGame">Restart</button>
         </div>
       </section>
+    </div>
+  `;
+}
+
+// records this run broke, under the run's stats on the death card
+function renderNewRecordsHtml() {
+  const broken = newRecordsThisRun();
+  if (!broken.length) return "";
+  const rows = broken
+    .map((record) => {
+      const format = (number) => (record.key === "highestEliteLevel" ? `ELITE ${number}` : formatNumber(number));
+      const value = format(record.value);
+      const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
+      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
+    })
+    .join("");
+  return `
+    <div class="new-records">
+      <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
+      ${rows}
     </div>
   `;
 }

@@ -384,7 +384,6 @@ function applyPenalties() {
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   clearTemporaryBotSinBonuses();
-  resolveDeferredPavlosEliminations();
 
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -548,9 +547,7 @@ function applyExcessDamageSpread(eliminations) {
 }
 
 function resolveEliminatedBots(eliminated) {
-  const freshEliminations = protectPavlosAcrossRound(
-    eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated)
-  );
+  const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
   if (!freshEliminations.length) return;
   const eliminatedIds = new Set(freshEliminations.map((bot) => bot.id));
   const dantreSources = activeBossesWithPower("dantre", eliminatedIds);
@@ -794,16 +791,33 @@ function applyRoundEliminationBonus() {
   });
 }
 
-function resetBossKillInterval() {
-  state.killsSinceBossSpawn = 0;
-  state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+// after the main game (all 8 unique BOSSES beaten) BOSSES come sooner
+function bossKillIntervalRange() {
+  return allSpecialBossesKilled()
+    ? [ENDLESS_BOSS_KILL_INTERVAL_MIN, ENDLESS_BOSS_KILL_INTERVAL_MAX]
+    : [BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX];
 }
 
+function rollBossKillInterval() {
+  const [min, max] = bossKillIntervalRange();
+  state.nextBossKillInterval = randomInt(min, max);
+  state.nextBossKillIntervalEndless = allSpecialBossesKilled();
+}
+
+function resetBossKillInterval() {
+  state.killsSinceBossSpawn = 0;
+  rollBossKillInterval();
+}
+
+// the KOs already counted are kept; the interval is rolled again only when it is missing, out of
+// range, or was rolled before the main game was beaten
 function ensureBossKillInterval() {
+  const [min, max] = bossKillIntervalRange();
   if (!Number.isInteger(state.nextBossKillInterval) ||
-      state.nextBossKillInterval < BOSS_KILL_INTERVAL_MIN ||
-      state.nextBossKillInterval > BOSS_KILL_INTERVAL_MAX) {
-    state.nextBossKillInterval = randomInt(BOSS_KILL_INTERVAL_MIN, BOSS_KILL_INTERVAL_MAX);
+      state.nextBossKillInterval < min ||
+      state.nextBossKillInterval > max ||
+      Boolean(state.nextBossKillIntervalEndless) !== allSpecialBossesKilled()) {
+    rollBossKillInterval();
   }
   return state.nextBossKillInterval;
 }
@@ -1015,7 +1029,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const guess = round.botEffectiveGuesses.get(bot.id);
         let damage = 0;
         if (entry.id === "p112" && Number.isFinite(guess)) {
-          [3, 5, 7].forEach((divisor) => {
+          [2, 3, 5, 7].forEach((divisor) => {
             if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, divisor);
           });
         } else if (entry.id === "p113") {

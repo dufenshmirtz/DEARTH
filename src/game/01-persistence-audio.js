@@ -291,8 +291,7 @@ function normalizeLoadedRoundState(round) {
     "activeUseItemCounts",
     "artifactTargetCountsByBotId",
     "botDamageTotals",
-    "targetDifferenceDamageByBotId",
-    "pavlosStartHpById"
+    "targetDifferenceDamageByBotId"
   ].forEach((key) => {
     round[key] = ensureMap(round[key]);
   });
@@ -307,7 +306,6 @@ function normalizeLoadedRoundState(round) {
     "belethTriggeredBotIds",
     "vapulaTriggeredBotIds",
     "kalhaSuppressedPassiveIds",
-    "pavlosDeferredBotIds",
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
     "triggeredPassiveIds",
@@ -362,6 +360,8 @@ function normalizeLoadedArcadeRun() {
     state.lastUsedArtifact = null;
   }
   if (!state.sealStats || typeof state.sealStats !== "object") state.sealStats = {};
+  // older saves have no snapshot; the records as they are now are the closest guess
+  if (!state.recordsAtRunStart || typeof state.recordsAtRunStart !== "object") snapshotRecordsAtRunStart();
   state.roundState = normalizeLoadedRoundState(state.roundState);
   if (!state.finalBossPhase && !state.finalBossQueued) ensureBossKillInterval();
   [...state.player.actives, ...state.shop.map((slot) => slot?.item), state.lastUsedArtifact].forEach((item) => {

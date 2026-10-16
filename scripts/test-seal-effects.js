@@ -173,13 +173,13 @@ test("Furfur adds matching divisors and applies normal elite rounding", () => {
   game()(`
     fixture([["p112"]], [9, 10, 14, 15, 21, 35, 0, 11]);
     applyEndOfRoundPassiveDamageInOrder();
-    assertDamage([3, 5, 7, 8, 10, 12, 15, 0]);
-    assert.equal(state.sealStats.p112.damage, 60);
+    assertDamage([3, 7, 9, 8, 10, 12, 17, 0]);
+    assert.equal(state.sealStats.p112.damage, 66);
   `);
   game()(`
     fixture([["p112", 3]], [15, 35, 0, NaN]);
     applyEndOfRoundPassiveDamageInOrder();
-    assertDamage([20, 29, 37, 0]);
+    assertDamage([20, 29, 42, 0]);
   `);
 });
 
@@ -312,7 +312,7 @@ test("new damage resolves at round end with each seal attributed in the animatio
     const before = captureRoundRevealSnapshot();
     Math.random = () => 0.01;
     applyEndOfRoundPassives();
-    assertDamage([27, 24, 24]);
+    assertDamage([27, 26, 24]);
     assert.equal(state.sealStats.p114.credits, 6);
     const sequence = buildRoundRevealSequence(before);
     for (const id of ["p112", "p113", "p114", "p115"]) {
@@ -375,6 +375,7 @@ test("random intervals preserve the first-eight gate, twin encounter, and final 
     assert.equal(nextBossSpecIfNeeded(), null);
     assert.equal(state.goeticBossQueue.length, 1);
     state.bossKills = 8;
+    state.killsSinceBossSpawn = 10;
     assert.equal(nextBossSpecIfNeeded().goeticKey, "bael");
     state.uniqueBossQueue = ["petros"];
     state.killsSinceBossSpawn = state.nextBossKillInterval;
@@ -433,5 +434,46 @@ test("all playable artifact prices fall by one with a 2 SIN minimum and catalog 
     assert.equal(state.player.actives[0].sellValueOverride, 0);
     assert.equal(shopPrice(state.shop[0].item), 6);
     assert.ok(itemDescription({ ...ITEMS.p113, description: "Old 5% chance", stack: 1 }).includes("10% chance"));
+  `);
+});
+
+test("after the 8 unique bosses, bosses come every 6-10 KOs; KOs already counted are kept", () => {
+  game()(`
+    fixture([], [50]);
+    state.bossKills = 7;
+    resetBossKillInterval();
+    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 12);
+    state.killsSinceBossSpawn = 5;
+    state.bossKills = 8;
+    const seen = new Set();
+    let tick = 0;
+    Math.random = () => ((tick++ * 0.37) % 1);
+    for (let i = 0; i < 200; i++) {
+      state.nextBossKillIntervalEndless = false;
+      const interval = ensureBossKillInterval();
+      assert.ok(interval >= 6 && interval <= 10, "endless interval " + interval);
+      seen.add(interval);
+    }
+    assert.equal(seen.size, 5);
+    assert.equal(state.killsSinceBossSpawn, 5);
+    const kept = state.nextBossKillInterval;
+    assert.equal(ensureBossKillInterval(), kept);
+  `);
+});
+
+test("Petros and Pavlos can fall in the same round", () => {
+  game()(`
+    fixture([], [50, 50, 50, 50, 50]);
+    const spec = uniqueBossSpecFromKey("petros");
+    const petros = createBot({ boss: true, bossSpec: spec });
+    const pavlos = createBot({ boss: true, bossSpec: spec.pairedBossSpec });
+    state.bots[0] = petros;
+    state.bots[1] = pavlos;
+    damageBots([petros, pavlos], 100000, (bot, dealt) => bot.name + " took " + dealt, "Test");
+    assert.equal(petros.eliminated, true);
+    assert.equal(pavlos.eliminated, true);
+    const borrowed = bossBorrowedPower(petros);
+    assert.ok(borrowed && borrowed.name && !/TARGET modifier/i.test(borrowed.text));
+    assert.ok(!botPassiveDescription(petros).includes("Borrowed"));
   `);
 });

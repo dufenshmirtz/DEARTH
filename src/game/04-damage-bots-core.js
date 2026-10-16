@@ -242,10 +242,8 @@ function recordBotExcessDamage(bot, damage, hpBefore) {
 
 function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZero = false } = {}) {
   const eliminated = [];
-  maybeActivatePavlosProtection(botDamages);
   bots.forEach((bot) => {
     if (!bot || bot.eliminated || bot.hp <= 0) return;
-    if (pavlosDamageBlocked(bot)) return;
     const damage = botDamages.get(bot.id) || 0;
     if (damage <= 0) {
       if (logZero) state.roundState.roundEvents.push(`${bot.name} took 0 damage.`);
@@ -559,111 +557,12 @@ function activeBots() {
   return state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
 }
 
-function activeBossByOwnKey(key) {
-  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.hp > 0 && !bot.eliminated) || null;
-}
-
-function pairedBossByKey(key, pairGroupId) {
-  if (!pairGroupId) return null;
-  return state.bots.find((bot) => bot.isBoss && bot.uniqueKey === key && bot.pairGroupId === pairGroupId) || null;
-}
-
-function restoreProtectedPavlos(pavlos) {
-  const round = state.roundState;
-  if (!round || !pavlos || round.pavlosProtectedBotId === pavlos.id) return false;
-  const startingHp = round.pavlosStartHpById?.get(pavlos.id);
-  round.pavlosDeferredBotIds?.delete(pavlos.id);
-  pavlos.eliminated = false;
-  pavlos.hp = Math.max(1, Math.ceil(startingHp || pavlos.hp || pavlos.maxHp / 2 || 1));
-  pavlos.lastDamage = 0;
-  pavlos.damageSources = [];
-  pavlos.deathCause = null;
-  pavlos.deathNotice = null;
-  pavlos.pendingReplacementSpec = null;
-  round.pavlosProtectedBotId = pavlos.id;
-  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
-  return true;
-}
-
-function protectPavlosAcrossRound(freshEliminations) {
-  const round = state.roundState;
-  if (!round || round.pavlosProtectedBotId) return freshEliminations;
-  if (round.resolvingDeferredPavlos) return freshEliminations;
-  const fallingIds = new Set(freshEliminations.map((bot) => bot.id));
-
-  const protectedEliminations = freshEliminations.filter((bot) => {
-    if (bot.uniqueKey !== "pavlos") return true;
-    const petros = pairedBossByKey("petros", bot.pairGroupId);
-    const petrosFalling = petros && (fallingIds.has(petros.id) || petros.eliminated || petros.hp <= 0);
-    if (!petrosFalling && petros && !petros.eliminated && petros.hp > 0) {
-      round.pavlosDeferredBotIds?.add(bot.id);
-      bot.hp = 1;
-      return false;
-    }
-    if (!petrosFalling) return true;
-    restoreProtectedPavlos(bot);
-    return false;
-  });
-
-  freshEliminations.forEach((bot) => {
-    if (bot.uniqueKey !== "petros") return;
-    const pavlos = pairedBossByKey("pavlos", bot.pairGroupId);
-    if (pavlos && (pavlos.eliminated || pavlos.hp <= 0 || round.pavlosDeferredBotIds?.has(pavlos.id))) {
-      restoreProtectedPavlos(pavlos);
-    }
-  });
-
-  return protectedEliminations;
-}
-
-function resolveDeferredPavlosEliminations() {
-  const round = state.roundState;
-  const deferredIds = Array.from(round?.pavlosDeferredBotIds || []);
-  if (!round || !deferredIds.length) return;
-  round.pavlosDeferredBotIds.clear();
-  deferredIds.forEach((id) => {
-    const pavlos = state.bots.find((bot) => bot.id === id && bot.uniqueKey === "pavlos");
-    if (!pavlos || pavlos.eliminated || round.pavlosProtectedBotId === pavlos.id) return;
-    const petros = pairedBossByKey("petros", pavlos.pairGroupId);
-    if (!petros || petros.eliminated || petros.hp <= 0) {
-      restoreProtectedPavlos(pavlos);
-      return;
-    }
-    round.resolvingDeferredPavlos = true;
-    pavlos.hp = 0;
-    resolveEliminatedBots([pavlos]);
-    round.resolvingDeferredPavlos = false;
-  });
-}
-
-function maybeActivatePavlosProtection(incomingDamageById) {
-  const round = state.roundState;
-  if (!round || round.pavlosProtectedBotId) return null;
-  const petros = activeBossByOwnKey("petros");
-  const pavlos = activeBossByOwnKey("pavlos");
-  if (!petros || !pavlos || petros.pairGroupId !== pavlos.pairGroupId) return null;
-  const petrosDamage = Math.max(0, Math.ceil(incomingDamageById.get(petros.id) || 0));
-  const pavlosDamage = Math.max(0, Math.ceil(incomingDamageById.get(pavlos.id) || 0));
-  if (petrosDamage < petros.hp || pavlosDamage < pavlos.hp) return null;
-  round.pavlosProtectedBotId = pavlos.id;
-  round.roundEvents.push("Pavlos refused lethal damage because both twins would have fallen.");
-  return pavlos.id;
-}
-
-function pavlosDamageBlocked(bot) {
-  return Boolean(
-    bot &&
-      (state.roundState?.pavlosProtectedBotId === bot.id || state.roundState?.pavlosDeferredBotIds?.has(bot.id))
-  );
-}
-
 function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
   const rawDamage = Math.max(0, Math.ceil(amount));
   if (!bot || bot.eliminated || rawDamage <= 0) return 0;
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (damage <= 0) return 0;
-  if (pavlosDamageBlocked(bot)) return 0;
   bot.lastDamage = (bot.lastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
@@ -694,7 +593,6 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
   const damage = damageDetails.damage;
   if (damage <= 0) return 0;
-  if (pavlosDamageBlocked(bot)) return 0;
   if (bot.immortal) {
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
@@ -729,9 +627,8 @@ function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, play
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
   });
-  maybeActivatePavlosProtection(new Map(planned.map(({ bot, damage }) => [bot?.id, damage])));
   planned.forEach(({ bot, damageDetails, damage }) => {
-    if (!bot || bot.eliminated || damage <= 0 || pavlosDamageBlocked(bot)) return;
+    if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
