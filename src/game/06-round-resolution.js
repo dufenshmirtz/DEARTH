@@ -577,7 +577,11 @@ function resolveEliminatedBots(eliminated) {
 
     if (bot.isBoss) {
       const previousPassiveLimit = passiveLimit();
-      if (bot.countsAsBossProgress !== false) state.bossKills += 1;
+      if (bot.countsAsBossProgress !== false) {
+        state.bossKills += 1;
+        // the main game is won: Satan comes back once the results are on screen
+        if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
+      }
       if (bot.goeticKey) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
@@ -1486,6 +1490,12 @@ function advanceAfterSummary() {
   // first-launch story: from round 2 the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
+    return;
+  }
+  // after the 8th unique BOSS, the results wait for Satan; moving on brings him in now
+  if (introState.phase === "victory" || introState.phase === "victory-leave") return;
+  if (satanVictoryHoldsSummary()) {
+    startSatanVictoryNow();
     return;
   }
   clearDevTemporaryArtifacts();

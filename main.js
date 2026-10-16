@@ -2080,6 +2080,8 @@ const state = {
   finalBossQueued: false,
   bossQueued: false,
   eliteBoostedNextReroll: 0,
+  satanVictoryDue: false,
+  satanVictoryPlayed: false,
   paleHorseBoostArmed: false,
   critMomentumBonus: 0,
   previousRoundEliminationsForMartyrs: 0,
@@ -7134,6 +7136,8 @@ function startGame(options = {}) {
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
   snapshotRecordsAtRunStart();
+  state.satanVictoryDue = false;
+  state.satanVictoryPlayed = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -8812,7 +8816,11 @@ function resolveEliminatedBots(eliminated) {
 
     if (bot.isBoss) {
       const previousPassiveLimit = passiveLimit();
-      if (bot.countsAsBossProgress !== false) state.bossKills += 1;
+      if (bot.countsAsBossProgress !== false) {
+        state.bossKills += 1;
+        // the main game is won: Satan comes back once the results are on screen
+        if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
+      }
       if (bot.goeticKey) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
@@ -9721,6 +9729,12 @@ function advanceAfterSummary() {
   // first-launch story: from round 2 the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
+    return;
+  }
+  // after the 8th unique BOSS, the results wait for Satan; moving on brings him in now
+  if (introState.phase === "victory" || introState.phase === "victory-leave") return;
+  if (satanVictoryHoldsSummary()) {
+    startSatanVictoryNow();
     return;
   }
   clearDevTemporaryArtifacts();
@@ -14274,6 +14288,14 @@ const INTRO_PACT_LINES = [
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
+// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact
+const SATAN_VICTORY_LINES = [
+  ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
+  ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
+  ["satan", "I hope you didn't think this was actually the end, did you? Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right? So please, keep the SIN flowing and the sinners screaming, and maybe we shall meet again."],
+  ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
+];
+
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal
@@ -14323,7 +14345,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -14333,7 +14355,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -14552,7 +14574,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory"].includes(introState.phase) || !introState.box) return;
   introWakePencil();
   if (introState.typing) {
     // finish the current part at once
@@ -14581,6 +14603,7 @@ function introAdvance() {
     return;
   }
   if (introState.phase === "judgement") introBootGame();
+  else if (introState.phase === "victory") satanVictoryLeave();
   else introSealPact();
 }
 
@@ -14588,7 +14611,7 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (introState.phase === "pact") introPlacePactBox();
+    if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
@@ -14643,6 +14666,10 @@ function introSkip() {
     introState.typing = false;
     introState.box?.classList.remove("intro-box-pulse");
     introSealPact();
+  } else if (introState.phase === "victory") {
+    introClearTimers();
+    introState.typing = false;
+    satanVictoryLeave();
   }
 }
 
@@ -14730,7 +14757,8 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (introState.phase === "pact") introPlacePactBox();
+  if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+  satanVictoryAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
   if (state.round >= 2 && state.stage === "summary") {
     const check = () => {
@@ -14755,6 +14783,85 @@ function introStartPactNow() {
   clearTimeout(introState.pactTimer);
   introState.pactTimer = null;
   introStartPact();
+}
+
+/* ---- Satan returns: the 8 unique BOSSES are beaten ----
+   state.satanVictoryDue is set when the 8th unique BOSS falls; the round's results then wait for him
+   (Next Round brings him in at once), like the pact after round 2. Same entrance and box as the pact,
+   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). */
+function satanVictoryReady() {
+  return (
+    state.satanVictoryDue &&
+    introState.phase === "off" &&
+    state.mode === "arcade" &&
+    state.stage === "summary" &&
+    !state.gameOver &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function satanVictoryHoldsSummary() {
+  return Boolean(state.satanVictoryDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function satanVictoryAfterRender() {
+  if (!state.satanVictoryDue || introState.pactTimer || introState.phase !== "off") return;
+  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanVictoryReady()) startSatanVictory();
+    else if (state.satanVictoryDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanVictoryNow() {
+  if (!satanVictoryHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanVictory();
+}
+
+function startSatanVictory() {
+  state.satanVictoryDue = false;
+  state.satanVictoryPlayed = true;
+  introBindKeys();
+  introState.phase = "victory";
+  introState.lines = SATAN_VICTORY_LINES;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  document.querySelector("#floatingTooltip")?.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-pact-layer satan-victory-layer";
+  layer.innerHTML = `
+    <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introPlacePactBox();
+  introShowLine(0);
+  saveArcadeRun();
+}
+
+function satanVictoryLeave() {
+  if (introState.phase !== "victory") return;
+  introSetWaiting(false);
+  introState.phase = "victory-leave";
+  introPlaySfx("introLaugh");
+  introState.box?.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introClearTimers();
+    introState.phase = "off";
+    render();
+  }, 1300);
 }
 
 /* ---- 3. Satan's pact ---- */

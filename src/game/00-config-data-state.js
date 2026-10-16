@@ -1874,6 +1874,8 @@ const state = {
   finalBossQueued: false,
   bossQueued: false,
   eliteBoostedNextReroll: 0,
+  satanVictoryDue: false,
+  satanVictoryPlayed: false,
   paleHorseBoostArmed: false,
   critMomentumBonus: 0,
   previousRoundEliminationsForMartyrs: 0,

@@ -690,6 +690,8 @@ function startGame(options = {}) {
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
   snapshotRecordsAtRunStart();
+  state.satanVictoryDue = false;
+  state.satanVictoryPlayed = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
