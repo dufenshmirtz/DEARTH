@@ -732,7 +732,7 @@ function applyKillRuleHealing(bot) {
     );
     return;
   }
-  const heal = bot?.isBoss ? 8 : 1;
+  const heal = bot?.isBoss ? 6 : 1;
   const source = bot?.isBoss ? "BOSS kill" : "DAMNED kill";
   const healed = healPlayer(heal, null, source);
   state.roundState.roundEvents.push(

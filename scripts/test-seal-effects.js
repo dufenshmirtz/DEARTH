@@ -104,16 +104,16 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   }
 });
 
-test("boss kills heal 8 HP, normal kills heal 1, and healing respects max HP", () => {
+test("boss kills heal 6 HP, normal kills heal 1, and healing respects max HP", () => {
   game()(`
     fixture([], [50, 50]);
     state.bots[0].isBoss = true;
     state.player.hp = 80;
     applyKillRuleHealing(state.bots[0]);
-    assert.equal(state.player.hp, 88);
-    assert.ok(state.roundState.roundEvents.includes("BOSS kill healed you for 8."));
+    assert.equal(state.player.hp, 86);
+    assert.ok(state.roundState.roundEvents.includes("BOSS kill healed you for 6."));
     applyKillRuleHealing(state.bots[1]);
-    assert.equal(state.player.hp, 89);
+    assert.equal(state.player.hp, 87);
     state.player.hp = 98;
     applyKillRuleHealing(state.bots[0]);
     assert.equal(state.player.hp, 100);
@@ -475,5 +475,21 @@ test("Petros and Pavlos can fall in the same round", () => {
     const borrowed = bossBorrowedPower(petros);
     assert.ok(borrowed && borrowed.name && !/TARGET modifier/i.test(borrowed.text));
     assert.ok(!botPassiveDescription(petros).includes("Borrowed"));
+  `);
+});
+
+test("every collection SEAL has at least one known build tag", () => {
+  game()(`
+    const keys = new Set(SEAL_BUILDS.map(build => build.key));
+    const ids = collectionSections().flatMap(section => section.ids);
+    assert.equal(ids.length, 91);
+    for (const id of ids) {
+      assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
+      for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
+    }
+    for (const id of Object.keys(SEAL_BUILD_TAGS)) assert.ok(ids.includes(id), id + " is tagged but not in the collection");
+    assert.ok(sealMatchesCollectionFilter("p59", "reveal") && sealMatchesCollectionFilter("p59", "bounty"));
+    assert.ok(!sealMatchesCollectionFilter("p45", "bounty"));
+    assert.ok(sealMatchesCollectionFilter("p45", "all"));
   `);
 });

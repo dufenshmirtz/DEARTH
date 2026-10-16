@@ -8971,7 +8971,7 @@ function applyKillRuleHealing(bot) {
     );
     return;
   }
-  const heal = bot?.isBoss ? 8 : 1;
+  const heal = bot?.isBoss ? 6 : 1;
   const source = bot?.isBoss ? "BOSS kill" : "DAMNED kill";
   const healed = healPlayer(heal, null, source);
   state.roundState.roundEvents.push(
@@ -15294,6 +15294,132 @@ const COLLECTION_SECTIONS = [
   { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
 ];
 
+/* ---- builds: the collection filters ----
+   Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
+   BOUNTY means the SEAL works with the BOUNTY the DAMNED carry (gives it, reads it, spends it). SEALS
+   that only pay you SIN, or only multiply the SIN paid on elimination, are not BOUNTY SEALS. */
+const SEAL_BUILDS = [
+  { key: "bounty", label: "Bounty" },
+  { key: "memory", label: "Memory" },
+  { key: "reveal", label: "Reveal" },
+  { key: "critical", label: "Critical" },
+  { key: "personality", label: "Personality" },
+  { key: "artifact", label: "Artifact" },
+  { key: "general", label: "General" }
+];
+
+const SEAL_BUILD_TAGS = {
+  // Player SEALS
+  p1: ["memory"], // Vassago
+  p2: ["critical"], // Paimon
+  p6: ["critical"], // Orias
+  p7: ["critical"], // Glasya-Labolas
+  p9: ["bounty", "memory"], // Marbas
+  p10: ["bounty", "memory"], // Gusion
+  p11: ["artifact"], // Valefor
+  p12: ["general"], // Belial
+  p13: ["general", "personality"], // Bune
+  p14: ["personality"], // Leraje
+  p15: ["memory"], // Bathin
+  p16: ["general"], // Bael
+  p17: ["memory"], // Dantalion
+  p19: ["general"], // Sabnock
+  p20: ["artifact"], // Haagenti
+  p23: ["bounty"], // Seere
+  p25: ["artifact"], // Valac
+  p26: ["artifact"], // Amdusias
+  p30: ["general"], // Andrealphus
+  p31: ["bounty"], // Murmur
+  p32: ["bounty"], // Foras
+  p33: ["bounty"], // Marchosias
+  p34: ["bounty"], // Gremory
+  p35: ["bounty"], // Forneus
+  p40: ["bounty"], // Focalor
+  p42: ["memory"], // Stolas
+  p44: ["bounty"], // Andromalius
+  p45: ["general"], // Crocell (double SIN payout only)
+  p46: ["bounty"], // Barbatos
+  p47: ["bounty"], // Ronove
+  p48: ["bounty"], // Cimejes
+  p49: ["bounty", "artifact"], // Phenex
+  p50: ["bounty"], // Agares
+  p52: ["memory"], // Decarabia
+  p53: ["memory"], // Samigina
+  p54: ["reveal"], // Zepar
+  p55: ["memory"], // Sitri
+  p57: ["bounty", "memory"], // Balam
+  p58: ["general"], // Ipos
+  p59: ["reveal", "bounty", "memory"], // Amon
+  p60: ["artifact"], // Gaap
+  p61: ["reveal"], // Vepar
+  p63: ["reveal"], // Vual
+  p64: ["reveal"], // Vine (double SIN payout is not BOUNTY)
+  p65: ["reveal"], // Naberius
+  p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
+  p68: ["memory"], // Vapula
+  p69: ["critical"], // Eligos
+  p70: ["artifact"], // Amy
+  p71: ["general"], // Sallos
+  p72: ["general"], // Furcas
+  p73: ["general"], // Asmoday
+  p84: ["reveal"], // Astaroth
+  p85: ["personality"], // Berith
+  p86: ["personality", "memory"], // Haures
+  p87: ["personality"], // Purson
+  p88: ["personality", "bounty"], // Raum
+  p89: ["personality"], // Marax
+  p90: ["personality"], // Bifrons
+  p91: ["critical"], // Aim
+  p104: ["personality", "bounty", "memory"], // Alloces
+  p105: ["personality", "artifact"], // Andras
+  p106: ["personality"], // Zagan
+  p107: ["personality"], // Ose
+  p108: ["personality"], // Orobas
+  p112: ["general"], // Furfur
+  p113: ["general"], // Halphas
+  p114: ["general"], // Buer
+  p115: ["general"], // Botis
+  // Apocalypse SEALS
+  p74: ["bounty"], // White Horse
+  p75: ["reveal"], // Red Horse
+  p76: ["memory"], // Black Horse
+  p77: ["critical"], // Pale Horse
+  p78: ["personality"], // Souls of Martyrs
+  p79: ["artifact"], // Creation Uncreated
+  p80: ["general"], // Silence in Heaven
+  // Boss SEALS
+  p92: ["critical"], // Dantre
+  p93: ["bounty"], // Zilon
+  p94: ["artifact"], // Serafeim
+  p95: ["reveal"], // Pyros
+  p96: ["personality"], // Padma
+  p97: ["memory"], // Threon
+  p110: ["general"], // Petros-Pavlos (wipes MEMORY and BOUNTY)
+  // Satan SEALS
+  p111: ["general"], // Satan
+  // Seals of Saturn
+  p98: ["critical"], // Samael Star
+  p99: ["memory"], // Cassiel Sigil
+  p100: ["bounty"], // Bethor
+  p101: ["general"], // Aggiel Hexagram
+  p102: ["reveal"], // Zachriel Triangle
+  p103: ["artifact"], // Cassiel Pentagram
+  p109: ["personality"] // Samael Triangle
+};
+
+function sealBuilds(id) {
+  return SEAL_BUILD_TAGS[id] || ["general"];
+}
+
+function collectionFilter() {
+  const key = state.collectionFilter;
+  return SEAL_BUILDS.some((build) => build.key === key) ? key : "all";
+}
+
+function sealMatchesCollectionFilter(id, filter = collectionFilter()) {
+  return filter === "all" || sealBuilds(id).includes(filter);
+}
+
 /* ---- stored progress ---- */
 let collectionProgressCache = null;
 
@@ -15606,6 +15732,7 @@ function collectionInfoHtml(id) {
     return `
       <div class="collection-info-status locked">Locked</div>
       <div class="collection-info-name">${escapeHtml(item.name)}</div>
+      ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}`;
   }
@@ -15613,8 +15740,45 @@ function collectionInfoHtml(id) {
   return `
     <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
+    ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
     ${note}`;
+}
+
+function collectionBuildsHtml(id) {
+  const labels = sealBuilds(id).map((key) => SEAL_BUILDS.find((build) => build.key === key)?.label).filter(Boolean);
+  return `<div class="collection-info-builds">${labels.map((label) => `<span>${escapeHtml(label)}</span>`).join("")}</div>`;
+}
+
+function collectionFiltersHtml(all) {
+  const filter = collectionFilter();
+  const tabs = [{ key: "all", label: "All" }, ...SEAL_BUILDS].map((build) => {
+    const count = build.key === "all" ? all.length : all.filter((id) => sealBuilds(id).includes(build.key)).length;
+    const active = build.key === filter;
+    return `<button class="collection-filter${active ? " active" : ""}" type="button" data-collection-filter="${build.key}" aria-pressed="${active}">${escapeHtml(build.label)}<span class="collection-filter-count">${count}</span></button>`;
+  });
+  return `<nav class="collection-filters" aria-label="Filter SEALS by build">${tabs.join("")}</nav>`;
+}
+
+// filters in place, so the screen does not replay its entrance
+function applyCollectionFilter(screen, filter) {
+  state.collectionFilter = filter;
+  if (!screen) return;
+  screen.querySelectorAll("[data-collection-filter]").forEach((button) => {
+    const active = button.dataset.collectionFilter === filter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  screen.querySelectorAll(".collection-seal").forEach((button) => {
+    button.hidden = !sealMatchesCollectionFilter(button.dataset.collectionSeal, filter);
+  });
+  screen.querySelectorAll(".collection-section").forEach((section) => {
+    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
+  });
+  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+  const body = screen.querySelector(".collection-body");
+  if (body) body.scrollTop = 0;
 }
 
 function collectionDescription(item) {
@@ -15629,10 +15793,11 @@ function renderCollectionScreen(from) {
   const all = collectibleSealIds();
   const unlocked = all.filter((id) => isSealUnlocked(id)).length;
   const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
+  const filter = collectionFilter();
   const sections = collectionSections()
     .map(
       (section) => `
-        <section class="collection-section collection-section-${section.key}">
+        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => sealMatchesCollectionFilter(id, filter)) ? "" : " hidden"}>
           <h2 class="collection-section-title">${escapeHtml(section.title)}</h2>
           <div class="collection-grid">
             ${section.ids
@@ -15640,7 +15805,7 @@ function renderCollectionScreen(from) {
                 const status = collectionSealState(id);
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
                 return `
-                  <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}" aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                  <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
@@ -15660,6 +15825,7 @@ function renderCollectionScreen(from) {
           <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
       </header>
+      ${collectionFiltersHtml(all)}
       <div class="collection-legend" aria-hidden="true">
         <span class="legend discovered">discovered</span>
         <span class="legend undiscovered">undiscovered</span>
@@ -15706,6 +15872,12 @@ function closeCollection(from) {
 function bindCollectionEvents() {
   document.querySelectorAll("[data-collection-back]").forEach((button) => {
     bindOn(button, "click", () => closeCollection(button.dataset.collectionBack));
+  });
+  document.querySelectorAll("[data-collection-filter]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
+    });
   });
   document.querySelectorAll("[data-collection-seal]").forEach((button) => {
     bindOn(button, "pointerenter", (event) => {
