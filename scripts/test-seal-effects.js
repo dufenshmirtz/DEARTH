@@ -437,7 +437,7 @@ test("all playable artifact prices fall by one with a 2 SIN minimum and catalog 
   `);
 });
 
-test("after the 8 unique bosses, bosses come every 6-10 KOs; KOs already counted are kept", () => {
+test("after the 8 unique bosses, bosses come every 4-8 KOs; KOs already counted are kept", () => {
   game()(`
     fixture([], [50]);
     state.bossKills = 7;
@@ -451,7 +451,7 @@ test("after the 8 unique bosses, bosses come every 6-10 KOs; KOs already counted
     for (let i = 0; i < 200; i++) {
       state.nextBossKillIntervalEndless = false;
       const interval = ensureBossKillInterval();
-      assert.ok(interval >= 6 && interval <= 10, "endless interval " + interval);
+      assert.ok(interval >= 4 && interval <= 8, "endless interval " + interval);
       seen.add(interval);
     }
     assert.equal(seen.size, 5);

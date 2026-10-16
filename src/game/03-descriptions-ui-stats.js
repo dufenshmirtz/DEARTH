@@ -1121,9 +1121,9 @@ function sourceTooltip(sources, kind = "damage") {
     const savedEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "saved"));
     return [
       ...damageEntries.map((entry) => `-${entry.amount} health from ${entry.source}`),
-      ...flatBonusEntries.map((entry) => `+${entry.amount} flat damage from ${entry.source}`),
-      ...multiplierBonusEntries.map((entry) => `+${entry.amount} multiplied damage from ${entry.source}`),
-      ...bonusEntries.map((entry) => `+${entry.amount} bonus damage from ${entry.source}`),
+      ...flatBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (flat bonus)`),
+      ...multiplierBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (multiplier)`),
+      ...bonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (bonus)`),
       ...savedEntries.map((entry) => `+${entry.amount} health saved from ${entry.source}`)
     ].join("\n");
   }

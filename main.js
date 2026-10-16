@@ -233,11 +233,11 @@ const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
-// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 6-10 after it
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
 const BOSS_KILL_INTERVAL_MAX = 12;
-const ENDLESS_BOSS_KILL_INTERVAL_MIN = 6;
-const ENDLESS_BOSS_KILL_INTERVAL_MAX = 10;
+const ENDLESS_BOSS_KILL_INTERVAL_MIN = 4;
+const ENDLESS_BOSS_KILL_INTERVAL_MAX = 8;
 const PVP_SLOT_COUNT = 5;
 const PVP_MAX_SLOT_COUNT = 12;
 const PVP_MAX_HP = 100;
@@ -1551,24 +1551,25 @@ const SEAL_SIGILS = {
   p91: "003_Aim.png",
   p92: "dev/DantreSeal.png",
   p93: "dev/ZilonSeal.png",
-  p94: "dev/SerafeimSeal.png",
+  p94: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
   p95: "dev/PyrosSeal.png",
   p96: "dev/PadmaSeal.png",
   p97: "dev/ThreonSeal.png",
   p110: "dev/PetrosPavlosSeal.png",
   p111: "satan/lucifer-wide.png",
-  p98: "self-stacking/Samael-Star.png",
-  p99: "self-stacking/Cassiel-Sigil.png",
-  p100: "self-stacking/Bethor.png",
-  p101: "self-stacking/Aggiel-Hexagram.png",
-  p102: "self-stacking/Zachriel-Triangle.png",
-  p103: "self-stacking/Cassiel-Pentagram.png",
+  // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
+  p98: "saturn/Saturn-Pentacle-01.png",
+  p99: "saturn/Saturn-Pentacle-02.png",
+  p100: "saturn/Saturn-Pentacle-03.png",
+  p101: "saturn/Saturn-Pentacle-04.png",
+  p102: "saturn/Saturn-Pentacle-05.png",
+  p103: "saturn/Saturn-Pentacle-06.png",
   p104: "004_Allocer.png",
   p105: "008_Andras.png",
   p106: "071_Zagan.png",
   p107: "050_Ose.png",
   p108: "049_Orobas.png",
-  p109: "self-stacking/Samael-Triangle.png",
+  p109: "saturn/Saturn-Pentacle-07.png",
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",
@@ -5478,9 +5479,9 @@ function sourceTooltip(sources, kind = "damage") {
     const savedEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "saved"));
     return [
       ...damageEntries.map((entry) => `-${entry.amount} health from ${entry.source}`),
-      ...flatBonusEntries.map((entry) => `+${entry.amount} flat damage from ${entry.source}`),
-      ...multiplierBonusEntries.map((entry) => `+${entry.amount} multiplied damage from ${entry.source}`),
-      ...bonusEntries.map((entry) => `+${entry.amount} bonus damage from ${entry.source}`),
+      ...flatBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (flat bonus)`),
+      ...multiplierBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (multiplier)`),
+      ...bonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (bonus)`),
       ...savedEntries.map((entry) => `+${entry.amount} health saved from ${entry.source}`)
     ].join("\n");
   }
