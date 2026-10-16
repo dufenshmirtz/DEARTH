@@ -9671,8 +9671,6 @@ body.native-arcade #app .pause-scene .pause-overlay {
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 10px clamp(14px, 4vw, 60px) 30px;
-  scrollbar-width: thin;
-  scrollbar-color: #4a4640 transparent;
 }
 
 .collection-section + .collection-section {
@@ -10741,4 +10739,296 @@ body.mobile-arcade #app .game-over-card .new-record-row strong {
 }
 body.mobile-arcade #app .game-over-card .new-record-row small {
   display: none;
+}
+
+/* ==========================================================================
+   Scrollbars: a thin bone line on a faint hand-drawn rail, red while held.
+   Chromium (desktop build, Android WebView) uses ::-webkit-scrollbar; Firefox the standard properties.
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, transparent 4px, rgba(233, 227, 214, 0.14) 4px, rgba(233, 227, 214, 0.14) 6px, transparent 6px);
+}
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(180deg, transparent 4px, rgba(233, 227, 214, 0.14) 4px, rgba(233, 227, 214, 0.14) 6px, transparent 6px);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(233, 227, 214, 0.62);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 1px;
+  min-height: 28px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(233, 227, 214, 0.9);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--blood-bright, #dc2a2f);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+  display: none;
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(233, 227, 214, 0.62) transparent;
+  }
+}
+
+/* ARTIFACTS: rows keep their height whatever the count; past the panel's height the list scrolls */
+#app .active-panel .active-list {
+  grid-template-rows: none !important;
+  grid-auto-rows: max-content !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+#app .active-panel .active-list > .item-card {
+  min-height: max-content !important;
+}
+
+/* ==========================================================================
+   Settings: tabs (Audio, Display, Gameplay), rows of sliders, toggles and ‹ choice ›
+   Used in the main menu and in Pause.
+   ========================================================================== */
+#app .main-menu-panel.menu-screen-sound {
+  width: min(600px, 94vw);
+}
+#app .options-menu {
+  width: 100%;
+  justify-items: center;
+}
+#app .settings-panel {
+  display: grid;
+  gap: 12px;
+  width: min(560px, 92vw);
+}
+#app .settings-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding-bottom: 10px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") bottom center / 100% 8px no-repeat;
+}
+#app .settings-tab {
+  position: relative;
+  padding: 2px 16px 6px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 24px !important;
+  color: var(--ash) !important;
+  cursor: pointer;
+}
+#app .settings-tab::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -2px;
+  height: 6px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") center / 100% 6px no-repeat;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(105%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+#app .settings-tab.active {
+  color: var(--bone) !important;
+}
+#app .settings-tab.active::after {
+  opacity: 1;
+}
+#app .settings-tab:hover:not(.active) {
+  color: var(--blood-bright) !important;
+}
+#app .settings-rows {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 232px;
+}
+#app .setting-row,
+#app .settings-rows .sound-setting {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 34px;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  color: var(--bone) !important;
+}
+#app .settings-rows .sound-setting label,
+#app .setting-label {
+  text-align: left;
+  color: var(--bone) !important;
+}
+#app .settings-rows .sound-setting strong {
+  text-align: right;
+  font-weight: 400 !important;
+  color: var(--ash) !important;
+}
+#app .setting-toggle-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
+  cursor: pointer;
+}
+#app .setting-toggle-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+}
+#app .setting-choice-row {
+  grid-template-columns: 200px minmax(0, 1fr);
+}
+#app .setting-choice {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  text-align: center;
+  padding: 0 4px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") bottom center / 100% 6px no-repeat;
+}
+#app .setting-choice strong {
+  font-weight: 400 !important;
+  font-size: 22px !important;
+  color: var(--bone) !important;
+  white-space: nowrap;
+}
+#app .setting-arrow {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: Georgia, serif !important;
+  font-size: 30px !important;
+  line-height: 1 !important;
+  color: var(--ash) !important;
+  cursor: pointer;
+}
+#app .setting-arrow:hover,
+#app .setting-arrow:focus-visible {
+  color: var(--blood-bright) !important;
+}
+#app .setting-note {
+  font-family: var(--font-book, Alegreya, Georgia, serif) !important;
+  font-size: 15px !important;
+  color: var(--ash) !important;
+  text-align: center;
+  line-height: 1.35;
+}
+#app .setting-note b {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 400;
+  color: var(--bone) !important;
+  font-size: 17px !important;
+}
+#app .settings-wide-button {
+  justify-self: center;
+  min-width: 220px;
+  margin-top: 4px;
+}
+#app .settings-footer {
+  display: flex;
+  justify-content: center;
+}
+#app .settings-reset-button {
+  min-width: 190px;
+  color: var(--ash) !important;
+}
+#app .settings-reset-button:hover {
+  color: var(--blood-bright) !important;
+}
+#app .pause-settings-card {
+  width: min(640px, 94vw) !important;
+}
+#app .pause-settings-card .settings-panel {
+  width: 100%;
+}
+
+/* phones (landscape, short): tighter rows */
+@media (max-height: 560px) {
+  #app .settings-panel {
+    gap: 6px;
+  }
+  #app .settings-tab {
+    font-size: 19px !important;
+    padding: 0 12px 4px !important;
+  }
+  #app .settings-rows {
+    gap: 4px;
+    min-height: 168px;
+  }
+  #app .setting-row,
+  #app .settings-rows .sound-setting {
+    grid-template-columns: 150px minmax(0, 1fr) 52px;
+    min-height: 28px;
+    font-size: 17px !important;
+  }
+  #app .setting-choice-row {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+  #app .setting-choice strong {
+    font-size: 17px !important;
+  }
+  #app .setting-note {
+    font-size: 12px !important;
+  }
+}
+
+/* Settings > Display > Flashes: Reduced */
+body.reduce-flashes .hit-flash,
+body.reduce-flashes .slam-wave-red,
+body.reduce-flashes .menu-jesus-flash {
+  display: none !important;
+}
+body.reduce-flashes #app .passive-slot.seal-summoned::after {
+  animation: none !important;
+}
+
+/* Settings > Display > Text size: Large (tooltips and the collection's details) */
+body.text-large .floating-tooltip,
+body.text-large .collection-info {
+  zoom: 1.2;
+}
+@media (max-height: 560px) {
+  #app .setting-toggle-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  #app .setting-toggle-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+  #app .pause-settings-card {
+    padding: 10px 22px 12px !important;
+  }
+  #app .pause-settings-card .end-title {
+    display: none !important;
+  }
+  #app .pause-settings-card .pause-sound-settings {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    background: none !important;
+  }
+  #app .pause-settings-card .pause-back-row {
+    margin-top: 6px !important;
+  }
+  #app .pause-settings-card .settings-footer .small-button {
+    min-height: 26px !important;
+  }
+  #app .main-menu-panel.menu-screen-sound .secondary-menu-button {
+    min-height: 30px;
+  }
 }

@@ -556,6 +556,7 @@ function resolveEliminatedBots(eliminated) {
     const rewardDetails = bot.skipEliminationReward ? { amount: 0, sourceEntries: [] } : botRewardDetails(bot, true);
     const reward = rewardDetails.amount > 0 ? gainEliminationCreditsFromSourceEntries(rewardDetails.sourceEntries, true) : 0;
     state.eliminations += 1;
+    bot.eliminationReward = reward;
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;

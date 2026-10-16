@@ -831,6 +831,10 @@ function beginRound() {
     pendingEndOfRoundBotDamages: [],
     resolvingEndOfRoundPassives: false,
     triggeredPassiveIds: new Set(),
+    // SEALS already shown in a trigger animation this round (the rest wait for READY)
+    animatedPassiveIds: new Set(),
+    // DAMNED alive when the round began: if one falls before READY, its KO is shown after READY
+    aliveIdsAtStart: new Set(state.bots.filter((bot) => !bot.eliminated && bot.hp > 0).map((bot) => bot.id)),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
     roundEvents: []
@@ -1478,6 +1482,23 @@ function cloneRoundRevealSources(sources) {
   return (sources || []).map((entry) => ({ ...entry }));
 }
 
+// a DAMNED that fell this round before READY: its HEALTH shows 0, but the KO waits for READY
+function botDeathAwaitsReady(bot) {
+  const round = state.roundState;
+  return Boolean(
+    round && !round.penaltiesApplied && bot?.eliminated && !bot.immortal && round.aliveIdsAtStart?.has?.(bot.id)
+  );
+}
+
+// KOs and BOUNTY SIN of DAMNED whose KO is still waiting for READY (kept off the HUD until then)
+function deathsAwaitingReady() {
+  const bots = (state.bots || []).filter((bot) => botDeathAwaitsReady(bot));
+  return {
+    count: bots.length,
+    reward: bots.reduce((sum, bot) => sum + Math.max(0, Number(bot.eliminationReward) || 0), 0)
+  };
+}
+
 function captureRoundRevealSnapshot() {
   const round = state.roundState;
   return {
@@ -1498,7 +1519,7 @@ function captureRoundRevealSnapshot() {
       id: bot.id,
       hp: bot.hp,
       maxHp: bot.maxHp,
-      eliminated: Boolean(bot.eliminated),
+      eliminated: Boolean(bot.eliminated) && !botDeathAwaitsReady(bot),
       damageTakenTotal: bot.damageTakenTotal || 0,
       lastDamage: bot.lastDamage || 0,
       lastHeal: bot.lastHeal || 0,
@@ -1539,19 +1560,47 @@ function roundRevealEventMatchesSeal(id, event) {
   return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
 }
 
-function buildRoundRevealSequence(beforeSnapshot) {
+// every SEAL that triggered this round and has not been animated yet, including ones whose
+// condition was met before READY (they wait for it). onlyIds limits it (the reveal-time Dev SEALS).
+function buildRoundRevealSequence(beforeSnapshot, onlyIds = null) {
   const round = state.roundState;
   if (!round) return [];
-  const previousIds = new Set(beforeSnapshot?.triggeredPassiveIds || []);
+  const animated = round.animatedPassiveIds || new Set();
   const finalEvents = (round.roundEvents || []).slice();
-  const eventStart = beforeSnapshot?.roundEventCount || 0;
   return Array.from(round.triggeredPassiveIds || [])
-    .filter((id) => PASSIVE_IDS.includes(id) && !previousIds.has(id))
+    .filter((id) => PASSIVE_IDS.includes(id) && !animated.has(id) && (!onlyIds || onlyIds.has(id)))
     .map((id) => ({
       id,
       name: roundRevealSealName(id),
-      events: finalEvents.slice(eventStart).filter((event) => roundRevealEventMatchesSeal(id, event))
+      events: finalEvents.filter((event) => roundRevealEventMatchesSeal(id, event))
     }));
+}
+
+// a SEAL that acted before the snapshot is already counted in the snapshot's HEALTH and SIN;
+// put those amounts back so its step shows them happening, like any other SEAL
+function rebaseRoundRevealSnapshot(beforeSnapshot, sequence) {
+  if (!beforeSnapshot || !sequence.length) return;
+  const ids = new Set(sequence.map((step) => step.id));
+  const fromSequence = (sources) => (sources || []).filter((entry) => ids.has(sealIdFromStatSource(entry?.source)));
+  const total = (sources, options) =>
+    fromSequence(sources).reduce((sum, entry) => {
+      if (options?.damage && entry?.kind === "saved") return sum;
+      const raw = Number(entry?.amount || 0);
+      if (!Number.isFinite(raw) || raw === 0) return sum;
+      const amount = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+      return sum + (options?.signed ? amount : Math.abs(amount));
+    }, 0);
+  (beforeSnapshot.bots || []).forEach((bot) => {
+    const damage = total(bot.damageSources, { damage: true });
+    const healing = total(bot.healSources);
+    bot.hp = Math.max(0, bot.hp + damage - healing);
+    bot.damageTakenTotal = Math.max(0, (bot.damageTakenTotal || 0) - damage);
+  });
+  const player = beforeSnapshot.player;
+  if (player) {
+    player.hp = Math.max(0, player.hp + total(player.damageSources, { damage: true }) - total(player.healSources));
+    player.credits -= total(player.creditSources, { signed: true });
+  }
 }
 
 // a dark swell that rises while the seal fills and grows; the slam has its own sound
@@ -1562,12 +1611,14 @@ function playRoundRevealStepSfx() {
 function scheduleRoundRevealAnimation() {
   clearRoundRevealTimer();
   if (!roundRevealAnimationActive()) return;
-  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, 1000);
+  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, gameMs(1000));
 }
 
-function startRoundRevealAnimation(beforeSnapshot) {
-  const sequence = buildRoundRevealSequence(beforeSnapshot);
+function startRoundRevealAnimation(beforeSnapshot, options = {}) {
+  const sequence = buildRoundRevealSequence(beforeSnapshot, options.onlyIds || null);
   if (!sequence.length) return false;
+  rebaseRoundRevealSnapshot(beforeSnapshot, sequence);
+  sequence.forEach((step) => state.roundState?.animatedPassiveIds?.add(step.id));
   clearRoundRevealTimer();
   state.roundRevealAnimation = {
     active: true,
@@ -1640,7 +1691,8 @@ function submitGuess() {
   round.targetBeforeRevealSeals = round.target !== shownBefore.target ? shownBefore : null;
   state.stage = "active";
   addLog(`Target revealed at ${formatNumber(round.target)}. CRITICAL integer: ${round.criticalInteger}.`);
-  startRoundRevealAnimation(beforeReveal);
+  // only the reveal-time Dev SEALS (Dantre, Serafeim) animate now; every other SEAL waits for READY
+  startRoundRevealAnimation(beforeReveal, { onlyIds: DEV_SEALS_AT_REVEAL });
   render();
 }
 

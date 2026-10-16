@@ -44,6 +44,11 @@ const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
 const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
 const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
+// Settings that are a choice between a few values (Settings > Display / Gameplay)
+const ANIM_SPEED_VALUES = [1, 2, 4];
+const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
+const FLASH_LABELS = ["Reduced", "Full"];
+const TEXT_SIZE_LABELS = ["Normal", "Large"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -281,7 +286,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Valac",
     price: 17,
-    description: "Gain +2 ARTIFACT uses per round and +2 ARTIFACT inventory slots. Each ELITE level adds +2 more to both."
+    description: "Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both."
   },
   p26: {
     id: "p26",
@@ -1796,13 +1801,20 @@ const state = {
   menuScreen: "main",
   pendingRunDeleteSlotId: null,
   sound: {
+    masterVolume: 1,
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
-    muted: false
+    muted: false,
+    muteInBackground: true
   },
   display: {
-    outlineBoil: 2
+    outlineBoil: 2,
+    animSpeed: 1,
+    screenShake: 2,
+    flashes: 1,
+    textSize: 0
   },
+  settingsTab: "audio",
   pauseOpen: false,
   pauseScreen: "main",
   menuCollectionOpen: false,

@@ -956,7 +956,7 @@ function andrealphusDamage(idOrItem) {
 }
 
 function baseEditionBonus(idOrItem) {
-  return simpleStackCount(idOrItem) * 2;
+  return simpleStackCount(idOrItem);
 }
 
 function twinDetonatorDamage(idOrItem) {

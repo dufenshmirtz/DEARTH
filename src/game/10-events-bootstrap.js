@@ -62,9 +62,28 @@ function bindEvents() {
     bindOn(control, "input", () => updateDisplaySetting(control.dataset.displaySetting, control.value));
   });
 
+  document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+    bindOn(button, "click", () => {
+      state.settingsTab = button.dataset.settingsTab;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-setting-choice]").forEach((button) => {
+    bindOn(button, "click", () => updateSettingChoice(button.dataset.settingChoice, Number(button.dataset.step) || 1));
+  });
+
+  document.querySelectorAll("[data-settings-reset]").forEach((button) => {
+    bindOn(button, "click", resetSettings);
+  });
+
+  document.querySelectorAll("[data-settings-replay-story]").forEach((button) => {
+    bindOn(button, "click", () => startIntroSequence({ fromMenu: true }));
+  });
+
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {
     const key = control.dataset.soundSetting;
-    if (key === "muted") {
+    if (control.type === "checkbox") {
       bindOn(control, "change", () => updateSoundSetting(key, control.checked));
       return;
     }
@@ -263,23 +282,32 @@ document.addEventListener("fullscreenchange", updateFullscreenLayoutClass);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     saveArcadeRunForNativeExit();
-    if (isNativeArcadeApp()) pauseGameAudioForBackground();
+    if (muteWhenInBackground()) pauseGameAudioForBackground();
     return;
   }
-  if (isNativeArcadeApp()) {
-    if (state.mode === "menu") resumeNativeArcadeOnForeground();
-    resumeGameAudioAfterForeground();
-  }
+  if (isNativeArcadeApp() && state.mode === "menu") resumeNativeArcadeOnForeground();
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
 });
+// Settings > Audio > Mute in background (always on in the phone app)
+function muteWhenInBackground() {
+  return isNativeArcadeApp() || state.sound.muteInBackground !== false;
+}
+
 window.addEventListener("blur", () => {
-  if (isNativeArcadeApp()) pauseGameAudioForBackground();
+  if (muteWhenInBackground()) pauseGameAudioForBackground();
 });
 window.addEventListener("focus", () => {
-  if (isNativeArcadeApp()) resumeGameAudioAfterForeground();
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
+});
+document.addEventListener("fullscreenchange", () => {
+  document.querySelectorAll('[data-setting-value="fullscreen"]').forEach((label) => {
+    label.textContent = document.fullscreenElement ? "Fullscreen" : "Windowed";
+  });
 });
 
 loadSoundSettings();
 loadDisplaySettings();
+installAnimationSpeed();
 installSoundtrack();
 installArcadeEnterShortcut();
 installPauseEscapeShortcut();

@@ -1,9 +1,13 @@
+function masterVolume() {
+  return Number.isFinite(state.sound.masterVolume) ? clamp(state.sound.masterVolume, 0, 1) : 1;
+}
+
 function musicVolume() {
-  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL, 0, 1);
+  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL * masterVolume(), 0, 1);
 }
 
 function sfxVolume(baseVolume) {
-  return state.sound.muted ? 0 : clamp(baseVolume * state.sound.sfxVolume, 0, 1);
+  return state.sound.muted ? 0 : clamp(baseVolume * state.sound.sfxVolume * masterVolume(), 0, 1);
 }
 
 function applySoundSettings() {
@@ -26,9 +30,11 @@ function loadSoundSettings() {
     const raw = window.localStorage?.getItem(SOUND_SETTINGS_STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.masterVolume)) state.sound.masterVolume = clamp(saved.masterVolume, 0, 1);
     if (Number.isFinite(saved.musicVolume)) state.sound.musicVolume = clamp(saved.musicVolume, 0, 1);
     if (Number.isFinite(saved.sfxVolume)) state.sound.sfxVolume = clamp(saved.sfxVolume, 0, 1);
     if (typeof saved.muted === "boolean") state.sound.muted = saved.muted;
+    if (typeof saved.muteInBackground === "boolean") state.sound.muteInBackground = saved.muteInBackground;
   } catch (error) {}
 }
 
@@ -36,12 +42,17 @@ function loadSoundSettings() {
 function loadDisplaySettings() {
   const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
   state.display.outlineBoil = prefersReducedMotion ? 0 : 2;
+  state.display.screenShake = prefersReducedMotion ? 0 : 2;
   try {
     const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
       if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil ? 2 : 0;
       else if (Number.isFinite(saved.outlineBoil)) state.display.outlineBoil = clamp(Math.round(saved.outlineBoil), 0, 3);
+      if (ANIM_SPEED_VALUES.includes(saved.animSpeed)) state.display.animSpeed = saved.animSpeed;
+      if (Number.isFinite(saved.screenShake)) state.display.screenShake = clamp(Math.round(saved.screenShake), 0, 2);
+      if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
+      if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -59,6 +70,44 @@ function applyDisplaySettings() {
   document.body.classList.toggle("outline-boil", level > 0);
   if (level > 0) document.body.style.setProperty("--boil-duration", `${OUTLINE_BOIL_DURATIONS_MS[level]}ms`);
   else document.body.style.removeProperty("--boil-duration");
+  document.body.classList.toggle("reduce-flashes", !state.display.flashes);
+  document.body.classList.toggle("text-large", Boolean(state.display.textSize));
+  document.body.dataset.animSpeed = String(animSpeed());
+}
+
+// ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
+// Game animations (SEAL triggers, the READY reveal steps, hits, pops) run this many times faster.
+function animSpeed() {
+  const value = Number(state.display?.animSpeed);
+  return ANIM_SPEED_VALUES.includes(value) ? value : 1;
+}
+
+// a duration in ms at the chosen speed
+function gameMs(ms) {
+  return Math.max(0, Math.round(ms / animSpeed()));
+}
+
+// CSS animations of the game itself are sped up as they start (menu, intro and the trembling
+// outlines keep their own pace)
+const SPEED_SCALED_ANIMATIONS = /^(seal-|slam-wave|hit-|hud-pop|damage-pop|health-ghost|ko-pop|death-pulse|pentakill-fade)/;
+
+function installAnimationSpeed() {
+  if (typeof document === "undefined") return;
+  document.addEventListener(
+    "animationstart",
+    (event) => {
+      const speed = animSpeed();
+      if (speed === 1 || !SPEED_SCALED_ANIMATIONS.test(event.animationName || "")) return;
+      const target = event.target;
+      if (typeof document.getAnimations !== "function") return;
+      // includes the element's ::before / ::after animations (their effect target is the element)
+      document.getAnimations().forEach((animation) => {
+        if (animation.animationName !== event.animationName || animation.effect?.target !== target) return;
+        if (animation.playbackRate !== speed) animation.playbackRate = speed;
+      });
+    },
+    true
+  );
 }
 
 function saveSoundSettings() {
@@ -309,6 +358,8 @@ function normalizeLoadedRoundState(round) {
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
     "triggeredPassiveIds",
+    "animatedPassiveIds",
+    "aliveIdsAtStart",
     "criticalHitKeys"
   ].forEach((key) => {
     round[key] = ensureSet(round[key]);

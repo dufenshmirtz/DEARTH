@@ -250,6 +250,11 @@ const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
 const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
 const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
+// Settings that are a choice between a few values (Settings > Display / Gameplay)
+const ANIM_SPEED_VALUES = [1, 2, 4];
+const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
+const FLASH_LABELS = ["Reduced", "Full"];
+const TEXT_SIZE_LABELS = ["Normal", "Large"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -487,7 +492,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Valac",
     price: 17,
-    description: "Gain +2 ARTIFACT uses per round and +2 ARTIFACT inventory slots. Each ELITE level adds +2 more to both."
+    description: "Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both."
   },
   p26: {
     id: "p26",
@@ -2002,13 +2007,20 @@ const state = {
   menuScreen: "main",
   pendingRunDeleteSlotId: null,
   sound: {
+    masterVolume: 1,
     musicVolume: SOUNDTRACK_VOLUME,
     sfxVolume: 1,
-    muted: false
+    muted: false,
+    muteInBackground: true
   },
   display: {
-    outlineBoil: 2
+    outlineBoil: 2,
+    animSpeed: 1,
+    screenShake: 2,
+    flashes: 1,
+    textSize: 0
   },
+  settingsTab: "audio",
   pauseOpen: false,
   pauseScreen: "main",
   menuCollectionOpen: false,
@@ -2096,12 +2108,16 @@ let sfxPrimed = false;
 let gameButtonTickInstalled = false;
 let soundtrackPausedByAppBackground = false;
 
+function masterVolume() {
+  return Number.isFinite(state.sound.masterVolume) ? clamp(state.sound.masterVolume, 0, 1) : 1;
+}
+
 function musicVolume() {
-  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL, 0, 1);
+  return state.sound.muted ? 0 : clamp(state.sound.musicVolume * SOUNDTRACK_LEVEL * masterVolume(), 0, 1);
 }
 
 function sfxVolume(baseVolume) {
-  return state.sound.muted ? 0 : clamp(baseVolume * state.sound.sfxVolume, 0, 1);
+  return state.sound.muted ? 0 : clamp(baseVolume * state.sound.sfxVolume * masterVolume(), 0, 1);
 }
 
 function applySoundSettings() {
@@ -2124,9 +2140,11 @@ function loadSoundSettings() {
     const raw = window.localStorage?.getItem(SOUND_SETTINGS_STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.masterVolume)) state.sound.masterVolume = clamp(saved.masterVolume, 0, 1);
     if (Number.isFinite(saved.musicVolume)) state.sound.musicVolume = clamp(saved.musicVolume, 0, 1);
     if (Number.isFinite(saved.sfxVolume)) state.sound.sfxVolume = clamp(saved.sfxVolume, 0, 1);
     if (typeof saved.muted === "boolean") state.sound.muted = saved.muted;
+    if (typeof saved.muteInBackground === "boolean") state.sound.muteInBackground = saved.muteInBackground;
   } catch (error) {}
 }
 
@@ -2134,12 +2152,17 @@ function loadSoundSettings() {
 function loadDisplaySettings() {
   const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
   state.display.outlineBoil = prefersReducedMotion ? 0 : 2;
+  state.display.screenShake = prefersReducedMotion ? 0 : 2;
   try {
     const raw = window.localStorage?.getItem(DISPLAY_SETTINGS_STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
       if (typeof saved.outlineBoil === "boolean") state.display.outlineBoil = saved.outlineBoil ? 2 : 0;
       else if (Number.isFinite(saved.outlineBoil)) state.display.outlineBoil = clamp(Math.round(saved.outlineBoil), 0, 3);
+      if (ANIM_SPEED_VALUES.includes(saved.animSpeed)) state.display.animSpeed = saved.animSpeed;
+      if (Number.isFinite(saved.screenShake)) state.display.screenShake = clamp(Math.round(saved.screenShake), 0, 2);
+      if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
+      if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -2157,6 +2180,44 @@ function applyDisplaySettings() {
   document.body.classList.toggle("outline-boil", level > 0);
   if (level > 0) document.body.style.setProperty("--boil-duration", `${OUTLINE_BOIL_DURATIONS_MS[level]}ms`);
   else document.body.style.removeProperty("--boil-duration");
+  document.body.classList.toggle("reduce-flashes", !state.display.flashes);
+  document.body.classList.toggle("text-large", Boolean(state.display.textSize));
+  document.body.dataset.animSpeed = String(animSpeed());
+}
+
+// ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
+// Game animations (SEAL triggers, the READY reveal steps, hits, pops) run this many times faster.
+function animSpeed() {
+  const value = Number(state.display?.animSpeed);
+  return ANIM_SPEED_VALUES.includes(value) ? value : 1;
+}
+
+// a duration in ms at the chosen speed
+function gameMs(ms) {
+  return Math.max(0, Math.round(ms / animSpeed()));
+}
+
+// CSS animations of the game itself are sped up as they start (menu, intro and the trembling
+// outlines keep their own pace)
+const SPEED_SCALED_ANIMATIONS = /^(seal-|slam-wave|hit-|hud-pop|damage-pop|health-ghost|ko-pop|death-pulse|pentakill-fade)/;
+
+function installAnimationSpeed() {
+  if (typeof document === "undefined") return;
+  document.addEventListener(
+    "animationstart",
+    (event) => {
+      const speed = animSpeed();
+      if (speed === 1 || !SPEED_SCALED_ANIMATIONS.test(event.animationName || "")) return;
+      const target = event.target;
+      if (typeof document.getAnimations !== "function") return;
+      // includes the element's ::before / ::after animations (their effect target is the element)
+      document.getAnimations().forEach((animation) => {
+        if (animation.animationName !== event.animationName || animation.effect?.target !== target) return;
+        if (animation.playbackRate !== speed) animation.playbackRate = speed;
+      });
+    },
+    true
+  );
 }
 
 function saveSoundSettings() {
@@ -2407,6 +2468,8 @@ function normalizeLoadedRoundState(round) {
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
     "triggeredPassiveIds",
+    "animatedPassiveIds",
+    "aliveIdsAtStart",
     "criticalHitKeys"
   ].forEach((key) => {
     round[key] = ensureSet(round[key]);
@@ -4017,7 +4080,7 @@ function andrealphusDamage(idOrItem) {
 }
 
 function baseEditionBonus(idOrItem) {
-  return simpleStackCount(idOrItem) * 2;
+  return simpleStackCount(idOrItem);
 }
 
 function twinDetonatorDamage(idOrItem) {
@@ -4399,7 +4462,7 @@ function itemDescription(item) {
   if (item.id === "p22") return `Avoid 20% of damage you would take in a round, rounded down. The avoided damage becomes ${doubledStackPower(item)}x MEMORY for the living DAMNED with the most MEMORY.`;
   if (item.id === "p23") return `New non-boss DAMNED have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 BOUNTY.`;
   if (item.id === "p24") return `You can use only one ARTIFACT per round. All DAMNED pay ${bountyOathMultiplierForItem(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
-  if (item.id === "p25") return `Gain +${baseEditionBonus(item)} ARTIFACT uses per round and +${baseEditionBonus(item)} ARTIFACT inventory slots.`;
+  if (item.id === "p25") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
   if (item.id === "p26") return `Using two matching ARTIFACTS in a round deals ${twinDetonatorDamage(item)} damage to all DAMNED.`;
   if (item.id === "p27") return `Every ARTIFACT triggers one outcome: gain ${reactiveWarrantySin(item)} SIN, deal ${reactiveWarrantyDamage(item)} damage to a random DAMNED, or refund its purchase cost.`;
   if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-HEALTH DAMNED.`;
@@ -7211,6 +7274,10 @@ function beginRound() {
     pendingEndOfRoundBotDamages: [],
     resolvingEndOfRoundPassives: false,
     triggeredPassiveIds: new Set(),
+    // SEALS already shown in a trigger animation this round (the rest wait for READY)
+    animatedPassiveIds: new Set(),
+    // DAMNED alive when the round began: if one falls before READY, its KO is shown after READY
+    aliveIdsAtStart: new Set(state.bots.filter((bot) => !bot.eliminated && bot.hp > 0).map((bot) => bot.id)),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
     roundEvents: []
@@ -7858,6 +7925,23 @@ function cloneRoundRevealSources(sources) {
   return (sources || []).map((entry) => ({ ...entry }));
 }
 
+// a DAMNED that fell this round before READY: its HEALTH shows 0, but the KO waits for READY
+function botDeathAwaitsReady(bot) {
+  const round = state.roundState;
+  return Boolean(
+    round && !round.penaltiesApplied && bot?.eliminated && !bot.immortal && round.aliveIdsAtStart?.has?.(bot.id)
+  );
+}
+
+// KOs and BOUNTY SIN of DAMNED whose KO is still waiting for READY (kept off the HUD until then)
+function deathsAwaitingReady() {
+  const bots = (state.bots || []).filter((bot) => botDeathAwaitsReady(bot));
+  return {
+    count: bots.length,
+    reward: bots.reduce((sum, bot) => sum + Math.max(0, Number(bot.eliminationReward) || 0), 0)
+  };
+}
+
 function captureRoundRevealSnapshot() {
   const round = state.roundState;
   return {
@@ -7878,7 +7962,7 @@ function captureRoundRevealSnapshot() {
       id: bot.id,
       hp: bot.hp,
       maxHp: bot.maxHp,
-      eliminated: Boolean(bot.eliminated),
+      eliminated: Boolean(bot.eliminated) && !botDeathAwaitsReady(bot),
       damageTakenTotal: bot.damageTakenTotal || 0,
       lastDamage: bot.lastDamage || 0,
       lastHeal: bot.lastHeal || 0,
@@ -7919,19 +8003,47 @@ function roundRevealEventMatchesSeal(id, event) {
   return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
 }
 
-function buildRoundRevealSequence(beforeSnapshot) {
+// every SEAL that triggered this round and has not been animated yet, including ones whose
+// condition was met before READY (they wait for it). onlyIds limits it (the reveal-time Dev SEALS).
+function buildRoundRevealSequence(beforeSnapshot, onlyIds = null) {
   const round = state.roundState;
   if (!round) return [];
-  const previousIds = new Set(beforeSnapshot?.triggeredPassiveIds || []);
+  const animated = round.animatedPassiveIds || new Set();
   const finalEvents = (round.roundEvents || []).slice();
-  const eventStart = beforeSnapshot?.roundEventCount || 0;
   return Array.from(round.triggeredPassiveIds || [])
-    .filter((id) => PASSIVE_IDS.includes(id) && !previousIds.has(id))
+    .filter((id) => PASSIVE_IDS.includes(id) && !animated.has(id) && (!onlyIds || onlyIds.has(id)))
     .map((id) => ({
       id,
       name: roundRevealSealName(id),
-      events: finalEvents.slice(eventStart).filter((event) => roundRevealEventMatchesSeal(id, event))
+      events: finalEvents.filter((event) => roundRevealEventMatchesSeal(id, event))
     }));
+}
+
+// a SEAL that acted before the snapshot is already counted in the snapshot's HEALTH and SIN;
+// put those amounts back so its step shows them happening, like any other SEAL
+function rebaseRoundRevealSnapshot(beforeSnapshot, sequence) {
+  if (!beforeSnapshot || !sequence.length) return;
+  const ids = new Set(sequence.map((step) => step.id));
+  const fromSequence = (sources) => (sources || []).filter((entry) => ids.has(sealIdFromStatSource(entry?.source)));
+  const total = (sources, options) =>
+    fromSequence(sources).reduce((sum, entry) => {
+      if (options?.damage && entry?.kind === "saved") return sum;
+      const raw = Number(entry?.amount || 0);
+      if (!Number.isFinite(raw) || raw === 0) return sum;
+      const amount = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+      return sum + (options?.signed ? amount : Math.abs(amount));
+    }, 0);
+  (beforeSnapshot.bots || []).forEach((bot) => {
+    const damage = total(bot.damageSources, { damage: true });
+    const healing = total(bot.healSources);
+    bot.hp = Math.max(0, bot.hp + damage - healing);
+    bot.damageTakenTotal = Math.max(0, (bot.damageTakenTotal || 0) - damage);
+  });
+  const player = beforeSnapshot.player;
+  if (player) {
+    player.hp = Math.max(0, player.hp + total(player.damageSources, { damage: true }) - total(player.healSources));
+    player.credits -= total(player.creditSources, { signed: true });
+  }
 }
 
 // a dark swell that rises while the seal fills and grows; the slam has its own sound
@@ -7942,12 +8054,14 @@ function playRoundRevealStepSfx() {
 function scheduleRoundRevealAnimation() {
   clearRoundRevealTimer();
   if (!roundRevealAnimationActive()) return;
-  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, 1000);
+  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, gameMs(1000));
 }
 
-function startRoundRevealAnimation(beforeSnapshot) {
-  const sequence = buildRoundRevealSequence(beforeSnapshot);
+function startRoundRevealAnimation(beforeSnapshot, options = {}) {
+  const sequence = buildRoundRevealSequence(beforeSnapshot, options.onlyIds || null);
   if (!sequence.length) return false;
+  rebaseRoundRevealSnapshot(beforeSnapshot, sequence);
+  sequence.forEach((step) => state.roundState?.animatedPassiveIds?.add(step.id));
   clearRoundRevealTimer();
   state.roundRevealAnimation = {
     active: true,
@@ -8020,7 +8134,8 @@ function submitGuess() {
   round.targetBeforeRevealSeals = round.target !== shownBefore.target ? shownBefore : null;
   state.stage = "active";
   addLog(`Target revealed at ${formatNumber(round.target)}. CRITICAL integer: ${round.criticalInteger}.`);
-  startRoundRevealAnimation(beforeReveal);
+  // only the reveal-time Dev SEALS (Dantre, Serafeim) animate now; every other SEAL waits for READY
+  startRoundRevealAnimation(beforeReveal, { onlyIds: DEV_SEALS_AT_REVEAL });
   render();
 }
 
@@ -8675,6 +8790,7 @@ function resolveEliminatedBots(eliminated) {
     const rewardDetails = bot.skipEliminationReward ? { amount: 0, sourceEntries: [] } : botRewardDetails(bot, true);
     const reward = rewardDetails.amount > 0 ? gainEliminationCreditsFromSourceEntries(rewardDetails.sourceEntries, true) : 0;
     state.eliminations += 1;
+    bot.eliminationReward = reward;
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
@@ -11357,6 +11473,7 @@ function renderMenuApp() {
         }
       </section>
     </main>
+    ${renderMobileMenuSettingsOverlay()}
     ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
     ${state.menuCollectionOpen ? renderCollectionScreen("menu") : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
@@ -11470,10 +11587,30 @@ function renderOptionsMenu() {
   `;
 }
 
+// phone: Settings opens as the same framed card as Pause > Settings, over the menu art
+// (rendered outside the menu panel so it can cover the screen)
+function renderMobileMenuSettingsOverlay() {
+  if (state.menuScreen !== "sound" || !isMobileArcadeView()) return "";
+  {
+    return `
+    <div class="overlay visible pause-overlay menu-settings-overlay">
+      <section class="end-card pause-card pause-settings-card">
+        <h1 class="end-title">Settings</h1>
+        <div class="pause-sound-settings">${renderSettingsPanel("menu")}</div>
+        <div class="pause-actions pause-back-row">
+          <button class="primary-button" data-menu-action="options">Back</button>
+        </div>
+      </section>
+    </div>
+  `;
+  }
+}
+
 function renderSoundOptionsMenu() {
+  if (isMobileArcadeView()) return "";
   return `
     <div class="options-menu">
-      ${renderSoundSettings("menu")}
+      ${renderSettingsPanel("menu")}
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
   `;
@@ -11519,32 +11656,153 @@ function renderRecordsMenu() {
   `;
 }
 
-function renderSoundSettings(prefix) {
-  const musicValue = Math.round(state.sound.musicVolume * 100);
-  const sfxValue = Math.round(state.sound.sfxVolume * 100);
-  const musicId = `${prefix}MusicVolume`;
-  const sfxId = `${prefix}SfxVolume`;
-  const muteId = `${prefix}SoundMuted`;
+// ---------- Settings (main menu and Pause share it) ----------
+const SETTINGS_TABS = [
+  { key: "audio", label: "Audio" },
+  { key: "display", label: "Display" },
+  { key: "gameplay", label: "Gameplay" }
+];
+
+// settings picked from a short list with ‹ ›
+const SETTING_CHOICES = {
+  animSpeed: {
+    label: "Animation speed",
+    values: () => ANIM_SPEED_VALUES,
+    get: () => animSpeed(),
+    set: (value) => { state.display.animSpeed = value; },
+    text: (value) => `x${value}`
+  },
+  outlineBoil: {
+    label: "Outline animation",
+    values: () => [0, 1, 2, 3],
+    get: () => clamp(Math.round(Number(state.display.outlineBoil) || 0), 0, 3),
+    set: (value) => { state.display.outlineBoil = value; },
+    text: (value) => OUTLINE_BOIL_LABELS[value] || "Off"
+  },
+  screenShake: {
+    label: "Screen shake",
+    values: () => [0, 1, 2],
+    get: () => (Number.isFinite(state.display.screenShake) ? state.display.screenShake : 2),
+    set: (value) => { state.display.screenShake = value; },
+    text: (value) => SCREEN_SHAKE_LABELS[value] || "Full"
+  },
+  flashes: {
+    label: "Flashes",
+    values: () => [1, 0],
+    get: () => (state.display.flashes ? 1 : 0),
+    set: (value) => { state.display.flashes = value; },
+    text: (value) => FLASH_LABELS[value] || "Full"
+  },
+  textSize: {
+    label: "Text size",
+    values: () => [0, 1],
+    get: () => (state.display.textSize ? 1 : 0),
+    set: (value) => { state.display.textSize = value; },
+    text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
+  },
+  fullscreen: {
+    label: "Window",
+    values: () => [0, 1],
+    get: () => (document.fullscreenElement ? 1 : 0),
+    set: (value) => setFullscreen(Boolean(value)),
+    text: (value) => (value ? "Fullscreen" : "Windowed")
+  }
+};
+
+function fullscreenSupported() {
+  return !isNativeArcadeApp() && Boolean(document.documentElement?.requestFullscreen);
+}
+
+function setFullscreen(on) {
+  try {
+    if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch?.(() => {});
+    else if (!on && document.fullscreenElement) document.exitFullscreen?.()?.catch?.(() => {});
+  } catch (error) {}
+}
+
+function settingSliderRow(prefix, key, label) {
+  const value = Math.round((Number(state.sound[key]) || 0) * 100);
+  const id = `${prefix}-${key}`;
   return `
-      <div class="sound-setting">
-        <label for="${musicId}">Music</label>
-        <input id="${musicId}" class="sound-slider" data-sound-setting="musicVolume" type="range" min="0" max="100" step="1" value="${musicValue}" />
-        <strong data-sound-value="musicVolume">${musicValue}%</strong>
+    <div class="sound-setting setting-row">
+      <label for="${id}">${label}</label>
+      <input id="${id}" class="sound-slider" data-sound-setting="${key}" type="range" min="0" max="100" step="1" value="${value}" />
+      <strong data-sound-value="${key}">${value}%</strong>
+    </div>
+  `;
+}
+
+function settingToggleRow(prefix, key, label) {
+  const id = `${prefix}-${key}`;
+  return `
+    <label class="sound-toggle setting-row setting-toggle-row" for="${id}">
+      <span class="setting-label">${label}</span>
+      <input id="${id}" data-sound-setting="${key}" type="checkbox" ${state.sound[key] ? "checked" : ""} />
+    </label>
+  `;
+}
+
+function settingChoiceRow(key) {
+  const choice = SETTING_CHOICES[key];
+  const value = choice.get();
+  return `
+    <div class="setting-row setting-choice-row">
+      <span class="setting-label">${choice.label}</span>
+      <div class="setting-choice">
+        <button class="setting-arrow" data-setting-choice="${key}" data-step="-1" aria-label="Previous ${choice.label}">&lsaquo;</button>
+        <strong data-setting-value="${key}">${escapeHtml(choice.text(value))}</strong>
+        <button class="setting-arrow" data-setting-choice="${key}" data-step="1" aria-label="Next ${choice.label}">&rsaquo;</button>
       </div>
-      <div class="sound-setting">
-        <label for="${sfxId}">Sfx</label>
-        <input id="${sfxId}" class="sound-slider" data-sound-setting="sfxVolume" type="range" min="0" max="100" step="1" value="${sfxValue}" />
-        <strong data-sound-value="sfxVolume">${sfxValue}%</strong>
+    </div>
+  `;
+}
+
+function settingNote(text) {
+  return `<div class="setting-note">${text}</div>`;
+}
+
+function renderSettingsPanel(prefix) {
+  const tab = SETTINGS_TABS.some((entry) => entry.key === state.settingsTab) ? state.settingsTab : "audio";
+  const tabs = SETTINGS_TABS.map(
+    (entry) =>
+      `<button class="settings-tab ${entry.key === tab ? "active" : ""}" data-settings-tab="${entry.key}" role="tab" aria-selected="${entry.key === tab}">${entry.label}</button>`
+  ).join("");
+  let rows = "";
+  if (tab === "audio") {
+    rows = [
+      settingSliderRow(prefix, "masterVolume", "Master"),
+      settingSliderRow(prefix, "musicVolume", "Music"),
+      settingSliderRow(prefix, "sfxVolume", "Effects"),
+      settingToggleRow(prefix, "muted", "Mute all"),
+      settingToggleRow(prefix, "muteInBackground", "Mute in background")
+    ].join("");
+  } else if (tab === "display") {
+    rows = [
+      fullscreenSupported() ? settingChoiceRow("fullscreen") : "",
+      settingChoiceRow("outlineBoil"),
+      settingChoiceRow("screenShake"),
+      settingChoiceRow("flashes"),
+      settingChoiceRow("textSize")
+    ].join("");
+  } else {
+    const controls = isNativeArcadeApp()
+      ? ""
+      : settingNote("<b>Enter</b> Guess, Ready, Next round &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> more on a tooltip");
+    rows = [
+      settingChoiceRow("animSpeed"),
+      settingNote("Speeds up SEAL triggers and the READY reveal."),
+      controls,
+      prefix === "menu" ? `<button class="small-button settings-wide-button" data-settings-replay-story>Replay the story</button>` : ""
+    ].join("");
+  }
+  return `
+    <div class="settings-panel">
+      <div class="settings-tabs" role="tablist">${tabs}</div>
+      <div class="settings-rows" role="tabpanel">${rows}</div>
+      <div class="settings-footer">
+        <button class="small-button settings-reset-button" data-settings-reset>Reset to defaults</button>
       </div>
-      <label class="sound-toggle">
-        <input id="${muteId}" data-sound-setting="muted" type="checkbox" ${state.sound.muted ? "checked" : ""} />
-        <span>Mute Sound</span>
-      </label>
-      <div class="sound-setting">
-        <label for="${prefix}OutlineBoil">Outlines</label>
-        <input id="${prefix}OutlineBoil" class="sound-slider" data-display-setting="outlineBoil" type="range" min="0" max="3" step="1" value="${state.display.outlineBoil}" />
-        <strong data-display-value="outlineBoil">${OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off"}</strong>
-      </div>
+    </div>
   `;
 }
 
@@ -11759,12 +12017,14 @@ function botSealEffectTotals(bot) {
 
 function roundRevealPlayerDisplay() {
   if (!roundRevealAnimationActive()) {
+    // BOUNTY from a KO that waits for READY is paid on screen after READY
+    const pendingReward = deathsAwaitingReady().reward;
     return {
       hp: state.player.hp,
-      credits: state.player.credits,
+      credits: state.player.credits - pendingReward,
       lastDamage: state.playerLastDamage,
       lastHeal: state.playerLastHeal,
-      lastCredits: state.playerLastCredits,
+      lastCredits: Math.max(0, (state.playerLastCredits || 0) - pendingReward),
       damageSources: state.playerDamageSources,
       healSources: state.playerHealSources,
       creditSources: state.playerCreditSources
@@ -11850,7 +12110,7 @@ function renderPauseMenu() {
       <section class="end-card pause-card pause-settings-card">
         <h1 class="end-title">Settings</h1>
         <div class="pause-sound-settings">
-          ${renderSoundSettings("pause")}
+          ${renderSettingsPanel("pause")}
         </div>
         <div class="pause-actions pause-back-row">
           <button class="primary-button" data-pause-action="back">Back</button>
@@ -12203,7 +12463,8 @@ function trackHudChange(key, value) {
     hudChangeTracker.set(key, { value, from: previous.value, changedAt: now });
     return { from: previous.value, elapsed: 0 };
   }
-  return { from: previous.from, elapsed: now - previous.changedAt };
+  // in game time: at x2 / x4 animation speed a change is "older" sooner (the CSS runs faster too)
+  return { from: previous.from, elapsed: (now - previous.changedAt) * animSpeed() };
 }
 
 // red under-bar that shows the health just lost, then drains away
@@ -12277,7 +12538,7 @@ const SEAL_SUMMON_MS = 700;
 function sealSummonAttrs(id) {
   const at = sealSummonedAt.get(id);
   if (at === undefined) return { className: "", style: "" };
-  const elapsed = performance.now() - at;
+  const elapsed = (performance.now() - at) * animSpeed();
   if (elapsed >= SEAL_SUMMON_MS) return { className: "", style: "" };
   return { className: "seal-summoned", style: ` style="--summon-delay: ${-Math.round(elapsed)}ms"` };
 }
@@ -12331,7 +12592,7 @@ function quietMomentSfx(key, ms = 500) {
 
 function momentSfx(key, delayMs = 0) {
   if ((quietSfxUntil[key] || 0) > performance.now()) return;
-  if (delayMs > 0) setTimeout(() => playGameSfx(key), delayMs);
+  if (delayMs > 0) setTimeout(() => playGameSfx(key), gameMs(delayMs));
   else playGameSfx(key);
 }
 
@@ -12341,8 +12602,9 @@ function motionReduced() {
 
 function startMoment(kind, title, sub = "") {
   momentSeq += 1;
-  const duration = MOMENT_DURATIONS_MS[kind] || 1600;
-  activeMoment = { id: momentSeq, kind, title, sub, until: performance.now() + duration };
+  // big moments speed up at most x2, so they can still be read
+  const duration = Math.round((MOMENT_DURATIONS_MS[kind] || 1600) / Math.min(animSpeed(), 2));
+  activeMoment = { id: momentSeq, kind, title, sub, duration, until: performance.now() + duration };
   // the card is put on screen straight away and lives outside the render cycle (data-morph-keep),
   // so later renders never rebuild it and its animation plays exactly once
   const app = document.querySelector("#app");
@@ -12365,7 +12627,7 @@ function renderMoment() {
       ? `<img class="moment-figure moment-figure-left" src="assets/ui/jesus.png" alt="" /><img class="moment-figure moment-figure-right" src="assets/ui/devil.png" alt="" />`
       : "";
   return `
-    <div class="moment-card moment-${moment.kind}" data-morph-keep data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
+    <div class="moment-card moment-${moment.kind}" style="--moment-ms: ${moment.duration || MOMENT_DURATIONS_MS[moment.kind] || 1600}ms" data-morph-keep data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
       ${figures}
       <div class="moment-text">
         <div class="moment-title">${escapeHtml(moment.title)}</div>
@@ -12384,11 +12646,16 @@ function hitStop(ms = 70) {
     try {
       if (animation.playState === "paused") animation.play();
     } catch (error) {}
-  }), ms);
+  }), gameMs(ms));
 }
 
 function screenShake(px = 6, ms = 380) {
   if (motionReduced()) return;
+  // Settings > Display > Screen shake: Off / Low / Full
+  const shake = Number.isFinite(state.display?.screenShake) ? state.display.screenShake : 2;
+  if (shake <= 0) return;
+  px *= shake === 1 ? 0.45 : 1;
+  ms = gameMs(ms);
   const app = document.querySelector("#app");
   if (!app?.animate) return;
   const k = [0, -1, 0.8, -0.6, 0.45, -0.3, 0.15, 0];
@@ -12423,7 +12690,7 @@ function readMomentSnapshot() {
   const shown = roundRevealPlayerDisplay();
   return {
     round: state.round,
-    eliminations: state.eliminations,
+    eliminations: state.eliminations - deathsAwaitingReady().count,
     target: round && round.target !== null && round.target !== undefined ? shownTargetValue(round) : null,
     playerCritical: Boolean(round?.criticalHitKeys?.has("player")),
     anyCritical: Boolean(round?.criticalHitKeys?.size),
@@ -12564,7 +12831,7 @@ function sealSlamEffects(slot) {
   fx.style.cssText = `left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;--fx-d:${diameter * 0.92}px`;
   fx.innerHTML = `<span class="slam-wave"></span><span class="slam-wave slam-wave-red"></span>`;
   document.body.appendChild(fx);
-  setTimeout(() => fx.remove(), 800);
+  setTimeout(() => fx.remove(), gameMs(800));
 }
 
 function watchSealTrigger() {
@@ -12576,7 +12843,7 @@ function watchSealTrigger() {
   setTimeout(() => {
     const slot = document.querySelector(".passive-slot.round-reveal-active:not(.suppressed)");
     if (slot) sealSlamEffects(slot);
-  }, SEAL_SLAM_AT_MS);
+  }, gameMs(SEAL_SLAM_AT_MS));
 }
 
 function afterRenderEffects() {
@@ -12644,7 +12911,7 @@ function renderTopbar() {
           </div>
           <div class="round-kos-cell">
             <span class="stat-label">KOs / BOSS</span>
-            <span class="stat-value">${state.eliminations}/${state.bossKills}</span>
+            <span class="stat-value">${state.eliminations - deathsAwaitingReady().count}/${state.bossKills}</span>
           </div>
         </div>
       </div>
@@ -12822,7 +13089,9 @@ function renderBot(bot, pendingPick) {
   const effective = round?.botEffectiveGuesses.get(bot.id);
   const displayHp = display?.hp ?? bot.hp;
   const displayMaxHp = display?.maxHp ?? bot.maxHp;
-  const isDown = display ? display.eliminated : bot.eliminated || bot.hp <= 0;
+  // fell before READY: HEALTH reads 0, the KO (X, sound, notice) comes after READY
+  const deathAwaitsReady = !display && botDeathAwaitsReady(bot);
+  const isDown = display ? display.eliminated : (bot.eliminated || bot.hp <= 0) && !deathAwaitsReady;
   const revealed = Number.isFinite(effective)
     ? formatNumber(effective)
     : state.stage !== "guess"
@@ -12838,7 +13107,7 @@ function renderBot(bot, pendingPick) {
   const bossClass = bot.isBoss ? "boss" : "";
   const diffMarkedClass = bot.diffMarkedByPlayer && !isDown ? "diff-marked" : "";
   const downClass = isDown ? "eliminated" : "";
-  const deathCauseClass = bot.deathCause ? `death-${bot.deathCause}` : "";
+  const deathCauseClass = bot.deathCause && isDown ? `death-${bot.deathCause}` : "";
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
@@ -12902,9 +13171,9 @@ function renderBot(bot, pendingPick) {
   const healthPercent = bot.immortal ? 100 : clamp((displayHp / safeDisplayMaxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
-  const pickDisabled = isDown || identitySwapBlocked || shieldBlocked;
+  const pickDisabled = isDown || bot.eliminated || identitySwapBlocked || shieldBlocked;
   const pickButton = pendingPick
-    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
+    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown || bot.eliminated ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
   const hit = bot.immortal
@@ -13231,11 +13500,15 @@ function renderPassives() {
     const revealStep = currentRoundRevealStep();
     const revealClass =
       revealStep?.id === item.id ? (roundRevealEffectActive() ? "round-reveal-effect" : "round-reveal-active") : "";
+    // a SEAL lights up only once its trigger has been shown, which is after READY
+    // (or in the reveal-time Dev SEAL animation); after READY anything new lights up straight away
+    const round = state.roundState;
+    const triggerShown = Boolean(round?.penaltiesApplied || round?.animatedPassiveIds?.has(item.id));
     const triggeredClass = roundRevealAnimationActive()
       ? revealStep?.id === item.id
         ? "triggered"
         : ""
-      : state.roundState?.triggeredPassiveIds?.has(item.id)
+      : round?.triggeredPassiveIds?.has(item.id) && triggerShown
         ? "triggered"
         : "";
     const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
@@ -13415,6 +13688,39 @@ function handleMenuAction(action) {
   }
 }
 
+function updateSettingChoice(key, step) {
+  const choice = SETTING_CHOICES[key];
+  if (!choice) return;
+  const values = choice.values();
+  const index = values.indexOf(choice.get());
+  const next = values[(Math.max(0, index) + step + values.length) % values.length];
+  choice.set(next);
+  if (key !== "fullscreen") {
+    saveDisplaySettings();
+    applyDisplaySettings();
+  }
+  render();
+}
+
+function resetSettings() {
+  const prefersReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  state.sound.masterVolume = 1;
+  state.sound.musicVolume = SOUNDTRACK_VOLUME;
+  state.sound.sfxVolume = 1;
+  state.sound.muted = false;
+  state.sound.muteInBackground = true;
+  state.display.outlineBoil = prefersReducedMotion ? 0 : 2;
+  state.display.animSpeed = 1;
+  state.display.screenShake = prefersReducedMotion ? 0 : 2;
+  state.display.flashes = 1;
+  state.display.textSize = 0;
+  saveSoundSettings();
+  applySoundSettings();
+  saveDisplaySettings();
+  applyDisplaySettings();
+  render();
+}
+
 function updateDisplaySetting(key, value) {
   if (!(key in state.display)) return;
   if (key === "outlineBoil") state.display.outlineBoil = clamp(Math.round(Number(value) || 0), 0, 3);
@@ -13429,8 +13735,8 @@ function updateDisplaySetting(key, value) {
 }
 
 function updateSoundSetting(key, value, renderAfter = true) {
-  if (key === "muted") {
-    state.sound.muted = Boolean(value);
+  if (typeof state.sound[key] === "boolean") {
+    state.sound[key] = Boolean(value);
   } else if (key in state.sound) {
     state.sound[key] = clamp(Number(value) / 100, 0, 1);
   }
@@ -15430,9 +15736,28 @@ function bindEvents() {
     bindOn(control, "input", () => updateDisplaySetting(control.dataset.displaySetting, control.value));
   });
 
+  document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+    bindOn(button, "click", () => {
+      state.settingsTab = button.dataset.settingsTab;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-setting-choice]").forEach((button) => {
+    bindOn(button, "click", () => updateSettingChoice(button.dataset.settingChoice, Number(button.dataset.step) || 1));
+  });
+
+  document.querySelectorAll("[data-settings-reset]").forEach((button) => {
+    bindOn(button, "click", resetSettings);
+  });
+
+  document.querySelectorAll("[data-settings-replay-story]").forEach((button) => {
+    bindOn(button, "click", () => startIntroSequence({ fromMenu: true }));
+  });
+
   document.querySelectorAll("[data-sound-setting]").forEach((control) => {
     const key = control.dataset.soundSetting;
-    if (key === "muted") {
+    if (control.type === "checkbox") {
       bindOn(control, "change", () => updateSoundSetting(key, control.checked));
       return;
     }
@@ -15631,23 +15956,32 @@ document.addEventListener("fullscreenchange", updateFullscreenLayoutClass);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     saveArcadeRunForNativeExit();
-    if (isNativeArcadeApp()) pauseGameAudioForBackground();
+    if (muteWhenInBackground()) pauseGameAudioForBackground();
     return;
   }
-  if (isNativeArcadeApp()) {
-    if (state.mode === "menu") resumeNativeArcadeOnForeground();
-    resumeGameAudioAfterForeground();
-  }
+  if (isNativeArcadeApp() && state.mode === "menu") resumeNativeArcadeOnForeground();
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
 });
+// Settings > Audio > Mute in background (always on in the phone app)
+function muteWhenInBackground() {
+  return isNativeArcadeApp() || state.sound.muteInBackground !== false;
+}
+
 window.addEventListener("blur", () => {
-  if (isNativeArcadeApp()) pauseGameAudioForBackground();
+  if (muteWhenInBackground()) pauseGameAudioForBackground();
 });
 window.addEventListener("focus", () => {
-  if (isNativeArcadeApp()) resumeGameAudioAfterForeground();
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
+});
+document.addEventListener("fullscreenchange", () => {
+  document.querySelectorAll('[data-setting-value="fullscreen"]').forEach((label) => {
+    label.textContent = document.fullscreenElement ? "Fullscreen" : "Windowed";
+  });
 });
 
 loadSoundSettings();
 loadDisplaySettings();
+installAnimationSpeed();
 installSoundtrack();
 installArcadeEnterShortcut();
 installPauseEscapeShortcut();
