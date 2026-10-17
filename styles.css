@@ -7536,7 +7536,7 @@ body.mobile-arcade #app .bot-glyph {
   font-size: 19px !important;
 }
 
-#app .pause-actions .primary-button[data-pause-action="resume"] {
+#app .pause-actions .primary-button[data-pause-action="resume"]:not(:hover) {
   color: #fff !important;
 }
 
@@ -9640,7 +9640,12 @@ body.native-arcade #app .pause-scene .pause-overlay {
 
 .collection-screen .collection-back:hover:not(:disabled) {
   transform: none !important;
-  background: #0b0b0b !important;
+  background: transparent !important;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .collection-back:hover:not(:disabled)::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
 }
 
 /* collection: build filters */
@@ -9679,8 +9684,13 @@ body.native-arcade #app .pause-scene .pause-overlay {
   transition: opacity 0.15s ease;
 }
 
-.collection-screen .collection-filter:hover:not(.active) {
+.collection-screen .collection-filter:hover:not(:disabled) {
   transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.collection-screen .collection-filter:hover:not(.active) {
   color: #dc2a2f !important;
 }
 
@@ -9815,6 +9825,22 @@ body.native-arcade #app .pause-scene .pause-overlay {
 
 .collection-seal.locked .collection-sigil {
   filter: brightness(0.2);
+}
+
+/* hover: seals turn red like the SEALS in a run (undiscovered dim red, discovered brighter red),
+   a locked seal's padlock turns red */
+.collection-seal.undiscovered:hover .collection-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) saturate(0.18) brightness(2.5);
+}
+
+.collection-seal.discovered:hover .collection-sigil,
+.collection-seal.discovered.selected .collection-sigil {
+  filter: brightness(0.75) sepia(1) saturate(9) hue-rotate(-48deg) drop-shadow(0 0 8px rgba(230, 30, 30, 0.8));
+}
+
+.collection-seal.locked:hover .collection-lock,
+.collection-seal.locked:hover .collection-lock::before {
+  border-color: #dc2a2f;
 }
 
 /* a small hand-drawn padlock on locked seals */
@@ -11114,4 +11140,11 @@ body.text-large .collection-info {
   #app .main-menu-panel.menu-screen-sound .secondary-menu-button {
     min-height: 30px;
   }
+}
+
+/* Hovering a button never outlines it: buttons turn red instead (each button styles its own red).
+   This only removes the old generic white hover ring; rules scoped under #app keep their own effects. */
+html body button:hover:not(:disabled) {
+  box-shadow: none !important;
+  outline: none !important;
 }

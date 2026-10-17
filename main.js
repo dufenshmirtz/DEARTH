@@ -12134,11 +12134,6 @@ function renderPauseMenu() {
     </div>
   `;
   }
-  const modeButton = state.mode === "pvp" ? "Arcade" : "PvP";
-  const modeAction = state.mode === "pvp" ? "arcade" : "pvp";
-  const modeSwitchButton = isNativeArcadeApp()
-    ? ""
-    : `<button class="primary-button" data-pause-action="${modeAction}">${modeButton}</button>`;
   return `
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
@@ -12148,7 +12143,6 @@ function renderPauseMenu() {
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
           <button class="primary-button" data-pause-action="restart">Restart</button>
-          ${modeSwitchButton}
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
