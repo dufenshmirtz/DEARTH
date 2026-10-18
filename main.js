@@ -1015,7 +1015,7 @@ const ITEMS = {
     id: "p111",
     type: "passive",
     name: "Seal of Satan",
-    price: 50,
+    price: 20,
     description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
   },
   p98: {
@@ -1044,7 +1044,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aggiel Hexagram",
     price: 15,
-    description: "Whenever you make a PENTAKILL, this SEAL gains +5 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
@@ -1411,7 +1411,7 @@ const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
-  p101: { key: "pentakill", label: "PENTAKILL", increment: 5 },
+  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
   p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
@@ -4785,14 +4785,21 @@ function applyRoundEndBossPassiveDamage() {
 }
 
 function applyCorruptionGuessMutation(guess) {
-  let mutated = Math.ceil(guess);
+  const original = Math.ceil(guess);
+  let mutated = original;
+  const by = [];
   activeBotsWithBossPassive("corruption").forEach((bot) => {
     if (Math.random() >= 0.33) return;
     const before = mutated;
     const shift = Math.random() < 0.5 ? -10 : 10;
     mutated = Math.ceil(clamp(mutated + shift, 0, playerGuessLimit()));
+    if (mutated !== before) by.push(bot.name);
     state.roundState?.roundEvents.push(`${bot.name}'s ${BOSS_PASSIVES.corruption.name} shifted your guess from ${before} to ${mutated}.`);
   });
+  // remembered so the guess box shows the corrupted number and what it was
+  if (state.roundState) {
+    state.roundState.playerCorruption = mutated !== original ? { from: original, to: mutated, by, shown: false } : null;
+  }
   return mutated;
 }
 
@@ -7219,6 +7226,7 @@ function beginRound() {
   state.roundState = {
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
+    playerCorruption: null,
     botSubmittedGuesses: new Map(),
     botEffectiveGuesses: new Map(),
     targetModifier: twinModifier ?? (threonMystery ? randomInt(6, 10) / 10 : currentTargetModifier()),
@@ -10397,6 +10405,7 @@ function chooseBot(botId) {
     const botGuess = round.botEffectiveGuesses.get(bot.id);
     round.playerEffectiveGuess = botGuess;
     round.playerSubmittedGuess = botGuess;
+    round.playerCorruption = null;
     round.botEffectiveGuesses.set(bot.id, playerGuess);
     round.botSubmittedGuesses.set(bot.id, playerGuess);
     applyTargetedItemSinGain(item, [bot]);
@@ -13256,13 +13265,26 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  const value = round?.playerSubmittedGuess ?? "";
+  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
+  const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
+  const corruptionFresh = Boolean(corruption && !corruption.shown);
+  if (corruption) corruption.shown = true;
   const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
   const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, shownTargetValue(round), playerCritical);
   // about to CRIT: just the number in red; after READY the line and the button turn red too
   const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
-  const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
+  const inputClass = [
+    "guess-input",
+    criticalInputClass,
+    playerCloseness.className,
+    corruption ? "corrupted-guess" : "",
+    corruptionFresh ? "corrupted-fresh" : ""
+  ].filter(Boolean).join(" ");
+  const corruptionNote = corruption
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
     ? 'readonly inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-readonly="true"'
@@ -13274,7 +13296,8 @@ function renderConsole() {
   return `
     <section class="center-console" aria-label="Player action">
       ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
-      <div class="console-row">
+      <div class="console-row${corruption ? " has-corruption" : ""}">
+        ${corruptionNote}
         <input
           id="guessInput"
           class="${inputClass}"

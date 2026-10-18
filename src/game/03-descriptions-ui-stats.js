@@ -425,14 +425,21 @@ function applyRoundEndBossPassiveDamage() {
 }
 
 function applyCorruptionGuessMutation(guess) {
-  let mutated = Math.ceil(guess);
+  const original = Math.ceil(guess);
+  let mutated = original;
+  const by = [];
   activeBotsWithBossPassive("corruption").forEach((bot) => {
     if (Math.random() >= 0.33) return;
     const before = mutated;
     const shift = Math.random() < 0.5 ? -10 : 10;
     mutated = Math.ceil(clamp(mutated + shift, 0, playerGuessLimit()));
+    if (mutated !== before) by.push(bot.name);
     state.roundState?.roundEvents.push(`${bot.name}'s ${BOSS_PASSIVES.corruption.name} shifted your guess from ${before} to ${mutated}.`);
   });
+  // remembered so the guess box shows the corrupted number and what it was
+  if (state.roundState) {
+    state.roundState.playerCorruption = mutated !== original ? { from: original, to: mutated, by, shown: false } : null;
+  }
   return mutated;
 }
 

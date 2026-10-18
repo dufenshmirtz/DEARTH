@@ -11148,3 +11148,91 @@ html body button:hover:not(:disabled) {
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* BOSS Corruption: the guess box shows the corrupted guess, with the typed number struck out beside it */
+.center-console .console-row.has-corruption {
+  position: relative;
+}
+
+.center-console .guess-corruption {
+  position: absolute;
+  z-index: 2;
+  left: 12px;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+  line-height: 1.05;
+}
+
+.center-console .guess-corruption-label {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 13px !important;
+  letter-spacing: 0.04em;
+  color: #dc2a2f !important;
+}
+
+.center-console .guess-corruption s {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 20px !important;
+  color: #8d877c !important;
+  text-decoration-color: #dc2a2f;
+  text-decoration-thickness: 2px;
+}
+
+.center-console .guess-corruption.fresh {
+  animation: guess-corruption-in 0.7s ease-out both;
+}
+
+@keyframes guess-corruption-in {
+  0% { opacity: 0; transform: translate(-6px, -50%); }
+  100% { opacity: 1; transform: translate(0, -50%); }
+}
+
+/* the number glitches into its corrupted value once, when the guess is locked in */
+#app .center-console .guess-input.corrupted-fresh {
+  animation: guess-corrupt-glitch 0.9s steps(1, end) both;
+}
+
+@keyframes guess-corrupt-glitch {
+  0% { color: #dc2a2f; text-shadow: -3px 0 #dc2a2f, 3px 0 #e9e3d6; }
+  12% { color: #e9e3d6; text-shadow: 3px 0 #dc2a2f, -2px 0 #8d877c; }
+  24% { color: #dc2a2f; text-shadow: -2px 0 #e9e3d6, 2px 0 #dc2a2f; }
+  36% { color: #e9e3d6; text-shadow: 2px 0 #dc2a2f; }
+  50% { color: #dc2a2f; text-shadow: -1px 0 #dc2a2f; }
+  70% { color: #dc2a2f; text-shadow: none; }
+  100% { text-shadow: none; }
+}
+
+body.reduce-flashes #app .center-console .guess-input.corrupted-fresh {
+  animation: none;
+}
+
+/* phone app: the guess box is narrow, so the Corruption note sits just below it on one line */
+body.native-arcade .center-console .guess-corruption {
+  top: calc(100% + 4px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  justify-content: center;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  transform: none;
+}
+
+body.native-arcade .center-console .guess-corruption.fresh {
+  animation-name: guess-corruption-in-above;
+}
+
+@keyframes guess-corruption-in-above {
+  0% { opacity: 0; transform: translateX(-6px); }
+  100% { opacity: 1; transform: none; }
+}
+
+body.native-arcade .center-console .guess-corruption s {
+  font-size: 17px !important;
+}

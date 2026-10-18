@@ -516,3 +516,27 @@ test("Vial of Blood copies only the first DAMNED's PERSONALITY", () => {
     assert.ok(itemDescription(ITEMS.a11).includes("PERSONALITY"));
   `);
 });
+
+test("Corruption shows the changed guess: the effective guess and what was typed are remembered", () => {
+  game()(`
+    fixture([], [50, 50]);
+    state.bots[0].passiveKeys = ["corruption"];
+    const rolls = [0.1, 0.9];
+    Math.random = () => rolls.length ? rolls.shift() : 0.99;
+    const mutated = applyCorruptionGuessMutation(27);
+    assert.equal(mutated, 37);
+    assert.equal(state.roundState.playerCorruption.from, 27);
+    assert.equal(state.roundState.playerCorruption.to, 37);
+    Math.random = () => 0.99;
+    assert.equal(applyCorruptionGuessMutation(27), 27);
+    assert.equal(state.roundState.playerCorruption, null);
+  `);
+});
+
+test("Seal of Satan costs 20 SIN and Aggiel Hexagram stacks +20 per PENTAKILL", () => {
+  game()(`
+    assert.equal(ITEMS.p111.price, 20);
+    assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
+    assert.ok(ITEMS.p101.description.includes("+20 damage"));
+  `);
+});

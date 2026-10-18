@@ -642,6 +642,7 @@ function chooseBot(botId) {
     const botGuess = round.botEffectiveGuesses.get(bot.id);
     round.playerEffectiveGuess = botGuess;
     round.playerSubmittedGuess = botGuess;
+    round.playerCorruption = null;
     round.botEffectiveGuesses.set(bot.id, playerGuess);
     round.botSubmittedGuesses.set(bot.id, playerGuess);
     applyTargetedItemSinGain(item, [bot]);

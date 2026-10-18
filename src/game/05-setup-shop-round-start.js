@@ -773,6 +773,7 @@ function beginRound() {
   state.roundState = {
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
+    playerCorruption: null,
     botSubmittedGuesses: new Map(),
     botEffectiveGuesses: new Map(),
     targetModifier: twinModifier ?? (threonMystery ? randomInt(6, 10) / 10 : currentTargetModifier()),

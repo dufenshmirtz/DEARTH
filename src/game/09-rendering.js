@@ -1955,13 +1955,26 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  const value = round?.playerSubmittedGuess ?? "";
+  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
+  const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
+  const corruptionFresh = Boolean(corruption && !corruption.shown);
+  if (corruption) corruption.shown = true;
   const playerCriticalConfirmed = Boolean(round?.criticalHitKeys?.has("player"));
   const playerCritical = playerCriticalConfirmed || criticalKeysForDisplay(round).has("player");
   const playerCloseness = guessClosenessAttrs(round?.playerEffectiveGuess, shownTargetValue(round), playerCritical);
   // about to CRIT: just the number in red; after READY the line and the button turn red too
   const criticalInputClass = playerCriticalConfirmed ? "critical-guess" : playerCritical ? "critical-pending" : "";
-  const inputClass = ["guess-input", criticalInputClass, playerCloseness.className].filter(Boolean).join(" ");
+  const inputClass = [
+    "guess-input",
+    criticalInputClass,
+    playerCloseness.className,
+    corruption ? "corrupted-guess" : "",
+    corruptionFresh ? "corrupted-fresh" : ""
+  ].filter(Boolean).join(" ");
+  const corruptionNote = corruption
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
     ? 'readonly inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-readonly="true"'
@@ -1973,7 +1986,8 @@ function renderConsole() {
   return `
     <section class="center-console" aria-label="Player action">
       ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
-      <div class="console-row">
+      <div class="console-row${corruption ? " has-corruption" : ""}">
+        ${corruptionNote}
         <input
           id="guessInput"
           class="${inputClass}"

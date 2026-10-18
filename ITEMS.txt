@@ -259,13 +259,13 @@ When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% c
 
 Satan Seals
 
-Seal of Satan (50 SIN)
+Seal of Satan (20 SIN)
 Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level.
 
 Seals of Saturn (self-stacking)
 
 Seal of Aggiel Hexagram (15 SIN)
-Whenever you make a PENTAKILL, this SEAL gains +5 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
+Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
 
 Seal of Bethor (15 SIN)
 At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.

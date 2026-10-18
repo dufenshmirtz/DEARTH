@@ -809,7 +809,7 @@ const ITEMS = {
     id: "p111",
     type: "passive",
     name: "Seal of Satan",
-    price: 50,
+    price: 20,
     description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
   },
   p98: {
@@ -838,7 +838,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aggiel Hexagram",
     price: 15,
-    description: "Whenever you make a PENTAKILL, this SEAL gains +5 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
@@ -1205,7 +1205,7 @@ const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
-  p101: { key: "pentakill", label: "PENTAKILL", increment: 5 },
+  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
   p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
