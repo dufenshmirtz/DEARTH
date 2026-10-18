@@ -493,3 +493,26 @@ test("every collection SEAL has at least one known build tag", () => {
     assert.ok(sealMatchesCollectionFilter("p45", "all"));
   `);
 });
+
+test("Vial of Blood copies only the first DAMNED's PERSONALITY", () => {
+  game()(`
+    fixture([], [50, 50, 50]);
+    globalThis.render = () => {};
+    globalThis.playGameSfx = () => {};
+    globalThis.playSfx = () => {};
+    globalThis.playArtifactSfx = () => {};
+    const [first, second] = state.bots;
+    setBotPersonality(first, "Stubborn", "", { triggerAlterationDamage: false });
+    setBotPersonality(second, "Analyst", "", { triggerAlterationDamage: false });
+    first.passiveKeys = ["soulStealing"];
+    second.passiveKeys = [];
+    state.player.actives = [{ ...ITEMS.a11, uid: "vial-1" }];
+    state.pendingActive = { index: 0, uid: "vial-1", id: "a11", mode: "bot", step: "damage" };
+    resolveBloodVial(first);
+    resolveBloodVial(second);
+    assert.equal(personalityType(first), "Stubborn");
+    assert.equal(personalityType(second), "Stubborn");
+    assert.deepEqual(second.passiveKeys, []);
+    assert.ok(itemDescription(ITEMS.a11).includes("PERSONALITY"));
+  `);
+});

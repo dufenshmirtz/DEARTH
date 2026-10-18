@@ -8,7 +8,7 @@ function artifactDescription(item) {
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
-    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's ability.`;
+    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's PERSONALITY.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
   if (item.id === "a13") {

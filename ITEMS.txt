@@ -354,7 +354,7 @@ Satanic Bible (2 SIN)
 Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
 
 Vial of Blood (2 SIN)
-Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability.
+Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY.
 
 Voodoo Doll (3 SIN)
 This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.

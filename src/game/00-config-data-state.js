@@ -985,7 +985,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 2,
-    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability."
+    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY."
   },
   a12: {
     id: "a12",

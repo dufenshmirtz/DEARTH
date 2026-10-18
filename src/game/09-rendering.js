@@ -2015,7 +2015,7 @@ function renderPendingText() {
     return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
-    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;
+    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's PERSONALITY.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }

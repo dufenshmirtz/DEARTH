@@ -1191,7 +1191,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 2,
-    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's ability."
+    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY."
   },
   a12: {
     id: "a12",
@@ -4368,7 +4368,7 @@ function artifactDescription(item) {
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
-    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's ability.`;
+    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's PERSONALITY.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
   if (item.id === "a13") {
@@ -10053,31 +10053,10 @@ function addArtifactCriticalRangeBonus(amount, source) {
   return state.roundState.artifactCriticalRangeBonus;
 }
 
-function snapshotDamnedAbility(bot) {
-  return {
-    type: personalityType(bot),
-    passiveKeys: [...(bot?.passiveKeys || [])],
-    buffPassiveKey: bot?.buffPassiveKey || null
-  };
-}
-
-function applyDamnedAbilitySnapshot(bot, snapshot, source) {
-  if (!bot || !snapshot) return false;
-  let changed = false;
-  if (snapshot.type) {
-    changed = setBotPersonality(bot, snapshot.type, source) || changed;
-  }
-  const passiveKeys = (snapshot.passiveKeys || []).filter((key) => BOSS_PASSIVES[key] || PYROS_GIFT_PASSIVES[key]);
-  const buffPassiveKey = PYROS_GIFT_PASSIVES[snapshot.buffPassiveKey] ? snapshot.buffPassiveKey : null;
-  if (JSON.stringify(bot.passiveKeys || []) !== JSON.stringify(passiveKeys)) {
-    bot.passiveKeys = [...passiveKeys];
-    changed = true;
-  }
-  if ((bot.buffPassiveKey || null) !== buffPassiveKey) {
-    bot.buffPassiveKey = buffPassiveKey;
-    changed = true;
-  }
-  return changed;
+// Vial of Blood: the second DAMNED takes the first one's PERSONALITY (nothing else)
+function copyDamnedPersonality(bot, personality, source) {
+  if (!bot || !personality) return false;
+  return Boolean(setBotPersonality(bot, personality, source));
 }
 
 function recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter = true) {
@@ -10523,9 +10502,9 @@ function resolveBloodVial(bot) {
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
     pending.damageBotId = bot.id;
-    pending.copiedAbility = snapshotDamnedAbility(bot);
-    pending.copiedAbilityName = bot.name;
-    addLog("Now pick another non-boss DAMNED to overheal and receive the copied ability.");
+    pending.copiedPersonality = personalityType(bot);
+    pending.copiedPersonalityName = bot.name;
+    addLog("Now pick another non-boss DAMNED to overheal and receive the copied PERSONALITY.");
     render();
     return;
   }
@@ -10543,11 +10522,11 @@ function resolveBloodVial(bot) {
     }
     const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
     const healed = healBot(bot, healAmount, itemName, itemName, { allowOverheal: true });
-    const copied = applyDamnedAbilitySnapshot(bot, pending.copiedAbility, itemName);
+    const copied = copyDamnedPersonality(bot, pending.copiedPersonality || pending.copiedAbility?.type, itemName);
     applyTargetedItemSinGain(item, [bot]);
     finishActiveResolution(
       pending.index,
-      `${itemName} overhealed ${bot.name} for ${healed} and ${copied ? "copied" : "matched"} ${pending.copiedAbilityName || "the first DAMNED"}'s ability.`
+      `${itemName} overhealed ${bot.name} for ${healed} and ${copied ? "copied" : "matched"} ${pending.copiedPersonalityName || pending.copiedAbilityName || "the first DAMNED"}'s PERSONALITY.`
     );
   }
 }
@@ -13337,7 +13316,7 @@ function renderPendingText() {
     return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
-    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's ability.`;
+    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's PERSONALITY.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }
