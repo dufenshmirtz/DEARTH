@@ -7,12 +7,15 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 
 ## Working rules
 - Never commit to `main` directly. Create a feature branch (`feature/...`, `fix/...`, `balance/...`, `docs/...`), commit there, open a PR.
+- The owner pushes branches himself. Commit, but do not push, even if a hook asks; say which branches are waiting and in what order. Each new request usually gets its own branch, cut from the previous (unpushed) one, so the branches stack.
 - Do not touch uncommitted changes you did not make. Check `git status` first and ask before modifying files that already have local edits.
 - Edit game logic in `src/game/*.js`, never `main.js` directly. Then run `pnpm run build:game` to regenerate `main.js`.
 - Run `pnpm run check` before committing (verifies `main.js` matches `src/game` and syntax-checks the scripts).
 - When a SEAL or ARTIFACT changes in code, update `ITEMS.txt` to match (it is a hand-maintained catalog).
 - Sounds are balanced by loudness tier, not raw volume. After adding or replacing any file in `assets/audio/`, run `pnpm run audio:levels` (needs ffmpeg; writes `src/game/00-audio-loudness.js` and rebuilds) and give the sound a tier in `SFX_LEVELS` (`00-audio-sfx-config.js`). Per-sound tweaks are a `trim` in dB.
 - Shell is Windows (PowerShell / cmd). Use `pnpm`. Files use CRLF line endings; the repo has `core.autocrlf=true`.
+- Tests: `node --test scripts/test-seal-effects.js` (`pnpm run check` does not run them). Add a test for every SEAL/BOSS rule you add or change.
+- After a change that ships: `pnpm run build:game`, `pnpm run check`, tests, commit; then `pnpm run mobile:build`, `git checkout -- main.js` (the mobile build rewrites it), and copy the changed `native-www/` files into `android/app/src/main/assets/public/` so the phone app matches.
 
 ## Running
 - `pnpm start` (or `start_pvp_server.bat`) → server on http://localhost:5177
@@ -42,14 +45,59 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - `assets/` (artifacts, audio, bots, seals, ui), `fonts/`.
 - `android/`, `ios/` — Capacitor 8 projects (app id `com.aenao.dearth`), arcade-only, landscape.
 
+## Working with the owner
+- Design choices with several reasonable answers: present them as an interactive option page (an HTML artifact the owner can click through) rather than a wall of text. Small calls (an ELITE bonus, a price) can be decided; say what you picked in the reply so it can be changed.
+- Report what changed in plain words and keep replies short; list judgment calls separately.
+- Audio: balance loudness for any SFX change (see the audio rule above).
+
 ## Game rules in brief
 - Each round the player + 5 DAMNED guess 0–100. TARGET = ceil(weighted average × modifier + offset); modifier 0.8 by default (final bosses 0.666, unique bosses override).
 - Damage = |guess − TARGET|; worst guess +10; CRITICAL (exact TARGET, window widened by seals) hits everyone else for 10% max HP.
 - Stages: guess → active (≤2 ARTIFACTS) → reveal/resolution → summary → Devil's Offerings shop.
 - Currency SIN; DAMNED carry BOUNTY (SIN paid on death) and MEMORY (past rounds, drives AI). Personalities: Anchor, Analyst, Follower, Stubborn, Drifter, Caller. Bosses have no personality and play optimally.
 - Player: 100 HP, 8 starting SIN, 3 seal slots (max 6). ELITE seal levels usually ×1.5 damage.
-- Bosses every 8 kills: 8 unique bosses (Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, Petros+Pavlos) → Goetic demon bosses → final bosses Jesus and Satan (infinite HP) → endless.
+- Player SEAL slots: 3, +1 per 2 BOSS kills, max 6. ARTIFACTS: hold 5, use 2 per round. Kills heal 1 (BOSS kills heal 6).
+- BOSSES: one every 8-12 KOs (`BOSS_KILL_INTERVAL_*`) for the 8 unique bosses (Zilon, Dantre, Pyros, Threon, Kalha, Serafim, Padma, Petros+Pavlos). Beating those 8 is the main game (Satan returns with a short scene). After that, Goetic demon bosses every 4-8 KOs (`ENDLESS_BOSS_KILL_INTERVAL_*`) and the run is "how far can you get" (like Balatro's endless). Jesus and Satan (infinite HP) after all 72 Goetic bosses are an easter egg almost nobody should reach; never treat them as the goal or spoil them in player-facing text.
 - PvP: up to 12 players, phones as controllers, simplified artifact set, modifier rerolls 0.7–1.2 every 3 rounds.
 
 ## Licensing
 No open-source license; all rights reserved. Third-party asset audit pending before release.
+
+## SEALS: how they are organised
+- Collection sections (`COLLECTION_SECTIONS`, `09-collection.js`): Player (Goetic), Apocalypse, Boss (Dev), Satan, Seals of Saturn (self-stacking), Special. Section membership is only for the collection; every SEAL can be offered in the shop unless locked in `SEAL_UNLOCKS`.
+- Goetic SEALS are exactly the 72 Goetic demons, each used once (a test enforces it). A new Goetic SEAL needs a free demon: move an existing one to Special Seals (`SPECIAL_SEAL_IDS`) and rename it. Each Goetic demon also has a BOSS in `GOETIC_BOSS_SPECS` whose `passiveId` is that SEAL: while that BOSS lives, the SEAL is suppressed.
+- Build filters: every SEAL has build tags in `SEAL_BUILD_TAGS` (bounty, memory, reveal, critical, personality, artifact, general). "Bounty" means the SEAL works with the BOUNTY the DAMNED carry; SEALS that only pay you SIN or multiply the payout are not Bounty.
+- Art: Goetic sigils in `assets/seals/NNN_Name.png`, the others in subfolders (`saturn/`, `dev/`, `satan/`, `self-stacking/` = old art kept for reuse). Sigils fill 92% of a 512px transparent canvas, white lines; keep new art at that size.
+- Old ids are never reused: removed SEALS go in `REMOVED_PASSIVE_IDS`; new SEALS take the next free `pNNN`.
+
+## Adding or changing a SEAL (checklist)
+1. `00-config-data-state.js`: `ITEMS.pNNN` (name, price, description ending with the ELITE rule), `PASSIVE_IDS`, `SEAL_SIGILS`; Goetic ones also `GOETIC_BOSS_IMAGE_BY_PASSIVE_ID` and the demon's `GOETIC_BOSS_SPECS.passiveId`.
+2. The effect, hooked where it fires: CRITICAL in `applyPenalties` (`06`), deaths in `applyEliminationPassives` (`06`, add the id to its list), end of round in `applyEndOfRoundPassiveDamageInOrder` / `applyEndOfRoundPassives` (`06`), round start at the end of `beginRound` (`05`), TARGET reveal in `submitGuess` (`05`), MEMORY gain via `addBotMemory` (`02`). Iterate `orderedPassiveEffectEntries(id)` (it skips suppressed SEALS).
+3. Every time it acts, call `markPassiveEntryTriggered(entry)` (or `markPassiveTriggered(id)`): that drives the seal animation after READY, `state.sealStats`, and collection discovery.
+4. ELITE helpers: `passiveEntryFlatDamage(entry, base)` (x1.5 per level, rounded up), `passiveEntryScaledValue(entry, base)` (+20% per level), `passiveEntryEliteLevels(entry)`.
+5. Text: `itemDescription` in `03-descriptions-ui-stats.js` (ELITE-aware text for stack 2+; add the id to the `stack <= 1` list when the base text changed, since saves keep a copy). Use `ITEMS.pNNN.name` in log text, never a hard-coded name.
+6. `SEAL_BUILD_TAGS`, the collection section if not Player, `ITEMS.txt` (alphabetical within its section), a test in `scripts/test-seal-effects.js`.
+7. Check it on screen (shop, SEAL slot tooltip, collection) and, for anything that changes balance, run a few simulated runs.
+
+## Timing and visuals rules
+- SEAL visuals (glow, colour) and DAMNED death animations play only after READY, even if their condition was met earlier; HEALTH may already read 0. Exception: Dantre and Serafeim act at reveal (`DEV_SEALS_AT_REVEAL`).
+- Animation speed x1/x2/x4 (Settings > Gameplay): timed code uses `gameMs(ms)`; CSS animations whose names match `SPEED_SCALED_ANIMATIONS` are sped up automatically.
+- Settings live in `renderSettingsPanel` (`09-rendering.js`, tabs Audio/Display/Gameplay) and are stored with the sound settings (`01-persistence-audio.js`). Display options add body classes (`reduce-flashes`, `text-large`); respect `reduce-flashes` in new flashy CSS.
+
+## UI conventions
+- Hover on any button turns it blood red (text and frame); never an outline, glow ring or box. The generic button rules in `styles.css` are old and very broad (`button:hover:not(:disabled) ... !important`); new buttons need their own red hover and may need higher specificity.
+- Fonts: "Razor Keen" for UI labels, `var(--font-book)` (Alegreya) for body text. Colours: `--blood-bright #dc2a2f`, `--bone #e9e3d6`, `--ash #8d877c`. Dividers and frames come from `assets/occult-ui-border-kit/`.
+- Scrollbars are styled to match the game; do not set `scrollbar-color` on containers (it overrides the webkit styling).
+- Keyboard: Enter = Guess / Ready / Next round, Esc = Pause (or closes the collection), Shift = more detail on a tooltip.
+- Three layouts must work: desktop (`index.html`, 1600x900 is a good check), phone web (`mobile.html`, body class `mobile-arcade`) and the native app (`app.html`, body class `native-arcade`, check at 844x390). The native app has no fullscreen option and different console layout.
+
+## Checking your work
+- Test harness: `game()` returns a fresh VM with the whole game; `fixture(passives, guesses)` builds a round (TARGET 50, DAMNED at 1000 HP); `assertDamage([...])` checks each DAMNED's `lastDamage`. Stub browser-only calls inside a test when needed (`globalThis.playArtifactSfx = () => {}`). Memory per DAMNED is capped by the round number (`memoryRoundLimit`), so raise `state.round` when a test needs MEMORY.
+- Screenshots: serve the repo with any static server and drive it with Playwright; set `localStorage.dearthIntroSeenV1 = "1"` first to skip the story. `startGame()`, `openCollectionFromMenu()`, `openPauseMenu()`, `submitGuess()`, `readyRound()` and `finishRoundRevealAnimation()` get to most screens quickly.
+- For balance, loop whole runs in the page (buy, guess near the TARGET, READY, `advanceAfterSummary()`) and compare `state.sealStats`.
+
+## Remote sessions (Claude working through the desktop bridge)
+- The repo is `C:\Users\fchry\Documents\ChatGPT\Smalmerstein` (mounted as `$HOME/mnt/Smalmerstein`). Files copied in from elsewhere arrive with LF: convert them to CRLF before building.
+- Git needs delete permission in that folder (it removes its own lock files); request it once per session. If a session ends mid-command, check for a stale `.git/index.lock` before the next git command.
+- The bridge can drop on long commands: run build, commit, mobile build and the android copy as separate steps, and copy files to `android/.../public` with a small script rather than `cp -r` (the Windows mount is slow).
+- Demo for friends: a zip with `PLAY DEARTH.html` (redirect to `game/index.html`), `START PVP SERVER.bat`, `HOW TO RUN.txt`, `HOW TO PLAY.txt` and `game/` (index.html, main.js, styles.css, mobile.html, controller.*, server.js, start_pvp_server.bat, assets, fonts). Update the guides when rules change, and do not mention Jesus/Satan in them.
