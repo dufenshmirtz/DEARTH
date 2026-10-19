@@ -744,6 +744,7 @@ function startGame(options = {}) {
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.critMomentumBonus = 0;
+  state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
   resetBotsForRun();
   rerollShop();
@@ -845,6 +846,7 @@ function beginRound() {
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
+    if (!Number.isFinite(bot.spawnRound)) bot.spawnRound = state.round;
     trimBotMemoryToLimit(bot);
     bot.fresh = bot.memory.length === 0;
     bot.lastDamage = 0;
@@ -881,6 +883,7 @@ function beginRound() {
   applyStartOfRoundPassives();
   applyGuessReveals();
   applyRevealPoisonCounters();
+  ensureSitriHost();
 }
 
 function applyMarkedProspect() {
@@ -1687,6 +1690,7 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
   const shownBefore = { target: round.target, offset: round.targetOffset };
@@ -1697,6 +1701,23 @@ function submitGuess() {
   // only the reveal-time Dev SEALS (Dantre, Serafeim) animate now; every other SEAL waits for READY
   startRoundRevealAnimation(beforeReveal, { onlyIds: DEV_SEALS_AT_REVEAL });
   render();
+}
+
+// Seal of Eligos: your guess equals the TARGET as it is revealed (before any ARTIFACT or reveal SEAL moves it)
+function applyEligosExactGuess() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p119");
+  if (!round || !entries.length) return false;
+  if (!Number.isFinite(round.playerEffectiveGuess) || Math.ceil(round.playerEffectiveGuess) !== Math.ceil(round.target)) return false;
+  state.exactGuessCritCharged = true;
+  round.eligosExactGuess = true;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    const eliteSin = 5 * passiveEntryEliteLevels(entry);
+    if (eliteSin > 0) gainCredits(eliteSin, true, ITEMS.p119.name);
+  });
+  round.roundEvents.push(`${ITEMS.p119.name}: your guess was exactly the TARGET. Your next CRITICAL deals 20% max HEALTH.`);
+  return true;
 }
 
 function applyGuessMutation(name, guess, bot = null) {

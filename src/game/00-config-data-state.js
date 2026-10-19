@@ -495,7 +495,7 @@ const ITEMS = {
   p55: {
     id: "p55",
     type: "passive",
-    name: "Seal of Sitri",
+    name: "Seal of Samael Septagram",
     price: 11,
     description:
       "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
@@ -601,7 +601,7 @@ const ITEMS = {
   p69: {
     id: "p69",
     type: "passive",
-    name: "Seal of Eligos",
+    name: "Seal of Cassiel Hexagram",
     price: 14,
     description:
       "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
@@ -901,7 +901,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 12,
-    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 14 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
   },
   p113: {
     id: "p113",
@@ -923,6 +923,41 @@ const ITEMS = {
     name: "Seal of Botis",
     price: 12,
     description: "At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes 4 damage and gives you 2 SIN. ELITE multiplies the damage by x1.5 and increases the SIN gained by +20% each level, rounded up."
+  },
+  p116: {
+    id: "p116",
+    type: "passive",
+    name: "Seal of Beleth",
+    price: 12,
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p117: {
+    id: "p117",
+    type: "passive",
+    name: "Seal of Shax",
+    price: 11,
+    description: "In a round where you hit CRITICAL, every DAMNED that dies gives you 2 extra SIN. ELITE increases the SIN by +20% each level, rounded up."
+  },
+  p118: {
+    id: "p118",
+    type: "passive",
+    name: "Seal of Malphas",
+    price: 13,
+    description: "At end of round, each DAMNED takes 2 damage for every round it has been alive: 2 in its first round, 4 in its second, and so on. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p119: {
+    id: "p119",
+    type: "passive",
+    name: "Seal of Eligos",
+    price: 14,
+    description: "If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens."
+  },
+  p120: {
+    id: "p120",
+    type: "passive",
+    name: "Seal of Sitri",
+    price: 13,
+    description: "The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level."
   },
   a28: {
     id: "a28",
@@ -1170,7 +1205,12 @@ const PASSIVE_IDS = [
   "p112",
   "p113",
   "p114",
-  "p115"
+  "p115",
+  "p116",
+  "p117",
+  "p118",
+  "p119",
+  "p120"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1200,6 +1240,8 @@ const REMOVED_PASSIVE_IDS = new Set([
 ]);
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
+// former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
+const SPECIAL_SEAL_IDS = new Set(["p55", "p69"]);
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
@@ -1306,7 +1348,7 @@ const SEAL_SIGILS = {
   p52: "029_Decarabia.png",
   p53: "058_Samigina.png",
   p54: "072_Zepar.png",
-  p55: "062_Sytry.png",
+  p55: "self-stacking/Samael-Star.png",
   p56: "039_Halphas.png",
   p57: "014_Balan.png",
   p58: "041_Ipes.png",
@@ -1320,7 +1362,7 @@ const SEAL_SIGILS = {
   p66: "003_Aim.png",
   p67: "024_Caim.png",
   p68: "067_Vapula.png",
-  p69: "001_Abigor.png",
+  p69: "self-stacking/Cassiel-Hexagram.png",
   p70: "006_Amy.png",
   p71: "057_Sallos.png",
   p72: "031_Forcas.png",
@@ -1367,7 +1409,12 @@ const SEAL_SIGILS = {
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",
-  p115: "021_Botis.png"
+  p115: "021_Botis.png",
+  p116: "017_Beleth.png",
+  p117: "060_Shax.png",
+  p118: "043_Malphas.png",
+  p119: "001_Abigor.png",
+  p120: "062_Sytry.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -1416,7 +1463,6 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p52: "69-decarabia.png",
   p53: "04-samigina-gamigin.png",
   p54: "16-zepar.png",
-  p55: "12-sitri.png",
   p56: "38-halphas.png",
   p57: "51-balam.png",
   p58: "22-ipos.png",
@@ -1429,7 +1475,6 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p65: "24-naberius.png",
   p67: "53-caim-camio.png",
   p68: "60-vapula-naphula.png",
-  p69: "15-eligos.png",
   p70: "58-amy-avnas.png",
   p71: "19-sallos.png",
   p72: "50-furcas.png",
@@ -1452,7 +1497,12 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p112: "34-furfur.png",
   p113: "38-halphas.png",
   p114: "10-buer.png",
-  p115: "17-botis.png"
+  p115: "17-botis.png",
+  p116: "13-beleth.png",
+  p117: "44-shax.png",
+  p118: "39-malphas.png",
+  p119: "15-eligos.png",
+  p120: "12-sitri.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -1466,10 +1516,10 @@ const GOETIC_BOSS_SPECS = [
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
   { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
   { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
-  { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p55" },
-  { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p62" },
+  { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p120" },
+  { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p116" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
-  { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p69" },
+  { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p119" },
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
   { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p115" },
   { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
@@ -1493,12 +1543,12 @@ const GOETIC_BOSS_SPECS = [
   { key: "stolas", name: "Stolas", image: "36-stolas.png", passiveId: "p42" },
   { key: "phenex", name: "Phenex", image: "37-phenex-phoenix.png", passiveId: "p49" },
   { key: "halphas", name: "Halphas", image: "38-halphas.png", passiveId: "p113" },
-  { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p37" },
+  { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p118" },
   { key: "raum", name: "Raum", image: "40-raum.png", passiveId: "p88" },
   { key: "focalor", name: "Focalor", image: "41-focalor.png", passiveId: "p40" },
   { key: "vepar", name: "Vepar", image: "42-vepar.png", passiveId: "p61" },
   { key: "sabnock", name: "Sabnock", image: "43-sabnock.png", passiveId: "p19" },
-  { key: "shax", name: "Shax", image: "44-shax.png", passiveId: "p21" },
+  { key: "shax", name: "Shax", image: "44-shax.png", passiveId: "p117" },
   { key: "vine", name: "Vine", image: "45-vine.png", passiveId: "p64" },
   { key: "bifrons", name: "Bifrons", image: "46-bifrons.png", passiveId: "p90" },
   { key: "vual", name: "Vual", image: "47-vual-uvall.png", passiveId: "p63" },
@@ -1878,6 +1928,7 @@ const state = {
   satanVictoryPlayed: false,
   paleHorseBoostArmed: false,
   critMomentumBonus: 0,
+  exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   shouldFocusGuessInput: false,
   pendingActive: null,

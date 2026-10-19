@@ -818,6 +818,11 @@ button:disabled {
   margin-right: 50px;
 }
 
+#app .sitri-host-label {
+  color: #dc2a2f !important;
+  cursor: help;
+}
+
 .bot-health .health-bar {
   margin-top: 6px;
 }

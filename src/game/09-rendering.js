@@ -1847,6 +1847,11 @@ function renderBot(bot, pendingPick) {
     (bot.poisonCounters || 0) > 0
       ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
       : "";
+  // Seal of Sitri's host: double HEALTH until it dies
+  const sitriHostBadge =
+    bot.sitriHost && !isDown
+      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double HEALTH, gains MEMORY every round.`)}">Host x2</span>`
+      : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
@@ -1901,6 +1906,7 @@ function renderBot(bot, pendingPick) {
           ${healBadge}
           <div class="bot-health-heading">
             <span>${healthLabel}</span>
+            ${sitriHostBadge}
             ${poisonStackBadge}
           </div>
           <div class="health-bar">

@@ -493,8 +493,8 @@ function applyExcessMemoryDamage(bot, excessMemory) {
     queueEndOfRoundBotDamage(
       bot,
       damage,
-      `Seal of Sitri converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
-      "Seal of Sitri"
+      `${ITEMS.p55.name} converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
+      ITEMS.p55.name
     );
   });
 }

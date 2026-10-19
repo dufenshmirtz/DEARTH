@@ -83,7 +83,9 @@ const COLLECTION_SECTIONS = [
   { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
   { key: "satan", title: "Satan Seals", ids: ["p111"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
+  // former Goetic SEALS whose demons now belong to newer SEALS
+  { key: "special", title: "Special Seals", ids: ["p55", "p69"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -138,7 +140,7 @@ const SEAL_BUILD_TAGS = {
   p52: ["memory"], // Decarabia
   p53: ["memory"], // Samigina
   p54: ["reveal"], // Zepar
-  p55: ["memory"], // Sitri
+  p55: ["memory"], // Samael Septagram (special)
   p57: ["bounty", "memory"], // Balam
   p58: ["general"], // Ipos
   p59: ["reveal", "bounty", "memory"], // Amon
@@ -149,7 +151,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p69: ["critical"], // Eligos
+  p69: ["critical"], // Cassiel Hexagram (special)
   p70: ["artifact"], // Amy
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
@@ -171,6 +173,11 @@ const SEAL_BUILD_TAGS = {
   p113: ["general"], // Halphas
   p114: ["general"], // Buer
   p115: ["general"], // Botis
+  p116: ["critical"], // Beleth
+  p117: ["critical"], // Shax (SIN from kills, not BOUNTY)
+  p118: ["general"], // Malphas
+  p119: ["critical"], // Eligos
+  p120: ["memory"], // Sitri
   // Apocalypse SEALS
   p74: ["bounty"], // White Horse
   p75: ["reveal"], // Red Horse

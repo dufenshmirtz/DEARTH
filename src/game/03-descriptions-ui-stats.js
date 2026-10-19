@@ -61,7 +61,13 @@ function itemDescription(item) {
         : "";
     return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
   }
-  if (stack <= 1) return ["p64", "p65", "p69", "p75", "p95", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p119") {
+    const levels = Math.max(0, stack - 1);
+    const elite = levels ? ` Gain ${5 * levels} SIN whenever this happens.` : "";
+    const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
+    return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
+  }
+  if (stack <= 1) return ["p55", "p64", "p65", "p69", "p75", "p95", "p112", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -180,7 +186,11 @@ function itemDescription(item) {
   if (item.id === "p69") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
   }
-  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
+  if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
+  if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double HEALTH and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
   if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
   if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;

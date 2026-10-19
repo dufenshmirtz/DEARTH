@@ -173,13 +173,13 @@ test("Furfur adds matching divisors and applies normal elite rounding", () => {
   game()(`
     fixture([["p112"]], [9, 10, 14, 15, 21, 35, 0, 11]);
     applyEndOfRoundPassiveDamageInOrder();
-    assertDamage([3, 7, 9, 8, 10, 12, 17, 0]);
-    assert.equal(state.sealStats.p112.damage, 66);
+    assertDamage([3, 7, 16, 8, 17, 19, 24, 0]);
+    assert.equal(state.sealStats.p112.damage, 94);
   `);
   game()(`
     fixture([["p112", 3]], [15, 35, 0, NaN]);
     applyEndOfRoundPassiveDamageInOrder();
-    assertDamage([20, 29, 42, 0]);
+    assertDamage([20, 44, 57, 0]);
   `);
 });
 
@@ -268,10 +268,11 @@ test("new seals obey matching-boss suppression and Beleth no longer applies", ()
 test("new Goetic seals have valid unique names, images, elite help, and catalog entries", () => {
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
-  assert.equal(catalog.includes("Seal of Beleth ("), false);
-  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 69);
-  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 69);
-  for (const id of ["p69", "p112", "p113", "p114", "p115"]) {
+  // the Goetic SEALS are exactly the 72 demons, each one once
+  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 72);
+  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 72);
+  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.some(id => SPECIAL_SEAL_IDS.has(id))"), false);
+  for (const id of ["p69", "p112", "p113", "p114", "p115", "p116", "p117", "p118", "p119", "p120"]) {
     const item = run(`ITEMS.${id}`);
     assert.ok(catalog.includes(`${item.name} (${item.price} SIN)\n${item.description}`) ||
       catalog.includes(`${item.name} (${item.price} SIN)\r\n${item.description}`));
@@ -482,7 +483,7 @@ test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
     const ids = collectionSections().flatMap(section => section.ids);
-    assert.equal(ids.length, 91);
+    assert.equal(ids.length, 96);
     for (const id of ids) {
       assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
       for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
@@ -538,5 +539,116 @@ test("Seal of Satan costs 20 SIN and Aggiel Hexagram stacks +20 per PENTAKILL", 
     assert.equal(ITEMS.p111.price, 20);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
     assert.ok(ITEMS.p101.description.includes("+20 damage"));
+  `);
+});
+
+// player 60 vs DAMNED 49, 47, 30, 70, 100 with modifier 1: TARGET 60, only you hit CRITICAL
+const CRIT_TABLE = "[49, 47, 30, 70, 100]";
+function critRound(passives, extra = "") {
+  return `
+    fixture(${passives}, ${CRIT_TABLE});
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    ${extra}
+    applyPenalties();
+    assert.equal(state.roundState.target, 60);
+    assert.ok(state.roundState.criticalHitKeys.has("player"));
+  `;
+}
+
+test("Beleth: your CRITICAL hits the 2 DAMNED with the best guesses for 10 extra", () => {
+  const base = game();
+  base(critRound("[]"));
+  const without = JSON.parse(base("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  for (const [stack, extra] of [[1, 10], [2, 15]]) {
+    const run = game();
+    run(critRound(`[["p116", ${stack}]]`));
+    const withSeal = JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+    assert.deepEqual(withSeal.map((value, index) => value - without[index]), [extra, 0, 0, extra, 0]);
+  }
+});
+
+test("Shax: in a round you hit CRITICAL, every DAMNED that dies pays 2 extra SIN", () => {
+  const run = game();
+  run(critRound(`[["p117"]]`, "state.bots[2].hp = 1;"));
+  run(`
+    assert.ok(state.bots[2].eliminated);
+    assert.equal(state.sealStats.p117.credits, 2);
+  `);
+  const quiet = game();
+  quiet(`
+    fixture([["p117"]], [50, 50, 50]);
+    state.roundState.criticalHitKeys = new Set();
+    state.bots[0].hp = 0;
+    resolveEliminatedBots([state.bots[0]]);
+    assert.equal(state.sealStats.p117?.credits || 0, 0);
+  `);
+});
+
+test("Malphas: 2 damage per round alive, counting the current round", () => {
+  game()(`
+    fixture([["p118"]], [11, 13, 17]);
+    state.round = 3;
+    state.bots[0].spawnRound = 1;
+    state.bots[1].spawnRound = 3;
+    state.bots[2].spawnRound = 2;
+    applyEndOfRoundPassiveDamageInOrder();
+    assertDamage([6, 2, 4]);
+  `);
+  game()(`
+    fixture([["p118", 2]], [11, 13]);
+    state.round = 3;
+    state.bots[0].spawnRound = 1;
+    state.bots[1].spawnRound = 3;
+    applyEndOfRoundPassiveDamageInOrder();
+    assertDamage([9, 3]);
+  `);
+});
+
+test("Eligos: an exact guess at reveal charges the next CRITICAL to 20%, ELITE pays 5 SIN per level", () => {
+  game()(`
+    fixture([["p119", 2]], [50]);
+    state.roundState.target = 50;
+    state.roundState.playerEffectiveGuess = 51;
+    assert.equal(applyEligosExactGuess(), false);
+    assert.equal(state.exactGuessCritCharged, false);
+    state.roundState.playerEffectiveGuess = 50;
+    assert.equal(applyEligosExactGuess(), true);
+    assert.equal(state.exactGuessCritCharged, true);
+    assert.equal(state.player.credits, 5);
+  `);
+  const plain = game();
+  plain(critRound(`[["p119"]]`));
+  const charged = game();
+  charged(critRound(`[["p119"]]`, "state.exactGuessCritCharged = true;"));
+  const before = JSON.parse(plain("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  const after = JSON.parse(charged("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  // max HEALTH 1000: the CRITICAL goes from 100 to 200
+  assert.deepEqual(after.map((value, index) => value - before[index]), [100, 100, 100, 100, 100]);
+  assert.equal(charged("state.exactGuessCritCharged"), false);
+});
+
+test("Sitri: the most-MEMORY DAMNED gets double HEALTH, gains MEMORY, and only a death passes it on", () => {
+  game()(`
+    fixture([["p120"]], [50, 50, 50]);
+    // the round start already picked a host among equals; start over with MEMORY that decides it
+    assert.ok(sitriHost());
+    state.bots.forEach(bot => { bot.sitriHost = false; bot.hp = bot.maxHp = 1000; });
+    state.round = 10;
+    state.bots[1].memory = initialMemoryEntries(3);
+    state.bots[2].memory = initialMemoryEntries(1);
+    const host = ensureSitriHost();
+    assert.equal(host, state.bots[1]);
+    assert.equal(host.maxHp, 2000);
+    assert.equal(host.hp, 2000);
+    assert.equal(ensureSitriHost(), null);
+    assert.equal(state.bots[1].maxHp, 2000);
+    applySitriHostMemory();
+    assert.equal(state.bots[1].memory.length, 4);
+    state.bots[1].hp = 0;
+    resolveEliminatedBots([state.bots[1]]);
+    assert.equal(sitriHost(), state.bots[2]);
+    assert.equal(state.bots[2].maxHp, 2000);
+    assert.equal(state.bots[0].maxHp, 1000);
   `);
 });

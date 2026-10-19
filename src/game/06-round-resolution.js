@@ -268,6 +268,14 @@ function applyPenalties() {
   } else {
     state.critMomentumBonus = 0;
   }
+  round.exactGuessCritBoost = false;
+  if (playerCritThisRound && state.exactGuessCritCharged && passiveStack("p119")) {
+    state.exactGuessCritCharged = false;
+    round.exactGuessCritBoost = true;
+    markPassiveTriggered("p119");
+    round.roundEvents.push(`${ITEMS.p119.name} made your CRITICAL deal 20% max HEALTH.`);
+  }
+  if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
@@ -296,7 +304,7 @@ function applyPenalties() {
       }
     });
   });
-  if (eligosBlockedCritical) round.roundEvents.push("Seal of Eligos blocked DAMNED CRITICAL damage against you.");
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p69.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -474,14 +482,74 @@ function playerCriticalFlatBonus() {
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
-  return base + playerCriticalFlatBonus();
+  // Seal of Eligos: a charged CRITICAL deals 20% max HEALTH instead of 10% (another 10% on top)
+  const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
+  return base + eligos + playerCriticalFlatBonus();
+}
+
+// how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
+function botRoundsAlive(bot) {
+  if (!bot) return 1;
+  if (!Number.isFinite(bot.spawnRound)) bot.spawnRound = state.round;
+  return Math.max(1, state.round - bot.spawnRound + 1);
+}
+
+// Seal of Sitri: the non-boss DAMNED with the most MEMORY becomes its host with double HEALTH.
+// A new host is only chosen once the current one is gone.
+function sitriHost() {
+  return state.bots.find((bot) => bot.sitriHost && !bot.eliminated && bot.hp > 0) || null;
+}
+
+function ensureSitriHost() {
+  const entries = orderedPassiveEffectEntries("p120");
+  if (!entries.length || sitriHost()) return null;
+  const candidates = state.bots.filter((bot) => !bot.isBoss && !bot.immortal && !bot.eliminated && bot.hp > 0);
+  if (!candidates.length) return null;
+  const host = candidates.reduce((best, bot) => ((bot.memory?.length || 0) > (best.memory?.length || 0) ? bot : best));
+  host.sitriHost = true;
+  host.maxHp = Math.ceil((host.maxHp || 0) * 2);
+  host.hp = Math.min(host.maxHp, Math.ceil((host.hp || 0) * 2));
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+  state.roundState?.roundEvents.push(`${ITEMS.p120.name} chose ${host.name} as its host: double HEALTH.`);
+  return host;
+}
+
+function applySitriHostMemory() {
+  const host = sitriHost();
+  if (!host) return;
+  orderedPassiveEffectEntries("p120").forEach((entry) => {
+    const gained = addBotMemory(host, Math.max(1, entry.stack || 1), "", { source: ITEMS.p120.name });
+    if (gained > 0) {
+      markPassiveEntryTriggered(entry);
+      state.roundState?.roundEvents.push(`${ITEMS.p120.name} gave ${host.name} +${gained} MEMORY.`);
+    }
+  });
+}
+
+// Seal of Beleth: on your CRITICAL, the two DAMNED closest to the TARGET take extra damage
+function applyBelethCriticalStrike(botDamages, botDamageSources) {
+  const round = state.roundState;
+  orderedPassiveEffectEntries("p116").forEach((entry) => {
+    const ranked = activeBots()
+      .map((bot, seat) => ({ bot, seat, guess: round.botEffectiveGuesses.get(bot.id) }))
+      .filter((row) => Number.isFinite(row.guess))
+      .sort((left, right) => Math.abs(left.guess - round.target) - Math.abs(right.guess - round.target) || left.seat - right.seat)
+      .slice(0, 2)
+      .map((row) => row.bot);
+    const damage = passiveEntryFlatDamage(entry, 10);
+    if (!ranked.length || damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    ranked.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, ITEMS.p116.name, true));
+    round.roundEvents.push(`${ITEMS.p116.name} struck ${ranked.map((bot) => bot.name).join(" and ")} for ${damage} damage.`);
+  });
 }
 
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max HEALTH";
   const flatBonus = playerCriticalFlatBonus();
-  if (passiveStack("p7")) return `${pressureSpikeDamage("p7") + flatBonus} damage`;
-  return flatBonus > 0 ? `10% max HEALTH + ${flatBonus} damage` : "10% max HEALTH";
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
+  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  return flatBonus > 0 ? `${percent}% max HEALTH + ${flatBonus} damage` : `${percent}% max HEALTH`;
 }
 
 function findCriticalHits() {
@@ -866,9 +934,20 @@ function takeNextBossSpec() {
 }
 
 function applyEliminationPassives(bot) {
+  if (bot?.sitriHost) ensureSitriHost();
   applySelfStackingRevealedDeath(bot);
   applySelfStackingStubbornDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117"]).forEach((entry) => {
+    if (entry.id === "p117") {
+      if (!state.roundState?.criticalHitKeys?.has("player")) return;
+      const bonus = passiveEntryScaledValue(entry, 2);
+      if (bonus <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const gained = gainEliminationCredits(bonus, true, ITEMS.p117.name);
+      state.roundState.roundEvents.push(`${ITEMS.p117.name} took ${gained} extra SIN from ${bot.name}.`);
+      return;
+    }
+
     if (entry.id === "p9") {
       queueMarbasNextRoundSpread(entry);
       return;
@@ -1024,8 +1103,25 @@ function applyEliminationPassives(bot) {
   });
 }
 
+// Seal of Furfur: [divisor, damage]; multiples of 7 hit twice as hard
+const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
+
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118"]).forEach((entry) => {
+    if (entry.id === "p118") {
+      const targets = activeBots();
+      if (!targets.length) return;
+      const name = ITEMS.p118.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(
+        targets,
+        (bot) => botRoundsAlive(bot) * passiveEntryFlatDamage(entry, 2),
+        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (round ${botRoundsAlive(bot)} alive).`,
+        name
+      );
+      return;
+    }
+
     if (entry.id === "p112" || entry.id === "p113" || entry.id === "p115") {
       const round = state.roundState;
       const damages = new Map();
@@ -1034,8 +1130,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const guess = round.botEffectiveGuesses.get(bot.id);
         let damage = 0;
         if (entry.id === "p112" && Number.isFinite(guess)) {
-          [2, 3, 5, 7].forEach((divisor) => {
-            if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, divisor);
+          FURFUR_DIVISOR_DAMAGE.forEach(([divisor, base]) => {
+            if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, base);
           });
         } else if (entry.id === "p113") {
           if (Math.random() < 0.3) damage += passiveEntryFlatDamage(entry, 5);
@@ -1288,6 +1384,7 @@ function applyEndOfRoundPassives() {
     applyQueuedEndOfRoundBotDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
+    applySitriHostMemory();
 
     const relicStacks = passiveStack("p18");
     if (relicStacks) {

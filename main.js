@@ -701,7 +701,7 @@ const ITEMS = {
   p55: {
     id: "p55",
     type: "passive",
-    name: "Seal of Sitri",
+    name: "Seal of Samael Septagram",
     price: 11,
     description:
       "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
@@ -807,7 +807,7 @@ const ITEMS = {
   p69: {
     id: "p69",
     type: "passive",
-    name: "Seal of Eligos",
+    name: "Seal of Cassiel Hexagram",
     price: 14,
     description:
       "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
@@ -1107,7 +1107,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 12,
-    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 14 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
   },
   p113: {
     id: "p113",
@@ -1129,6 +1129,41 @@ const ITEMS = {
     name: "Seal of Botis",
     price: 12,
     description: "At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes 4 damage and gives you 2 SIN. ELITE multiplies the damage by x1.5 and increases the SIN gained by +20% each level, rounded up."
+  },
+  p116: {
+    id: "p116",
+    type: "passive",
+    name: "Seal of Beleth",
+    price: 12,
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p117: {
+    id: "p117",
+    type: "passive",
+    name: "Seal of Shax",
+    price: 11,
+    description: "In a round where you hit CRITICAL, every DAMNED that dies gives you 2 extra SIN. ELITE increases the SIN by +20% each level, rounded up."
+  },
+  p118: {
+    id: "p118",
+    type: "passive",
+    name: "Seal of Malphas",
+    price: 13,
+    description: "At end of round, each DAMNED takes 2 damage for every round it has been alive: 2 in its first round, 4 in its second, and so on. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p119: {
+    id: "p119",
+    type: "passive",
+    name: "Seal of Eligos",
+    price: 14,
+    description: "If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens."
+  },
+  p120: {
+    id: "p120",
+    type: "passive",
+    name: "Seal of Sitri",
+    price: 13,
+    description: "The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level."
   },
   a28: {
     id: "a28",
@@ -1376,7 +1411,12 @@ const PASSIVE_IDS = [
   "p112",
   "p113",
   "p114",
-  "p115"
+  "p115",
+  "p116",
+  "p117",
+  "p118",
+  "p119",
+  "p120"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1406,6 +1446,8 @@ const REMOVED_PASSIVE_IDS = new Set([
 ]);
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
+// former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
+const SPECIAL_SEAL_IDS = new Set(["p55", "p69"]);
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
@@ -1512,7 +1554,7 @@ const SEAL_SIGILS = {
   p52: "029_Decarabia.png",
   p53: "058_Samigina.png",
   p54: "072_Zepar.png",
-  p55: "062_Sytry.png",
+  p55: "self-stacking/Samael-Star.png",
   p56: "039_Halphas.png",
   p57: "014_Balan.png",
   p58: "041_Ipes.png",
@@ -1526,7 +1568,7 @@ const SEAL_SIGILS = {
   p66: "003_Aim.png",
   p67: "024_Caim.png",
   p68: "067_Vapula.png",
-  p69: "001_Abigor.png",
+  p69: "self-stacking/Cassiel-Hexagram.png",
   p70: "006_Amy.png",
   p71: "057_Sallos.png",
   p72: "031_Forcas.png",
@@ -1573,7 +1615,12 @@ const SEAL_SIGILS = {
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",
-  p115: "021_Botis.png"
+  p115: "021_Botis.png",
+  p116: "017_Beleth.png",
+  p117: "060_Shax.png",
+  p118: "043_Malphas.png",
+  p119: "001_Abigor.png",
+  p120: "062_Sytry.png"
 };
 
 const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
@@ -1622,7 +1669,6 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p52: "69-decarabia.png",
   p53: "04-samigina-gamigin.png",
   p54: "16-zepar.png",
-  p55: "12-sitri.png",
   p56: "38-halphas.png",
   p57: "51-balam.png",
   p58: "22-ipos.png",
@@ -1635,7 +1681,6 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p65: "24-naberius.png",
   p67: "53-caim-camio.png",
   p68: "60-vapula-naphula.png",
-  p69: "15-eligos.png",
   p70: "58-amy-avnas.png",
   p71: "19-sallos.png",
   p72: "50-furcas.png",
@@ -1658,7 +1703,12 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p112: "34-furfur.png",
   p113: "38-halphas.png",
   p114: "10-buer.png",
-  p115: "17-botis.png"
+  p115: "17-botis.png",
+  p116: "13-beleth.png",
+  p117: "44-shax.png",
+  p118: "39-malphas.png",
+  p119: "15-eligos.png",
+  p120: "12-sitri.png"
 };
 const GOETIC_BOSS_SPECS = [
   { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
@@ -1672,10 +1722,10 @@ const GOETIC_BOSS_SPECS = [
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
   { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
   { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
-  { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p55" },
-  { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p62" },
+  { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p120" },
+  { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p116" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
-  { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p69" },
+  { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p119" },
   { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
   { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p115" },
   { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
@@ -1699,12 +1749,12 @@ const GOETIC_BOSS_SPECS = [
   { key: "stolas", name: "Stolas", image: "36-stolas.png", passiveId: "p42" },
   { key: "phenex", name: "Phenex", image: "37-phenex-phoenix.png", passiveId: "p49" },
   { key: "halphas", name: "Halphas", image: "38-halphas.png", passiveId: "p113" },
-  { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p37" },
+  { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p118" },
   { key: "raum", name: "Raum", image: "40-raum.png", passiveId: "p88" },
   { key: "focalor", name: "Focalor", image: "41-focalor.png", passiveId: "p40" },
   { key: "vepar", name: "Vepar", image: "42-vepar.png", passiveId: "p61" },
   { key: "sabnock", name: "Sabnock", image: "43-sabnock.png", passiveId: "p19" },
-  { key: "shax", name: "Shax", image: "44-shax.png", passiveId: "p21" },
+  { key: "shax", name: "Shax", image: "44-shax.png", passiveId: "p117" },
   { key: "vine", name: "Vine", image: "45-vine.png", passiveId: "p64" },
   { key: "bifrons", name: "Bifrons", image: "46-bifrons.png", passiveId: "p90" },
   { key: "vual", name: "Vual", image: "47-vual-uvall.png", passiveId: "p63" },
@@ -2084,6 +2134,7 @@ const state = {
   satanVictoryPlayed: false,
   paleHorseBoostArmed: false,
   critMomentumBonus: 0,
+  exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   shouldFocusGuessInput: false,
   pendingActive: null,
@@ -2514,6 +2565,14 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
+  // SEALS keep their current name and text after a rename (older saves hold a copy of both)
+  [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
+    if (item?.type === "passive" && ITEMS[item.id]) {
+      item.name = ITEMS[item.id].name;
+      item.description = ITEMS[item.id].description;
+    }
+  });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
   state.runStats = normalizeRunStats(state.runStats);
@@ -3620,8 +3679,8 @@ function applyExcessMemoryDamage(bot, excessMemory) {
     queueEndOfRoundBotDamage(
       bot,
       damage,
-      `Seal of Sitri converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
-      "Seal of Sitri"
+      `${ITEMS.p55.name} converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
+      ITEMS.p55.name
     );
   });
 }
@@ -4421,7 +4480,13 @@ function itemDescription(item) {
         : "";
     return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
   }
-  if (stack <= 1) return ["p64", "p65", "p69", "p75", "p95", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p119") {
+    const levels = Math.max(0, stack - 1);
+    const elite = levels ? ` Gain ${5 * levels} SIN whenever this happens.` : "";
+    const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
+    return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
+  }
+  if (stack <= 1) return ["p55", "p64", "p65", "p69", "p75", "p95", "p112", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -4540,7 +4605,11 @@ function itemDescription(item) {
   if (item.id === "p69") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
   }
-  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 7)} damage. Matching effects add together.`;
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
+  if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
+  if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double HEALTH and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
   if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
   if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
@@ -7197,6 +7266,7 @@ function startGame(options = {}) {
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.critMomentumBonus = 0;
+  state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
   resetBotsForRun();
   rerollShop();
@@ -7298,6 +7368,7 @@ function beginRound() {
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
+    if (!Number.isFinite(bot.spawnRound)) bot.spawnRound = state.round;
     trimBotMemoryToLimit(bot);
     bot.fresh = bot.memory.length === 0;
     bot.lastDamage = 0;
@@ -7334,6 +7405,7 @@ function beginRound() {
   applyStartOfRoundPassives();
   applyGuessReveals();
   applyRevealPoisonCounters();
+  ensureSitriHost();
 }
 
 function applyMarkedProspect() {
@@ -8140,6 +8212,7 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
   const shownBefore = { target: round.target, offset: round.targetOffset };
@@ -8150,6 +8223,23 @@ function submitGuess() {
   // only the reveal-time Dev SEALS (Dantre, Serafeim) animate now; every other SEAL waits for READY
   startRoundRevealAnimation(beforeReveal, { onlyIds: DEV_SEALS_AT_REVEAL });
   render();
+}
+
+// Seal of Eligos: your guess equals the TARGET as it is revealed (before any ARTIFACT or reveal SEAL moves it)
+function applyEligosExactGuess() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p119");
+  if (!round || !entries.length) return false;
+  if (!Number.isFinite(round.playerEffectiveGuess) || Math.ceil(round.playerEffectiveGuess) !== Math.ceil(round.target)) return false;
+  state.exactGuessCritCharged = true;
+  round.eligosExactGuess = true;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    const eliteSin = 5 * passiveEntryEliteLevels(entry);
+    if (eliteSin > 0) gainCredits(eliteSin, true, ITEMS.p119.name);
+  });
+  round.roundEvents.push(`${ITEMS.p119.name}: your guess was exactly the TARGET. Your next CRITICAL deals 20% max HEALTH.`);
+  return true;
 }
 
 function applyGuessMutation(name, guess, bot = null) {
@@ -8515,6 +8605,14 @@ function applyPenalties() {
   } else {
     state.critMomentumBonus = 0;
   }
+  round.exactGuessCritBoost = false;
+  if (playerCritThisRound && state.exactGuessCritCharged && passiveStack("p119")) {
+    state.exactGuessCritCharged = false;
+    round.exactGuessCritBoost = true;
+    markPassiveTriggered("p119");
+    round.roundEvents.push(`${ITEMS.p119.name} made your CRITICAL deal 20% max HEALTH.`);
+  }
+  if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
@@ -8543,7 +8641,7 @@ function applyPenalties() {
       }
     });
   });
-  if (eligosBlockedCritical) round.roundEvents.push("Seal of Eligos blocked DAMNED CRITICAL damage against you.");
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p69.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -8721,14 +8819,74 @@ function playerCriticalFlatBonus() {
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
-  return base + playerCriticalFlatBonus();
+  // Seal of Eligos: a charged CRITICAL deals 20% max HEALTH instead of 10% (another 10% on top)
+  const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
+  return base + eligos + playerCriticalFlatBonus();
+}
+
+// how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
+function botRoundsAlive(bot) {
+  if (!bot) return 1;
+  if (!Number.isFinite(bot.spawnRound)) bot.spawnRound = state.round;
+  return Math.max(1, state.round - bot.spawnRound + 1);
+}
+
+// Seal of Sitri: the non-boss DAMNED with the most MEMORY becomes its host with double HEALTH.
+// A new host is only chosen once the current one is gone.
+function sitriHost() {
+  return state.bots.find((bot) => bot.sitriHost && !bot.eliminated && bot.hp > 0) || null;
+}
+
+function ensureSitriHost() {
+  const entries = orderedPassiveEffectEntries("p120");
+  if (!entries.length || sitriHost()) return null;
+  const candidates = state.bots.filter((bot) => !bot.isBoss && !bot.immortal && !bot.eliminated && bot.hp > 0);
+  if (!candidates.length) return null;
+  const host = candidates.reduce((best, bot) => ((bot.memory?.length || 0) > (best.memory?.length || 0) ? bot : best));
+  host.sitriHost = true;
+  host.maxHp = Math.ceil((host.maxHp || 0) * 2);
+  host.hp = Math.min(host.maxHp, Math.ceil((host.hp || 0) * 2));
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+  state.roundState?.roundEvents.push(`${ITEMS.p120.name} chose ${host.name} as its host: double HEALTH.`);
+  return host;
+}
+
+function applySitriHostMemory() {
+  const host = sitriHost();
+  if (!host) return;
+  orderedPassiveEffectEntries("p120").forEach((entry) => {
+    const gained = addBotMemory(host, Math.max(1, entry.stack || 1), "", { source: ITEMS.p120.name });
+    if (gained > 0) {
+      markPassiveEntryTriggered(entry);
+      state.roundState?.roundEvents.push(`${ITEMS.p120.name} gave ${host.name} +${gained} MEMORY.`);
+    }
+  });
+}
+
+// Seal of Beleth: on your CRITICAL, the two DAMNED closest to the TARGET take extra damage
+function applyBelethCriticalStrike(botDamages, botDamageSources) {
+  const round = state.roundState;
+  orderedPassiveEffectEntries("p116").forEach((entry) => {
+    const ranked = activeBots()
+      .map((bot, seat) => ({ bot, seat, guess: round.botEffectiveGuesses.get(bot.id) }))
+      .filter((row) => Number.isFinite(row.guess))
+      .sort((left, right) => Math.abs(left.guess - round.target) - Math.abs(right.guess - round.target) || left.seat - right.seat)
+      .slice(0, 2)
+      .map((row) => row.bot);
+    const damage = passiveEntryFlatDamage(entry, 10);
+    if (!ranked.length || damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    ranked.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, ITEMS.p116.name, true));
+    round.roundEvents.push(`${ITEMS.p116.name} struck ${ranked.map((bot) => bot.name).join(" and ")} for ${damage} damage.`);
+  });
 }
 
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max HEALTH";
   const flatBonus = playerCriticalFlatBonus();
-  if (passiveStack("p7")) return `${pressureSpikeDamage("p7") + flatBonus} damage`;
-  return flatBonus > 0 ? `10% max HEALTH + ${flatBonus} damage` : "10% max HEALTH";
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
+  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  return flatBonus > 0 ? `${percent}% max HEALTH + ${flatBonus} damage` : `${percent}% max HEALTH`;
 }
 
 function findCriticalHits() {
@@ -9113,9 +9271,20 @@ function takeNextBossSpec() {
 }
 
 function applyEliminationPassives(bot) {
+  if (bot?.sitriHost) ensureSitriHost();
   applySelfStackingRevealedDeath(bot);
   applySelfStackingStubbornDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117"]).forEach((entry) => {
+    if (entry.id === "p117") {
+      if (!state.roundState?.criticalHitKeys?.has("player")) return;
+      const bonus = passiveEntryScaledValue(entry, 2);
+      if (bonus <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const gained = gainEliminationCredits(bonus, true, ITEMS.p117.name);
+      state.roundState.roundEvents.push(`${ITEMS.p117.name} took ${gained} extra SIN from ${bot.name}.`);
+      return;
+    }
+
     if (entry.id === "p9") {
       queueMarbasNextRoundSpread(entry);
       return;
@@ -9271,8 +9440,25 @@ function applyEliminationPassives(bot) {
   });
 }
 
+// Seal of Furfur: [divisor, damage]; multiples of 7 hit twice as hard
+const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
+
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118"]).forEach((entry) => {
+    if (entry.id === "p118") {
+      const targets = activeBots();
+      if (!targets.length) return;
+      const name = ITEMS.p118.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(
+        targets,
+        (bot) => botRoundsAlive(bot) * passiveEntryFlatDamage(entry, 2),
+        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (round ${botRoundsAlive(bot)} alive).`,
+        name
+      );
+      return;
+    }
+
     if (entry.id === "p112" || entry.id === "p113" || entry.id === "p115") {
       const round = state.roundState;
       const damages = new Map();
@@ -9281,8 +9467,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const guess = round.botEffectiveGuesses.get(bot.id);
         let damage = 0;
         if (entry.id === "p112" && Number.isFinite(guess)) {
-          [2, 3, 5, 7].forEach((divisor) => {
-            if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, divisor);
+          FURFUR_DIVISOR_DAMAGE.forEach(([divisor, base]) => {
+            if (guess % divisor === 0) damage += passiveEntryFlatDamage(entry, base);
           });
         } else if (entry.id === "p113") {
           if (Math.random() < 0.3) damage += passiveEntryFlatDamage(entry, 5);
@@ -9535,6 +9721,7 @@ function applyEndOfRoundPassives() {
     applyQueuedEndOfRoundBotDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
+    applySitriHostMemory();
 
     const relicStacks = passiveStack("p18");
     if (relicStacks) {
@@ -13157,6 +13344,11 @@ function renderBot(bot, pendingPick) {
     (bot.poisonCounters || 0) > 0
       ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
       : "";
+  // Seal of Sitri's host: double HEALTH until it dies
+  const sitriHostBadge =
+    bot.sitriHost && !isDown
+      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double HEALTH, gains MEMORY every round.`)}">Host x2</span>`
+      : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
@@ -13211,6 +13403,7 @@ function renderBot(bot, pendingPick) {
           ${healBadge}
           <div class="bot-health-heading">
             <span>${healthLabel}</span>
+            ${sitriHostBadge}
             ${poisonStackBadge}
           </div>
           <div class="health-bar">
@@ -15287,7 +15480,9 @@ const COLLECTION_SECTIONS = [
   { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
   { key: "satan", title: "Satan Seals", ids: ["p111"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
+  // former Goetic SEALS whose demons now belong to newer SEALS
+  { key: "special", title: "Special Seals", ids: ["p55", "p69"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -15342,7 +15537,7 @@ const SEAL_BUILD_TAGS = {
   p52: ["memory"], // Decarabia
   p53: ["memory"], // Samigina
   p54: ["reveal"], // Zepar
-  p55: ["memory"], // Sitri
+  p55: ["memory"], // Samael Septagram (special)
   p57: ["bounty", "memory"], // Balam
   p58: ["general"], // Ipos
   p59: ["reveal", "bounty", "memory"], // Amon
@@ -15353,7 +15548,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p69: ["critical"], // Eligos
+  p69: ["critical"], // Cassiel Hexagram (special)
   p70: ["artifact"], // Amy
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
@@ -15375,6 +15570,11 @@ const SEAL_BUILD_TAGS = {
   p113: ["general"], // Halphas
   p114: ["general"], // Buer
   p115: ["general"], // Botis
+  p116: ["critical"], // Beleth
+  p117: ["critical"], // Shax (SIN from kills, not BOUNTY)
+  p118: ["general"], // Malphas
+  p119: ["critical"], // Eligos
+  p120: ["memory"], // Sitri
   // Apocalypse SEALS
   p74: ["bounty"], // White Horse
   p75: ["reveal"], // Red Horse

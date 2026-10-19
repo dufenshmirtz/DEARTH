@@ -49,6 +49,9 @@ Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. E
 Seal of Bathin (11 SIN)
 Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
+Seal of Beleth (12 SIN)
+When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up.
+
 Seal of Belial (11 SIN)
 At end of round, for every 10 SIN you have, deal 2 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
@@ -83,7 +86,7 @@ Seal of Decarabia (12 SIN)
 At end of round, DAMNED take 3 damage per MEMORY. BOSSES take 1 damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up.
 
 Seal of Eligos (14 SIN)
-Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up.
+If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens.
 
 Seal of Focalor (14 SIN)
 At end of round, deal half the total BOUNTY of living DAMNED to every enemy. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -98,7 +101,7 @@ Seal of Furcas (11 SIN)
 Every round, if the previous TARGET was below 40, one random non-boss DAMNED guess becomes 100. If it was above 40, one random DAMNED guess becomes 0. ELITE deals 5 damage per level to the selected DAMNED.
 
 Seal of Furfur (12 SIN)
-At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 7 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up.
+At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 14 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up.
 
 Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -126,6 +129,9 @@ The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damag
 
 Seal of Leraje (12 SIN)
 At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%.
+
+Seal of Malphas (13 SIN)
+At end of round, each DAMNED takes 2 damage for every round it has been alive: 2 in its first round, 4 in its second, and so on. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Marax (16 SIN)
 DAMNED can only have two personalities: ANALYST or STUBBORN. At end of round, a DAMNED takes 5 damage if both adjacent DAMNED have the same personality. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -178,8 +184,11 @@ When a non-boss DAMNED is eliminated, gain bonus SIN equal to its MEMORY. ELITE 
 Seal of Seere (10 SIN)
 New non-boss DAMNED have a 33% chance to spawn with +6 BOUNTY. ELITE increases the spawn chance by +20% each level, capped at 100%.
 
-Seal of Sitri (11 SIN)
-Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level.
+Seal of Shax (11 SIN)
+In a round where you hit CRITICAL, every DAMNED that dies gives you 2 extra SIN. ELITE increases the SIN by +20% each level, rounded up.
+
+Seal of Sitri (13 SIN)
+The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level.
 
 Seal of Stolas (13 SIN)
 When a DAMNED with 3 or less MEMORY dies, gain SIN equal to its MEMORY. If it had more than 3 MEMORY, split its MEMORY between the DAMNED on its left and right; with only one side, only half is transferred and the rest is lost. ELITE increases only the low-MEMORY SIN payout by +20%.
@@ -284,6 +293,16 @@ Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBOR
 
 Seal of Zachriel Triangle (15 SIN)
 Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
+
+Special Seals
+
+Former Goetic SEALS whose demons now belong to newer SEALS. They keep their effects and use the old self-stacking art for now.
+
+Seal of Cassiel Hexagram (14 SIN)
+Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up.
+
+Seal of Samael Septagram (11 SIN)
+Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level.
 
 Unlockable Seals
 

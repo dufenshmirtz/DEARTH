@@ -401,6 +401,14 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
+  // SEALS keep their current name and text after a rename (older saves hold a copy of both)
+  [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
+    if (item?.type === "passive" && ITEMS[item.id]) {
+      item.name = ITEMS[item.id].name;
+      item.description = ITEMS[item.id].description;
+    }
+  });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
   state.runStats = normalizeRunStats(state.runStats);
