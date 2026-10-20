@@ -1272,7 +1272,7 @@ function planPersonaGuess(bot, persona) {
 }
 
 function bossRevealAllowedBySeals() {
-  return orderedPassiveEffectEntries("p61").length > 0;
+  return orderedPassiveEffectEntries(["p61", "p129"]).length > 0;
 }
 
 function revealedDamnedCount() {
@@ -1309,6 +1309,10 @@ function revealBotGuess(bot, source = "", entry = null, options = {}) {
   bot.revealStacks = wasRevealed ? Math.max(1, Math.ceil(bot.revealStacks || 1)) + (stacked ? 1 : 0) : 1;
   state.roundState?.revealedBotIds?.add(bot.id);
   if (entry && (!wasRevealed || stacked)) markPassiveEntryTriggered(entry);
+  // Seal of Gusion: every time a BOSS is revealed the revealed DAMNED are hit at end of round
+  if (bot.isBoss && (!wasRevealed || stacked) && state.roundState && passiveStack("p129")) {
+    state.roundState.bossRevealEvents = Math.max(0, Math.ceil(state.roundState.bossRevealEvents || 0)) + 1;
+  }
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
   if (source && stacked) addRoundEvent(`${source} revealed ${bot.name}'s guess again (x${bot.revealStacks}).`);
   if (!wasRevealed) {

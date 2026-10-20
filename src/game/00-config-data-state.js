@@ -861,6 +861,20 @@ const ITEMS = {
     price: 16,
     description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
   },
+  p129: {
+    id: "p129",
+    type: "passive",
+    name: "Seal of Gusion",
+    price: 14,
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p130: {
+    id: "p130",
+    type: "passive",
+    name: "Seal of Valac",
+    price: 15,
+    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
+  },
   p111: {
     id: "p111",
     type: "passive",
@@ -1274,7 +1288,9 @@ const PASSIVE_IDS = [
   "p125",
   "p126",
   "p127",
-  "p128"
+  "p128",
+  "p129",
+  "p130"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1377,7 +1393,7 @@ const SEAL_SIGILS = {
   p7: "035_Glasya-Labolas.png",
   p8: "022_Buer.png",
   p9: "045_Marbas.png",
-  p10: "037_Guison.png",
+  p129: "037_Guison.png",
   p11: "065_Valfor.png",
   p12: "018_Belial.png",
   p13: "023_Bune.png",
@@ -1392,7 +1408,7 @@ const SEAL_SIGILS = {
   p22: "021_Botis.png",
   p23: "059_Seere.png",
   p24: "049_Orobas.png",
-  p25: "070_Volac.png",
+  p130: "070_Volac.png",
   p26: "063_Tap.png",
   p27: "071_Zagan.png",
   p28: "050_Ose.png",
@@ -1510,7 +1526,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p6: "59-orias.png",
   p7: "25-glasya-labolas.png",
   p9: "05-marbas.png",
-  p10: "11-gusion.png",
+  p129: "11-gusion.png",
   p11: "06-valefor.png",
   p12: "68-belial.png",
   p13: "26-bune-bime.png",
@@ -1523,7 +1539,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p21: "44-shax.png",
   p22: "17-botis.png",
   p23: "70-seere-seir.png",
-  p25: "62-valac-ualac.png",
+  p130: "62-valac-ualac.png",
   p26: "67-amdusias.png",
   p27: "61-zagan.png",
   p28: "57-ose.png",
@@ -1599,7 +1615,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "barbatos", name: "Barbatos", image: "08-barbatos.png", passiveId: "p46" },
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
   { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
-  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
+  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p129" },
   { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p120" },
   { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p116" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
@@ -1650,7 +1666,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
   { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
-  { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p25" },
+  { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p130" },
   { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p105" },
   { key: "haures", name: "Haures", image: "64-haures-flauros.png", passiveId: "p86" },
   { key: "andrealphus", name: "Andrealphus", image: "65-andrealphus.png", passiveId: "p30" },

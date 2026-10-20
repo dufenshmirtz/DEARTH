@@ -268,9 +268,9 @@ test("new seals obey matching-boss suppression and Beleth no longer applies", ()
 test("new Goetic seals have valid unique names, images, elite help, and catalog entries", () => {
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
-  // the Goetic SEALS are exactly the 70 live demons, each one once
-  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 70);
-  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 70);
+  // the Goetic SEALS are exactly the 72 demons, each one once
+  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 72);
+  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 72);
   assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.some(id => SPECIAL_SEAL_IDS.has(id))"), false);
   for (const id of ["p128", "p112", "p113", "p114", "p115", "p116", "p117", "p118", "p119", "p120"]) {
     const item = run(`ITEMS.${id}`);
@@ -483,7 +483,7 @@ test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
     const ids = collectionSections().flatMap(section => section.ids);
-    assert.equal(ids.length, 100);
+    assert.equal(ids.length, 102);
     for (const id of ids) {
       assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
       for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
@@ -792,5 +792,58 @@ test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as 
     applyPenalties();
     assert.equal(state.player.credits > 0, true);
     assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+  `);
+});
+
+// ---- Gusion and Valac (new Goetic SEALS p129, p130) ----
+test("Gusion lets BOSSES be revealed and hits every revealed DAMNED when one is (x1.5 per ELITE level)", () => {
+  for (const [stack, damage] of [[1, 20], [2, 30]]) {
+    game()(`
+      fixture([["p129", ${stack}]], [10, 20, 30, 40, 50]);
+      assert.equal(bossRevealAllowedBySeals(), true);
+      state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
+      state.roundState.bossRevealEvents = 0;
+      const boss = state.bots[0];
+      boss.isBoss = true;
+      assert.equal(revealBotGuess(boss, "Test"), true);
+      assert.equal(state.roundState.bossRevealEvents, 1);
+      revealBotGuess(state.bots[1], "Test");
+      assert.equal(state.roundState.bossRevealEvents, 1);
+      applyEndOfRoundPassiveDamageInOrder();
+      assert.equal(state.bots[0].lastDamage, ${damage});
+      assert.equal(state.bots[1].lastDamage, ${damage});
+      assert.equal(state.bots[2].lastDamage || 0, 0);
+    `);
+  }
+  game()(`
+    fixture([], [10, 20]);
+    assert.equal(bossRevealAllowedBySeals(), false);
+  `);
+});
+
+test("Valac eliminates a lone non-BOSS survivor after 4 eliminations and pays +2 SIN per ELITE level on PENTAKILLS", () => {
+  game()(`
+    fixture([["p130"]], [10, 20, 30, 40, 50]);
+    const round = state.roundState;
+    state.bots.slice(0, 4).forEach(bot => { bot.hp = 0; });
+    resolveEliminatedBots(state.bots.slice(0, 4));
+    assert.equal(state.bots[4].eliminated, true);
+    assert.equal(round.eliminationsThisRound, 5);
+    assert.equal(round.pentakillAwarded, true);
+  `);
+  game()(`
+    fixture([["p130"]], [10, 20, 30, 40, 50]);
+    state.bots[4].isBoss = true;
+    state.bots.slice(0, 4).forEach(bot => { bot.hp = 0; });
+    resolveEliminatedBots(state.bots.slice(0, 4));
+    assert.equal(state.bots[4].eliminated, false);
+  `);
+  game()(`
+    fixture([["p130", 3]], [10, 20, 30, 40, 50]);
+    const before = state.player.credits;
+    state.roundState.eliminationsThisRound = BOT_COUNT;
+    checkRoundPentakillBonus();
+    assert.ok(state.player.credits - before >= 8 + 4);
+    assert.equal(state.sealStats.p130.credits, 4);
   `);
 });

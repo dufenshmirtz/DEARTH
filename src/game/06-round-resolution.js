@@ -683,6 +683,7 @@ function resolveEliminatedBots(eliminated) {
   });
 
   applyExcessDamageSpread(freshEliminations);
+  applyValacSweep();
 
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
@@ -785,6 +786,30 @@ function checkRoundPentakillBonus() {
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
   applyKalhaPentakillUpgrade();
+  orderedPassiveEffectEntries("p130").forEach((entry) => {
+    const levels = passiveEntryEliteLevels(entry);
+    if (levels <= 0) return;
+    const extra = gainCredits(2 * levels, true, ITEMS.p130.name);
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the PENTAKILL.`);
+  });
+}
+
+// Seal of Valac: with 4 eliminations this round and a single non-BOSS DAMNED left alive, it is eliminated too
+function applyValacSweep() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p130");
+  if (!round || !entries.length || round.valacSwept) return;
+  if ((round.eliminationsThisRound || 0) < BOT_COUNT - 1) return;
+  const alive = activeBots();
+  if (alive.length !== 1) return;
+  const last = alive[0];
+  if (last.isBoss || last.immortal) return;
+  round.valacSwept = true;
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+  last.hp = 0;
+  round.roundEvents.push(`${ITEMS.p130.name} eliminated ${last.name}, the last DAMNED standing.`);
+  resolveEliminatedBots([last]);
 }
 
 // Seal of Kalha: every PENTAKILL gives a random SEAL you own an ELITE upgrade (never one that cannot be upgraded)
@@ -1127,7 +1152,17 @@ function applyEliminationPassives(bot) {
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
+    if (entry.id === "p129") {
+      const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
+      const targets = activeBots().filter((bot) => bot.revealedByPassive);
+      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = ITEMS.p129.name;
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} damage to revealed ${bot.name}.`, name);
+      return;
+    }
     if (entry.id === "p118") {
       const targets = activeBots();
       if (!targets.length) return;

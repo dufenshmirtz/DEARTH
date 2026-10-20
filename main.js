@@ -1067,6 +1067,20 @@ const ITEMS = {
     price: 16,
     description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
   },
+  p129: {
+    id: "p129",
+    type: "passive",
+    name: "Seal of Gusion",
+    price: 14,
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p130: {
+    id: "p130",
+    type: "passive",
+    name: "Seal of Valac",
+    price: 15,
+    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
+  },
   p111: {
     id: "p111",
     type: "passive",
@@ -1480,7 +1494,9 @@ const PASSIVE_IDS = [
   "p125",
   "p126",
   "p127",
-  "p128"
+  "p128",
+  "p129",
+  "p130"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1583,7 +1599,7 @@ const SEAL_SIGILS = {
   p7: "035_Glasya-Labolas.png",
   p8: "022_Buer.png",
   p9: "045_Marbas.png",
-  p10: "037_Guison.png",
+  p129: "037_Guison.png",
   p11: "065_Valfor.png",
   p12: "018_Belial.png",
   p13: "023_Bune.png",
@@ -1598,7 +1614,7 @@ const SEAL_SIGILS = {
   p22: "021_Botis.png",
   p23: "059_Seere.png",
   p24: "049_Orobas.png",
-  p25: "070_Volac.png",
+  p130: "070_Volac.png",
   p26: "063_Tap.png",
   p27: "071_Zagan.png",
   p28: "050_Ose.png",
@@ -1716,7 +1732,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p6: "59-orias.png",
   p7: "25-glasya-labolas.png",
   p9: "05-marbas.png",
-  p10: "11-gusion.png",
+  p129: "11-gusion.png",
   p11: "06-valefor.png",
   p12: "68-belial.png",
   p13: "26-bune-bime.png",
@@ -1729,7 +1745,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p21: "44-shax.png",
   p22: "17-botis.png",
   p23: "70-seere-seir.png",
-  p25: "62-valac-ualac.png",
+  p130: "62-valac-ualac.png",
   p26: "67-amdusias.png",
   p27: "61-zagan.png",
   p28: "57-ose.png",
@@ -1805,7 +1821,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "barbatos", name: "Barbatos", image: "08-barbatos.png", passiveId: "p46" },
   { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
   { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
-  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
+  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p129" },
   { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p120" },
   { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p116" },
   { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
@@ -1856,7 +1872,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
   { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
-  { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p25" },
+  { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p130" },
   { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p105" },
   { key: "haures", name: "Haures", image: "64-haures-flauros.png", passiveId: "p86" },
   { key: "andrealphus", name: "Andrealphus", image: "65-andrealphus.png", passiveId: "p30" },
@@ -4607,6 +4623,8 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
   if (stack <= 1) return ["p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
+  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -7993,7 +8011,7 @@ function planPersonaGuess(bot, persona) {
 }
 
 function bossRevealAllowedBySeals() {
-  return orderedPassiveEffectEntries("p61").length > 0;
+  return orderedPassiveEffectEntries(["p61", "p129"]).length > 0;
 }
 
 function revealedDamnedCount() {
@@ -8030,6 +8048,10 @@ function revealBotGuess(bot, source = "", entry = null, options = {}) {
   bot.revealStacks = wasRevealed ? Math.max(1, Math.ceil(bot.revealStacks || 1)) + (stacked ? 1 : 0) : 1;
   state.roundState?.revealedBotIds?.add(bot.id);
   if (entry && (!wasRevealed || stacked)) markPassiveEntryTriggered(entry);
+  // Seal of Gusion: every time a BOSS is revealed the revealed DAMNED are hit at end of round
+  if (bot.isBoss && (!wasRevealed || stacked) && state.roundState && passiveStack("p129")) {
+    state.roundState.bossRevealEvents = Math.max(0, Math.ceil(state.roundState.bossRevealEvents || 0)) + 1;
+  }
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
   if (source && stacked) addRoundEvent(`${source} revealed ${bot.name}'s guess again (x${bot.revealStacks}).`);
   if (!wasRevealed) {
@@ -9319,6 +9341,7 @@ function resolveEliminatedBots(eliminated) {
   });
 
   applyExcessDamageSpread(freshEliminations);
+  applyValacSweep();
 
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
@@ -9421,6 +9444,30 @@ function checkRoundPentakillBonus() {
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
   applyKalhaPentakillUpgrade();
+  orderedPassiveEffectEntries("p130").forEach((entry) => {
+    const levels = passiveEntryEliteLevels(entry);
+    if (levels <= 0) return;
+    const extra = gainCredits(2 * levels, true, ITEMS.p130.name);
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the PENTAKILL.`);
+  });
+}
+
+// Seal of Valac: with 4 eliminations this round and a single non-BOSS DAMNED left alive, it is eliminated too
+function applyValacSweep() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p130");
+  if (!round || !entries.length || round.valacSwept) return;
+  if ((round.eliminationsThisRound || 0) < BOT_COUNT - 1) return;
+  const alive = activeBots();
+  if (alive.length !== 1) return;
+  const last = alive[0];
+  if (last.isBoss || last.immortal) return;
+  round.valacSwept = true;
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+  last.hp = 0;
+  round.roundEvents.push(`${ITEMS.p130.name} eliminated ${last.name}, the last DAMNED standing.`);
+  resolveEliminatedBots([last]);
 }
 
 // Seal of Kalha: every PENTAKILL gives a random SEAL you own an ELITE upgrade (never one that cannot be upgraded)
@@ -9763,7 +9810,17 @@ function applyEliminationPassives(bot) {
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
+    if (entry.id === "p129") {
+      const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
+      const targets = activeBots().filter((bot) => bot.revealedByPassive);
+      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = ITEMS.p129.name;
+      damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} damage to revealed ${bot.name}.`, name);
+      return;
+    }
     if (entry.id === "p118") {
       const targets = activeBots();
       if (!targets.length) return;
@@ -15912,6 +15969,8 @@ const SEAL_BUILD_TAGS = {
   p116: ["critical"], // Beleth
   p117: ["critical"], // Shax (SIN from kills, not BOUNTY)
   p118: ["general"], // Malphas
+  p129: ["reveal"], // Gusion
+  p130: ["general"], // Valac
   p119: ["critical"], // Eligos
   p120: ["memory"], // Sitri
   // Apocalypse SEALS

@@ -171,6 +171,8 @@ const SEAL_BUILD_TAGS = {
   p116: ["critical"], // Beleth
   p117: ["critical"], // Shax (SIN from kills, not BOUNTY)
   p118: ["general"], // Malphas
+  p129: ["reveal"], // Gusion
+  p130: ["general"], // Valac
   p119: ["critical"], // Eligos
   p120: ["memory"], // Sitri
   // Apocalypse SEALS
