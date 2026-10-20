@@ -11286,8 +11286,13 @@ body.native-arcade .center-console .guess-corruption s {
 /* ---------- PICK buttons under the DAMNED cards: the same border-kit frame as the other buttons ---------- */
 #app .pick-button {
   position: relative;
-  min-height: 32px;
-  padding: 0 10px !important;
+  min-height: 34px;
+  width: fit-content;
+  min-width: 0;
+  justify-self: center;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 22px !important;
   font-size: 17px !important;
   line-height: 1.1 !important;
   border-color: transparent !important;
@@ -11299,14 +11304,14 @@ body.native-arcade .center-console .guess-corruption s {
 #app .pick-button::after {
   content: "";
   position: absolute;
-  inset: -2px -3px;
+  inset: -3px -4px;
   z-index: 2;
   pointer-events: none;
   box-sizing: border-box;
   border-style: solid;
   border-color: transparent;
-  border-width: 6px 14px;
-  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 6px 14px stretch;
+  border-width: 9px 18px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 9px 18px stretch;
   opacity: 0.9;
   transition: opacity 0.2s ease, filter 0.2s ease;
 }
@@ -11331,8 +11336,12 @@ body.native-arcade .center-console .guess-corruption s {
 
 /* native app: the small pick button under the compact card */
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
+  right: auto;
+  left: 50%;
+  width: auto;
+  transform: translateX(-50%);
   min-height: 27px !important;
-  padding: 0 6px !important;
+  padding: 0 16px !important;
   font-size: 13px !important;
   border-color: transparent !important;
   background: transparent !important;
@@ -11340,9 +11349,9 @@ body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
 }
 
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button::after {
-  inset: -1px -2px;
-  border-width: 5px 11px;
-  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 5px 11px stretch;
+  inset: -2px -3px;
+  border-width: 7px 13px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 7px 13px stretch;
 }
 
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button:hover:not(:disabled),
