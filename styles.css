@@ -8732,19 +8732,6 @@ body.native-arcade .mobile-numpad .mobile-numpad-action {
   font-size: 12px !important;
 }
 
-/* a hand-drawn line between the cards and the bottom row */
-body.native-arcade .passive-bar::before {
-  content: "";
-  position: absolute;
-  left: 1%;
-  right: calc(-1 * (var(--native-control-width) + var(--native-numpad-width) + 10px) + 1%);
-  top: -6px;
-  height: 7px;
-  pointer-events: none;
-  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
-  opacity: 0.85;
-}
-
 /* test-only SKIP / INF: tucked above your guess, out of the panels */
 body.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
   position: fixed !important;
@@ -8792,11 +8779,6 @@ body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
   width: 52px !important;
   height: 52px !important;
   align-self: center;
-}
-
-/* the line runs under the cards, from the seals to the guess; it stops before the number pad */
-body.native-arcade .passive-bar::before {
-  right: calc(-1 * (var(--native-control-width) + 5px)) !important;
 }
 
 /* your guess sits in the middle of its column */
@@ -8932,12 +8914,6 @@ body.native-arcade {
 body.native-arcade .mobile-numpad {
   padding: 6px 9px !important;
   gap: 4px !important;
-}
-
-/* phone: the line under the cards trembles with the outlines */
-body.outline-boil.native-arcade .passive-bar::before {
-  background-image: var(--divider-img) !important;
-  animation: divider-boil var(--boil-duration, 375ms) steps(1) infinite;
 }
 
 /* anyone who CRITs (or is about to, once the TARGET is out) wears the TARGET's red */
@@ -11406,4 +11382,27 @@ body.native-ios #app.app {
 body.native-ios.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
   right: calc(var(--native-numpad-width) + 30px + env(safe-area-inset-right)) !important;
   bottom: calc(var(--native-seal-row-height) - 20px + env(safe-area-inset-bottom)) !important;
+}
+
+/* iPhone: Safari can't animate the line drawing through --divider-img (it loses the line's size and
+   position, so the lines come out fat and shifted). On iPhone the lines stay still; the frames still tremble. */
+body.native-ios.outline-boil #app .panel-header,
+body.native-ios.outline-boil #app .bot-card .bot-stats,
+body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
+  animation: none !important;
+}
+body.native-ios.outline-boil #app .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+}
+body.native-ios.outline-boil #app .bot-card .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+}
+body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+}
+body.native-ios.outline-boil #app .bot-card.boss .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") !important;
+}
+body.native-ios.outline-boil #app .bot-card.boss .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
 }
