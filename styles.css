@@ -7720,6 +7720,25 @@ body .sound-slider:focus-visible {
 
 #app .game-over-card .end-actions {
   margin-top: 22px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Inspect, Main Menu and Restart share one row, so they are smaller than the usual primary button */
+#app .game-over-card .end-actions .primary-button {
+  min-height: 38px;
+  padding: 6px 10px !important;
+  font-size: 14px !important;
+  white-space: nowrap;
+}
+
+body.mobile-arcade #app .game-over-card .end-actions .primary-button {
+  min-height: 32px;
+  font-size: 12px !important;
+}
+
+#app .game-over-card .end-menu:hover:not(:disabled) {
+  color: var(--blood-bright) !important;
 }
 
 #app .game-over-card .end-restart {

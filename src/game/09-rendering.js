@@ -2294,6 +2294,7 @@ function renderOverlay() {
         ${renderNewRecordsHtml()}
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
+          <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
           <button class="primary-button end-restart" id="restartGame">Restart</button>
         </div>
       </section>

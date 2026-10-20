@@ -216,6 +216,9 @@ function bindEvents() {
   const restartButton = document.querySelector("#restartGame");
   if (restartButton) bindOn(restartButton, "click", startGame);
 
+  const gameOverMenuButton = document.querySelector("#gameOverMenu");
+  if (gameOverMenuButton) bindOn(gameOverMenuButton, "click", () => showMainMenu());
+
   const inspectButton = document.querySelector("#inspectGame");
   if (inspectButton) {
     bindOn(inspectButton, "click", () => {

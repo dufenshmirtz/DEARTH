@@ -14167,6 +14167,7 @@ function renderOverlay() {
         ${renderNewRecordsHtml()}
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
+          <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
           <button class="primary-button end-restart" id="restartGame">Restart</button>
         </div>
       </section>
@@ -16773,6 +16774,9 @@ function bindEvents() {
 
   const restartButton = document.querySelector("#restartGame");
   if (restartButton) bindOn(restartButton, "click", startGame);
+
+  const gameOverMenuButton = document.querySelector("#gameOverMenu");
+  if (gameOverMenuButton) bindOn(gameOverMenuButton, "click", () => showMainMenu());
 
   const inspectButton = document.querySelector("#inspectGame");
   if (inspectButton) {
