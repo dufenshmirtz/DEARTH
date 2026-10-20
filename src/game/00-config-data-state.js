@@ -852,7 +852,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Threon",
     price: 16,
-    description: "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
+    description: "Excess MEMORY that would be added to a DAMNED becomes 4 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
   },
   p128: {
     id: "p128",

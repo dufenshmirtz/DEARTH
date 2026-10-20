@@ -1058,7 +1058,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Threon",
     price: 16,
-    description: "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
+    description: "Excess MEMORY that would be added to a DAMNED becomes 4 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
   },
   p128: {
     id: "p128",
@@ -3776,7 +3776,7 @@ function trimBotMemoryToLimit(bot) {
 }
 
 function sitriExcessMemoryDamage(entry) {
-  return doubledStackValue(entry, 10);
+  return doubledStackValue(entry, 4);
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
@@ -13683,8 +13683,10 @@ function renderBot(bot, pendingPick) {
   const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
-    ? `${memoryTotal} ${memoryTotal === 1 ? "round" : "rounds"}${memoryOverflow ? ` <span class="memory-overflow">(+${memoryOverflow})</span>` : ""}`
+    ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
+  // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
+  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -13796,6 +13798,7 @@ function renderBot(bot, pendingPick) {
           ${memoryBadge}
           <span>Memory</span>
           <strong>${memoryText}</strong>
+          ${memoryOverflowHtml}
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}

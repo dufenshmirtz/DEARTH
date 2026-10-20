@@ -264,7 +264,7 @@ Seal of Serafeim (16 SIN)
 Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both.
 
 Seal of Threon (16 SIN)
-Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level.
+Excess MEMORY that would be added to a DAMNED becomes 4 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level.
 
 Seal of Zilon (16 SIN)
 40% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY. ELITE adds +5% to the converted share.

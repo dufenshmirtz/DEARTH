@@ -490,7 +490,7 @@ function trimBotMemoryToLimit(bot) {
 }
 
 function sitriExcessMemoryDamage(entry) {
-  return doubledStackValue(entry, 10);
+  return doubledStackValue(entry, 4);
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown

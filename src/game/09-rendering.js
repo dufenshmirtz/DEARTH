@@ -1810,8 +1810,10 @@ function renderBot(bot, pendingPick) {
   const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
-    ? `${memoryTotal} ${memoryTotal === 1 ? "round" : "rounds"}${memoryOverflow ? ` <span class="memory-overflow">(+${memoryOverflow})</span>` : ""}`
+    ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
+  // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
+  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -1923,6 +1925,7 @@ function renderBot(bot, pendingPick) {
           ${memoryBadge}
           <span>Memory</span>
           <strong>${memoryText}</strong>
+          ${memoryOverflowHtml}
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}

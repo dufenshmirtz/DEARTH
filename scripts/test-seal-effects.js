@@ -775,7 +775,7 @@ test("Threon keeps MEMORY beyond the limit visible, then removes it at round end
     const overflow = bot.memoryOverflow;
     applyMemoryOverflowDamage();
     assert.equal(bot.memoryOverflow, 0);
-    assert.equal(hp - bot.hp, overflow * 10);
+    assert.equal(hp - bot.hp, overflow * 4);
     const boss = state.bots[1];
     boss.isBoss = true;
     boss.memory = [];

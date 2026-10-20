@@ -6085,8 +6085,21 @@ body.mobile-arcade #app .arena:not(.pvp-arena) .credit-wrap .stat-label {
   padding: 0 0 6px !important;
 }
 
+#app .bot-card .mini-stat.memory-stat {
+  flex-wrap: nowrap !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > strong {
+  white-space: nowrap;
+}
+
 #app .bot-card .mini-stat.memory-stat > span {
   font-size: 13px !important;
+}
+
+#app .bot-card .mini-stat.memory-stat > .memory-overflow {
+  font-size: 15px !important;
+  white-space: nowrap;
 }
 
 #app .bot-card .mini-stat.memory-stat > strong {
@@ -6122,6 +6135,7 @@ body.mobile-arcade #app .bot-card .mini-stat.memory-stat {
 }
 
 body.mobile-arcade #app .bot-card .mini-stat.memory-stat > span,
+body.mobile-arcade #app .bot-card .mini-stat.memory-stat > .memory-overflow,
 body.mobile-arcade #app .bot-card .mini-stat.memory-stat > strong {
   font-size: 10px !important;
 }
