@@ -204,6 +204,7 @@ const GAME_SFX = {
 Object.values(ARTIFACT_SFX).forEach((config) => { config.volume = levelVolume(config.src, config.tier, config.trim); });
 PENTAKILL_SFX.volume = levelVolume(PENTAKILL_SFX.src, PENTAKILL_SFX.tier, PENTAKILL_SFX.trim);
 Object.values(GAME_SFX).forEach((config) => { config.volume = levelVolume(config.srcs, config.tier, config.trim); });
+<<<<<<< HEAD
 "use strict";
 
 const GAME_VERSION = "0.1.0";
@@ -2262,6 +2263,1966 @@ let sfxPrimed = false;
 let gameButtonTickInstalled = false;
 let soundtrackPausedByAppBackground = false;
 
+=======
+"use strict";
+
+const GAME_VERSION = "0.1.0";
+
+const BASE_PASSIVE_LIMIT = 3;
+const MAX_PASSIVE_LIMIT = 6;
+const MAX_REVEALED_DAMNED = 4;
+const ACTIVE_LIMIT = 5;
+const BOT_COUNT = 5;
+const PLAYER_MAX_HP = 100;
+const NON_BOSS_MEMORY_LIMIT = 20;
+const BOT_MIN_HP = 20;
+const BOT_MAX_HP = 60;
+const STARTING_CREDITS = 8;
+const BASE_TARGET_MODIFIER = 0.8;
+const FINAL_BOSS_TARGET_MODIFIER = 0.666;
+const SCALING_BREAKPOINT_BOSSES = 4;
+const ENDLESS_SCALING_BREAKPOINT_BOSSES = 8;
+const BOT_HP_BONUS_PER_BOSS = 17;
+const BOT_HP_BONUS_PER_BOSS_LATE = 18;
+const BOT_HP_BONUS_PER_BOSS_ENDLESS = 50;
+const BOSS_HP_BONUS_PER_SPAWN = 50;
+const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
+const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
+const HP_EXPONENTIAL_RATE = 1.2;
+const HP_EXPONENTIAL_STEP_BOSSES = 3;
+const SIN_PRICE_PRESSURE_INTERVAL = 150;
+const ACTIVE_USES_PER_ROUND = 2;
+const UNIQUE_BOSS_INTERVAL = 8;
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
+const BOSS_KILL_INTERVAL_MIN = 8;
+const BOSS_KILL_INTERVAL_MAX = 12;
+const ENDLESS_BOSS_KILL_INTERVAL_MIN = 4;
+const ENDLESS_BOSS_KILL_INTERVAL_MAX = 8;
+const PVP_SLOT_COUNT = 5;
+const PVP_MAX_SLOT_COUNT = 12;
+const PVP_MAX_HP = 100;
+const PVP_MODIFIERS = [0.7, 0.8, 0.9, 1, 1.1, 1.2];
+const PVP_MODIFIER_INTERVAL = 3;
+const PVP_PHASE_AUTO_DELAY = 450;
+const PVP_SUMMARY_AUTO_DELAY = 10000;
+const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
+const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
+// Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
+const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
+const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
+// Settings that are a choice between a few values (Settings > Display / Gameplay)
+const ANIM_SPEED_VALUES = [1, 2, 4];
+const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
+const FLASH_LABELS = ["Reduced", "Full"];
+const TEXT_SIZE_LABELS = ["Normal", "Large"];
+const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
+const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
+const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
+const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
+const ARCADE_RUN_SAVE_VERSION = 1;
+const ARCADE_RUN_SLOT_COUNT = 5;
+const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
+const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
+const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
+const SHOP_ELITE_CHANCE = 0.08;
+const PVP_ACTIVES = [
+  {
+    id: "pulse",
+    name: "Demon Bowl",
+    icon: "assets/artifacts/occult-new-9/demon-bowl-incantation-bowl.png",
+    description: "Deal 3 damage to everyone else.",
+    needsTarget: false
+  },
+  {
+    id: "rise",
+    name: "Ceremonial Altar",
+    icon: "assets/artifacts/occult-items-17/17 CEREMONIAL ALTAR.png",
+    description: "Change the final TARGET by +5.",
+    needsTarget: false
+  },
+  {
+    id: "sink",
+    name: "Black Candle",
+    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
+    description: "Change the final TARGET by -5.",
+    needsTarget: false
+  },
+  {
+    id: "shield",
+    name: "Dark Talisman",
+    icon: "assets/artifacts/occult-items-17/16 DARK TALISMAN.png",
+    description: "You take 50% less damage this round.",
+    needsTarget: false
+  },
+  {
+    id: "markBest",
+    name: "Sacrificial Dagger",
+    icon: "assets/artifacts/occult-items-17/01 SACRIFICIAL DAGGER.png",
+    description: "Deal 5 damage to every player tied closest to the first TARGET.",
+    needsTarget: false
+  },
+  {
+    id: "jam",
+    name: "Inverted Cross",
+    icon: "assets/artifacts/occult-items-17/11 INVERTED CROSS.png",
+    description: "Pick a player whose guess does not count for the final TARGET.",
+    needsTarget: true
+  }
+];
+const PVP_SKIP_ACTIVE = {
+  id: "skip",
+  name: "Skip",
+  description: "Do not use an Artifact this round. Your next round Artifact casts for sure.",
+  needsTarget: false,
+  skip: true
+};
+
+const ITEMS = {
+  p1: {
+    id: "p1",
+    type: "passive",
+    name: "Seal of Vassago",
+    price: 13,
+    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p2: {
+    id: "p2",
+    type: "passive",
+    name: "Seal of Paimon",
+    price: 15,
+    description: "If your final guess is close to the TARGET, gain ladder SIN: 1 at +/-5, +1 per step closer, up to 5 at +/-1. On exact TARGET, gain 10 SIN. ELITE doubles all SIN gained."
+  },
+  p3: {
+    id: "p3",
+    type: "passive",
+    name: "Seal of Alloces",
+    price: 7,
+    description: "If the rounded TARGET is a multiple of 3, all DAMNED take 20 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p4: {
+    id: "p4",
+    type: "passive",
+    name: "Seal of Andras",
+    price: 12,
+    description: "If your final effective guess is 0, 50, or 100, deal 10 damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage. ELITE multiplies only the damage by x1.5 each level, rounded up."
+  },
+  p5: {
+    id: "p5",
+    type: "passive",
+    name: "Seal of Haures",
+    price: 9,
+    description: "Whenever you take damage, all DAMNED take the same amount of extra damage. ELITE multiplies the echoed damage by x1.5 each level, rounded up."
+  },
+  p6: {
+    id: "p6",
+    type: "passive",
+    name: "Seal of Orias",
+    price: 13,
+    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+  },
+  p7: {
+    id: "p7",
+    type: "passive",
+    name: "Seal of Glasya-Labolas",
+    price: 12,
+    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p8: {
+    id: "p8",
+    type: "passive",
+    name: "Seal of Buer",
+    price: 7,
+    description: "At end of round, gain 5 SIN. ELITE increases this payout by +20%."
+  },
+  p9: {
+    id: "p9",
+    type: "passive",
+    name: "Seal of Marbas",
+    price: 12,
+    description: "Every DAMNED elimination spreads 3 SIN and 3 MEMORY randomly among the DAMNED of the next round. ELITE increases only the SIN spread by +20%."
+  },
+  p10: {
+    id: "p10",
+    type: "passive",
+    name: "Seal of Gusion",
+    price: 11,
+    description: "Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. ELITE converts +1 extra MEMORY or BOUNTY each level when this triggers."
+  },
+  p11: {
+    id: "p11",
+    type: "passive",
+    name: "Seal of Valefor",
+    price: 12,
+    description: "When a DAMNED dies, gain a random ARTIFACT with 0 sell value if you have room. ELITE gives +1 random ARTIFACT each level."
+  },
+  p12: {
+    id: "p12",
+    type: "passive",
+    name: "Seal of Belial",
+    price: 11,
+    description: "At end of round, for every 10 SIN you have, deal 2 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p13: {
+    id: "p13",
+    type: "passive",
+    name: "Seal of Bune",
+    price: 14,
+    description: "If two or more DAMNED are eliminated in a round, gain 8 SIN. If two or more with the same personality were eliminated, gain 16 SIN. ELITE increases the payout by +20%."
+  },
+  p14: {
+    id: "p14",
+    type: "passive",
+    name: "Seal of Leraje",
+    price: 12,
+    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+  },
+  p15: {
+    id: "p15",
+    type: "passive",
+    name: "Seal of Bathin",
+    price: 11,
+    description:
+      "Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p16: {
+    id: "p16",
+    type: "passive",
+    name: "Seal of Bael",
+    price: 10,
+    description: "If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p17: {
+    id: "p17",
+    type: "passive",
+    name: "Seal of Dantalion",
+    price: 15,
+    description: "At end of round, deal damage equal to the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If any BOSSES are active, hit all active BOSSES instead and exclude BOSS MEMORY from the sum. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p18: {
+    id: "p18",
+    type: "passive",
+    name: "Seal of Berith",
+    price: 8,
+    description: "At end of round, this SEAL's sell value increases by 3. ELITE increases the sell-value growth by +20% each level, rounded up."
+  },
+  p19: {
+    id: "p19",
+    type: "passive",
+    name: "Seal of Sabnock",
+    price: 13,
+    description: "Every time a DAMNED dies, deal 5 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p20: {
+    id: "p20",
+    type: "passive",
+    name: "Seal of Haagenti",
+    price: 12,
+    description: "Devil's Offerings has one more ARTIFACT slot. Whenever you use an ARTIFACT, all DAMNED take damage equal to that ARTIFACT's purchase cost. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p21: {
+    id: "p21",
+    type: "passive",
+    name: "Seal of Shax",
+    price: 10,
+    description: "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p22: {
+    id: "p22",
+    type: "passive",
+    name: "Seal of Botis",
+    price: 14,
+    description: "Avoid 20% of damage you would take in a round, rounded down, and convert the avoided damage into MEMORY for the living DAMNED with the most MEMORY. ELITE doubles only the MEMORY added each level."
+  },
+  p23: {
+    id: "p23",
+    type: "passive",
+    name: "Seal of Seere",
+    price: 10,
+    description: "New non-boss DAMNED have a 33% chance to spawn with +6 BOUNTY. ELITE increases the spawn chance by +20% each level, capped at 100%."
+  },
+  p24: {
+    id: "p24",
+    type: "passive",
+    name: "Seal of Orobas",
+    price: 9,
+    description: "You can use only one ARTIFACT per round. All DAMNED pay 1.5x BOUNTY SIN when eliminated. ELITE increases the payout multiplier by +20% each level; the one-ARTIFACT limit does not change."
+  },
+  p25: {
+    id: "p25",
+    type: "passive",
+    name: "Seal of Valac",
+    price: 17,
+    description: "Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both."
+  },
+  p26: {
+    id: "p26",
+    type: "passive",
+    name: "Seal of Amdusias",
+    price: 14,
+    description: "Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 damage to all DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p27: {
+    id: "p27",
+    type: "passive",
+    name: "Seal of Zagan",
+    price: 10,
+    description: "Every ARTIFACT used triggers one of three outcomes: gain 3 SIN, damage a random DAMNED, or refund that ARTIFACT's purchase cost. ELITE multiplies the damage outcome by x1.5 each level, rounded up, and increases the SIN outcome by +20%."
+  },
+  p28: {
+    id: "p28",
+    type: "passive",
+    name: "Seal of Ose",
+    price: 14,
+    description: "Copies a random SEAL you own and keeps copying it. If that SEAL is sold, Ose chooses another owned SEAL. If no SEAL is available, it waits for the next SEAL you buy. ELITE makes the copied SEAL resolve one level stronger each level."
+  },
+  p29: {
+    id: "p29",
+    type: "passive",
+    name: "Seal of Furfur",
+    price: 10,
+    description: "For every 2 SIN you spend in a round, deal 1 damage to the highest-HEALTH DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p30: {
+    id: "p30",
+    type: "passive",
+    name: "Seal of Andrealphus",
+    price: 9,
+    description: "Every time a DAMNED is eliminated, deal 10 damage to the DAMNED on its left and right. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p31: {
+    id: "p31",
+    type: "passive",
+    name: "Seal of Murmur",
+    price: 14,
+    description: "At end of round, two random DAMNED take damage equal to their BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p32: {
+    id: "p32",
+    type: "passive",
+    name: "Seal of Foras",
+    price: 14,
+    description: "Every time a DAMNED dies, all other DAMNED gain +1 or +2 BOUNTY. ELITE increases the BOUNTY gain by +20% each level, rounded up."
+  },
+  p33: {
+    id: "p33",
+    type: "passive",
+    name: "Seal of Marchosias",
+    price: 17,
+    description: "Every time a DAMNED is eliminated, all other DAMNED take damage equal to that DAMNED's BOUNTY. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p34: {
+    id: "p34",
+    type: "passive",
+    name: "Seal of Gremory",
+    price: 16,
+    description: "Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%."
+  },
+  p35: {
+    id: "p35",
+    type: "passive",
+    name: "Seal of Forneus",
+    price: 15,
+    description: "At end of round, the two highest BOUNTY DAMNED gain +1 BOUNTY. ELITE levels add +1 BOUNTY."
+  },
+  p36: {
+    id: "p36",
+    type: "passive",
+    name: "Pandorium Contract",
+    price: 15,
+    description: "Removed. ELITE does not change this effect."
+  },
+  p37: {
+    id: "p37",
+    type: "passive",
+    name: "Seal of Malphas",
+    price: 11,
+    description: "When you take 4 or less TARGET-difference damage in a round, gain 7 SIN. ELITE increases this payout by +20%."
+  },
+  p38: {
+    id: "p38",
+    type: "passive",
+    name: "Seal of Astaroth",
+    price: 12,
+    description: "At the start of each round, mark a DAMNED until round end. If the marked DAMNED dies, its BOUNTY payout becomes double BOUNTY or 6 SIN, whichever is greater, and you gain 5 SIN. ELITE increases the payout bonus and SIN gain by +20% each level."
+  },
+  p39: {
+    id: "p39",
+    type: "passive",
+    name: "Seal of Purson",
+    price: 10,
+    description: "Starts with 1 stack. Rounds without buying from Devil's Offerings add a stack. Buying an offering resets it. At end of round, gain SIN equal to its stacks. ELITE increases the end-round SIN payout by +20% each level."
+  },
+  p40: {
+    id: "p40",
+    type: "passive",
+    name: "Seal of Focalor",
+    price: 14,
+    description: "At end of round, deal half the total BOUNTY of living DAMNED to every enemy. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p41: {
+    id: "p41",
+    type: "passive",
+    name: "Seal of Bifrons",
+    price: 15,
+    description: "If the rounded TARGET is a multiple of 7, gain SIN equal to your current SIN. ELITE increases the paid SIN by +20%."
+  },
+  p42: {
+    id: "p42",
+    type: "passive",
+    name: "Seal of Stolas",
+    price: 13,
+    description:
+      "When a DAMNED with 3 or less MEMORY dies, gain SIN equal to its MEMORY. If it had more than 3 MEMORY, split its MEMORY between the DAMNED on its left and right; with only one side, only half is transferred and the rest is lost. ELITE increases only the low-MEMORY SIN payout by +20%."
+  },
+  p43: {
+    id: "p43",
+    type: "passive",
+    name: "Seal of Raum",
+    price: 12,
+    description: "Whenever a DAMNED loses SIN, it takes 20 damage. At end of round, all DAMNED lose 1 SIN. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p44: {
+    id: "p44",
+    type: "passive",
+    name: "Seal of Andromalius",
+    price: 15,
+    description: "At end of round, any non-boss DAMNED with 2 or less BOUNTY is eliminated. Its SIN goes to the living DAMNED with the highest BOUNTY. ELITE increases the BOUNTY limit by +1 each level."
+  },
+  p45: {
+    id: "p45",
+    type: "passive",
+    name: "Seal of Crocell",
+    price: 11,
+    description: "DAMNED with 3 or less BOUNTY pay double BOUNTY SIN when eliminated. ELITE increases the payout multiplier by +20% each level."
+  },
+  p46: {
+    id: "p46",
+    type: "passive",
+    name: "Seal of Barbatos",
+    price: 12,
+    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+  },
+  p47: {
+    id: "p47",
+    type: "passive",
+    name: "Seal of Ronove",
+    price: 11,
+    description: "At end of round, a DAMNED loses half its BOUNTY and you gain double the SIN removed. ELITE adds one more DAMNED target each level."
+  },
+  p48: {
+    id: "p48",
+    type: "passive",
+    name: "Seal of Cimejes",
+    price: 11,
+    description: "At start of round, double a random DAMNED's BOUNTY for 1 round. ELITE levels double one extra random DAMNED."
+  },
+  p49: {
+    id: "p49",
+    type: "passive",
+    name: "Seal of Phenex",
+    price: 16,
+    description: "Using an ARTIFACT that targets one or more DAMNED increases those DAMNED's BOUNTY by 3. ELITE increases the BOUNTY gain by +20% each level, rounded up."
+  },
+  p50: {
+    id: "p50",
+    type: "passive",
+    name: "Seal of Agares",
+    price: 14,
+    description: "At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take 5 damage per BOUNTY gained from this SEAL. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p51: {
+    id: "p51",
+    type: "passive",
+    name: "Seal of Marax",
+    price: 11,
+    description: "Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, its BOUNTY increases by 4. ELITE increases the BOUNTY gain by +20% each level, rounded up."
+  },
+  p52: {
+    id: "p52",
+    type: "passive",
+    name: "Seal of Decarabia",
+    price: 12,
+    description: "At end of round, DAMNED take 3 damage per MEMORY. BOSSES take 1 damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up."
+  },
+  p53: {
+    id: "p53",
+    type: "passive",
+    name: "Seal of Samigina",
+    price: 11,
+    description: "When a non-boss DAMNED is eliminated, gain bonus SIN equal to its MEMORY. ELITE increases this SIN payout by +20% each level."
+  },
+  p54: {
+    id: "p54",
+    type: "passive",
+    name: "Seal of Zepar",
+    price: 12,
+    description: "When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes that much damage too. ELITE multiplies the echoed damage by x1.5 each level, rounded up."
+  },
+  p55: {
+    id: "p55",
+    type: "passive",
+    name: "Seal of Samael Septagram",
+    price: 11,
+    description:
+      "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
+  },
+  p56: {
+    id: "p56",
+    type: "passive",
+    name: "Seal of Halphas",
+    price: 14,
+    description: "At end of round, deal round x BOSSES defeated total damage, spread randomly among enemies. ELITE gives +2 SIN each round per upgrade."
+  },
+  p57: {
+    id: "p57",
+    type: "passive",
+    name: "Seal of Balam",
+    price: 14,
+    description:
+      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
+  },
+  p58: {
+    id: "p58",
+    type: "passive",
+    name: "Seal of Ipos",
+    price: 13,
+    description:
+      "The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, the next two take 10. ELITE multiplies both damage values by x1.5 each level, rounded up."
+  },
+  p59: {
+    id: "p59",
+    type: "passive",
+    name: "Seal of Amon",
+    price: 12,
+    description:
+      "Reveal one extra DAMNED each round. Revealed DAMNED gain +2 BOUNTY and +2 MEMORY, and the gains stay even if they are not revealed next round. ELITE adds +1 BOUNTY to the reveal reward."
+  },
+  p60: {
+    id: "p60",
+    type: "passive",
+    name: "Seal of Gaap",
+    price: 14,
+    description:
+      "Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p61: {
+    id: "p61",
+    type: "passive",
+    name: "Seal of Vepar",
+    price: 13,
+    description:
+      "BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage. ELITE adds +2% per poison."
+  },
+  p62: {
+    id: "p62",
+    type: "passive",
+    name: "Seal of Beleth",
+    price: 12,
+    description: "The first time each full-HEALTH DAMNED takes damage in a round, it takes 10 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+  },
+  p63: {
+    id: "p63",
+    type: "passive",
+    name: "Seal of Vual",
+    price: 10,
+    description: "Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+  },
+  p64: {
+    id: "p64",
+    type: "passive",
+    name: "Seal of Vine",
+    price: 10,
+    description:
+      "Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
+  },
+  p65: {
+    id: "p65",
+    type: "passive",
+    name: "Seal of Naberius",
+    price: 10,
+    description: "Reveal one extra DAMNED each round. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p66: {
+    id: "p66",
+    type: "passive",
+    name: "Seal of Aim",
+    price: 15,
+    description: "When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If a BOSS is active, deal 30 damage to each active BOSS. ELITE multiplies only the BOSS damage by x1.5 each level, rounded up."
+  },
+  p67: {
+    id: "p67",
+    type: "passive",
+    name: "Seal of Caim",
+    price: 11,
+    description: "DAMNED with 8 or more MEMORY pay double BOUNTY SIN when eliminated. ELITE increases the payout multiplier by +20%."
+  },
+  p68: {
+    id: "p68",
+    type: "passive",
+    name: "Seal of Vapula",
+    price: 13,
+    description:
+      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+  },
+  p69: {
+    id: "p69",
+    type: "passive",
+    name: "Seal of Cassiel Hexagram",
+    price: 14,
+    description:
+      "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
+  },
+  p70: {
+    id: "p70",
+    type: "passive",
+    name: "Seal of Amy",
+    price: 12,
+    description:
+      "Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up."
+  },
+  p71: {
+    id: "p71",
+    type: "passive",
+    name: "Seal of Sallos",
+    price: 14,
+    description:
+      "Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level."
+  },
+  p72: {
+    id: "p72",
+    type: "passive",
+    name: "Seal of Furcas",
+    price: 11,
+    description:
+      "Every round, if the previous TARGET was below 40, one random non-boss DAMNED guess becomes 100. If it was above 40, one random DAMNED guess becomes 0. ELITE deals 5 damage per level to the selected DAMNED."
+  },
+  p73: {
+    id: "p73",
+    type: "passive",
+    name: "Seal of Asmoday",
+    price: 12,
+    description: "When a DAMNED dies from excess damage, split that excess damage equally among the other living enemies. ELITE multiplies the excess damage split by x1.5 each level, rounded up."
+  },
+  p74: {
+    id: "p74",
+    type: "passive",
+    name: "Seal of the White Horse",
+    price: 20,
+    description: "DAMNED with 10 or more BOUNTY take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+  },
+  p75: {
+    id: "p75",
+    type: "passive",
+    name: "Seal of the Red Horse",
+    price: 20,
+    description: "Reveal one extra DAMNED each round. Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+  },
+  p76: {
+    id: "p76",
+    type: "passive",
+    name: "Seal of the Black Horse",
+    price: 20,
+    description: "Non-boss DAMNED with 10 or more MEMORY take x1.5 damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead. ELITE adds +0.2 to the multiplier."
+  },
+  p77: {
+    id: "p77",
+    type: "passive",
+    name: "Seal of the Pale Horse",
+    price: 20,
+    description: "If you score CRITICAL this round, DAMNED take x1.5 damage from all sources next round. ELITE adds +0.2 to the multiplier."
+  },
+  p78: {
+    id: "p78",
+    type: "passive",
+    name: "Seal of the Souls of Martyrs",
+    price: 20,
+    description: "DAMNED with the STUBBORN personality take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+  },
+  p79: {
+    id: "p79",
+    type: "passive",
+    name: "Seal of Creation Uncreated",
+    price: 20,
+    description: "DAMNED take x1.5 damage from all sources if an ARTIFACT was used on them this round. ELITE adds +0.2 to the multiplier."
+  },
+  p80: {
+    id: "p80",
+    type: "passive",
+    name: "Seal of Silence in Heaven",
+    price: 20,
+    description: "DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier."
+  },
+  p81: {
+    id: "p81",
+    type: "passive",
+    name: "Seal of Buer",
+    price: 12,
+    description: "If a DAMNED has more than 16 MEMORY, their guess is revealed. ELITE does not change this effect."
+  },
+  p82: {
+    id: "p82",
+    type: "passive",
+    name: "Seal of Marked Offering",
+    price: 11,
+    description: "Using an ARTIFACT on a DAMNED has a 50% chance to reveal their guess. ELITE adds +10% reveal chance."
+  },
+  p84: {
+    id: "p84",
+    type: "passive",
+    name: "Seal of Astaroth",
+    price: 13,
+    description: "At end of round, every revealed DAMNED makes each adjacent DAMNED take damage equal to that revealed DAMNED's TARGET-difference damage this round. Worst guess penalty counts as TARGET-difference damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p85: {
+    id: "p85",
+    type: "passive",
+    name: "Seal of Berith",
+    price: 14,
+    description: "At end of round, each DAMNED takes 10 damage for every other living DAMNED with the same personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p86: {
+    id: "p86",
+    type: "passive",
+    name: "Seal of Haures",
+    price: 14,
+    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
+  },
+  p87: {
+    id: "p87",
+    type: "passive",
+    name: "Seal of Purson",
+    price: 13,
+    description: "When a DAMNED is eliminated, deal 30 damage to each other living DAMNED with the same personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p88: {
+    id: "p88",
+    type: "passive",
+    name: "Seal of Raum",
+    price: 16,
+    description: "When a DAMNED dies, half of their BOUNTY is added to each other living DAMNED with the same personality. You gain that dead DAMNED's BOUNTY. ELITE increases the added and gained SIN by +20%."
+  },
+  p89: {
+    id: "p89",
+    type: "passive",
+    name: "Seal of Marax",
+    price: 16,
+    description: "DAMNED can only have two personalities: ANALYST or STUBBORN. At end of round, a DAMNED takes 5 damage if both adjacent DAMNED have the same personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p90: {
+    id: "p90",
+    type: "passive",
+    name: "Seal of Bifrons",
+    price: 15,
+    description: "Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take 10 damage. At the end of each round, one DAMNED has their personality altered to the most prevalent personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p91: {
+    id: "p91",
+    type: "passive",
+    name: "Seal of Aim",
+    price: 14,
+    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
+  },
+  p92: {
+    id: "p92",
+    type: "passive",
+    name: "Seal of Dantre",
+    price: 16,
+    description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
+  },
+  p93: {
+    id: "p93",
+    type: "passive",
+    name: "Seal of Zilon",
+    price: 16,
+    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+  },
+  p94: {
+    id: "p94",
+    type: "passive",
+    name: "Seal of Serafeim",
+    price: 16,
+    description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
+  },
+  p95: {
+    id: "p95",
+    type: "passive",
+    name: "Seal of Pyros",
+    price: 16,
+    description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+  },
+  p96: {
+    id: "p96",
+    type: "passive",
+    name: "Seal of Padma",
+    price: 16,
+    description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
+  },
+  p97: {
+    id: "p97",
+    type: "passive",
+    name: "Seal of Threon",
+    price: 16,
+    description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
+  },
+  p110: {
+    id: "p110",
+    type: "passive",
+    name: "Seal of Petros-Pavlos",
+    price: 16,
+    description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+  },
+  p111: {
+    id: "p111",
+    type: "passive",
+    name: "Seal of Satan",
+    price: 20,
+    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
+  },
+  p98: {
+    id: "p98",
+    type: "passive",
+    name: "Seal of Samael Star",
+    price: 15,
+    description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
+  },
+  p99: {
+    id: "p99",
+    type: "passive",
+    name: "Seal of Cassiel Sigil",
+    price: 15,
+    description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
+  },
+  p100: {
+    id: "p100",
+    type: "passive",
+    name: "Seal of Bethor",
+    price: 15,
+    description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+  },
+  p101: {
+    id: "p101",
+    type: "passive",
+    name: "Seal of Aggiel Hexagram",
+    price: 15,
+    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+  },
+  p102: {
+    id: "p102",
+    type: "passive",
+    name: "Seal of Zachriel Triangle",
+    price: 15,
+    description: "Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
+  },
+  p103: {
+    id: "p103",
+    type: "passive",
+    name: "Seal of Cassiel Pentagram",
+    price: 15,
+    description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
+  },
+  p104: {
+    id: "p104",
+    type: "passive",
+    name: "Seal of Alloces",
+    price: 13,
+    description: "At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains."
+  },
+  p105: {
+    id: "p105",
+    type: "passive",
+    name: "Seal of Andras",
+    price: 13,
+    description: "Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to STUBBORN. At end of round, BOSSES take 5 damage for every STUBBORN DAMNED. ELITE adds +10% chance and multiplies the BOSS damage by x1.5 each level, rounded up."
+  },
+  p106: {
+    id: "p106",
+    type: "passive",
+    name: "Seal of Zagan",
+    price: 15,
+    description: "At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p107: {
+    id: "p107",
+    type: "passive",
+    name: "Seal of Ose",
+    price: 14,
+    description: "STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At the end of every round, one random DAMNED personality changes to STUBBORN. ELITE deals 5 damage to every STUBBORN DAMNED per ELITE level."
+  },
+  p108: {
+    id: "p108",
+    type: "passive",
+    name: "Seal of Orobas",
+    price: 14,
+    description: "When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p109: {
+    id: "p109",
+    type: "passive",
+    name: "Seal of Samael Triangle",
+    price: 15,
+    description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
+  },
+  p112: {
+    id: "p112",
+    type: "passive",
+    name: "Seal of Furfur",
+    price: 12,
+    description: "At end of round, DAMNED whose guesses are multiples of 2 take 2 damage, multiples of 3 take 3 damage, multiples of 5 take 5 damage, and multiples of 7 take 14 damage. Matching effects add together. ELITE multiplies each damage value by x1.5 each level, rounded up."
+  },
+  p113: {
+    id: "p113",
+    type: "passive",
+    name: "Seal of Halphas",
+    price: 12,
+    description: "At end of round, each DAMNED independently has a 30% chance to take 5 damage and a separate 10% chance to take 10 damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+  },
+  p114: {
+    id: "p114",
+    type: "passive",
+    name: "Seal of Buer",
+    price: 12,
+    description: "Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up."
+  },
+  p115: {
+    id: "p115",
+    type: "passive",
+    name: "Seal of Botis",
+    price: 12,
+    description: "At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes 4 damage and gives you 2 SIN. ELITE multiplies the damage by x1.5 and increases the SIN gained by +20% each level, rounded up."
+  },
+  p116: {
+    id: "p116",
+    type: "passive",
+    name: "Seal of Beleth",
+    price: 12,
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p117: {
+    id: "p117",
+    type: "passive",
+    name: "Seal of Shax",
+    price: 11,
+    description: "In a round where you hit CRITICAL, every DAMNED that dies gives you 2 extra SIN. ELITE increases the SIN by +20% each level, rounded up."
+  },
+  p118: {
+    id: "p118",
+    type: "passive",
+    name: "Seal of Malphas",
+    price: 13,
+    description: "At end of round, each DAMNED takes 2 damage for every round it has been alive: 2 in its first round, 4 in its second, and so on. ELITE multiplies the damage by x1.5 each level, rounded up."
+  },
+  p119: {
+    id: "p119",
+    type: "passive",
+    name: "Seal of Eligos",
+    price: 14,
+    description: "If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens."
+  },
+  p120: {
+    id: "p120",
+    type: "passive",
+    name: "Seal of Sitri",
+    price: 13,
+    description: "The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level."
+  },
+  a28: {
+    id: "a28",
+    type: "active",
+    name: "Engraved Skull",
+    price: 3,
+    description: "Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
+  },
+  a14: {
+    id: "a14",
+    type: "active",
+    name: "Black Candle",
+    price: 3,
+    description: "During reveal, reduce the TARGET by 10."
+  },
+  a15: {
+    id: "a15",
+    type: "active",
+    name: "Sacrificial Dagger",
+    price: 3,
+    description: "Pick a DAMNED. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES."
+  },
+  a6: {
+    id: "a6",
+    type: "active",
+    name: "Ceremonial Altar",
+    price: 3,
+    description: "During reveal, add 20 to the TARGET."
+  },
+  a7: {
+    id: "a7",
+    type: "active",
+    name: "Demonic Idol",
+    price: 5,
+    description: "Pick a non-boss DAMNED and swap your effective guess with theirs."
+  },
+  a8: {
+    id: "a8",
+    type: "active",
+    name: "Goat Head",
+    price: 2,
+    description: "Pick a DAMNED; their guess counts five times for the TARGET average."
+  },
+  a9: {
+    id: "a9",
+    type: "active",
+    name: "Inverted Cross",
+    price: 2,
+    description: "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage."
+  },
+  a10: {
+    id: "a10",
+    type: "active",
+    name: "Funeral Coin",
+    price: 3,
+    description: "Gain 3 to 10 SIN."
+  },
+  a11: {
+    id: "a11",
+    type: "active",
+    name: "Vial of Blood",
+    price: 2,
+    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY."
+  },
+  a12: {
+    id: "a12",
+    type: "active",
+    name: "Dark Talisman",
+    price: 3,
+    description: "You take 50% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively."
+  },
+  a13: {
+    id: "a13",
+    type: "active",
+    name: "The White-Hilted Knife",
+    price: 4,
+    description: "Removed."
+  },
+  a16: {
+    id: "a16",
+    type: "active",
+    name: "Dr Dee's Gold Disc",
+    price: 4,
+    description: "Gain a random 3 to 9 SIN."
+  },
+  a18: {
+    id: "a18",
+    type: "active",
+    name: "Corrupted Crystal",
+    price: 3,
+    description: "Instantly copy the effect of the last non-Crystal ARTIFACT you used."
+  },
+  a24: {
+    id: "a24",
+    type: "active",
+    name: "Dr Dee's Crystal",
+    price: 4,
+    description: "Reserved for a future ARTIFACT."
+  },
+  a21: {
+    id: "a21",
+    type: "active",
+    name: "Voodoo Doll",
+    price: 3,
+    description: "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took."
+  },
+  a22: {
+    id: "a22",
+    type: "active",
+    name: "Cursed Chalice",
+    price: 6,
+    description: "+1 CRITICAL range for the round."
+  },
+  a23: {
+    id: "a23",
+    type: "active",
+    name: "Satanic Bible",
+    price: 2,
+    description: "Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll."
+  },
+  a25: {
+    id: "a25",
+    type: "active",
+    name: "Mummified Lamb",
+    price: 2,
+    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
+  },
+  a26: {
+    id: "a26",
+    type: "active",
+    name: "Spirit Board",
+    price: 3,
+    description: "Reserved for a future ARTIFACT."
+  }
+};
+
+const PASSIVE_IDS = [
+  "p1",
+  "p2",
+  "p3",
+  "p4",
+  "p5",
+  "p6",
+  "p7",
+  "p9",
+  "p10",
+  "p11",
+  "p12",
+  "p13",
+  "p14",
+  "p15",
+  "p16",
+  "p17",
+  "p18",
+  "p19",
+  "p20",
+  "p21",
+  "p22",
+  "p23",
+  "p24",
+  "p25",
+  "p26",
+  "p28",
+  "p29",
+  "p30",
+  "p31",
+  "p32",
+  "p33",
+  "p34",
+  "p35",
+  "p37",
+  "p39",
+  "p40",
+  "p41",
+  "p42",
+  "p43",
+  "p44",
+  "p45",
+  "p46",
+  "p47",
+  "p48",
+  "p49",
+  "p50",
+  "p51",
+  "p52",
+  "p53",
+  "p54",
+  "p55",
+  "p56",
+  "p57",
+  "p58",
+  "p59",
+  "p60",
+  "p61",
+  "p62",
+  "p63",
+  "p64",
+  "p65",
+  "p66",
+  "p67",
+  "p68",
+  "p69",
+  "p70",
+  "p71",
+  "p72",
+  "p73",
+  "p74",
+  "p75",
+  "p76",
+  "p77",
+  "p78",
+  "p79",
+  "p80",
+  "p81",
+  "p82",
+  "p83",
+  "p84",
+  "p85",
+  "p86",
+  "p87",
+  "p88",
+  "p89",
+  "p90",
+  "p91",
+  "p92",
+  "p93",
+  "p94",
+  "p95",
+  "p96",
+  "p97",
+  "p110",
+  "p111",
+  "p98",
+  "p99",
+  "p100",
+  "p101",
+  "p102",
+  "p103",
+  "p104",
+  "p105",
+  "p106",
+  "p107",
+  "p108",
+  "p109",
+  "p112",
+  "p113",
+  "p114",
+  "p115",
+  "p116",
+  "p117",
+  "p118",
+  "p119",
+  "p120"
+];
+const REMOVED_PASSIVE_IDS = new Set([
+  "p3",
+  "p4",
+  "p5",
+  "p8",
+  "p18",
+  "p21",
+  "p22",
+  "p24",
+  "p27",
+  "p28",
+  "p29",
+  "p36",
+  "p37",
+  "p38",
+  "p39",
+  "p41",
+  "p43",
+  "p51",
+  "p56",
+  "p62",
+  "p66",
+  "p81",
+  "p82",
+  "p83"
+]);
+const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
+const SATAN_SEAL_IDS = new Set(["p111"]);
+// former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
+const SPECIAL_SEAL_IDS = new Set(["p55", "p69"]);
+const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
+const SELF_STACKING_SEAL_SPECS = {
+  p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
+  p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
+  p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
+  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
+  p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
+  p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
+  p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
+};
+const ACTIVE_IDS = [
+  "a6",
+  "a7",
+  "a8",
+  "a9",
+  "a10",
+  "a11",
+  "a12",
+  "a14",
+  "a15",
+  "a18",
+  "a21",
+  "a22",
+  "a23",
+  "a25",
+  "a28"
+];
+const RESERVED_ARTIFACT_IDS = ["a13", "a16", "a24", "a26", "a27"];
+const TARGETED_ARTIFACT_IDS = new Set(["a7", "a8", "a9", "a15", "a25", "a28"]);
+const ARTIFACT_ICONS = {
+  a6: "occult-items-17/17 CEREMONIAL ALTAR.png",
+  a7: "occult-items-17/12 DEMONIC IDOL.png",
+  a8: "occult-items-17/04 GOAT HEAD.png",
+  a9: "occult-items-17/11 INVERTED CROSS.png",
+  a10: "occult-items-17/07 FUNERAL COIN.png",
+  a11: "occult-items-17/05 VIAL OF BLOOD.png",
+  a12: "occult-items-17/16 DARK TALISMAN.png",
+  a13: "a13.png",
+  a14: "occult-items-17/02 BLACK CANDLE.png",
+  a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
+  a16: "a16.png",
+  a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
+  a21: "occult-items-17/08 VOODOO DOLL.png",
+  a22: "occult-items-17/06 CURSED CHALICE.png",
+  a23: "occult-items-17/09 SATANIC BIBLE.png",
+  a24: "a24.png",
+  a25: "occult-items-17/15 MUMMIFIED LAMB.png",
+  a26: "occult-items-17/13 SPIRIT BOARD.png",
+  a27: "occult-new-9/bath-curse-tablets.png",
+  a28: "occult-items-17/03 ENGRAVED SKULL.png"
+};
+const SEAL_SIGILS = {
+  p1: "068_Vassago.png",
+  p2: "051_Paimon.png",
+  p3: "004_Allocer.png",
+  p4: "008_Andras.png",
+  p5: "040_Haures.png",
+  p6: "048_Orias.png",
+  p7: "035_Glasya-Labolas.png",
+  p8: "022_Buer.png",
+  p9: "045_Marbas.png",
+  p10: "037_Guison.png",
+  p11: "065_Valfor.png",
+  p12: "018_Belial.png",
+  p13: "023_Bune.png",
+  p14: "042_Leraje.png",
+  p15: "016_Bathin.png",
+  p16: "013_Bael.png",
+  p17: "028_Dantalion.png",
+  p18: "019_Benith.png",
+  p19: "056_Sabnock.png",
+  p20: "038_Haagenti.png",
+  p21: "060_Shax.png",
+  p22: "021_Botis.png",
+  p23: "059_Seere.png",
+  p24: "049_Orobas.png",
+  p25: "070_Volac.png",
+  p26: "063_Tap.png",
+  p27: "071_Zagan.png",
+  p28: "050_Ose.png",
+  p29: "034_Furfur.png",
+  p30: "009_Andrealphus.png",
+  p31: "047_Murmur.png",
+  p32: "031_Forcas.png",
+  p33: "046_Marchosias.png",
+  p34: "036_Gomory.png",
+  p35: "032_Forneus.png",
+  p36: "011_Asmodeus.png",
+  p37: "043_Malphas.png",
+  p38: "012_Astaroth.png",
+  p39: "053_Purson.png",
+  p40: "030_Focalor.png",
+  p41: "020_Bifrons.png",
+  p42: "061_Stolas.png",
+  p43: "054_Raum.png",
+  p44: "010_Andromalius.png",
+  p45: "027_Crocell.png",
+  p46: "015_Barbatos.png",
+  p47: "055_Ronwe.png",
+  p48: "026_Cimejes.png",
+  p49: "052_Phenex.png",
+  p50: "002_Agares.png",
+  p51: "044_Marax.png",
+  p52: "029_Decarabia.png",
+  p53: "058_Samigina.png",
+  p54: "072_Zepar.png",
+  p55: "self-stacking/Samael-Star.png",
+  p56: "039_Halphas.png",
+  p57: "014_Balan.png",
+  p58: "041_Ipes.png",
+  p59: "007_Ammon.png",
+  p60: "063_Tap.png",
+  p61: "066_Vapar.png",
+  p62: "017_Beleth.png",
+  p63: "064_Uval.png",
+  p64: "069_Vine.png",
+  p65: "025_Cerbere.png",
+  p66: "003_Aim.png",
+  p67: "024_Caim.png",
+  p68: "067_Vapula.png",
+  p69: "self-stacking/Cassiel-Hexagram.png",
+  p70: "006_Amy.png",
+  p71: "057_Sallos.png",
+  p72: "031_Forcas.png",
+  p73: "011_Asmodeus.png",
+  p74: "apocalypse/01-four-living-creatures.png",
+  p75: "apocalypse/02-enthroned-figure.png",
+  p76: "apocalypse/03-radiant-shield.png",
+  p77: "apocalypse/04-angel-book-pillars.png",
+  p78: "apocalypse/05-seven-trumpets.png",
+  p79: "apocalypse/06-holy-city-tablet.png",
+  p80: "apocalypse/07-angel-dragon.png",
+  p81: "022_Buer.png",
+  p82: "071_Zagan.png",
+  p83: "049_Orobas.png",
+  p84: "012_Astaroth.png",
+  p85: "019_Benith.png",
+  p86: "040_Haures.png",
+  p87: "053_Purson.png",
+  p88: "054_Raum.png",
+  p89: "044_Marax.png",
+  p90: "020_Bifrons.png",
+  p91: "003_Aim.png",
+  p92: "dev/DantreSeal.png",
+  p93: "dev/ZilonSeal.png",
+  p94: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
+  p95: "dev/PyrosSeal.png",
+  p96: "dev/PadmaSeal.png",
+  p97: "dev/ThreonSeal.png",
+  p110: "dev/PetrosPavlosSeal.png",
+  p111: "satan/lucifer-wide.png",
+  // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
+  p98: "saturn/Saturn-Pentacle-01.png",
+  p99: "saturn/Saturn-Pentacle-02.png",
+  p100: "saturn/Saturn-Pentacle-03.png",
+  p101: "saturn/Saturn-Pentacle-04.png",
+  p102: "saturn/Saturn-Pentacle-05.png",
+  p103: "saturn/Saturn-Pentacle-06.png",
+  p104: "004_Allocer.png",
+  p105: "008_Andras.png",
+  p106: "071_Zagan.png",
+  p107: "050_Ose.png",
+  p108: "049_Orobas.png",
+  p109: "saturn/Saturn-Pentacle-07.png",
+  p112: "034_Furfur.png",
+  p113: "039_Halphas.png",
+  p114: "022_Buer.png",
+  p115: "021_Botis.png",
+  p116: "017_Beleth.png",
+  p117: "060_Shax.png",
+  p118: "043_Malphas.png",
+  p119: "001_Abigor.png",
+  p120: "062_Sytry.png"
+};
+
+const GOETIC_BOSS_IMAGE_ROOT = "assets/bots/goetic-stickmen-72";
+const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
+  p1: "03-vassago.png",
+  p2: "09-paimon.png",
+  p3: "52-alloces.png",
+  p4: "63-andras.png",
+  p6: "59-orias.png",
+  p7: "25-glasya-labolas.png",
+  p9: "05-marbas.png",
+  p10: "11-gusion.png",
+  p11: "06-valefor.png",
+  p12: "68-belial.png",
+  p13: "26-bune-bime.png",
+  p14: "14-leraje.png",
+  p15: "18-bathin.png",
+  p16: "01-bael.png",
+  p17: "71-dantalion.png",
+  p19: "43-sabnock.png",
+  p20: "48-haagenti.png",
+  p21: "44-shax.png",
+  p22: "17-botis.png",
+  p23: "70-seere-seir.png",
+  p25: "62-valac-ualac.png",
+  p26: "67-amdusias.png",
+  p27: "61-zagan.png",
+  p28: "57-ose.png",
+  p29: "34-furfur.png",
+  p30: "65-andrealphus.png",
+  p31: "54-murmur.png",
+  p32: "31-foras.png",
+  p33: "35-marchosias.png",
+  p34: "56-gremory-gamori.png",
+  p35: "30-forneus.png",
+  p37: "39-malphas.png",
+  p40: "41-focalor.png",
+  p42: "36-stolas.png",
+  p44: "72-andromalius.png",
+  p45: "49-crocell.png",
+  p46: "08-barbatos.png",
+  p47: "27-ronove.png",
+  p48: "66-cimejes-kimaris.png",
+  p49: "37-phenex-phoenix.png",
+  p50: "02-agares.png",
+  p52: "69-decarabia.png",
+  p53: "04-samigina-gamigin.png",
+  p54: "16-zepar.png",
+  p56: "38-halphas.png",
+  p57: "51-balam.png",
+  p58: "22-ipos.png",
+  p59: "07-amon.png",
+  p60: "33-gaap.png",
+  p61: "42-vepar.png",
+  p62: "13-beleth.png",
+  p63: "47-vual-uvall.png",
+  p64: "45-vine.png",
+  p65: "24-naberius.png",
+  p67: "53-caim-camio.png",
+  p68: "60-vapula-naphula.png",
+  p70: "58-amy-avnas.png",
+  p71: "19-sallos.png",
+  p72: "50-furcas.png",
+  p73: "32-asmoday.png",
+  p81: "10-buer.png",
+  p83: "55-orobas.png",
+  p84: "29-astaroth.png",
+  p85: "28-berith.png",
+  p86: "64-haures-flauros.png",
+  p87: "20-purson.png",
+  p88: "40-raum.png",
+  p89: "21-marax-morax.png",
+  p90: "46-bifrons.png",
+  p91: "23-aim-haborym.png",
+  p104: "52-alloces.png",
+  p105: "63-andras.png",
+  p106: "61-zagan.png",
+  p107: "57-ose.png",
+  p108: "55-orobas.png",
+  p112: "34-furfur.png",
+  p113: "38-halphas.png",
+  p114: "10-buer.png",
+  p115: "17-botis.png",
+  p116: "13-beleth.png",
+  p117: "44-shax.png",
+  p118: "39-malphas.png",
+  p119: "15-eligos.png",
+  p120: "12-sitri.png"
+};
+const GOETIC_BOSS_SPECS = [
+  { key: "bael", name: "Bael", image: "01-bael.png", passiveId: "p16" },
+  { key: "agares", name: "Agares", image: "02-agares.png", passiveId: "p50" },
+  { key: "vassago", name: "Vassago", image: "03-vassago.png", passiveId: "p1" },
+  { key: "samigina", name: "Samigina", image: "04-samigina-gamigin.png", passiveId: "p53" },
+  { key: "marbas", name: "Marbas", image: "05-marbas.png", passiveId: "p9" },
+  { key: "valefor", name: "Valefor", image: "06-valefor.png", passiveId: "p11" },
+  { key: "amon", name: "Amon", image: "07-amon.png", passiveId: "p59" },
+  { key: "barbatos", name: "Barbatos", image: "08-barbatos.png", passiveId: "p46" },
+  { key: "paimon", name: "Paimon", image: "09-paimon.png", passiveId: "p2" },
+  { key: "buer", name: "Buer", image: "10-buer.png", passiveId: "p114" },
+  { key: "gusion", name: "Gusion", image: "11-gusion.png", passiveId: "p10" },
+  { key: "sitri", name: "Sitri", image: "12-sitri.png", passiveId: "p120" },
+  { key: "beleth", name: "Beleth", image: "13-beleth.png", passiveId: "p116" },
+  { key: "leraje", name: "Leraje", image: "14-leraje.png", passiveId: "p14" },
+  { key: "eligos", name: "Eligos", image: "15-eligos.png", passiveId: "p119" },
+  { key: "zepar", name: "Zepar", image: "16-zepar.png", passiveId: "p54" },
+  { key: "botis", name: "Botis", image: "17-botis.png", passiveId: "p115" },
+  { key: "bathin", name: "Bathin", image: "18-bathin.png", passiveId: "p15" },
+  { key: "sallos", name: "Sallos", image: "19-sallos.png", passiveId: "p71" },
+  { key: "purson", name: "Purson", image: "20-purson.png", passiveId: "p87" },
+  { key: "marax", name: "Marax", image: "21-marax-morax.png", passiveId: "p89" },
+  { key: "ipos", name: "Ipos", image: "22-ipos.png", passiveId: "p58" },
+  { key: "aim", name: "Aim", image: "23-aim-haborym.png", passiveId: "p91" },
+  { key: "naberius", name: "Naberius", image: "24-naberius.png", passiveId: "p65" },
+  { key: "glasya-labolas", name: "Glasya-Labolas", image: "25-glasya-labolas.png", passiveId: "p7" },
+  { key: "bune", name: "Bune", image: "26-bune-bime.png", passiveId: "p13" },
+  { key: "ronove", name: "Ronove", image: "27-ronove.png", passiveId: "p47" },
+  { key: "berith", name: "Berith", image: "28-berith.png", passiveId: "p85" },
+  { key: "astaroth", name: "Astaroth", image: "29-astaroth.png", passiveId: "p84" },
+  { key: "forneus", name: "Forneus", image: "30-forneus.png", passiveId: "p35" },
+  { key: "foras", name: "Foras", image: "31-foras.png", passiveId: "p32" },
+  { key: "asmoday", name: "Asmoday", image: "32-asmoday.png", passiveId: "p73" },
+  { key: "gaap", name: "Gaap", image: "33-gaap.png", passiveId: "p60" },
+  { key: "furfur", name: "Furfur", image: "34-furfur.png", passiveId: "p112" },
+  { key: "marchosias", name: "Marchosias", image: "35-marchosias.png", passiveId: "p33" },
+  { key: "stolas", name: "Stolas", image: "36-stolas.png", passiveId: "p42" },
+  { key: "phenex", name: "Phenex", image: "37-phenex-phoenix.png", passiveId: "p49" },
+  { key: "halphas", name: "Halphas", image: "38-halphas.png", passiveId: "p113" },
+  { key: "malphas", name: "Malphas", image: "39-malphas.png", passiveId: "p118" },
+  { key: "raum", name: "Raum", image: "40-raum.png", passiveId: "p88" },
+  { key: "focalor", name: "Focalor", image: "41-focalor.png", passiveId: "p40" },
+  { key: "vepar", name: "Vepar", image: "42-vepar.png", passiveId: "p61" },
+  { key: "sabnock", name: "Sabnock", image: "43-sabnock.png", passiveId: "p19" },
+  { key: "shax", name: "Shax", image: "44-shax.png", passiveId: "p117" },
+  { key: "vine", name: "Vine", image: "45-vine.png", passiveId: "p64" },
+  { key: "bifrons", name: "Bifrons", image: "46-bifrons.png", passiveId: "p90" },
+  { key: "vual", name: "Vual", image: "47-vual-uvall.png", passiveId: "p63" },
+  { key: "haagenti", name: "Haagenti", image: "48-haagenti.png", passiveId: "p20" },
+  { key: "crocell", name: "Crocell", image: "49-crocell.png", passiveId: "p45" },
+  { key: "furcas", name: "Furcas", image: "50-furcas.png", passiveId: "p72" },
+  { key: "balam", name: "Balam", image: "51-balam.png", passiveId: "p57" },
+  { key: "alloces", name: "Alloces", image: "52-alloces.png", passiveId: "p104" },
+  { key: "caim", name: "Caim", image: "53-caim-camio.png", passiveId: "p67" },
+  { key: "murmur", name: "Murmur", image: "54-murmur.png", passiveId: "p31" },
+  { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p108" },
+  { key: "gremory", name: "Gremory", image: "56-gremory-gamori.png", passiveId: "p34" },
+  { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p107" },
+  { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p70" },
+  { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
+  { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
+  { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
+  { key: "valac", name: "Valac", image: "62-valac-ualac.png", passiveId: "p25" },
+  { key: "andras", name: "Andras", image: "63-andras.png", passiveId: "p105" },
+  { key: "haures", name: "Haures", image: "64-haures-flauros.png", passiveId: "p86" },
+  { key: "andrealphus", name: "Andrealphus", image: "65-andrealphus.png", passiveId: "p30" },
+  { key: "cimejes", name: "Cimejes", image: "66-cimejes-kimaris.png", passiveId: "p48" },
+  { key: "amdusias", name: "Amdusias", image: "67-amdusias.png", passiveId: "p26" },
+  { key: "belial", name: "Belial", image: "68-belial.png", passiveId: "p12" },
+  { key: "decarabia", name: "Decarabia", image: "69-decarabia.png", passiveId: "p52" },
+  { key: "seere", name: "Seere", image: "70-seere-seir.png", passiveId: "p23" },
+  { key: "dantalion", name: "Dantalion", image: "71-dantalion.png", passiveId: "p17" },
+  { key: "andromalius", name: "Andromalius", image: "72-andromalius.png", passiveId: "p44" }
+];
+const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [spec.key, spec]));
+const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
+const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
+const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
+const BOSS_PASSIVES = {
+  sinStealing: {
+    name: "Sin-Stealing"
+  },
+  soullessness: {
+    name: "Soulessness",
+    baseDamage: 5
+  },
+  soulStealing: {
+    name: "Soul-stealing"
+  },
+  deathRoll: {
+    name: "Death Roll"
+  },
+  rerollToll: {
+    name: "Reroll Toll",
+    baseDamage: 5
+  },
+  offeringToll: {
+    name: "Offering Toll",
+    baseDamage: 2
+  },
+  avenging: {
+    name: "Avenging",
+    baseDamage: 4
+  },
+  corruption: {
+    name: "Corruption"
+  },
+  punishment: {
+    name: "Punishment",
+    baseDamage: 5
+  },
+  lifeSteal: {
+    name: "Life-Steal"
+  }
+};
+const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const PYROS_GIFT_PASSIVES = {
+  metabolism: {
+    name: "Seal of Bathin",
+    description: "This Pyros Gift heals 5 HEALTH at the end of every round."
+  },
+  fumes: {
+    name: "Seal of Amon",
+    description: "While this Pyros Gift is alive, you take 1 damage at the end of every round."
+  },
+  thief: {
+    name: "Seal of Raum",
+    description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
+  },
+  spite: {
+    name: "Seal of Botis",
+    description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
+  },
+  wideCrit: {
+    name: "Seal of Ipos",
+    description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
+  },
+  shield: {
+    name: "Seal of Halphas",
+    description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
+  },
+  lamb: {
+    name: "Seal of Sallos",
+    description: "When this Pyros Gift dies, all other DAMNED gain 10 HEALTH."
+  }
+};
+const PYROS_GIFT_KEYS = Object.keys(PYROS_GIFT_PASSIVES);
+
+const BOT_ARCHETYPES = [
+  { type: "Anchor", anchor: 56, noise: 7, color: "#75c9c1", aggression: 0.34 },
+  { type: "Analyst", anchor: 40, noise: 5, color: "#e1b84c", aggression: 0.22 },
+  { type: "Follower", anchor: 51, noise: 6, color: "#7fc47b", aggression: 0.3 },
+  { type: "Stubborn", anchor: 66, noise: 5, color: "#ef6f61", aggression: 0.44 },
+  { type: "Drifter", anchor: 33, noise: 10, color: "#b68de6", aggression: 0.48 },
+  { type: "Caller", anchor: 46, noise: 8, color: "#d58a4f", aggression: 0.38 }
+];
+
+const BOT_PROFILES = [
+  { flag: "🇬🇷", country: "Greece", names: ["Nikos", "Eleni", "Yannis", "Sofia"] },
+  { flag: "🇯🇵", country: "Japan", names: ["Haruto", "Yuki", "Aiko", "Ren"] },
+  { flag: "🇧🇷", country: "Brazil", names: ["Joao", "Ana", "Luiza", "Mateus"] },
+  { flag: "🇪🇬", country: "Egypt", names: ["Omar", "Layla", "Youssef", "Nour"] },
+  { flag: "🇮🇳", country: "India", names: ["Arjun", "Priya", "Anaya", "Ravi"] },
+  { flag: "🇳🇬", country: "Nigeria", names: ["Chidi", "Ada", "Kemi", "Tunde"] },
+  { flag: "🇫🇷", country: "France", names: ["Luc", "Camille", "Julien", "Amelie"] },
+  { flag: "🇩🇪", country: "Germany", names: ["Lukas", "Greta", "Anja", "Felix"] },
+  { flag: "🇲🇽", country: "Mexico", names: ["Diego", "Valeria", "Sofia", "Mateo"] },
+  { flag: "🇮🇹", country: "Italy", names: ["Marco", "Giulia", "Luca", "Chiara"] },
+  { flag: "🇰🇷", country: "South Korea", names: ["Minjun", "Jiwoo", "Hana", "Seo"] },
+  { flag: "🇨🇳", country: "China", names: ["Wei", "Lin", "Mei", "Jun"] },
+  { flag: "🇹🇷", country: "Turkey", names: ["Deniz", "Emre", "Ayla", "Selin"] },
+  { flag: "🇪🇸", country: "Spain", names: ["Pablo", "Lucia", "Ines", "Javier"] },
+  { flag: "🇪🇹", country: "Ethiopia", names: ["Dawit", "Hana", "Selam", "Amanuel"] },
+  { flag: "🇺🇦", country: "Ukraine", names: ["Olena", "Maksym", "Kateryna", "Andriy"] },
+  { flag: "🇵🇱", country: "Poland", names: ["Marek", "Zofia", "Antek", "Ewa"] },
+  { flag: "🇿🇦", country: "South Africa", names: ["Thabo", "Lindiwe", "Sipho", "Naledi"] },
+  { flag: "🇦🇷", country: "Argentina", names: ["Tomas", "Martina", "Javier", "Lucia"] },
+  { flag: "🇮🇩", country: "Indonesia", names: ["Budi", "Sari", "Dewi", "Agus"] },
+  { flag: "🇸🇪", country: "Sweden", names: ["Erik", "Freja", "Linnea", "Astrid"] },
+  { flag: "🇵🇹", country: "Portugal", names: ["Tiago", "Ines", "Beatriz", "Rafael"] }
+];
+const BOT_IMAGE_FILES = [
+  "01-original-standing.png",
+  "02-predatory-crouch.png",
+  "03-raised-invocation.png",
+  "04-insect-crawl.png",
+  "05-kneeling-anguish.png",
+  "06-ritual-levitation.png",
+  "07-stalking-stride.png",
+  "08-broken-cruciform.png",
+  "09-seated-ritual.png",
+  "10-inverted-backbend.png",
+  "11-contorted-balance.png",
+  "extra-20/01-crossed-arms.png",
+  "extra-20/02-hands-behind-back.png",
+  "extra-20/03-tiptoe-stalk.png",
+  "extra-20/04-panicked-sprint.png",
+  "extra-20/05-silent-shush.png",
+  "extra-20/06-listening-ear.png",
+  "extra-20/07-hands-up-surrender.png",
+  "extra-20/08-looming-hands-on-knees.png",
+  "extra-20/09-cross-legged-stillness.png",
+  "extra-20/10-side-recline.png",
+  "extra-20/11-one-knee-reach.png",
+  "extra-20/12-kneeling-hands-behind.png",
+  "extra-20/13-retreating-palms-out.png",
+  "extra-20/14-standing-self-embrace.png",
+  "extra-20/15-shielding-upward-gaze.png",
+  "extra-20/16-peering-between-legs.png",
+  "extra-20/17-drunken-windmill.png",
+  "extra-20/18-invisible-pull.png",
+  "extra-20/19-sleepwalking-drag.png",
+  "extra-20/20-hands-frame-head.png"
+];
+
+const UNIQUE_BOSS_SPECS = {
+  zilon: {
+    key: "zilon",
+    name: "Zilon",
+    image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
+    modifierOverride: 1.5,
+    descriptions: [
+      "Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive.",
+      "The TARGET modifier becomes 1.5 while Zilon is alive."
+    ]
+  },
+  dantre: {
+    key: "dantre",
+    name: "Dantre",
+    image: "assets/bots/occult-stickmen-pack/boss-dantre.png",
+    modifierOverride: 0.5,
+    eliminationDamage: 2,
+    descriptions: [
+      "Every elimination deals 2 damage to you while Dantre is alive.",
+      "The TARGET modifier becomes 0.5 while Dantre is alive."
+    ]
+  },
+  pyros: {
+    key: "pyros",
+    name: "Pyros",
+    image: "assets/bots/occult-stickmen-pack/boss-pyros.png",
+    modifierOverride: 1,
+    grantsBuffs: true,
+    descriptions: [
+      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
+      "The TARGET modifier becomes 1.0 while Pyros is alive."
+    ]
+  },
+  threon: {
+    key: "threon",
+    name: "Threon",
+    image: "assets/bots/occult-stickmen-pack/boss-threon.png",
+    descriptions: [
+      "Each round, Threon applies a hidden mystery TARGET modifier from 0.6 to 1.0.",
+      "Every ARTIFACT you use has a 50% chance to malfunction, do nothing, and deal 3 damage to you."
+    ]
+  },
+  kalha: {
+    key: "kalha",
+    name: "Kalha",
+    image: "assets/bots/new-red-bosses-5/Kalha-vibrant.png",
+    modifierOverride: 1.2,
+    descriptions: [
+      "Each round, half your equipped SEALS rounded down are deactivated until the round ends.",
+      "The TARGET modifier becomes 1.2 while Kalha is alive."
+    ]
+  },
+  serafim: {
+    key: "serafim",
+    name: "Serafim",
+    image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
+    modifierOverride: 0.7,
+    descriptions: [
+      "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
+      "Each round, you lose up to 2 SIN and Serafim adds the stolen SIN to his BOSS bounty.",
+      "The TARGET modifier becomes 0.7 while Serafim is alive."
+    ]
+  },
+  padma: {
+    key: "padma",
+    name: "Padma",
+    image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
+    modifierOverride: 0.6,
+    descriptions: [
+      "While Padma is alive, non-boss healing cannot restore your HEALTH.",
+      "At the start of every round, Padma heals non-boss DAMNED for 10% max HEALTH and herself for 5% max HEALTH.",
+      "The TARGET modifier becomes 0.6 while Padma is alive."
+    ]
+  },
+  petros: {
+    key: "petros",
+    name: "Petros",
+    image: "assets/bots/new-red-bosses-5/Petros-vibrant.png",
+    statFactor: 0.5,
+    bossBountyFactor: 0.5,
+    descriptions: [
+      "Petros enters with Pavlos. Each twin has half BOSS HEALTH and half BOSS SIN.",
+      "Each twin borrows one other special BOSS ability.",
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
+    ]
+  },
+  pavlos: {
+    key: "pavlos",
+    name: "Pavlos",
+    image: "assets/bots/new-red-bosses-5/Pavlos-vibrant.png",
+    statFactor: 0.5,
+    bossBountyFactor: 0.5,
+    countsAsBossProgress: false,
+    countsAsBossSpawn: false,
+    descriptions: [
+      "Pavlos enters with Petros. Each twin has half BOSS HEALTH and half BOSS SIN.",
+      "Each twin borrows one other special BOSS ability.",
+      "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
+    ]
+  }
+};
+const UNIQUE_BOSS_KEYS = ["zilon", "dantre", "pyros", "threon", "kalha", "serafim", "padma", "petros"];
+const PETROS_PAVLOS_POWER_KEYS = UNIQUE_BOSS_KEYS.filter((key) => key !== "petros");
+const PETROS_PAVLOS_MODIFIERS = [0.9, 1.1];
+
+const FINAL_BOSS_SPECS = {
+  jesus: {
+    key: "jesus",
+    name: "Jesus",
+    image: FINAL_BOSS_JESUS_SRC,
+    color: "#d64f45",
+    descriptions: [
+      "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
+      "Jesus's guess counts three times when calculating the TARGET average."
+    ]
+  },
+  satan: {
+    key: "satan",
+    name: "Satan",
+    image: FINAL_BOSS_SATAN_SRC,
+    color: "#d64f45",
+    descriptions: [
+      "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
+      "The Devil disables Devil's Offerings while Satan is alive."
+    ]
+  }
+};
+
+const state = {
+  mode: "menu",
+  menuScreen: "main",
+  pendingRunDeleteSlotId: null,
+  sound: {
+    masterVolume: 1,
+    musicVolume: SOUNDTRACK_VOLUME,
+    sfxVolume: 1,
+    muted: false,
+    muteInBackground: true
+  },
+  display: {
+    outlineBoil: 2,
+    animSpeed: 1,
+    screenShake: 2,
+    flashes: 1,
+    textSize: 0
+  },
+  settingsTab: "audio",
+  pauseOpen: false,
+  pauseScreen: "main",
+  menuCollectionOpen: false,
+  pauseDevOpen: false,
+  devUnlockAllSeals: false,
+  collectionRun: null,
+  round: 1,
+  stage: "guess",
+  player: {
+    hp: PLAYER_MAX_HP,
+    maxHp: PLAYER_MAX_HP,
+    credits: STARTING_CREDITS,
+    passives: [],
+    actives: []
+  },
+  bots: [],
+  shop: [],
+  log: [],
+  roundState: null,
+  roundRevealAnimation: null,
+  previousTarget: null,
+  playerLastDamage: 0,
+  playerLastHeal: 0,
+  playerLastCredits: 0,
+  playerDamageSources: [],
+  playerHealSources: [],
+  playerCreditSources: [],
+  sealStats: {},
+  runStats: null,
+  currentRunSlotId: null,
+  runStartedAt: null,
+  recordsAtRunStart: null,
+  pendingNextRoundMarbasBonuses: [],
+  pendingNextRoundLambReveals: [],
+  pendingSelfStackingPentakillDamage: 0,
+  gameMemory: [],
+  nextBotId: 1,
+  nextItemUid: 1,
+  eliminations: 0,
+  bossKills: 0,
+  itemsBought: 0,
+  totalArtifactsUsed: 0,
+  selfStackingGameConditionCounts: {},
+  rerollBaseCost: 1,
+  activeCarouselIndex: 0,
+  mobileOfferingsOpen: false,
+  bossSpawnCount: 0,
+  uniqueBossQueue: [],
+  goeticBossQueue: [],
+  goeticBossKills: 0,
+  killsSinceBossSpawn: 0,
+  nextBossKillInterval: null,
+  nextBossKillIntervalEndless: false,
+  nextBossPairId: 1,
+  finalBossPhase: false,
+  finalBossQueued: false,
+  bossQueued: false,
+  eliteBoostedNextReroll: 0,
+  satanVictoryDue: false,
+  satanVictoryPlayed: false,
+  paleHorseBoostArmed: false,
+  critMomentumBonus: 0,
+  exactGuessCritCharged: false,
+  previousRoundEliminationsForMartyrs: 0,
+  shouldFocusGuessInput: false,
+  pendingActive: null,
+  lastUsedArtifact: null,
+  playtestInfiniteMoney: false,
+  gameOver: false,
+  inspectingGameOver: false,
+  pvp: null
+};
+
+let pvpPollTimer = null;
+let pvpAutoTimer = null;
+let soundtrackAudio = null;
+let sealPurchaseSfx = null;
+let guessSfx = null;
+let readySfx = null;
+let nextRoundSfx = null;
+let clockTickSfx = [];
+let artifactSfx = {};
+let pentakillSfx = null;
+let nextClockTickIndex = 0;
+const activeOneShotSfxInstances = new Set();
+let roundRevealTimer = null;
+let sfxPrimed = false;
+let gameButtonTickInstalled = false;
+let soundtrackPausedByAppBackground = false;
+
+>>>>>>> d0d827e8a3fbbf853383ee5b96ecf0422850d9c2
 function masterVolume() {
   return Number.isFinite(state.sound.masterVolume) ? clamp(state.sound.masterVolume, 0, 1) : 1;
 }
@@ -3051,6 +5012,7 @@ function installSoundtrack() {
   document.addEventListener("keydown", unlockSoundtrack);
 }
 
+<<<<<<< HEAD
 "use strict";
 
 function emptyRecord(extra = {}) {
@@ -8647,6 +10609,5392 @@ function installArcadeEnterShortcut() {
   });
 }
 
+=======
+"use strict";
+
+function emptyRecord(extra = {}) {
+  return { value: 0, ...extra };
+}
+
+function defaultRunStats() {
+  return {
+    overallDamage: 0,
+    currentRoundDamage: 0,
+    singleRoundDamage: 0,
+    pentakills: 0,
+    currentRoundSealDamage: {},
+    maxSealRoundDamage: emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: emptyRecord({ id: "", name: "" }),
+    sealPlays: {},
+    artifactPlays: {}
+  };
+}
+
+function normalizeRunStats(stats) {
+  const base = defaultRunStats();
+  const source = stats && typeof stats === "object" ? stats : {};
+  return {
+    ...base,
+    ...source,
+    overallDamage: Math.max(0, Math.ceil(Number(source.overallDamage) || 0)),
+    currentRoundDamage: Math.max(0, Math.ceil(Number(source.currentRoundDamage) || 0)),
+    singleRoundDamage: Math.max(0, Math.ceil(Number(source.singleRoundDamage) || 0)),
+    pentakills: Math.max(0, Math.floor(Number(source.pentakills) || 0)),
+    currentRoundSealDamage: source.currentRoundSealDamage && typeof source.currentRoundSealDamage === "object" ? source.currentRoundSealDamage : {},
+    maxSealRoundDamage:
+      source.maxSealRoundDamage && typeof source.maxSealRoundDamage === "object"
+        ? { ...emptyRecord({ id: "", name: "" }), ...source.maxSealRoundDamage }
+        : base.maxSealRoundDamage,
+    highestEliteLevel:
+      source.highestEliteLevel && typeof source.highestEliteLevel === "object"
+        ? { ...emptyRecord({ id: "", name: "" }), ...source.highestEliteLevel }
+        : base.highestEliteLevel,
+    sealPlays: source.sealPlays && typeof source.sealPlays === "object" ? source.sealPlays : {},
+    artifactPlays: source.artifactPlays && typeof source.artifactPlays === "object" ? source.artifactPlays : {}
+  };
+}
+
+function ensureRunStats() {
+  state.runStats = normalizeRunStats(state.runStats);
+  return state.runStats;
+}
+
+function defaultArcadeRecords() {
+  return {
+    mostEliminations: emptyRecord(),
+    mostBossEliminations: emptyRecord(),
+    mostOverallDamage: emptyRecord(),
+    mostSingleRoundDamage: emptyRecord(),
+    highestRoundReached: emptyRecord(),
+    mostPentakills: emptyRecord(),
+    mostOverallSealDamage: emptyRecord({ id: "", name: "" }),
+    mostRoundSealDamage: emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: emptyRecord({ id: "", name: "" }),
+    mostPlayedSeal: emptyRecord({ id: "", name: "" }),
+    mostPlayedArtifact: emptyRecord({ id: "", name: "" })
+  };
+}
+
+function normalizeRecord(record, fallback) {
+  const source = record && typeof record === "object" ? record : {};
+  return { ...fallback, ...source, value: Math.max(0, Math.ceil(Number(source.value) || 0)) };
+}
+
+function normalizeArcadeRecords(records) {
+  const defaults = defaultArcadeRecords();
+  const source = records && typeof records === "object" ? records : {};
+  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => [key, normalizeRecord(source[key], fallback)]));
+}
+
+function loadArcadeRecords() {
+  try {
+    const raw = window.localStorage?.getItem(ARCADE_RECORDS_STORAGE_KEY);
+    return normalizeArcadeRecords(raw ? JSON.parse(raw) : null);
+  } catch (error) {
+    return defaultArcadeRecords();
+  }
+}
+
+function saveArcadeRecords(records) {
+  try {
+    window.localStorage?.setItem(ARCADE_RECORDS_STORAGE_KEY, JSON.stringify(normalizeArcadeRecords(records)));
+  } catch (error) {}
+}
+
+function bestCountEntry(counts, type) {
+  if (!counts || typeof counts !== "object") return emptyRecord({ id: "", name: "" });
+  return Object.entries(counts).reduce(
+    (best, [id, raw]) => {
+      const value = Math.max(0, Math.floor(Number(raw) || 0));
+      if (value <= best.value) return best;
+      return { value, id, name: ITEMS[id]?.name || id || type };
+    },
+    emptyRecord({ id: "", name: "" })
+  );
+}
+
+function bestOverallSealDamageEntry() {
+  const stats = state.sealStats && typeof state.sealStats === "object" ? state.sealStats : {};
+  return Object.entries(stats).reduce(
+    (best, [id, sealStats]) => {
+      const value = Math.max(0, Math.ceil(Number(sealStats?.damage) || 0));
+      if (value <= best.value) return best;
+      return { value, id, name: ITEMS[id]?.name || id || "SEAL" };
+    },
+    emptyRecord({ id: "", name: "" })
+  );
+}
+
+function updateRecordIfHigher(records, key, candidate) {
+  const current = records[key] || emptyRecord();
+  const value = Math.max(0, Math.ceil(Number(candidate?.value) || 0));
+  if (value <= Math.max(0, Math.ceil(Number(current.value) || 0))) return;
+  records[key] = { ...current, ...candidate, value };
+}
+
+// what this run has reached for each record
+function currentRunRecordCandidates() {
+  const stats = ensureRunStats();
+  return {
+    mostEliminations: { value: state.eliminations || 0 },
+    mostBossEliminations: { value: state.bossKills || 0 },
+    mostOverallDamage: { value: stats.overallDamage || 0 },
+    mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
+    highestRoundReached: { value: state.round || 0 },
+    mostPentakills: { value: stats.pentakills || 0 },
+    mostOverallSealDamage: bestOverallSealDamageEntry(),
+    mostRoundSealDamage: stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }),
+    highestEliteLevel: stats.highestEliteLevel || emptyRecord({ id: "", name: "" }),
+    mostPlayedSeal: bestCountEntry(stats.sealPlays, "SEAL"),
+    mostPlayedArtifact: bestCountEntry(stats.artifactPlays, "ARTIFACT")
+  };
+}
+
+function updateArcadeRecordsFromCurrentRun() {
+  if (state.mode !== "arcade") return;
+  const records = loadArcadeRecords();
+  Object.entries(currentRunRecordCandidates()).forEach(([key, candidate]) => updateRecordIfHigher(records, key, candidate));
+  saveArcadeRecords(records);
+}
+
+// the records as they stood when this run began (kept in the run's save), so the death card can say
+// which ones this run broke
+function snapshotRecordsAtRunStart() {
+  state.recordsAtRunStart = loadArcadeRecords();
+}
+
+// short names for the death card, in the order they are listed there
+const NEW_RECORD_LABELS = {
+  highestRoundReached: "Highest round",
+  mostEliminations: "Most KOs",
+  mostBossEliminations: "Most BOSS kills",
+  mostOverallDamage: "Most damage dealt",
+  mostSingleRoundDamage: "Most damage in one round",
+  mostPentakills: "Most PENTAKILLS",
+  mostOverallSealDamage: "Most damage by one SEAL",
+  mostRoundSealDamage: "Most SEAL damage in one round",
+  highestEliteLevel: "Highest ELITE level"
+};
+
+// records this run beat. A record that was still 0 before the run (a first run) does not count.
+function newRecordsThisRun() {
+  if (state.mode !== "arcade") return [];
+  const before = normalizeArcadeRecords(state.recordsAtRunStart || loadArcadeRecords());
+  const reached = currentRunRecordCandidates();
+  return Object.keys(NEW_RECORD_LABELS)
+    .map((key) => {
+      const previous = Math.max(0, Math.ceil(Number(before[key]?.value) || 0));
+      const value = Math.max(0, Math.ceil(Number(reached[key]?.value) || 0));
+      if (previous <= 0 || value <= previous) return null;
+      return { key, label: NEW_RECORD_LABELS[key], value, previous, name: reached[key]?.name || "" };
+    })
+    .filter(Boolean);
+}
+
+function beginRunRoundStats() {
+  const stats = ensureRunStats();
+  stats.currentRoundDamage = 0;
+  stats.currentRoundSealDamage = {};
+}
+
+function recordRunDamage(amount) {
+  const damage = Math.max(0, Math.ceil(Number(amount) || 0));
+  if (damage <= 0 || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.overallDamage += damage;
+  stats.currentRoundDamage += damage;
+  if (stats.currentRoundDamage > stats.singleRoundDamage) stats.singleRoundDamage = stats.currentRoundDamage;
+}
+
+function recordRunSealDamage(id, amount) {
+  const damage = Math.max(0, Math.ceil(Number(amount) || 0));
+  if (!id || damage <= 0 || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  const next = (Number(stats.currentRoundSealDamage[id]) || 0) + damage;
+  stats.currentRoundSealDamage[id] = next;
+  if (next > (stats.maxSealRoundDamage?.value || 0)) {
+    stats.maxSealRoundDamage = { value: next, id, name: ITEMS[id]?.name || id };
+  }
+}
+
+function recordRunPentakill() {
+  if (state.mode !== "arcade") return;
+  ensureRunStats().pentakills += 1;
+  collectionNotePentakill();
+}
+
+function recordPlayedSeal(id) {
+  if (!id || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.sealPlays[id] = (Number(stats.sealPlays[id]) || 0) + 1;
+}
+
+function recordPlayedArtifact(id) {
+  if (!id || state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.artifactPlays[id] = (Number(stats.artifactPlays[id]) || 0) + 1;
+}
+
+function recordEliteLevelBought(id, stack) {
+  if (!id || state.mode !== "arcade") return;
+  const eliteLevel = Math.max(0, Math.floor(Number(stack) || 1) - 1);
+  const stats = ensureRunStats();
+  if (eliteLevel > (stats.highestEliteLevel?.value || 0)) {
+    stats.highestEliteLevel = { value: eliteLevel, id, name: ITEMS[id]?.name || id };
+  }
+}
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomFrom(values) {
+  return values[randomInt(0, values.length - 1)];
+}
+
+function pvpRollModifier(currentModifier = null) {
+  let choices = PVP_MODIFIERS.slice();
+  if (Number.isFinite(currentModifier)) {
+    choices =
+      currentModifier >= 1
+        ? choices.filter((modifier) => modifier < 1)
+        : choices.filter((modifier) => modifier > currentModifier);
+  }
+  if (!choices.length) choices = PVP_MODIFIERS.slice();
+  return randomFrom(choices);
+}
+
+function shuffled(values) {
+  const result = values.slice();
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(0, index);
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function average(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function nearestMultiple(value, divisor) {
+  const number = Number(value);
+  const step = Math.max(1, Math.ceil(divisor));
+  if (!Number.isFinite(number)) return 0;
+  return Math.ceil(Math.round(number / step) * step);
+}
+
+function nearestMultipleFromDivisors(value, divisors) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return { value: 0, divisor: 1 };
+  const forceDifferent = divisors.some((divisor) => {
+    const step = Math.max(1, Math.ceil(divisor));
+    return number % step === 0;
+  });
+  return divisors
+    .flatMap((divisor) => {
+      const step = Math.max(1, Math.ceil(divisor));
+      const lower = Math.floor(number / step) * step;
+      const upper = Math.ceil(number / step) * step;
+      const values = new Set([lower, upper]);
+      if (forceDifferent && values.has(number)) {
+        values.delete(number);
+        values.add(lower - step);
+        values.add(upper + step);
+      }
+      return [...values].map((snapped) => ({ divisor, value: Math.ceil(snapped), distance: Math.abs(snapped - number) }));
+    })
+    .sort((left, right) => left.distance - right.distance || left.value - right.value || left.divisor - right.divisor)[0];
+}
+
+function hasPassive(id) {
+  return passiveStack(id) > 0;
+}
+
+function passiveEntry(id) {
+  return state.player.passives.find((item) => item.id === id) || null;
+}
+
+function directPassiveStack(id) {
+  return passiveEntry(id)?.stack || 0;
+}
+
+function sealSlotCost(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return SATAN_SEAL_IDS.has(id) ? 2 : 1;
+}
+
+function ownedSealSlotCount() {
+  return state.player.passives
+    .filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id))
+    .reduce((sum, item) => sum + sealSlotCost(item), 0);
+}
+
+function hasSealSlotRoomFor(item) {
+  return ownedSealSlotCount() + sealSlotCost(item) <= passiveLimit();
+}
+
+function pruneRemovedPassives() {
+  const before = state.player.passives.length;
+  state.player.passives = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id));
+  if (state.player.passives.length !== before) refreshMimicTarget();
+}
+
+function suppressingBossForSeal(id) {
+  if (!id || !state.bots?.length) return null;
+  const sealName = ITEMS[id]?.name || "";
+  return (
+    state.bots.find(
+      (bot) =>
+        bot.isBoss &&
+        bot.hp > 0 &&
+        !bot.eliminated &&
+        (bot.goeticPassiveId === id || (sealName && bot.goeticSealName === sealName))
+    ) || null
+  );
+}
+
+function kalhaSuppressionForSeal(id) {
+  const round = state.roundState;
+  if (!id || !round || !round.kalhaSuppressedPassiveIds?.has(id)) return null;
+  return state.bots.find((bot) => bot.id === round.kalhaSuppressedById && bot.hp > 0 && !bot.eliminated) || {
+    name: "Kalha"
+  };
+}
+
+function isSealSuppressed(id) {
+  return Boolean(suppressingBossForSeal(id) || kalhaSuppressionForSeal(id));
+}
+
+function sealSuppressionNotice(id) {
+  const goeticBoss = suppressingBossForSeal(id);
+  if (goeticBoss) return `Disabled while ${goeticBoss.name} is alive.\n`;
+  const kalhaBoss = kalhaSuppressionForSeal(id);
+  if (kalhaBoss) return `Disabled by ${kalhaBoss.name} this round.\n`;
+  return "";
+}
+
+function mimicEntry() {
+  return passiveEntry("p28");
+}
+
+function availableMimicTargets() {
+  return state.player.passives.filter(
+    (item) => item && item.id !== "p28" && !REMOVED_PASSIVE_IDS.has(item.id) && !isSelfStackingSeal(item.id)
+  );
+}
+
+function chooseMimicTarget(mimic = mimicEntry()) {
+  if (!mimic) return null;
+  const choices = availableMimicTargets();
+  if (!choices.length) {
+    delete mimic.copiedPassiveId;
+    return null;
+  }
+  const target = randomFrom(choices);
+  mimic.copiedPassiveId = target.id;
+  return target;
+}
+
+function mimicTargetEntry() {
+  const mimic = mimicEntry();
+  if (!mimic) return null;
+  const target = mimic.copiedPassiveId
+    ? state.player.passives.find(
+        (item) =>
+          item &&
+          item.id === mimic.copiedPassiveId &&
+          item.id !== "p28" &&
+          !REMOVED_PASSIVE_IDS.has(item.id) &&
+          !isSelfStackingSeal(item.id)
+      )
+    : null;
+  return target || chooseMimicTarget(mimic);
+}
+
+function refreshMimicTarget() {
+  const mimic = mimicEntry();
+  if (!mimic) return null;
+  return mimicTargetEntry();
+}
+
+function mimicContributionFor(id) {
+  if (id === "p28") return 0;
+  if (isSealSuppressed("p28") || isSealSuppressed(id)) return 0;
+  const mimic = mimicEntry();
+  const target = mimicTargetEntry();
+  return target?.id === id ? mimic?.stack || 0 : 0;
+}
+
+function passiveStack(id) {
+  if (REMOVED_PASSIVE_IDS.has(id)) return 0;
+  if (isSealSuppressed(id)) return 0;
+  return directPassiveStack(id) + mimicContributionFor(id);
+}
+
+function eliteLevels(idOrItem) {
+  const stack = typeof idOrItem === "string" ? passiveStack(idOrItem) : idOrItem?.stack || 0;
+  return Math.max(0, stack - 1);
+}
+
+function passivePower(idOrItem, eliteStep = 0.2) {
+  const stack = typeof idOrItem === "string" ? passiveStack(idOrItem) : idOrItem?.stack || 0;
+  if (!stack) return 0;
+  return 1 + eliteLevels(idOrItem) * eliteStep;
+}
+
+function scaledPassiveValue(id, baseValue, eliteStep = 0.2) {
+  const power = passivePower(id, eliteStep);
+  return power ? Math.ceil(baseValue * power) : 0;
+}
+
+function scaledPassiveValueForItem(item, baseValue, eliteStep = 0.2) {
+  const power = passivePower(item, eliteStep);
+  return power ? Math.ceil(baseValue * power) : 0;
+}
+
+function flatDamagePower(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? Math.pow(1.5, Math.max(0, stack - 1)) : 0;
+}
+
+function flatDamageValue(idOrItem, baseValue) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 0;
+  let value = Math.max(0, Math.ceil(baseValue || 0));
+  for (let level = 1; level < stack; level += 1) {
+    value = Math.ceil(value * 1.5);
+  }
+  return value;
+}
+
+function passiveEntryFlatDamage(entry, baseValue) {
+  return flatDamageValue(entry, baseValue);
+}
+
+function passiveEntryEliteLevels(entry) {
+  return Math.max(0, (entry?.stack || 1) - 1);
+}
+
+function doubledStackPower(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? Math.pow(2, Math.max(0, stack - 1)) : 0;
+}
+
+function doubledStackValue(idOrItem, baseValue) {
+  const power = doubledStackPower(idOrItem);
+  return power ? Math.ceil((baseValue || 0) * power) : 0;
+}
+
+function rollScaledPassiveCount(id, baseCount = 1) {
+  const power = passivePower(id);
+  if (!power) return 0;
+  const raw = baseCount * power;
+  const guaranteed = Math.floor(raw);
+  const chance = raw - guaranteed;
+  return guaranteed + (Math.random() < chance ? 1 : 0);
+}
+
+function botSin(bot) {
+  if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
+  if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
+  return Math.max(0, Math.ceil(bot?.reward || 0));
+}
+
+function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
+  const count = Math.max(0, Math.ceil(progress || 0));
+  const early = Math.min(count, SCALING_BREAKPOINT_BOSSES);
+  const mid = Math.min(
+    Math.max(0, count - SCALING_BREAKPOINT_BOSSES),
+    ENDLESS_SCALING_BREAKPOINT_BOSSES - SCALING_BREAKPOINT_BOSSES
+  );
+  const endless = Math.max(0, count - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+  return early * earlyStep + mid * lateStep + endless * endlessStep;
+}
+
+function artifactScaleFactor() {
+  return 1;
+}
+
+function artifactValue(baseValue) {
+  const sign = Math.sign(baseValue || 0);
+  const scaled = Math.floor(Math.abs(baseValue || 0) * artifactScaleFactor());
+  return sign * scaled;
+}
+
+function artifactPercentValue(basePercent) {
+  return clamp(artifactValue(basePercent), 0, 100);
+}
+
+function artifactPercent(basePercent) {
+  return artifactPercentValue(basePercent) / 100;
+}
+
+function artifactCount(baseValue) {
+  return Math.max(1, artifactValue(baseValue));
+}
+
+function artifactMultiplier(baseValue) {
+  return Math.max(0, Math.floor((baseValue || 0) * artifactScaleFactor() * 10) / 10);
+}
+
+function formatArtifactMultiplier(value) {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+}
+
+function botBossBounty(bot) {
+  if (!bot?.isBoss || bot?.immortal) return 0;
+  const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
+  const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
+  return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus);
+}
+
+function botRegularBounty(bot) {
+  if (bot?.immortal) return 0;
+  return Math.max(0, Math.ceil(bot?.reward || 0));
+}
+
+function botRegularBountyPayout(bot, markTriggers = false) {
+  return botRegularBountyPayoutDetails(bot, markTriggers).payout;
+}
+
+function botRegularBountyPayoutDetails(bot, markTriggers = false) {
+  if (!bot || bot.immortal) return { payout: 0, baseReward: 0, modifierEntries: [] };
+  const baseReward = botRegularBounty(bot);
+  let exactReward = baseReward;
+  let roundedReward = baseReward;
+  const modifierEntries = [];
+  const applyMultiplier = (multiplier, source, triggerId) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedReward <= 0) return;
+    const before = roundedReward;
+    exactReward *= multiplier;
+    roundedReward = Math.ceil(exactReward);
+    const extra = Math.max(0, roundedReward - before);
+    if (extra <= 0) return;
+    modifierEntries.push({ amount: extra, source });
+    if (triggerId && markTriggers) markPassiveTriggered(triggerId);
+  };
+
+  if (hasPassive("p36")) {
+    applyMultiplier(1.5 * passivePower("p36"), ITEMS.p36?.name || "Seal of Asmoday", "p36");
+  }
+  applyMultiplier(bountyOathMultiplier(), ITEMS.p24?.name || "Seal of Orobas", passiveStack("p24") ? "p24" : "");
+  if (botHasLowSin(bot, 3) && passiveStack("p45")) {
+    applyMultiplier(2 * passivePower("p45"), ITEMS.p45?.name || "Seal of Crocell", "p45");
+  }
+  if (bot.revealedByPassive && passiveStack("p64")) {
+    applyMultiplier(revealedBountyMultiplier("p64"), ITEMS.p64?.name || "Seal of Vine", "p64");
+  }
+  if ((bot.memory?.length || 0) >= 8 && passiveStack("p67")) {
+    applyMultiplier(memoryBountyMultiplier("p67"), ITEMS.p67?.name || "Seal of Caim", "p67");
+  }
+
+  return { payout: roundedReward, baseReward, modifierEntries };
+}
+
+function botHasLowSin(bot, limit = 3) {
+  if (bot?.immortal) return false;
+  return botSin(bot) <= limit;
+}
+
+function andromaliusBountyLimit(idOrItem) {
+  return 2 + eliteLevels(idOrItem);
+}
+
+function wealthWeightBonus() {
+  return 0;
+}
+
+function passiveShopDiscount() {
+  return 0;
+}
+
+function sinPricePressureMultiplier() {
+  const credits = Number.isFinite(state.player.credits) ? Math.max(0, state.player.credits) : 0;
+  if (credits <= SIN_PRICE_PRESSURE_INTERVAL) return 1;
+  return 2 ** Math.ceil((credits - SIN_PRICE_PRESSURE_INTERVAL) / SIN_PRICE_PRESSURE_INTERVAL);
+}
+
+function memoryEntryForBot(bot) {
+  const round = state.roundState;
+  const fallbackGuess = bot?.plannedGuess ?? bot?.anchor ?? 50;
+  const ownGuess = round?.botEffectiveGuesses?.get(bot.id) ?? fallbackGuess;
+  const tableAverage = Number.isFinite(round?.tableAverage) ? round.tableAverage : ownGuess;
+  return {
+    ownGuess,
+    playerGuess: round?.playerEffectiveGuess ?? ownGuess,
+    target: round?.target ?? state.previousTarget ?? ownGuess,
+    targetModifier: round?.targetModifier ?? currentTargetModifier(),
+    targetOffset: round?.targetOffset ?? 0,
+    tableAverage,
+    botAverage: tableAverage
+  };
+}
+
+function bathinMemoryDamage(entry) {
+  return passiveEntryFlatDamage(entry, 3);
+}
+
+function applyBathinMemoryDamage(bot, entries) {
+  if (!state.roundState || !bot || bot.eliminated || !entries?.length) return;
+  entries.forEach((entry) => {
+    if (bot.eliminated) return;
+    const damage = bathinMemoryDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    queueEndOfRoundBotDamage(bot, damage, `Seal of Bathin dealt ${damage} damage to ${bot.name} for gaining MEMORY.`, "Seal of Bathin");
+  });
+}
+
+function reduceBotMemoryRecord(bot, amount) {
+  let remaining = Math.max(0, Math.ceil(amount));
+  if (!bot || remaining <= 0) return;
+  bot.lastMemoryDelta = Math.max(0, (bot.lastMemoryDelta || 0) - remaining);
+  if (!Array.isArray(bot.memorySources)) return;
+  for (let index = bot.memorySources.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const source = bot.memorySources[index];
+    const sourceAmount = Math.max(0, Math.ceil(source?.amount || 0));
+    const removed = Math.min(sourceAmount, remaining);
+    source.amount = sourceAmount - removed;
+    remaining -= removed;
+  }
+  bot.memorySources = bot.memorySources.filter((source) => Math.max(0, Math.ceil(source?.amount || 0)) > 0);
+}
+
+function applyMemoryToBountyMirror(bot, amount, options = {}) {
+  const memoriesAdded = Math.max(0, Math.ceil(amount));
+  if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || memoriesAdded <= 0) return;
+  const entry = orderedPassiveEffectEntries("p10")[0];
+  if (!entry) return;
+  const baseConverted = Math.floor(memoriesAdded / 2);
+  const converted = baseConverted > 0 ? Math.min(memoriesAdded, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  if (converted <= 0) return;
+  bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
+  reduceBotMemoryRecord(bot, converted);
+  recordBotMemoryLoss(bot, converted, "Seal of Gusion");
+  markPassiveEntryTriggered(entry);
+  changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false
+  });
+}
+
+function applyBountyToMemoryMirror(bot, amount, options = {}) {
+  const bountyGained = Math.max(0, Math.ceil(amount));
+  if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || bountyGained <= 0) return;
+  const entry = orderedPassiveEffectEntries("p10")[0];
+  if (!entry) return;
+  const baseConverted = Math.floor(bountyGained / 2);
+  const converted = baseConverted > 0 ? Math.min(bountyGained, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  if (converted <= 0) return;
+  markPassiveEntryTriggered(entry);
+  const result = changeBotSin(bot, -converted, "", {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false,
+    triggerLossDamage: false
+  });
+  if (result.lost <= 0) return;
+  const added = addBotMemory(bot, result.lost, "", {
+    source: "Seal of Gusion",
+    triggerMemoryBountyMirror: false
+  });
+  addRoundEvent(`Seal of Gusion converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
+}
+
+function memoryRoundLimit() {
+  return Math.max(0, Math.ceil(state.round || 0));
+}
+
+function botMemoryLimit(bot) {
+  const roundLimit = memoryRoundLimit();
+  if (bot?.isBoss) return roundLimit;
+  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+}
+
+function trimBotMemoryToLimit(bot) {
+  if (!bot?.memory) return 0;
+  const limit = botMemoryLimit(bot);
+  const before = bot.memory.length;
+  bot.memory = limit > 0 ? bot.memory.slice(-limit) : [];
+  return Math.max(0, before - bot.memory.length);
+}
+
+function sitriExcessMemoryDamage(entry) {
+  return doubledStackValue(entry, 10);
+}
+
+function applyExcessMemoryDamage(bot, excessMemory) {
+  const excess = Math.max(0, Math.ceil(excessMemory));
+  if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
+  orderedPassiveEffectEntries("p55").forEach((entry) => {
+    if (bot.eliminated) return;
+    const damage = excess * sitriExcessMemoryDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    queueEndOfRoundBotDamage(
+      bot,
+      damage,
+      `${ITEMS.p55.name} converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
+      ITEMS.p55.name
+    );
+  });
+}
+
+function addBotMemory(bot, count, reason = "", options = {}) {
+  if (!bot || bot.eliminated || count <= 0) return 0;
+  const baseRequested = Math.ceil(count);
+  const bathinEntries = options.triggerBathinMemory !== false ? orderedPassiveEffectEntries("p15") : [];
+  const bonusRequested = bathinEntries.length;
+  const requested = baseRequested + bonusRequested;
+  trimBotMemoryToLimit(bot);
+  const beforeMemory = bot.memory?.length || 0;
+  const allowed = Math.max(0, botMemoryLimit(bot) - beforeMemory);
+  const added = Math.min(requested, allowed);
+  const excess = Math.max(0, requested - added);
+  const entry = options.entry || memoryEntryForBot(bot);
+  for (let index = 0; index < added; index += 1) {
+    bot.memory.push({ ...entry });
+  }
+  const actualIncrease = Math.max(0, (bot.memory?.length || 0) - beforeMemory);
+  const baseIncrease = Math.min(baseRequested, actualIncrease);
+  const bathinIncrease = Math.max(0, actualIncrease - baseIncrease);
+  recordBotMemorySource(bot, baseIncrease, options.source || sourceLabelFromReason(reason, "Memory"));
+  recordBotMemorySource(bot, bathinIncrease, ITEMS.p15?.name || "Seal of Bathin");
+  applyMemoryToBountyMirror(bot, actualIncrease, options);
+  applyExcessMemoryDamage(bot, excess);
+  applyBathinMemoryDamage(bot, bathinEntries);
+  if (reason) state.roundState?.roundEvents.push(reason);
+  applySelfStackingMemoryOverTen(bot, beforeMemory, bot.memory?.length || 0);
+  checkBalamMemoryBountyEliminations();
+  return actualIncrease;
+}
+
+function initialMemoryEntries(count) {
+  const targetModifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const targetOffset = state.roundState?.targetOffset ?? 0;
+  const target = state.previousTarget ?? Math.ceil(50 * targetModifier + targetOffset);
+  const tableAverage = targetModifier ? (target - targetOffset) / targetModifier : 50;
+  return Array.from({ length: count }, () => ({
+    ownGuess: 50,
+    playerGuess: 50,
+    target,
+    targetModifier,
+    targetOffset,
+    tableAverage,
+    botAverage: tableAverage
+  }));
+}
+
+function seedNewBotMemoryFromVassago(bot) {
+  if (!bot || bot.isBoss) return;
+  if (bot.memory?.length) return;
+  const entries = orderedPassiveEffectEntries("p1");
+  if (!entries.length) return;
+  const seedCount = Math.min(3, botMemoryLimit(bot));
+  bot.memory = initialMemoryEntries(seedCount);
+  recordBotMemorySource(bot, bot.memory.length, ITEMS.p1?.name || "Seal of Vassago");
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+}
+
+function applyBotSinLossDamage(bot, lost, extraDamagePerSin = 0, extraSource = "") {
+  const amount = Math.max(0, Math.ceil(lost));
+  if (!bot || bot.eliminated || amount <= 0) return;
+
+  if (extraDamagePerSin > 0) {
+    const damage = Math.ceil(amount * extraDamagePerSin);
+    if (damage > 0) queueEndOfRoundBotDamage(bot, damage, `${extraSource} dealt ${damage} damage to ${bot.name}.`, extraSource || "SIN loss");
+  }
+
+  orderedPassiveEffectEntries("p43").forEach((entry) => {
+    const damage = passiveEntryFlatDamage(entry, 20);
+    if (damage <= 0 || bot.eliminated) return;
+    markPassiveEntryTriggered(entry);
+    queueEndOfRoundBotDamage(bot, damage, `Seal of Raum dealt ${damage} damage to ${bot.name} for losing SIN.`, "Seal of Raum");
+  });
+}
+
+function agaresDamagePerSin(entry) {
+  return flatDamageValue(entry, 5);
+}
+
+function applyBotSinGainDamage(bot, gained) {
+  return 0;
+}
+
+function stubbornArtifactChance(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 0;
+  return Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1);
+}
+
+function balamCollapseTargets(sourceBot) {
+  const bosses = activeBots().filter((bot) => bot.id !== sourceBot?.id && bot.isBoss);
+  if (bosses.length) return bosses;
+  return activeBots().filter((bot) => bot.id !== sourceBot?.id);
+}
+
+function checkBalamMemoryBountyEliminations() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p57");
+  if (!round || round.balamResolving || !entries.length) return;
+  round.balamResolving = true;
+  try {
+    let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+    while (target) {
+      entries.forEach((entry) => markPassiveEntryTriggered(entry));
+      const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
+      target.hp = 0;
+      target.deathCause = "memory-bounty";
+      target.deathNotice = "BALAM";
+      round.roundEvents.push(`Seal of Balam eliminated ${target.name} for reaching 10 memory and 10 bounty.`);
+
+      const damageTargets = balamCollapseTargets(target);
+      if (damagePool > 0 && damageTargets.length) {
+        const allocations = randomDamageSpread(damagePool, damageTargets);
+        damageBots(
+          damageTargets,
+          (bot) => allocations.get(bot.id) || 0,
+          (bot, damage) => `Seal of Balam dealt ${damage} collapse damage to ${bot.name}.`,
+          "Seal of Balam"
+        );
+      }
+
+      resolveEliminatedBots([target]);
+      target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+    }
+  } finally {
+    round.balamResolving = false;
+  }
+}
+
+function changeBotSin(bot, delta, reason = "", options = {}) {
+  if (!bot || bot.eliminated) return { changed: 0, lost: 0, gained: 0 };
+  if (bot.immortal || !Number.isFinite(botSin(bot))) return { changed: 0, lost: 0, gained: 0 };
+  const before = botSin(bot);
+  const next = Math.max(0, Math.ceil(before + delta));
+  bot.reward = next;
+  const changed = next - before;
+  if (!changed) return { changed: 0, lost: 0, gained: 0 };
+  const lost = Math.max(0, -changed);
+  const gained = Math.max(0, changed);
+  const fallbackSource = changed > 0 ? "SIN gain" : "SIN loss";
+  const source = options.source || sourceLabelFromReason(reason, fallbackSource);
+  bot.lastSinDelta = (bot.lastSinDelta || 0) + changed;
+  recordBotSinSource(bot, changed, source);
+  if (reason) state.roundState?.roundEvents.push(reason);
+  if (lost > 0 && options.triggerLossDamage !== false) {
+    applyBotSinLossDamage(bot, lost, options.extraDamagePerSin || 0, options.extraDamageSource || "");
+  }
+  if (gained > 0) {
+    applyBountyToMemoryMirror(bot, gained, options);
+  }
+  checkBalamMemoryBountyEliminations();
+  return { changed, lost, gained };
+}
+
+function setBotSin(bot, value, reason = "", options = {}) {
+  return changeBotSin(bot, Math.ceil(value) - botSin(bot), reason, options);
+}
+
+function increaseAllBotSin(amount, reasonFactory) {
+  const increase = Math.max(0, Math.ceil(amount));
+  if (increase <= 0) return 0;
+  let total = 0;
+  activeBots().forEach((bot) => {
+    const result = changeBotSin(bot, increase, typeof reasonFactory === "function" ? reasonFactory(bot, increase) : "", {
+      triggerLossDamage: false
+    });
+    total += result.gained;
+  });
+  return total;
+}
+
+function applyTargetedItemSinGain(item, targets) {
+  const uniqueTargets = Array.from(new Set((targets || []).filter((bot) => bot && !bot.eliminated)));
+  if (!item || !uniqueTargets.length) return;
+  if (state.roundState?.artifactTargetCountsByBotId) {
+    uniqueTargets.forEach((bot) => {
+      const previous = state.roundState.artifactTargetCountsByBotId.get(bot.id) || 0;
+      state.roundState.artifactTargetCountsByBotId.set(bot.id, previous + 1);
+    });
+  }
+  orderedPassiveEffectEntries("p82").forEach((entry) => {
+    const chance = Math.min(1, 0.5 + Math.max(0, (entry.stack || 1) - 1) * 0.1);
+    let revealed = 0;
+    uniqueTargets.forEach((bot) => {
+      if (Math.random() < chance && revealBotGuess(bot, "Seal of Marked Offering", entry)) revealed += 1;
+    });
+    if (revealed > 0) state.roundState?.roundEvents.push(`Seal of Marked Offering revealed ${revealed} targeted DAMNED.`);
+  });
+  orderedPassiveEffectEntries("p105").forEach((entry) => {
+    const chance = stubbornArtifactChance(entry);
+    let changed = 0;
+    uniqueTargets.forEach((bot) => {
+      if (Math.random() < chance && setBotPersonality(bot, "Stubborn", passiveName("p105", "Seal of Andras"), { markEntry: entry })) {
+        changed += 1;
+      }
+    });
+    if (changed > 0) state.roundState?.roundEvents.push(`${passiveName("p105", "Seal of Andras")} made ${changed} ARTIFACT target${changed === 1 ? "" : "s"} STUBBORN.`);
+  });
+  const entries = orderedPassiveEffectEntries("p49");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    const amount = passiveEntryScaledValue(entry, 3);
+    if (amount <= 0) return;
+    markPassiveEntryTriggered(entry);
+    uniqueTargets.forEach((bot) => {
+      changeBotSin(bot, amount, `Seal of Phenex gave ${bot.name} +${amount} SIN because ${item.name} targeted them.`, {
+        triggerLossDamage: false
+      });
+    });
+  });
+}
+
+function critWindowDetails(idOrItem) {
+  return {
+    guaranteed: criticalCalipersWindow(idOrItem),
+    chance: 0,
+    text: `+/-${criticalCalipersWindow(idOrItem)}`
+  };
+}
+
+function ascendingCritWindowBonus() {
+  return passiveStack("p91") ? Math.min(4, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
+}
+
+function ascendingCritDamageBonus() {
+  return passiveStack("p91") ? eliteLevels("p91") * 5 : 0;
+}
+
+function passiveDisplayName(item) {
+  if (isSelfStackingSeal(item)) return item.name;
+  const stack = item.stack || 1;
+  if (stack <= 1) return item.name;
+  return stack === 2 ? `ELITE ${item.name}` : `ELITE +${stack - 1} ${item.name}`;
+}
+
+function simpleStackCount(idOrItem) {
+  return typeof idOrItem === "string" ? passiveStack(idOrItem) : idOrItem?.stack || 0;
+}
+
+function divisibleVerdictDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 20);
+}
+
+function edgeGambitMultiplier(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? 2 * Math.pow(1.5, stack - 1) : 1;
+}
+
+function edgeGambitDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function spiteCircuitDamage(playerDamage) {
+  return flatDamageValue("p5", playerDamage);
+}
+
+function criticalCalipersWindow(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? stack + 1 : 0;
+}
+
+function pressureSpikeDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 20);
+}
+
+function gaapDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 5);
+}
+
+function poisonPercentPerCounter(idOrItem) {
+  return Math.max(0, 5 + eliteLevels(idOrItem) * 2);
+}
+
+function paimonBaseSin(round = state.roundState) {
+  if (!round) return 0;
+  const distance = Math.ceil(Math.abs((round.playerEffectiveGuess ?? 0) - (round.target ?? 0)));
+  if (!Number.isFinite(distance) || distance > 5) return 0;
+  if (distance === 0) return 10;
+  return Math.max(0, 6 - distance);
+}
+
+function paimonSinReward(idOrItem, round = state.roundState) {
+  const baseSin = paimonBaseSin(round);
+  return baseSin ? doubledStackValue(idOrItem, baseSin) : 0;
+}
+
+function bifronsSinReward(entry) {
+  const currentSin = Math.max(0, Math.ceil(state.player.credits || 0));
+  return passiveEntryScaledValue(entry, currentSin);
+}
+
+function playerTargetDistance(round = state.roundState) {
+  if (!round) return Number.POSITIVE_INFINITY;
+  const guess = round.playerEffectiveGuess;
+  const target = round.target;
+  if (!Number.isFinite(guess) || !Number.isFinite(target)) return Number.POSITIVE_INFINITY;
+  return Math.ceil(Math.abs(guess - target));
+}
+
+function shaxRerollDamage(entry, spent) {
+  return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
+}
+
+function sallosShiftValues(entry) {
+  const max = 5 + Math.max(0, (entry?.stack || 1) - 1);
+  return Array.from({ length: Math.max(1, max - 1) }, (_, index) => index + 2);
+}
+
+function barbatosDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 5);
+}
+
+function fullHealthExtraDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function revealedExtraDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
+function aimBossDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 30);
+}
+
+function vapulaMemoryExtraDamage(idOrItem, memoryCount) {
+  if (memoryCount > 12) return flatDamageValue(idOrItem, 15);
+  if (memoryCount >= 8) return flatDamageValue(idOrItem, 10);
+  return 0;
+}
+
+function decarabiaMemoryExtraDamage(idOrItem, bot) {
+  const memory = bot?.memory?.length || 0;
+  if (!memory) return 0;
+  const perMemory = bot?.isBoss ? 1 : 3;
+  return flatDamageValue(idOrItem, memory * perMemory);
+}
+
+function furcasSelectedDamage(idOrItem) {
+  return eliteLevels(idOrItem) * 5;
+}
+
+function specialSealBaseMultiplier(idOrItem, baseMultiplier) {
+  const stack = simpleStackCount(idOrItem);
+  if (!stack) return 1;
+  return baseMultiplier + eliteLevels(idOrItem) * 0.2;
+}
+
+function revealedBountyMultiplier(idOrItem) {
+  return 2 * passivePower(idOrItem);
+}
+
+function fullHealthDamageMultiplier(idOrItem) {
+  return 1.5 * passivePower(idOrItem);
+}
+
+function fifthRoundDamageMultiplier(idOrItem) {
+  return 2 * passivePower(idOrItem);
+}
+
+function memoryDamageMultiplier(idOrItem, memoryCount) {
+  if (memoryCount > 12) return 2 * passivePower(idOrItem);
+  if (memoryCount >= 8) return 1.5 * passivePower(idOrItem);
+  return 1;
+}
+
+function memoryBountyMultiplier(idOrItem) {
+  return 2 * passivePower(idOrItem);
+}
+
+function sacrificialDaggerBossPercent(idOrItem = "p70") {
+  return 10;
+}
+
+function sacrificialDaggerPercentForBot(bot) {
+  return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
+}
+
+function sacrificialDaggerExtraDamage(idOrItem = "p70") {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function halphasRoundBossDamage() {
+  return Math.max(0, Math.ceil((state.round || 0) * (state.bossKills || 0)));
+}
+
+function halphasEliteCredits(entry) {
+  return Math.max(0, ((entry?.stack || 1) - 1) * 2);
+}
+
+function satanSealMaxDivisor(entry) {
+  return Math.max(1, Math.floor(100 * Math.pow(0.8, passiveEntryEliteLevels(entry))));
+}
+
+function satanSealDamageRoll(entry) {
+  const maxDivisor = satanSealMaxDivisor(entry);
+  const divisor = randomInt(1, maxDivisor);
+  return {
+    divisor,
+    maxDivisor,
+    damage: Math.ceil(666 / divisor)
+  };
+}
+
+function randomDamageSpread(totalDamage, targets, broadSpread = false) {
+  const total = Math.max(0, Math.ceil(totalDamage));
+  const liveTargets = targets.filter((bot) => bot && !bot.eliminated && bot.hp > 0);
+  const allocations = new Map();
+  if (total <= 0 || !liveTargets.length) return allocations;
+  if (broadSpread && liveTargets.length > 1) {
+    const seededTargets = shuffled(liveTargets).slice(0, Math.min(total, liveTargets.length));
+    seededTargets.forEach((bot) => allocations.set(bot.id, 1));
+    const extraAllocations = randomDamageSpread(total - seededTargets.length, liveTargets);
+    extraAllocations.forEach((amount, botId) => {
+      allocations.set(botId, (allocations.get(botId) || 0) + amount);
+    });
+    return allocations;
+  }
+  const weightedTargets = liveTargets.map((bot) => ({ bot, weight: Math.max(0.01, Math.random()) }));
+  const weightTotal = weightedTargets.reduce((sum, entry) => sum + entry.weight, 0);
+  let assigned = 0;
+  weightedTargets.forEach((entry) => {
+    const amount = Math.floor((total * entry.weight) / weightTotal);
+    if (amount > 0) allocations.set(entry.bot.id, amount);
+    assigned += amount;
+  });
+  let remainder = total - assigned;
+  shuffled(weightedTargets).forEach((entry) => {
+    if (remainder <= 0) return;
+    allocations.set(entry.bot.id, (allocations.get(entry.bot.id) || 0) + 1);
+    remainder -= 1;
+  });
+  return allocations;
+}
+
+function slowRepairSin(idOrItem) {
+  return passiveConvertedSin(idOrItem, 5);
+}
+
+function victoryPatchSin(idOrItem) {
+  return passiveConvertedSin(idOrItem, 3);
+}
+
+function sweepDividendHealingSin(idOrItem) {
+  return passiveConvertedSin(idOrItem, 5);
+}
+
+function sweepDividendCredits(idOrItem) {
+  return scaledPassiveValue(idOrItem, 5);
+}
+
+function furfurDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 1);
+}
+
+function andrealphusDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function baseEditionBonus(idOrItem) {
+  return simpleStackCount(idOrItem);
+}
+
+function twinDetonatorDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 30);
+}
+
+function reactiveWarrantySin(idOrItem) {
+  return passiveConvertedSin(idOrItem, 3);
+}
+
+function reactiveWarrantyDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+function lowProfileRewardSin(idOrItem) {
+  const baseSin = typeof idOrItem === "string" ? scaledPassiveValue(idOrItem, 4) : scaledPassiveValueForItem(idOrItem, 4);
+  return baseSin + passiveConvertedSin(idOrItem, 3);
+}
+
+function passiveConvertedSin(idOrItem, baseHeal) {
+  return simpleStackCount(idOrItem) ? Math.ceil(baseHeal * passivePower(idOrItem)) : 0;
+}
+
+function orderedPassiveEntries() {
+  const passives = state.player.passives || [];
+  return passives
+    .map((item, index) => {
+      if (!item) return null;
+      if (REMOVED_PASSIVE_IDS.has(item.id)) return null;
+      if (isSealSuppressed(item.id)) return null;
+      if (item.id === "p28") {
+        const target = mimicTargetEntry();
+        if (!target || isSealSuppressed(target.id)) return null;
+        return {
+          id: target.id,
+          item,
+          stack: item.stack || 1,
+          sourceId: "p28",
+          copied: true,
+          copiedName: target.name,
+          index
+        };
+      }
+      return {
+        id: item.id,
+        item,
+        stack: item.stack || 1,
+        sourceId: item.id,
+        copied: false,
+        index
+      };
+    })
+    .filter(Boolean);
+}
+
+function orderedPassiveEffectEntries(ids) {
+  const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+  return orderedPassiveEntries().filter((entry) => idSet.has(entry.id) && !isSealSuppressed(entry.id));
+}
+
+function passiveEntryPower(entry, eliteStep = 0.2) {
+  const stack = entry?.stack || 0;
+  return stack ? 1 + Math.max(0, stack - 1) * eliteStep : 0;
+}
+
+function passiveEntryScaledValue(entry, baseValue, eliteStep = 0.2) {
+  const power = passiveEntryPower(entry, eliteStep);
+  return power ? Math.ceil(baseValue * power) : 0;
+}
+
+function passiveEntryConvertedSin(entry, baseHeal) {
+  return entry?.stack ? Math.ceil(baseHeal * passiveEntryPower(entry)) : 0;
+}
+
+function stackLinearMultiplier(entry) {
+  return Math.max(1, entry?.stack || 1);
+}
+
+function markPassiveEntryTriggered(entry) {
+  if (!state.roundState || !entry) return;
+  const triggerId = entry.sourceId || entry.id;
+  state.roundState.triggeredPassiveIds.add(triggerId);
+  recordSealTrigger(triggerId);
+}
+
+function nonBossDamageMultiplier(bot, playerDealt = true) {
+  return 1;
+}
+
+function scaledBotDamage(bot, amount, playerDealt = true) {
+  return scaledBotDamageDetails(bot, amount, playerDealt).damage;
+}
+
+function scaledBotDamageDetails(bot, amount, playerDealt = true) {
+  const damage = Math.max(0, Math.ceil(amount));
+  if (!damage) return { damage: 0, baseDamage: 0, modifierEntries: [], redirectEntries: [] };
+  let exactDamage = damage;
+  let roundedDamage = damage;
+  const modifierEntries = [];
+  const redirectEntries = [];
+  const applyFlatBonus = (bonus, source, entry) => {
+    const extra = Math.max(0, Math.ceil(bonus || 0));
+    if (extra <= 0 || roundedDamage <= 0) return false;
+    exactDamage += extra;
+    roundedDamage += extra;
+    modifierEntries.push({ amount: extra, source, kind: "flat-bonus" });
+    markPassiveEntryTriggered(entry);
+    return true;
+  };
+  const applyMultiplier = (multiplier, source, entry) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    const before = roundedDamage;
+    exactDamage *= multiplier;
+    roundedDamage = Math.ceil(exactDamage);
+    const extra = Math.max(0, roundedDamage - before);
+    if (extra <= 0) return;
+    modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
+    markPassiveEntryTriggered(entry);
+  };
+  const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
+    const boostedDamage = Math.ceil(exactDamage * multiplier);
+    const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
+    if (redirectedDamage <= 0) return;
+    redirectEntries.push({ targetBotId: targetBot.id, amount: redirectedDamage, source, kind: "bonus" });
+    markPassiveEntryTriggered(entry);
+  };
+
+  if (bot) {
+    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
+      if (entry.id === "p46" && botSin(bot) >= 6) {
+        applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
+        return;
+      }
+
+      if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
+        applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
+        state.roundState?.belethTriggeredBotIds?.add(bot.id);
+        return;
+      }
+
+      if (entry.id === "p63" && bot.revealedByPassive) {
+        applyFlatBonus(revealedExtraDamage(entry), ITEMS.p63?.name || "Seal of Vual", entry);
+        return;
+      }
+
+      if (entry.id === "p68") {
+        if (state.roundState?.vapulaTriggeredBotIds?.has(bot.id)) return;
+        if (applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry)) {
+          state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
+        }
+        return;
+      }
+    });
+
+    if (state.roundState?.padmaVulnerableBotIds?.has(bot.id)) {
+      applyMultiplier(1.25, ITEMS.p96?.name || "Seal of Padma", null);
+    }
+
+    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
+      if (entry.id === "p74") {
+        if (botSin(bot) >= 10) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p74?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p75") {
+        if (bot.revealedByPassive) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p76") {
+        if (bot.isBoss || (bot.memory?.length || 0) < 10) return;
+        const redirectBoss = blackHorseRedirectBoss(bot);
+        if (redirectBoss) {
+          applyRedirectMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p76?.name, entry, redirectBoss, true);
+        } else {
+          applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p76?.name, entry);
+        }
+        return;
+      }
+
+      if (entry.id === "p77" && state.roundState?.paleHorseDamageBoostActive) {
+        applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p77?.name, entry);
+        return;
+      }
+
+      if (entry.id === "p78") {
+        if (personalityType(bot) === "Stubborn") {
+          applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p78?.name, entry);
+        }
+        return;
+      }
+
+      if (entry.id === "p79" && (state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0) > 0) {
+        applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p79?.name, entry);
+      }
+    });
+  }
+
+  return {
+    damage: roundedDamage,
+    baseDamage: damage,
+    modifierEntries,
+    redirectEntries
+  };
+}
+
+function blackHorseRedirectBoss(sourceBot) {
+  return (
+    activeBots()
+      .filter((bot) => bot.isBoss && bot.id !== sourceBot?.id)
+      .sort((left, right) => left.id - right.id)[0] || null
+  );
+}
+
+function applyPendingRedirectDamage(entries, botDamages, botDamageSources) {
+  (entries || []).forEach((entry) => {
+    const target = state.bots.find((bot) => bot.id === entry.targetBotId);
+    if (!target || target.eliminated) return;
+    addPendingBotDamage(botDamages, botDamageSources, target, entry.amount, entry.source || "Redirected damage");
+  });
+}
+
+function applyDirectRedirectDamage(entries) {
+  (entries || []).forEach((entry) => {
+    const target = state.bots.find((bot) => bot.id === entry.targetBotId);
+    const damage = Math.max(0, Math.ceil(entry.amount || 0));
+    if (!target || target.eliminated || damage <= 0) return;
+    const source = entry.source || "Redirected damage";
+    damageBot(target, damage, `${source} redirected ${damage} damage to ${target.name}.`, source);
+  });
+}
+
+function scaledBotDamageSourceEntries(details, source) {
+  const entries = [];
+  const baseDamage = Math.max(0, Math.ceil(details?.baseDamage || 0));
+  if (baseDamage > 0) entries.push({ amount: baseDamage, source });
+  (details?.modifierEntries || []).forEach((entry) => {
+    const amount = Math.max(0, Math.ceil(entry.amount || 0));
+    if (amount > 0) entries.push({ amount, source: entry.source || "Damage modifier", kind: entry.kind || "bonus" });
+  });
+  return entries;
+}
+
+function recordScaledBotDamageSources(bot, details, source) {
+  scaledBotDamageSourceEntries(details, source).forEach((entry) => recordBotDamageSource(bot, entry.amount, entry.source, entry.kind));
+}
+
+function highestHealthNonBossBot() {
+  return activeBots()
+    .filter((bot) => !bot.isBoss)
+    .sort((left, right) => right.hp - left.hp || right.maxHp - left.maxHp || left.id - right.id)[0];
+}
+
+function highestHealthEnemy() {
+  return activeBots().sort((left, right) => right.hp - left.hp || right.maxHp - left.maxHp || left.id - right.id)[0];
+}
+
+function applyPassivePlayerHeal(id, baseHeal, reason) {
+  const credits = passiveConvertedSin(id, baseHeal);
+  if (!credits || state.player.hp <= 0) return { healed: 0, credits: 0 };
+  const gained = gainCredits(credits, true, reason);
+  addRoundEvent(`${reason} paid ${gained} SIN.`);
+  return { healed: 0, credits: gained };
+}
+
+function applyPassivePlayerHealForEntry(entry, baseHeal, reason) {
+  const credits = passiveEntryConvertedSin(entry, baseHeal);
+  if (!credits || state.player.hp <= 0) return { healed: 0, credits: 0 };
+  const gained = gainCredits(credits, true, reason);
+  addRoundEvent(`${reason} paid ${gained} SIN.`);
+  return { healed: 0, credits: gained };
+}
+
+function artifactDescription(item) {
+  if (!item) return "";
+  if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the TARGET.`;
+  if (item.id === "a7") return "Pick a non-boss DAMNED and swap your effective guess with theirs.";
+  if (item.id === "a8") return `Pick a DAMNED; their guess counts ${artifactCount(5)} times for the TARGET average.`;
+  if (item.id === "a9") return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
+  if (item.id === "a10") {
+    return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
+  }
+  if (item.id === "a11") {
+    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's PERSONALITY.`;
+  }
+  if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
+  if (item.id === "a13") {
+    return "Removed.";
+  }
+  if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
+  if (item.id === "a15") {
+    const extra = sacrificialDaggerExtraDamage("p70");
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-HEALTH damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
+  }
+  if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
+  if (item.id === "a18") {
+    return `Instantly copy the effect of the last non-Crystal ARTIFACT you used. Last: ${lastUsedArtifactName()}.`;
+  }
+  if (item.id === "a21") {
+    return "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.";
+  }
+  if (item.id === "a22") {
+    return "+1 CRITICAL range for the round.";
+  }
+  if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
+  if (item.id === "a25") return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+  if (item.id === "a26") {
+    return "Reserved for a future ARTIFACT.";
+  }
+  if (item.id === "a28") {
+    const value = artifactValue(6);
+    return `Pick a DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
+  }
+  return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
+}
+
+function itemDescription(item) {
+  if (!item) return "";
+  if (item.type === "active") return artifactDescription(item);
+  if (item.type !== "passive") return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
+  const stack = item.stack || 1;
+  if (isSelfStackingSeal(item)) return selfStackingSealDescription(item);
+  if (item.id === "p28") {
+    const target = mimicTargetEntry();
+    if (!target) return "Copies a random SEAL you own. If no SEAL is available, it waits for the next SEAL you buy.";
+    const copiedVersion = passiveDisplayName({ ...target, stack });
+    return `Copies ${target.name} as ${copiedVersion}. If the copied SEAL is sold, Ose chooses another owned SEAL.`;
+  }
+  if (item.id === "p39") return `Seal of Purson stacks: ${item.counter || 0}. Rounds without buying from Devil's Offerings add 1 stack. Buying an offering resets stacks. End of round pays ${Math.ceil((item.counter || 0) * passivePower(item))} SIN.`;
+  if (item.id === "p111") {
+    const lastRoll =
+      item.lastSatanDivisor && item.lastSatanMaxDivisor
+        ? ` Last divisor: ${item.lastSatanDivisor}. Last damage: ${item.lastSatanDamage || 0}.`
+        : "";
+    return `Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to ${satanSealMaxDivisor(item)} and deal the result as damage to every DAMNED.${lastRoll}`;
+  }
+  if (item.id === "p119") {
+    const levels = Math.max(0, stack - 1);
+    const elite = levels ? ` Gain ${5 * levels} SIN whenever this happens.` : "";
+    const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
+    return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
+  }
+  if (stack <= 1) return ["p55", "p64", "p65", "p69", "p75", "p95", "p112", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
+  if (item.id === "p2") {
+    return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
+  }
+  if (item.id === "p3") return `If the rounded TARGET is a multiple of 3, all DAMNED take ${divisibleVerdictDamage(item)} extra damage.`;
+  if (item.id === "p4") {
+    return `If your final effective guess is 0, 50, or 100, deal ${edgeGambitDamage(item)} damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage.`;
+  }
+  if (item.id === "p5") return `Whenever you take damage, all DAMNED take ${flatDamagePower(item)}x that damage as extra damage.`;
+  if (item.id === "p6") return `Your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer.`;
+  if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
+  if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
+  if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
+  if (item.id === "p10") {
+    const bonus = eliteLevels(item);
+    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down${bonus ? `, plus ${bonus} extra when it triggers` : ""}.`;
+  }
+  if (item.id === "p11") {
+    return `When a DAMNED dies, gain ${stack} random ARTIFACT${stack === 1 ? "" : "S"} with 0 sell value if you have room.`;
+  }
+  if (item.id === "p12") return `At end of round, for every 10 SIN you have, deal ${flatDamageValue(item, 2)} damage to every DAMNED.`;
+  if (item.id === "p13") {
+    return `If two or more DAMNED are eliminated in a round, gain ${scaledPassiveValueForItem(item, 8)} SIN. If two or more share a personality, gain ${scaledPassiveValueForItem(item, 16)} SIN.`;
+  }
+  if (item.id === "p14") {
+    return `At the start of each round, deal ${flatDamageValue(item, 20)} damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain ${scaledPassiveValueForItem(item, 8)} SIN.`;
+  }
+  if (item.id === "p15") {
+    return `Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal ${bathinMemoryDamage(item)} damage to that DAMNED.`;
+  }
+  if (item.id === "p16") {
+    return `If a DAMNED's guess is less than 5 away from their previous guess, they take ${flatDamageValue(item, 10)} damage. If it is exactly the same, they take ${flatDamageValue(item, 30)} damage.`;
+  }
+  if (item.id === "p17") {
+    return `At end of round, deal ${flatDamagePower(item)}x the total MEMORY of all DAMNED on the board, including dead ones, to one random living DAMNED. If BOSSES are active, hit all active BOSSES and exclude BOSS MEMORY from the sum.`;
+  }
+  if (item.id === "p18") return `At end of round, this SEAL's sell value increases by ${scaledPassiveValueForItem(item, 3)}.`;
+  if (item.id === "p19") return `Every time a DAMNED dies, deal ${flatDamageValue(item, 5)} damage to every other DAMNED.`;
+  if (item.id === "p20") return `Devil's Offerings has ${shopSlotCountForItem(item)} slots. Whenever you use an ARTIFACT, all DAMNED take ${flatDamagePower(item)}x that ARTIFACT's purchase cost as damage.`;
+  if (item.id === "p21") return `Every reroll makes all DAMNED take ${shaxRerollDamage(item, 1)} damage per SIN spent at end of round.`;
+  if (item.id === "p22") return `Avoid 20% of damage you would take in a round, rounded down. The avoided damage becomes ${doubledStackPower(item)}x MEMORY for the living DAMNED with the most MEMORY.`;
+  if (item.id === "p23") return `New non-boss DAMNED have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 BOUNTY.`;
+  if (item.id === "p24") return `You can use only one ARTIFACT per round. All DAMNED pay ${bountyOathMultiplierForItem(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+  if (item.id === "p25") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
+  if (item.id === "p26") return `Using two matching ARTIFACTS in a round deals ${twinDetonatorDamage(item)} damage to all DAMNED.`;
+  if (item.id === "p27") return `Every ARTIFACT triggers one outcome: gain ${reactiveWarrantySin(item)} SIN, deal ${reactiveWarrantyDamage(item)} damage to a random DAMNED, or refund its purchase cost.`;
+  if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-HEALTH DAMNED.`;
+  if (item.id === "p30") return `Every DAMNED elimination deals ${andrealphusDamage(item)} damage to the DAMNED on its left and right.`;
+  if (item.id === "p31") return `At end of round, two random DAMNED take ${flatDamagePower(item)}x their BOUNTY as damage.`;
+  if (item.id === "p32") return `Every DAMNED death gives each other living DAMNED +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} BOUNTY.`;
+  if (item.id === "p33") return `Every DAMNED elimination makes all other DAMNED take ${flatDamagePower(item)}x that DAMNED's BOUNTY as damage.`;
+  if (item.id === "p34") {
+    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 1)} BOUNTY.`;
+  }
+  if (item.id === "p35") return `At end of round, the two highest BOUNTY DAMNED gain +${stack} BOUNTY.`;
+  if (item.id === "p36") return "Removed.";
+  if (item.id === "p37") return `If you take 4 or less TARGET-difference damage in a round, gain ${lowProfileRewardSin(item)} SIN.`;
+  if (item.id === "p38") return `Start each round by marking a DAMNED. If it dies, its BOUNTY payout becomes at least ${scaledPassiveValueForItem(item, 6)} SIN or ${Math.round(200 * passivePower(item))}% BOUNTY, and you gain ${passiveConvertedSin(item, 5)} SIN.`;
+  if (item.id === "p40") return `At end of round, deal ${flatDamagePower(item)}x half the total BOUNTY of living DAMNED to every enemy.`;
+  if (item.id === "p41") return `If the rounded TARGET is a multiple of 7, gain SIN equal to ${Math.round(passivePower(item) * 100)}% of your current SIN.`;
+  if (item.id === "p42") {
+    return `When a DAMNED with 3 or less MEMORY dies, gain ${Math.round(100 * passivePower(item))}% of its MEMORY as SIN. If it had more than 3 MEMORY, split its MEMORY between adjacent DAMNED.`;
+  }
+  if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
+  if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
+  if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
+  if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
+  if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
+  if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
+  if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
+  if (item.id === "p50") return `At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take ${agaresDamagePerSin(item)} damage per BOUNTY gained from this SEAL.`;
+  if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
+  if (item.id === "p52") {
+    return `At end of round, DAMNED take ${flatDamageValue(item, 3)} damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} damage per MEMORY instead.`;
+  }
+  if (item.id === "p53") return `When a non-boss DAMNED is eliminated, gain bonus SIN equal to ${Math.round(100 * passivePower(item))}% of its MEMORY.`;
+  if (item.id === "p54") {
+    const multiplier = Number(flatDamagePower(item).toFixed(2));
+    return `When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes ${multiplier}x that damage.`;
+  }
+  if (item.id === "p55") {
+    return `Each excess MEMORY becomes ${sitriExcessMemoryDamage(item)} damage to that DAMNED.`;
+  }
+  if (item.id === "p56") {
+    return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
+  }
+  if (item.id === "p57") {
+    const multiplier = Number(flatDamagePower(item).toFixed(2));
+    return `If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. ${multiplier}x its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
+  }
+  if (item.id === "p58") {
+    return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;
+  }
+  if (item.id === "p59") {
+    return `Reveal one extra DAMNED each round. Revealed DAMNED gain +${scaledPassiveValueForItem(item, 2)} BOUNTY and +2 MEMORY permanently.`;
+  }
+  if (item.id === "p60") {
+    return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
+  }
+  if (item.id === "p61") {
+    return `BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals ${poisonPercentPerCounter(item)}% max-HEALTH damage.`;
+  }
+  if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
+  if (item.id === "p63") {
+    return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
+  }
+  if (item.id === "p64") {
+    return `Reveal one extra DAMNED each round. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+  }
+  if (item.id === "p65") return `Reveal one extra DAMNED each round. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
+  if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+  if (item.id === "p68") {
+    return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
+  }
+  if (item.id === "p69") {
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
+  }
+  if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
+  if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
+  if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double HEALTH and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
+  if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
+  if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
+  if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
+  if (item.id === "p70") {
+    return `Sacrificial Dagger deals ${sacrificialDaggerExtraDamage(item)} extra flat damage and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
+  }
+  if (item.id === "p71") {
+    const values = sallosShiftValues(item);
+    return `Before damage calculation, all DAMNED guesses shift away from the TARGET by random ${values.join(", ")} without changing the average.`;
+  }
+  if (item.id === "p72") {
+    return `Previous TARGET below 40 sets one non-boss DAMNED guess to 100; above 40 sets one DAMNED guess to 0. ELITE deals ${furcasSelectedDamage(item)} damage to the selected DAMNED.`;
+  }
+  if (item.id === "p73") {
+    return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
+  }
+  if (item.id === "p74") return `DAMNED with 10 or more BOUNTY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  if (item.id === "p75") return `Reveal one extra DAMNED each round. Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  if (item.id === "p76") {
+    return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead.`;
+  }
+  if (item.id === "p77") return `If you scored CRITICAL this round, DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources next round.`;
+  if (item.id === "p78") {
+    return `STUBBORN DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  }
+  if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
+  if (item.id === "p80") {
+    return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage if they have more than 10 TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.`;
+  }
+  if (item.id === "p81") return "If a DAMNED has more than 16 MEMORY, their guess is revealed.";
+  if (item.id === "p82") {
+    return `Using an ARTIFACT on a DAMNED has a ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance to reveal their guess.`;
+  }
+  if (item.id === "p84") {
+    return `At end of round, every revealed DAMNED makes adjacent DAMNED take ${flatDamagePower(item)}x the TARGET-difference damage it took this round. Worst guess penalty counts.`;
+  }
+  if (item.id === "p85") {
+    return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
+  }
+  if (item.id === "p86") {
+    return `When a DAMNED is eliminated, ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance the replacement inherits its personality, MEMORY, name, number, and flag.`;
+  }
+  if (item.id === "p87") {
+    return `When a DAMNED is eliminated, deal ${flatDamageValue(item, 30)} damage to each other living DAMNED with the same personality.`;
+  }
+  if (item.id === "p88") {
+    return `When a DAMNED dies, ${scaledPassiveValueForItem(item, 50) / 100}x its BOUNTY is added to each other living DAMNED with the same personality, and you gain ${Math.round(passivePower(item) * 100)}% of its BOUNTY.`;
+  }
+  if (item.id === "p89") {
+    return `DAMNED can only be ANALYST or STUBBORN. At end of round, a DAMNED takes ${flatDamageValue(item, 5)} damage if both adjacent DAMNED have the same personality.`;
+  }
+  if (item.id === "p90") {
+    return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At end of round, one DAMNED changes to the most prevalent personality.`;
+  }
+  if (item.id === "p91") {
+    return `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage. Current range bonus: +${ascendingCritWindowBonus()}.`;
+  }
+  if (item.id === "p104") {
+    const amount = item.stack || 1;
+    return `At end of round, STUBBORN DAMNED gain +${amount} additional MEMORY and +${amount} BOUNTY. Revealed DAMNED become STUBBORN.`;
+  }
+  if (item.id === "p105") {
+    const chance = Math.round(stubbornArtifactChance(item) * 100);
+    return `Using an ARTIFACT on a DAMNED has a ${chance}% chance to make them STUBBORN. At end of round, BOSSES take ${flatDamageValue(item, 5)} damage per STUBBORN DAMNED.`;
+  }
+  if (item.id === "p106") {
+    return `At end of round, DAMNED with the most prevalent personality take ${flatDamageValue(item, 5)} damage for every DAMNED with that personality.`;
+  }
+  if (item.id === "p107") {
+    const eliteDamage = eliteLevels(item) * 5;
+    return `STUBBORN DAMNED guesses can only be up to 2 away from their previous guess. At end of round, one random DAMNED becomes STUBBORN${eliteDamage ? ` and every STUBBORN DAMNED takes ${eliteDamage} damage` : ""}.`;
+  }
+  if (item.id === "p108") {
+    return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
+  }
+  if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
+  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
+  if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
+  if (item.id === "p95") return `Reveal one extra DAMNED each round. When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
+  if (item.id === "p96") {
+    return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
+  }
+  if (item.id === "p97") {
+    return `When you press READY, ${devSealChanceText(item)} chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.`;
+  }
+  if (item.id === "p110") {
+    return `When you press READY, ${devSealChanceText(item)} chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY.`;
+  }
+  return item.description;
+}
+
+function markPassiveTriggered(id) {
+  if (!state.roundState || !passiveStack(id)) return;
+  if (directPassiveStack(id)) {
+    state.roundState.triggeredPassiveIds.add(id);
+    recordSealTrigger(id);
+  }
+  if (mimicContributionFor(id)) {
+    state.roundState.triggeredPassiveIds.add("p28");
+    recordSealTrigger("p28");
+  }
+}
+
+function passiveLimit() {
+  return Math.min(MAX_PASSIVE_LIMIT, BASE_PASSIVE_LIMIT + Math.floor(state.bossKills / 2));
+}
+
+function rerollCost() {
+  return state.rerollBaseCost;
+}
+
+function currentRerollCost() {
+  return rerollCost();
+}
+
+function bossAbilityNullified(bot) {
+  return Boolean(bot?.isBoss && state.roundState?.bossAbilityNullifiedBotIds?.has(bot.id));
+}
+
+function botHasPassive(bot, key) {
+  if (bossAbilityNullified(bot) && bot?.passiveKeys?.includes(key)) return false;
+  return Boolean(bot.passiveKeys?.includes(key) || bot.buffPassiveKey === key);
+}
+
+function botPassiveKeyName(key) {
+  return BOSS_PASSIVES[key]?.name || PYROS_GIFT_PASSIVES[key]?.name || key;
+}
+
+function botPassiveKeyDescription(key) {
+  return BOSS_PASSIVES[key] ? bossPassiveEffectDescription(key) : PYROS_GIFT_PASSIVES[key]?.description || "";
+}
+
+function hasBossPassive(key) {
+  return state.bots.some((bot) => bot.hp > 0 && botHasPassive(bot, key));
+}
+
+function bossPassiveDamage(key) {
+  const passive = BOSS_PASSIVES[key];
+  if (!passive) return 0;
+  return Math.max(0, Math.ceil(passive.baseDamage || 0));
+}
+
+function bossPassiveEffectDescription(key) {
+  const damage = bossPassiveDamage(key);
+  if (!BOSS_PASSIVES[key]) return "";
+  if (key === "sinStealing") return "At the start of each round, removes 20% of your total SIN plus 5 more SIN. The stolen SIN vanishes.";
+  if (key === "soullessness") return `When this BOSS is defeated, it does not heal you and instead deals ${damage} damage.`;
+  if (key === "soulStealing") return "While this BOSS ability is alive, you cannot recover HEALTH.";
+  if (key === "deathRoll") return "If the TARGET is a multiple of 3, you take 3 damage. If it is a multiple of 5, you take 5 damage. If it is a multiple of 7, you take 7 damage.";
+  if (key === "rerollToll") return `Every time you reroll Devil's Offerings, you take ${damage} damage.`;
+  if (key === "offeringToll") return `Every time you buy an ARTIFACT or SEAL, you take ${damage} damage.`;
+  if (key === "avenging") return `If 2 or more DAMNED are eliminated in the same round, you take ${damage} damage.`;
+  if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
+  if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
+  if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  return "";
+}
+
+function activeBotsWithBossPassive(key) {
+  return activeBots().filter((bot) => botHasPassive(bot, key));
+}
+
+function applyBossPassivePlayerDamage(key, reasonForBot) {
+  const damage = bossPassiveDamage(key);
+  if (damage <= 0) return 0;
+  let total = 0;
+  activeBotsWithBossPassive(key).forEach((bot) => {
+    total += damagePlayer(damage, reasonForBot(bot, damage), true, true, BOSS_PASSIVES[key]?.name);
+  });
+  return total;
+}
+
+function applyBossSinStealing() {
+  activeBotsWithBossPassive("sinStealing").forEach((bot) => {
+    const currentSin = Math.max(0, Math.ceil(state.player.credits || 0));
+    if (currentSin <= 0) return;
+    const amount = Math.ceil(currentSin * 0.2) + 5;
+    loseCredits(amount, `${bot.name}'s ${BOSS_PASSIVES.sinStealing.name}`);
+  });
+}
+
+function deathRollDamageForTarget(target) {
+  const value = Math.ceil(target);
+  if (!Number.isFinite(value)) return 0;
+  let damage = 0;
+  if (value % 3 === 0) damage += 3;
+  if (value % 5 === 0) damage += 5;
+  if (value % 7 === 0) damage += 7;
+  return damage;
+}
+
+function deathRollMultiplesForTarget(target) {
+  const value = Math.ceil(target);
+  if (!Number.isFinite(value)) return [];
+  return [3, 5, 7].filter((divisor) => value % divisor === 0);
+}
+
+function applyDeathRollDamage() {
+  const round = state.roundState;
+  const damage = deathRollDamageForTarget(round?.target);
+  if (damage <= 0) return;
+  const multiples = deathRollMultiplesForTarget(round.target).join(", ");
+  activeBotsWithBossPassive("deathRoll").forEach((bot) => {
+    damagePlayer(
+      damage,
+      `${bot.name}'s ${BOSS_PASSIVES.deathRoll.name} dealt ${damage} damage because TARGET ${formatNumber(round.target)} is a multiple of ${multiples}.`,
+      true,
+      true,
+      BOSS_PASSIVES.deathRoll.name
+    );
+  });
+}
+
+function applyRerollTollDamage() {
+  applyBossPassivePlayerDamage(
+    "rerollToll",
+    (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.rerollToll.name} dealt ${damage} damage because you rerolled Devil's Offerings.`
+  );
+}
+
+function applyOfferingTollDamage(item) {
+  applyBossPassivePlayerDamage(
+    "offeringToll",
+    (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.offeringToll.name} dealt ${damage} damage because you bought ${item.name}.`
+  );
+}
+
+function applyRoundEndBossPassiveDamage() {
+  const eliminations = state.roundState?.eliminationsThisRound || 0;
+  if (eliminations >= 2) {
+    applyBossPassivePlayerDamage(
+      "avenging",
+      (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.avenging.name} dealt ${damage} damage because ${eliminations} DAMNED were eliminated this round.`
+    );
+  }
+  if (eliminations === 0) {
+    applyBossPassivePlayerDamage(
+      "punishment",
+      (bot, damage) => `${bot.name}'s ${BOSS_PASSIVES.punishment.name} dealt ${damage} damage because no DAMNED were eliminated this round.`
+    );
+  }
+}
+
+function applyCorruptionGuessMutation(guess) {
+  const original = Math.ceil(guess);
+  let mutated = original;
+  const by = [];
+  activeBotsWithBossPassive("corruption").forEach((bot) => {
+    if (Math.random() >= 0.33) return;
+    const before = mutated;
+    const shift = Math.random() < 0.5 ? -10 : 10;
+    mutated = Math.ceil(clamp(mutated + shift, 0, playerGuessLimit()));
+    if (mutated !== before) by.push(bot.name);
+    state.roundState?.roundEvents.push(`${bot.name}'s ${BOSS_PASSIVES.corruption.name} shifted your guess from ${before} to ${mutated}.`);
+  });
+  // remembered so the guess box shows the corrupted number and what it was
+  if (state.roundState) {
+    state.roundState.playerCorruption = mutated !== original ? { from: original, to: mutated, by, shown: false } : null;
+  }
+  return mutated;
+}
+
+function soulStealingBlocker() {
+  return activeBotsWithBossPassive("soulStealing")[0] || null;
+}
+
+function applyBossLifeStealHealing(playerDamage) {
+  const damage = Math.max(0, Math.ceil(playerDamage));
+  if (damage <= 0) return;
+  activeBotsWithBossPassive("lifeSteal").forEach((bot) => {
+    const heal = Math.ceil((bot.maxHp || 0) * (damage / 100));
+    if (heal <= 0) return;
+    const healed = healBot(bot, heal, null, BOSS_PASSIVES.lifeSteal.name);
+    if (healed > 0) addRoundEvent(`${bot.name}'s ${BOSS_PASSIVES.lifeSteal.name} converted ${damage} player damage into ${healed} healing.`);
+  });
+}
+
+function botHasUniquePower(bot, key) {
+  if (bossAbilityNullified(bot)) return false;
+  return Boolean(bot && (bot.uniqueKey === key || bot.copiedUniqueKey === key));
+}
+
+function activeBossesWithPower(key, excludedIds = new Set()) {
+  return state.bots.filter(
+    (bot) => bot.isBoss && botHasUniquePower(bot, key) && !excludedIds.has(bot.id) && bot.hp > 0 && !bot.eliminated
+  );
+}
+
+function aliveUniqueBoss(key, excludedIds = new Set()) {
+  return activeBossesWithPower(key, excludedIds).length > 0;
+}
+
+function aliveFinalBoss(key) {
+  return state.bots.some((bot) => bot.finalKey === key && bot.hp > 0 && !bot.eliminated);
+}
+
+function shopDisabledBySatan() {
+  return state.finalBossPhase && aliveFinalBoss("satan");
+}
+
+function activePetrosPavlosBosses() {
+  return state.bots.filter(
+    (bot) => bot.isBoss && ["petros", "pavlos"].includes(bot.uniqueKey) && !bossAbilityNullified(bot) && bot.hp > 0 && !bot.eliminated
+  );
+}
+
+function petrosPavlosRoundModifier() {
+  const twins = activePetrosPavlosBosses();
+  if (!twins.length) return null;
+  const startRound = twins.reduce((earliest, bot) => Math.min(earliest, bot.modifierCycleStartRound || state.round), state.round);
+  const cycleIndex = Math.max(0, state.round - startRound) % PETROS_PAVLOS_MODIFIERS.length;
+  return PETROS_PAVLOS_MODIFIERS[cycleIndex];
+}
+
+function currentTargetModifier() {
+  if (state.finalBossPhase) return FINAL_BOSS_TARGET_MODIFIER;
+  const twinModifier = petrosPavlosRoundModifier();
+  if (twinModifier !== null) return twinModifier;
+  const modifierBosses = state.bots
+    .filter(
+      (bot) =>
+        bot.isBoss &&
+        bot.hp > 0 &&
+        !bot.eliminated &&
+        !bossAbilityNullified(bot) &&
+        bot.modifierOverride !== null &&
+        bot.modifierOverride !== undefined
+    )
+    .sort((left, right) => right.bossOrder - left.bossOrder);
+  return modifierBosses.length ? modifierBosses[0].modifierOverride : BASE_TARGET_MODIFIER;
+}
+
+function playerGuessLimit() {
+  return 100;
+}
+
+function shopTax(item = null) {
+  if (!aliveUniqueBoss("zilon") || !item) return 0;
+  return item.type === "passive" ? 6 : 3;
+}
+
+function shopPrice(item) {
+  const duplicateMultiplier = item.type === "passive" && !isSelfStackingSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
+  const basePrice = item.price * duplicateMultiplier;
+  const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
+  const discountedPrice = item.type === "passive" ? Math.max(0, taxedPrice - passiveShopDiscount()) : taxedPrice;
+  return Math.ceil(discountedPrice * sinPricePressureMultiplier());
+}
+
+function botPassiveSummary(bot) {
+  if (!bot) return "";
+  const names = [];
+  if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
+  bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
+  if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
+  return names.join(" + ") || "No Seal";
+}
+
+function botPassiveDescription(bot) {
+  if (!bot) return "";
+  const descriptions = [];
+  if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
+  if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
+  return descriptions.join(" ");
+}
+
+// Petros and Pavlos each steal one other unique BOSS's ability. It is shown apart from their own rules.
+// The stolen TARGET modifier is left out: while a twin is alive their own 0.9 / 1.1 cycle sets the modifier.
+function bossBorrowedPower(bot) {
+  if (!bot?.isBoss || !bot.copiedUniqueKey) return null;
+  const spec = UNIQUE_BOSS_SPECS[bot.copiedUniqueKey];
+  if (!spec) return null;
+  const ownName = new RegExp(`\\b${spec.name}\\b(?!'s own gift| Gift)`, "g");
+  const text = spec.descriptions
+    .filter((line) => !/TARGET modifier/i.test(line))
+    .map((line) => line.replace(ownName, bot.name))
+    .join(" ");
+  return { key: spec.key, name: spec.name, text };
+}
+
+function bossPassiveSummary(bot) {
+  return bot?.isBoss ? botPassiveSummary(bot) : "";
+}
+
+function bossPassiveDescription(bot) {
+  return bot?.isBoss ? botPassiveDescription(bot) : "";
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
+
+function normalizeGameText(value) {
+  return String(value)
+    .replace(/\bnon-bosses\b/gi, "non-boss DAMNED")
+    .replace(/\bnon-boss\b/gi, "non-boss")
+    .replace(/\bsinners\b/gi, "DAMNED")
+    .replace(/\bsinner\b/gi, "DAMNED")
+    .replace(/\bbots\b/gi, "DAMNED")
+    .replace(/\bbot\b/gi, "DAMNED")
+    .replace(/\bbosses\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "bosses" : "BOSSES"))
+    .replace(/\bboss\b/gi, (match, offset, text) => (text[offset - 1] === "-" ? "boss" : "BOSS"))
+    .replace(/\bartifacts\b/gi, "ARTIFACTS")
+    .replace(/\bartifact\b/gi, "ARTIFACT")
+    .replace(/\bseals\b/gi, "SEALS")
+    .replace(/\bseal\b/gi, "SEAL");
+}
+
+function htmlWithLineBreaks(value) {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function descriptionHtml(value) {
+  const protectedPhrases = [];
+  const plainTargetText = normalizeGameText(value);
+  const protectedText = [
+    /\bpick a target\b/gi,
+    /\beach target\b/gi,
+    /\bchoose a target\b/gi,
+    /\bneeds a target\b/gi,
+    /\bheal target\b/gi,
+    /\bdamage target\b/gi
+  ].reduce((text, pattern) => text.replace(pattern, (match) => {
+    const token = `__PLAIN_TARGET_${protectedPhrases.length}__`;
+    protectedPhrases.push(match);
+    return token;
+  }), plainTargetText);
+  let html = htmlWithLineBreaks(protectedText).replace(
+    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|HEALTH|MEMORY|BOUNTY)\b/gi,
+    (keyword, _whole, offset, fullText) => {
+      if (/^boss(?:es)?$/i.test(keyword) && fullText[offset - 1] === "-") return keyword.toLowerCase();
+      return `<span class="tooltip-keyword">${keyword.toUpperCase()}</span>`;
+    }
+  );
+  protectedPhrases.forEach((phrase, index) => {
+    html = html.replace(`__PLAIN_TARGET_${index}__`, escapeHtml(phrase));
+  });
+  return html;
+}
+
+function splitEliteDescription(value) {
+  const text = String(value || "").trim();
+  const eliteMatch = text.match(/\s+(ELITE(?:\s+levels)?:?[\s\S]*)$/i);
+  if (!eliteMatch) return { main: text, elite: "" };
+  return {
+    main: text.slice(0, eliteMatch.index).trim(),
+    elite: eliteMatch[1].trim()
+  };
+}
+
+function renderSealTooltipHtml(item, displayName, description, disabledNotice, sale) {
+  const contribution = sealContributionSummary(item);
+  const runDetails = sealContributionDetails(item);
+  const splitDescription = splitEliteDescription(description);
+  const fallbackElite = splitEliteDescription(ITEMS[item?.id]?.description || "").elite;
+  const mainDescription = splitDescription.main || description;
+  const eliteDescription = splitDescription.elite || fallbackElite;
+  const bodyText = `${disabledNotice || ""}${mainDescription}`;
+  return `
+    <div class="tooltip-heading">
+      <div class="tooltip-title">${escapeHtml(displayName)}</div>
+      <div class="tooltip-shift-hint">press shift for more</div>
+    </div>
+    <div class="tooltip-body">${descriptionHtml(bodyText)}</div>
+    ${eliteDescription ? `<div class="tooltip-elite-line">${descriptionHtml(eliteDescription)}</div>` : ""}
+    <div class="tooltip-stat-line">${descriptionHtml(runDetails)}</div>
+    <div class="seal-tooltip-footer">
+      <span>${contribution ? escapeHtml(contribution) : ""}</span>
+      <span>Sell ${sale}${SIN_MARK}</span>
+    </div>
+  `;
+}
+
+function sealSigilPath(item) {
+  const id = typeof item === "string" ? item : item?.id;
+  const file = SEAL_SIGILS[id];
+  return file ? `assets/seals/${file}` : "";
+}
+
+function renderSealSigil(item, extraClass = "") {
+  const src = sealSigilPath(item);
+  if (!src) return "";
+  const id = typeof item === "string" ? item : item?.id;
+  const className = [
+    "seal-sigil",
+    DEV_SEAL_IDS.has(id) ? "dev-seal-sigil" : "",
+    SATAN_SEAL_IDS.has(id) ? "satan-seal-sigil" : "",
+    extraClass
+  ].filter(Boolean).join(" ");
+  const name = typeof item === "string" ? ITEMS[item]?.name || "Seal" : item?.name || "Seal";
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+}
+
+function passiveName(id, fallback = "Seal") {
+  return ITEMS[id]?.name || fallback;
+}
+
+function artifactIconPath(item) {
+  const id = typeof item === "string" ? item : item?.id;
+  const file = ARTIFACT_ICONS[id];
+  return file ? `assets/artifacts/${file}` : "";
+}
+
+function renderArtifactIcon(item, extraClass = "") {
+  const src = artifactIconPath(item);
+  if (!src) return "";
+  const className = ["artifact-icon", extraClass].filter(Boolean).join(" ");
+  const name = typeof item === "string" ? ITEMS[item]?.name || "Artifact" : item?.name || "Artifact";
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} icon`)}" loading="lazy" />`;
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "--";
+  return String(Math.ceil(value));
+}
+
+function formatModifier(value) {
+  if (!Number.isFinite(value)) return "?";
+  return Number.isInteger(value * 10)
+    ? value.toFixed(1)
+    : value.toFixed(3).replace(/0+$/u, "").replace(/\.$/u, "");
+}
+
+function guessClosenessColor(guess, target) {
+  if (!Number.isFinite(guess) || !Number.isFinite(target)) return "";
+  const distance = Math.abs(guess - target);
+  if (distance >= 10) return "";
+  const closeness = clamp(1 - distance / 10, 0, 1);
+  const intensity = Math.pow(closeness, 2.35) * 0.78;
+  const from = { r: 255, g: 255, b: 255 };
+  const to = { r: 239, g: 111, b: 97 };
+  const mix = (start, end) => Math.round(start + (end - start) * intensity);
+  return `rgb(${mix(from.r, to.r)}, ${mix(from.g, to.g)}, ${mix(from.b, to.b)})`;
+}
+
+function guessClosenessAttrs(guess, target, isCritical) {
+  if (isCritical) return { className: "", style: "" };
+  const color = guessClosenessColor(guess, target);
+  if (!color) return { className: "", style: "" };
+  return {
+    className: "guess-closeness-number",
+    style: ` style="--guess-closeness-color: ${color}"`
+  };
+}
+
+function itemCopy(id) {
+  const uid = `${id}-${state.nextItemUid++}`;
+  const copy = { ...ITEMS[id], uid, stack: ITEMS[id].type === "passive" ? 1 : undefined };
+  if (id === "p39") copy.counter = 1;
+  if (isSelfStackingSeal(id)) copy.selfDamage = 0;
+  return copy;
+}
+
+function freeActiveCopy(id) {
+  return { ...itemCopy(id), purchaseCost: 0, sellValueOverride: 0 };
+}
+
+function devTemporaryActiveCopy(id) {
+  const copy = freeActiveCopy(id);
+  copy.devTemporary = true;
+  copy.sellValueOverride = 0;
+  return copy;
+}
+
+function devSealChance(idOrItem) {
+  const stack = typeof idOrItem === "string" ? simpleStackCount(idOrItem) : idOrItem?.stack || 0;
+  if (!stack) return 0;
+  return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
+}
+
+function devSealEntryChance(entry) {
+  if (!entry?.stack) return 0;
+  return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
+}
+
+function isSelfStackingSeal(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return SELF_STACKING_SEAL_IDS.has(id);
+}
+
+function selfStackingSpec(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return SELF_STACKING_SEAL_SPECS[id] || null;
+}
+
+function selfStackingCurrentDamage(item) {
+  return Math.max(0, Math.ceil(item?.selfDamage || 0));
+}
+
+function selfStackingCurrentDamageForId(id) {
+  return orderedPassiveEffectEntries(id).reduce((sum, entry) => sum + selfStackingCurrentDamage(entry.item), 0);
+}
+
+function selfStackingSealDescription(item) {
+  const description = item.id === "p102" ? ITEMS.p102.description : item.description;
+  return `${description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
+}
+
+function selfStackingConditionCounts(round = state.roundState) {
+  if (!round) return {};
+  if (!round.selfStackingConditionCounts || typeof round.selfStackingConditionCounts !== "object") {
+    round.selfStackingConditionCounts = {};
+  }
+  Object.values(SELF_STACKING_SEAL_SPECS).forEach((spec) => {
+    if (!Number.isFinite(round.selfStackingConditionCounts[spec.key])) round.selfStackingConditionCounts[spec.key] = 0;
+  });
+  return round.selfStackingConditionCounts;
+}
+
+function selfStackingGameConditionCounts() {
+  if (!state.selfStackingGameConditionCounts || typeof state.selfStackingGameConditionCounts !== "object") {
+    state.selfStackingGameConditionCounts = {};
+  }
+  Object.values(SELF_STACKING_SEAL_SPECS).forEach((spec) => {
+    if (!Number.isFinite(state.selfStackingGameConditionCounts[spec.key])) {
+      state.selfStackingGameConditionCounts[spec.key] = 0;
+    }
+  });
+  return state.selfStackingGameConditionCounts;
+}
+
+function recordSelfStackingCondition(idOrKey) {
+  const spec = SELF_STACKING_SEAL_SPECS[idOrKey] || Object.values(SELF_STACKING_SEAL_SPECS).find((entry) => entry.key === idOrKey);
+  if (!spec || !state.roundState) return;
+  const roundCounts = selfStackingConditionCounts();
+  roundCounts[spec.key] = (roundCounts[spec.key] || 0) + 1;
+  const gameCounts = selfStackingGameConditionCounts();
+  gameCounts[spec.key] = (gameCounts[spec.key] || 0) + 1;
+}
+
+function increaseSelfStackingSealDamage(entry) {
+  const spec = selfStackingSpec(entry?.id);
+  if (!spec || !entry?.item) return 0;
+  entry.item.selfDamage = selfStackingCurrentDamage(entry.item) + spec.increment;
+  markPassiveEntryTriggered(entry);
+  return selfStackingCurrentDamage(entry.item);
+}
+
+function triggerSelfStackingSeal(id) {
+  recordSelfStackingCondition(id);
+  let totalDamage = 0;
+  orderedPassiveEffectEntries(id).forEach((entry) => {
+    totalDamage += increaseSelfStackingSealDamage(entry);
+  });
+  return totalDamage;
+}
+
+function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
+  if (!bot || bot.isBoss || bot.eliminated || beforeMemory > 10 || afterMemory <= 10) return;
+  const damage = triggerSelfStackingSeal("p99");
+  if (damage <= 0) return;
+  queueEndOfRoundBotDamage(
+    bot,
+    damage,
+    `${ITEMS.p99.name} dealt ${damage} damage to ${bot.name} for exceeding 10 MEMORY.`,
+    ITEMS.p99.name
+  );
+}
+
+function applySelfStackingBountySumDamage() {
+  const targets = activeBots();
+  if (!targets.length) return;
+  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+  if (bountySum <= 40) return;
+  const damage = triggerSelfStackingSeal("p100");
+  if (damage <= 0) return;
+  damageBots(
+    targets,
+    damage,
+    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total BOUNTY was ${bountySum}.`,
+    ITEMS.p100.name
+  );
+}
+
+function queueSelfStackingPentakillDamage() {
+  const damage = triggerSelfStackingSeal("p101");
+  if (damage <= 0) return;
+  state.pendingSelfStackingPentakillDamage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0)) + damage;
+  state.roundState?.roundEvents.push(`${ITEMS.p101.name} queued ${damage} end-of-round damage.`);
+}
+
+function applyPendingSelfStackingPentakillDamage() {
+  const damage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0));
+  if (damage <= 0) return;
+  state.pendingSelfStackingPentakillDamage = 0;
+  const targets = activeBots();
+  if (!targets.length) return;
+  damageBots(
+    targets,
+    damage,
+    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued PENTAKILL damage to ${bot.name}.`,
+    ITEMS.p101.name
+  );
+}
+
+function applySelfStackingRevealedDeath(bot) {
+  if (!bot?.revealedByPassive) return;
+  const damage = triggerSelfStackingSeal("p102");
+  if (damage <= 0) return;
+  const targets = adjacentLivingBots(bot);
+  if (!targets.length) return;
+  queueEndOfRoundBotDamages(
+    targets,
+    damage,
+    (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
+    ITEMS.p102.name
+  );
+}
+
+function applySelfStackingStubbornDeath(bot) {
+  if (personalityType(bot) !== "Stubborn") return;
+  const damage = triggerSelfStackingSeal("p109");
+  if (damage <= 0) return;
+  const targets = activeBots().filter((target) => personalityType(target) !== "Stubborn");
+  if (!targets.length) return;
+  queueEndOfRoundBotDamages(
+    targets,
+    damage,
+    (target, queued) => `${ITEMS.p109.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s STUBBORN death.`,
+    ITEMS.p109.name
+  );
+}
+
+function recordArtifactUseForSelfStacking() {
+  const before = Math.max(0, Math.floor(state.totalArtifactsUsed || 0));
+  const after = before + 1;
+  state.totalArtifactsUsed = after;
+  const thresholds = Math.floor(after / 20) - Math.floor(before / 20);
+  for (let count = 0; count < thresholds; count += 1) {
+    triggerSelfStackingSeal("p103");
+  }
+  const damage = selfStackingCurrentDamageForId("p103");
+  if (damage <= 0) return;
+  const targets = activeBots();
+  if (!targets.length) return;
+  queueEndOfRoundBotDamages(
+    targets,
+    damage,
+    (bot, queued) => `${ITEMS.p103.name} dealt ${queued} damage to ${bot.name} from ARTIFACT use.`,
+    ITEMS.p103.name
+  );
+}
+
+function devSealChanceText(idOrItem) {
+  return `${Math.round(devSealChance(idOrItem) * 100)}%`;
+}
+
+function activeSellValue(item) {
+  if (!item) return 0;
+  if (Number.isFinite(item.sellValueOverride)) return Math.max(0, Math.ceil(item.sellValueOverride));
+  return Math.floor((item.price || 0) / 2);
+}
+
+function addLog(message) {
+  state.log.unshift(normalizeGameText(message));
+  state.log = state.log.slice(0, 5);
+}
+
+function showInvalidGuessPopup() {
+  if (typeof window !== "undefined" && typeof window.alert === "function") {
+    window.alert("Invalid");
+  } else {
+    addLog("Invalid");
+  }
+}
+
+function addRoundEvent(message) {
+  if (state.roundState) state.roundState.roundEvents.push(normalizeGameText(message));
+}
+
+function sourceLabelFromReason(reason, fallback) {
+  const text = String(reason || "").trim();
+  if (!text) return fallback || "";
+  const knownSources = [
+    ["FINAL CRITICAL", "Final CRITICAL"],
+    ["CRITICAL", "CRITICAL"],
+    ["Sacrificial Dagger", "Sacrificial Dagger"],
+    ["Engraved Skull", "Engraved Skull"],
+    ["Black Candle", "Black Candle"],
+    ["Ceremonial Altar", "Ceremonial Altar"],
+    ["Demonic Idol", "Demonic Idol"],
+    ["Goat Head", "Goat Head"],
+    ["Inverted Cross", "Inverted Cross"],
+    ["Funeral Coin", "Funeral Coin"],
+    ["Vial of Blood", "Vial of Blood"],
+    ["Dark Talisman", "Dark Talisman"],
+    ["Corrupted Crystal", "Corrupted Crystal"],
+    ["Voodoo Doll", "Voodoo Doll"],
+    ["Cursed Chalice", "Cursed Chalice"],
+    ["Satanic Bible", "Satanic Bible"],
+    ["Mummified Lamb", "Mummified Lamb"],
+    ["Spirit Board", "Spirit Board"],
+    ["The Magical Sword of Solomon", "The Magical Sword of Solomon"],
+    ["Demon Bowl", "Demon Bowl"],
+    ["The Black-Hilted Knife", "The Black-Hilted Knife"],
+    ["Target damage", "Target difference"],
+    ["target damage", "Target difference"],
+    ["Seal of Leraje", "Seal of Leraje"],
+    ["Seal of Paimon", "Seal of Paimon"],
+    ["Seal of Haagenti", "Seal of Haagenti"],
+    ["Seal of Amdusias", "Seal of Amdusias"],
+    ["Seal of Zagan", "Seal of Zagan"],
+    ["Seal of Furfur", "Seal of Furfur"],
+    ["Seal of Furfur", "Seal of Furfur"],
+    ["Seal of Andrealphus", "Seal of Andrealphus"],
+    ["The Brazen Vessel of Solomon", "The Brazen Vessel of Solomon"],
+    ["Seal of Murmur", "Seal of Murmur"],
+    ["Seal of Foras", "Seal of Foras"],
+    ["Seal of Marchosias", "Seal of Marchosias"],
+    ["Seal of Gremory", "Seal of Gremory"],
+    ["Seal of Forneus", "Seal of Forneus"],
+    ["Seal of Cimejes", "Seal of Cimejes"],
+    ["Seal of Asmoday", "Seal of Asmoday"],
+    ["Seal of Malphas", "Seal of Malphas"],
+    ["Seal of Astaroth", "Seal of Astaroth"],
+    ["Seal of Purson", "Seal of Purson"],
+    ["Seal of Focalor", "Seal of Focalor"],
+    ["Seal of Bifrons", "Seal of Bifrons"],
+    ["Seal of Stolas", "Seal of Stolas"],
+    ["Grandier's Pact", "Grandier's Pact"],
+    ["Seal of Haures", "Seal of Haures"],
+    ["Seal of Vassago", "Seal of Vassago"],
+    ["Amulet of Pazuzu", "Amulet of Pazuzu"],
+    ["Seal of Alloces", "Seal of Alloces"],
+    ["Seal of Shax", "Seal of Shax"],
+    ["Seal of Belial", "Seal of Belial"],
+    ["Seal of Agares", "Seal of Agares"],
+    ["Seal of Phenex", "Seal of Phenex"],
+    ["Seal of Marax", "Seal of Marax"],
+    ["Seal of Decarabia", "Seal of Decarabia"],
+    ["Seal of Belial", "Seal of Belial"],
+    ["Seal of Dantalion", "Seal of Dantalion"],
+    ["Seal of Sabnock", "Seal of Sabnock"],
+    ["Seal of Bune", "Seal of Bune"],
+    ["Seal of Sitri", "Seal of Sitri"],
+    ["Seal of Halphas", "Seal of Halphas"],
+    ["Seal of Balam", "Seal of Balam"],
+    ["Seal of Marbas", "Seal of Marbas"],
+    ["Seal of Buer", "Seal of Buer"],
+    ["Seal of Bathin", "Seal of Bathin"],
+    ["Seal of Botis", "Seal of Botis"],
+    ["Seal of Gusion", "Seal of Gusion"],
+    ["Seal of Raum", "Seal of Raum"],
+    ["Seal of Ronove", "Seal of Ronove"],
+    ["Seal of Andromalius", "Seal of Andromalius"],
+    ["Seal of Botis", "Seal of Botis"],
+    ["Seal of Gaap", "Seal of Gaap"],
+    ["Seal of Vepar", "Seal of Vepar"],
+    ["Seal of Beleth", "Seal of Beleth"],
+    ["Seal of Vual", "Seal of Vual"],
+    ["Seal of Vine", "Seal of Vine"],
+    ["Seal of Naberius", "Seal of Naberius"],
+    ["Seal of Aim", "Seal of Aim"],
+    ["Seal of Caim", "Seal of Caim"],
+    ["Seal of Vapula", "Seal of Vapula"],
+    ["Seal of Eligos", "Seal of Eligos"],
+    ["Seal of Amy", "Seal of Amy"],
+    ["Seal of Ipos", "Seal of Ipos"],
+    ["Seal of Zepar", "Seal of Zepar"],
+    ["Seal of Sallos", "Seal of Sallos"],
+    ["Seal of Furcas", "Seal of Furcas"],
+    ["Seal of the White Horse", "Seal of the White Horse"],
+    ["Seal of the Red Horse", "Seal of the Red Horse"],
+    ["Seal of the Black Horse", "Seal of the Black Horse"],
+    ["Seal of the Pale Horse", "Seal of the Pale Horse"],
+    ["Seal of the Souls of Martyrs", "Seal of the Souls of Martyrs"],
+    ["Seal of Creation Uncreated", "Seal of Creation Uncreated"],
+    ["Seal of Silence in Heaven", "Seal of Silence in Heaven"],
+    ["Seal of Dantre", "Seal of Dantre"],
+    ["Seal of Zilon", "Seal of Zilon"],
+    ["Seal of Serafeim", "Seal of Serafeim"],
+    ["Seal of Pyros", "Seal of Pyros"],
+    ["Seal of Padma", "Seal of Padma"],
+    ["Seal of Threon", "Seal of Threon"],
+    ["Seal of Petros-Pavlos", "Seal of Petros-Pavlos"],
+    ["Seal of Bathin", "Seal of Bathin"],
+    ["The White-Hilted Knife", "The White-Hilted Knife"],
+    ["The Philosopher's Stone", "The Philosopher's Stone"],
+    ["The Necklace of Harmonia", "The Necklace of Harmonia"],
+    ["Dantre", "Dantre"],
+    ["Seal of Botis", "Seal of Botis"]
+  ];
+  const match = knownSources.find(([needle]) => text.includes(needle));
+  if (match) return match[1];
+  return (
+    text
+      .replace(/\s+dealt\s+\d+.*$/i, "")
+      .replace(/\s+took\s+\d+.*$/i, "")
+      .replace(/\s+healed\s+.*$/i, "")
+      .replace(/\s+restored\s+.*$/i, "")
+      .replace(/[.!]$/g, "")
+      .trim() || fallback || "Unknown"
+  );
+}
+
+function mergeSourceEntries(sources) {
+  const merged = new Map();
+  (sources || []).forEach((entry) => {
+    const amount = Math.max(0, Math.ceil(entry.amount || 0));
+    if (amount <= 0) return;
+    const source = entry.source || "Unknown";
+    const kind = entry.kind || "";
+    const key = `${kind}\u0000${source}`;
+    const previous = merged.get(key) || { source, kind, amount: 0 };
+    previous.amount += amount;
+    merged.set(key, previous);
+  });
+  return Array.from(merged.values());
+}
+
+function mergeSignedSourceEntries(sources) {
+  const merged = new Map();
+  (sources || []).forEach((entry) => {
+    const raw = Number(entry.amount || 0);
+    if (!Number.isFinite(raw) || raw === 0) return;
+    const amount = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+    const source = entry.source || "Unknown";
+    merged.set(source, (merged.get(source) || 0) + amount);
+  });
+  return Array.from(merged, ([source, amount]) => ({ source, amount })).filter((entry) => entry.amount !== 0);
+}
+
+function sourceTooltip(sources, kind = "damage") {
+  if (kind === "signed-credits") {
+    return mergeSignedSourceEntries(sources)
+      .map((entry) => `${entry.amount > 0 ? "+" : "-"}${Math.abs(entry.amount)} SIN from ${entry.source}`)
+      .join("\n");
+  }
+  if (kind === "damage") {
+    const damageEntries = mergeSourceEntries((sources || []).filter((entry) => !entry.kind || entry.kind === "damage"));
+    const flatBonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "flat-bonus"));
+    const multiplierBonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "multiplier-bonus"));
+    const bonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "bonus"));
+    const savedEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "saved"));
+    return [
+      ...damageEntries.map((entry) => `-${entry.amount} health from ${entry.source}`),
+      ...flatBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (flat bonus)`),
+      ...multiplierBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (multiplier)`),
+      ...bonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (bonus)`),
+      ...savedEntries.map((entry) => `+${entry.amount} health saved from ${entry.source}`)
+    ].join("\n");
+  }
+  const sign = kind === "damage" ? "-" : "+";
+  const unit = kind === "credits" ? "SIN" : kind === "memory" ? "memory" : "health";
+  return mergeSourceEntries(sources)
+    .map((entry) => `${sign}${entry.amount} ${unit} from ${entry.source}`)
+    .join("\n");
+}
+
+function sealIdFromStatSource(source) {
+  const sourceText = String(source || "").trim();
+  if (!sourceText) return "";
+  return (
+    PASSIVE_IDS.find((id) => {
+      if (REMOVED_PASSIVE_IDS.has(id)) return false;
+      const name = ITEMS[id]?.name;
+      return name && (sourceText === name || sourceText.startsWith(`${name} `));
+    }) || ""
+  );
+}
+
+function sealStatsFor(id) {
+  if (!id) return null;
+  state.sealStats = state.sealStats || {};
+  const stats = state.sealStats[id] || {
+    damage: 0,
+    healing: 0,
+    credits: 0,
+    saved: 0,
+    memory: 0,
+    bounty: 0,
+    bountyRemoved: 0,
+    triggers: 0
+  };
+  state.sealStats[id] = stats;
+  return stats;
+}
+
+function recordSealStat(id, kind, amount) {
+  const value = Math.max(0, Math.ceil(amount));
+  if (!PASSIVE_IDS.includes(id) || value <= 0) return;
+  // a SEAL that did damage / healed / paid SIN has been seen working: discovered
+  collectionDiscover(id);
+  const stats = sealStatsFor(id);
+  if (!stats) return;
+  stats[kind] = (stats[kind] || 0) + value;
+  if (kind === "damage") recordRunSealDamage(id, value);
+}
+
+function recordSealTrigger(id) {
+  if (!PASSIVE_IDS.includes(id)) return;
+  collectionDiscover(id);
+  const stats = sealStatsFor(id);
+  if (!stats) return;
+  stats.triggers = (stats.triggers || 0) + 1;
+}
+
+function recordSealStatFromSource(kind, amount, source) {
+  const id = sealIdFromStatSource(source);
+  recordSealStat(id, kind, amount);
+}
+
+function sealContributionParts(stats, { includeTriggers = false } = {}) {
+  const parts = [];
+  if (!stats) return parts;
+  if (stats.damage > 0) parts.push(`${stats.damage} damage dealt`);
+  if (stats.healing > 0) parts.push(`${stats.healing} healing done`);
+  if (stats.saved > 0) parts.push(`${stats.saved} damage negated`);
+  if (stats.credits > 0) parts.push(`${stats.credits} SIN gained`);
+  if (stats.memory > 0) parts.push(`${stats.memory} MEMORY added`);
+  if (stats.bounty > 0) parts.push(`${stats.bounty} BOUNTY added`);
+  if (stats.bountyRemoved > 0) parts.push(`${stats.bountyRemoved} BOUNTY removed`);
+  if (includeTriggers && stats.triggers > 0) parts.push(`${stats.triggers} trigger${stats.triggers === 1 ? "" : "s"}`);
+  return parts;
+}
+
+function sealContributionSummary(item) {
+  const stats = state.sealStats?.[item?.id];
+  if (!stats) return "";
+  const parts = sealContributionParts(stats);
+  if (!parts.length && stats.triggers > 0) parts.push(`${stats.triggers} trigger${stats.triggers === 1 ? "" : "s"}`);
+  return parts.length ? `Total: ${parts.join(" / ")}` : "";
+}
+
+function sealContributionDetails(item) {
+  const stats = state.sealStats?.[item?.id];
+  const parts = sealContributionParts(stats, { includeTriggers: true });
+  if (item?.id === "p111" && item.lastSatanDivisor && item.lastSatanMaxDivisor) {
+    parts.push(`last divisor ${item.lastSatanDivisor}`);
+    parts.push(`last Satan damage ${item.lastSatanDamage || 0}`);
+  }
+  if (!parts.length) return "This run:\nNo tracked effect yet.";
+  return `This run:\n${parts.map((part) => `- ${part}`).join("\n")}`;
+}
+
+function recordPlayerDamageSource(amount, source, kind = "") {
+  const damage = Math.max(0, Math.ceil(amount));
+  if (damage <= 0 || !source) return;
+  state.playerDamageSources = state.playerDamageSources || [];
+  state.playerDamageSources.push({ amount: damage, source, kind });
+  if (kind === "saved") recordSealStatFromSource("saved", damage, source);
+}
+
+function recordPlayerHealSource(amount, source) {
+  const healed = Math.max(0, Math.ceil(amount));
+  if (healed <= 0 || !source) return;
+  state.playerHealSources = state.playerHealSources || [];
+  state.playerHealSources.push({ amount: healed, source });
+  recordSealStatFromSource("healing", healed, source);
+}
+
+function recordPlayerCreditSource(amount, source) {
+  const credits = Math.max(0, Math.ceil(amount));
+  if (credits <= 0 || !source) return;
+  state.playerCreditSources = state.playerCreditSources || [];
+  state.playerCreditSources.push({ amount: credits, source });
+  recordSealStatFromSource("credits", credits, source);
+}
+
+function recordBotSinSource(bot, amount, source) {
+  const raw = Number(amount || 0);
+  if (!bot || !Number.isFinite(raw) || raw === 0 || !source) return;
+  const sin = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+  bot.sinSources = bot.sinSources || [];
+  bot.sinSources.push({ amount: sin, source });
+  if (sin > 0) recordSealStatFromSource("bounty", sin, source);
+  if (sin < 0) recordSealStatFromSource("bountyRemoved", Math.abs(sin), source);
+}
+
+function recordBotMemorySource(bot, amount, source) {
+  const memory = Math.max(0, Math.ceil(amount));
+  if (!bot || memory <= 0 || !sealIdFromStatSource(source)) return;
+  bot.lastMemoryDelta = (bot.lastMemoryDelta || 0) + memory;
+  bot.memorySources = bot.memorySources || [];
+  bot.memorySources.push({ amount: memory, source });
+  recordSealStatFromSource("memory", memory, source);
+}
+
+// MEMORY taken away by a SEAL, kept like the gains so the seal animation can show (and sound) it at its step
+function recordBotMemoryLoss(bot, amount, source) {
+  const memory = Math.max(0, Math.ceil(amount));
+  if (!bot || memory <= 0 || !sealIdFromStatSource(source)) return;
+  bot.memoryLossSources = bot.memoryLossSources || [];
+  bot.memoryLossSources.push({ amount: memory, source });
+}
+
+function clearBotMemoryBadges() {
+  state.bots.forEach((bot) => {
+    bot.lastMemoryDelta = 0;
+    bot.memorySources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
+  });
+}
+
+function recordBotDamageSource(bot, amount, source, kind = "") {
+  const damage = Math.max(0, Math.ceil(amount));
+  if (!bot || damage <= 0) return;
+  recordRunDamage(damage);
+  recordBotRoundDamage(bot, damage);
+  if (!source) return;
+  bot.damageSources = bot.damageSources || [];
+  bot.damageSources.push({ amount: damage, source, kind });
+  recordSealStatFromSource("damage", damage, source);
+}
+
+function recordBotRoundDamage(bot, amount) {
+  const round = state.roundState;
+  const damage = Math.max(0, Math.ceil(amount));
+  if (!round || !bot || bot.eliminated || damage <= 0) return;
+  const previous = round.botDamageTotals.get(bot.id) || 0;
+  const next = previous + damage;
+  round.botDamageTotals.set(bot.id, next);
+  const buerThreshold = Math.max(0, (bot.maxHp || 0) * 0.2);
+  if (previous <= buerThreshold && next > buerThreshold) {
+    orderedPassiveEffectEntries("p114").forEach((entry) => {
+      markPassiveEntryTriggered(entry);
+      const gained = gainCredits(passiveEntryScaledValue(entry, 2), true, ITEMS.p114.name);
+      round.roundEvents.push(`${ITEMS.p114.name} paid ${gained} SIN after ${bot.name} took more than 20% max-HEALTH damage.`);
+    });
+  }
+  const maraxThreshold = Math.max(0, (bot.maxHp || 0) * 0.3);
+  if (previous <= maraxThreshold && next > maraxThreshold) {
+    applyHighDamageSinGain(bot);
+  }
+}
+
+function applyHighDamageSinGain(bot) {
+  const round = state.roundState;
+  if (!round || !bot || bot.eliminated || round.highDamageSinBotIds.has(bot.id)) return;
+  const entries = orderedPassiveEffectEntries("p51");
+  if (!entries.length) return;
+  round.highDamageSinBotIds.add(bot.id);
+  entries.forEach((entry) => {
+    const amount = passiveEntryScaledValue(entry, 4);
+    if (amount <= 0) return;
+    markPassiveEntryTriggered(entry);
+    changeBotSin(bot, amount, `Seal of Marax gave ${bot.name} +${amount} SIN for taking more than 30% max-health damage.`, {
+      triggerLossDamage: false
+    });
+  });
+}
+
+function recordBotHealSource(bot, amount, source) {
+  const healed = Math.max(0, Math.ceil(amount));
+  if (!bot || healed <= 0 || !source) return;
+  bot.healSources = bot.healSources || [];
+  bot.healSources.push({ amount: healed, source });
+  recordSealStatFromSource("healing", healed, source);
+}
+
+function addPendingBotDamage(botDamages, botDamageSources, bot, amount, source, playerDealt = true) {
+  if (!bot || bot.eliminated) return;
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
+  if (!bot || damage <= 0) return;
+  botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
+  if (botDamageSources) {
+    const sources = botDamageSources.get(bot.id) || [];
+    sources.push(...scaledBotDamageSourceEntries(damageDetails, source || "Unknown"));
+    botDamageSources.set(bot.id, sources);
+  }
+  applyPendingRedirectDamage(damageDetails.redirectEntries, botDamages, botDamageSources);
+}
+
+function queueEndOfRoundBotDamage(bot, amount, reason, source = undefined, playerDealt = true) {
+  const damage = Math.max(0, Math.ceil(amount));
+  const round = state.roundState;
+  if (!bot || bot.eliminated || damage <= 0) return 0;
+  if (!round || round.resolvingEndOfRoundPassives) {
+    return damageBot(bot, damage, reason, source, playerDealt);
+  }
+  if (!Array.isArray(round.pendingEndOfRoundBotDamages)) round.pendingEndOfRoundBotDamages = [];
+  round.pendingEndOfRoundBotDamages.push({
+    botId: bot.id,
+    amount: damage,
+    source: source === null ? null : source || sourceLabelFromReason(reason, "Damage"),
+    playerDealt
+  });
+  return damage;
+}
+
+function queueEndOfRoundBotDamages(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+  return (bots || []).reduce((total, bot) => {
+    if (!bot || bot.eliminated) return total;
+    const rawAmount = typeof amount === "function" ? amount(bot) : amount;
+    const damage = Math.max(0, Math.ceil(rawAmount));
+    if (damage <= 0) return total;
+    const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
+    const source =
+      sourceFactory === null
+        ? null
+        : typeof sourceFactory === "function"
+          ? sourceFactory(bot, damage)
+          : sourceFactory;
+    return total + queueEndOfRoundBotDamage(bot, damage, reason, source, playerDealt);
+  }, 0);
+}
+
+function applyQueuedEndOfRoundBotDamage() {
+  const round = state.roundState;
+  const queued = Array.isArray(round?.pendingEndOfRoundBotDamages) ? round.pendingEndOfRoundBotDamages : [];
+  if (!round || !queued.length) return 0;
+  round.pendingEndOfRoundBotDamages = [];
+  const botDamages = new Map();
+  const botDamageSources = new Map();
+  queued.forEach((entry) => {
+    const bot = state.bots.find((candidate) => candidate.id === entry.botId);
+    const damage = Math.max(0, Math.ceil(entry.amount || 0));
+    if (!bot || bot.eliminated || bot.hp <= 0 || damage <= 0) return;
+    addPendingBotDamage(botDamages, botDamageSources, bot, damage, entry.source || "Queued damage", entry.playerDealt !== false);
+  });
+  if (!botDamages.size) return 0;
+  const total = Array.from(botDamages.values()).reduce((sum, damage) => sum + Math.max(0, Math.ceil(damage || 0)), 0);
+  applyPendingBotDamageBatch(botDamages, botDamageSources, state.bots);
+  return total;
+}
+
+function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
+  const baseDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
+  let exactDamage = baseDamage;
+  let roundedDamage = baseDamage;
+  const modifierEntries = [];
+  const applyMultiplier = (multiplier, source, entry) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    const before = roundedDamage;
+    exactDamage *= multiplier;
+    roundedDamage = Math.ceil(exactDamage);
+    const extra = Math.max(0, roundedDamage - before);
+    if (extra <= 0) return;
+    modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
+    markPassiveEntryTriggered(entry);
+  };
+
+  targetDiffEntries.forEach((entry) => {
+    if (entry.id === "p80" && baseDamage > 10) {
+      applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
+    }
+  });
+
+  return { damage: roundedDamage, baseDamage, modifierEntries };
+}
+
+function addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, amount, source, targetDiffEntries) {
+  if (!bot || amount <= 0) return 0;
+  const targetDetails = targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries);
+  if (targetDetails.damage <= 0) return 0;
+  const scaledDetails = scaledBotDamageDetails(bot, targetDetails.damage, false);
+  const damage = scaledDetails.damage;
+  if (damage <= 0) return 0;
+  botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
+  const sourceEntries = [
+    { amount: targetDetails.baseDamage, source: source || "Target difference" },
+    ...targetDetails.modifierEntries,
+    ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
+  ];
+  if (botDamageSources) {
+    const sources = botDamageSources.get(bot.id) || [];
+    sources.push(...sourceEntries);
+    botDamageSources.set(bot.id, sources);
+  }
+  applyPendingRedirectDamage(scaledDetails.redirectEntries, botDamages, botDamageSources);
+  const round = state.roundState;
+  if (round) {
+    round.targetDifferenceDamageByBotId.set(bot.id, (round.targetDifferenceDamageByBotId.get(bot.id) || 0) + damage);
+  }
+  return damage;
+}
+
+function recordBotExcessDamage(bot, damage, hpBefore) {
+  if (!state.roundState || !bot || bot.immortal) return;
+  const excess = Math.max(0, Math.ceil(damage || 0) - Math.max(0, Math.ceil(hpBefore || 0)));
+  if (excess <= 0) return;
+  bot.excessDamage = (bot.excessDamage || 0) + excess;
+}
+
+function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZero = false } = {}) {
+  const eliminated = [];
+  bots.forEach((bot) => {
+    if (!bot || bot.eliminated || bot.hp <= 0) return;
+    const damage = botDamages.get(bot.id) || 0;
+    if (damage <= 0) {
+      if (logZero) state.roundState.roundEvents.push(`${bot.name} took 0 damage.`);
+      return;
+    }
+    bot.lastDamage = (bot.lastDamage || 0) + damage;
+    scaleSourceEntries(botDamageSources.get(bot.id), damage).forEach((entry) =>
+      recordBotDamageSource(bot, entry.amount, entry.source, entry.kind)
+    );
+    if (bot.immortal) {
+      bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
+      state.roundState.roundEvents.push(`${bot.name} took ${damage} damage. Total: ${bot.damageTakenTotal}.`);
+      return;
+    }
+    const hpBefore = bot.hp;
+    bot.hp = Math.max(0, bot.hp - damage);
+    state.roundState.roundEvents.push(`${bot.name} took ${damage} damage.`);
+    if (bot.hp <= 0) {
+      recordBotExcessDamage(bot, damage, hpBefore);
+      eliminated.push(bot);
+    }
+  });
+  if (eliminated.length) resolveEliminatedBots(eliminated);
+  return eliminated;
+}
+
+function scaleSourceEntries(sources, total) {
+  const target = Math.max(0, Math.ceil(total));
+  const entries = mergeSourceEntries(sources);
+  const rawTotal = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  if (target <= 0) return [];
+  if (!entries.length || rawTotal <= 0) return [{ amount: target, source: "Damage" }];
+  if (rawTotal === target) return entries;
+
+  const scaled = entries.map((entry) => {
+    const exact = (entry.amount * target) / rawTotal;
+    return { ...entry, amount: Math.floor(exact), fraction: exact % 1 };
+  });
+  let remainder = target - scaled.reduce((sum, entry) => sum + entry.amount, 0);
+  scaled
+    .slice()
+    .sort((left, right) => right.fraction - left.fraction)
+    .forEach((entry) => {
+      if (remainder <= 0) return;
+      entry.amount += 1;
+      remainder -= 1;
+    });
+  return scaled.filter((entry) => entry.amount > 0).map(({ source, kind, amount }) => ({ source, kind, amount }));
+}
+
+function highestMemorySinner() {
+  return activeBots()
+    .slice()
+    .sort((left, right) => (right.memory?.length || 0) - (left.memory?.length || 0) || right.hp - left.hp || left.id - right.id)[0];
+}
+
+function applyPlayerDamageMemoryConversion(amount) {
+  let damage = Math.max(0, Math.ceil(amount));
+  const conversions = [];
+  if (!state.roundState || damage <= 0) return { damage, conversions, avoidedTotal: 0 };
+
+  orderedPassiveEffectEntries("p22").forEach((entry) => {
+    if (damage <= 0) return;
+    const avoided = Math.min(damage, Math.floor(damage * 0.2));
+    if (avoided <= 0) return;
+    damage -= avoided;
+    conversions.push({
+      entry,
+      avoided,
+      memory: doubledStackValue(entry, avoided)
+    });
+    markPassiveEntryTriggered(entry);
+  });
+
+  return {
+    damage,
+    conversions,
+    avoidedTotal: conversions.reduce((sum, conversion) => sum + Math.max(0, Math.ceil(conversion.avoided || 0)), 0)
+  };
+}
+
+function resolvePlayerDamageMemoryConversions(conversions = []) {
+  conversions.forEach(({ avoided, memory }) => {
+    const target = highestMemorySinner();
+    if (!target || memory <= 0) {
+      addRoundEvent(`Seal of Botis avoided ${avoided} damage, but no DAMNED could receive MEMORY.`);
+      return;
+    }
+    const added = addBotMemory(target, memory, "", { source: ITEMS.p22?.name || "Seal of Botis" });
+    addRoundEvent(`Seal of Botis avoided ${avoided} damage and gave ${target.name} +${added} memory.`);
+  });
+}
+
+function damagePlayer(amount, reason, echo = true, respectReduction = true, source = undefined, applySealConversion = true) {
+  let damage = Math.max(0, Math.ceil(amount));
+  const sourceDamage = damage;
+  let reductionSaved = 0;
+  if (respectReduction && state.roundState?.playerDamageReduction) {
+    const beforeReduction = damage;
+    damage = Math.ceil(damage * (1 - state.roundState.playerDamageReduction));
+    reductionSaved = Math.max(0, beforeReduction - damage);
+  }
+  const conversion = applySealConversion ? applyPlayerDamageMemoryConversion(damage) : { damage, conversions: [], avoidedTotal: 0 };
+  damage = conversion.damage;
+  if (damage <= 0) {
+    if (reductionSaved > 0) {
+      recordPlayerDamageSource(reductionSaved, state.roundState?.playerDamageReductionSource || "Damage reduction", "saved");
+    }
+    if (conversion.avoidedTotal > 0) {
+      recordPlayerDamageSource(conversion.avoidedTotal, ITEMS.p22?.name || "Seal of Botis", "saved");
+    }
+    resolvePlayerDamageMemoryConversions(conversion.conversions);
+    return 0;
+  }
+  state.player.hp = Math.max(introPlayerHpFloor(), state.player.hp - damage);
+  state.playerLastDamage = (state.playerLastDamage || 0) + damage;
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
+  recordPlayerDamageSource(sourceDamage, sourceLabel);
+  applyBossLifeStealHealing(damage);
+  if (reductionSaved > 0) {
+    recordPlayerDamageSource(reductionSaved, state.roundState?.playerDamageReductionSource || "Damage reduction", "saved");
+  }
+  if (conversion.avoidedTotal > 0) {
+    recordPlayerDamageSource(conversion.avoidedTotal, ITEMS.p22?.name || "Seal of Botis", "saved");
+  }
+  if (reason) addRoundEvent(reason);
+  if (echo) applySpiteCircuitDamage(damage);
+  if (echo) applyPainEchoDamage(damage);
+  resolvePlayerDamageMemoryConversions(conversion.conversions);
+  return damage;
+}
+
+function playerMaxHp() {
+  return state.player.maxHp || PLAYER_MAX_HP;
+}
+
+function applySpiteCircuitDamage(playerDamage, pendingBotDamages = null, pendingBotSources = null) {
+  const damage = spiteCircuitDamage(playerDamage);
+  if (damage <= 0) return;
+  const targets = activeBots();
+  if (!targets.length) return;
+  markPassiveTriggered("p5");
+  if (pendingBotDamages) {
+    targets.forEach((bot) => {
+      addPendingBotDamage(pendingBotDamages, pendingBotSources, bot, damage, "Seal of Haures");
+    });
+    addRoundEvent(`Seal of Haures adds ${damage} damage to every DAMNED.`);
+    return;
+  }
+  damageBots(targets, damage, (bot, dealt) => `Seal of Haures dealt ${dealt} damage to ${bot.name}.`, "Seal of Haures");
+}
+
+function applyPainEchoDamage(playerDamage, pendingBotDamages = null, pendingBotSources = null) {
+  const round = state.roundState;
+  if (!round?.painEcho || playerDamage <= 0) return;
+  const source = ITEMS.a21?.name || "Voodoo Doll";
+  const percent = playerDamage / Math.max(1, playerMaxHp());
+  const targets = activeBots();
+  if (!targets.length) return;
+  const percentLabel = `${Math.round(percent * 100)}%`;
+  if (pendingBotDamages) {
+    targets.forEach((bot) => {
+      const echoDamage = Math.ceil((bot.maxHp || 0) * percent);
+      addPendingBotDamage(pendingBotDamages, pendingBotSources, bot, echoDamage, source);
+    });
+    round.roundEvents.push(`${source} adds ${percentLabel} max-HEALTH damage to every DAMNED.`);
+    return;
+  }
+  targets.forEach((bot) => {
+    const echoDamage = Math.ceil((bot.maxHp || 0) * percent);
+    damageBot(bot, echoDamage, `${source} dealt ${echoDamage} damage to ${bot.name}.`, source);
+  });
+}
+
+function healPlayer(amount, reason, source = undefined) {
+  if (state.player.hp <= 0) return 0;
+  amount = Math.ceil(amount);
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
+  const soulBlocker = soulStealingBlocker();
+  if (soulBlocker) {
+    if (sourceLabel) addRoundEvent(`${soulBlocker.name}'s ${BOSS_PASSIVES.soulStealing.name} prevented ${sourceLabel} from healing you.`);
+    return 0;
+  }
+  const healingBlocker = padmaHealingBlocker(sourceLabel);
+  if (healingBlocker) {
+    if (sourceLabel) addRoundEvent(`${healingBlocker.name} prevented ${sourceLabel} from healing you.`);
+    return 0;
+  }
+  const before = state.player.hp;
+  state.player.hp = Math.min(playerMaxHp(), state.player.hp + amount);
+  const healed = state.player.hp - before;
+  if (healed > 0) state.playerLastHeal = (state.playerLastHeal || 0) + healed;
+  recordPlayerHealSource(healed, sourceLabel);
+  if (healed > 0 && reason) addRoundEvent(`${reason} healed you for ${healed}.`);
+  return healed;
+}
+
+function healBot(bot, amount, reason, source = undefined, options = {}) {
+  amount = Math.ceil(amount);
+  const before = bot.hp;
+  bot.hp = options.allowOverheal ? bot.hp + amount : Math.min(bot.maxHp, bot.hp + amount);
+  const healed = bot.hp - before;
+  bot.lastHeal = (bot.lastHeal || 0) + healed;
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Healing");
+  recordBotHealSource(bot, healed, sourceLabel);
+  if (healed > 0 && reason) addRoundEvent(`${reason} healed ${bot.name} for ${healed}.`);
+  return healed;
+}
+
+function botRewardDetails(bot, markTriggers = false) {
+  if (bot?.immortal) return { amount: 0, sourceEntries: [] };
+  const bossBounty = botBossBounty(bot);
+  const regularDetails = botRegularBountyPayoutDetails(bot, markTriggers);
+  const sourceEntries = [];
+  if (bossBounty > 0) sourceEntries.push({ amount: bossBounty, source: `${bot.name} boss bounty` });
+  if (regularDetails.baseReward > 0) sourceEntries.push({ amount: regularDetails.baseReward, source: `${bot.name} bounty` });
+  sourceEntries.push(...regularDetails.modifierEntries);
+  return {
+    amount: Math.ceil(bossBounty + regularDetails.payout),
+    sourceEntries
+  };
+}
+
+function botReward(bot) {
+  return botRewardDetails(bot, false).amount;
+}
+
+function botHealthBonus() {
+  return scalingBonus(state.bossKills, BOT_HP_BONUS_PER_BOSS, BOT_HP_BONUS_PER_BOSS_LATE, BOT_HP_BONUS_PER_BOSS_ENDLESS);
+}
+
+function bossHealthBonus() {
+  return scalingBonus(
+    state.bossSpawnCount,
+    BOSS_HP_BONUS_PER_SPAWN,
+    BOSS_HP_BONUS_PER_SPAWN_LATE,
+    BOSS_HP_BONUS_PER_SPAWN_ENDLESS
+  );
+}
+
+function hpExponentialFactor(progressAfterFirstEight) {
+  const progress = Math.max(0, progressAfterFirstEight || 0);
+  return Math.pow(HP_EXPONENTIAL_RATE, progress / HP_EXPONENTIAL_STEP_BOSSES);
+}
+
+function botHealthScaleFactor() {
+  return hpExponentialFactor((state.bossKills || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+}
+
+function bossHealthScaleFactor() {
+  return hpExponentialFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+}
+
+function randomBotHealth() {
+  return randomBotHealthValue();
+}
+
+function randomBotHealthValue() {
+  const bonus = botHealthBonus();
+  const factor = botHealthScaleFactor();
+  return randomInt(Math.ceil((BOT_MIN_HP + bonus) * factor), Math.ceil((BOT_MAX_HP + bonus) * factor));
+}
+
+function shopSlotCount() {
+  return 3 + (hasPassive("p20") ? 1 : 0);
+}
+
+function shopSlotCountForItem(item) {
+  return 3 + (item?.id === "p20" ? 1 : 0);
+}
+
+function sealSlotsFull() {
+  return ownedSealSlotCount() >= passiveLimit();
+}
+
+function eliteRerollBoostCount(value = state.eliteBoostedNextReroll) {
+  if (value === true) return 1;
+  if (!Number.isFinite(Number(value))) return 0;
+  return Math.max(0, Math.ceil(Number(value)));
+}
+
+function addEliteRerollBoost() {
+  state.eliteBoostedNextReroll = eliteRerollBoostCount() + 1;
+}
+
+function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
+  if (ownedSealSlotCount() <= 0) return 0;
+  let multiplier = 1;
+  multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
+  if (sealSlotsFull()) multiplier *= 2;
+  return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
+}
+
+function activeInventoryLimit() {
+  return ACTIVE_LIMIT + baseEditionBonus("p25");
+}
+
+function activeUseLimit() {
+  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p25");
+}
+
+function bountyOathMultiplier() {
+  return hasPassive("p24") ? 1.5 * passivePower("p24") : 1;
+}
+
+function bountyOathMultiplierForItem(item) {
+  return item?.id === "p24" ? 1.5 * passivePower(item) : 1;
+}
+
+function activeBots() {
+  return state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
+}
+
+function damageBot(bot, amount, reason, source = undefined, playerDealt = true) {
+  const rawDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || bot.eliminated || rawDamage <= 0) return 0;
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
+  if (damage <= 0) return 0;
+  bot.lastDamage = (bot.lastDamage || 0) + damage;
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
+  recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
+  if (bot.immortal) {
+    bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
+    if (reason) {
+      addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
+    }
+    applyDirectRedirectDamage(damageDetails.redirectEntries);
+    return damage;
+  }
+  const hpBefore = bot.hp;
+  bot.hp = Math.max(0, bot.hp - damage);
+  if (reason) {
+    addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
+  }
+  applyDirectRedirectDamage(damageDetails.redirectEntries);
+  if (bot.hp <= 0) {
+    recordBotExcessDamage(bot, damage, hpBefore);
+    resolveEliminatedBots([bot]);
+  }
+  return damage;
+}
+
+function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt = true) {
+  const rawDamage = Math.max(0, Math.ceil(amount));
+  if (!bot || bot.eliminated || bot.hp <= 1 || rawDamage <= 0) return 0;
+  const damageDetails = scaledBotDamageDetails(bot, amount, playerDealt);
+  const damage = damageDetails.damage;
+  if (damage <= 0) return 0;
+  if (bot.immortal) {
+    bot.lastDamage = (bot.lastDamage || 0) + damage;
+    bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
+    const reasonText = typeof reason === "function" ? reason(bot, damage) : reason;
+    const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reasonText, "Damage");
+    recordScaledBotDamageSources(bot, damageDetails, sourceLabel);
+    if (reasonText) addRoundEvent(reasonText);
+    applyDirectRedirectDamage(damageDetails.redirectEntries);
+    return damage;
+  }
+  const before = bot.hp;
+  bot.lastDamage = (bot.lastDamage || 0) + damage;
+  bot.hp = Math.max(1, bot.hp - damage);
+  const dealt = before - bot.hp;
+  const reasonText = typeof reason === "function" ? reason(bot, dealt) : reason;
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reasonText, "Damage");
+  scaleSourceEntries(scaledBotDamageSourceEntries(damageDetails, sourceLabel), dealt).forEach((entry) =>
+    recordBotDamageSource(bot, entry.amount, entry.source, entry.kind)
+  );
+  if (reasonText && dealt > 0) {
+    addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${dealt} non-lethal damage to ${bot.name}.` : reasonText);
+  }
+  applyDirectRedirectDamage(damageDetails.redirectEntries);
+  return dealt;
+}
+
+function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+  const eliminated = [];
+  const planned = bots.map((bot) => {
+    if (!bot || bot.eliminated) return { bot, damageDetails: { damage: 0, baseDamage: 0, modifierEntries: [] }, damage: 0 };
+    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damage = damageDetails.damage;
+    return { bot, damageDetails, damage };
+  });
+  planned.forEach(({ bot, damageDetails, damage }) => {
+    if (!bot || bot.eliminated || damage <= 0) return;
+    bot.lastDamage = (bot.lastDamage || 0) + damage;
+    const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
+    const source =
+      sourceFactory === null
+        ? ""
+        : typeof sourceFactory === "function"
+          ? sourceFactory(bot, damage)
+          : sourceFactory || sourceLabelFromReason(reason, "Damage");
+    recordScaledBotDamageSources(bot, damageDetails, source);
+    if (bot.immortal) {
+      bot.damageTakenTotal = (bot.damageTakenTotal || 0) + damage;
+      if (reason) addRoundEvent(reason);
+      applyDirectRedirectDamage(damageDetails.redirectEntries);
+      return;
+    }
+    const hpBefore = bot.hp;
+    bot.hp = Math.max(0, bot.hp - damage);
+    if (reason) addRoundEvent(reason);
+    if (bot.hp <= 0) {
+      recordBotExcessDamage(bot, damage, hpBefore);
+      eliminated.push(bot);
+    }
+    applyDirectRedirectDamage(damageDetails.redirectEntries);
+  });
+  if (eliminated.length) resolveEliminatedBots(eliminated);
+  return eliminated;
+}
+
+function eraseBotWithoutReward(bot, reason, cause = "erased") {
+  if (!bot || bot.eliminated) return;
+  if (bot.immortal) {
+    if (reason) addRoundEvent(`${bot.name} cannot be erased.`);
+    return;
+  }
+  bot.hp = 0;
+  bot.eliminated = true;
+  bot.deathCause = cause;
+  bot.deathNotice = cause === "contract" ? "CONTRACT" : "ERASED";
+  bot.pendingReplacementSpec = null;
+  if (reason) addRoundEvent(reason);
+}
+
+function archetypeByType(type) {
+  return BOT_ARCHETYPES.find((archetype) => archetype.type === type) || randomFrom(BOT_ARCHETYPES);
+}
+
+// bosses have no personality, so every personality seal skips them
+function personalityType(bot) {
+  if (!bot || bot.isBoss) return "";
+  return bot.type || "";
+}
+
+function samePersonalityBots(bot) {
+  const type = personalityType(bot);
+  if (!type) return [];
+  return activeBots().filter((candidate) => candidate.id !== bot?.id && personalityType(candidate) === type);
+}
+
+function mostPrevalentPersonality() {
+  const counts = new Map();
+  activeBots().forEach((bot) => {
+    const type = personalityType(bot);
+    if (!type) return;
+    counts.set(type, (counts.get(type) || 0) + 1);
+  });
+  const bestCount = Math.max(0, ...Array.from(counts.values()));
+  const best = Array.from(counts.entries())
+    .filter((entry) => entry[1] === bestCount)
+    .map((entry) => entry[0]);
+  return best.length ? randomFrom(best) : "";
+}
+
+function applyPersonalityAlterationDamage(bot, source = "Personality alteration") {
+  const entries = orderedPassiveEffectEntries("p90");
+  if (!bot || !entries.length || bot.eliminated) return;
+  entries.forEach((entry) => {
+    if (bot.eliminated) return;
+    const damage = passiveEntryFlatDamage(entry, 10);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    const name = passiveName("p90", "Seal of Bifrons");
+    queueEndOfRoundBotDamage(bot, damage, `${name} dealt ${damage} damage to ${bot.name} after ${source} altered their personality.`, name);
+  });
+}
+
+function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
+  if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
+  const archetype = archetypeByType(type);
+  // changes made while READY resolves the round are shown at their SEAL's step of the seal animation
+  if (state.roundState?.penaltiesApplied && source) {
+    bot.personalityChanges = bot.personalityChanges || [];
+    bot.personalityChanges.push({ from: personalityType(bot) || bot.type, to: archetype.type, source });
+  }
+  bot.type = archetype.type;
+  bot.color = archetype.color;
+  bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
+  bot.aggression = archetype.aggression;
+  bot.noise = archetype.noise;
+  if (markEntry) markPassiveEntryTriggered(markEntry);
+  if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
+  if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
+  return true;
+}
+
+function allowedTwinTemperType() {
+  return randomFrom(["Analyst", "Stubborn"]);
+}
+
+function enforceTwinTemperPersonalities() {
+  const entries = orderedPassiveEffectEntries("p89");
+  if (!entries.length) return;
+  activeBots().forEach((bot) => {
+    if (["Analyst", "Stubborn"].includes(personalityType(bot))) return;
+    const entry = entries[0];
+    setBotPersonality(bot, allowedTwinTemperType(), passiveName("p89", "Seal of Marax"), { markEntry: entry });
+  });
+}
+
+function applyForcedDoctrineEndRound() {
+  const entries = orderedPassiveEffectEntries("p90");
+  if (!entries.length) return;
+  const prevalent = mostPrevalentPersonality();
+  if (!prevalent) return;
+  entries.forEach((entry) => {
+    const targets = activeBots().filter((bot) => personalityType(bot) !== prevalent);
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
+  });
+}
+
+// Seal of Ose: at end of round one random DAMNED becomes STUBBORN (so the clamp bites from next round),
+// then ELITE hits every STUBBORN DAMNED, the new one included.
+function applyFixedWillEndRound() {
+  const entries = orderedPassiveEffectEntries("p107");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    const name = passiveName("p107", "Seal of Ose");
+    const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+    if (targets.length) {
+      const target = randomFrom(targets);
+      setBotPersonality(target, "Stubborn", name, { markEntry: entry });
+    }
+    const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
+    if (eliteDamage <= 0) return;
+    const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
+    if (!stubbornTargets.length) return;
+    markPassiveEntryTriggered(entry);
+    damageBots(stubbornTargets, eliteDamage, (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
+  });
+}
+
+function inheritedReplacementProfile(bot, entry) {
+  if (!bot || bot.isBoss || bot.immortal || !entry) return null;
+  const chance = Math.min(1, 0.5 + Math.max(0, (entry.stack || 1) - 1) * 0.1);
+  if (Math.random() >= chance) return null;
+  markPassiveEntryTriggered(entry);
+  return {
+    name: bot.name,
+    flag: bot.flag,
+    country: bot.country,
+    type: personalityType(bot),
+    anchor: bot.anchor,
+    aggression: bot.aggression,
+    noise: bot.noise,
+    color: bot.color,
+    image: bot.image,
+    memory: (bot.memory || []).slice(-botMemoryLimit(bot))
+  };
+}
+
+function randomBossPassiveKeys(count) {
+  return shuffled(BOSS_PASSIVE_KEYS).slice(0, count);
+}
+
+function sealEntityName(passiveId) {
+  return (ITEMS[passiveId]?.name || "PandoriumBeast").replace(/^Seal of\s+/i, "");
+}
+
+function goeticBossImagePath(passiveId) {
+  const file = GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[passiveId];
+  return file ? `${GOETIC_BOSS_IMAGE_ROOT}/${file}` : randomBotImage();
+}
+
+function goeticBossSpecFromKey(key) {
+  const spec = GOETIC_BOSS_BY_KEY[key] || randomFrom(GOETIC_BOSS_SPECS);
+  const passiveId = spec.passiveId || null;
+  return {
+    key: spec.key,
+    passiveId,
+    name: spec.name,
+    sealName: passiveId ? ITEMS[passiveId]?.name || `Seal of ${spec.name}` : `Seal of ${spec.name}`,
+    image: `${GOETIC_BOSS_IMAGE_ROOT}/${spec.image}`
+  };
+}
+
+function uniqueBossSpecFromKey(key) {
+  if (key !== "petros") return { uniqueKey: key };
+  const groupId = `petros-pavlos-${state.nextBossPairId++}`;
+  const powers = shuffled(PETROS_PAVLOS_POWER_KEYS);
+  return {
+    uniqueKey: "petros",
+    pairGroupId: groupId,
+    copiedUniqueKey: powers[0] || "zilon",
+    pairedBossSpec: {
+      uniqueKey: "pavlos",
+      pairGroupId: groupId,
+      copiedUniqueKey: powers[1] || powers[0] || "dantre"
+    }
+  };
+}
+
+function grantRandomBossPassive(bot) {
+  if (!bot || bot.hp <= 0 || bot.eliminated) return null;
+  const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
+  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
+  const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
+  if (!choices.length) return null;
+  const key = randomFrom(choices);
+  bot.passiveKeys.push(key);
+  return key;
+}
+
+function grantRandomPyrosGift(bot) {
+  if (!bot || bot.hp <= 0 || bot.eliminated) return null;
+  const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
+  const choices = PYROS_GIFT_KEYS.filter((key) => !owned.has(key));
+  if (!choices.length) return null;
+  const key = randomFrom(choices);
+  bot.passiveKeys.push(key);
+  return key;
+}
+
+function randomBotProfile() {
+  const profile = randomFrom(BOT_PROFILES);
+  return {
+    flag: profile.flag,
+    country: profile.country,
+    name: `${randomFrom(profile.names)}-${randomInt(10, 99)}`
+  };
+}
+
+function randomBotImage() {
+  return `assets/bots/occult-stickmen-pack/${randomFrom(BOT_IMAGE_FILES)}`;
+}
+
+function botImagePath(entity) {
+  return entity?.image || `assets/bots/occult-stickmen-pack/${BOT_IMAGE_FILES[0]}`;
+}
+
+function botSinDisplay(bot) {
+  if (bot?.finalKey === "satan") return "∞ SIN";
+  if (bot?.finalKey === "jesus") return "-∞ SIN";
+  if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
+  return `${botRegularBounty(bot)} SIN`;
+}
+
+function stealPlayerSinToBoss(bot, amount, source) {
+  if (!bot || bot.eliminated || bot.immortal) return 0;
+  const available = Math.max(0, Math.ceil(state.player.credits || 0));
+  const stolen = Math.min(available, Math.max(0, Math.ceil(amount)));
+  if (stolen <= 0) return 0;
+  state.player.credits = Math.max(0, state.player.credits - stolen);
+  bot.bossBountyBonus = (bot.bossBountyBonus || 0) + stolen;
+  return stolen;
+}
+
+function uniquePowerSourceName(bot, key) {
+  const spec = UNIQUE_BOSS_SPECS[key];
+  if (!bot || bot.uniqueKey === key) return `${spec?.name || key}'s Seal`;
+  return `${bot.name}'s borrowed ${spec?.name || key} Seal`;
+}
+
+function applySerafimEntrySteal(bot) {
+  const stolen = stealPlayerSinToBoss(
+    bot,
+    Math.ceil(Math.max(0, state.player.credits || 0) / 2),
+    uniquePowerSourceName(bot, "serafim")
+  );
+  collectionNoteSerafimEntry(bot, stolen);
+  if (stolen <= 0) return;
+  const hpGain = stolen * 2;
+  bot.maxHp += hpGain;
+  bot.hp += hpGain;
+  addLog(`${bot.name} stole ${stolen} SIN and gained ${hpGain} health.`);
+}
+
+function applySerafimRoundSteal() {
+  const bosses = activeBossesWithPower("serafim");
+  if (!bosses.length) return;
+  bosses.forEach((bot) => {
+    const stolen = stealPlayerSinToBoss(bot, 2, uniquePowerSourceName(bot, "serafim"));
+    if (stolen > 0) state.roundState.roundEvents.push(`${bot.name} stole ${stolen} SIN.`);
+  });
+}
+
+function padmaHealingBlocker(sourceLabel = "") {
+  if (String(sourceLabel || "").toLowerCase().includes("boss kill")) return null;
+  return activeBossesWithPower("padma")[0] || null;
+}
+
+function applyPadmaStartHealing() {
+  const padmas = activeBossesWithPower("padma");
+  if (!padmas.length) return;
+  padmas.forEach((padma) => {
+    const source = uniquePowerSourceName(padma, "padma");
+    healBot(padma, Math.ceil(padma.maxHp * 0.05), source, source);
+    activeBots()
+      .filter((bot) => bot.id !== padma.id && !bot.isBoss)
+      .forEach((bot) => healBot(bot, Math.ceil(bot.maxHp * 0.1), source, source));
+  });
+}
+
+function applyKalhaSealSuppression() {
+  const kalhas = activeBossesWithPower("kalha");
+  const choices = state.player.passives.filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !suppressingBossForSeal(item.id));
+  if (!kalhas.length || !choices.length || !state.roundState) return;
+  const boss = randomFrom(kalhas);
+  const count = Math.floor(choices.length / 2);
+  if (count <= 0) return;
+  const seals = shuffled(choices).slice(0, count);
+  state.roundState.kalhaSuppressedPassiveIds = new Set(seals.map((seal) => seal.id));
+  state.roundState.kalhaSuppressedById = boss.id;
+  state.roundState.roundEvents.push(
+    `${boss.name} deactivated ${seals.map((seal) => passiveDisplayName(seal)).join(", ")} for this round.`
+  );
+}
+
+function createFinalBoss(key) {
+  const spec = FINAL_BOSS_SPECS[key];
+  return {
+    id: state.nextBotId++,
+    name: spec.name,
+    flag: "🏴",
+    country: "Final Judgment",
+    type: "Final Boss",
+    color: spec.color,
+    image: spec.image,
+    anchor: 50,
+    aggression: 0,
+    noise: 0,
+    hp: 100,
+    maxHp: 100,
+    reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
+    isBoss: true,
+    bossOrder: state.bossSpawnCount + 1,
+    uniqueKey: null,
+    goeticKey: null,
+    goeticPassiveId: null,
+    goeticSealName: null,
+    finalKey: key,
+    immortal: true,
+    damageTakenTotal: 0,
+    modifierOverride: null,
+    shopTax: 0,
+    eliminationDamage: 0,
+    grantsBuffs: false,
+    passiveKeys: [],
+    buffPassiveKey: null,
+    uniqueDescriptions: spec.descriptions,
+    memory: state.gameMemory.slice(),
+    markedByPlayer: false,
+    plannedGuess: null,
+    lastDamage: 0,
+    lastHeal: 0,
+    lastSinDelta: 0,
+    lastMemoryDelta: 0,
+    damageSources: [],
+    healSources: [],
+    sinSources: [],
+    memorySources: [],
+    poisonCounters: 0,
+    deathCause: null,
+    deathNotice: null,
+    eliminated: false,
+    skipEliminationReward: false,
+    pendingReplacementSpec: null,
+    pendingReplacementInheritance: null,
+    revealedByPassive: false,
+    fresh: false
+  };
+}
+
+function activeGoeticBoss() {
+  return state.bots.some((bot) => bot.goeticKey && bot.hp > 0 && !bot.eliminated);
+}
+
+function enterFinalBossPhase() {
+  state.finalBossQueued = false;
+  state.finalBossPhase = true;
+  state.bossQueued = false;
+  state.killsSinceBossSpawn = 0;
+  state.nextBossKillInterval = null;
+  state.uniqueBossQueue = [];
+  state.goeticBossQueue = [];
+  state.pendingActive = null;
+  state.mobileOfferingsOpen = false;
+  state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
+  state.shop = [];
+  addLog("Jesus and Satan enter. Devil's Offerings are sealed.");
+}
+
+function skipToFirstGoeticBoss() {
+  state.pauseOpen = false;
+  state.pendingActive = null;
+  state.uniqueBossQueue = [];
+  state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.goeticBossKills = 0;
+  resetBossKillInterval();
+  state.finalBossPhase = false;
+  state.finalBossQueued = false;
+  state.bossQueued = false;
+  state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length);
+  state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length);
+  state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * UNIQUE_BOSS_KEYS.length);
+  const firstBossSpec = takeNextBossSpec();
+  state.bots = firstBossSpec ? [createBot({ boss: true, bossSpec: firstBossSpec })] : [];
+  fillBots();
+  state.rerollBaseCost = 1;
+  rerollShop();
+  beginRound();
+  addLog("SKIP: jumped past the eight special bosses to the first Goetic Seal boss.");
+  render();
+}
+
+function skipToFinalBosses() {
+  state.pauseOpen = false;
+  state.pendingActive = null;
+  state.goeticBossKills = GOETIC_BOSS_TOTAL;
+  state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
+  state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
+  state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * (UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL));
+  enterFinalBossPhase();
+  rerollShop();
+  beginRound();
+  addLog("SKIP: jumped to the Jesus and Satan phase.");
+  render();
+}
+
+function skipArcadeProgression() {
+  if (arcadeActionLocked()) return;
+  if (state.finalBossPhase) {
+    addLog("SKIP: final phase is already active.");
+    render();
+    return;
+  }
+  if (activeGoeticBoss() || state.goeticBossKills > 0) {
+    skipToFinalBosses();
+  } else {
+    skipToFirstGoeticBoss();
+  }
+}
+
+function createBot(options = {}) {
+  const isBoss = Boolean(options.boss);
+  const bossSpec = options.bossSpec || null;
+  const inherited = !isBoss && options.inheritFrom ? options.inheritFrom : null;
+  const uniqueSpec = bossSpec?.uniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.uniqueKey] : null;
+  const copiedUniqueSpec = bossSpec?.copiedUniqueKey ? UNIQUE_BOSS_SPECS[bossSpec.copiedUniqueKey] : null;
+  const powerSpec = copiedUniqueSpec || uniqueSpec;
+  const profile = isBoss ? null : inherited ? inherited : randomBotProfile();
+  // bosses have no personality: they play the optimal guess (planBossGuess)
+  const archetype = isBoss
+    ? null
+    : inherited
+      ? archetypeByType(inherited.type)
+      : passiveStack("p89")
+        ? archetypeByType(allowedTwinTemperType())
+        : randomFrom(BOT_ARCHETYPES);
+  const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
+  const isEndlessBoss = isBoss && !uniqueSpec;
+  const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  const bossBaseHp = 80 + bossHealthBonus();
+  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
+  const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
+  const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
+  const passiveKeys = isBoss
+    ? uniqueSpec
+      ? []
+      : randomBossPassiveKeys(1)
+    : [];
+  const reward = randomInt(1, 5);
+  const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
+  const loadedSpawnBonus = !isBoss && loadedSpawnChance && Math.random() < loadedSpawnChance ? 6 : 0;
+  if (loadedSpawnBonus) markPassiveTriggered("p23");
+  const bot = {
+    id: state.nextBotId++,
+    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
+    flag: profile?.flag || "🏴",
+    country: profile?.country || "BOSS",
+    type: isBoss ? "BOSS" : inherited?.type || archetype.type,
+    color: isBoss ? "#d64f45" : archetype.color,
+    image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
+    anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
+    aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
+    noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
+    hp: maxHp,
+    maxHp,
+    reward: reward + loadedSpawnBonus,
+    isBoss,
+    bossOrder,
+    uniqueKey: uniqueSpec?.key || null,
+    copiedUniqueKey: copiedUniqueSpec?.key || null,
+    pairGroupId: bossSpec?.pairGroupId || null,
+    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
+    goeticKey: goeticSpec?.key || null,
+    goeticPassiveId: goeticSpec?.passiveId || null,
+    goeticSealName: goeticSpec?.sealName || null,
+    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
+    shopTax: uniqueSpec?.shopTax || 0,
+    eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
+    grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
+    bossBountyFactor: uniqueSpec?.bossBountyFactor ?? bossSpec?.bossBountyFactor ?? 1,
+    bossBountyBonus: 0,
+    countsAsBossProgress: uniqueSpec?.countsAsBossProgress !== false && bossSpec?.countsAsBossProgress !== false,
+    countsAsBossSpawn: uniqueSpec?.countsAsBossSpawn !== false && bossSpec?.countsAsBossSpawn !== false,
+    passiveKeys,
+    buffPassiveKey: null,
+    uniqueDescriptions: uniqueSpec?.descriptions || [],
+    memory: isBoss ? state.gameMemory.slice() : (inherited?.memory || []).slice(),
+    markedByPlayer: false,
+    plannedGuess: null,
+    lastDamage: 0,
+    lastHeal: 0,
+    lastSinDelta: 0,
+    lastMemoryDelta: 0,
+    damageSources: [],
+    healSources: [],
+    sinSources: [],
+    memorySources: [],
+    poisonCounters: 0,
+    deathCause: null,
+    deathNotice: null,
+    eliminated: false,
+    skipEliminationReward: false,
+    pendingReplacementSpec: null,
+    revealedByPassive: false,
+    fresh: true
+  };
+  if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
+  seedNewBotMemoryFromVassago(bot);
+  if (isBoss && bot.countsAsBossSpawn !== false) state.bossSpawnCount += 1;
+  return bot;
+}
+
+function fillBots() {
+  while (state.bots.length < BOT_COUNT) {
+    state.bots.push(createBot());
+  }
+}
+
+function resetBotsForRun() {
+  state.bots = [];
+  fillBots();
+}
+
+function applyPyrosBuffs() {
+  const pyrosSource = activeBossesWithPower("pyros")[0];
+  if (!pyrosSource || state.roundState?.pyrosGiftGranted) return;
+  const candidates = activeBots();
+  if (!candidates.length) return;
+  const target = randomFrom(candidates);
+  const key = grantRandomPyrosGift(target);
+  if (!key) return;
+  target.pyrosGifted = true;
+  if (state.roundState) {
+    state.roundState.pyrosGiftGranted = true;
+    state.roundState.roundEvents.push(`${pyrosSource.name} gave ${target.name} ${botPassiveKeyName(key)}.`);
+  }
+}
+
+function rerollShop() {
+  collectionNoteShopReroll();
+  if (shopDisabledBySatan()) {
+    state.shop = [];
+    return;
+  }
+  const eliteBoosted = eliteRerollBoostCount();
+  state.eliteBoostedNextReroll = 0;
+  state.shop = [drawPassiveShopItem(eliteBoosted), drawActiveShopItem(), drawActiveShopItem()];
+  if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  syncShopSlotCount();
+}
+
+function syncShopSlotCount() {
+  if (shopDisabledBySatan()) {
+    state.shop = [];
+    return;
+  }
+  const count = shopSlotCount();
+  while (state.shop.length < count) state.shop.push(drawActiveShopItem());
+  if (state.shop.length > count) state.shop = state.shop.slice(0, count);
+}
+
+function drawShopItem(pool) {
+  const availablePool = pool.filter((id) => !REMOVED_PASSIVE_IDS.has(id));
+  const id = randomFrom(availablePool.length ? availablePool : pool);
+  return { item: itemCopy(id), sold: false };
+}
+
+function sacrificialDaggerShopWeight(idOrItem = "p70") {
+  const stack = typeof idOrItem === "string" ? passiveStack(idOrItem) : idOrItem?.stack || 0;
+  return stack ? 2 : 1;
+}
+
+function activeShopPool() {
+  const pool = ACTIVE_IDS.slice();
+  const daggerExtraCopies = Math.max(0, sacrificialDaggerShopWeight() - 1);
+  for (let copy = 0; copy < daggerExtraCopies; copy += 1) {
+    pool.push("a15");
+  }
+  return pool;
+}
+
+function drawActiveShopItem() {
+  return drawShopItem(activeShopPool());
+}
+
+function drawPassiveShopItem(eliteBoosted = false) {
+  // locked SEALS (see SEAL_UNLOCKS in 09-collection.js) never show up until unlocked
+  const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && !isSealLocked(id));
+  const availablePool = passivePool.filter((id) => !isSelfStackingSeal(id) || directPassiveStack(id) === 0);
+  const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isSelfStackingSeal(id));
+  const freshPassives = availablePool.filter((id) => directPassiveStack(id) === 0);
+  const eliteChance = eliteShopChance(eliteBoosted);
+  const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
+  const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
+  if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isSelfStackingSeal(id)));
+  return { item: itemCopy(randomFrom(choices)), sold: false };
+}
+
+function playtestMoneyModeActive() {
+  return Boolean(state.playtestInfiniteMoney);
+}
+
+function canSpendCredits(amount) {
+  const cost = Math.max(0, Math.ceil(amount));
+  return playtestMoneyModeActive() || state.player.credits >= cost;
+}
+
+function spendCredits(amount) {
+  const cost = Math.max(0, Math.ceil(amount));
+  if (!canSpendCredits(cost)) return false;
+  state.player.credits -= cost;
+  collectionNoteSpend(cost);
+  applyCreditLashSpent(cost);
+  return true;
+}
+
+function resetNegativePlaytestSin() {
+  if (state.player.credits >= 0) return false;
+  state.player.credits = 0;
+  addLog("Playtest SIN debt reset to 0.");
+  return true;
+}
+
+function togglePlaytestMoneyMode() {
+  if (arcadeActionLocked()) return;
+  state.playtestInfiniteMoney = !state.playtestInfiniteMoney;
+  if (!state.playtestInfiniteMoney) resetNegativePlaytestSin();
+  addLog(`Playtest SIN debt ${state.playtestInfiniteMoney ? "enabled" : "disabled"}.`);
+  render();
+}
+
+function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
+  const normalizedEntries = mergeSourceEntries(entries);
+  const base = normalizedEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const multiplier = applyRoundMultiplier && state.roundState ? state.roundState.bountyMultiplier || 1 : 1;
+  const gained = Math.ceil(base * multiplier);
+  state.player.credits += gained;
+  if (gained > 0) {
+    if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
+    state.playerLastCredits = (state.playerLastCredits || 0) + gained;
+    normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
+    const multiplierBonus = Math.max(0, gained - base);
+    if (multiplierBonus > 0) {
+      recordPlayerCreditSource(multiplierBonus, ITEMS.a10?.name || "Funeral Coin");
+    }
+  }
+  return gained;
+}
+
+function gainCredits(amount, applyRoundMultiplier = true, source = undefined) {
+  return gainCreditsFromSourceEntries([{ amount: Math.max(0, Math.ceil(amount)), source: source || "SIN" }], applyRoundMultiplier);
+}
+
+function loseCredits(amount, source = "SIN loss") {
+  const loss = Math.max(0, Math.ceil(amount));
+  if (loss <= 0) return 0;
+  const before = Math.max(0, Math.ceil(state.player.credits || 0));
+  const lost = Math.min(before, loss);
+  state.player.credits = Math.max(0, before - lost);
+  if (state.roundState) {
+    state.roundState.roundEvents.push(`${source} removed ${lost} SIN.`);
+  }
+  return lost;
+}
+
+function recordEliminationCredits(credits) {
+  const gained = Math.max(0, Math.ceil(credits));
+  if (!state.roundState || gained <= 0) return;
+  state.roundState.eliminationCreditRecords.push({ credits: gained });
+}
+
+function gainEliminationCredits(amount, applyRoundMultiplier = true, source = undefined) {
+  const gained = gainCredits(amount, applyRoundMultiplier, source || "Bounty");
+  recordEliminationCredits(gained);
+  return gained;
+}
+
+function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
+  const gained = gainCreditsFromSourceEntries(entries, applyRoundMultiplier);
+  recordEliminationCredits(gained);
+  return gained;
+}
+
+function distributeSinAmongHighest(amount, targets, entry) {
+  const total = Math.max(0, Math.ceil(amount));
+  const ordered = targets
+    .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
+    .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id);
+  if (total <= 0 || !ordered.length) return 0;
+  const base = Math.floor(total / ordered.length);
+  let remainder = total - base * ordered.length;
+  let distributed = 0;
+  ordered.forEach((bot) => {
+    const gift = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    if (gift <= 0) return;
+    const result = changeBotSin(bot, gift, `Seal of Agares gave ${bot.name} +${gift} SIN.`, {
+      source: "Seal of Agares"
+    });
+    const damage = result.gained * agaresDamagePerSin(entry);
+    if (damage > 0 && !bot.eliminated) {
+      damageBot(
+        bot,
+        damage,
+        `Seal of Agares dealt ${damage} damage to ${bot.name} for gaining ${result.gained} BOUNTY from its effect.`,
+        "Seal of Agares"
+      );
+    }
+    distributed += result.gained;
+  });
+  return distributed;
+}
+
+function applyAgaresEarnedSinSpread() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p50");
+  if (!round || round.agaresSpreadApplied || !entries.length) return;
+  const earned = Math.max(0, Math.ceil(round.earnedSinThisRound || 0));
+  const amount = Math.ceil(earned * 0.2);
+  const targets = activeBots().filter((bot) => !bot.immortal);
+  if (earned <= 0 || amount <= 0 || !targets.length) return;
+  round.agaresSpreadApplied = true;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    const distributed = distributeSinAmongHighest(amount, targets, entry);
+    if (distributed > 0) {
+      round.roundEvents.push(`Seal of Agares spread ${distributed} SIN from ${earned} round-earned SIN.`);
+    }
+  });
+}
+
+function applyMarketHex(cost) {
+  if (!passiveStack("p20")) return;
+  const targets = activeBots();
+  if (!targets.length) return;
+  const damage = flatDamageValue("p20", cost);
+  if (damage <= 0) return;
+  markPassiveTriggered("p20");
+  damageBots(targets, damage, (target, dealt) => `Seal of Haagenti dealt ${dealt} damage to ${target.name}.`);
+}
+
+function applyCreditLashSpent(amount) {
+  const round = state.roundState;
+  if (!round || !passiveStack("p29")) return;
+  round.creditsSpentThisRound += Math.max(0, Math.ceil(amount));
+  const totalTicks = Math.floor(round.creditsSpentThisRound / 2);
+  const ticks = totalTicks - (round.creditLashDamageApplied || 0);
+  if (ticks <= 0) return;
+  markPassiveTriggered("p29");
+  const damage = furfurDamage("p29");
+  let appliedTicks = 0;
+  for (let tick = 0; tick < ticks; tick += 1) {
+    const target = highestHealthEnemy();
+    if (!target) break;
+    damageBot(target, damage, `Seal of Furfur dealt ${damage} damage to ${target.name}.`, "Seal of Furfur");
+    appliedTicks += 1;
+  }
+  round.creditLashDamageApplied = (round.creditLashDamageApplied || 0) + appliedTicks;
+}
+
+function recordShopItemBought(itemId) {
+  if (state.roundState) state.roundState.shopItemBoughtThisRound = true;
+  state.player.passives.forEach((passive) => {
+    if (passive.id === "p39") passive.counter = 0;
+  });
+  if (itemId === "p39") {
+    const ledger = passiveEntry("p39");
+    if (ledger) ledger.counter = 1;
+  }
+}
+
+function activePurchaseCost(item) {
+  if (!item || item.freeLoot) return 0;
+  return Math.max(0, Math.ceil(item.purchaseCost ?? item.price ?? 0));
+}
+
+function arcadeActionLocked() {
+  return state.mode !== "arcade" || state.gameOver || roundRevealAnimationActive();
+}
+
+function itemBuyValue(item) {
+  if (!item) return 0;
+  if (item.type === "active") return Math.max(0, Math.ceil(Math.max(item.purchaseCost ?? 0, item.price ?? 0)));
+  return Math.max(0, Math.ceil((item.price || 0) * (item.stack || 1)));
+}
+
+function applyActiveUsePassives(item) {
+  const round = state.roundState;
+  if (!round || !item) return;
+  if (state.player.hp <= 0) return;
+
+  const previousCount = round.activeUseItemCounts.get(item.id) || 0;
+  const nextCount = previousCount + 1;
+  round.activeUseItemCounts.set(item.id, nextCount);
+
+  orderedPassiveEffectEntries(["p20", "p26", "p27", "p60"]).forEach((entry) => {
+    if (entry.id === "p20") {
+      const targets = activeBots();
+      const damage = passiveEntryFlatDamage(entry, activePurchaseCost(item));
+      if (!targets.length || damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      queueEndOfRoundBotDamages(targets, damage, (target, queued) => `Seal of Haagenti dealt ${queued} damage to ${target.name}.`, "Seal of Haagenti");
+      return;
+    }
+
+    if (entry.id === "p60") {
+      if (Math.random() >= 0.5) return;
+      markPassiveEntryTriggered(entry);
+      const duplicate = copiedEffectItem(item);
+      let duplicated = false;
+      if (state.player.actives.length < activeInventoryLimit()) {
+        state.player.actives.push(duplicate);
+        normalizeActiveCarouselIndex();
+        duplicated = true;
+      }
+      const targets = activeBots();
+      const damage = gaapDamage(entry);
+      if (targets.length && damage > 0) {
+        queueEndOfRoundBotDamages(
+          targets,
+          damage,
+          (bot, queued) => `Seal of Gaap dealt ${queued} damage to ${bot.name}.`,
+          "Seal of Gaap"
+        );
+      }
+      round.roundEvents.push(
+        duplicated
+          ? `Seal of Gaap copied ${item.name} and struck every DAMNED.`
+          : `Seal of Gaap struck every DAMNED, but your ARTIFACT inventory was full.`
+      );
+      return;
+    }
+
+    if (entry.id === "p26") {
+      const triggerKey = `${entry.index}:${item.id}`;
+      if (nextCount < 2 || round.twinDetonatorTriggeredIds.has(triggerKey)) return;
+      round.twinDetonatorTriggeredIds.add(triggerKey);
+      const damage = twinDetonatorDamage(entry);
+      const targets = activeBots();
+      if (!targets.length) return;
+      markPassiveEntryTriggered(entry);
+      queueEndOfRoundBotDamages(
+        targets,
+        damage,
+        (bot, queued) => `Seal of Amdusias dealt ${queued} damage to ${bot.name}.`,
+        "Seal of Amdusias"
+      );
+      return;
+    }
+
+    if (entry.id === "p27") {
+      const outcomes = ["heal", "damage", "refund"];
+      const outcome = randomFrom(outcomes);
+      markPassiveEntryTriggered(entry);
+
+      if (outcome === "heal") {
+        const { credits } = applyPassivePlayerHealForEntry(entry, 3, "Seal of Zagan");
+        round.roundEvents.push(`Seal of Zagan paid ${credits} SIN.`);
+        return;
+      }
+
+      if (outcome === "damage") {
+        const targets = activeBots();
+        if (!targets.length) {
+          round.roundEvents.push("Seal of Zagan sparked, but no DAMNED could be hit.");
+          return;
+        }
+        const target = randomFrom(targets);
+        const damage = reactiveWarrantyDamage(entry);
+        queueEndOfRoundBotDamage(target, damage, `Seal of Zagan dealt ${damage} damage to ${target.name}.`, "Seal of Zagan");
+        return;
+      }
+
+      const refund = activePurchaseCost(item);
+      const gained = gainCredits(refund, false, "Seal of Zagan");
+      round.roundEvents.push(`Seal of Zagan refunded ${gained} SIN from ${item.name}.`);
+    }
+  });
+}
+
+function startGame(options = {}) {
+  // a restart in the middle of the first-launch story ends the story
+  if (!options.intro) introAbort();
+  resetRoundRevealAnimation();
+  resumeSoundtrack();
+  pvpClearAutoTimer();
+  pvpStopHostPolling();
+  const restartingSlotId = options.slotId || (state.mode === "arcade" ? state.currentRunSlotId : null) || createArcadeRunSlotId();
+  state.mode = "arcade";
+  state.currentRunSlotId = restartingSlotId;
+  state.runStartedAt = Date.now();
+  snapshotRecordsAtRunStart();
+  state.satanVictoryDue = false;
+  state.satanVictoryPlayed = false;
+  state.pauseOpen = false;
+  state.pauseDevOpen = false;
+  state.devUnlockAllSeals = false;
+  resetCollectionRun();
+  state.round = 1;
+  state.stage = "guess";
+  state.player.maxHp = PLAYER_MAX_HP;
+  state.player.hp = PLAYER_MAX_HP;
+  state.player.credits = STARTING_CREDITS;
+  state.player.passives = [];
+  state.player.actives = [];
+  state.log = [];
+  state.roundState = null;
+  state.previousTarget = null;
+  state.playerLastDamage = 0;
+  state.playerLastHeal = 0;
+  state.playerLastCredits = 0;
+  state.playerDamageSources = [];
+  state.playerHealSources = [];
+  state.playerCreditSources = [];
+  state.sealStats = {};
+  state.runStats = defaultRunStats();
+  state.pendingNextRoundMarbasBonuses = [];
+  state.pendingNextRoundLambReveals = [];
+  state.pendingSelfStackingPentakillDamage = 0;
+  state.gameMemory = [];
+  state.pendingActive = null;
+  state.lastUsedArtifact = null;
+  state.gameOver = false;
+  state.inspectingGameOver = false;
+  state.nextBotId = 1;
+  state.nextItemUid = 1;
+  state.eliminations = 0;
+  state.bossKills = 0;
+  state.itemsBought = 0;
+  state.totalArtifactsUsed = 0;
+  state.selfStackingGameConditionCounts = Object.fromEntries(Object.values(SELF_STACKING_SEAL_SPECS).map((spec) => [spec.key, 0]));
+  state.rerollBaseCost = 1;
+  state.activeCarouselIndex = 0;
+  state.mobileOfferingsOpen = false;
+  state.bossSpawnCount = 0;
+  state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
+  state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.goeticBossKills = 0;
+  state.nextBossPairId = 1;
+  state.finalBossPhase = false;
+  state.finalBossQueued = false;
+  state.bossQueued = false;
+  resetBossKillInterval();
+  state.eliteBoostedNextReroll = 0;
+  state.paleHorseBoostArmed = false;
+  state.critMomentumBonus = 0;
+  state.exactGuessCritCharged = false;
+  state.previousRoundEliminationsForMartyrs = 0;
+  resetBotsForRun();
+  rerollShop();
+  beginRound();
+  addLog("Round 1 begins. The table continues until you fall.");
+  render();
+}
+
+function beginRound() {
+  beginRunRoundStats();
+  collectionBeginRound();
+  resetNegativePlaytestSin();
+  pruneRemovedPassives();
+  state.stage = "guess";
+  state.shouldFocusGuessInput = true;
+  state.pendingActive = null;
+  state.playerLastDamage = 0;
+  state.playerLastHeal = 0;
+  state.playerLastCredits = 0;
+  state.playerDamageSources = [];
+  state.playerHealSources = [];
+  state.playerCreditSources = [];
+  const twinModifier = petrosPavlosRoundModifier();
+  const threonMystery = aliveUniqueBoss("threon");
+  const paleHorseDamageBoostActive = Boolean(state.paleHorseBoostArmed);
+  state.paleHorseBoostArmed = false;
+  state.roundState = {
+    playerSubmittedGuess: null,
+    playerEffectiveGuess: null,
+    playerCorruption: null,
+    botSubmittedGuesses: new Map(),
+    botEffectiveGuesses: new Map(),
+    targetModifier: twinModifier ?? (threonMystery ? randomInt(6, 10) / 10 : currentTargetModifier()),
+    mysteryModifier: twinModifier === null && threonMystery,
+    targetOffset: 0,
+    target: null,
+    criticalInteger: null,
+    tableAverage: null,
+    extraAverageGuesses: [],
+    removedBotIds: new Set(),
+    activeUses: 0,
+    activeUseItemCounts: new Map(),
+    artifactTargetCountsByBotId: new Map(),
+    twinDetonatorTriggeredIds: new Set(),
+    painEcho: false,
+    bountyMultiplier: 1,
+    edgeGambitStacks: 0,
+    playerDamageReduction: 0,
+    playerDamageReductionSource: "",
+    creditsSpentThisRound: 0,
+    earnedSinThisRound: 0,
+    rerollSinSpentThisRound: 0,
+    agaresSpreadApplied: false,
+    creditLashDamageApplied: 0,
+    temporaryBotSinBonuses: [],
+    botDamageTotals: new Map(),
+    highDamageSinBotIds: new Set(),
+    balamResolving: false,
+    shopItemBoughtThisRound: false,
+    multiEliminationBonusPaid: false,
+    eliminatedPersonalities: [],
+    eliminationsThisRound: 0,
+    eliminationCreditRecords: [],
+    pentakillAwarded: false,
+    pentakillPopup: false,
+    revealedBotIds: new Set(),
+    amonRewardKeys: new Set(),
+    targetDifferenceDamageByBotId: new Map(),
+    playerTargetDifferenceDamage: 0,
+    bossRevealPunishedKeys: new Set(),
+    bossAbilityNullifiedBotIds: new Set(),
+    belethTriggeredBotIds: new Set(),
+    vapulaTriggeredBotIds: new Set(),
+    wiretapExtraCount: null,
+    wiretapStack: 0,
+    kalhaSuppressedPassiveIds: new Set(),
+    kalhaSuppressedById: null,
+    pyrosGiftGranted: false,
+    devSealsRolled: false,
+    devSealsAfterReadyRolled: false,
+    targetBeforeRevealSeals: null,
+    devTemporaryActiveUids: new Set(),
+    padmaVulnerableBotIds: new Set(),
+    paleHorseDamageBoostActive,
+    previousRoundEliminationsForMartyrs: state.previousRoundEliminationsForMartyrs || 0,
+    selfStackingConditionCounts: Object.fromEntries(Object.values(SELF_STACKING_SEAL_SPECS).map((spec) => [spec.key, 0])),
+    selfStackingCriticalDamage: 0,
+    pendingEndOfRoundBotDamages: [],
+    resolvingEndOfRoundPassives: false,
+    triggeredPassiveIds: new Set(),
+    // SEALS already shown in a trigger animation this round (the rest wait for READY)
+    animatedPassiveIds: new Set(),
+    // DAMNED alive when the round began: if one falls before READY, its KO is shown after READY
+    aliveIdsAtStart: new Set(state.bots.filter((bot) => !bot.eliminated && bot.hp > 0).map((bot) => bot.id)),
+    penaltiesApplied: false,
+    criticalHitKeys: new Set(),
+    roundEvents: []
+  };
+
+  state.bots.forEach((bot) => {
+    if (bot.eliminated) return;
+    if (!Number.isFinite(bot.spawnRound)) bot.spawnRound = state.round;
+    trimBotMemoryToLimit(bot);
+    bot.fresh = bot.memory.length === 0;
+    bot.lastDamage = 0;
+    bot.lastHeal = 0;
+    bot.lastSinDelta = 0;
+    bot.damageSources = [];
+    bot.healSources = [];
+    bot.sinSources = [];
+    bot.memoryLossSources = [];
+    bot.personalityChanges = [];
+    bot.deathCause = null;
+    bot.deathNotice = null;
+    bot.markedByPlayer = false;
+    bot.diffMarkedByPlayer = false;
+    bot.revealedByPassive = false;
+  });
+
+  enforceTwinTemperPersonalities();
+  applyPendingNextRoundMarbasBonuses();
+  state.bots.forEach((bot) => {
+    if (bot.eliminated) return;
+    bot.fresh = bot.memory.length === 0;
+    bot.plannedGuess = planBotGuess(bot);
+  });
+
+  applyKalhaSealSuppression();
+  applySerafimRoundSteal();
+  applyBossSinStealing();
+  applyPadmaStartHealing();
+  applyPyrosBuffs();
+  applyMarkedProspect();
+  applyGuessReveals();
+  applyPendingNextRoundLambReveals();
+  applyStartOfRoundPassives();
+  applyGuessReveals();
+  applyRevealPoisonCounters();
+  ensureSitriHost();
+}
+
+function applyMarkedProspect() {
+  if (!passiveStack("p38")) return;
+  const targets = activeBots();
+  if (!targets.length) return;
+  const target = randomFrom(targets);
+  target.markedByPlayer = true;
+  markPassiveTriggered("p38");
+  state.roundState.roundEvents.push(`Seal of Astaroth marked ${target.name}.`);
+}
+
+function queueMarbasNextRoundSpread(entry) {
+  if (!entry) return;
+  state.pendingNextRoundMarbasBonuses = state.pendingNextRoundMarbasBonuses || [];
+  state.pendingNextRoundMarbasBonuses.push({
+    sin: passiveEntryConvertedSin(entry, 3),
+    memory: 3,
+    source: ITEMS.p9?.name || "Seal of Marbas"
+  });
+  markPassiveEntryTriggered(entry);
+  state.roundState?.roundEvents.push("Seal of Marbas will spread SIN and MEMORY among next-round DAMNED.");
+}
+
+function applyPendingNextRoundMarbasBonuses() {
+  const pending = state.pendingNextRoundMarbasBonuses || [];
+  if (!pending.length || !state.roundState) return;
+  state.pendingNextRoundMarbasBonuses = [];
+  pending.forEach((bonus) => {
+    const targets = activeBots().filter((bot) => !bot.immortal);
+    if (!targets.length) return;
+    const source = bonus.source || "Seal of Marbas";
+    let sinSpread = 0;
+    let memorySpread = 0;
+    for (let index = 0; index < Math.max(0, Math.ceil(bonus.sin || 0)); index += 1) {
+      const target = randomFrom(targets);
+      const result = changeBotSin(target, 1, "", { source });
+      sinSpread += result.gained;
+    }
+    for (let index = 0; index < Math.max(0, Math.ceil(bonus.memory || 0)); index += 1) {
+      const target = randomFrom(targets);
+      memorySpread += addBotMemory(target, 1, "", { source });
+    }
+    if (sinSpread || memorySpread) {
+      state.roundState.roundEvents.push(`${source} spread ${sinSpread} SIN and ${memorySpread} MEMORY among next-round DAMNED.`);
+    }
+  });
+}
+
+function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25")) {
+  if (!bot) return;
+  state.pendingNextRoundLambReveals = state.pendingNextRoundLambReveals || [];
+  state.pendingNextRoundLambReveals.push({
+    botId: bot.id,
+    botName: bot.name,
+    bounty: 3,
+    source
+  });
+  state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
+}
+
+function applyPendingNextRoundLambReveals() {
+  const pending = state.pendingNextRoundLambReveals || [];
+  if (!pending.length || !state.roundState) return;
+  state.pendingNextRoundLambReveals = [];
+  pending.forEach((effect) => {
+    const source = effect.source || activeName("a25");
+    const bot = state.bots.find((candidate) => candidate.id === effect.botId && candidate.hp > 0 && !candidate.eliminated);
+    if (!bot) {
+      state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
+      return;
+    }
+    revealBotGuess(bot, source, null, { allowBoss: true });
+    const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
+    const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
+    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained} BOUNTY for its next-round mark.`);
+  });
+}
+
+function applyStartOfRoundSinRedistribution() {
+  const entries = orderedPassiveEffectEntries("p48");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    const targets = shuffled(activeBots().filter((bot) => !bot.immortal && botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
+    if (!targets.length) return;
+    markPassiveEntryTriggered(entry);
+    targets.forEach((bot) => {
+      const bonus = botSin(bot);
+      if (bonus <= 0) return;
+      const result = changeBotSin(bot, bonus, `Seal of Cimejes doubled ${bot.name}'s bounty for this round.`);
+      if (result.gained > 0) {
+        state.roundState.temporaryBotSinBonuses.push({
+          botId: bot.id,
+          amount: result.gained,
+          source: "Seal of Cimejes"
+        });
+      }
+    });
+  });
+}
+
+function applyStartOfRoundPassives() {
+  applyStartOfRoundSinRedistribution();
+
+  orderedPassiveEffectEntries("p14").forEach((entry) => {
+    const targets = activeBots();
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    const damage = passiveEntryFlatDamage(entry, 20);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    const wasAlive = target.hp > 0 && !target.eliminated;
+    damageBot(target, damage, `Seal of Leraje dealt ${damage} damage to ${target.name}.`, "Seal of Leraje");
+    if (wasAlive && target.eliminated) {
+      const credits = passiveEntryScaledValue(entry, 8);
+      const gained = gainCredits(credits, true, "Seal of Leraje");
+      state.roundState.roundEvents.push(`Seal of Leraje paid ${gained} SIN for eliminating ${target.name}.`);
+      return;
+    }
+    if (!target.eliminated) {
+      setBotPersonality(target, "Stubborn", "Seal of Leraje");
+    }
+  });
+}
+
+function projectedMemoryTarget(
+  memoryEntry,
+  modifier = state.roundState?.targetModifier ?? BASE_TARGET_MODIFIER,
+  offset = state.roundState?.targetOffset ?? 0
+) {
+  if (!memoryEntry) return null;
+  if (Number.isFinite(memoryEntry.tableAverage)) {
+    return Math.ceil(memoryEntry.tableAverage * modifier + offset);
+  }
+  if (Number.isFinite(memoryEntry.target) && Number.isFinite(memoryEntry.targetModifier) && memoryEntry.targetModifier !== 0) {
+    const previousOffset = Number.isFinite(memoryEntry.targetOffset) ? memoryEntry.targetOffset : 0;
+    return Math.ceil(((memoryEntry.target - previousOffset) / memoryEntry.targetModifier) * modifier + offset);
+  }
+  return Number.isFinite(memoryEntry.target) ? memoryEntry.target : null;
+}
+
+function applyFurcasLastTargetGuessSet() {
+  const entries = orderedPassiveEffectEntries("p72");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(state.previousTarget)) return;
+  const previous = Math.ceil(state.previousTarget);
+  if (previous === 40) return;
+  entries.forEach((entry) => {
+    const targets = previous < 40 ? activeBots().filter((bot) => !bot.isBoss) : activeBots();
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    const guess = previous < 40 ? 100 : 0;
+    round.botSubmittedGuesses.set(target.id, guess);
+    round.botEffectiveGuesses.set(target.id, guess);
+    target.plannedGuess = guess;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Furcas set ${target.name}'s guess to ${guess} because the previous TARGET was ${previous}.`);
+    const damage = furcasSelectedDamage(entry);
+    if (damage > 0) {
+      queueEndOfRoundBotDamage(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
+    }
+  });
+}
+
+function applySallosGuessShiftAwayFromTarget() {
+  const entries = orderedPassiveEffectEntries("p71");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(round.target)) return;
+  entries.forEach((entry) => {
+    const values = sallosShiftValues(entry);
+    let shifted = 0;
+    activeBots().forEach((bot) => {
+      const current = round.botEffectiveGuesses.get(bot.id);
+      if (!Number.isFinite(current)) return;
+      const direction = current === round.target ? randomFrom([-1, 1]) : current > round.target ? 1 : -1;
+      const amount = randomFrom(values);
+      const next = Math.ceil(clamp(current + direction * amount, 0, 100));
+      if (next === current) return;
+      round.botEffectiveGuesses.set(bot.id, next);
+      shifted += 1;
+    });
+    if (!shifted) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Sallos shifted ${shifted} DAMNED guesses away from the TARGET without changing the average.`);
+  });
+}
+
+function applyBifronsTargetSevenSin() {
+  const entries = orderedPassiveEffectEntries("p41");
+  const round = state.roundState;
+  if (!entries.length || !round || !Number.isFinite(round.criticalInteger)) return;
+  if (round.criticalInteger % 7 !== 0) return;
+  entries.forEach((entry) => {
+    const sin = bifronsSinReward(entry);
+    if (sin <= 0) return;
+    const gained = gainCredits(sin, true, "Seal of Bifrons");
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`Seal of Bifrons paid ${gained} SIN because the TARGET was a multiple of 7.`);
+  });
+}
+
+function memoryRawAverage(memoryEntry) {
+  if (!memoryEntry) return null;
+  if (Number.isFinite(memoryEntry.tableAverage)) return memoryEntry.tableAverage;
+  if (Number.isFinite(memoryEntry.target) && Number.isFinite(memoryEntry.targetModifier) && memoryEntry.targetModifier !== 0) {
+    const previousOffset = Number.isFinite(memoryEntry.targetOffset) ? memoryEntry.targetOffset : 0;
+    return (memoryEntry.target - previousOffset) / memoryEntry.targetModifier;
+  }
+  return null;
+}
+
+function weightedMemoryAverage(entries, readValue) {
+  let weighted = 0;
+  let totalWeight = 0;
+  entries.forEach((entry, index) => {
+    const value = readValue(entry);
+    if (!Number.isFinite(value)) return;
+    const weight = index + 1;
+    weighted += value * weight;
+    totalWeight += weight;
+  });
+  return totalWeight ? weighted / totalWeight : null;
+}
+
+// Bosses have no personality. They play the best reply to what the table is likely to do:
+// estimate the other players' weighted average from the rounds they remember (or a level-1
+// guess when they remember nothing), then pick the whole number closest to the TARGET their
+// own guess would produce. No noise, no bluffing.
+function bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset) {
+  const total = othersWeight + ownWeight;
+  if (total <= 0) return guess;
+  return Math.ceil(Math.min(200, ((othersSum + guess * ownWeight) / total) * modifier + offset));
+}
+
+function bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset) {
+  const othersSum = othersAverage * othersWeight;
+  const total = othersWeight + ownWeight;
+  const denominator = 1 - (modifier * ownWeight) / total;
+  const solved = Math.abs(denominator) > 0.05 ? ((modifier * othersSum) / total + offset) / denominator : othersAverage * modifier + offset;
+  let best = clamp(Math.round(solved), 0, 100);
+  let bestMiss = Infinity;
+  for (let guess = Math.max(0, best - 6); guess <= Math.min(100, best + 6); guess += 1) {
+    const miss = Math.abs(guess - bossTargetFor(guess, othersSum, othersWeight, ownWeight, modifier, offset));
+    if (miss < bestMiss || (miss === bestMiss && Math.abs(guess - solved) < Math.abs(best - solved))) {
+      best = guess;
+      bestMiss = miss;
+    }
+  }
+  return best;
+}
+
+function planBossGuess(bot) {
+  const memory = bot.memory || [];
+  const modifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const offset = state.roundState?.targetOffset ?? 0;
+  const ownWeight = botTargetWeight(bot);
+  const playerWeight = 1 + wealthWeightBonus();
+  const othersWeight =
+    playerWeight +
+    activeBots()
+      .filter((other) => other.id !== bot.id)
+      .reduce((sum, other) => sum + botTargetWeight(other), 0);
+  const participantWeight = othersWeight + ownWeight;
+  const recent = memory.slice(-Math.min(6, memory.length));
+  const remembered = weightedMemoryAverage(recent, (entry) => {
+    const rawAverage = memoryRawAverage(entry);
+    if (!Number.isFinite(rawAverage)) return null;
+    if (Number.isFinite(entry.ownGuess) && participantWeight > ownWeight) {
+      return (rawAverage * participantWeight - entry.ownGuess * ownWeight) / (participantWeight - ownWeight);
+    }
+    return rawAverage;
+  });
+  // nothing remembered: assume the table plays one step of reasoning (50 x modifier)
+  const othersAverage = clamp(remembered ?? 50 * clamp(modifier, 0.2, 1.5), 0, 100);
+  return clampFixedWillGuess(bot, bestBossGuess(othersAverage, othersWeight, ownWeight, modifier, offset));
+}
+
+function clampFixedWillGuess(bot, guess) {
+  if (!passiveStack("p107") || personalityType(bot) !== "Stubborn") return guess;
+  const previousGuess = bot?.memory?.slice().reverse().find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
+  if (!Number.isFinite(previousGuess)) return guess;
+  return clamp(guess, previousGuess - 2, previousGuess + 2);
+}
+
+function planBotGuess(bot) {
+  if (bot.isBoss) return planBossGuess(bot);
+
+  const memory = bot.memory;
+  const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  let guess;
+
+  if (!memory.length) {
+    guess = bot.anchor + randomInt(-12, 12);
+  } else {
+    const last = memory[memory.length - 1];
+    const prev = memory[memory.length - 2] || last;
+    const lastTarget = projectedMemoryTarget(last, currentModifier) ?? last.target;
+    const prevTarget = projectedMemoryTarget(prev, currentModifier) ?? prev.target ?? lastTarget;
+    const trend = lastTarget - prevTarget;
+    const tablePull = Number.isFinite(last.tableAverage) ? last.tableAverage * currentModifier : lastTarget;
+
+    if (bot.type === "Analyst") {
+      guess = lastTarget + trend * 0.45 + randomInt(-bot.noise, bot.noise);
+    } else if (bot.type === "Follower") {
+      guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-bot.noise, bot.noise);
+    } else if (bot.type === "Stubborn") {
+      guess = bot.anchor * 0.72 + lastTarget * 0.28 + randomInt(-bot.noise, bot.noise);
+    } else if (bot.type === "Drifter") {
+      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-bot.noise * 2, bot.noise * 2);
+    } else if (bot.type === "Caller") {
+      guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-bot.noise, bot.noise);
+    } else {
+      guess = bot.anchor * 0.42 + lastTarget * 0.58 + randomInt(-bot.noise, bot.noise);
+    }
+
+    if (bot.isBoss) guess = guess * 0.82 + lastTarget * 0.18;
+  }
+
+  if (Math.random() < bot.aggression * 0.62) {
+    const direction = Math.random() < 0.5 ? -1 : 1;
+    guess += direction * randomInt(5, 16);
+  }
+
+  if (Math.random() < bot.aggression * 0.09) {
+    guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
+  }
+
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+}
+
+function bossRevealAllowedBySeals() {
+  return orderedPassiveEffectEntries("p61").length > 0;
+}
+
+function revealedDamnedCount() {
+  return activeBots().filter((bot) => bot.revealedByPassive).length;
+}
+
+function canRevealBotGuess(bot, options = {}) {
+  if (!bot || bot.hp <= 0 || bot.eliminated || botHasPassive(bot, "shield")) return false;
+  if (bot.revealedByPassive) return true;
+  if (revealedDamnedCount() >= MAX_REVEALED_DAMNED) return false;
+  return options.allowBoss || !bot.isBoss || bossRevealAllowedBySeals();
+}
+
+function revealBotGuess(bot, source = "", entry = null, options = {}) {
+  if (!canRevealBotGuess(bot, options)) return false;
+  const wasRevealed = Boolean(bot.revealedByPassive);
+  bot.revealedByPassive = true;
+  state.roundState?.revealedBotIds?.add(bot.id);
+  if (entry && !wasRevealed) markPassiveEntryTriggered(entry);
+  if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
+  if (!wasRevealed) {
+    orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
+      setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
+    });
+  }
+  return !wasRevealed;
+}
+
+function applyHighMemoryReveals() {
+  const entries = orderedPassiveEffectEntries("p81");
+  if (!entries.length) return;
+  entries.forEach((entry) => {
+    state.bots
+      .filter((bot) => (bot.memory?.length || 0) > 16)
+      .forEach((bot) => revealBotGuess(bot, passiveName("p81", "Seal of Buer"), entry));
+  });
+}
+
+function applyGuessReveals() {
+  if (state.stage !== "guess" || !state.roundState) return;
+  const bossRevealAllowed = bossRevealAllowedBySeals();
+  const amonEntries = orderedPassiveEffectEntries("p59");
+  const extraReveals = orderedPassiveEffectEntries(["p59", "p64", "p65", "p75", "p95", "p102"]).length;
+  const revealableBots = state.bots.filter(
+    (bot) =>
+      (bossRevealAllowed || !bot.isBoss) &&
+      bot.hp > 0 &&
+      !bot.eliminated &&
+      !botHasPassive(bot, "shield")
+  );
+  const desiredRevealCount = Math.min(revealableBots.length, MAX_REVEALED_DAMNED, 1 + extraReveals);
+  const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
+  const hiddenBots = shuffled(revealableBots.filter((bot) => !bot.revealedByPassive));
+  const newlyRevealed = hiddenBots.slice(0, Math.max(0, desiredRevealCount - revealedCount));
+  newlyRevealed.forEach((bot) => {
+    revealBotGuess(bot);
+  });
+  applyHighMemoryReveals();
+  applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntries("p59")) {
+  const round = state.roundState;
+  if (!round || !entries.length || !revealedBots.length) return;
+  entries.forEach((entry) => {
+    let triggered = false;
+    revealedBots.forEach((bot) => {
+      const key = `${entry.sourceId || entry.id}:${bot.id}`;
+      if (round.amonRewardKeys.has(key)) return;
+      round.amonRewardKeys.add(key);
+      const bounty = passiveEntryScaledValue(entry, 2);
+      const bountyResult = changeBotSin(bot, bounty, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+      const memoryAdded = addBotMemory(bot, 2, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+      if (bountyResult.gained > 0 || memoryAdded > 0) triggered = true;
+    });
+    if (triggered) {
+      markPassiveEntryTriggered(entry);
+      round.roundEvents.push(`${ITEMS.p59?.name || "Seal of Amon"} rewarded revealed DAMNED with BOUNTY and MEMORY.`);
+    }
+  });
+}
+
+function applyRevealPoisonCounters() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p61");
+  if (!round || !entries.length) return;
+  const targets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.revealedByPassive);
+  if (!targets.length) return;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    targets.forEach((bot) => {
+      bot.poisonCounters = (bot.poisonCounters || 0) + 1;
+    });
+  });
+  round.roundEvents.push(`Seal of Vepar added poison to ${targets.map((bot) => bot.name).join(", ")}.`);
+}
+
+function grantDevTemporaryArtifact(source) {
+  const id = randomFrom(ACTIVE_IDS);
+  if (!id) return null;
+  const active = devTemporaryActiveCopy(id);
+  state.player.actives.push(active);
+  state.roundState?.devTemporaryActiveUids?.add(active.uid);
+  normalizeActiveCarouselIndex();
+  addRoundEvent(`${source} granted temporary ${active.name}.`);
+  return active;
+}
+
+function clearDevTemporaryArtifacts() {
+  const round = state.roundState;
+  const temporaryUids = round?.devTemporaryActiveUids;
+  if (!temporaryUids?.size) return;
+  state.player.actives = state.player.actives.filter((item) => !item?.devTemporary && !temporaryUids.has(item?.uid));
+  temporaryUids.clear();
+  normalizeActiveCarouselIndex();
+}
+
+function devSealTargetDamned() {
+  return activeBots().filter((bot) => !bot.immortal);
+}
+
+// Dev SEALs that still act the moment the TARGET is revealed (GUESS): Dantre moves the TARGET itself,
+// Serafeim's ARTIFACTS must arrive while they can still be used this round.
+// Every other dev SEAL acts when READY is pressed, so it plays in the seal animation like the rest.
+const DEV_SEALS_AT_REVEAL = new Set(["p92", "p94"]);
+
+function applyDevSealsAtReveal() {
+  const round = state.roundState;
+  if (!round || round.devSealsRolled) return;
+  round.devSealsRolled = true;
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealsAfterReady() {
+  const round = state.roundState;
+  if (!round || round.devSealsAfterReadyRolled) return;
+  round.devSealsAfterReadyRolled = true;
+  applyDevSealEntries(Array.from(DEV_SEAL_IDS).filter((id) => !DEV_SEALS_AT_REVEAL.has(id)));
+}
+
+function applyDevSealEntries(ids) {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries(ids);
+  if (!entries.length) return;
+
+  entries.forEach((entry) => {
+    const source = ITEMS[entry.id]?.name || "Dev Seal";
+    if (Math.random() >= devSealEntryChance(entry)) return;
+    markPassiveEntryTriggered(entry);
+
+    if (entry.id === "p92") {
+      const guess = Math.ceil(round.playerEffectiveGuess);
+      if (!Number.isFinite(guess)) return;
+      const before = round.target;
+      const base = (round.tableAverage || 0) * (round.targetModifier || 0);
+      round.targetOffset = guess - base;
+      recalculateTarget();
+      addRoundEvent(`${source} changed the TARGET from ${formatNumber(before)} to ${formatNumber(round.target)}.`);
+      return;
+    }
+
+    if (entry.id === "p93") {
+      let total = 0;
+      devSealTargetDamned().forEach((bot) => {
+        const bounty = botRegularBounty(bot);
+        if (bounty <= 0) return;
+        const result = changeBotSin(bot, bounty, "", { source });
+        total += result.gained;
+      });
+      addRoundEvent(total > 0 ? `${source} doubled ${total} total BOUNTY.` : `${source} found no BOUNTY to double.`);
+      return;
+    }
+
+    if (entry.id === "p94") {
+      const granted = [];
+      for (let count = 0; count < 5; count += 1) {
+        const artifact = grantDevTemporaryArtifact(source);
+        if (artifact) granted.push(artifact.name);
+      }
+      addRoundEvent(
+        granted.length
+          ? `${source} gave ${granted.length} temporary ARTIFACTS for this round.`
+          : `${source} found no ARTIFACTS to grant.`
+      );
+      return;
+    }
+
+    if (entry.id === "p95") {
+      const targets = devSealTargetDamned().filter((bot) => bot.revealedByPassive);
+      let total = 0;
+      targets.forEach((bot) => {
+        const damage = Math.ceil(bot.hp * 0.5);
+        total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+      });
+      addRoundEvent(total > 0 ? `${source} queued ${total} total damage to revealed DAMNED.` : `${source} found no revealed DAMNED.`);
+      return;
+    }
+
+    if (entry.id === "p96") {
+      let changed = 0;
+      let vulnerable = 0;
+      devSealTargetDamned().forEach((bot) => {
+        if (personalityType(bot) === "Stubborn") {
+          round.padmaVulnerableBotIds?.add(bot.id);
+          vulnerable += 1;
+          return;
+        }
+        if (setBotPersonality(bot, "Stubborn", source)) changed += 1;
+      });
+      addRoundEvent(`${source} made ${changed} personalities STUBBORN and marked ${vulnerable} already STUBBORN DAMNED for extra damage.`);
+      return;
+    }
+
+    if (entry.id === "p97") {
+      const targets = devSealTargetDamned();
+      const memoryReferenceTargets = targets.filter((bot) => !bot.isBoss);
+      const maxMemory = Math.max(0, ...(memoryReferenceTargets.length ? memoryReferenceTargets : targets).map((bot) => bot.memory?.length || 0));
+      let memoryAdded = 0;
+      let damage = 0;
+      targets.forEach((bot) => {
+        const originalMemory = bot.memory?.length || 0;
+        memoryAdded += addBotMemory(bot, Math.max(0, maxMemory - originalMemory), "", { source });
+        if (originalMemory > 0) {
+          damage += queueEndOfRoundBotDamage(bot, originalMemory, `${source} dealt ${originalMemory} damage to ${bot.name}.`, source);
+        }
+      });
+      addRoundEvent(`${source} used ${maxMemory} as the living MEMORY peak, added ${memoryAdded} MEMORY, and queued ${damage} total damage.`);
+      return;
+    }
+
+    if (entry.id === "p110") {
+      const targets = devSealTargetDamned();
+      let memoryRemoved = 0;
+      let bountyRemoved = 0;
+      targets.forEach((bot) => {
+        const memory = bot.memory?.length || 0;
+        if (memory > 0) {
+          memoryRemoved += memory;
+          bot.memory = [];
+          recordBotMemoryLoss(bot, memory, source);
+        }
+        const bounty = botRegularBounty(bot);
+        if (bounty > 0) {
+          const result = changeBotSin(bot, -bounty, "", {
+            source,
+            triggerLossDamage: false
+          });
+          bountyRemoved += result.lost;
+        }
+      });
+      const damage = memoryRemoved + bountyRemoved;
+      if (damage > 0) {
+        queueEndOfRoundBotDamages(
+          targets,
+          damage,
+          (bot, dealt) => `${source} dealt ${dealt} removed MEMORY and BOUNTY damage to ${bot.name}.`,
+          source
+        );
+      }
+      addRoundEvent(
+        damage > 0
+          ? `${source} removed ${memoryRemoved} MEMORY and ${bountyRemoved} BOUNTY, then queued ${damage} damage to every DAMNED.`
+          : `${source} found no MEMORY or BOUNTY to remove.`
+      );
+    }
+  });
+}
+
+function cloneRoundRevealSources(sources) {
+  return (sources || []).map((entry) => ({ ...entry }));
+}
+
+// a DAMNED that fell this round before READY: its HEALTH shows 0, but the KO waits for READY
+function botDeathAwaitsReady(bot) {
+  const round = state.roundState;
+  return Boolean(
+    round && !round.penaltiesApplied && bot?.eliminated && !bot.immortal && round.aliveIdsAtStart?.has?.(bot.id)
+  );
+}
+
+// KOs and BOUNTY SIN of DAMNED whose KO is still waiting for READY (kept off the HUD until then)
+function deathsAwaitingReady() {
+  const bots = (state.bots || []).filter((bot) => botDeathAwaitsReady(bot));
+  return {
+    count: bots.length,
+    reward: bots.reduce((sum, bot) => sum + Math.max(0, Number(bot.eliminationReward) || 0), 0)
+  };
+}
+
+function captureRoundRevealSnapshot() {
+  const round = state.roundState;
+  return {
+    stage: state.stage,
+    roundEventCount: round?.roundEvents?.length || 0,
+    triggeredPassiveIds: Array.from(round?.triggeredPassiveIds || []),
+    player: {
+      hp: state.player.hp,
+      credits: state.player.credits,
+      lastDamage: state.playerLastDamage || 0,
+      lastHeal: state.playerLastHeal || 0,
+      lastCredits: state.playerLastCredits || 0,
+      damageSources: cloneRoundRevealSources(state.playerDamageSources),
+      healSources: cloneRoundRevealSources(state.playerHealSources),
+      creditSources: cloneRoundRevealSources(state.playerCreditSources)
+    },
+    bots: state.bots.map((bot) => ({
+      id: bot.id,
+      hp: bot.hp,
+      maxHp: bot.maxHp,
+      eliminated: Boolean(bot.eliminated) && !botDeathAwaitsReady(bot),
+      damageTakenTotal: bot.damageTakenTotal || 0,
+      lastDamage: bot.lastDamage || 0,
+      lastHeal: bot.lastHeal || 0,
+      lastSinDelta: bot.lastSinDelta || 0,
+      lastMemoryDelta: bot.lastMemoryDelta || 0,
+      damageSources: cloneRoundRevealSources(bot.damageSources),
+      healSources: cloneRoundRevealSources(bot.healSources),
+      sinSources: cloneRoundRevealSources(bot.sinSources),
+      memorySources: cloneRoundRevealSources(bot.memorySources)
+    }))
+  };
+}
+
+function roundRevealAnimationActive() {
+  return Boolean(state.roundRevealAnimation?.active);
+}
+
+function clearRoundRevealTimer() {
+  if (!roundRevealTimer) return;
+  clearTimeout(roundRevealTimer);
+  roundRevealTimer = null;
+}
+
+function resetRoundRevealAnimation() {
+  clearRoundRevealTimer();
+  state.roundRevealAnimation = null;
+}
+
+function roundRevealSealName(id) {
+  const entry = passiveEntry(id);
+  return entry ? passiveDisplayName(entry) : ITEMS[id]?.name || "Seal";
+}
+
+function roundRevealEventMatchesSeal(id, event) {
+  const text = normalizeGameText(event || "");
+  const baseName = normalizeGameText(ITEMS[id]?.name || "");
+  const displayName = normalizeGameText(roundRevealSealName(id));
+  return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
+}
+
+// every SEAL that triggered this round and has not been animated yet, including ones whose
+// condition was met before READY (they wait for it). onlyIds limits it (the reveal-time Dev SEALS).
+function buildRoundRevealSequence(beforeSnapshot, onlyIds = null) {
+  const round = state.roundState;
+  if (!round) return [];
+  const animated = round.animatedPassiveIds || new Set();
+  const finalEvents = (round.roundEvents || []).slice();
+  return Array.from(round.triggeredPassiveIds || [])
+    .filter((id) => PASSIVE_IDS.includes(id) && !animated.has(id) && (!onlyIds || onlyIds.has(id)))
+    .map((id) => ({
+      id,
+      name: roundRevealSealName(id),
+      events: finalEvents.filter((event) => roundRevealEventMatchesSeal(id, event))
+    }));
+}
+
+// a SEAL that acted before the snapshot is already counted in the snapshot's HEALTH and SIN;
+// put those amounts back so its step shows them happening, like any other SEAL
+function rebaseRoundRevealSnapshot(beforeSnapshot, sequence) {
+  if (!beforeSnapshot || !sequence.length) return;
+  const ids = new Set(sequence.map((step) => step.id));
+  const fromSequence = (sources) => (sources || []).filter((entry) => ids.has(sealIdFromStatSource(entry?.source)));
+  const total = (sources, options) =>
+    fromSequence(sources).reduce((sum, entry) => {
+      if (options?.damage && entry?.kind === "saved") return sum;
+      const raw = Number(entry?.amount || 0);
+      if (!Number.isFinite(raw) || raw === 0) return sum;
+      const amount = raw > 0 ? Math.ceil(raw) : -Math.ceil(Math.abs(raw));
+      return sum + (options?.signed ? amount : Math.abs(amount));
+    }, 0);
+  (beforeSnapshot.bots || []).forEach((bot) => {
+    const damage = total(bot.damageSources, { damage: true });
+    const healing = total(bot.healSources);
+    bot.hp = Math.max(0, bot.hp + damage - healing);
+    bot.damageTakenTotal = Math.max(0, (bot.damageTakenTotal || 0) - damage);
+  });
+  const player = beforeSnapshot.player;
+  if (player) {
+    player.hp = Math.max(0, player.hp + total(player.damageSources, { damage: true }) - total(player.healSources));
+    player.credits -= total(player.creditSources, { signed: true });
+  }
+}
+
+// a dark swell that rises while the seal fills and grows; the slam has its own sound
+function playRoundRevealStepSfx() {
+  playGameSfx("sealCharge");
+}
+
+function scheduleRoundRevealAnimation() {
+  clearRoundRevealTimer();
+  if (!roundRevealAnimationActive()) return;
+  roundRevealTimer = setTimeout(advanceRoundRevealAnimation, gameMs(1000));
+}
+
+function startRoundRevealAnimation(beforeSnapshot, options = {}) {
+  const sequence = buildRoundRevealSequence(beforeSnapshot, options.onlyIds || null);
+  if (!sequence.length) return false;
+  rebaseRoundRevealSnapshot(beforeSnapshot, sequence);
+  sequence.forEach((step) => state.roundState?.animatedPassiveIds?.add(step.id));
+  clearRoundRevealTimer();
+  state.roundRevealAnimation = {
+    active: true,
+    phase: "seal",
+    stepIndex: 0,
+    sequence,
+    before: beforeSnapshot
+  };
+  playRoundRevealStepSfx();
+  scheduleRoundRevealAnimation();
+  return true;
+}
+
+function advanceRoundRevealAnimation() {
+  const animation = state.roundRevealAnimation;
+  if (!animation?.active) return;
+  if (animation.phase === "seal") {
+    // the slam at the end of the fill is the sound of this step now
+    animation.phase = "effect";
+    render();
+    scheduleRoundRevealAnimation();
+    return;
+  }
+  animation.stepIndex += 1;
+  if (animation.stepIndex >= animation.sequence.length) {
+    finishRoundRevealAnimation();
+    return;
+  }
+  animation.phase = "seal";
+  playRoundRevealStepSfx();
+  render();
+  scheduleRoundRevealAnimation();
+}
+
+function finishRoundRevealAnimation() {
+  resetRoundRevealAnimation();
+  render();
+}
+
+function submitGuess() {
+  if (state.stage !== "guess" || state.gameOver) return;
+  const input = document.querySelector("#guessInput");
+  const rawGuess = (input?.value || "").trim();
+  const submitted = Number(rawGuess);
+  const maxGuess = playerGuessLimit();
+  if (!rawGuess || !Number.isFinite(submitted) || submitted < 0 || submitted > maxGuess) {
+    showInvalidGuessPopup();
+    return;
+  }
+
+  playGuessSfx();
+  const guess = Math.ceil(submitted);
+  const round = state.roundState;
+  round.playerSubmittedGuess = guess;
+  round.playerEffectiveGuess = applyGuessMutation("Player", guess);
+
+  state.bots.filter((bot) => !bot.eliminated).forEach((bot) => {
+    round.botSubmittedGuesses.set(bot.id, bot.plannedGuess);
+    round.botEffectiveGuesses.set(bot.id, applyGuessMutation(bot.name, bot.plannedGuess, bot));
+  });
+  applyFurcasLastTargetGuessSet();
+
+  round.edgeGambitStacks = 0;
+
+  recalculateTarget();
+  applyEligosExactGuess();
+  // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
+  const beforeReveal = captureRoundRevealSnapshot();
+  const shownBefore = { target: round.target, offset: round.targetOffset };
+  applyDevSealsAtReveal();
+  round.targetBeforeRevealSeals = round.target !== shownBefore.target ? shownBefore : null;
+  state.stage = "active";
+  addLog(`Target revealed at ${formatNumber(round.target)}. CRITICAL integer: ${round.criticalInteger}.`);
+  // only the reveal-time Dev SEALS (Dantre, Serafeim) animate now; every other SEAL waits for READY
+  startRoundRevealAnimation(beforeReveal, { onlyIds: DEV_SEALS_AT_REVEAL });
+  render();
+}
+
+// Seal of Eligos: your guess equals the TARGET as it is revealed (before any ARTIFACT or reveal SEAL moves it)
+function applyEligosExactGuess() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p119");
+  if (!round || !entries.length) return false;
+  if (!Number.isFinite(round.playerEffectiveGuess) || Math.ceil(round.playerEffectiveGuess) !== Math.ceil(round.target)) return false;
+  state.exactGuessCritCharged = true;
+  round.eligosExactGuess = true;
+  entries.forEach((entry) => {
+    markPassiveEntryTriggered(entry);
+    const eliteSin = 5 * passiveEntryEliteLevels(entry);
+    if (eliteSin > 0) gainCredits(eliteSin, true, ITEMS.p119.name);
+  });
+  round.roundEvents.push(`${ITEMS.p119.name}: your guess was exactly the TARGET. Your next CRITICAL deals 20% max HEALTH.`);
+  return true;
+}
+
+function applyGuessMutation(name, guess, bot = null) {
+  if (bot) return guess;
+  return applyCorruptionGuessMutation(guess);
+}
+
+function botTargetWeight(bot) {
+  return bot?.finalKey === "jesus" ? 3 : 1;
+}
+
+function recalculateTarget() {
+  const round = state.roundState;
+  let weightedTotal = 0;
+  let totalWeight = 0;
+
+  const addWeightedGuess = (guess, weight = 1) => {
+    if (!Number.isFinite(guess) || weight <= 0) return;
+    weightedTotal += guess * weight;
+    totalWeight += weight;
+  };
+
+  const sinWeight = wealthWeightBonus();
+  const playerWeight = 1 + sinWeight;
+  addWeightedGuess(round.playerEffectiveGuess, playerWeight);
+
+  state.bots.forEach((bot) => {
+    const guess = round.botEffectiveGuesses.get(bot.id);
+    if (!round.removedBotIds.has(bot.id)) {
+      addWeightedGuess(guess, botTargetWeight(bot));
+    }
+  });
+
+  round.extraAverageGuesses.forEach((entry) => {
+    addWeightedGuess(entry.guess);
+  });
+
+  round.tableAverage = totalWeight ? weightedTotal / totalWeight : 0;
+  const rawTarget = round.tableAverage * round.targetModifier + round.targetOffset;
+  round.target = Math.ceil(Math.min(200, rawTarget));
+  round.criticalInteger = round.target;
+}
+
+function readyRound() {
+  if (state.stage !== "active" || !state.roundState || state.roundState.penaltiesApplied) return;
+  if (state.pendingActive) {
+    addLog("Finish the Artifact target first.");
+    render();
+    return;
+  }
+  const beforeReveal = captureRoundRevealSnapshot();
+  playReadySfx();
+  applyPenalties();
+  if (startRoundRevealAnimation(beforeReveal)) {
+    render();
+    return;
+  }
+  render();
+}
+
+function performMainAction() {
+  if (roundRevealAnimationActive()) {
+    finishRoundRevealAnimation();
+    return;
+  }
+  if (state.stage === "guess") submitGuess();
+  else if (state.stage === "active") readyRound();
+  else if (state.stage === "summary") {
+    playNextRoundSfx();
+    advanceAfterSummary();
+  } else if (state.stage === "ended") {
+    startGame();
+  }
+}
+
+function shouldUseArcadeEnterShortcut(event) {
+  if (event.key !== "Enter" || event.defaultPrevented) return false;
+  if (state.mode !== "arcade" || state.pauseOpen) return false;
+  if (introCapturesInput()) return false;
+  if (!["guess", "active", "summary", "ended"].includes(state.stage)) return false;
+  const target = event.target;
+  if (target?.closest?.("button, a, select, textarea, [contenteditable='true']")) return false;
+  if (target?.tagName === "INPUT" && target.id !== "guessInput") return false;
+  const mainAction = document.querySelector("#mainAction");
+  return Boolean(mainAction && !mainAction.disabled);
+}
+
+function installArcadeEnterShortcut() {
+  document.addEventListener("keydown", (event) => {
+    if (!shouldUseArcadeEnterShortcut(event)) return;
+    event.preventDefault();
+    document.querySelector("#mainAction")?.click();
+  });
+}
+
+>>>>>>> d0d827e8a3fbbf853383ee5b96ecf0422850d9c2
 let shiftTooltipMoreInstalled = false;
 
 function setShiftTooltipMore(active) {
@@ -10323,6 +17671,7 @@ function advanceAfterSummary() {
   render();
 }
 
+<<<<<<< HEAD
 function applyStubbornWitnessEndRoundGrowth() {
   const entries = orderedPassiveEffectEntries("p104");
   if (!entries.length) return;
@@ -11871,6 +19220,1555 @@ function updateFullscreenLayoutClass() {
   document.body.classList.toggle("fullscreen-layout", isFullscreenLayoutMode());
 }
 
+=======
+function applyStubbornWitnessEndRoundGrowth() {
+  const entries = orderedPassiveEffectEntries("p104");
+  if (!entries.length) return;
+  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && personalityType(bot) === "Stubborn");
+  if (!targets.length) return;
+  entries.forEach((entry) => {
+    const amount = Math.max(0, Math.ceil(entry.stack || 1));
+    if (amount <= 0) return;
+    const source = passiveName("p104", "Seal of Alloces");
+    let totalMemory = 0;
+    let totalBounty = 0;
+    targets.forEach((bot) => {
+      totalMemory += addBotMemory(bot, amount, "", { source });
+      totalBounty += changeBotSin(bot, amount, "", { triggerLossDamage: false, source }).gained;
+    });
+    if (totalMemory > 0 || totalBounty > 0) {
+      markPassiveEntryTriggered(entry);
+      state.roundState?.roundEvents.push(`${source} gave STUBBORN DAMNED ${totalMemory} MEMORY and ${totalBounty} BOUNTY.`);
+    }
+  });
+}
+
+function rememberRound() {
+  const round = state.roundState;
+  clearBotMemoryBadges();
+  const memoryGain = 1;
+  const botGuessValues = state.bots
+    .map((bot) => round.botEffectiveGuesses.get(bot.id))
+    .filter((value) => Number.isFinite(value));
+  const memoryEntry = {
+    playerGuess: round.playerEffectiveGuess,
+    target: round.target,
+    targetModifier: round.targetModifier,
+    targetOffset: round.targetOffset,
+    tableAverage: round.tableAverage,
+    botAverage: average(botGuessValues)
+  };
+
+  state.gameMemory.push(memoryEntry);
+
+  state.bots.forEach((bot) => {
+    if (bot.eliminated) return;
+    const ownGuess = round.botEffectiveGuesses.get(bot.id);
+    if (!Number.isFinite(ownGuess)) {
+      if (bot.isBoss) bot.memory = state.gameMemory.slice(-botMemoryLimit(bot));
+      return;
+    }
+    addBotMemory(
+      bot,
+      memoryGain,
+      "",
+      {
+        source: "End of round memory",
+        entry: {
+          ownGuess,
+          ...memoryEntry
+        }
+      }
+    );
+  });
+  applyStubbornWitnessEndRoundGrowth();
+}
+
+function buyShopItem(slotIndex) {
+  if (arcadeActionLocked()) return;
+  pruneRemovedPassives();
+  if (shopDisabledBySatan()) {
+    addLog("Satan has disabled Devil's Offerings.");
+    render();
+    return;
+  }
+  const slot = state.shop[slotIndex];
+  if (!slot || slot.sold) return;
+  const item = slot.item;
+  if (item.type === "passive" && REMOVED_PASSIVE_IDS.has(item.id)) {
+    slot.sold = true;
+    addLog(`${item.name} is no longer offered.`);
+    syncShopSlotCount();
+    render();
+    return;
+  }
+  const cost = shopPrice(item);
+
+  if (!canSpendCredits(cost)) {
+    addLog("Not enough SIN.");
+    render();
+    return;
+  }
+
+  if (item.type === "passive") {
+    const existing = passiveEntry(item.id);
+    if (existing && isSelfStackingSeal(item.id)) {
+      slot.sold = true;
+      addLog(`${item.name} cannot be upgraded.`);
+      syncShopSlotCount();
+      render();
+      return;
+    }
+    if (!existing && !hasSealSlotRoomFor(item)) {
+      addLog(SATAN_SEAL_IDS.has(item.id) ? "Need 2 empty Seal slots." : "Seal slots are full.");
+      render();
+      return;
+    }
+    spendCredits(cost);
+    if (existing) {
+      existing.stack = (existing.stack || 1) + 1;
+      recordEliteLevelBought(existing.id, existing.stack);
+      addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
+    } else {
+      const boughtSeal = itemCopy(item.id);
+      state.player.passives.push(boughtSeal);
+      refreshMimicTarget();
+      addLog(`Bought ${item.name}.`);
+    }
+    recordPlayedSeal(item.id);
+    recordShopItemBought(item.id);
+    state.itemsBought += 1;
+    slot.sold = true;
+    syncShopSlotCount();
+    collectionNoteShopBuy();
+    applyGuessReveals();
+    checkBalamMemoryBountyEliminations();
+    playSealPurchaseSfx();
+    applyOfferingTollDamage(item);
+    if (state.player.hp <= 0) finishGameOverRound();
+    render();
+    return;
+  }
+
+  if (state.player.actives.length >= activeInventoryLimit()) {
+    addLog("Artifact inventory is full.");
+    render();
+    return;
+  }
+
+  spendCredits(cost);
+  const active = itemCopy(item.id);
+  active.purchaseCost = cost;
+  state.player.actives.push(active);
+  state.activeCarouselIndex = state.player.actives.length - 1;
+  recordShopItemBought(item.id);
+  state.itemsBought += 1;
+  slot.sold = true;
+  syncShopSlotCount();
+  collectionNoteShopBuy();
+  addLog(`Bought ${item.name}.`);
+  playGameSfx("artifactBuy");
+  applyOfferingTollDamage(item);
+  if (state.player.hp <= 0) finishGameOverRound();
+  render();
+}
+
+function rerollShopClick() {
+  if (arcadeActionLocked()) return;
+  if (shopDisabledBySatan()) {
+    addLog("Satan has disabled Devil's Offerings.");
+    render();
+    return;
+  }
+  const cost = currentRerollCost();
+  if (!canSpendCredits(cost)) {
+    addLog(`Reroll needs ${cost} SIN.`);
+    render();
+    return;
+  }
+  spendCredits(cost);
+  if (state.roundState) {
+    state.roundState.rerollSinSpentThisRound = (state.roundState.rerollSinSpentThisRound || 0) + Math.max(0, Math.ceil(cost));
+  }
+  rerollShop();
+  playGameSfx("reroll");
+  state.rerollBaseCost += 1;
+  addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
+  applyRerollTollDamage();
+  if (state.player.hp <= 0) finishGameOverRound();
+  render();
+}
+
+function sellPassive(index) {
+  if (arcadeActionLocked()) return;
+  const item = state.player.passives[index];
+  if (!item) return;
+  const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  ghostSealOut(index);
+  state.player.passives.splice(index, 1);
+  refreshMimicTarget();
+  gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
+  syncShopSlotCount();
+  addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
+  // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
+  playGameSfx("sealSellGhost");
+  quietMomentSfx("sinGain");
+  render();
+}
+
+function sellActive(index) {
+  if (arcadeActionLocked()) return;
+  const item = state.player.actives[index];
+  if (!item) return;
+  const sale = activeSellValue(item);
+  state.player.actives.splice(index, 1);
+  gainCredits(sale, false, `Sold ${item.name}`);
+  normalizeActiveCarouselIndex();
+  addLog(`Sold ${item.name} for ${sale} SIN.`);
+  playGameSfx("sell");
+  quietMomentSfx("sinGain");
+  render();
+}
+
+function normalizeActiveCarouselIndex() {
+  const count = state.player.actives.length;
+  if (!count) {
+    state.activeCarouselIndex = 0;
+    return;
+  }
+  state.activeCarouselIndex = clamp(state.activeCarouselIndex, 0, count - 1);
+}
+
+function moveActiveCarousel(delta) {
+  const count = state.player.actives.length;
+  if (!count) return;
+  state.activeCarouselIndex = (state.activeCarouselIndex + delta + count) % count;
+  render();
+}
+
+function positionFloatingTooltip(event, tooltip) {
+  const gap = 14;
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+  const rect = tooltip.getBoundingClientRect();
+  let left = event.clientX + gap;
+  let top = event.clientY + gap;
+  if (left + rect.width > window.innerWidth - gap) left = event.clientX - rect.width - gap;
+  if (top + rect.height > window.innerHeight - gap) top = event.clientY - rect.height - gap;
+  tooltip.style.left = `${Math.max(gap, left)}px`;
+  tooltip.style.top = `${Math.max(gap, top)}px`;
+}
+
+function canUseActive(index = null) {
+  const item = Number.isInteger(index) ? state.player.actives[index] : null;
+  const temporaryDevArtifact = Boolean(item?.devTemporary);
+  return (
+    !arcadeActionLocked() &&
+    state.stage === "active" &&
+    state.roundState &&
+    !state.roundState.penaltiesApplied &&
+    (temporaryDevArtifact || state.roundState.activeUses < activeUseLimit())
+  );
+}
+
+function activeName(id) {
+  return ITEMS[id]?.name || "Artifact";
+}
+
+function pendingArtifactItem() {
+  const pending = state.pendingActive;
+  if (!pending) return null;
+  return pending.copiedItem || state.player.actives.find((active) => active.uid === pending.uid) || null;
+}
+
+function copiedEffectItem(sourceItem) {
+  const copy = itemCopy(sourceItem.id);
+  copy.purchaseCost = sourceItem.purchaseCost ?? sourceItem.price ?? ITEMS[sourceItem.id]?.price ?? 0;
+  if (Number.isFinite(sourceItem.sellValueOverride)) copy.sellValueOverride = sourceItem.sellValueOverride;
+  return copy;
+}
+
+function rememberLastUsedArtifactEffect(item) {
+  if (!item || item.id === "a18" || !ACTIVE_IDS.includes(item.id)) return;
+  state.lastUsedArtifact = copiedEffectItem(item);
+}
+
+function lastUsedArtifactEffect() {
+  const item = state.lastUsedArtifact;
+  if (!item || item.id === "a18" || !ACTIVE_IDS.includes(item.id)) return null;
+  return copiedEffectItem(item);
+}
+
+function lastUsedArtifactName() {
+  const item = state.lastUsedArtifact;
+  if (!item || item.id === "a18" || !ACTIVE_IDS.includes(item.id)) return "None";
+  return item.name || activeName(item.id);
+}
+
+function stackPlayerDamageReduction(basePercent, source) {
+  if (!state.roundState) return 0;
+  const nextReduction = artifactPercent(basePercent);
+  const currentReduction = clamp(state.roundState.playerDamageReduction || 0, 0, 0.99);
+  state.roundState.playerDamageReduction = clamp(1 - (1 - currentReduction) * (1 - nextReduction), 0, 0.99);
+  state.roundState.playerDamageReductionSource = source || "Damage reduction";
+  return state.roundState.playerDamageReduction;
+}
+
+function addArtifactCriticalRangeBonus(amount, source) {
+  if (!state.roundState) return 0;
+  const bonus = Math.max(0, Math.ceil(amount || 0));
+  state.roundState.artifactCriticalRangeBonus = Math.max(0, Math.ceil(state.roundState.artifactCriticalRangeBonus || 0)) + bonus;
+  return state.roundState.artifactCriticalRangeBonus;
+}
+
+// Vial of Blood: the second DAMNED takes the first one's PERSONALITY (nothing else)
+function copyDamnedPersonality(bot, personality, source) {
+  if (!bot || !personality) return false;
+  return Boolean(setBotPersonality(bot, personality, source));
+}
+
+function recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter = true) {
+  rememberLastUsedArtifactEffect(copiedItem);
+  const text = `${copierName} copied ${copiedItem?.name || "Artifact"}: ${message}`;
+  state.roundState.roundEvents.push(text);
+  addLog(text);
+  recalculateTarget();
+  if (state.player.hp <= 0) finishGameOverRound();
+  if (renderAfter) render();
+}
+
+function finishActiveResolution(index, message, uid = state.pendingActive?.uid, renderAfter = true) {
+  const pending = state.pendingActive;
+  if (pending?.copiedItem) {
+    const copiedItem = pending.copiedItem;
+    const copierName = pending.copiedByName || activeName("a18");
+    state.pendingActive = null;
+    recordCopiedArtifactResolution(copierName, copiedItem, message, renderAfter);
+    return;
+  }
+  consumeActive(index, message, uid, renderAfter);
+}
+
+function beginCopiedArtifactEffect(sourceItem, copierName) {
+  const item = copiedEffectItem(sourceItem);
+  if (TARGETED_ARTIFACT_IDS.has(item.id) || item.id === "a11") {
+    state.pendingActive = { index: -1, uid: item.uid, id: item.id, mode: "bot", copiedItem: item, copiedByName: copierName };
+    if (item.id === "a11") state.pendingActive.step = "damage";
+    closeMobileOfferingsForTargetPick();
+    addLog(`${copierName} copied ${item.name}. Pick a DAMNED to resolve the copied effect.`);
+    render();
+    return;
+  }
+
+  if (item.id === "a6") {
+    const value = artifactValue(20);
+    state.roundState.targetOffset += value;
+    recordCopiedArtifactResolution(copierName, item, `${item.name} added ${value} to the target.`);
+    return;
+  }
+
+  if (item.id === "a14") {
+    const value = artifactValue(10);
+    state.roundState.targetOffset -= value;
+    recordCopiedArtifactResolution(copierName, item, `${item.name} reduced the target by ${value}.`);
+    return;
+  }
+
+  if (item.id === "a23") {
+    addEliteRerollBoost();
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`
+    );
+    return;
+  }
+
+  if (item.id === "a10") {
+    const credits = randomInt(artifactValue(3), artifactValue(10));
+    const gained = gainCredits(credits, true, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} gained ${gained} SIN.`);
+    return;
+  }
+
+  if (item.id === "a12") {
+    const reduction = stackPlayerDamageReduction(50, item.name);
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} armed: you take ${artifactPercentValue(50)}% less damage this round. Total reduction: ${Math.round(reduction * 100)}%.`
+    );
+    return;
+  }
+
+  if (item.id === "a16") {
+    const credits = randomInt(artifactValue(3), artifactValue(9));
+    const gained = gainCredits(credits, true, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} gained ${gained} SIN.`);
+    return;
+  }
+
+  if (item.id === "a21") {
+    state.roundState.painEcho = true;
+    recordCopiedArtifactResolution(
+      copierName,
+      item,
+      `${item.name} armed: DAMNED take matching max-HEALTH percentage damage when you take damage this round.`
+    );
+    return;
+  }
+
+  if (item.id === "a22") {
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    recordCopiedArtifactResolution(copierName, item, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`);
+    return;
+  }
+
+  recordCopiedArtifactResolution(copierName, item, `${item.name} has no current effect.`);
+}
+
+function useActive(index) {
+  if (arcadeActionLocked()) return;
+  if (!canUseActive(index)) {
+    addLog("Artifacts can be used only during the reveal stage.");
+    render();
+    return;
+  }
+
+  if (state.pendingActive) {
+    addLog("Finish or cancel the current Artifact first.");
+    render();
+    return;
+  }
+
+  const item = state.player.actives[index];
+  if (!item) return;
+  if (!ACTIVE_IDS.includes(item.id)) {
+    addLog(`${item.name} is reserved and can only be sold.`);
+    render();
+    return;
+  }
+
+  if (item.id === "a11") {
+    const nonBossTargets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && !bot.isBoss);
+    if (nonBossTargets.length < 2) {
+      addLog(`${item.name} needs two non-boss DAMNED.`);
+      render();
+      return;
+    }
+  }
+
+  activeBots()
+    .filter((bot) => botHasPassive(bot, "spite"))
+    .forEach((bot) => {
+      damagePlayer(3, `${bot.name}'s Pyros Gift: Seal of Botis dealt 3 damage because you used an ARTIFACT.`);
+    });
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
+    render();
+    return;
+  }
+
+  const threonSource = activeBossesWithPower("threon")[0];
+  if (threonSource && Math.random() < 0.5) {
+    damagePlayer(3, `${threonSource.name} made ${item.name} malfunction for 3 damage.`);
+    consumeActive(index, `${threonSource.name} made ${item.name} malfunction and do nothing.`, item.uid);
+    return;
+  }
+
+  if (item.id === "a6") {
+    const value = artifactValue(20);
+    state.roundState.targetOffset += value;
+    consumeActive(index, `${item.name} added ${value} to the target.`, item.uid);
+    return;
+  }
+
+  if (item.id === "a14") {
+    const value = artifactValue(10);
+    state.roundState.targetOffset -= value;
+    consumeActive(index, `${item.name} reduced the target by ${value}.`, item.uid);
+    return;
+  }
+
+  if (item.id === "a23") {
+    addEliteRerollBoost();
+    consumeActive(
+      index,
+      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`,
+      item.uid
+    );
+    return;
+  }
+
+  if (TARGETED_ARTIFACT_IDS.has(item.id)) {
+    state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot" };
+    closeMobileOfferingsForTargetPick();
+    addLog("Pick a DAMNED to resolve the ARTIFACT.");
+    render();
+    return;
+  }
+
+  if (item.id === "a10") {
+    const credits = randomInt(artifactValue(3), artifactValue(10));
+    const gained = gainCredits(credits, true, item.name);
+    consumeActive(index, `${item.name} gained ${gained} SIN.`, item.uid);
+    return;
+  }
+
+  if (item.id === "a12") {
+    const reduction = stackPlayerDamageReduction(50, item.name);
+    consumeActive(
+      index,
+      `${item.name} armed: you take ${artifactPercentValue(50)}% less damage this round. Total reduction: ${Math.round(reduction * 100)}%.`,
+      item.uid
+    );
+    return;
+  }
+
+  if (item.id === "a11") {
+    state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
+    closeMobileOfferingsForTargetPick();
+    addLog("Pick a non-boss DAMNED to take 30% max-HEALTH damage.");
+    render();
+    return;
+  }
+
+  if (item.id === "a16") {
+    const credits = randomInt(artifactValue(3), artifactValue(9));
+    const gained = gainCredits(credits, true, item.name);
+    consumeActive(index, `${item.name} gained ${gained} SIN.`, item.uid);
+    return;
+  }
+
+  if (item.id === "a18") {
+    const copied = lastUsedArtifactEffect();
+    if (!copied) {
+      addLog(`${item.name} needs a previously used non-Crystal ARTIFACT to copy.`);
+      render();
+      return;
+    }
+    consumeActive(index, `${item.name} shattered into ${copied.name}.`, item.uid, false);
+    if (state.player.hp <= 0) {
+      render();
+      return;
+    }
+    beginCopiedArtifactEffect(copied, item.name);
+    return;
+  }
+
+  if (item.id === "a21") {
+    state.roundState.painEcho = true;
+    consumeActive(
+      index,
+      `${item.name} armed: DAMNED take matching max-HEALTH percentage damage when you take damage this round.`,
+      item.uid
+    );
+    return;
+  }
+
+  if (item.id === "a22") {
+    const total = addArtifactCriticalRangeBonus(1, item.name);
+    consumeActive(index, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`, item.uid);
+    return;
+  }
+
+  render();
+}
+
+function cancelPendingActive() {
+  if (arcadeActionLocked()) return;
+  const pending = state.pendingActive;
+  if (!pending) return;
+  const item = pendingArtifactItem();
+  const itemName = item?.name || "Artifact";
+  if (pending.id === "a11" && pending.step === "heal") {
+      addLog(`${itemName} has already hit; choose an overheal target to finish it.`);
+    render();
+    return;
+  }
+  if (pending.id === "a26" && pending.step === "give") {
+    const source = state.bots.find((bot) => bot.id === pending.sourceBotId);
+    if (source) {
+      changeBotSin(source, pending.removedBounty || 0, "", {
+        triggerLossDamage: false,
+        source: `${itemName} canceled`
+      });
+    }
+    addLog(`${itemName} canceled and restored the drained bounty.`);
+  } else if (pending.copiedItem) {
+    addLog(`${pending.copiedByName || activeName("a18")} copied ${itemName}, but the copied effect was canceled.`);
+  } else {
+    addLog(`${itemName} canceled.`);
+  }
+  state.pendingActive = null;
+  render();
+}
+
+function consumeActive(index, message, uid = state.pendingActive?.uid, renderAfter = true) {
+  const actualIndex = uid ? state.player.actives.findIndex((item) => item.uid === uid) : index;
+  if (actualIndex < 0) {
+    state.pendingActive = null;
+    addLog("That Artifact is no longer available.");
+    render();
+    return;
+  }
+  const [item] = state.player.actives.splice(actualIndex, 1);
+  if (!item) return;
+  playArtifactSfx(item.id);
+  recordPlayedArtifact(item.id);
+  // Seal of Valac never triggers on its own; using ARTIFACTS while holding it is what it does
+  if (passiveStack("p25")) collectionDiscover("p25");
+  if (!item.devTemporary) state.roundState.activeUses += 1;
+  collectionNoteArtifactUse();
+  state.pendingActive = null;
+  state.roundState.roundEvents.push(message);
+  addLog(message);
+  recordArtifactUseForSelfStacking();
+  applyActiveUsePassives(item);
+  rememberLastUsedArtifactEffect(item);
+  recalculateTarget();
+  normalizeActiveCarouselIndex();
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
+  }
+  if (renderAfter) render();
+}
+
+function chooseBot(botId) {
+  if (arcadeActionLocked()) return;
+  if (!state.pendingActive || state.pendingActive.mode !== "bot") return;
+  const pending = state.pendingActive;
+  const { id, index } = pending;
+  const bot = state.bots.find((candidate) => candidate.id === botId);
+  if (!bot) return;
+  if (bot.hp <= 0) {
+    addLog(`${bot.name} is already down.`);
+    render();
+    return;
+  }
+  if (botHasPassive(bot, "shield")) {
+    addLog(`${bot.name}'s Pyros Gift: Seal of Halphas blocks ARTIFACTS.`);
+    render();
+    return;
+  }
+  const round = state.roundState;
+  const item = pendingArtifactItem();
+  const itemName = item?.name || activeName(id);
+
+  if (id === "a7") {
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
+      render();
+      return;
+    }
+    const playerGuess = round.playerEffectiveGuess;
+    const botGuess = round.botEffectiveGuesses.get(bot.id);
+    round.playerEffectiveGuess = botGuess;
+    round.playerSubmittedGuess = botGuess;
+    round.playerCorruption = null;
+    round.botEffectiveGuesses.set(bot.id, playerGuess);
+    round.botSubmittedGuesses.set(bot.id, playerGuess);
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} traded guesses with ${bot.name}.`);
+    return;
+  }
+
+  if (id === "a8") {
+    const guess = round.botEffectiveGuesses.get(bot.id);
+    const count = artifactCount(5);
+    for (let copy = 0; copy < count - 1; copy += 1) {
+      round.extraAverageGuesses.push({ botId: bot.id, guess });
+    }
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} counted ${bot.name}'s guess ${count} times.`);
+    return;
+  }
+
+  if (id === "a9") {
+    round.removedBotIds.add(bot.id);
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} removed ${bot.name} from the average.`);
+    return;
+  }
+
+  if (id === "a15") {
+    const uid = pending.uid;
+    const baseDamage = Math.ceil(bot.maxHp * artifactPercent(sacrificialDaggerPercentForBot(bot)));
+    const extraDamage = sacrificialDaggerExtraDamage("p70");
+    const damage = baseDamage + extraDamage;
+    const amyText = extraDamage ? ` including ${extraDamage} from Seal of Amy` : "";
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} hit ${bot.name} for ${damage}${amyText}.`, uid, false);
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}${amyText}.`, itemName);
+    if (extraDamage > 0) recordSealStatFromSource("damage", extraDamage, ITEMS.p70?.name || "Seal of Amy");
+    if (state.player.hp <= 0) finishGameOverRound();
+    render();
+    return;
+  }
+
+  if (id === "a25") {
+    queueMummifiedLambNextRoundReveal(bot, itemName);
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +3 BOUNTY.`);
+    return;
+  }
+
+  if (id === "a26") {
+    if (pending.step === "give") {
+      changeBotSin(bot, pending.removedBounty || 0, "", { triggerLossDamage: false, source: itemName });
+      applyTargetedItemSinGain(item, [bot]);
+      finishActiveResolution(index, `${itemName} moved ${pending.removedBounty || 0} bounty to ${bot.name}.`);
+      return;
+    }
+    const maxDrain = artifactValue(5);
+    const removed = Math.min(maxDrain, botSin(bot));
+    changeBotSin(bot, -removed, `${itemName} drained ${removed} bounty from ${bot.name}.`);
+    applyTargetedItemSinGain(item, [bot]);
+    pending.step = "give";
+    pending.sourceBotId = bot.id;
+    pending.removedBounty = removed;
+    addLog(`${itemName} drained ${removed} BOUNTY from ${bot.name}. Pick a DAMNED to receive it.`);
+    render();
+    return;
+  }
+
+  if (id === "a28") {
+    const value = artifactValue(6);
+    const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(6));
+    const memoryAdded = addBotMemory(bot, value, "", { source: itemName });
+    changeBotSin(bot, value, `${itemName} gave ${bot.name} +${value} SIN.`, { triggerLossDamage: false });
+    const healed = healBot(bot, healAmount, itemName, itemName);
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(index, `${itemName} gave ${bot.name} +${memoryAdded} memory, +${value} SIN, and healed ${healed}.`);
+    return;
+  }
+
+  if (id === "a11") {
+    resolveBloodVial(bot);
+  }
+}
+
+function resolveBloodVial(bot) {
+  const pending = state.pendingActive;
+  const item = pendingArtifactItem();
+  const itemName = item?.name || activeName("a11");
+  if (pending.step === "damage") {
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
+      render();
+      return;
+    }
+    const possibleHealTargets = state.bots.filter(
+      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && !candidate.isBoss
+    );
+    if (!possibleHealTargets.length) {
+      addLog("Pick a target that leaves another non-boss DAMNED to overheal.");
+      render();
+      return;
+    }
+    const damage = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
+    applyTargetedItemSinGain(item, [bot]);
+    pending.step = "heal";
+    pending.damageBotId = bot.id;
+    pending.copiedPersonality = personalityType(bot);
+    pending.copiedPersonalityName = bot.name;
+    addLog("Now pick another non-boss DAMNED to overheal and receive the copied PERSONALITY.");
+    render();
+    return;
+  }
+
+  if (pending.step === "heal") {
+    if (bot.id === pending.damageBotId) {
+      addLog("Choose another DAMNED to receive the heal.");
+      render();
+      return;
+    }
+    if (bot.isBoss) {
+      addLog(`${itemName} cannot target BOSSES.`);
+      render();
+      return;
+    }
+    const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+    const healed = healBot(bot, healAmount, itemName, itemName, { allowOverheal: true });
+    const copied = copyDamnedPersonality(bot, pending.copiedPersonality || pending.copiedAbility?.type, itemName);
+    applyTargetedItemSinGain(item, [bot]);
+    finishActiveResolution(
+      pending.index,
+      `${itemName} overhealed ${bot.name} for ${healed} and ${copied ? "copied" : "matched"} ${pending.copiedPersonalityName || pending.copiedAbilityName || "the first DAMNED"}'s PERSONALITY.`
+    );
+  }
+}
+
+function pvpInitialState() {
+  return {
+    stage: "lobby",
+    round: 0,
+    slots: Array.from({ length: PVP_SLOT_COUNT }, (_, slot) => null),
+    modifier: pvpRollModifier(),
+    previousTarget: null,
+    previousAverage: null,
+    previousModifier: null,
+    baseTarget: null,
+    finalTarget: null,
+    tableAverage: null,
+    finalAverage: null,
+    targetOffset: 0,
+    removedIds: new Set(),
+    criticalHitIds: new Set(),
+    finalCriticalHitIds: new Set(),
+    activeResults: [],
+    log: [],
+    winner: null,
+    forceModifierNextRound: false,
+    modifierRoundsSinceChange: 0,
+    waitForHost: false,
+    autoKey: null,
+    autoDueAt: null,
+    onlineRoom: null,
+    removedRemoteIds: new Set()
+  };
+}
+
+function pvpParticipant(slot, name, human = true, remoteId = null) {
+  return {
+    id: remoteId || `local-${slot}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    slot,
+    name: name || `Player ${slot + 1}`,
+    human,
+    remoteId,
+    color: randomFrom(BOT_ARCHETYPES).color,
+    image: randomBotImage(),
+    hp: PVP_MAX_HP,
+    maxHp: PVP_MAX_HP,
+    eliminated: false,
+    guess: null,
+    firstPhaseGuess: null,
+    activeOptions: [],
+    activeChoiceId: null,
+    activeTargetId: null,
+    activeCast: null,
+    activeResolved: false,
+    activeGuaranteeThisRound: false,
+    activeGuaranteeNextRound: false,
+    damageReduction: 0,
+    roundStartHp: null,
+    aliveAtRoundStart: false,
+    lastDamage: 0,
+    damageSources: [],
+    critical: false
+  };
+}
+
+function pvpBot(slot) {
+  const profile = randomBotProfile();
+  return {
+    ...pvpParticipant(slot, profile.name, false),
+    name: profile.name,
+    country: profile.country,
+    flag: profile.flag
+  };
+}
+
+function pvpActiveById(id) {
+  if (id === PVP_SKIP_ACTIVE.id) return PVP_SKIP_ACTIVE;
+  return PVP_ACTIVES.find((active) => active.id === id) || PVP_ACTIVES[0];
+}
+
+function pvpSelectableActives(participant) {
+  return [...(participant?.activeOptions || []), PVP_SKIP_ACTIVE];
+}
+
+function pvpAliveParticipants() {
+  return state.pvp.slots.filter((participant) => participant && !participant.eliminated && participant.hp > 0);
+}
+
+function pvpHumanParticipants() {
+  return pvpAliveParticipants().filter((participant) => participant.human);
+}
+
+function pvpAddLog(message) {
+  if (!state.pvp) return;
+  state.pvp.log.unshift(normalizeGameText(message));
+  state.pvp.log = state.pvp.log.slice(0, 8);
+}
+
+function pvpClearAutoTimer() {
+  if (pvpAutoTimer) clearTimeout(pvpAutoTimer);
+  pvpAutoTimer = null;
+  if (state.pvp) {
+    state.pvp.autoKey = null;
+    state.pvp.autoDueAt = null;
+  }
+}
+
+function pvpScheduleAuto(key, delay, callback) {
+  const pvp = state.pvp;
+  if (!pvp || pvp.waitForHost || typeof setTimeout !== "function") return;
+  if (pvpAutoTimer && pvp.autoKey === key) return;
+  pvpClearAutoTimer();
+  pvp.autoKey = key;
+  pvp.autoDueAt = Date.now() + delay;
+  pvpAutoTimer = setTimeout(() => {
+    if (!state.pvp || state.pvp.autoKey !== key || state.pvp.waitForHost) return;
+    pvpClearAutoTimer();
+    callback();
+  }, delay);
+}
+
+function pvpMaybeAutoAdvance() {
+  const pvp = state.pvp;
+  if (!pvp || state.mode !== "pvp") return;
+  if (pvp.waitForHost) {
+    pvpClearAutoTimer();
+    return;
+  }
+  if (pvp.stage === "guess" && pvpAllGuessesReady()) {
+    pvpScheduleAuto(`guess-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpPrepareActivePhase);
+    return;
+  }
+  if (pvp.stage === "active" && pvpAllActivesReady()) {
+    pvpScheduleAuto(`active-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpResolveActives);
+    return;
+  }
+  if (pvp.stage === "summary") {
+    pvpScheduleAuto(`summary-${pvp.round}`, PVP_SUMMARY_AUTO_DELAY, pvpNextRound);
+    return;
+  }
+  pvpClearAutoTimer();
+}
+
+function startPvpMode() {
+  if (isNativeArcadeApp()) {
+    showMainMenu();
+    return;
+  }
+  resumeSoundtrack();
+  pvpClearAutoTimer();
+  state.mode = "pvp";
+  state.pauseOpen = false;
+  state.pvp = pvpInitialState();
+  pvpAddLog("The lobby is open.");
+  pvpHostResetRoom();
+  pvpStartHostPolling();
+  render();
+}
+
+function pvpLocalServerUrl() {
+  return "http://localhost:5177";
+}
+
+function pvpShouldAutoStartFromHash() {
+  return typeof location !== "undefined" && location.hash === "#pvp" && !isNativeArcadeApp();
+}
+
+async function pvpOpenServedHostIfAvailable() {
+  if (typeof location === "undefined" || location.protocol !== "file:" || typeof fetch !== "function") return false;
+  const url = pvpLocalServerUrl();
+  try {
+    await fetch(`${url}/api/room`, { cache: "no-store", mode: "no-cors" });
+    window.location.href = `${url}/#pvp`;
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function requestPvpMode() {
+  if (isNativeArcadeApp()) {
+    showMainMenu();
+    return;
+  }
+  if (await pvpOpenServedHostIfAvailable()) return;
+  startPvpMode();
+  if (!pvpServerEnabled()) pvpAddLog("Phone server is not running. Browser security cannot start it from a local file.");
+}
+
+function restartPvpMode() {
+  resumeSoundtrack();
+  pvpClearAutoTimer();
+  state.pauseOpen = false;
+  state.pvp = pvpInitialState();
+  pvpAddLog("PvP restarted.");
+  pvpHostResetRoom();
+  pvpStartHostPolling();
+  render();
+}
+
+function switchToArcadeMode() {
+  pvpClearAutoTimer();
+  pvpStopHostPolling();
+  state.pauseOpen = false;
+  state.pvp = null;
+  startGame();
+}
+
+function pvpNormalizeSlots() {
+  if (!state.pvp) return;
+  state.pvp.slots.forEach((participant, slot) => {
+    if (participant) participant.slot = slot;
+  });
+}
+
+function pvpAddEmptySlot() {
+  if (!state.pvp || state.pvp.stage !== "lobby") return;
+  if (state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) {
+    pvpAddLog(`The table seats up to ${PVP_MAX_SLOT_COUNT}.`);
+    render();
+    return;
+  }
+  state.pvp.slots.push(null);
+  pvpAddLog(`Seat ${state.pvp.slots.length} added.`);
+  pvpPostHostState();
+  render();
+}
+
+function pvpRemoveRemotePlayer(remoteId) {
+  if (!remoteId || !pvpServerEnabled()) return;
+  fetch("/api/remove", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: remoteId })
+  }).catch(() => {});
+}
+
+function pvpRemoveEmptySlot() {
+  if (!state.pvp || state.pvp.stage !== "lobby") return;
+  for (let slot = state.pvp.slots.length - 1; slot >= 0; slot -= 1) {
+    if (!state.pvp.slots[slot]) {
+      pvpRemoveLobbySlot(slot);
+      return;
+    }
+  }
+}
+
+// The host's Pause holds the automatic flow; phones are told the game is paused.
+function pvpSetHostPaused(paused) {
+  if (!state.pvp) return;
+  state.pvp.waitForHost = Boolean(paused);
+  if (paused) pvpClearAutoTimer();
+  else pvpMaybeAutoAdvance();
+  pvpPostHostState();
+}
+
+function pvpRemoveLobbySlot(slot) {
+  if (!state.pvp || state.pvp.stage !== "lobby") return;
+  if (slot < 0 || slot >= state.pvp.slots.length) return;
+  if (state.pvp.slots.length <= 2) {
+    pvpAddLog("The table needs at least two seats.");
+    render();
+    return;
+  }
+  const [removed] = state.pvp.slots.splice(slot, 1);
+  if (removed?.remoteId) {
+    state.pvp.removedRemoteIds.add(removed.remoteId);
+    pvpRemoveRemotePlayer(removed.remoteId);
+  }
+  pvpNormalizeSlots();
+  pvpAddLog(removed ? `${removed.name} was removed from the table.` : `Seat ${slot + 1} removed.`);
+  pvpPostHostState();
+  render();
+}
+
+function pvpFillBotsAndStart() {
+  if (state.pvp.slots.length < 2) {
+    pvpAddLog("The table needs at least two seats.");
+    render();
+    return;
+  }
+  state.pvp.slots = state.pvp.slots.map((participant, slot) => participant || pvpBot(slot));
+  pvpNormalizeSlots();
+  pvpAddLog("The DAMNED took the open seats.");
+  pvpStartRound();
+}
+
+function pvpStartRound() {
+  const pvp = state.pvp;
+  pvpClearAutoTimer();
+  pvp.round += 1;
+  pvp.stage = "guess";
+  pvp.log = [];
+  const forcedModifierChange = pvp.forceModifierNextRound;
+  const roundsSinceModifierChange = Number.isFinite(pvp.modifierRoundsSinceChange) ? pvp.modifierRoundsSinceChange : 0;
+  const scheduledModifierChange = pvp.round === 1 || roundsSinceModifierChange >= PVP_MODIFIER_INTERVAL;
+  if (scheduledModifierChange || forcedModifierChange) {
+    pvp.modifier = pvpRollModifier(pvp.round === 1 ? null : pvp.modifier);
+    pvp.forceModifierNextRound = false;
+    pvp.modifierRoundsSinceChange = 1;
+    pvpAddLog(
+      forcedModifierChange
+        ? `Target reached 100. Modifier changed to ${pvp.modifier.toFixed(1)}.`
+        : `Modifier set to ${pvp.modifier.toFixed(1)}.`
+    );
+  } else {
+    pvp.modifierRoundsSinceChange = roundsSinceModifierChange + 1;
+  }
+  pvp.baseTarget = null;
+  pvp.finalTarget = null;
+  pvp.tableAverage = null;
+  pvp.finalAverage = null;
+  pvp.targetOffset = 0;
+  pvp.removedIds = new Set();
+  pvp.criticalHitIds = new Set();
+  pvp.finalCriticalHitIds = new Set();
+  pvp.activeResults = [];
+
+  pvp.slots.forEach((participant) => {
+    if (!participant) return;
+    participant.roundStartHp = null;
+    participant.aliveAtRoundStart = false;
+    if (participant.eliminated) return;
+    participant.roundStartHp = participant.hp;
+    participant.aliveAtRoundStart = true;
+    participant.activeGuaranteeThisRound = Boolean(participant.activeGuaranteeNextRound);
+    participant.activeGuaranteeNextRound = false;
+    participant.guess = participant.human ? null : pvpBotGuess(participant);
+    participant.firstPhaseGuess = null;
+    participant.activeOptions = [];
+    participant.activeChoiceId = null;
+    participant.activeTargetId = null;
+    participant.activeCast = null;
+    participant.activeResolved = false;
+    participant.damageReduction = 0;
+    participant.lastDamage = 0;
+    participant.damageSources = [];
+    participant.critical = false;
+  });
+  pvpAddLog(`Round ${pvp.round} guess phase.`);
+  pvpMaybeAutoAdvance();
+  pvpPostHostState();
+  render();
+}
+
+function pvpProjectedPreviousTarget() {
+  const pvp = state.pvp;
+  if (!pvp) return null;
+  if (Number.isFinite(pvp.previousAverage)) {
+    return Math.ceil(pvp.previousAverage * pvp.modifier);
+  }
+  if (Number.isFinite(pvp.previousTarget) && Number.isFinite(pvp.previousModifier) && pvp.previousModifier !== 0) {
+    return Math.ceil((pvp.previousTarget / pvp.previousModifier) * pvp.modifier);
+  }
+  return Number.isFinite(pvp.previousTarget) ? pvp.previousTarget : null;
+}
+
+function pvpBotGuess(participant) {
+  const projected = pvpProjectedPreviousTarget();
+  const anchor = projected === null ? randomInt(24, 76) : projected;
+  const jitter = projected === null ? randomInt(-18, 18) : randomInt(-12, 12);
+  return Math.ceil(clamp(anchor + jitter, 0, 100));
+}
+
+function pvpAllGuessesReady() {
+  return pvpAliveParticipants().every((participant) => Number.isFinite(participant.guess));
+}
+
+function pvpPrepareActivePhase() {
+  pvpClearAutoTimer();
+  if (!pvpAllGuessesReady()) {
+    pvpAddLog("Waiting for every living player to guess.");
+    render();
+    return;
+  }
+  const pvp = state.pvp;
+  const alive = pvpAliveParticipants();
+  pvp.tableAverage = average(alive.map((participant) => participant.guess));
+  pvp.baseTarget = Math.ceil(pvp.tableAverage * pvp.modifier);
+  pvp.finalTarget = pvp.baseTarget;
+  pvp.previousTarget = pvp.baseTarget;
+  pvp.previousAverage = pvp.tableAverage;
+  pvp.previousModifier = pvp.modifier;
+  pvp.criticalHitIds = new Set(
+    alive.filter((participant) => participant.guess === pvp.baseTarget).map((participant) => participant.id)
+  );
+  alive.forEach((participant) => {
+    participant.firstPhaseGuess = participant.guess;
+    participant.critical = pvp.criticalHitIds.has(participant.id);
+    participant.activeOptions = shuffled(PVP_ACTIVES).slice(0, 2);
+    participant.activeChoiceId = null;
+    participant.activeTargetId = null;
+    participant.activeCast = null;
+    participant.activeResolved = false;
+    if (!participant.human) pvpChooseBotActive(participant);
+  });
+  pvp.stage = "active";
+  pvpAddLog(`First target ${pvp.baseTarget}. Choose one Artifact.`);
+  pvpMaybeAutoAdvance();
+  pvpPostHostState();
+  render();
+}
+
+function pvpChooseBotActive(participant) {
+  const choice = randomFrom(participant.activeOptions);
+  participant.activeChoiceId = choice.id;
+  if (choice.needsTarget) {
+    const targets = pvpAliveParticipants().filter((candidate) => candidate.id !== participant.id);
+    participant.activeTargetId = targets.length ? randomFrom(targets).id : null;
+  }
+}
+
+function pvpAllActivesReady() {
+  return pvpAliveParticipants().every((participant) => Boolean(participant.activeChoiceId));
+}
+
+function pvpDamageParticipant(participant, amount, reason, source = undefined) {
+  const rawDamage = Math.max(0, Math.ceil(amount));
+  const reduction = clamp(participant?.damageReduction || 0, 0, 1);
+  const damage = reduction > 0 ? Math.max(0, Math.ceil(rawDamage * (1 - reduction))) : rawDamage;
+  const saved = Math.max(0, rawDamage - damage);
+  if (!participant || participant.eliminated || damage <= 0) return 0;
+  participant.hp = Math.max(0, participant.hp - damage);
+  participant.lastDamage += damage;
+  const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
+  if (sourceLabel) {
+    participant.damageSources = participant.damageSources || [];
+    participant.damageSources.push({ amount: rawDamage, source: sourceLabel });
+    if (saved > 0) participant.damageSources.push({ amount: saved, source: "Dark Talisman", kind: "saved" });
+  }
+  if (reason) {
+    state.pvp.activeResults.push(reason);
+    if (saved > 0) state.pvp.activeResults.push(`Dark Talisman saved ${participant.name} ${saved} health.`);
+  }
+  if (participant.hp <= 0) {
+    participant.eliminated = true;
+    state.pvp.activeResults.push(`${participant.name} was eliminated.`);
+  }
+  return damage;
+}
+
+function pvpNoSurvivorWinner() {
+  const candidates = state.pvp.slots.filter(
+    (participant) => participant?.aliveAtRoundStart && Number.isFinite(participant.roundStartHp)
+  );
+  if (!candidates.length) return null;
+  return candidates
+    .slice()
+    .sort((left, right) => left.roundStartHp - right.roundStartHp || left.slot - right.slot)[0];
+}
+
+function pvpBestGuessParticipants() {
+  const pvp = state.pvp;
+  if (!Number.isFinite(pvp.baseTarget)) return [];
+  const candidates = pvpAliveParticipants()
+    .map((participant) => ({
+      participant,
+      guess: Number.isFinite(participant.firstPhaseGuess) ? participant.firstPhaseGuess : participant.guess
+    }))
+    .filter((entry) => Number.isFinite(entry.guess));
+  if (!candidates.length) return [];
+  const bestDistance = Math.min(...candidates.map((entry) => Math.abs(entry.guess - pvp.baseTarget)));
+  return candidates
+    .filter((entry) => Math.abs(entry.guess - pvp.baseTarget) === bestDistance)
+    .map((entry) => entry.participant);
+}
+
+function pvpResolveActiveCast(participant) {
+  const pvp = state.pvp;
+  const active = pvpActiveById(participant.activeChoiceId);
+  if (active.skip) {
+    participant.activeCast = null;
+    participant.activeResolved = true;
+    participant.activeGuaranteeThisRound = false;
+    participant.activeGuaranteeNextRound = true;
+    pvp.activeResults.push(`${participant.name} skipped Artifact use. Next round their Artifact will cast for sure.`);
+    return;
+  }
+  const guaranteed = Boolean(participant.activeGuaranteeThisRound);
+  const cast = guaranteed || Math.random() >= 0.5;
+  participant.activeCast = cast;
+  participant.activeResolved = true;
+  participant.activeGuaranteeThisRound = false;
+  if (!cast) {
+    pvp.activeResults.push(`${participant.name}'s ${active.name} failed to cast.`);
+    return;
+  }
+  pvp.activeResults.push(
+    guaranteed ? `${participant.name}'s ${active.name} cast with Skip guarantee.` : `${participant.name}'s ${active.name} cast.`
+  );
+
+  if (active.id === "shield") {
+    participant.damageReduction = Math.max(participant.damageReduction || 0, 0.5);
+  }
+}
+
+function pvpApplyActiveEffect(participant) {
+  const pvp = state.pvp;
+  const active = pvpActiveById(participant.activeChoiceId);
+  if (!participant.activeCast || active.skip) return;
+
+  if (active.id === "pulse") {
+    pvpAliveParticipants()
+      .filter((target) => target.id !== participant.id)
+      .forEach((target) => pvpDamageParticipant(target, 3, `${target.name} took 3 from Demon Bowl.`, "Demon Bowl"));
+  } else if (active.id === "rise") {
+    pvp.targetOffset += 5;
+  } else if (active.id === "sink") {
+    pvp.targetOffset -= 5;
+  } else if (active.id === "markBest") {
+    pvpBestGuessParticipants().forEach((target) =>
+      pvpDamageParticipant(target, 5, `${target.name} took 5 as one of the closest guesses.`, "Sacrificial Dagger")
+    );
+  } else if (active.id === "jam") {
+    const target = pvp.slots.find((candidate) => candidate?.id === participant.activeTargetId);
+    if (target && !target.eliminated) {
+      pvp.removedIds.add(target.id);
+      pvp.activeResults.push(`${participant.name} used Inverted Cross on ${target.name}; ${target.name}'s guess no longer counts.`);
+    }
+  }
+}
+
+function pvpResolveActiveChoice(participant) {
+  pvpResolveActiveCast(participant);
+  pvpApplyActiveEffect(participant);
+}
+
+function pvpResolveActives() {
+  pvpClearAutoTimer();
+  if (!pvpAllActivesReady()) {
+    pvpAddLog("Waiting for every living player to choose an Artifact.");
+    render();
+    return;
+  }
+  const pvp = state.pvp;
+  pvp.activeResults = [];
+  pvp.removedIds = new Set();
+  pvp.targetOffset = 0;
+
+  const resolvingParticipants = pvpAliveParticipants();
+  resolvingParticipants.forEach((participant) => {
+    participant.damageReduction = 0;
+  });
+  resolvingParticipants.forEach((participant) => pvpResolveActiveCast(participant));
+  resolvingParticipants.forEach((participant) => pvpApplyActiveEffect(participant));
+
+  const criticalHitters = pvp.slots.filter((participant) => participant && pvp.criticalHitIds.has(participant.id));
+  criticalHitters.forEach((hitter) => {
+    pvpAliveParticipants()
+      .filter((target) => target.id !== hitter.id)
+      .forEach((target) => pvpDamageParticipant(target, 5, `${hitter.name} hit CRITICAL: ${target.name} took 5.`, `CRITICAL from ${hitter.name}`));
+  });
+
+  const finalParticipants = pvpAliveParticipants().filter((participant) => !pvp.removedIds.has(participant.id));
+  pvp.finalAverage = finalParticipants.length ? average(finalParticipants.map((participant) => participant.guess)) : 0;
+  pvp.finalTarget = Math.ceil(pvp.finalAverage * pvp.modifier + pvp.targetOffset);
+  pvp.previousTarget = pvp.finalTarget;
+  pvp.previousAverage = pvp.finalAverage;
+  pvp.previousModifier = pvp.modifier;
+  if (pvp.finalTarget >= 100) {
+    pvp.forceModifierNextRound = true;
+    pvp.activeResults.push("Final target reached 100. Multiplier will change next round.");
+  }
+
+  const finalCriticalHitters = pvpAliveParticipants().filter((participant) => participant.guess === pvp.finalTarget);
+  pvp.finalCriticalHitIds = new Set(finalCriticalHitters.map((participant) => participant.id));
+  finalCriticalHitters.forEach((hitter) => {
+    hitter.critical = true;
+    pvpAliveParticipants()
+      .filter((target) => target.id !== hitter.id)
+      .forEach((target) =>
+        pvpDamageParticipant(target, 5, `${hitter.name} hit FINAL CRITICAL: ${target.name} took 5.`, `Final CRITICAL from ${hitter.name}`)
+      );
+  });
+
+  pvpAliveParticipants().forEach((participant) => {
+    const damage = Math.ceil(Math.abs(participant.guess - pvp.finalTarget));
+    pvpDamageParticipant(participant, damage, `${participant.name} took ${damage} target damage.`, "Target difference");
+  });
+
+  const alive = pvpAliveParticipants();
+  if (alive.length <= 1) {
+    pvp.stage = "ended";
+    const tiebreakWinner = alive.length ? null : pvpNoSurvivorWinner();
+    pvp.winner = alive[0]?.name || tiebreakWinner?.name || "No one";
+    pvpAddLog(
+      tiebreakWinner
+        ? `${pvp.winner} wins PvP by lowest starting health (${tiebreakWinner.roundStartHp}).`
+        : `${pvp.winner} wins PvP.`
+    );
+  } else {
+    pvp.stage = "summary";
+    pvpAddLog(`Round ${pvp.round} resolved.`);
+    pvpMaybeAutoAdvance();
+  }
+  pvpPostHostState();
+  render();
+}
+
+function pvpNextRound() {
+  pvpClearAutoTimer();
+  if (state.pvp.stage !== "summary") return;
+  pvpStartRound();
+}
+
+function pvpJoinUrl() {
+  if (typeof location === "undefined" || !location.origin || location.protocol === "file:") {
+    return "Run start_pvp_server.bat, then open the shown phone URL.";
+  }
+  return `${location.origin}/controller.html`;
+}
+
+function pvpPublicState() {
+  if (!state.pvp) return null;
+  const revealActiveChoices = state.pvp.stage !== "active" || pvpAllActivesReady();
+  return {
+    stage: state.pvp.stage,
+    round: state.pvp.round,
+    modifier: state.pvp.modifier,
+    previousTarget: state.pvp.previousTarget,
+    baseTarget: state.pvp.baseTarget,
+    finalTarget: state.pvp.finalTarget,
+    waitForHost: state.pvp.waitForHost,
+    autoDueAt: state.pvp.autoDueAt,
+    players: state.pvp.slots.map((participant) =>
+      participant
+        ? {
+            id: participant.id,
+            slot: participant.slot,
+            name: participant.name,
+            hp: participant.hp,
+            eliminated: participant.eliminated,
+            lastDamage: participant.lastDamage,
+            damageSources: mergeSourceEntries(participant.damageSources),
+            guessSubmitted: Number.isFinite(participant.guess),
+            activeOptions: pvpSelectableActives(participant).map((active) => ({
+              id: active.id,
+              name: active.name,
+              icon: active.icon || null,
+              description: normalizeGameText(active.description),
+              needsTarget: active.needsTarget
+            })),
+            activeSubmitted: Boolean(participant.activeChoiceId),
+            activeChoiceId: revealActiveChoices ? participant.activeChoiceId : null,
+            activeTargetId: revealActiveChoices ? participant.activeTargetId : null,
+            activeCast: participant.activeCast,
+            activeResolved: participant.activeResolved,
+            activeGuaranteeThisRound: participant.activeGuaranteeThisRound,
+            activeGuaranteeNextRound: participant.activeGuaranteeNextRound,
+            roundStartHp: participant.roundStartHp,
+            guess: state.pvp.stage === "guess" ? null : participant.guess
+          }
+        : null
+    ),
+    activeResults: state.pvp.activeResults.map((result) => normalizeGameText(result)),
+    winner: state.pvp.winner
+  };
+}
+
+function pvpServerEnabled() {
+  return typeof location !== "undefined" && location.protocol !== "file:" && typeof fetch === "function";
+}
+
+function pvpHostResetRoom() {
+  if (!pvpServerEnabled()) return;
+  fetch("/api/reset", { method: "POST" })
+    .then(() => pvpPostHostState())
+    .catch(() => pvpAddLog("Phone server not available."));
+}
+
+function pvpPostHostState() {
+  if (!pvpServerEnabled() || !state.pvp) return;
+  fetch("/api/host", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hostState: pvpPublicState() })
+  }).catch(() => {});
+}
+
+function pvpStartHostPolling() {
+  pvpStopHostPolling();
+  if (!pvpServerEnabled()) return;
+  pvpPollTimer = setInterval(pvpPollRoom, 900);
+  pvpPollRoom();
+}
+
+function pvpStopHostPolling() {
+  if (pvpPollTimer) clearInterval(pvpPollTimer);
+  pvpPollTimer = null;
+}
+
+async function pvpPollRoom() {
+  if (!pvpServerEnabled() || !state.pvp) return;
+  try {
+    const response = await fetch("/api/room");
+    if (!response.ok) return;
+    const room = await response.json();
+    let changed = false;
+    changed = pvpImportRemotePlayers(room.players || []) || changed;
+    changed = pvpImportRemoteInputs(room.players || []) || changed;
+    if (changed) {
+      pvpMaybeAutoAdvance();
+      pvpPostHostState();
+      render();
+    }
+  } catch {
+    // Phone play is optional; local PvP keeps working if the bridge is not running.
+  }
+}
+
+function pvpImportRemotePlayers(players) {
+  if (!state.pvp || state.pvp.stage !== "lobby") return false;
+  let changed = false;
+  players.forEach((player) => {
+    if (!player?.id) return;
+    if (state.pvp.removedRemoteIds?.has(player.id)) return;
+    if (state.pvp.slots.some((slot) => slot?.remoteId === player.id)) return;
+    const slotIndex = state.pvp.slots.findIndex((slot) => !slot);
+    if (slotIndex < 0 && state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) return;
+    const targetSlot = slotIndex >= 0 ? slotIndex : state.pvp.slots.length;
+    state.pvp.slots[targetSlot] = pvpParticipant(targetSlot, player.name, true, player.id);
+    pvpAddLog(`${player.name} took seat ${targetSlot + 1}.`);
+    changed = true;
+  });
+  if (changed) pvpNormalizeSlots();
+  return changed;
+}
+
+function pvpImportRemoteInputs(players) {
+  if (!state.pvp || state.pvp.stage === "lobby") return false;
+  let changed = false;
+  players.forEach((player) => {
+    if (!player?.id) return;
+    const participant = state.pvp.slots.find((slot) => slot?.remoteId === player.id);
+    if (!participant || participant.eliminated) return;
+
+    if (state.pvp.stage === "guess" && player.guessRound === state.pvp.round && Number.isFinite(player.guess)) {
+      const guess = Math.ceil(clamp(player.guess, 0, 100));
+      if (participant.guess !== guess) {
+        participant.guess = guess;
+        pvpAddLog(`${participant.name} sent a phone guess.`);
+        changed = true;
+      }
+    }
+
+    if (state.pvp.stage === "active" && player.activeRound === state.pvp.round && player.activeChoiceId) {
+      const active = pvpSelectableActives(participant).find((option) => option.id === player.activeChoiceId);
+      if (!active) return;
+      const targetId = player.activeTargetId || null;
+      if (active.needsTarget && !targetId) return;
+      if (participant.activeChoiceId !== player.activeChoiceId || participant.activeTargetId !== targetId) {
+        participant.activeChoiceId = player.activeChoiceId;
+        participant.activeTargetId = targetId;
+        pvpAddLog(`${participant.name} is ready.`);
+        changed = true;
+      }
+    }
+  });
+  return changed;
+}
+
+function isFullscreenLayoutMode() {
+  const screenHeight = window.screen?.height || 0;
+  const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+  const outerHeight = window.outerHeight || viewportHeight;
+  const browserFullscreen = screenHeight > 0 && outerHeight >= screenHeight - 8 && viewportHeight >= screenHeight - 120;
+  return Boolean(document.fullscreenElement) || browserFullscreen;
+}
+
+function updateFullscreenLayoutClass() {
+  document.body.classList.toggle("fullscreen-layout", isFullscreenLayoutMode());
+}
+
+>>>>>>> d0d827e8a3fbbf853383ee5b96ecf0422850d9c2
 /* ---------- In-place screen updates ----------
    During a run the screen is patched instead of rebuilt: elements that did not
    change stay in the page (no image re-decode, no layout from scratch, running
@@ -14804,6 +23702,7 @@ function drawCloth(rig, t) {
   gl.uniform1f(s.uT, (t + (rig.name === "satan" ? 17.3 : 0)) * 0.4);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
+<<<<<<< HEAD
 /* ---------- First-launch story: Jesus' judgement, the tutorial table, Satan's pact ----------
    Plays the first time the game is opened (and again from the main menu by clicking Jesus).
    1. Black screen, silence. After INTRO_BLACK_MS the bell tolls and the judgement dialogue starts
@@ -16889,3 +25788,2081 @@ if (!resumeNativeArcadeOnForeground()) {
     showMainMenu();
   }
 }
+=======
+/* ---------- First-launch story: Jesus' judgement, the tutorial table, Satan's pact ----------
+   Plays the first time the game is opened (and again from the main menu by clicking Jesus).
+   1. Black screen, silence. After INTRO_BLACK_MS the bell tolls and the judgement dialogue starts
+      (Jesus on the left, the sinner on the right, one text box in the middle).
+   2. The game boots with the Devil's Offerings, ARTIFACTS and SEAL slots blacked out and no music.
+   3. When round 2 is resolved, Satan stands on the right of the screen and his text box opens over
+      the SEAL slots. After the pact the hidden parts burn back into place, the music starts and
+      the run goes on as a normal, saved run.
+   A small "skip" on each box (or Esc): in the judgement it boots the game, in the pact it seals it.
+   Text: each box types letter by letter up to the next punctuation (. , ! ? and runs like ?? ...),
+   a click/tap anywhere continues; after the last part of a box the next click replaces it.
+   The first word of every line is who speaks, which sets the colour: jesus = yellow, you = white,
+   satan = red.
+   {SIN} draws the SIN icon. Edit the lines freely; the chunks are worked out from the punctuation. */
+
+const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
+const INTRO_BLACK_MS = 5000; // silence before the bell
+const INTRO_LETTER_MS = 34; // typing speed
+const INTRO_PACT_DELAY_MS = 1100; // pause after round 2 resolves before Satan speaks
+const INTRO_BOOT_REVEAL_MS = 1250; // the boot sound's power chord: the game switches on here
+const INTRO_BURN_MS = 1900; // offerings / ARTIFACTS / SEALS burning back into place
+
+const INTRO_JUDGEMENT_LINES = [
+  ["jesus", "You died on ______ after _______"],
+  ["jesus", "You are going to HELL."],
+  ["you", "Huh, what, no??"],
+  ["you", "This can't be true, wait what do you even mean there is an afterlife?"],
+  ["jesus", "There is, you are in it, it is over, only eternal damnation awaits you."],
+  ["you", "Why?? No!! Who the hell even are you?"],
+  ["jesus", "I am He, the One you know as Jesus."],
+  ["you", "What do you mean, after all of this Christianity was just right, every other God was bullshit and I'll be judged by your specific values. That's stupid I want the other afterlives."],
+  ["jesus", "There are no other afterlives you insolent fool. Only Heaven and Hell, and there are no other Gods but me. You had your chance to follow my truth, now you shall face my punishment."],
+  ["you", "Hey hey I am sorry, I didn't mean it alright? Look I did make some mistakes, and I wasn't always the better person, but you can't forsake me like this!"],
+  ["you", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
+  ["jesus", "SILENCE. My word is final. And during the Easter of 2023 you fasted only because you had gotten food poisoning from eating 10 day old pizza."],
+  ["you", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
+  ["you", "One year from now I'll have a big ass beard, I'll stop taking drugs, I'll stop having sex and... and go work at a church. I'll even diddle kids if that's what you want, most of your favorite children seem to do that nowadays anyway."],
+  ["you", "Hey please, talk to me!"],
+  ["you", "Don't leave me hanging!"],
+  ["you", "God answer me! Big man! Father! Big daddy!!!"],
+  ["jesus", "Shut. the. fuck. up. The next time you try to insult me or twist my word or whine, I'll make you wish you've never been created."],
+  ["you", "Okay got it whatever you want almighty, I just truly believe if you give me one last chance I'll make you proud, and maybe not face eternal torture."],
+  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, loving my neighbor, killing all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at muslims..."],
+  ["jesus", "So you want your second chance that bad?"],
+  ["you", "OH PLEASE, I will do literally anything and everything!"],
+  ["jesus", "Listen here worm, I'll grant you your chance."],
+  ["you", "FUCK YEAH, ready to go home and be the best chr-"],
+  ["jesus", "But you will have to earn it. Do you know how many ungrateful souls like you appear before me and beg like dogs to be forgiven? All of them. So be thankful for once you are even getting the chance to prove yourself before me."],
+  ["jesus", "To go back all you have to do is defeat all other Damned in the game I've devised for all you heedless."],
+  ["jesus", "You are all in the same situation and the only way out is to outsmart the others or be purged into the fires of the underworld."],
+  ["jesus", "What you have to do is enter a number from 1 to 100, and be the closest to 0.8 of the average of all the guesses. Any deviation from the target will bring you closer to your doom."],
+  ["jesus", "Be ready, the game is about to start."],
+  ["you", "Alright that's great and all, but how many enemies do I have to defeat again?"]
+];
+
+// third item: what happens on the click after the line ("evil": the pact sound before the next line)
+const INTRO_PACT_LINES = [
+  ["satan", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
+  ["you", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
+  ["satan", "Hey hey no reason to bring the big guy's name in here. I am here to help you. Think of me as your only chance of actually doing anything meaningful in this here place."],
+  ["satan", "Our goals happen to align this fine time. You want all the other wretches to be eliminated and I want more meat for the grinder, the faster the better!"],
+  ["satan", "So listen here, I got you a little offer. I will give you a little bit of an edge against all the other sinners here, and in exchange I want their SIN{SIN}. The more decadent they were the more valuable they are."],
+  ["you", "Wait a second, red eyes, twisting horns, pointy tail! You're Satan! No way I am trusting you after what the holy trio said to me. He was angry enough before, if he finds out I've been dealing with the devil it's over for me."],
+  ["satan", "No need to get defensive here you little flesh puppet! Me and Jesus are cool, I am sure he will turn the other cheek. It's not like he even cares what happens in here..."],
+  ["you", "Wait what do you mean?"],
+  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive you are free to do so. I'll find some other scum in here soon enough."],
+  ["you", "No no, wait please! I need to get back. What's the deal?"],
+  ["satan", "Okay listen here and listen well. You eliminate the other sinners and in exchange I'll give you the strength of my demons in the form of their SEALS. They will help you passively and the better you do the stronger you become."],
+  ["satan", "Also I humbly accept rituals to my name, so I would recommend using occult ARTIFACTS right after all the guesses have been revealed, whenever need be."],
+  ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
+  ["satan", "Yea yea definitely, or whatever the other guy promised you."],
+  ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
+  ["satan", "Great. And just beware, you are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
+];
+
+// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact
+const SATAN_VICTORY_LINES = [
+  ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
+  ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
+  ["satan", "I hope you didn't think this was actually the end, did you? Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right? So please, keep the SIN flowing and the sinners screaming, and maybe we shall meet again."],
+  ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
+];
+
+const INTRO_SPEAKERS = ["jesus", "you", "satan"];
+
+// phase: off | black | judgement | booting | tutorial | pact | reveal
+const introState = {
+  phase: "off",
+  timers: [],
+  typeTimer: null,
+  layer: null,
+  box: null,
+  lines: null,
+  lineIndex: -1,
+  glyphs: [],
+  ends: [],
+  chunk: 0,
+  shown: 0,
+  typing: false,
+  waiting: false,
+  pactTimer: null,
+  keyBound: false
+};
+
+/* ---- flags used by the rest of the game ---- */
+function shouldPlayIntroOnLaunch() {
+  try {
+    return window.localStorage?.getItem(INTRO_SEEN_STORAGE_KEY) !== "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function markIntroSeen() {
+  try {
+    window.localStorage?.setItem(INTRO_SEEN_STORAGE_KEY, "1");
+  } catch (error) {}
+}
+
+function introActive() {
+  return introState.phase !== "off";
+}
+
+function introHoldsMusic() {
+  return introActive();
+}
+
+function introBlocksRunSave() {
+  return ["black", "judgement", "booting", "tutorial", "pact"].includes(introState.phase);
+}
+
+function introCapturesInput() {
+  return ["black", "judgement", "booting", "pact", "victory"].includes(introState.phase);
+}
+
+// the tutorial table cannot kill you before Satan has had his say
+function introPlayerHpFloor() {
+  return introState.phase === "tutorial" || introState.phase === "pact" ? 1 : 0;
+}
+
+// leaving the run (menu, PvP) during the story ends the story
+function introGuardMode() {
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+}
+
+/* ---- timers & teardown ---- */
+function introLater(fn, ms) {
+  const id = setTimeout(() => {
+    introState.timers = introState.timers.filter((timer) => timer !== id);
+    fn();
+  }, ms);
+  introState.timers.push(id);
+  return id;
+}
+
+function introClearTimers() {
+  introState.timers.forEach(clearTimeout);
+  introState.timers = [];
+  clearInterval(introState.typeTimer);
+  introState.typeTimer = null;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+}
+
+function introRemoveLayers() {
+  document.querySelectorAll(".intro-layer, .intro-pact-layer, .intro-burn-canvas, .menu-jesus-flash").forEach((node) => node.remove());
+  document.body.classList.remove("intro-tutorial", "intro-crt-on", "intro-running");
+  introState.layer = null;
+  introState.box = null;
+}
+
+function introAbort() {
+  if (!introActive()) return;
+  introClearTimers();
+  introRemoveLayers();
+  introState.phase = "off";
+  markIntroSeen();
+  playSoundtrack();
+}
+
+/* ---- sound ---- */
+// plays a GAME_SFX sound and reports whether the browser let it play (autoplay rules)
+function introPlaySfx(key) {
+  const config = GAME_SFX[key];
+  const pool = ensureGameSfx(key);
+  if (!config || !pool.length || state.sound.muted) return Promise.resolve(true);
+  try {
+    const instance = pool[Math.floor(Math.random() * pool.length)].cloneNode(true);
+    instance.volume = sfxVolume(config.volume ?? 0.4);
+    if (config.rate || config.pitch) {
+      instance.preservesPitch = false;
+      instance.playbackRate = (config.rate || 1) * (1 + (Math.random() * 2 - 1) * (config.pitch || 0));
+    }
+    activeOneShotSfxInstances.add(instance);
+    const cleanup = () => activeOneShotSfxInstances.delete(instance);
+    instance.addEventListener("ended", cleanup, { once: true });
+    const attempt = instance.play();
+    if (!attempt || typeof attempt.then !== "function") return Promise.resolve(true);
+    return attempt.then(() => true).catch((error) => {
+      cleanup();
+      return !(error && error.name === "NotAllowedError");
+    });
+  } catch (error) {
+    return Promise.resolve(true);
+  }
+}
+
+// pencil scratch on every letter: Web Audio when it can (no lag at typing speed), plain audio otherwise
+const introPencil = { ctx: null, buffers: null, loading: false };
+
+function introLoadPencil() {
+  if (introPencil.loading || introPencil.buffers) return;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx || typeof fetch !== "function" || location.protocol === "file:") return;
+  introPencil.loading = true;
+  try {
+    introPencil.ctx = new AudioCtx();
+  } catch (error) {
+    return;
+  }
+  Promise.all(
+    GAME_SFX.introPencil.srcs.map((src) =>
+      fetch(src)
+        .then((response) => response.arrayBuffer())
+        .then((data) => new Promise((resolve, reject) => introPencil.ctx.decodeAudioData(data, resolve, reject)))
+    )
+  )
+    .then((buffers) => {
+      introPencil.buffers = buffers;
+    })
+    .catch(() => {});
+}
+
+function introWakePencil() {
+  if (introPencil.ctx && introPencil.ctx.state === "suspended") introPencil.ctx.resume().catch(() => {});
+}
+
+function introPencilTick() {
+  if (state.sound.muted) return;
+  const { ctx, buffers } = introPencil;
+  if (ctx && buffers && ctx.state === "running") {
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = buffers[Math.floor(Math.random() * buffers.length)];
+      source.playbackRate.value = 1 + (Math.random() * 2 - 1) * (GAME_SFX.introPencil.pitch || 0);
+      const gain = ctx.createGain();
+      gain.gain.value = sfxVolume(GAME_SFX.introPencil.volume ?? 0.1);
+      source.connect(gain).connect(ctx.destination);
+      source.start();
+      return;
+    } catch (error) {}
+  }
+  playGameSfx("introPencil");
+}
+
+/* ---- text: glyphs and punctuation chunks ---- */
+function introGlyphs(text) {
+  const glyphs = [];
+  for (let i = 0; i < text.length; i += 1) {
+    if (text.startsWith("{SIN}", i)) {
+      glyphs.push("{SIN}");
+      i += 4;
+    } else {
+      glyphs.push(text[i]);
+    }
+  }
+  return glyphs;
+}
+
+const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
+
+// a chunk ends after a run of . , ! ? (so "??", "!!" and "..." stay together); not inside numbers like 0.8
+function introChunkEnds(glyphs) {
+  const ends = [];
+  for (let i = 0; i < glyphs.length; i += 1) {
+    if (!INTRO_PUNCTUATION.has(glyphs[i])) continue;
+    const next = glyphs[i + 1];
+    if (next !== undefined && INTRO_PUNCTUATION.has(next)) continue;
+    if (next !== undefined && /[0-9]/.test(next)) continue;
+    let end = i + 1;
+    if (next === "\"" || next === "'") end += 1; // keep a closing quote with its punctuation
+    if (end < glyphs.length) ends.push(end);
+  }
+  ends.push(glyphs.length);
+  return ends.filter((end, index) => index === 0 || end > ends[index - 1]);
+}
+
+function introGlyphHtml(glyph) {
+  return glyph === "{SIN}" ? SIN_MARK : escapeHtml(glyph);
+}
+
+function introDrawText() {
+  const text = introState.box?.querySelector(".intro-text");
+  if (!text) return;
+  const { glyphs, shown } = introState;
+  const ink = glyphs.slice(0, Math.max(0, shown - 1)).map(introGlyphHtml).join("");
+  const fresh = shown > 0 ? `<span class="intro-fresh">${introGlyphHtml(glyphs[shown - 1])}</span>` : "";
+  const ghost = glyphs.slice(shown).map(introGlyphHtml).join("");
+  text.innerHTML = `${ink}${fresh}<span class="intro-ghost">${ghost}</span>`;
+}
+
+// shrink the font until the whole box text fits (the ghost keeps the full text in the layout)
+function introFitText() {
+  const box = introState.box;
+  const text = box?.querySelector(".intro-text");
+  if (!text) return;
+  text.style.fontSize = "";
+  const max = parseFloat(getComputedStyle(text).fontSize) || 24;
+  let size = max;
+  while (size > 9 && text.scrollHeight > text.clientHeight + 1) {
+    size -= 1;
+    text.style.fontSize = `${size}px`;
+  }
+}
+
+function introSetWaiting(waiting) {
+  introState.waiting = waiting;
+  introState.box?.classList.toggle("intro-waiting", waiting);
+}
+
+function introShowLine(index) {
+  const [speaker, text] = introState.lines[index];
+  introState.lineIndex = index;
+  introState.glyphs = introGlyphs(text);
+  introState.ends = introChunkEnds(introState.glyphs);
+  introState.chunk = 0;
+  introState.shown = 0;
+  const box = introState.box;
+  box.classList.remove(...INTRO_SPEAKERS.map((name) => `intro-says-${name}`), "intro-box-hush");
+  box.classList.add(`intro-says-${speaker}`);
+  if (introState.layer) introState.layer.dataset.speaker = speaker;
+  introDrawText();
+  introFitText();
+  introTypeTo(introState.ends[0]);
+}
+
+function introTypeTo(end) {
+  clearInterval(introState.typeTimer);
+  introSetWaiting(false);
+  introState.typing = true;
+  const step = () => {
+    if (introState.shown >= end) {
+      clearInterval(introState.typeTimer);
+      introState.typeTimer = null;
+      introState.typing = false;
+      introSetWaiting(true);
+      return;
+    }
+    introState.shown += 1;
+    const glyph = introState.glyphs[introState.shown - 1];
+    // spaces are skipped over at once and make no sound
+    while (introState.shown < end && /\s/.test(glyph) && /\s/.test(introState.glyphs[introState.shown])) introState.shown += 1;
+    if (!/\s/.test(glyph)) introPencilTick();
+    introDrawText();
+  };
+  step();
+  introState.typeTimer = setInterval(step, INTRO_LETTER_MS);
+}
+
+// click / tap / Enter / Space
+function introAdvance() {
+  if (!["judgement", "pact", "victory"].includes(introState.phase) || !introState.box) return;
+  introWakePencil();
+  if (introState.typing) {
+    // finish the current part at once
+    introState.shown = introState.ends[introState.chunk];
+    clearInterval(introState.typeTimer);
+    introState.typeTimer = null;
+    introState.typing = false;
+    introDrawText();
+    introSetWaiting(true);
+    return;
+  }
+  if (!introState.waiting) return;
+  if (introState.chunk < introState.ends.length - 1) {
+    introState.chunk += 1;
+    introTypeTo(introState.ends[introState.chunk]);
+    return;
+  }
+  const after = introState.lines[introState.lineIndex][2];
+  const next = introState.lineIndex + 1;
+  if (after === "evil") {
+    introPactEvil(next);
+    return;
+  }
+  if (next < introState.lines.length) {
+    introShowLine(next);
+    return;
+  }
+  if (introState.phase === "judgement") introBootGame();
+  else if (introState.phase === "victory") satanVictoryLeave();
+  else introSealPact();
+}
+
+function introBindKeys() {
+  if (introState.keyBound) return;
+  introState.keyBound = true;
+  window.addEventListener("resize", () => {
+    if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+    else if (introState.phase === "judgement") introFitText();
+  });
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (!introCapturesInput()) return;
+      if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (introState.phase === "black" && introState.layer?.classList.contains("intro-needs-tap")) introState.layer.click();
+        else introAdvance();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        introSkip();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+      }
+    },
+    true
+  );
+}
+
+function introBoxHtml(kind) {
+  return `
+    <div class="intro-box intro-box-${kind}" role="dialog" aria-live="polite">
+      <div class="intro-text"></div>
+      <span class="intro-next" aria-hidden="true"></span>
+      <button class="intro-skip" type="button" aria-label="Skip the conversation">skip</button>
+    </div>`;
+}
+
+function introBindSkip(layer) {
+  const skip = layer.querySelector(".intro-skip");
+  if (!skip) return;
+  // its own click: it must not also advance the text underneath
+  skip.addEventListener("click", (event) => {
+    event.stopPropagation();
+    skip.blur();
+    introSkip();
+  });
+}
+
+// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end
+function introSkip() {
+  if (introState.phase === "judgement") {
+    introClearTimers();
+    introState.typing = false;
+    introBootGame();
+  } else if (introState.phase === "pact") {
+    introClearTimers();
+    introState.typing = false;
+    introState.box?.classList.remove("intro-box-pulse");
+    introSealPact();
+  } else if (introState.phase === "victory") {
+    introClearTimers();
+    introState.typing = false;
+    satanVictoryLeave();
+  }
+}
+
+/* ---- 1. judgement ---- */
+function startIntroSequence(options = {}) {
+  introClearTimers();
+  introRemoveLayers();
+  introBindKeys();
+  introLoadPencil();
+  if (soundtrackAudio) pauseAudioElement(soundtrackAudio);
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  state.mobileOfferingsOpen = false;
+  introState.phase = "black";
+  introState.lines = INTRO_JUDGEMENT_LINES;
+  introState.lineIndex = -1;
+  const layer = document.createElement("div");
+  layer.className = "intro-layer";
+  layer.innerHTML = `
+    <img class="intro-portrait intro-portrait-jesus" src="assets/ui/intro/intro-jesus.webp" alt="" draggable="false" />
+    <img class="intro-portrait intro-portrait-sinner" src="assets/ui/intro/intro-sinner.webp" alt="" draggable="false" />
+    ${introBoxHtml("judgement")}
+    <div class="intro-tap-hint" aria-hidden="true">${"ontouchstart" in window ? "tap" : "click"}</div>`;
+  layer.addEventListener("click", () => {
+    if (layer.classList.contains("intro-needs-tap")) {
+      layer.classList.remove("intro-needs-tap");
+      introWakePencil();
+      introPlaySfx("introBell");
+      introBeginJudgement();
+      return;
+    }
+    introAdvance();
+  });
+  if (options.fromMenu) layer.classList.add("intro-from-flash");
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  document.body.classList.add("intro-running");
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introLater(introRingBell, INTRO_BLACK_MS);
+}
+
+function introRingBell() {
+  if (introState.phase !== "black") return;
+  introPlaySfx("introBell").then((played) => {
+    if (introState.phase !== "black") return;
+    // the browser kept the page silent: wait for one click so the bell is heard
+    if (!played) introState.layer.classList.add("intro-needs-tap");
+    else introBeginJudgement();
+  });
+}
+
+function introBeginJudgement() {
+  introState.phase = "judgement";
+  introState.layer.classList.add("intro-lit");
+  introShowLine(0);
+}
+
+/* ---- 2. the tutorial table ---- */
+function introBootGame() {
+  introState.phase = "booting";
+  introSetWaiting(false);
+  introState.layer.classList.add("intro-shutting");
+  introPlaySfx("introBoot");
+  introLater(() => {
+    introState.phase = "tutorial";
+    document.body.classList.add("intro-tutorial", "intro-crt-on");
+    startGame({ intro: true });
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introLater(() => document.body.classList.remove("intro-crt-on"), 1100);
+  }, INTRO_BOOT_REVEAL_MS);
+}
+
+function introPactReady() {
+  return (
+    introState.phase === "tutorial" &&
+    state.mode === "arcade" &&
+    state.round >= 2 &&
+    state.stage === "summary" &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function introAfterRender() {
+  if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+  satanVictoryAfterRender();
+  if (introState.phase !== "tutorial" || introState.pactTimer) return;
+  if (state.round >= 2 && state.stage === "summary") {
+    const check = () => {
+      introState.pactTimer = null;
+      if (introState.phase !== "tutorial") return;
+      if (introPactReady()) introStartPact();
+      else if (state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+    };
+    introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+  }
+}
+
+// Satan speaks after round 2's results. If the player moves on before he does (Next Round within the
+// short pause, easy after skipping Jesus), the round would advance and he would come a round late or
+// never; so the results hold until the pact, and moving on brings him in at once.
+function introHoldsSummary() {
+  return introState.phase === "tutorial" && state.mode === "arcade" && state.round >= 2 && state.stage === "summary";
+}
+
+function introStartPactNow() {
+  if (!introHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  introStartPact();
+}
+
+/* ---- Satan returns: the 8 unique BOSSES are beaten ----
+   state.satanVictoryDue is set when the 8th unique BOSS falls; the round's results then wait for him
+   (Next Round brings him in at once), like the pact after round 2. Same entrance and box as the pact,
+   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). */
+function satanVictoryReady() {
+  return (
+    state.satanVictoryDue &&
+    introState.phase === "off" &&
+    state.mode === "arcade" &&
+    state.stage === "summary" &&
+    !state.gameOver &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function satanVictoryHoldsSummary() {
+  return Boolean(state.satanVictoryDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function satanVictoryAfterRender() {
+  if (!state.satanVictoryDue || introState.pactTimer || introState.phase !== "off") return;
+  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanVictoryReady()) startSatanVictory();
+    else if (state.satanVictoryDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanVictoryNow() {
+  if (!satanVictoryHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanVictory();
+}
+
+function startSatanVictory() {
+  state.satanVictoryDue = false;
+  state.satanVictoryPlayed = true;
+  introBindKeys();
+  introState.phase = "victory";
+  introState.lines = SATAN_VICTORY_LINES;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  document.querySelector("#floatingTooltip")?.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-pact-layer satan-victory-layer";
+  layer.innerHTML = `
+    <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introPlacePactBox();
+  introShowLine(0);
+  saveArcadeRun();
+}
+
+function satanVictoryLeave() {
+  if (introState.phase !== "victory") return;
+  introSetWaiting(false);
+  introState.phase = "victory-leave";
+  introPlaySfx("introLaugh");
+  introState.box?.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introClearTimers();
+    introState.phase = "off";
+    render();
+  }, 1300);
+}
+
+/* ---- 3. Satan's pact ---- */
+// the box covers the SEAL slots (desktop and mobile); the whole SEAL bar if the slots can't be measured
+function introPactRect() {
+  const slots = [...document.querySelectorAll(".passive-bar .passive-slot")]
+    .map((slot) => slot.getBoundingClientRect())
+    .filter((rect) => rect.width && rect.height);
+  if (slots.length) {
+    const pad = 10;
+    const left = Math.max(4, Math.min(...slots.map((rect) => rect.left)) - pad);
+    const top = Math.max(4, Math.min(...slots.map((rect) => rect.top)) - pad);
+    const right = Math.min(window.innerWidth - 4, Math.max(...slots.map((rect) => rect.right)) + pad);
+    const bottom = Math.min(window.innerHeight - 4, Math.max(...slots.map((rect) => rect.bottom)) + pad);
+    return { left, top, width: right - left, height: bottom - top };
+  }
+  const bar = document.querySelector(".passive-bar")?.getBoundingClientRect();
+  return bar && bar.width && bar.height ? bar : null;
+}
+
+function introPlacePactBox() {
+  const box = introState.box;
+  if (!box || !box.classList.contains("intro-box-pact")) return;
+  const rect = introPactRect();
+  if (!rect) return;
+  box.style.left = `${rect.left}px`;
+  box.style.top = `${rect.top}px`;
+  box.style.width = `${rect.width}px`;
+  box.style.height = `${rect.height}px`;
+  introFitText();
+}
+
+function introStartPact() {
+  introState.phase = "pact";
+  introState.lines = INTRO_PACT_LINES;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  const floatingTooltip = document.querySelector("#floatingTooltip");
+  if (floatingTooltip) floatingTooltip.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-pact-layer";
+  layer.innerHTML = `
+    <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introPlacePactBox();
+  introShowLine(0);
+}
+
+function introPactEvil(nextIndex) {
+  introSetWaiting(false);
+  introState.box.classList.add("intro-box-hush");
+  introState.glyphs = [];
+  introState.shown = 0;
+  introDrawText();
+  introState.waiting = false;
+  introPlaySfx("introEvil");
+  introState.box.classList.add("intro-box-pulse");
+  introLater(() => {
+    if (introState.phase !== "pact") return;
+    introState.box.classList.remove("intro-box-pulse");
+    introShowLine(nextIndex);
+  }, 2000);
+}
+
+function introSealPact() {
+  introSetWaiting(false);
+  introState.phase = "reveal";
+  introPlaySfx("introLaugh");
+  introState.box.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introBurnIn();
+  }, 1300);
+}
+
+// the hidden panels come back like a burnt sheet played backwards: a ragged glowing edge
+// sweeps across a black cover that turns to nothing, leaving the panel in its place
+function introBurnTargets() {
+  const targets = [document.querySelector(".passive-bar")];
+  if (isMobileArcadeView()) targets.push(document.querySelector(".mobile-offerings-button"));
+  else targets.push(document.querySelector(".side-panel"));
+  return targets.filter(Boolean);
+}
+
+function introBurnIn() {
+  const targets = introBurnTargets();
+  const covers = targets.map((element) => introMakeBurnCover(element)).filter(Boolean);
+  document.body.classList.remove("intro-tutorial");
+  introPlaySfx("introBurn");
+  const start = performance.now();
+  const frame = (now) => {
+    if (introState.phase !== "reveal") return;
+    const progress = Math.min(1, (now - start) / INTRO_BURN_MS);
+    covers.forEach((cover) => introDrawBurn(cover, progress, now));
+    if (progress < 1) requestAnimationFrame(frame);
+    else introFinish();
+  };
+  if (!covers.length) {
+    introFinish();
+    return;
+  }
+  requestAnimationFrame(frame);
+}
+
+function introNoise(width, height, seed) {
+  // value noise, 3 octaves
+  let s = seed;
+  const rand = () => {
+    s = (s * 16807) % 2147483647;
+    return s / 2147483647;
+  };
+  const field = new Float32Array(width * height);
+  [
+    [3, 0.18],
+    [8, 0.32],
+    [20, 0.32],
+    [46, 0.18]
+  ].forEach(([cell, weight]) => {
+    const gw = Math.ceil(width / cell) + 2;
+    const gh = Math.ceil(height / cell) + 2;
+    const grid = Array.from({ length: gw * gh }, rand);
+    for (let y = 0; y < height; y += 1) {
+      const gy = y / cell;
+      const y0 = Math.floor(gy);
+      const fy = gy - y0;
+      const sy = fy * fy * (3 - 2 * fy);
+      for (let x = 0; x < width; x += 1) {
+        const gx = x / cell;
+        const x0 = Math.floor(gx);
+        const fx = gx - x0;
+        const sx = fx * fx * (3 - 2 * fx);
+        const a = grid[y0 * gw + x0];
+        const b = grid[y0 * gw + x0 + 1];
+        const c = grid[(y0 + 1) * gw + x0];
+        const d = grid[(y0 + 1) * gw + x0 + 1];
+        field[y * width + x] += weight * (a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy);
+      }
+    }
+  });
+  return field;
+}
+
+function introMakeBurnCover(element) {
+  const rect = element.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  const margin = 14;
+  const scale = 0.5;
+  const canvas = document.createElement("canvas");
+  canvas.className = "intro-burn-canvas";
+  const width = Math.max(4, Math.round((rect.width + margin * 2) * scale));
+  const height = Math.max(4, Math.round((rect.height + margin * 2) * scale));
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.left = `${rect.left - margin}px`;
+  canvas.style.top = `${rect.top - margin}px`;
+  canvas.style.width = `${rect.width + margin * 2}px`;
+  canvas.style.height = `${rect.height + margin * 2}px`;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    canvas.remove();
+    return null;
+  }
+  // the burn starts from a point low in the panel and spreads, ragged, to the far edges
+  const noise = introNoise(width, height, 1 + Math.floor(Math.random() * 100000));
+  const ox = width * (0.3 + Math.random() * 0.4);
+  const oy = height * (0.55 + Math.random() * 0.35);
+  const far = Math.max(Math.hypot(ox, oy), Math.hypot(width - ox, oy), Math.hypot(ox, height - oy), Math.hypot(width - ox, height - oy));
+  const field = new Float32Array(width * height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = y * width + x;
+      field[i] = 0.6 * (Math.hypot(x - ox, y - oy) / far) + 0.4 * noise[i];
+    }
+  }
+  const image = ctx.createImageData(width, height);
+  return { canvas, ctx, image, field, width, height };
+}
+
+function introDrawBurn(cover, progress, now) {
+  const { ctx, image, field } = cover;
+  const data = image.data;
+  const eased = 1 - Math.pow(1 - progress, 1.6);
+  const band = 0.03;
+  const front = -band + eased * (1.05 + band * 2);
+  const flicker = 0.85 + 0.15 * Math.sin(now / 37);
+  for (let i = 0; i < field.length; i += 1) {
+    const u = (field[i] - front) / band; // <0 burnt away, 0..1 glowing edge, >1 still covered
+    const p = i * 4;
+    if (u < 0) {
+      data[p + 3] = 0;
+      continue;
+    }
+    if (u >= 1.6) {
+      data[p] = 0;
+      data[p + 1] = 0;
+      data[p + 2] = 0;
+      data[p + 3] = 255;
+      continue;
+    }
+    let r;
+    let g;
+    let b;
+    let a = 255;
+    if (u < 0.22) {
+      // hottest rim
+      const k = u / 0.22;
+      r = 255;
+      g = 236 - 70 * k;
+      b = 170 - 120 * k;
+      a = Math.round(255 * (0.55 + 0.45 * k));
+    } else if (u < 1) {
+      const k = (u - 0.22) / 0.78;
+      r = 255 - 130 * k;
+      g = 166 - 150 * k;
+      b = 50 - 45 * k;
+    } else {
+      // charred, cooling into the black cover
+      const k = (u - 1) / 0.6;
+      r = 125 * (1 - k) + 6 * k;
+      g = 16 * (1 - k);
+      b = 5 * (1 - k);
+    }
+    data[p] = r * flicker;
+    data[p + 1] = g * flicker;
+    data[p + 2] = b;
+    data[p + 3] = a;
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+function introFinish() {
+  document.querySelectorAll(".intro-burn-canvas").forEach((node) => node.remove());
+  document.body.classList.remove("intro-running");
+  introClearTimers();
+  introState.phase = "off";
+  markIntroSeen();
+  playSoundtrack();
+  saveArcadeRun();
+}
+
+/* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
+   Clicking Jesus replays the story (triggerMenuJesus), clicking Satan opens the SEAL collection
+   (openCollectionFromMenu in 09-collection.js). */
+// Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
+const MENU_FIGURE_HIT = {
+  jesus: [
+    [414, 500], [374, 543], [378, 558], [371, 545], [359, 541], [321, 527], [292, 498], [283, 437], [273, 429], [285, 437],
+    [282, 447], [280, 452], [272, 459], [263, 476], [259, 498], [269, 495], [267, 503], [253, 507], [243, 515], [241, 522],
+    [240, 523], [296, 495], [281, 494], [277, 494], [289, 499], [360, 500], [352, 502], [338, 506], [320, 511], [213, 461],
+    [210, 560], [209, 560], [180, 560], [174, 560], [180, 560], [180, 560], [178, 560], [169, 560], 0
+  ],
+  satan: [
+    [260, 360], [278, 390], [222, 447], [232, 469], [268, 484], [275, 510], [304, 534], [381, 563], [381, 598], [380, 603],
+    [276, 598], [288, 591], [301, 587], [313, 583], [325, 578], [335, 587], [321, 603], [318, 638], [318, 651], [315, 639],
+    [312, 624], [306, 465], [304, 466], [298, 466], [294, 466], [309, 468], [320, 482], [327, 496], [322, 508], [323, 524],
+    [323, 503], [344, 493], [171, 604], [150, 650], [150, 650], [150, 650], [222, 650], 0
+  ]
+};
+const MENU_FIGURE_HIT_CELL = 32;
+const menuFigureTrigger = { bound: false, busy: false };
+
+// which menu figure (if any) is under the pointer
+function menuFigureAt(clientX, clientY, target) {
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen()) return null;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, button, input, a")) return null;
+  for (const name of Object.keys(MENU_FIGURE_HIT)) {
+    const fig = document.querySelector(`.menu-fig-${name}`);
+    if (!fig) continue;
+    const rect = fig.getBoundingClientRect();
+    const meta = MENU_FIGURES[name].meta;
+    const fx = ((clientX - rect.left) / rect.width) * meta.W;
+    const fy = ((clientY - rect.top) / rect.height) * meta.H;
+    if (fx < 0 || fy < 0 || fx > meta.W || fy > meta.H) continue;
+    const span = MENU_FIGURE_HIT[name][Math.floor(fy / MENU_FIGURE_HIT_CELL)];
+    if (span && fx >= span[0] && fx <= span[1]) return name;
+  }
+  return null;
+}
+
+function setMenuFigureLit(name) {
+  for (const fig of Object.keys(MENU_FIGURE_HIT)) {
+    document.querySelector(`.menu-fig-${fig}`)?.classList.toggle("eyes-lit", fig === name);
+  }
+  document.querySelector(".main-menu")?.classList.toggle("figure-hover", Boolean(name));
+}
+
+function bindMenuFigureTriggers() {
+  if (menuFigureTrigger.bound) return;
+  menuFigureTrigger.bound = true;
+  document.addEventListener("pointermove", (event) => {
+    if (state.mode !== "menu" || menuFigureTrigger.busy) return;
+    setMenuFigureLit(menuFigureAt(event.clientX, event.clientY, event.target));
+  });
+  document.addEventListener("pointerdown", (event) => {
+    const name = menuFigureAt(event.clientX, event.clientY, event.target);
+    if (name) setMenuFigureLit(name);
+  });
+  document.addEventListener("click", (event) => {
+    const name = menuFigureAt(event.clientX, event.clientY, event.target);
+    if (!name) return;
+    event.preventDefault();
+    if (name === "jesus") triggerMenuJesus();
+    else triggerMenuSatan();
+  });
+}
+
+function triggerMenuJesus() {
+  const fig = document.querySelector(".menu-fig-jesus");
+  if (!fig) return;
+  menuFigureTrigger.busy = true;
+  setMenuFigureLit("jesus");
+  fig.classList.add("eyes-flare");
+  playGameSfx("menuJesusFlash");
+  if (soundtrackAudio) duckMusic(1200);
+  // white flash bursting out of his eye, then black
+  const eye = fig.querySelector(".fig-eyes");
+  const eyeRect = eye ? eye.getBoundingClientRect() : fig.getBoundingClientRect();
+  const meta = MENU_FIGURES.jesus.meta;
+  const ex = eye ? eyeRect.left + (eyeRect.width * 138) / meta.head.w : eyeRect.left + eyeRect.width / 2;
+  const ey = eye ? eyeRect.top + (eyeRect.height * 107) / meta.head.h : eyeRect.top + eyeRect.height * 0.1;
+  const flash = document.createElement("div");
+  flash.className = "menu-jesus-flash";
+  flash.style.setProperty("--flash-x", `${Math.round(ex)}px`);
+  flash.style.setProperty("--flash-y", `${Math.round(ey)}px`);
+  document.body.appendChild(flash);
+  setTimeout(() => {
+    startIntroSequence({ fromMenu: true });
+    // keep the flash above the black story layer while it fades
+    document.body.appendChild(flash);
+    flash.classList.add("fading");
+    setTimeout(() => flash.remove(), 1400);
+    fig.classList.remove("eyes-flare");
+    setMenuFigureLit(null);
+    menuFigureTrigger.busy = false;
+  }, 520);
+}
+/* ---------- SEAL collection and unlockable SEALS ----------
+   Some SEALS start locked: they never appear in the Devil's Offerings until their achievement is met
+   once, and then stay unlocked forever (localStorage COLLECTION_STORAGE_KEY).
+   A SEAL is "discovered" the first time it triggers in a run.
+   The collection (click Satan in the main menu, or Pause > Collection) shows every SEAL that can be
+   bought: locked (dark, hover shows the achievement), unlocked but undiscovered (white),
+   discovered (red).
+
+   To lock another SEAL or change an achievement, edit SEAL_UNLOCKS below. Each entry is one of:
+     stat: lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
+     best: best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
+     flag: something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
+   with `goal` for stat/best. A new kind of achievement needs its counter recorded below
+   (search for collectionBump / collectionRaise / collectionFlag). */
+
+const COLLECTION_STORAGE_KEY = "dearthCollectionV2";
+const COLLECTION_OLD_STORAGE_KEYS = ["dearthCollectionV1"]; // discovered SEALS are carried over
+
+const SEAL_UNLOCKS = {
+  // Apocalypse Seals
+  p74: { best: "roundSpent", goal: 160, text: "Spend 160 SIN in one round." },
+  p75: { flag: "oneHealth", text: "Have exactly 1 HEALTH." },
+  p76: { best: "critStreak", goal: 8, text: "Score 8 CRITICAL hits in a row." },
+  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max HEALTH." },
+  p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
+  p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
+  // Boss Seals
+  p92: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
+  p93: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
+  p94: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
+  p95: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
+  p96: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
+  p97: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
+  p110: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  // Satan Seals
+  p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
+  // Seals of Saturn
+  p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
+  p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
+  p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
+  p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
+  p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
+  p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
+  // Still to come: "Get six SEALS that are all ELITE level 1 or more" for a Seal of Kalha
+  // (there is no Seal of Kalha yet; the counter is recorded as flag sixEliteSeals).
+};
+
+const COLLECTION_STAT_LABELS = {
+  eliminations: "DAMNED eliminated",
+  yannisKills: "Yannis eliminated",
+  goeticKills: "Goetic BOSSES eliminated",
+  gamesBeaten: "games beaten"
+};
+
+const COLLECTION_BEST_LABELS = {
+  roundSpent: "most SIN spent in a round",
+  sinHeld: "most SIN held",
+  critStreak: "CRITICALS in a row",
+  pentakillStreak: "PENTAKILLS in a row",
+  noKoStreak: "rounds in a row without a KO",
+  bossesAtOnce: "BOSSES active at once",
+  eliteLevel: "highest ELITE level"
+};
+
+const COLLECTION_FLAG_LABELS = {
+  oneHealth: "had exactly 1 HEALTH",
+  fullHealthBossKill: "one-shot a full-HEALTH BOSS",
+  fullHealthKill: "eliminated at 100 HEALTH",
+  beatNoArtifacts: "beat the game with no ARTIFACTS",
+  dantrePentakill: "PENTAKILL with Dantre active",
+  zilonBuyouts: "3 buyouts with Zilon active",
+  serafimNoSteal: "Serafeim stole nothing",
+  pyrosGiftBossKill: "beat a PYROS-TECH BOSS",
+  threonArtifacts: "4 ARTIFACTS with Threon active",
+  sixEliteSeals: "six ELITE SEALS"
+};
+
+// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Player Seals"
+const COLLECTION_SECTIONS = [
+  { key: "player", title: "Player Seals" },
+  { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
+  { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  { key: "satan", title: "Satan Seals", ids: ["p111"] },
+  // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
+  // former Goetic SEALS whose demons now belong to newer SEALS
+  { key: "special", title: "Special Seals", ids: ["p55", "p69"] }
+];
+
+/* ---- builds: the collection filters ----
+   Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
+   BOUNTY means the SEAL works with the BOUNTY the DAMNED carry (gives it, reads it, spends it). SEALS
+   that only pay you SIN, or only multiply the SIN paid on elimination, are not BOUNTY SEALS. */
+const SEAL_BUILDS = [
+  { key: "bounty", label: "Bounty" },
+  { key: "memory", label: "Memory" },
+  { key: "reveal", label: "Reveal" },
+  { key: "critical", label: "Critical" },
+  { key: "personality", label: "Personality" },
+  { key: "artifact", label: "Artifact" },
+  { key: "general", label: "General" }
+];
+
+const SEAL_BUILD_TAGS = {
+  // Player SEALS
+  p1: ["memory"], // Vassago
+  p2: ["critical"], // Paimon
+  p6: ["critical"], // Orias
+  p7: ["critical"], // Glasya-Labolas
+  p9: ["bounty", "memory"], // Marbas
+  p10: ["bounty", "memory"], // Gusion
+  p11: ["artifact"], // Valefor
+  p12: ["general"], // Belial
+  p13: ["general", "personality"], // Bune
+  p14: ["personality"], // Leraje
+  p15: ["memory"], // Bathin
+  p16: ["general"], // Bael
+  p17: ["memory"], // Dantalion
+  p19: ["general"], // Sabnock
+  p20: ["artifact"], // Haagenti
+  p23: ["bounty"], // Seere
+  p25: ["artifact"], // Valac
+  p26: ["artifact"], // Amdusias
+  p30: ["general"], // Andrealphus
+  p31: ["bounty"], // Murmur
+  p32: ["bounty"], // Foras
+  p33: ["bounty"], // Marchosias
+  p34: ["bounty"], // Gremory
+  p35: ["bounty"], // Forneus
+  p40: ["bounty"], // Focalor
+  p42: ["memory"], // Stolas
+  p44: ["bounty"], // Andromalius
+  p45: ["general"], // Crocell (double SIN payout only)
+  p46: ["bounty"], // Barbatos
+  p47: ["bounty"], // Ronove
+  p48: ["bounty"], // Cimejes
+  p49: ["bounty", "artifact"], // Phenex
+  p50: ["bounty"], // Agares
+  p52: ["memory"], // Decarabia
+  p53: ["memory"], // Samigina
+  p54: ["reveal"], // Zepar
+  p55: ["memory"], // Samael Septagram (special)
+  p57: ["bounty", "memory"], // Balam
+  p58: ["general"], // Ipos
+  p59: ["reveal", "bounty", "memory"], // Amon
+  p60: ["artifact"], // Gaap
+  p61: ["reveal"], // Vepar
+  p63: ["reveal"], // Vual
+  p64: ["reveal"], // Vine (double SIN payout is not BOUNTY)
+  p65: ["reveal"], // Naberius
+  p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
+  p68: ["memory"], // Vapula
+  p69: ["critical"], // Cassiel Hexagram (special)
+  p70: ["artifact"], // Amy
+  p71: ["general"], // Sallos
+  p72: ["general"], // Furcas
+  p73: ["general"], // Asmoday
+  p84: ["reveal"], // Astaroth
+  p85: ["personality"], // Berith
+  p86: ["personality", "memory"], // Haures
+  p87: ["personality"], // Purson
+  p88: ["personality", "bounty"], // Raum
+  p89: ["personality"], // Marax
+  p90: ["personality"], // Bifrons
+  p91: ["critical"], // Aim
+  p104: ["personality", "bounty", "memory"], // Alloces
+  p105: ["personality", "artifact"], // Andras
+  p106: ["personality"], // Zagan
+  p107: ["personality"], // Ose
+  p108: ["personality"], // Orobas
+  p112: ["general"], // Furfur
+  p113: ["general"], // Halphas
+  p114: ["general"], // Buer
+  p115: ["general"], // Botis
+  p116: ["critical"], // Beleth
+  p117: ["critical"], // Shax (SIN from kills, not BOUNTY)
+  p118: ["general"], // Malphas
+  p119: ["critical"], // Eligos
+  p120: ["memory"], // Sitri
+  // Apocalypse SEALS
+  p74: ["bounty"], // White Horse
+  p75: ["reveal"], // Red Horse
+  p76: ["memory"], // Black Horse
+  p77: ["critical"], // Pale Horse
+  p78: ["personality"], // Souls of Martyrs
+  p79: ["artifact"], // Creation Uncreated
+  p80: ["general"], // Silence in Heaven
+  // Boss SEALS
+  p92: ["critical"], // Dantre
+  p93: ["bounty"], // Zilon
+  p94: ["artifact"], // Serafeim
+  p95: ["reveal"], // Pyros
+  p96: ["personality"], // Padma
+  p97: ["memory"], // Threon
+  p110: ["general"], // Petros-Pavlos (wipes MEMORY and BOUNTY)
+  // Satan SEALS
+  p111: ["general"], // Satan
+  // Seals of Saturn
+  p98: ["critical"], // Samael Star
+  p99: ["memory"], // Cassiel Sigil
+  p100: ["bounty"], // Bethor
+  p101: ["general"], // Aggiel Hexagram
+  p102: ["reveal"], // Zachriel Triangle
+  p103: ["artifact"], // Cassiel Pentagram
+  p109: ["personality"] // Samael Triangle
+};
+
+function sealBuilds(id) {
+  return SEAL_BUILD_TAGS[id] || ["general"];
+}
+
+function collectionFilter() {
+  const key = state.collectionFilter;
+  return SEAL_BUILDS.some((build) => build.key === key) ? key : "all";
+}
+
+function sealMatchesCollectionFilter(id, filter = collectionFilter()) {
+  return filter === "all" || sealBuilds(id).includes(filter);
+}
+
+/* ---- stored progress ---- */
+let collectionProgressCache = null;
+
+function defaultCollectionProgress() {
+  return {
+    version: 2,
+    unlocked: [],
+    discovered: [],
+    stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
+    best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
+    flags: {}
+  };
+}
+
+function loadCollectionProgress() {
+  if (collectionProgressCache) return collectionProgressCache;
+  const progress = defaultCollectionProgress();
+  try {
+    const raw = window.localStorage?.getItem(COLLECTION_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
+      if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
+      if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
+      for (const group of ["stats", "best"]) {
+        const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
+        Object.keys(progress[group]).forEach((key) => {
+          progress[group][key] = Math.max(0, Math.floor(Number(source[key]) || 0));
+        });
+      }
+    } else {
+      // the first version had other achievements: keep only what was discovered
+      COLLECTION_OLD_STORAGE_KEYS.forEach((key) => {
+        const old = JSON.parse(window.localStorage?.getItem(key) || "null");
+        if (Array.isArray(old?.discovered)) progress.discovered = old.discovered.filter((id) => typeof id === "string");
+      });
+    }
+  } catch (error) {}
+  collectionProgressCache = progress;
+  return progress;
+}
+
+function saveCollectionProgress() {
+  if (!collectionProgressCache) return;
+  try {
+    window.localStorage?.setItem(COLLECTION_STORAGE_KEY, JSON.stringify(collectionProgressCache));
+  } catch (error) {}
+}
+
+/* ---- queries ---- */
+function collectibleSealIds() {
+  return PASSIVE_IDS.filter((id) => ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id));
+}
+
+function isUnlockableSeal(id) {
+  return Boolean(SEAL_UNLOCKS[id]);
+}
+
+function isSealUnlocked(id) {
+  if (!isUnlockableSeal(id)) return true;
+  // Pause > Unlock (testing): every SEAL counts as unlocked for the rest of this run
+  if (state.devUnlockAllSeals && state.mode !== "menu") return true;
+  return loadCollectionProgress().unlocked.includes(id);
+}
+
+function isSealLocked(id) {
+  return !isSealUnlocked(id);
+}
+
+function isSealDiscovered(id) {
+  return loadCollectionProgress().discovered.includes(id);
+}
+
+function sealUnlockProgress(id) {
+  const rule = SEAL_UNLOCKS[id];
+  if (!rule) return null;
+  const progress = loadCollectionProgress();
+  if (rule.stat) return { value: progress.stats[rule.stat] || 0, goal: rule.goal };
+  if (rule.best) return { value: progress.best[rule.best] || 0, goal: rule.goal };
+  if (rule.flag) return { value: progress.flags[rule.flag] ? 1 : 0, goal: 1 };
+  return null;
+}
+
+function sealUnlockMet(id) {
+  const result = sealUnlockProgress(id);
+  return Boolean(result && result.value >= result.goal);
+}
+
+/* ---- recording (called from the game) ---- */
+function collectionCounts() {
+  // only real arcade runs count: not PvP, not the story's tutorial rounds, not infinite-SIN testing
+  if (state.mode !== "arcade") return false;
+  if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
+  if (typeof playtestMoneyModeActive === "function" && playtestMoneyModeActive()) return false;
+  return true;
+}
+
+let collectionDirty = false;
+const collectionToastQueue = [];
+let collectionToastBusy = false;
+
+function collectionBump(stat, amount = 1) {
+  if (!collectionCounts() || !(stat in COLLECTION_STAT_LABELS)) return;
+  const progress = loadCollectionProgress();
+  progress.stats[stat] = (progress.stats[stat] || 0) + amount;
+  collectionDirty = true;
+}
+
+function collectionRaise(key, value) {
+  if (!collectionCounts() || !(key in COLLECTION_BEST_LABELS)) return;
+  const best = loadCollectionProgress().best;
+  const next = Math.max(0, Math.floor(Number(value) || 0));
+  if (next <= (best[key] || 0)) return;
+  best[key] = next;
+  collectionDirty = true;
+}
+
+function collectionFlag(key) {
+  if (!collectionCounts() || !(key in COLLECTION_FLAG_LABELS)) return;
+  const flags = loadCollectionProgress().flags;
+  if (flags[key]) return;
+  flags[key] = true;
+  collectionDirty = true;
+}
+
+// per-run counters (saved with the run)
+function collectionRun() {
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0 };
+  if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
+  else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  return state.collectionRun;
+}
+
+function resetCollectionRun() {
+  state.collectionRun = null;
+  collectionRun();
+}
+
+// a unique BOSS (alive or knocked out this round) is on the table
+function collectionBossPresent(key, aliveOnly = false) {
+  return (state.bots || []).some((bot) => bot?.isBoss && bot.uniqueKey === key && (!aliveOnly || (!bot.eliminated && bot.hp > 0)));
+}
+
+function collectionBeginRound() {
+  if (state.mode !== "arcade") return;
+  collectionRun().roundSpent = 0;
+  // BOSSES at full HEALTH when the round starts: knocking one out this round counts as a one-shot
+  (state.bots || []).forEach((bot) => {
+    if (bot?.isBoss) bot.fullHealthAtRoundStart = !bot.immortal && bot.hp >= bot.maxHp;
+  });
+}
+
+function collectionNoteSpend(cost) {
+  if (!collectionCounts() || !(cost > 0)) return;
+  const run = collectionRun();
+  run.roundSpent += cost;
+  collectionRaise("roundSpent", run.roundSpent);
+}
+
+function collectionNoteElimination(bot) {
+  if (!collectionCounts() || !bot) return;
+  collectionBump("eliminations");
+  if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
+  if (state.player.hp >= 100) collectionFlag("fullHealthKill");
+  if (!bot.isBoss) return;
+  if (bot.goeticKey) collectionBump("goeticKills");
+  if (bot.fullHealthAtRoundStart) collectionFlag("fullHealthBossKill");
+  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionFlag("pyrosGiftBossKill");
+  if (bot.uniqueKey) {
+    const run = collectionRun();
+    if (!run.uniqueKills.includes(bot.uniqueKey)) run.uniqueKills.push(bot.uniqueKey);
+    // beating the game = all 8 unique BOSSES defeated in one run (Petros and Pavlos both)
+    const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
+    if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
+      run.beaten = true;
+      collectionBump("gamesBeaten");
+      if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
+    }
+  }
+}
+
+function collectionNotePentakill() {
+  if (!collectionCounts()) return;
+  if (state.roundState) state.roundState.collectionPentakill = true;
+  if (collectionBossPresent("dantre")) collectionFlag("dantrePentakill");
+}
+
+function collectionNoteArtifactUse() {
+  if (!collectionCounts() || !state.roundState) return;
+  if ((state.roundState.activeUses || 0) >= 4 && collectionBossPresent("threon", true)) collectionFlag("threonArtifacts");
+}
+
+function collectionNoteShopBuy() {
+  if (!collectionCounts()) return;
+  const run = collectionRun();
+  const shop = state.shop || [];
+  if (!shop.length || run.buyoutCounted || !shop.every((slot) => slot?.sold)) return;
+  run.buyoutCounted = true;
+  if (!collectionBossPresent("zilon", true)) return;
+  run.zilonBuyouts += 1;
+  if (run.zilonBuyouts >= 3) collectionFlag("zilonBuyouts");
+}
+
+function collectionNoteShopReroll() {
+  if (state.mode === "arcade") collectionRun().buyoutCounted = false;
+}
+
+function collectionNoteSerafimEntry(bot, stolen) {
+  if (bot?.uniqueKey === "serafim" && !(stolen > 0)) collectionFlag("serafimNoSteal");
+}
+
+// a SEAL triggered: it is discovered for good
+function collectionDiscover(id) {
+  if (state.mode !== "arcade" || !id || !ITEMS[id]) return;
+  const progress = loadCollectionProgress();
+  if (progress.discovered.includes(id)) return;
+  progress.discovered.push(id);
+  saveCollectionProgress();
+}
+
+// after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
+function collectionAfterRender() {
+  if (!collectionCounts()) return;
+  const run = collectionRun();
+  if (state.player.hp === 1) collectionFlag("oneHealth");
+  collectionRaise("sinHeld", state.player.credits);
+  collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
+  collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
+  const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
+  if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
+  // once per round, when it is resolved
+  const round = state.roundState;
+  if (state.stage === "summary" && round && !roundRevealAnimationActive() && run.roundProcessed !== state.round) {
+    run.roundProcessed = state.round;
+    run.critStreak = round.criticalHitKeys?.has?.("player") ? run.critStreak + 1 : 0;
+    run.pentakillStreak = round.collectionPentakill ? run.pentakillStreak + 1 : 0;
+    run.noKoStreak = (round.eliminationsThisRound || 0) === 0 ? run.noKoStreak + 1 : 0;
+    collectionRaise("critStreak", run.critStreak);
+    collectionRaise("pentakillStreak", run.pentakillStreak);
+    collectionRaise("noKoStreak", run.noKoStreak);
+  }
+  if (!collectionDirty) return;
+  collectionDirty = false;
+  evaluateSealUnlocks(true);
+  saveCollectionProgress();
+}
+
+function evaluateSealUnlocks(announce) {
+  const progress = loadCollectionProgress();
+  Object.keys(SEAL_UNLOCKS).forEach((id) => {
+    if (progress.unlocked.includes(id) || !ITEMS[id] || !sealUnlockMet(id)) return;
+    progress.unlocked.push(id);
+    if (announce) collectionToastQueue.push(id);
+  });
+  if (announce) showNextCollectionToast();
+}
+
+/* ---- "SEAL UNLOCKED" toast: lives outside #app so renders never touch it ---- */
+function showNextCollectionToast() {
+  if (collectionToastBusy || !collectionToastQueue.length) return;
+  const id = collectionToastQueue.shift();
+  collectionToastBusy = true;
+  const toast = document.createElement("div");
+  toast.className = "collection-toast";
+  toast.setAttribute("role", "status");
+  toast.innerHTML = `
+    <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
+    <span class="collection-toast-text">
+      <span class="collection-toast-kicker">Seal unlocked</span>
+      <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
+    </span>`;
+  document.body.appendChild(toast);
+  playGameSfx("sealUnlock");
+  setTimeout(() => {
+    toast.classList.add("leaving");
+    setTimeout(() => {
+      toast.remove();
+      collectionToastBusy = false;
+      showNextCollectionToast();
+    }, 600);
+  }, 3600);
+}
+
+/* ---- the collection screen ---- */
+function collectionOpen() {
+  return state.mode === "menu" ? Boolean(state.menuCollectionOpen) : Boolean(state.pauseOpen && state.pauseScreen === "collection");
+}
+
+function collectionSealState(id) {
+  if (isSealLocked(id)) return "locked";
+  return isSealDiscovered(id) ? "discovered" : "undiscovered";
+}
+
+function collectionSections() {
+  const all = collectibleSealIds();
+  const listed = new Set(COLLECTION_SECTIONS.flatMap((section) => section.ids || []));
+  return COLLECTION_SECTIONS.map((section) => ({
+    ...section,
+    ids: (section.ids || all.filter((id) => !listed.has(id))).filter((id) => all.includes(id))
+  })).filter((section) => section.ids.length);
+}
+
+function collectionInfoHtml(id) {
+  const item = ITEMS[id];
+  const status = collectionSealState(id);
+  if (status === "locked") {
+    const rule = SEAL_UNLOCKS[id];
+    const result = sealUnlockProgress(id);
+    const progressText = result && result.goal > 1 ? `<div class="collection-info-progress">${formatNumber(Math.min(result.value, result.goal))} / ${formatNumber(result.goal)}</div>` : "";
+    return `
+      <div class="collection-info-status locked">Locked</div>
+      <div class="collection-info-name">${escapeHtml(item.name)}</div>
+      ${collectionBuildsHtml(id)}
+      <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
+      ${progressText}`;
+  }
+  const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
+  return `
+    <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+    <div class="collection-info-name">${escapeHtml(item.name)}</div>
+    ${collectionBuildsHtml(id)}
+    <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
+    ${note}`;
+}
+
+function collectionBuildsHtml(id) {
+  const labels = sealBuilds(id).map((key) => SEAL_BUILDS.find((build) => build.key === key)?.label).filter(Boolean);
+  return `<div class="collection-info-builds">${labels.map((label) => `<span>${escapeHtml(label)}</span>`).join("")}</div>`;
+}
+
+function collectionFiltersHtml(all) {
+  const filter = collectionFilter();
+  const tabs = [{ key: "all", label: "All" }, ...SEAL_BUILDS].map((build) => {
+    const count = build.key === "all" ? all.length : all.filter((id) => sealBuilds(id).includes(build.key)).length;
+    const active = build.key === filter;
+    return `<button class="collection-filter${active ? " active" : ""}" type="button" data-collection-filter="${build.key}" aria-pressed="${active}">${escapeHtml(build.label)}<span class="collection-filter-count">${count}</span></button>`;
+  });
+  return `<nav class="collection-filters" aria-label="Filter SEALS by build">${tabs.join("")}</nav>`;
+}
+
+// filters in place, so the screen does not replay its entrance
+function applyCollectionFilter(screen, filter) {
+  state.collectionFilter = filter;
+  if (!screen) return;
+  screen.querySelectorAll("[data-collection-filter]").forEach((button) => {
+    const active = button.dataset.collectionFilter === filter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  screen.querySelectorAll(".collection-seal").forEach((button) => {
+    button.hidden = !sealMatchesCollectionFilter(button.dataset.collectionSeal, filter);
+  });
+  screen.querySelectorAll(".collection-section").forEach((section) => {
+    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
+  });
+  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+  const body = screen.querySelector(".collection-body");
+  if (body) body.scrollTop = 0;
+}
+
+function collectionDescription(item) {
+  try {
+    return itemDescription(item) || item.description || "";
+  } catch (error) {
+    return item.description || "";
+  }
+}
+
+function renderCollectionScreen(from) {
+  const all = collectibleSealIds();
+  const unlocked = all.filter((id) => isSealUnlocked(id)).length;
+  const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
+  const filter = collectionFilter();
+  const sections = collectionSections()
+    .map(
+      (section) => `
+        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => sealMatchesCollectionFilter(id, filter)) ? "" : " hidden"}>
+          <h2 class="collection-section-title">${escapeHtml(section.title)}</h2>
+          <div class="collection-grid">
+            ${section.ids
+              .map((id) => {
+                const status = collectionSealState(id);
+                const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
+                return `
+                  <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                    <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
+                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
+                  </button>`;
+              })
+              .join("")}
+          </div>
+        </section>`
+    )
+    .join("");
+  return `
+    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="SEAL collection">
+      <header class="collection-header">
+        <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
+        <h1 class="collection-title">Collection</h1>
+        <div class="collection-counts">
+          <span><strong>${discovered}</strong> / ${all.length} discovered</span>
+          <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
+        </div>
+      </header>
+      ${collectionFiltersHtml(all)}
+      <div class="collection-legend" aria-hidden="true">
+        <span class="legend discovered">discovered</span>
+        <span class="legend undiscovered">undiscovered</span>
+        <span class="legend locked">locked</span>
+      </div>
+      <div class="collection-body">${sections}</div>
+      <div class="collection-info" aria-live="polite"></div>
+    </div>`;
+}
+
+function showCollectionInfo(button, pinned) {
+  const screen = button.closest(".collection-screen");
+  const info = screen?.querySelector(".collection-info");
+  if (!info) return;
+  const id = button.dataset.collectionSeal;
+  info.innerHTML = collectionInfoHtml(id);
+  info.className = `collection-info visible ${collectionSealState(id)}`;
+  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  if (pinned) button.classList.add("selected");
+  // beside the seal, kept on screen
+  const rect = button.getBoundingClientRect();
+  const width = info.offsetWidth;
+  const height = info.offsetHeight;
+  let left = rect.right + 12;
+  if (left + width > window.innerWidth - 8) left = rect.left - width - 12;
+  left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+  let top = rect.top + rect.height / 2 - height / 2;
+  top = Math.max(8, Math.min(top, window.innerHeight - height - 8));
+  info.style.left = `${Math.round(left)}px`;
+  info.style.top = `${Math.round(top)}px`;
+}
+
+function hideCollectionInfo(screen) {
+  const info = screen?.querySelector(".collection-info");
+  if (info && !screen.querySelector(".collection-seal.selected")) info.classList.remove("visible");
+}
+
+function closeCollection(from) {
+  if (from === "menu") state.menuCollectionOpen = false;
+  else state.pauseScreen = "main";
+  render();
+}
+
+function bindCollectionEvents() {
+  document.querySelectorAll("[data-collection-back]").forEach((button) => {
+    bindOn(button, "click", () => closeCollection(button.dataset.collectionBack));
+  });
+  document.querySelectorAll("[data-collection-filter]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
+    });
+  });
+  document.querySelectorAll("[data-collection-seal]").forEach((button) => {
+    bindOn(button, "pointerenter", (event) => {
+      if (event.pointerType === "mouse") showCollectionInfo(button, false);
+    });
+    bindOn(button, "pointerleave", (event) => {
+      if (event.pointerType === "mouse") hideCollectionInfo(button.closest(".collection-screen"));
+    });
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      const wasSelected = button.classList.contains("selected");
+      if (wasSelected) {
+        button.classList.remove("selected");
+        hideCollectionInfo(button.closest(".collection-screen"));
+      } else {
+        showCollectionInfo(button, true);
+      }
+    });
+  });
+  const screen = document.querySelector(".collection-screen");
+  if (screen) {
+    bindOn(screen, "click", () => {
+      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+      hideCollectionInfo(screen);
+    });
+    bindOn(screen.querySelector(".collection-body"), "scroll", () => {
+      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+      hideCollectionInfo(screen);
+    });
+  }
+}
+
+// Esc closes the collection
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !collectionOpen()) return;
+  event.preventDefault();
+  closeCollection(state.mode === "menu" ? "menu" : "pause");
+});
+
+/* ---- main menu: Satan opens the collection ----
+   His eyes flare, a dark red bloom swells out of them over the screen, and the collection
+   surfaces from it. */
+function triggerMenuSatan() {
+  const fig = document.querySelector(".menu-fig-satan");
+  if (!fig) return;
+  menuFigureTrigger.busy = true;
+  setMenuFigureLit("satan");
+  fig.classList.add("eyes-flare");
+  playGameSfx("menuSatanOpen");
+  const eyes = fig.querySelector(".fig-eyes");
+  const rect = (eyes || fig).getBoundingClientRect();
+  const meta = MENU_FIGURES.satan.meta;
+  // between his two eyes (head-image pixels 104, 123)
+  const ex = eyes ? rect.left + (rect.width * 104) / meta.head.w : rect.left + rect.width * 0.4;
+  const ey = eyes ? rect.top + (rect.height * 123) / meta.head.h : rect.top + rect.height * 0.12;
+  const veil = document.createElement("div");
+  veil.className = "menu-satan-veil";
+  veil.style.setProperty("--veil-x", `${Math.round(ex)}px`);
+  veil.style.setProperty("--veil-y", `${Math.round(ey)}px`);
+  document.body.appendChild(veil);
+  setTimeout(() => {
+    fig.classList.remove("eyes-flare");
+    setMenuFigureLit(null);
+    menuFigureTrigger.busy = false;
+    openCollectionFromMenu();
+    // keep the veil above the collection while it clears
+    document.body.appendChild(veil);
+    veil.classList.add("clearing");
+    setTimeout(() => veil.remove(), 900);
+  }, 640);
+}
+
+function openCollectionFromMenu() {
+  if (state.mode !== "menu") return;
+  state.menuCollectionOpen = true;
+  render();
+}
+function bindPvpEvents() {
+  if (state.mode !== "pvp" || !state.pvp) return;
+
+  const start = document.querySelector("#pvpReadyLobby");
+  if (start) bindOn(start, "click", pvpFillBotsAndStart);
+
+  const addSlot = document.querySelector("#pvpAddSlot");
+  if (addSlot) bindOn(addSlot, "click", pvpAddEmptySlot);
+
+  const removeSlot = document.querySelector("#pvpRemoveSlot");
+  if (removeSlot) bindOn(removeSlot, "click", pvpRemoveEmptySlot);
+
+  document.querySelectorAll("[data-pvp-remove-slot]").forEach((button) => {
+    bindOn(button, "click", () => pvpRemoveLobbySlot(Number(button.dataset.pvpRemoveSlot)));
+  });
+
+  const nextRound = document.querySelector("#pvpNextRound");
+  if (nextRound) {
+    bindOn(nextRound, "click", () => {
+      playNextRoundSfx();
+      pvpNextRound();
+    });
+  }
+
+  const restart = document.querySelector("#pvpRestart");
+  if (restart) bindOn(restart, "click", restartPvpMode);
+}
+
+function bindEvents() {
+  document.querySelectorAll("[data-menu-action]").forEach((button) => {
+    bindOn(button, "click", () => handleMenuAction(button.dataset.menuAction));
+  });
+
+  document.querySelectorAll("[data-run-slot-id]").forEach((button) => {
+    bindOn(button, "click", () => {
+      if (loadArcadeRun(button.dataset.runSlotId)) {
+        resumeSoundtrack();
+        render();
+      } else {
+        startGame();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-new-run]").forEach((button) => {
+    bindOn(button, "click", () => startGame());
+  });
+
+  document.querySelectorAll("[data-remove-run-slot-id]").forEach((button) => {
+    bindOn(button, "click", () => requestRunRemoval(button.dataset.removeRunSlotId));
+  });
+
+  document.querySelectorAll("[data-confirm-remove-run]").forEach((button) => {
+    bindOn(button, "click", () => confirmRunRemoval(button.dataset.confirmRemoveRun));
+  });
+
+  document.querySelectorAll("[data-cancel-remove-run]").forEach((button) => {
+    bindOn(button, "click", cancelRunRemoval);
+  });
+
+  document.querySelectorAll("[data-display-setting]").forEach((control) => {
+    bindOn(control, "input", () => updateDisplaySetting(control.dataset.displaySetting, control.value));
+  });
+
+  document.querySelectorAll("[data-settings-tab]").forEach((button) => {
+    bindOn(button, "click", () => {
+      state.settingsTab = button.dataset.settingsTab;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-setting-choice]").forEach((button) => {
+    bindOn(button, "click", () => updateSettingChoice(button.dataset.settingChoice, Number(button.dataset.step) || 1));
+  });
+
+  document.querySelectorAll("[data-settings-reset]").forEach((button) => {
+    bindOn(button, "click", resetSettings);
+  });
+
+  document.querySelectorAll("[data-settings-replay-story]").forEach((button) => {
+    bindOn(button, "click", () => startIntroSequence({ fromMenu: true }));
+  });
+
+  document.querySelectorAll("[data-sound-setting]").forEach((control) => {
+    const key = control.dataset.soundSetting;
+    if (control.type === "checkbox") {
+      bindOn(control, "change", () => updateSoundSetting(key, control.checked));
+      return;
+    }
+    bindOn(control, "input", () => {
+      updateSoundSetting(key, control.value, false);
+      document.querySelectorAll(`[data-sound-value="${key}"]`).forEach((valueLabel) => {
+        valueLabel.textContent = `${control.value}%`;
+      });
+    });
+  });
+
+  const pauseButton = document.querySelector("#pauseButton");
+  if (pauseButton) bindOn(pauseButton, "click", openPauseMenu);
+
+  const playtestMoney = document.querySelector("#playtestMoney");
+  if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
+
+  const skipProgression = document.querySelector("#skipProgression");
+  if (skipProgression) bindOn(skipProgression, "click", skipArcadeProgression);
+
+  const mobileOfferingsToggle = document.querySelector("#mobileOfferingsToggle");
+  if (mobileOfferingsToggle) {
+    bindOn(mobileOfferingsToggle, "click", () => {
+      state.mobileOfferingsOpen = true;
+      render();
+    });
+  }
+
+  const mobileOfferingsClose = document.querySelector("#mobileOfferingsClose");
+  if (mobileOfferingsClose) {
+    bindOn(mobileOfferingsClose, "click", () => {
+      state.mobileOfferingsOpen = false;
+      render();
+    });
+  }
+
+  const mobileOfferingsBackdrop = document.querySelector("#mobileOfferingsBackdrop");
+  if (mobileOfferingsBackdrop) {
+    bindOn(mobileOfferingsBackdrop, "click", () => {
+      state.mobileOfferingsOpen = false;
+      render();
+    });
+  }
+
+  document.querySelectorAll("[data-pause-action]").forEach((button) => {
+    bindOn(button, "click", () => handlePauseAction(button.dataset.pauseAction));
+  });
+
+  bindPvpEvents();
+  bindCollectionEvents();
+
+  const mainAction = document.querySelector("#mainAction");
+  if (mainAction) {
+    bindOn(mainAction, "click", performMainAction);
+  }
+
+  const guessInput = document.querySelector("#guessInput");
+  if (guessInput) {
+    bindOn(guessInput, "keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        performMainAction();
+      }
+    });
+  }
+
+  document.querySelectorAll("[data-numpad-key]").forEach((button) => {
+    bindOn(button, "click", () => {
+      handleMobileNumpadKey(button.dataset.numpadKey);
+      button.blur();
+    });
+  });
+
+  document.querySelectorAll("[data-buy]").forEach((button) => {
+    bindOn(button, "click", () => buyShopItem(Number(button.dataset.buy)));
+  });
+
+  document.querySelectorAll("[data-sell-passive]").forEach((button) => {
+    bindOn(button, "click", () => sellPassive(Number(button.dataset.sellPassive)));
+  });
+
+  document.querySelectorAll("[data-sell-active]").forEach((button) => {
+    bindOn(button, "click", () => sellActive(Number(button.dataset.sellActive)));
+  });
+
+  document.querySelectorAll("[data-use-active]").forEach((button) => {
+    bindOn(button, "click", () => useActive(Number(button.dataset.useActive)));
+  });
+
+  document.querySelectorAll("[data-active-prev]").forEach((button) => {
+    bindOn(button, "click", () => moveActiveCarousel(-1));
+  });
+
+  document.querySelectorAll("[data-active-next]").forEach((button) => {
+    bindOn(button, "click", () => moveActiveCarousel(1));
+  });
+
+  const cancelActive = document.querySelector("#cancelPendingActive");
+  if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
+
+  const floatingTooltip = document.querySelector("#floatingTooltip");
+  if (floatingTooltip) {
+    document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
+      bindOn(element, "mouseenter", (event) => {
+        if (element.dataset.tooltipHtml) {
+          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
+        } else {
+          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
+        }
+        floatingTooltip.classList.add("visible");
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mousemove", (event) => {
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mouseleave", () => {
+        floatingTooltip.classList.remove("visible");
+        floatingTooltip.innerHTML = "";
+      });
+    });
+  }
+
+  document.querySelectorAll("[data-pick-bot]").forEach((button) => {
+    bindOn(button, "click", () => chooseBot(Number(button.dataset.pickBot)));
+  });
+
+  const rerollButton = document.querySelector("#rerollShop");
+  if (rerollButton) bindOn(rerollButton, "click", rerollShopClick);
+
+  const restartButton = document.querySelector("#restartGame");
+  if (restartButton) bindOn(restartButton, "click", startGame);
+
+  const inspectButton = document.querySelector("#inspectGame");
+  if (inspectButton) {
+    bindOn(inspectButton, "click", () => {
+      state.inspectingGameOver = true;
+      render();
+    });
+  }
+}
+
+function openPauseMenu() {
+  state.pauseOpen = true;
+  state.pauseScreen = "main";
+  if (state.mode === "pvp") pvpSetHostPaused(true);
+  render();
+}
+
+// Esc: opens Pause during a run; inside Pause it goes back one screen, then resumes.
+// While an ARTIFACT is waiting for its target, Esc cancels that first.
+// The intro and the collection handle their own Esc (they mark the event as handled).
+function installPauseEscapeShortcut() {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || event.defaultPrevented || event.repeat) return;
+    if (state.mode !== "arcade" && state.mode !== "pvp") return;
+    if (introCapturesInput()) return;
+    if (state.gameOver && !state.inspectingGameOver && !state.pauseOpen) return;
+    event.preventDefault();
+    if (state.pauseOpen) {
+      handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
+      return;
+    }
+    if (state.pendingActive) {
+      cancelPendingActive();
+      return;
+    }
+    if (state.mobileOfferingsOpen) {
+      state.mobileOfferingsOpen = false;
+      render();
+      return;
+    }
+    openPauseMenu();
+  });
+}
+
+function saveArcadeRunForNativeExit() {
+  markNativeArcadeResumeOnForeground();
+  saveArcadeRun();
+}
+
+function blockNativeSelection(event) {
+  if (isNativeArcadeApp()) event.preventDefault();
+}
+
+function installNativeSelectionGuards() {
+  if (!isNativeArcadeApp()) return;
+  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
+  document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
+  document.addEventListener("dragstart", blockNativeSelection, { passive: false });
+}
+
+window.addEventListener("resize", updateFullscreenLayoutClass);
+window.addEventListener("pagehide", saveArcadeRunForNativeExit);
+window.addEventListener("beforeunload", saveArcadeRunForNativeExit);
+document.addEventListener("fullscreenchange", updateFullscreenLayoutClass);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveArcadeRunForNativeExit();
+    if (muteWhenInBackground()) pauseGameAudioForBackground();
+    return;
+  }
+  if (isNativeArcadeApp() && state.mode === "menu") resumeNativeArcadeOnForeground();
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
+});
+// Settings > Audio > Mute in background (always on in the phone app)
+function muteWhenInBackground() {
+  return isNativeArcadeApp() || state.sound.muteInBackground !== false;
+}
+
+window.addEventListener("blur", () => {
+  if (muteWhenInBackground()) pauseGameAudioForBackground();
+});
+window.addEventListener("focus", () => {
+  if (muteWhenInBackground()) resumeGameAudioAfterForeground();
+});
+document.addEventListener("fullscreenchange", () => {
+  document.querySelectorAll('[data-setting-value="fullscreen"]').forEach((label) => {
+    label.textContent = document.fullscreenElement ? "Fullscreen" : "Windowed";
+  });
+});
+
+loadSoundSettings();
+loadDisplaySettings();
+installAnimationSpeed();
+installSoundtrack();
+installArcadeEnterShortcut();
+installPauseEscapeShortcut();
+installShiftTooltipMore();
+installNativeSelectionGuards();
+updateFullscreenLayoutClass();
+if (!resumeNativeArcadeOnForeground()) {
+  if (pvpShouldAutoStartFromHash()) {
+    if (window.history?.replaceState) window.history.replaceState(null, "", `${location.pathname}${location.search}`);
+    startPvpMode();
+  } else if (shouldPlayIntroOnLaunch()) {
+    startIntroSequence();
+  } else {
+    showMainMenu();
+  }
+}
+>>>>>>> d0d827e8a3fbbf853383ee5b96ecf0422850d9c2
