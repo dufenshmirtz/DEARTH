@@ -178,7 +178,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      <button class="menu-button" data-menu-action="quit">Quit</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }

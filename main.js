@@ -262,6 +262,9 @@ const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
 const ARCADE_RUN_SAVE_VERSION = 1;
 const ARCADE_RUN_SLOT_COUNT = 5;
 const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
+// the iPhone app: same arcade build, but iOS has no "quit" and puts the Dynamic Island on a side
+const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() === "ios";
+if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.08;
@@ -12051,7 +12054,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      <button class="menu-button" data-menu-action="quit">Quit</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
