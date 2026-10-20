@@ -11286,9 +11286,9 @@ body.native-arcade .center-console .guess-corruption s {
 /* ---------- PICK buttons under the DAMNED cards: the same border-kit frame as the other buttons ---------- */
 #app .pick-button {
   position: relative;
-  min-height: 26px;
-  padding: 0 8px !important;
-  font-size: 14px !important;
+  min-height: 32px;
+  padding: 0 10px !important;
+  font-size: 17px !important;
   line-height: 1.1 !important;
   border-color: transparent !important;
   background: transparent !important;
@@ -11331,9 +11331,9 @@ body.native-arcade .center-console .guess-corruption s {
 
 /* native app: the small pick button under the compact card */
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
-  min-height: 24px !important;
+  min-height: 27px !important;
   padding: 0 6px !important;
-  font-size: 11px !important;
+  font-size: 13px !important;
   border-color: transparent !important;
   background: transparent !important;
   color: var(--bone) !important;
