@@ -986,7 +986,7 @@ const ITEMS = {
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Samael's Star",
+    name: "Seal of Cassiel's Sigil",
     price: 16,
     description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
@@ -1000,7 +1000,7 @@ const ITEMS = {
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Cassiel's Sigil",
+    name: "Seal of Samael's Star",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
@@ -1669,9 +1669,9 @@ const SEAL_SIGILS = {
   p92: "archangel seals/Cassiel-Pentagram.png",
   p93: "archangel seals/Zachriel-Triangle.png",
   p94: "archangel seals/Aggiel-Hexagram.png",
-  p95: "archangel seals/Samael-Star.png",
+  p95: "archangel seals/Cassiel-Sigil.png",
   p96: "archangel seals/Samael-Triangle.png",
-  p97: "archangel seals/Cassiel-Sigil.png",
+  p97: "archangel seals/Samael-Star.png",
   p110: "archangel seals/Cassiel-Hexagram.png",
   // Boss SEALS
   p121: "dev/ZilonSeal.png",
