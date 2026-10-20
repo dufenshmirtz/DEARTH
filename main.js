@@ -751,7 +751,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage. ELITE adds +2% per poison."
+      "Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",
@@ -4084,8 +4084,15 @@ function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-function poisonPercentPerCounter(idOrItem) {
-  return Math.max(0, 5 + eliteLevels(idOrItem) * 2);
+// the worst guess penalty is 10% max HEALTH; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
+const WORST_GUESS_PENALTY_PERCENT = 10;
+
+function worstGuessPenalty(maxHp, percent = WORST_GUESS_PENALTY_PERCENT) {
+  return Math.max(1, Math.ceil((maxHp || 0) * (percent / 100)));
+}
+
+function veparPenaltyPercent(idOrItem) {
+  return WORST_GUESS_PENALTY_PERCENT + eliteLevels(idOrItem) * 2;
 }
 
 function paimonBaseSin(round = state.roundState) {
@@ -4622,7 +4629,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -4725,7 +4732,7 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals ${poisonPercentPerCounter(item)}% max-HEALTH damage.`;
+    return `Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
   }
   if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
@@ -7625,7 +7632,6 @@ function beginRound() {
   applyPendingNextRoundLambReveals();
   applyStartOfRoundPassives();
   applyGuessReveals();
-  applyRevealPoisonCounters();
   ensureSitriHost();
   applyZilonBossBounty();
 }
@@ -8011,7 +8017,7 @@ function planPersonaGuess(bot, persona) {
 }
 
 function bossRevealAllowedBySeals() {
-  return orderedPassiveEffectEntries(["p61", "p129"]).length > 0;
+  return orderedPassiveEffectEntries("p129").length > 0;
 }
 
 function revealedDamnedCount() {
@@ -8076,7 +8082,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p64", "p65", "p75", "p95", "p102"]).length;
+  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p75", "p95", "p102"]).length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -8134,21 +8140,6 @@ function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntr
       round.roundEvents.push(`${ITEMS.p59?.name || "Seal of Amon"} rewarded revealed DAMNED with BOUNTY and MEMORY.`);
     }
   });
-}
-
-function applyRevealPoisonCounters() {
-  const round = state.roundState;
-  const entries = orderedPassiveEffectEntries("p61");
-  if (!round || !entries.length) return;
-  const targets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.revealedByPassive);
-  if (!targets.length) return;
-  entries.forEach((entry) => {
-    markPassiveEntryTriggered(entry);
-    targets.forEach((bot) => {
-      bot.poisonCounters = (bot.poisonCounters || 0) + revealMultiplicity(bot);
-    });
-  });
-  round.roundEvents.push(`Seal of Vepar added poison to ${targets.map((bot) => bot.name).join(", ")}.`);
 }
 
 function grantDevTemporaryArtifact(source) {
@@ -8888,13 +8879,34 @@ function applyPenalties() {
           if (playerIgnoresWorstPenalty) {
             blockedPlayerPenalty = true;
           } else {
-            addPlayerDamage(10, "Worst guess penalty");
+            addPlayerDamage(worstGuessPenalty(state.player.maxHp), "Worst guess penalty");
           }
         } else {
-          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, 10, "Worst guess penalty", targetDiffEntries);
+          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, worstGuessPenalty(participant.bot.maxHp), "Worst guess penalty", targetDiffEntries);
         }
       });
-      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took 10 damage.`);
+      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max HEALTH.`);
+      // Seal of Vepar: when a revealed DAMNED takes the penalty, every revealed DAMNED takes it (once per reveal stack)
+      const veparEntries = orderedPassiveEffectEntries("p61");
+      if (veparEntries.length && worstGuessers.some((participant) => participant.kind !== "player" && participant.bot.revealedByPassive)) {
+        const worstIds = new Set(worstGuessers.filter((participant) => participant.kind !== "player").map((participant) => participant.bot.id));
+        veparEntries.forEach((entry) => {
+          const percent = veparPenaltyPercent(entry);
+          let hit = 0;
+          activeBots
+            .filter((bot) => bot.revealedByPassive)
+            .forEach((bot) => {
+              const times = revealMultiplicity(bot) - (worstIds.has(bot.id) ? 1 : 0);
+              if (times <= 0) return;
+              hit += 1;
+              addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, worstGuessPenalty(bot.maxHp, percent) * times, ITEMS.p61.name, targetDiffEntries);
+            });
+          if (hit) {
+            markPassiveEntryTriggered(entry);
+            round.roundEvents.push(`${ITEMS.p61.name} spread the worst guess penalty to every revealed DAMNED.`);
+          }
+        });
+      }
       if (blockedPlayerPenalty) round.roundEvents.push("Seal of Andras blocked your worst guess penalty damage.");
     }
   }
@@ -9810,7 +9822,7 @@ function applyEliminationPassives(bot) {
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
@@ -9991,20 +10003,6 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const name = passiveName("p111", "Seal of Satan");
       damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
-      return;
-    }
-
-    if (entry.id === "p61") {
-      const targets = activeBots().filter((bot) => (bot.poisonCounters || 0) > 0);
-      if (!targets.length) return;
-      const percent = poisonPercentPerCounter(entry);
-      markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => Math.ceil((bot.maxHp || 0) * (percent / 100) * (bot.poisonCounters || 0)),
-        (bot, dealt) => `Seal of Vepar dealt ${dealt} poison damage to ${bot.name}.`,
-        "Seal of Vepar"
-      );
       return;
     }
 

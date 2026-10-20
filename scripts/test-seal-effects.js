@@ -47,7 +47,7 @@ function game() {
 }
 
 test("each reveal seal adds one reveal, independent of elite level, with a shared cap of four", () => {
-  for (const id of ["p59", "p64", "p65", "p75", "p95", "p102"]) {
+  for (const id of ["p59", "p61", "p64", "p65", "p75", "p95", "p102"]) {
     game()(`
       fixture([["${id}", 4]], [10, 20, 30, 40, 50]);
       assert.equal(revealedDamnedCount(), 2);
@@ -845,5 +845,41 @@ test("Valac eliminates a lone non-BOSS survivor after 4 eliminations and pays +2
     checkRoundPentakillBonus();
     assert.ok(state.player.credits - before >= 8 + 4);
     assert.equal(state.sealStats.p130.credits, 4);
+  `);
+});
+
+// ---- worst guess penalty is 10% max HEALTH; new Vepar ----
+test("the worst guess penalty is 10% of max HEALTH", () => {
+  game()(`
+    fixture([], [60, 60, 60, 60, 0]);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    state.player.hp = state.player.maxHp = 200;
+    applyPenalties();
+    assert.equal(state.roundState.target, 50);
+    assertDamage([10, 10, 10, 10, 150]);
+  `);
+});
+
+test("Vepar reveals one extra DAMNED and spreads the worst guess penalty to every revealed DAMNED", () => {
+  game()(`
+    fixture([["p61"]], [60, 60, 60, 60, 0]);
+    assert.ok(revealedDamnedCount() >= 2);
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
+    revealBotGuess(state.bots[4], "Test");
+    revealBotGuess(state.bots[1], "Test");
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    applyPenalties();
+    assertDamage([10, 110, 10, 10, 150]);
+  `);
+  game()(`
+    fixture([["p61"]], [60, 60, 60, 60, 0]);
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
+    revealBotGuess(state.bots[1], "Test");
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    applyPenalties();
+    assertDamage([10, 10, 10, 10, 150]);
   `);
 });

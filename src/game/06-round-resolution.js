@@ -230,13 +230,34 @@ function applyPenalties() {
           if (playerIgnoresWorstPenalty) {
             blockedPlayerPenalty = true;
           } else {
-            addPlayerDamage(10, "Worst guess penalty");
+            addPlayerDamage(worstGuessPenalty(state.player.maxHp), "Worst guess penalty");
           }
         } else {
-          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, 10, "Worst guess penalty", targetDiffEntries);
+          addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, worstGuessPenalty(participant.bot.maxHp), "Worst guess penalty", targetDiffEntries);
         }
       });
-      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took 10 damage.`);
+      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max HEALTH.`);
+      // Seal of Vepar: when a revealed DAMNED takes the penalty, every revealed DAMNED takes it (once per reveal stack)
+      const veparEntries = orderedPassiveEffectEntries("p61");
+      if (veparEntries.length && worstGuessers.some((participant) => participant.kind !== "player" && participant.bot.revealedByPassive)) {
+        const worstIds = new Set(worstGuessers.filter((participant) => participant.kind !== "player").map((participant) => participant.bot.id));
+        veparEntries.forEach((entry) => {
+          const percent = veparPenaltyPercent(entry);
+          let hit = 0;
+          activeBots
+            .filter((bot) => bot.revealedByPassive)
+            .forEach((bot) => {
+              const times = revealMultiplicity(bot) - (worstIds.has(bot.id) ? 1 : 0);
+              if (times <= 0) return;
+              hit += 1;
+              addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, worstGuessPenalty(bot.maxHp, percent) * times, ITEMS.p61.name, targetDiffEntries);
+            });
+          if (hit) {
+            markPassiveEntryTriggered(entry);
+            round.roundEvents.push(`${ITEMS.p61.name} spread the worst guess penalty to every revealed DAMNED.`);
+          }
+        });
+      }
       if (blockedPlayerPenalty) round.roundEvents.push("Seal of Andras blocked your worst guess penalty damage.");
     }
   }
@@ -1152,7 +1173,7 @@ function applyEliminationPassives(bot) {
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
@@ -1333,20 +1354,6 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const name = passiveName("p111", "Seal of Satan");
       damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
-      return;
-    }
-
-    if (entry.id === "p61") {
-      const targets = activeBots().filter((bot) => (bot.poisonCounters || 0) > 0);
-      if (!targets.length) return;
-      const percent = poisonPercentPerCounter(entry);
-      markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => Math.ceil((bot.maxHp || 0) * (percent / 100) * (bot.poisonCounters || 0)),
-        (bot, dealt) => `Seal of Vepar dealt ${dealt} poison damage to ${bot.name}.`,
-        "Seal of Vepar"
-      );
       return;
     }
 

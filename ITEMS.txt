@@ -206,7 +206,7 @@ Seal of Vassago (13 SIN)
 New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Vepar (13 SIN)
-BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage. ELITE adds +2% per poison.
+Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level.
 
 Seal of Vine (10 SIN)
 Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%.

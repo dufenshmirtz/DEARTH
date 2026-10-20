@@ -545,7 +545,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "BOSSES can have their guess revealed. At the start of each round, each revealed DAMNED gains 1 poison. At end of round, each poison deals 5% max-HEALTH damage. ELITE adds +2% per poison."
+      "Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",

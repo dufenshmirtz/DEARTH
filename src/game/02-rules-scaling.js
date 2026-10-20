@@ -798,8 +798,15 @@ function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-function poisonPercentPerCounter(idOrItem) {
-  return Math.max(0, 5 + eliteLevels(idOrItem) * 2);
+// the worst guess penalty is 10% max HEALTH; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
+const WORST_GUESS_PENALTY_PERCENT = 10;
+
+function worstGuessPenalty(maxHp, percent = WORST_GUESS_PENALTY_PERCENT) {
+  return Math.max(1, Math.ceil((maxHp || 0) * (percent / 100)));
+}
+
+function veparPenaltyPercent(idOrItem) {
+  return WORST_GUESS_PENALTY_PERCENT + eliteLevels(idOrItem) * 2;
 }
 
 function paimonBaseSin(round = state.roundState) {

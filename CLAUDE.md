@@ -52,7 +52,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 
 ## Game rules in brief
 - Each round the player + 5 DAMNED guess 0–100. TARGET = ceil(weighted average × modifier + offset); modifier 0.8 by default (final bosses 0.666, unique bosses override).
-- Damage = |guess − TARGET|; worst guess +10; CRITICAL (exact TARGET, window widened by seals) hits everyone else for 10% max HP.
+- Damage = |guess − TARGET|; worst guess 10% max HP; CRITICAL (exact TARGET, window widened by seals) hits everyone else for 10% max HP.
 - Stages: guess → active (≤2 ARTIFACTS) → reveal/resolution → summary → Devil's Offerings shop.
 - Currency SIN; DAMNED carry BOUNTY (SIN paid on death) and MEMORY (past rounds, drives AI). Personalities: Anchor, Analyst, Follower, Stubborn, Drifter, Caller. Bosses have no personality and play optimally.
 - Player: 100 HP, 8 starting SIN, 3 seal slots (max 6). ELITE seal levels usually ×1.5 damage.

@@ -886,7 +886,6 @@ function beginRound() {
   applyPendingNextRoundLambReveals();
   applyStartOfRoundPassives();
   applyGuessReveals();
-  applyRevealPoisonCounters();
   ensureSitriHost();
   applyZilonBossBounty();
 }
@@ -1272,7 +1271,7 @@ function planPersonaGuess(bot, persona) {
 }
 
 function bossRevealAllowedBySeals() {
-  return orderedPassiveEffectEntries(["p61", "p129"]).length > 0;
+  return orderedPassiveEffectEntries("p129").length > 0;
 }
 
 function revealedDamnedCount() {
@@ -1337,7 +1336,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p64", "p65", "p75", "p95", "p102"]).length;
+  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p75", "p95", "p102"]).length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -1395,21 +1394,6 @@ function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntr
       round.roundEvents.push(`${ITEMS.p59?.name || "Seal of Amon"} rewarded revealed DAMNED with BOUNTY and MEMORY.`);
     }
   });
-}
-
-function applyRevealPoisonCounters() {
-  const round = state.roundState;
-  const entries = orderedPassiveEffectEntries("p61");
-  if (!round || !entries.length) return;
-  const targets = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated && bot.revealedByPassive);
-  if (!targets.length) return;
-  entries.forEach((entry) => {
-    markPassiveEntryTriggered(entry);
-    targets.forEach((bot) => {
-      bot.poisonCounters = (bot.poisonCounters || 0) + revealMultiplicity(bot);
-    });
-  });
-  round.roundEvents.push(`Seal of Vepar added poison to ${targets.map((bot) => bot.name).join(", ")}.`);
 }
 
 function grantDevTemporaryArtifact(source) {
