@@ -1824,10 +1824,10 @@ const UNIQUE_BOSS_SPECS = {
     key: "zilon",
     name: "Zilon",
     image: "assets/bots/occult-stickmen-pack/boss-zilon.png",
-    modifierOverride: 1.5,
+    modifierOverride: 1.3,
     descriptions: [
       "Devil's Offerings prices cost +3 SIN for ARTIFACTS and +6 SIN for SEALS while Zilon is alive.",
-      "The TARGET modifier becomes 1.5 while Zilon is alive."
+      "The TARGET modifier becomes 1.3 while Zilon is alive."
     ]
   },
   dantre: {
