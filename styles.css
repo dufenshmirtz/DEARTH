@@ -11286,9 +11286,10 @@ body.native-arcade .center-console .guess-corruption s {
 /* ---------- PICK buttons under the DAMNED cards: the same border-kit frame as the other buttons ---------- */
 #app .pick-button {
   position: relative;
-  min-height: 36px;
-  padding: 4px 10px !important;
+  min-height: 26px;
+  padding: 0 8px !important;
   font-size: 14px !important;
+  line-height: 1.1 !important;
   border-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -11298,14 +11299,14 @@ body.native-arcade .center-console .guess-corruption s {
 #app .pick-button::after {
   content: "";
   position: absolute;
-  inset: -3px -4px;
+  inset: -2px -3px;
   z-index: 2;
   pointer-events: none;
   box-sizing: border-box;
   border-style: solid;
   border-color: transparent;
-  border-width: 9px 18px;
-  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 9px 18px stretch;
+  border-width: 6px 14px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 6px 14px stretch;
   opacity: 0.9;
   transition: opacity 0.2s ease, filter 0.2s ease;
 }
@@ -11339,12 +11340,49 @@ body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
 }
 
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button::after {
-  inset: -2px -3px;
-  border-width: 7px 13px;
-  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 7px 13px stretch;
+  inset: -1px -2px;
+  border-width: 5px 11px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 5px 11px stretch;
 }
 
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button:hover:not(:disabled),
 body.native-arcade #app .arena:not(.pvp-arena) .bot-card.boss.pickable .pick-button {
   color: var(--blood-bright) !important;
+}
+
+/* ---------- "pick a DAMNED card" panel: the card frame, trembling like the other outlines ---------- */
+#app .pending-panel {
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 10px 20px !important;
+}
+
+/* the frame needs the panel to be a positioned box; where it was static, keep it in place */
+body:not(.mobile-arcade) #app .pending-panel {
+  position: relative;
+  inset: auto;
+}
+
+body.native-arcade #app .native-console-panel .pending-panel {
+  position: relative !important;
+  inset: auto;
+}
+
+#app .pending-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 16px;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% fill / 16px stretch;
+  opacity: 0.95;
+}
+
+body.outline-boil #app .pending-panel::after {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
 }
