@@ -2342,6 +2342,21 @@ function applyDisplaySettings() {
   document.body.dataset.animSpeed = String(animSpeed());
 }
 
+// ---------- iPhone: the hand-drawn lines tremble like the outlines ----------
+// Safari mis-draws lines whose picture is animated through a CSS variable, so on iPhone the
+// picture is stepped from here instead (body[data-line-frame] = 0/1/2, read by styles.css).
+let iosLineBoilFrame = 0;
+function stepIosLineBoil() {
+  const body = document.body;
+  if (body?.classList.contains("outline-boil")) {
+    iosLineBoilFrame = (iosLineBoilFrame + 1) % 3;
+    body.dataset.lineFrame = String(iosLineBoilFrame);
+  }
+  const duration = body ? parseFloat(getComputedStyle(body).getPropertyValue("--boil-duration")) : NaN;
+  setTimeout(stepIosLineBoil, (Number.isFinite(duration) && duration > 0 ? duration : 375) / 3);
+}
+if (NATIVE_IOS_APP) setTimeout(stepIosLineBoil, 0);
+
 // ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
 // Game animations (SEAL triggers, the READY reveal steps, hits, pops) run this many times faster.
 function animSpeed() {

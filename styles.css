@@ -11384,25 +11384,97 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
   bottom: calc(var(--native-seal-row-height) - 20px + env(safe-area-inset-bottom)) !important;
 }
 
-/* iPhone: Safari can't animate the line drawing through --divider-img (it loses the line's size and
-   position, so the lines come out fat and shifted). On iPhone the lines stay still; the frames still tremble. */
+/* DAMNED cards a bit taller on the phone (Android and iPhone), with room under the HEALTH bar */
+body.native-arcade {
+  --native-seal-row-height: clamp(92px, calc(27vh - 8px), 116px);
+}
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card {
+  padding-bottom: 11px !important;
+}
+
+/* ---------- iPhone: the hand-drawn lines tremble like the outlines ----------
+   Safari loses a line's size and position when its picture is animated through --divider-img
+   (fat, shifted lines), so on iPhone the picture is stepped by stepIosLineBoil() instead.
+   --line-0/1/2 are the same three drawings one step apart, like the animation delays elsewhere. */
+body.native-ios {
+  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
+  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
+  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
+  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
+  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+body.native-ios[data-line-frame="0"] {
+  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
+  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
+  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
+  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
+  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+}
+body.native-ios[data-line-frame="1"] {
+  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
+  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
+  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
+  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
+  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+}
+body.native-ios[data-line-frame="2"] {
+  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
+  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
+  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
+  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
+  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
+}
 body.native-ios.outline-boil #app .panel-header,
 body.native-ios.outline-boil #app .bot-card .bot-stats,
 body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
   animation: none !important;
 }
-body.native-ios.outline-boil #app .panel-header {
-  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
-}
+body.native-ios.outline-boil #app .panel-header,
 body.native-ios.outline-boil #app .bot-card .bot-stats {
-  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+  background-image: var(--line-0) !important;
 }
+body.native-ios.outline-boil #app .active-panel .panel-header,
 body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
-  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+  background-image: var(--line-1) !important;
+}
+body.native-ios.outline-boil #app .bot-card:nth-child(3n + 2) .bot-stats {
+  background-image: var(--line-2) !important;
 }
 body.native-ios.outline-boil #app .bot-card.boss .bot-stats {
-  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") !important;
+  background-image: var(--line-red-0) !important;
 }
 body.native-ios.outline-boil #app .bot-card.boss .mini-stat.bot-health {
-  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
+  background-image: var(--line-red-1) !important;
+}
+body.native-ios.outline-boil #app .bot-card.boss:nth-child(3n + 2) .bot-stats {
+  background-image: var(--line-red-2) !important;
+}
+
+/* iPhone: the menu art fills the whole screen (the table itself stays inside the safe area) */
+body.native-ios .main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* iPhone: the Items panel lines up with the table, which starts after the left inset */
+body.native-ios.native-arcade .mobile-offerings-backdrop.visible,
+body.native-ios.native-arcade .side-panel {
+  left: calc(var(--native-target-panel-width) + 10px + env(safe-area-inset-left)) !important;
+}
+
+/* iPhone: SEAL slots share the row between the slots you have (at least 4 wide), so they are
+   bigger with few slots and all 6 still fit without scrolling */
+body.native-ios.native-arcade #app .passive-bar {
+  grid-auto-columns: min(108px, calc((100% - 12px) / 4)) !important;
+}
+body.native-ios.native-arcade #app .passive-bar:has(> .passive-slot:nth-child(5)) {
+  grid-auto-columns: min(108px, calc((100% - 16px) / 5)) !important;
+}
+body.native-ios.native-arcade #app .passive-bar:has(> .passive-slot:nth-child(6)) {
+  grid-auto-columns: min(108px, calc((100% - 20px) / 6)) !important;
 }
