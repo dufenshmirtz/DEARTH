@@ -11241,3 +11241,11 @@ body.native-arcade .center-console .guess-corruption.fresh {
 body.native-arcade .center-console .guess-corruption s {
   font-size: 17px !important;
 }
+
+.memory-overflow {
+  color: var(--blood-bright);
+  font-weight: 700;
+}
+.bot-title .bot-glyph + .bot-glyph {
+  margin-left: 2px;
+}

@@ -965,51 +965,107 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Dantre",
+    name: "Seal of Cassiel's Pentagram",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Zilon",
+    name: "Seal of Zachriel's Triangle",
     price: 16,
     description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Serafeim",
+    name: "Seal of Aggiel's Hexagram",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Pyros",
+    name: "Seal of Samael's Star",
     price: 16,
     description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Padma",
+    name: "Seal of Samael's Triangle",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Threon",
+    name: "Seal of Cassiel's Sigil",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Petros-Pavlos",
+    name: "Seal of Cassiel's Hexagram",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+  },
+  p121: {
+    id: "p121",
+    type: "passive",
+    name: "Seal of Zilon",
+    price: 16,
+    description: "40% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY. ELITE adds +5% to the converted share."
+  },
+  p122: {
+    id: "p122",
+    type: "passive",
+    name: "Seal of Kalha",
+    price: 16,
+    description: "Every PENTAKILL gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
+  },
+  p123: {
+    id: "p123",
+    type: "passive",
+    name: "Seal of Pyros",
+    price: 16,
+    description: "At the start of every round, reveal one DAMNED, even one that is already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack. ELITE reveals +1 more DAMNED each round."
+  },
+  p124: {
+    id: "p124",
+    type: "passive",
+    name: "Seal of Padma",
+    price: 16,
+    description: "All non-boss DAMNED are bipolar: they have two PERSONALITIES at once and guess the average of both. An effect that changes a PERSONALITY changes only one of the two. A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY. Cannot be upgraded."
+  },
+  p125: {
+    id: "p125",
+    type: "passive",
+    name: "Seal of Petros-Pavlos",
+    price: 16,
+    description: "Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. Converted amounts are not converted again. ELITE gives +1 free MEMORY or BOUNTY with every conversion each level."
+  },
+  p126: {
+    id: "p126",
+    type: "passive",
+    name: "Seal of Serafeim",
+    price: 16,
+    description: "Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both."
+  },
+  p127: {
+    id: "p127",
+    type: "passive",
+    name: "Seal of Threon",
+    price: 16,
+    description: "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
+  },
+  p128: {
+    id: "p128",
+    type: "passive",
+    name: "Seal of Dantre",
+    price: 16,
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p111: {
     id: "p111",
@@ -1416,7 +1472,15 @@ const PASSIVE_IDS = [
   "p117",
   "p118",
   "p119",
-  "p120"
+  "p120",
+  "p121",
+  "p122",
+  "p123",
+  "p124",
+  "p125",
+  "p126",
+  "p127",
+  "p128"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1442,12 +1506,22 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p66",
   "p81",
   "p82",
-  "p83"
+  "p83",
+  // effects moved to boss seals (Petros-Pavlos, Serafeim, Threon, Dantre); demons free for new SEALS
+  "p10",
+  "p25",
+  "p55",
+  "p69"
 ]);
+// the seven archangel SEALS (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
+// the Boss SEALS, named after the eight unique BOSSES
+const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
+// SEALS that can never get an ELITE upgrade (the self-stacking ones, plus Kalha and Padma)
+const NON_UPGRADABLE_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109", "p122", "p124"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
 // former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
-const SPECIAL_SEAL_IDS = new Set(["p55", "p69"]);
+const SPECIAL_SEAL_IDS = new Set();
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
@@ -1591,13 +1665,23 @@ const SEAL_SIGILS = {
   p89: "044_Marax.png",
   p90: "020_Bifrons.png",
   p91: "003_Aim.png",
-  p92: "dev/DantreSeal.png",
-  p93: "dev/ZilonSeal.png",
-  p94: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
-  p95: "dev/PyrosSeal.png",
-  p96: "dev/PadmaSeal.png",
-  p97: "dev/ThreonSeal.png",
-  p110: "dev/PetrosPavlosSeal.png",
+  // archangel SEALS (old boss-seal effects); the Dev art below is now used by the Boss SEALS
+  p92: "archangel seals/Cassiel-Pentagram.png",
+  p93: "archangel seals/Zachriel-Triangle.png",
+  p94: "archangel seals/Aggiel-Hexagram.png",
+  p95: "archangel seals/Samael-Star.png",
+  p96: "archangel seals/Samael-Triangle.png",
+  p97: "archangel seals/Cassiel-Sigil.png",
+  p110: "archangel seals/Cassiel-Hexagram.png",
+  // Boss SEALS
+  p121: "dev/ZilonSeal.png",
+  p122: "dev/KalhaSeal.png",
+  p123: "dev/PyrosSeal.png",
+  p124: "dev/PadmaSeal.png",
+  p125: "dev/PetrosPavlosSeal.png",
+  p126: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
+  p127: "dev/ThreonSeal.png",
+  p128: "dev/DantreSeal.png",
   p111: "satan/lucifer-wide.png",
   // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
   p98: "saturn/Saturn-Pentacle-01.png",
@@ -3325,7 +3409,7 @@ function mimicEntry() {
 
 function availableMimicTargets() {
   return state.player.passives.filter(
-    (item) => item && item.id !== "p28" && !REMOVED_PASSIVE_IDS.has(item.id) && !isSelfStackingSeal(item.id)
+    (item) => item && item.id !== "p28" && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id)
   );
 }
 
@@ -3351,7 +3435,7 @@ function mimicTargetEntry() {
           item.id === mimic.copiedPassiveId &&
           item.id !== "p28" &&
           !REMOVED_PASSIVE_IDS.has(item.id) &&
-          !isSelfStackingSeal(item.id)
+          !isNonUpgradableSeal(item.id)
       )
     : null;
   return target || chooseMimicTarget(mimic);
@@ -3491,7 +3575,9 @@ function botBossBounty(bot) {
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
-  return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus);
+  // Seal of Zilon already turned part of it into BOUNTY (bossBountyConverted)
+  const converted = Math.max(0, Math.ceil(bot.bossBountyConverted || 0));
+  return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
 function botRegularBounty(bot) {
@@ -3528,7 +3614,9 @@ function botRegularBountyPayoutDetails(bot, markTriggers = false) {
     applyMultiplier(2 * passivePower("p45"), ITEMS.p45?.name || "Seal of Crocell", "p45");
   }
   if (bot.revealedByPassive && passiveStack("p64")) {
-    applyMultiplier(revealedBountyMultiplier("p64"), ITEMS.p64?.name || "Seal of Vine", "p64");
+    for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+      applyMultiplier(revealedBountyMultiplier("p64"), ITEMS.p64?.name || "Seal of Vine", "p64");
+    }
   }
   if ((bot.memory?.length || 0) >= 8 && passiveStack("p67")) {
     applyMultiplier(memoryBountyMultiplier("p67"), ITEMS.p67?.name || "Seal of Caim", "p67");
@@ -3609,41 +3697,48 @@ function reduceBotMemoryRecord(bot, amount) {
 function applyMemoryToBountyMirror(bot, amount, options = {}) {
   const memoriesAdded = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || memoriesAdded <= 0) return;
-  const entry = orderedPassiveEffectEntries("p10")[0];
+  const entry = orderedPassiveEffectEntries("p125")[0];
   if (!entry) return;
-  const baseConverted = Math.floor(memoriesAdded / 2);
-  const converted = baseConverted > 0 ? Math.min(memoriesAdded, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  const converted = Math.min(memoriesAdded, Math.floor(memoriesAdded / 2));
   if (converted <= 0) return;
+  // ELITE: every conversion also gives +1 free BOUNTY per level (it is not taken from MEMORY)
+  const free = passiveEntryEliteLevels(entry);
   bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
   reduceBotMemoryRecord(bot, converted);
-  recordBotMemoryLoss(bot, converted, "Seal of Gusion");
+  recordBotMemoryLoss(bot, converted, ITEMS.p125.name);
   markPassiveEntryTriggered(entry);
-  changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
-    source: "Seal of Gusion",
-    triggerMemoryBountyMirror: false
-  });
+  changeBotSin(
+    bot,
+    converted + free,
+    `${ITEMS.p125.name} converted ${converted} MEMORY from ${bot.name} into ${converted + free} BOUNTY.`,
+    {
+      source: ITEMS.p125.name,
+      triggerMemoryBountyMirror: false
+    }
+  );
 }
 
 function applyBountyToMemoryMirror(bot, amount, options = {}) {
   const bountyGained = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || bountyGained <= 0) return;
-  const entry = orderedPassiveEffectEntries("p10")[0];
+  const entry = orderedPassiveEffectEntries("p125")[0];
   if (!entry) return;
-  const baseConverted = Math.floor(bountyGained / 2);
-  const converted = baseConverted > 0 ? Math.min(bountyGained, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  const converted = Math.min(bountyGained, Math.floor(bountyGained / 2));
   if (converted <= 0) return;
   markPassiveEntryTriggered(entry);
   const result = changeBotSin(bot, -converted, "", {
-    source: "Seal of Gusion",
+    source: ITEMS.p125.name,
     triggerMemoryBountyMirror: false,
     triggerLossDamage: false
   });
   if (result.lost <= 0) return;
-  const added = addBotMemory(bot, result.lost, "", {
-    source: "Seal of Gusion",
+  // ELITE: every conversion also gives +1 free MEMORY per level (it is not taken from BOUNTY)
+  const free = passiveEntryEliteLevels(entry);
+  const added = addBotMemory(bot, result.lost + free, "", {
+    source: ITEMS.p125.name,
     triggerMemoryBountyMirror: false
   });
-  addRoundEvent(`Seal of Gusion converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
+  addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
 function memoryRoundLimit() {
@@ -3668,21 +3763,42 @@ function sitriExcessMemoryDamage(entry) {
   return doubledStackValue(entry, 10);
 }
 
+// Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
-  orderedPassiveEffectEntries("p55").forEach((entry) => {
-    if (bot.eliminated) return;
-    const damage = excess * sitriExcessMemoryDamage(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamage(
-      bot,
-      damage,
-      `${ITEMS.p55.name} converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
-      ITEMS.p55.name
-    );
+  const entries = orderedPassiveEffectEntries("p127");
+  if (!entries.length) return;
+  bot.memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0)) + excess;
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+}
+
+function applyMemoryOverflowDamage() {
+  const entries = orderedPassiveEffectEntries("p127");
+  state.bots.forEach((bot) => {
+    const overflow = Math.max(0, Math.ceil(bot?.memoryOverflow || 0));
+    if (!bot || overflow <= 0) return;
+    bot.memoryOverflow = 0;
+    if (bot.eliminated || bot.hp <= 0) return;
+    entries.forEach((entry) => {
+      if (bot.eliminated) return;
+      const damage = overflow * sitriExcessMemoryDamage(entry);
+      if (damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      damageBot(
+        bot,
+        damage,
+        `${ITEMS.p127.name} removed ${overflow} excess MEMORY from ${bot.name} and dealt ${damage} damage.`,
+        ITEMS.p127.name
+      );
+    });
   });
+}
+
+// Seal of Zilon: share of a BOSS BOUNTY that turns into regular BOUNTY (the rest is spread among the DAMNED)
+function zilonConversionPercent(idOrItem) {
+  return 40 + 5 * eliteLevels(idOrItem);
 }
 
 function addBotMemory(bot, count, reason = "", options = {}) {
@@ -4285,7 +4401,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p63" && bot.revealedByPassive) {
-        applyFlatBonus(revealedExtraDamage(entry), ITEMS.p63?.name || "Seal of Vual", entry);
+        applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
         return;
       }
 
@@ -4309,7 +4425,11 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p75") {
-        if (bot.revealedByPassive) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
+        if (bot.revealedByPassive) {
+          for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+            applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
+          }
+        }
         return;
       }
 
@@ -4330,7 +4450,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p78") {
-        if (personalityType(bot) === "Stubborn") {
+        for (let i = 0; i < personalityCount(bot, "Stubborn"); i += 1) {
           applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p78?.name, entry);
         }
         return;
@@ -4486,7 +4606,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p55", "p64", "p65", "p69", "p75", "p95", "p112", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -4500,9 +4620,9 @@ function itemDescription(item) {
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
   if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
-  if (item.id === "p10") {
+  if (item.id === "p125") {
     const bonus = eliteLevels(item);
-    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down${bonus ? `, plus ${bonus} extra when it triggers` : ""}.`;
+    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. Converted amounts are not converted again${bonus ? `. Every conversion also gives +${bonus} free MEMORY or BOUNTY` : ""}.`;
   }
   if (item.id === "p11") {
     return `When a DAMNED dies, gain ${stack} random ARTIFACT${stack === 1 ? "" : "S"} with 0 sell value if you have room.`;
@@ -4530,7 +4650,7 @@ function itemDescription(item) {
   if (item.id === "p22") return `Avoid 20% of damage you would take in a round, rounded down. The avoided damage becomes ${doubledStackPower(item)}x MEMORY for the living DAMNED with the most MEMORY.`;
   if (item.id === "p23") return `New non-boss DAMNED have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 BOUNTY.`;
   if (item.id === "p24") return `You can use only one ARTIFACT per round. All DAMNED pay ${bountyOathMultiplierForItem(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
-  if (item.id === "p25") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
+  if (item.id === "p126") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
   if (item.id === "p26") return `Using two matching ARTIFACTS in a round deals ${twinDetonatorDamage(item)} damage to all DAMNED.`;
   if (item.id === "p27") return `Every ARTIFACT triggers one outcome: gain ${reactiveWarrantySin(item)} SIN, deal ${reactiveWarrantyDamage(item)} damage to a random DAMNED, or refund its purchase cost.`;
   if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-HEALTH DAMNED.`;
@@ -4567,8 +4687,8 @@ function itemDescription(item) {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
     return `When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes ${multiplier}x that damage.`;
   }
-  if (item.id === "p55") {
-    return `Each excess MEMORY becomes ${sitriExcessMemoryDamage(item)} damage to that DAMNED.`;
+  if (item.id === "p127") {
+    return `Excess MEMORY that would be added to a DAMNED becomes ${sitriExcessMemoryDamage(item)} damage per excess MEMORY to that DAMNED.`;
   }
   if (item.id === "p56") {
     return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
@@ -4602,8 +4722,13 @@ function itemDescription(item) {
   if (item.id === "p68") {
     return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
-  if (item.id === "p69") {
-    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
+  if (item.id === "p128") {
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
+  }
+  if (item.id === "p121") return `${zilonConversionPercent(item)}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.`;
+  if (item.id === "p123") {
+    const reveals = 1 + eliteLevels(item);
+    return `At the start of every round, reveal ${reveals === 1 ? "one DAMNED" : `${reveals} DAMNED`}, even ones that are already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack.`;
   }
   if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
   if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
@@ -4952,7 +5077,7 @@ function shopTax(item = null) {
 }
 
 function shopPrice(item) {
-  const duplicateMultiplier = item.type === "passive" && !isSelfStackingSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
+  const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
   const discountedPrice = item.type === "passive" ? Math.max(0, taxedPrice - passiveShopDiscount()) : taxedPrice;
@@ -5201,6 +5326,12 @@ function isSelfStackingSeal(idOrItem) {
   return SELF_STACKING_SEAL_IDS.has(id);
 }
 
+// SEALS that can never be upgraded to ELITE: the self-stacking ones plus Kalha and Padma
+function isNonUpgradableSeal(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return NON_UPGRADABLE_SEAL_IDS.has(id);
+}
+
 function selfStackingSpec(idOrItem) {
   const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   return SELF_STACKING_SEAL_SPECS[id] || null;
@@ -5318,23 +5449,27 @@ function applyPendingSelfStackingPentakillDamage() {
 
 function applySelfStackingRevealedDeath(bot) {
   if (!bot?.revealedByPassive) return;
-  const damage = triggerSelfStackingSeal("p102");
-  if (damage <= 0) return;
-  const targets = adjacentLivingBots(bot);
-  if (!targets.length) return;
-  queueEndOfRoundBotDamages(
-    targets,
-    damage,
-    (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
-    ITEMS.p102.name
-  );
+  // once per reveal stack (Seal of Pyros)
+  for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+    const damage = triggerSelfStackingSeal("p102");
+    if (damage <= 0) continue;
+    const targets = adjacentLivingBots(bot);
+    if (!targets.length) continue;
+    queueEndOfRoundBotDamages(
+      targets,
+      damage,
+      (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
+      ITEMS.p102.name
+    );
+  }
 }
 
 function applySelfStackingStubbornDeath(bot) {
-  if (personalityType(bot) !== "Stubborn") return;
-  const damage = triggerSelfStackingSeal("p109");
+  const stubbornParts = personalityCount(bot, "Stubborn");
+  if (!stubbornParts) return;
+  const damage = triggerSelfStackingSeal("p109") * stubbornParts;
   if (damage <= 0) return;
-  const targets = activeBots().filter((target) => personalityType(target) !== "Stubborn");
+  const targets = activeBots().filter((target) => !hasPersonality(target, "Stubborn"));
   if (!targets.length) return;
   queueEndOfRoundBotDamages(
     targets,
@@ -6196,11 +6331,11 @@ function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
 }
 
 function activeInventoryLimit() {
-  return ACTIVE_LIMIT + baseEditionBonus("p25");
+  return ACTIVE_LIMIT + baseEditionBonus("p126");
 }
 
 function activeUseLimit() {
-  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p25");
+  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p126");
 }
 
 function bountyOathMultiplier() {
@@ -6339,18 +6474,61 @@ function personalityType(bot) {
   return bot.type || "";
 }
 
+// ---- Seal of Padma: every non-boss DAMNED is bipolar (two PERSONALITIES at once) ----
+// The first personality is bot.type (with anchor/aggression/noise), the second one bot.type2 (anchor2, ...).
+// Effects that look for a personality see both; a doubled personality (STUBBORN + STUBBORN) is hit twice.
+function padmaActive() {
+  return Boolean(passiveStack("p124"));
+}
+
+function personalityTypes(bot) {
+  if (!bot || bot.isBoss || !bot.type) return [];
+  return padmaActive() && bot.type2 ? [bot.type, bot.type2] : [bot.type];
+}
+
+function personalityCount(bot, type) {
+  return personalityTypes(bot).filter((entry) => entry === type).length;
+}
+
+function hasPersonality(bot, type) {
+  return personalityCount(bot, type) > 0;
+}
+
+function sharesPersonality(left, right) {
+  const rightTypes = personalityTypes(right);
+  return personalityTypes(left).some((type) => rightTypes.includes(type));
+}
+
+function ensureBipolarBot(bot) {
+  if (!padmaActive() || !bot || bot.isBoss || bot.eliminated || bot.type2) return;
+  const pool = passiveStack("p89")
+    ? BOT_ARCHETYPES.filter((archetype) => ["Analyst", "Stubborn"].includes(archetype.type))
+    : BOT_ARCHETYPES;
+  const different = pool.filter((archetype) => archetype.type !== bot.type);
+  const archetype = randomFrom(different.length ? different : pool);
+  bot.type2 = archetype.type;
+  bot.color2 = archetype.color;
+  bot.anchor2 = clamp(archetype.anchor + randomInt(-8, 8), 0, 100);
+  bot.aggression2 = archetype.aggression;
+  bot.noise2 = archetype.noise;
+}
+
+function syncBipolarBots() {
+  if (!padmaActive()) return;
+  state.bots.forEach((bot) => ensureBipolarBot(bot));
+}
+
 function samePersonalityBots(bot) {
-  const type = personalityType(bot);
-  if (!type) return [];
-  return activeBots().filter((candidate) => candidate.id !== bot?.id && personalityType(candidate) === type);
+  if (!personalityTypes(bot).length) return [];
+  return activeBots().filter((candidate) => candidate.id !== bot?.id && sharesPersonality(candidate, bot));
 }
 
 function mostPrevalentPersonality() {
   const counts = new Map();
   activeBots().forEach((bot) => {
-    const type = personalityType(bot);
-    if (!type) return;
-    counts.set(type, (counts.get(type) || 0) + 1);
+    personalityTypes(bot).forEach((type) => {
+      counts.set(type, (counts.get(type) || 0) + 1);
+    });
   });
   const bestCount = Math.max(0, ...Array.from(counts.values()));
   const best = Array.from(counts.entries())
@@ -6372,19 +6550,37 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
   });
 }
 
-function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
-  if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
+// With Seal of Padma a change alters only ONE of the two personalities: the first one that would actually
+// change (Analyst + Stubborn told to become Stubborn turns Analyst into Stubborn). `slot` forces a part.
+function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null, slot = null } = {}) {
+  if (!bot || bot.isBoss || bot.eliminated || !type) return false;
+  const types = personalityTypes(bot);
+  let index = slot;
+  if (index === null) {
+    index = types.length ? types.findIndex((current) => current !== type) : 0;
+    if (index < 0) return false;
+  } else if (types[index] === type) {
+    return false;
+  }
   const archetype = archetypeByType(type);
   // changes made while READY resolves the round are shown at their SEAL's step of the seal animation
   if (state.roundState?.penaltiesApplied && source) {
     bot.personalityChanges = bot.personalityChanges || [];
-    bot.personalityChanges.push({ from: personalityType(bot) || bot.type, to: archetype.type, source });
+    bot.personalityChanges.push({ from: types[index] || bot.type, to: archetype.type, source, slot: index });
   }
-  bot.type = archetype.type;
-  bot.color = archetype.color;
-  bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
-  bot.aggression = archetype.aggression;
-  bot.noise = archetype.noise;
+  if (index === 1) {
+    bot.type2 = archetype.type;
+    bot.color2 = archetype.color;
+    bot.anchor2 = clamp(Math.ceil((bot.anchor2 || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
+    bot.aggression2 = archetype.aggression;
+    bot.noise2 = archetype.noise;
+  } else {
+    bot.type = archetype.type;
+    bot.color = archetype.color;
+    bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
+    bot.aggression = archetype.aggression;
+    bot.noise = archetype.noise;
+  }
   if (markEntry) markPassiveEntryTriggered(markEntry);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
@@ -6399,9 +6595,12 @@ function enforceTwinTemperPersonalities() {
   const entries = orderedPassiveEffectEntries("p89");
   if (!entries.length) return;
   activeBots().forEach((bot) => {
-    if (["Analyst", "Stubborn"].includes(personalityType(bot))) return;
-    const entry = entries[0];
-    setBotPersonality(bot, allowedTwinTemperType(), passiveName("p89", "Seal of Marax"), { markEntry: entry });
+    // every part of a bipolar DAMNED has to be Analyst or Stubborn
+    personalityTypes(bot).forEach((current, slot) => {
+      if (["Analyst", "Stubborn"].includes(current)) return;
+      const entry = entries[0];
+      setBotPersonality(bot, allowedTwinTemperType(), passiveName("p89", "Seal of Marax"), { markEntry: entry, slot });
+    });
   });
 }
 
@@ -6411,7 +6610,7 @@ function applyForcedDoctrineEndRound() {
   const prevalent = mostPrevalentPersonality();
   if (!prevalent) return;
   entries.forEach((entry) => {
-    const targets = activeBots().filter((bot) => personalityType(bot) !== prevalent);
+    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== prevalent));
     if (!targets.length) return;
     const target = randomFrom(targets);
     setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
@@ -6425,17 +6624,17 @@ function applyFixedWillEndRound() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const name = passiveName("p107", "Seal of Ose");
-    const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== "Stubborn"));
     if (targets.length) {
       const target = randomFrom(targets);
       setBotPersonality(target, "Stubborn", name, { markEntry: entry });
     }
     const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
     if (eliteDamage <= 0) return;
-    const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
+    const stubbornTargets = activeBots().filter((bot) => hasPersonality(bot, "Stubborn"));
     if (!stubbornTargets.length) return;
     markPassiveEntryTriggered(entry);
-    damageBots(stubbornTargets, eliteDamage, (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
+    damageBots(stubbornTargets, (bot) => eliteDamage * personalityCount(bot, "Stubborn"), (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
   });
 }
 
@@ -6908,13 +7107,13 @@ function drawActiveShopItem() {
 function drawPassiveShopItem(eliteBoosted = false) {
   // locked SEALS (see SEAL_UNLOCKS in 09-collection.js) never show up until unlocked
   const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && !isSealLocked(id));
-  const availablePool = passivePool.filter((id) => !isSelfStackingSeal(id) || directPassiveStack(id) === 0);
-  const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isSelfStackingSeal(id));
+  const availablePool = passivePool.filter((id) => !isNonUpgradableSeal(id) || directPassiveStack(id) === 0);
+  const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isNonUpgradableSeal(id));
   const freshPassives = availablePool.filter((id) => directPassiveStack(id) === 0);
   const eliteChance = eliteShopChance(eliteBoosted);
   const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
-  if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isSelfStackingSeal(id)));
+  if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isNonUpgradableSeal(id)));
   return { item: itemCopy(randomFrom(choices)), sold: false };
 }
 
@@ -7333,6 +7532,7 @@ function beginRound() {
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
+    pyrosRevealsDone: 0,
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
@@ -7384,8 +7584,11 @@ function beginRound() {
     bot.markedByPlayer = false;
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
+    bot.revealStacks = 0;
+    bot.memoryOverflow = 0;
   });
 
+  syncBipolarBots();
   enforceTwinTemperPersonalities();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
@@ -7406,6 +7609,43 @@ function beginRound() {
   applyGuessReveals();
   applyRevealPoisonCounters();
   ensureSitriHost();
+  applyZilonBossBounty();
+}
+
+// Seal of Zilon: a share of every BOSS's BOSS BOUNTY (40%, ELITE +5% each level) becomes regular BOUNTY on that
+// BOSS; the rest is dealt out one SIN at a time to random other DAMNED. Runs at the start of every round and only
+// moves BOSS BOUNTY that has not been converted yet (bossBountyConverted).
+function applyZilonBossBounty() {
+  const entries = orderedPassiveEffectEntries("p121");
+  if (!state.roundState || !entries.length) return;
+  const name = ITEMS.p121.name;
+  entries.forEach((entry) => {
+    const percent = Math.min(100, zilonConversionPercent(entry));
+    activeBots()
+      .filter((bot) => bot.isBoss && !bot.immortal)
+      .forEach((boss) => {
+        const available = botBossBounty(boss);
+        if (available <= 0) return;
+        const converted = Math.floor((available * percent) / 100);
+        const rest = available - converted;
+        boss.bossBountyConverted = Math.max(0, Math.ceil(boss.bossBountyConverted || 0)) + available;
+        markPassiveEntryTriggered(entry);
+        if (converted > 0) changeBotSin(boss, converted, "", { source: name });
+        const others = activeBots().filter((bot) => bot.id !== boss.id && !bot.immortal);
+        const gains = new Map();
+        for (let index = 0; index < rest; index += 1) {
+          const target = others.length ? randomFrom(others) : boss;
+          gains.set(target.id, (gains.get(target.id) || 0) + 1);
+        }
+        gains.forEach((amount, id) => {
+          const target = state.bots.find((bot) => bot.id === id);
+          if (target) changeBotSin(target, amount, "", { source: name });
+        });
+        addRoundEvent(
+          `${name} turned ${converted} of ${boss.name}'s ${available} BOSS BOUNTY into BOUNTY and spread ${rest} among the other DAMNED.`
+        );
+      });
+  });
 }
 
 function applyMarkedProspect() {
@@ -7684,7 +7924,7 @@ function planBossGuess(bot) {
 }
 
 function clampFixedWillGuess(bot, guess) {
-  if (!passiveStack("p107") || personalityType(bot) !== "Stubborn") return guess;
+  if (!passiveStack("p107") || !hasPersonality(bot, "Stubborn")) return guess;
   const previousGuess = bot?.memory?.slice().reverse().find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
   if (!Number.isFinite(previousGuess)) return guess;
   return clamp(guess, previousGuess - 2, previousGuess + 2);
@@ -7692,13 +7932,29 @@ function clampFixedWillGuess(bot, guess) {
 
 function planBotGuess(bot) {
   if (bot.isBoss) return planBossGuess(bot);
+  // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
+  const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
+  if (padmaActive() && bot.type2) {
+    personas.push({
+      type: bot.type2,
+      anchor: bot.anchor2 ?? bot.anchor,
+      aggression: bot.aggression2 ?? bot.aggression,
+      noise: bot.noise2 ?? bot.noise
+    });
+  }
+  const guesses = personas.map((persona) => planPersonaGuess(bot, persona));
+  const guess = guesses.reduce((sum, value) => sum + value, 0) / guesses.length;
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+}
 
+// one personality's guess (before the STUBBORN clamp and rounding)
+function planPersonaGuess(bot, persona) {
   const memory = bot.memory;
   const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
   let guess;
 
   if (!memory.length) {
-    guess = bot.anchor + randomInt(-12, 12);
+    guess = persona.anchor + randomInt(-12, 12);
   } else {
     const last = memory[memory.length - 1];
     const prev = memory[memory.length - 2] || last;
@@ -7707,33 +7963,33 @@ function planBotGuess(bot) {
     const trend = lastTarget - prevTarget;
     const tablePull = Number.isFinite(last.tableAverage) ? last.tableAverage * currentModifier : lastTarget;
 
-    if (bot.type === "Analyst") {
-      guess = lastTarget + trend * 0.45 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Follower") {
-      guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Stubborn") {
-      guess = bot.anchor * 0.72 + lastTarget * 0.28 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Drifter") {
-      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-bot.noise * 2, bot.noise * 2);
-    } else if (bot.type === "Caller") {
-      guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-bot.noise, bot.noise);
+    if (persona.type === "Analyst") {
+      guess = lastTarget + trend * 0.45 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Follower") {
+      guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Stubborn") {
+      guess = persona.anchor * 0.72 + lastTarget * 0.28 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Drifter") {
+      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-persona.noise * 2, persona.noise * 2);
+    } else if (persona.type === "Caller") {
+      guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-persona.noise, persona.noise);
     } else {
-      guess = bot.anchor * 0.42 + lastTarget * 0.58 + randomInt(-bot.noise, bot.noise);
+      guess = persona.anchor * 0.42 + lastTarget * 0.58 + randomInt(-persona.noise, persona.noise);
     }
 
     if (bot.isBoss) guess = guess * 0.82 + lastTarget * 0.18;
   }
 
-  if (Math.random() < bot.aggression * 0.62) {
+  if (Math.random() < persona.aggression * 0.62) {
     const direction = Math.random() < 0.5 ? -1 : 1;
     guess += direction * randomInt(5, 16);
   }
 
-  if (Math.random() < bot.aggression * 0.09) {
+  if (Math.random() < persona.aggression * 0.09) {
     guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
   }
 
-  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+  return guess;
 }
 
 function bossRevealAllowedBySeals() {
@@ -7742,6 +7998,21 @@ function bossRevealAllowedBySeals() {
 
 function revealedDamnedCount() {
   return activeBots().filter((bot) => bot.revealedByPassive).length;
+}
+
+// Seal of Pyros: DAMNED can be revealed more than once a round; every reveal adds a reveal stack
+function pyrosActive() {
+  return Boolean(passiveStack("p123"));
+}
+
+function revealStacks(bot) {
+  return bot?.revealedByPassive ? Math.max(1, Math.ceil(bot.revealStacks || 1)) : 0;
+}
+
+// how many times effects that target revealed DAMNED affect this DAMNED (one per reveal stack with Pyros)
+function revealMultiplicity(bot) {
+  if (!bot?.revealedByPassive) return 0;
+  return pyrosActive() ? revealStacks(bot) : 1;
 }
 
 function canRevealBotGuess(bot, options = {}) {
@@ -7754,16 +8025,19 @@ function canRevealBotGuess(bot, options = {}) {
 function revealBotGuess(bot, source = "", entry = null, options = {}) {
   if (!canRevealBotGuess(bot, options)) return false;
   const wasRevealed = Boolean(bot.revealedByPassive);
+  const stacked = wasRevealed && pyrosActive();
   bot.revealedByPassive = true;
+  bot.revealStacks = wasRevealed ? Math.max(1, Math.ceil(bot.revealStacks || 1)) + (stacked ? 1 : 0) : 1;
   state.roundState?.revealedBotIds?.add(bot.id);
-  if (entry && !wasRevealed) markPassiveEntryTriggered(entry);
+  if (entry && (!wasRevealed || stacked)) markPassiveEntryTriggered(entry);
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
+  if (source && stacked) addRoundEvent(`${source} revealed ${bot.name}'s guess again (x${bot.revealStacks}).`);
   if (!wasRevealed) {
     orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
       setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
     });
   }
-  return !wasRevealed;
+  return !wasRevealed || stacked;
 }
 
 function applyHighMemoryReveals() {
@@ -7795,8 +8069,25 @@ function applyGuessReveals() {
   newlyRevealed.forEach((bot) => {
     revealBotGuess(bot);
   });
+  applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+// Seal of Pyros: at the start of every round it reveals one DAMNED (ELITE: +1 each level), chosen from ALL
+// DAMNED, including ones that are already revealed (they gain a reveal stack). Done once per round.
+function applyPyrosStartReveals(revealableBots) {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p123");
+  if (!round || !entries.length) return;
+  const owed = entries.reduce((sum, entry) => sum + 1 + passiveEntryEliteLevels(entry), 0);
+  const done = Math.max(0, Math.ceil(round.pyrosRevealsDone || 0));
+  round.pyrosRevealsDone = Math.max(done, owed);
+  for (let index = done; index < owed; index += 1) {
+    const candidates = revealableBots.filter((bot) => canRevealBotGuess(bot));
+    if (!candidates.length) return;
+    revealBotGuess(randomFrom(candidates), passiveName("p123", "Seal of Pyros"), entries[0]);
+  }
 }
 
 function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntries("p59")) {
@@ -7805,13 +8096,16 @@ function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntr
   entries.forEach((entry) => {
     let triggered = false;
     revealedBots.forEach((bot) => {
-      const key = `${entry.sourceId || entry.id}:${bot.id}`;
-      if (round.amonRewardKeys.has(key)) return;
-      round.amonRewardKeys.add(key);
-      const bounty = passiveEntryScaledValue(entry, 2);
-      const bountyResult = changeBotSin(bot, bounty, "", { source: ITEMS.p59?.name || "Seal of Amon" });
-      const memoryAdded = addBotMemory(bot, 2, "", { source: ITEMS.p59?.name || "Seal of Amon" });
-      if (bountyResult.gained > 0 || memoryAdded > 0) triggered = true;
+      // one reward per reveal stack (Seal of Pyros)
+      for (let stack = 1; stack <= revealMultiplicity(bot); stack += 1) {
+        const key = `${entry.sourceId || entry.id}:${bot.id}:${stack}`;
+        if (round.amonRewardKeys.has(key)) continue;
+        round.amonRewardKeys.add(key);
+        const bounty = passiveEntryScaledValue(entry, 2);
+        const bountyResult = changeBotSin(bot, bounty, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+        const memoryAdded = addBotMemory(bot, 2, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+        if (bountyResult.gained > 0 || memoryAdded > 0) triggered = true;
+      }
     });
     if (triggered) {
       markPassiveEntryTriggered(entry);
@@ -7829,7 +8123,7 @@ function applyRevealPoisonCounters() {
   entries.forEach((entry) => {
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
-      bot.poisonCounters = (bot.poisonCounters || 0) + 1;
+      bot.poisonCounters = (bot.poisonCounters || 0) + revealMultiplicity(bot);
     });
   });
   round.roundEvents.push(`Seal of Vepar added poison to ${targets.map((bot) => bot.name).join(", ")}.`);
@@ -7929,8 +8223,13 @@ function applyDevSealEntries(ids) {
       const targets = devSealTargetDamned().filter((bot) => bot.revealedByPassive);
       let total = 0;
       targets.forEach((bot) => {
-        const damage = Math.ceil(bot.hp * 0.5);
-        total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+        // once per reveal stack (Seal of Pyros): each time it takes half of the HEALTH it has left
+        let left = bot.hp;
+        for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+          const damage = Math.ceil(left * 0.5);
+          left -= damage;
+          total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+        }
       });
       addRoundEvent(total > 0 ? `${source} queued ${total} total damage to revealed DAMNED.` : `${source} found no revealed DAMNED.`);
       return;
@@ -7940,7 +8239,7 @@ function applyDevSealEntries(ids) {
       let changed = 0;
       let vulnerable = 0;
       devSealTargetDamned().forEach((bot) => {
-        if (personalityType(bot) === "Stubborn") {
+        if (hasPersonality(bot, "Stubborn")) {
           round.padmaVulnerableBotIds?.add(bot.id);
           vulnerable += 1;
           return;
@@ -8425,7 +8724,7 @@ function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) 
     revealedDamageSources.forEach(({ bot: sourceBot, damage }) => {
       const targets = adjacentLivingBots(sourceBot);
       if (!targets.length) return;
-      const echoedDamage = passiveEntryFlatDamage(entry, damage);
+      const echoedDamage = passiveEntryFlatDamage(entry, damage) * revealMultiplicity(sourceBot);
       targets.forEach((bot) => {
         addPendingBotDamage(botDamages, botDamageSources, bot, echoedDamage, "Seal of Zepar", false);
       });
@@ -8479,7 +8778,7 @@ function applyAstarothRevealedTargetDifferenceEcho(entry) {
   let triggered = false;
   sources.forEach((sourceBot) => {
     const baseDamage = Math.max(0, Math.ceil(round.targetDifferenceDamageByBotId?.get(sourceBot.id) || 0));
-    const damage = passiveEntryFlatDamage(entry, baseDamage);
+    const damage = passiveEntryFlatDamage(entry, baseDamage) * revealMultiplicity(sourceBot);
     const targets = adjacentLivingBots(sourceBot);
     if (!targets.length || damage <= 0) return;
     if (!triggered) {
@@ -8580,7 +8879,9 @@ function applyPenalties() {
 
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
-  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
+  const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
+  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
   if (playerCritThisRound) {
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
@@ -8622,8 +8923,8 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && passiveStack("p69")) {
-          markPassiveTriggered("p69");
+        if (hitter.kind === "bot" && passiveStack("p128")) {
+          markPassiveTriggered("p128");
           eligosBlockedCritical = true;
           return;
         }
@@ -8641,7 +8942,7 @@ function applyPenalties() {
       }
     });
   });
-  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p69.name} blocked DAMNED CRITICAL damage against you.`);
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -8801,7 +9102,8 @@ function getParticipants() {
 }
 
 function criticalDamageForVictim(hitter, victim) {
-  if (hitter.key === "player") {
+  // Seal of Dantre: a DAMNED's CRITICAL deals your CRITICAL damage (with every bonus your SEALS give it)
+  if (hitter.key === "player" || (hitter.kind === "bot" && passiveStack("p128"))) {
     return playerCriticalDamageTotal(victim);
   }
   return maxHealthCriticalDamageForVictim(victim);
@@ -8882,7 +9184,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player") return "10% max HEALTH";
+  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max HEALTH";
   const flatBonus = playerCriticalFlatBonus();
   const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
@@ -8902,10 +9204,10 @@ function findCriticalHits() {
 
 function applyEligosCriticalReward(hitter) {
   if (hitter.kind !== "bot") return;
-  orderedPassiveEffectEntries("p69").forEach((entry) => {
+  orderedPassiveEffectEntries("p128").forEach((entry) => {
     markPassiveEntryTriggered(entry);
-    const gained = gainCredits(passiveEntryScaledValue(entry, 1), true, ITEMS.p69.name);
-    state.roundState.roundEvents.push(`${ITEMS.p69.name} paid ${gained} SIN for ${hitter.name}'s CRITICAL.`);
+    const gained = gainCredits(passiveEntryScaledValue(entry, 1), true, ITEMS.p128.name);
+    state.roundState.roundEvents.push(`${ITEMS.p128.name} paid ${gained} SIN for ${hitter.name}'s CRITICAL.`);
   });
 }
 
@@ -8965,7 +9267,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
-    state.roundState.eliminatedPersonalities.push(personalityType(bot));
+    personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
@@ -9118,6 +9420,23 @@ function checkRoundPentakillBonus() {
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
+  applyKalhaPentakillUpgrade();
+}
+
+// Seal of Kalha: every PENTAKILL gives a random SEAL you own an ELITE upgrade (never one that cannot be upgraded)
+function applyKalhaPentakillUpgrade() {
+  orderedPassiveEffectEntries("p122").forEach((entry) => {
+    const choices = state.player.passives.filter(
+      (item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id)
+    );
+    if (!choices.length) return;
+    const target = randomFrom(choices);
+    target.stack = (target.stack || 1) + 1;
+    recordEliteLevelBought(target.id, target.stack);
+    markPassiveEntryTriggered(entry);
+    state.roundState.roundEvents.push(`${ITEMS.p122.name} upgraded ${target.name} to ${passiveDisplayName(target)}.`);
+    addLog(`${ITEMS.p122.name} upgraded ${target.name} to ${passiveDisplayName(target)}.`);
+  });
 }
 
 function applyKillRuleHealing(bot) {
@@ -9419,9 +9738,9 @@ function applyEliminationPassives(bot) {
     }
 
     if (entry.id === "p108") {
-      if (personalityType(bot) !== "Stubborn") return;
+      if (!hasPersonality(bot, "Stubborn")) return;
       const targets = activeBots().filter((target) => target.isBoss);
-      const damage = passiveEntryFlatDamage(entry, 30);
+      const damage = passiveEntryFlatDamage(entry, 30) * personalityCount(bot, "Stubborn");
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p108", "Seal of Orobas");
@@ -9639,7 +9958,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       markPassiveEntryTriggered(entry);
       damageBots(
         targets,
-        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)),
+        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)) * revealMultiplicity(bot),
         (bot, dealt) => `Seal of Naberius dealt ${dealt} damage to ${bot.name}'s revealed guess.`,
         "Seal of Naberius"
       );
@@ -9656,7 +9975,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       if (!living.length) return;
       const damages = new Map();
       living.forEach((bot) => {
-        const matching = living.filter((candidate) => candidate.id !== bot.id && personalityType(candidate) === personalityType(bot)).length;
+        const matching = living.filter((candidate) => candidate.id !== bot.id && sharesPersonality(candidate, bot)).length;
         const damage = passiveEntryFlatDamage(entry, matching * 10);
         if (damage > 0) damages.set(bot.id, damage);
       });
@@ -9678,7 +9997,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const index = state.bots.findIndex((candidate) => candidate.id === bot.id);
         const left = state.bots[index - 1];
         const right = state.bots[index + 1];
-        return left && right && left.hp > 0 && right.hp > 0 && !left.eliminated && !right.eliminated && personalityType(left) === personalityType(right);
+        return left && right && left.hp > 0 && right.hp > 0 && !left.eliminated && !right.eliminated && sharesPersonality(left, right);
       });
       const damage = passiveEntryFlatDamage(entry, 5);
       if (!targets.length || damage <= 0) return;
@@ -9689,7 +10008,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     }
 
     if (entry.id === "p105") {
-      const stubbornCount = activeBots().filter((bot) => personalityType(bot) === "Stubborn").length;
+      const stubbornCount = activeBots().reduce((sum, bot) => sum + personalityCount(bot, "Stubborn"), 0);
       const targets = activeBots().filter((bot) => bot.isBoss);
       const damage = passiveEntryFlatDamage(entry, stubbornCount * 5);
       if (!targets.length || damage <= 0) return;
@@ -9703,7 +10022,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const living = activeBots();
       const type = mostPrevalentPersonality();
       if (!living.length || !type) return;
-      const targets = living.filter((bot) => personalityType(bot) === type);
+      const targets = living.filter((bot) => hasPersonality(bot, type));
       const damage = passiveEntryFlatDamage(entry, targets.length * 5);
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
@@ -9719,6 +10038,7 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
+    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
@@ -9951,15 +10271,16 @@ function advanceAfterSummary() {
 function applyStubbornWitnessEndRoundGrowth() {
   const entries = orderedPassiveEffectEntries("p104");
   if (!entries.length) return;
-  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && personalityType(bot) === "Stubborn");
+  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && hasPersonality(bot, "Stubborn"));
   if (!targets.length) return;
   entries.forEach((entry) => {
-    const amount = Math.max(0, Math.ceil(entry.stack || 1));
-    if (amount <= 0) return;
+    const baseAmount = Math.max(0, Math.ceil(entry.stack || 1));
+    if (baseAmount <= 0) return;
     const source = passiveName("p104", "Seal of Alloces");
     let totalMemory = 0;
     let totalBounty = 0;
     targets.forEach((bot) => {
+      const amount = baseAmount * personalityCount(bot, "Stubborn");
       totalMemory += addBotMemory(bot, amount, "", { source });
       totalBounty += changeBotSin(bot, amount, "", { triggerLossDamage: false, source }).gained;
     });
@@ -10039,7 +10360,7 @@ function buyShopItem(slotIndex) {
 
   if (item.type === "passive") {
     const existing = passiveEntry(item.id);
-    if (existing && isSelfStackingSeal(item.id)) {
+    if (existing && isNonUpgradableSeal(item.id)) {
       slot.sold = true;
       addLog(`${item.name} cannot be upgraded.`);
       syncShopSlotCount();
@@ -10543,8 +10864,8 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (!item) return;
   playArtifactSfx(item.id);
   recordPlayedArtifact(item.id);
-  // Seal of Valac never triggers on its own; using ARTIFACTS while holding it is what it does
-  if (passiveStack("p25")) collectionDiscover("p25");
+  // Seal of Serafeim never triggers on its own; using ARTIFACTS while holding it is what it does
+  if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   collectionNoteArtifactUse();
   state.pendingActive = null;
@@ -12189,6 +12510,25 @@ function displayedBotType(bot) {
   return hidden ? hidden.from : bot.type;
 }
 
+// both personalities of a bipolar DAMNED (Seal of Padma) as the card should show them
+function displayedBotTypes(bot) {
+  if (bot?.isBoss) return [];
+  const second = padmaActive() ? bot.type2 : null;
+  if (!second) return [displayedBotType(bot)];
+  const changes = bot.personalityChanges || [];
+  let first = bot.type;
+  let other = second;
+  if (changes.length && roundRevealAnimationActive()) {
+    const visible = roundRevealVisibleSealIds() || new Set();
+    changes.forEach((change) => {
+      if (visible.has(sealIdFromStatSource(change.source))) return;
+      if (change.slot === 1) other = change.from;
+      else first = change.from;
+    });
+  }
+  return [first, other];
+}
+
 // what SEALs have done to a DAMNED so far this round, as far as the seal animation has shown it
 function botSealEffectTotals(bot) {
   const display = roundRevealBotDisplay(bot);
@@ -13284,8 +13624,12 @@ function renderBot(bot, pendingPick) {
         ? bot.plannedGuess
         : "--";
   const rawNote =
-    state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? "Revealed" : "Guess";
-  const memoryText = bot.memory.length ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}` : "No memory";
+    state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
+  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  const memoryTotal = bot.memory.length + memoryOverflow;
+  const memoryText = memoryTotal
+    ? `${memoryTotal} ${memoryTotal === 1 ? "round" : "rounds"}${memoryOverflow ? ` <span class="memory-overflow">(+${memoryOverflow})</span>` : ""}`
+    : "No memory";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -13296,7 +13640,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotType(bot));
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
@@ -13353,7 +13697,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(displayedBotType(bot))}`;
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -13596,7 +13940,7 @@ function renderShopSlot(slot, index) {
   const item = slot.item;
   const cost = shopPrice(item);
   const passiveCopies = item.type === "passive" ? directPassiveStack(item.id) : 0;
-  const ownedSelfStackingSeal = item.type === "passive" && isSelfStackingSeal(item.id) && passiveCopies > 0;
+  const ownedSelfStackingSeal = item.type === "passive" && isNonUpgradableSeal(item.id) && passiveCopies > 0;
   const full =
     item.type === "passive"
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
@@ -15422,14 +15766,15 @@ const SEAL_UNLOCKS = {
   p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
   p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
   p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals
-  p92: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
-  p93: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
-  p94: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
-  p95: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
-  p96: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
-  p97: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
-  p110: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  // Boss Seals (the Archangel seals p92-p97 and p110 are open from the start)
+  p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
+  p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
+  p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
+  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
+  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
+  p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
+  p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
   // Satan Seals
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
   // Seals of Saturn
@@ -15439,8 +15784,6 @@ const SEAL_UNLOCKS = {
   p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
   p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
   p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
-  // Still to come: "Get six SEALS that are all ELITE level 1 or more" for a Seal of Kalha
-  // (there is no Seal of Kalha yet; the counter is recorded as flag sixEliteSeals).
 };
 
 const COLLECTION_STAT_LABELS = {
@@ -15477,12 +15820,12 @@ const COLLECTION_FLAG_LABELS = {
 const COLLECTION_SECTIONS = [
   { key: "player", title: "Player Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
-  { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
+  // the former Boss SEALS, now named after the Archangels
+  { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
   { key: "satan", title: "Satan Seals", ids: ["p111"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
-  // former Goetic SEALS whose demons now belong to newer SEALS
-  { key: "special", title: "Special Seals", ids: ["p55", "p69"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -15506,7 +15849,6 @@ const SEAL_BUILD_TAGS = {
   p6: ["critical"], // Orias
   p7: ["critical"], // Glasya-Labolas
   p9: ["bounty", "memory"], // Marbas
-  p10: ["bounty", "memory"], // Gusion
   p11: ["artifact"], // Valefor
   p12: ["general"], // Belial
   p13: ["general", "personality"], // Bune
@@ -15517,7 +15859,6 @@ const SEAL_BUILD_TAGS = {
   p19: ["general"], // Sabnock
   p20: ["artifact"], // Haagenti
   p23: ["bounty"], // Seere
-  p25: ["artifact"], // Valac
   p26: ["artifact"], // Amdusias
   p30: ["general"], // Andrealphus
   p31: ["bounty"], // Murmur
@@ -15537,7 +15878,6 @@ const SEAL_BUILD_TAGS = {
   p52: ["memory"], // Decarabia
   p53: ["memory"], // Samigina
   p54: ["reveal"], // Zepar
-  p55: ["memory"], // Samael Septagram (special)
   p57: ["bounty", "memory"], // Balam
   p58: ["general"], // Ipos
   p59: ["reveal", "bounty", "memory"], // Amon
@@ -15548,7 +15888,6 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p69: ["critical"], // Cassiel Hexagram (special)
   p70: ["artifact"], // Amy
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
@@ -15584,13 +15923,22 @@ const SEAL_BUILD_TAGS = {
   p79: ["artifact"], // Creation Uncreated
   p80: ["general"], // Silence in Heaven
   // Boss SEALS
-  p92: ["critical"], // Dantre
-  p93: ["bounty"], // Zilon
-  p94: ["artifact"], // Serafeim
-  p95: ["reveal"], // Pyros
-  p96: ["personality"], // Padma
-  p97: ["memory"], // Threon
-  p110: ["general"], // Petros-Pavlos (wipes MEMORY and BOUNTY)
+  p121: ["bounty"], // Zilon
+  p122: ["general"], // Kalha
+  p123: ["reveal"], // Pyros
+  p124: ["personality"], // Padma
+  p125: ["bounty", "memory"], // Petros-Pavlos
+  p126: ["artifact"], // Serafeim
+  p127: ["memory"], // Threon
+  p128: ["critical"], // Dantre
+  // Archangel SEALS (the former Boss SEALS)
+  p92: ["critical"], // Cassiel Pentagram
+  p93: ["bounty"], // Zachriel Triangle
+  p94: ["artifact"], // Aggiel Hexagram
+  p95: ["reveal"], // Samael Star
+  p96: ["personality"], // Samael Triangle
+  p97: ["memory"], // Cassiel Sigil
+  p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Seals of Saturn

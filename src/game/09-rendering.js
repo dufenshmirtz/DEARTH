@@ -692,6 +692,25 @@ function displayedBotType(bot) {
   return hidden ? hidden.from : bot.type;
 }
 
+// both personalities of a bipolar DAMNED (Seal of Padma) as the card should show them
+function displayedBotTypes(bot) {
+  if (bot?.isBoss) return [];
+  const second = padmaActive() ? bot.type2 : null;
+  if (!second) return [displayedBotType(bot)];
+  const changes = bot.personalityChanges || [];
+  let first = bot.type;
+  let other = second;
+  if (changes.length && roundRevealAnimationActive()) {
+    const visible = roundRevealVisibleSealIds() || new Set();
+    changes.forEach((change) => {
+      if (visible.has(sealIdFromStatSource(change.source))) return;
+      if (change.slot === 1) other = change.from;
+      else first = change.from;
+    });
+  }
+  return [first, other];
+}
+
 // what SEALs have done to a DAMNED so far this round, as far as the seal animation has shown it
 function botSealEffectTotals(bot) {
   const display = roundRevealBotDisplay(bot);
@@ -1787,8 +1806,12 @@ function renderBot(bot, pendingPick) {
         ? bot.plannedGuess
         : "--";
   const rawNote =
-    state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? "Revealed" : "Guess";
-  const memoryText = bot.memory.length ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}` : "No memory";
+    state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
+  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  const memoryTotal = bot.memory.length + memoryOverflow;
+  const memoryText = memoryTotal
+    ? `${memoryTotal} ${memoryTotal === 1 ? "round" : "rounds"}${memoryOverflow ? ` <span class="memory-overflow">(+${memoryOverflow})</span>` : ""}`
+    : "No memory";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -1799,7 +1822,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotType(bot));
+  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
@@ -1856,7 +1879,7 @@ function renderBot(bot, pendingPick) {
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
-  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${personalityGlyphHtml(displayedBotType(bot))}`;
+  const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
   const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
@@ -2099,7 +2122,7 @@ function renderShopSlot(slot, index) {
   const item = slot.item;
   const cost = shopPrice(item);
   const passiveCopies = item.type === "passive" ? directPassiveStack(item.id) : 0;
-  const ownedSelfStackingSeal = item.type === "passive" && isSelfStackingSeal(item.id) && passiveCopies > 0;
+  const ownedSelfStackingSeal = item.type === "passive" && isNonUpgradableSeal(item.id) && passiveCopies > 0;
   const full =
     item.type === "passive"
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)

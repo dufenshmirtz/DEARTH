@@ -759,51 +759,107 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Dantre",
+    name: "Seal of Cassiel's Pentagram",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Zilon",
+    name: "Seal of Zachriel's Triangle",
     price: 16,
     description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Serafeim",
+    name: "Seal of Aggiel's Hexagram",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Pyros",
+    name: "Seal of Samael's Star",
     price: 16,
     description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Padma",
+    name: "Seal of Samael's Triangle",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Threon",
+    name: "Seal of Cassiel's Sigil",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Petros-Pavlos",
+    name: "Seal of Cassiel's Hexagram",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
+  },
+  p121: {
+    id: "p121",
+    type: "passive",
+    name: "Seal of Zilon",
+    price: 16,
+    description: "40% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY. ELITE adds +5% to the converted share."
+  },
+  p122: {
+    id: "p122",
+    type: "passive",
+    name: "Seal of Kalha",
+    price: 16,
+    description: "Every PENTAKILL gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
+  },
+  p123: {
+    id: "p123",
+    type: "passive",
+    name: "Seal of Pyros",
+    price: 16,
+    description: "At the start of every round, reveal one DAMNED, even one that is already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack. ELITE reveals +1 more DAMNED each round."
+  },
+  p124: {
+    id: "p124",
+    type: "passive",
+    name: "Seal of Padma",
+    price: 16,
+    description: "All non-boss DAMNED are bipolar: they have two PERSONALITIES at once and guess the average of both. An effect that changes a PERSONALITY changes only one of the two. A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY. Cannot be upgraded."
+  },
+  p125: {
+    id: "p125",
+    type: "passive",
+    name: "Seal of Petros-Pavlos",
+    price: 16,
+    description: "Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. Converted amounts are not converted again. ELITE gives +1 free MEMORY or BOUNTY with every conversion each level."
+  },
+  p126: {
+    id: "p126",
+    type: "passive",
+    name: "Seal of Serafeim",
+    price: 16,
+    description: "Gain +1 ARTIFACT use per round and +1 ARTIFACT inventory slot. Each ELITE level adds +1 more to both."
+  },
+  p127: {
+    id: "p127",
+    type: "passive",
+    name: "Seal of Threon",
+    price: 16,
+    description: "Excess MEMORY that would be added to a DAMNED becomes 10 damage per excess MEMORY to that DAMNED. ELITE doubles this damage each level."
+  },
+  p128: {
+    id: "p128",
+    type: "passive",
+    name: "Seal of Dantre",
+    price: 16,
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p111: {
     id: "p111",
@@ -1210,7 +1266,15 @@ const PASSIVE_IDS = [
   "p117",
   "p118",
   "p119",
-  "p120"
+  "p120",
+  "p121",
+  "p122",
+  "p123",
+  "p124",
+  "p125",
+  "p126",
+  "p127",
+  "p128"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1236,12 +1300,22 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p66",
   "p81",
   "p82",
-  "p83"
+  "p83",
+  // effects moved to boss seals (Petros-Pavlos, Serafeim, Threon, Dantre); demons free for new SEALS
+  "p10",
+  "p25",
+  "p55",
+  "p69"
 ]);
+// the seven archangel SEALS (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
+// the Boss SEALS, named after the eight unique BOSSES
+const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
+// SEALS that can never get an ELITE upgrade (the self-stacking ones, plus Kalha and Padma)
+const NON_UPGRADABLE_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109", "p122", "p124"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
 // former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
-const SPECIAL_SEAL_IDS = new Set(["p55", "p69"]);
+const SPECIAL_SEAL_IDS = new Set();
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
@@ -1385,13 +1459,23 @@ const SEAL_SIGILS = {
   p89: "044_Marax.png",
   p90: "020_Bifrons.png",
   p91: "003_Aim.png",
-  p92: "dev/DantreSeal.png",
-  p93: "dev/ZilonSeal.png",
-  p94: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
-  p95: "dev/PyrosSeal.png",
-  p96: "dev/PadmaSeal.png",
-  p97: "dev/ThreonSeal.png",
-  p110: "dev/PetrosPavlosSeal.png",
+  // archangel SEALS (old boss-seal effects); the Dev art below is now used by the Boss SEALS
+  p92: "archangel seals/Cassiel-Pentagram.png",
+  p93: "archangel seals/Zachriel-Triangle.png",
+  p94: "archangel seals/Aggiel-Hexagram.png",
+  p95: "archangel seals/Samael-Star.png",
+  p96: "archangel seals/Samael-Triangle.png",
+  p97: "archangel seals/Cassiel-Sigil.png",
+  p110: "archangel seals/Cassiel-Hexagram.png",
+  // Boss SEALS
+  p121: "dev/ZilonSeal.png",
+  p122: "dev/KalhaSeal.png",
+  p123: "dev/PyrosSeal.png",
+  p124: "dev/PadmaSeal.png",
+  p125: "dev/PetrosPavlosSeal.png",
+  p126: "dev/SerafeimSeal-v2.png", // old art kept: dev/SerafeimSeal.png
+  p127: "dev/ThreonSeal.png",
+  p128: "dev/DantreSeal.png",
   p111: "satan/lucifer-wide.png",
   // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
   p98: "saturn/Saturn-Pentacle-01.png",

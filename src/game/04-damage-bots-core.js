@@ -538,11 +538,11 @@ function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
 }
 
 function activeInventoryLimit() {
-  return ACTIVE_LIMIT + baseEditionBonus("p25");
+  return ACTIVE_LIMIT + baseEditionBonus("p126");
 }
 
 function activeUseLimit() {
-  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p25");
+  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p126");
 }
 
 function bountyOathMultiplier() {
@@ -681,18 +681,61 @@ function personalityType(bot) {
   return bot.type || "";
 }
 
+// ---- Seal of Padma: every non-boss DAMNED is bipolar (two PERSONALITIES at once) ----
+// The first personality is bot.type (with anchor/aggression/noise), the second one bot.type2 (anchor2, ...).
+// Effects that look for a personality see both; a doubled personality (STUBBORN + STUBBORN) is hit twice.
+function padmaActive() {
+  return Boolean(passiveStack("p124"));
+}
+
+function personalityTypes(bot) {
+  if (!bot || bot.isBoss || !bot.type) return [];
+  return padmaActive() && bot.type2 ? [bot.type, bot.type2] : [bot.type];
+}
+
+function personalityCount(bot, type) {
+  return personalityTypes(bot).filter((entry) => entry === type).length;
+}
+
+function hasPersonality(bot, type) {
+  return personalityCount(bot, type) > 0;
+}
+
+function sharesPersonality(left, right) {
+  const rightTypes = personalityTypes(right);
+  return personalityTypes(left).some((type) => rightTypes.includes(type));
+}
+
+function ensureBipolarBot(bot) {
+  if (!padmaActive() || !bot || bot.isBoss || bot.eliminated || bot.type2) return;
+  const pool = passiveStack("p89")
+    ? BOT_ARCHETYPES.filter((archetype) => ["Analyst", "Stubborn"].includes(archetype.type))
+    : BOT_ARCHETYPES;
+  const different = pool.filter((archetype) => archetype.type !== bot.type);
+  const archetype = randomFrom(different.length ? different : pool);
+  bot.type2 = archetype.type;
+  bot.color2 = archetype.color;
+  bot.anchor2 = clamp(archetype.anchor + randomInt(-8, 8), 0, 100);
+  bot.aggression2 = archetype.aggression;
+  bot.noise2 = archetype.noise;
+}
+
+function syncBipolarBots() {
+  if (!padmaActive()) return;
+  state.bots.forEach((bot) => ensureBipolarBot(bot));
+}
+
 function samePersonalityBots(bot) {
-  const type = personalityType(bot);
-  if (!type) return [];
-  return activeBots().filter((candidate) => candidate.id !== bot?.id && personalityType(candidate) === type);
+  if (!personalityTypes(bot).length) return [];
+  return activeBots().filter((candidate) => candidate.id !== bot?.id && sharesPersonality(candidate, bot));
 }
 
 function mostPrevalentPersonality() {
   const counts = new Map();
   activeBots().forEach((bot) => {
-    const type = personalityType(bot);
-    if (!type) return;
-    counts.set(type, (counts.get(type) || 0) + 1);
+    personalityTypes(bot).forEach((type) => {
+      counts.set(type, (counts.get(type) || 0) + 1);
+    });
   });
   const bestCount = Math.max(0, ...Array.from(counts.values()));
   const best = Array.from(counts.entries())
@@ -714,19 +757,37 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
   });
 }
 
-function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null } = {}) {
-  if (!bot || bot.isBoss || bot.eliminated || !type || personalityType(bot) === type) return false;
+// With Seal of Padma a change alters only ONE of the two personalities: the first one that would actually
+// change (Analyst + Stubborn told to become Stubborn turns Analyst into Stubborn). `slot` forces a part.
+function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null, slot = null } = {}) {
+  if (!bot || bot.isBoss || bot.eliminated || !type) return false;
+  const types = personalityTypes(bot);
+  let index = slot;
+  if (index === null) {
+    index = types.length ? types.findIndex((current) => current !== type) : 0;
+    if (index < 0) return false;
+  } else if (types[index] === type) {
+    return false;
+  }
   const archetype = archetypeByType(type);
   // changes made while READY resolves the round are shown at their SEAL's step of the seal animation
   if (state.roundState?.penaltiesApplied && source) {
     bot.personalityChanges = bot.personalityChanges || [];
-    bot.personalityChanges.push({ from: personalityType(bot) || bot.type, to: archetype.type, source });
+    bot.personalityChanges.push({ from: types[index] || bot.type, to: archetype.type, source, slot: index });
   }
-  bot.type = archetype.type;
-  bot.color = archetype.color;
-  bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
-  bot.aggression = archetype.aggression;
-  bot.noise = archetype.noise;
+  if (index === 1) {
+    bot.type2 = archetype.type;
+    bot.color2 = archetype.color;
+    bot.anchor2 = clamp(Math.ceil((bot.anchor2 || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
+    bot.aggression2 = archetype.aggression;
+    bot.noise2 = archetype.noise;
+  } else {
+    bot.type = archetype.type;
+    bot.color = archetype.color;
+    bot.anchor = clamp(Math.ceil((bot.anchor || archetype.anchor) * 0.55 + archetype.anchor * 0.45), 0, 100);
+    bot.aggression = archetype.aggression;
+    bot.noise = archetype.noise;
+  }
   if (markEntry) markPassiveEntryTriggered(markEntry);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
@@ -741,9 +802,12 @@ function enforceTwinTemperPersonalities() {
   const entries = orderedPassiveEffectEntries("p89");
   if (!entries.length) return;
   activeBots().forEach((bot) => {
-    if (["Analyst", "Stubborn"].includes(personalityType(bot))) return;
-    const entry = entries[0];
-    setBotPersonality(bot, allowedTwinTemperType(), passiveName("p89", "Seal of Marax"), { markEntry: entry });
+    // every part of a bipolar DAMNED has to be Analyst or Stubborn
+    personalityTypes(bot).forEach((current, slot) => {
+      if (["Analyst", "Stubborn"].includes(current)) return;
+      const entry = entries[0];
+      setBotPersonality(bot, allowedTwinTemperType(), passiveName("p89", "Seal of Marax"), { markEntry: entry, slot });
+    });
   });
 }
 
@@ -753,7 +817,7 @@ function applyForcedDoctrineEndRound() {
   const prevalent = mostPrevalentPersonality();
   if (!prevalent) return;
   entries.forEach((entry) => {
-    const targets = activeBots().filter((bot) => personalityType(bot) !== prevalent);
+    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== prevalent));
     if (!targets.length) return;
     const target = randomFrom(targets);
     setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
@@ -767,17 +831,17 @@ function applyFixedWillEndRound() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const name = passiveName("p107", "Seal of Ose");
-    const targets = activeBots().filter((bot) => personalityType(bot) !== "Stubborn");
+    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== "Stubborn"));
     if (targets.length) {
       const target = randomFrom(targets);
       setBotPersonality(target, "Stubborn", name, { markEntry: entry });
     }
     const eliteDamage = Math.max(0, Math.ceil((entry.stack || 1) - 1) * 5);
     if (eliteDamage <= 0) return;
-    const stubbornTargets = activeBots().filter((bot) => personalityType(bot) === "Stubborn");
+    const stubbornTargets = activeBots().filter((bot) => hasPersonality(bot, "Stubborn"));
     if (!stubbornTargets.length) return;
     markPassiveEntryTriggered(entry);
-    damageBots(stubbornTargets, eliteDamage, (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
+    damageBots(stubbornTargets, (bot) => eliteDamage * personalityCount(bot, "Stubborn"), (bot, damage) => `${name} dealt ${damage} ELITE damage to ${bot.name}.`, name);
   });
 }
 

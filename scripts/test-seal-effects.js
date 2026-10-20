@@ -140,7 +140,7 @@ test("Threon rerolls a hidden multiplier between 0.6 and 1.0 each round", () => 
 test("Eligos uses native crit ranges, never mirrors, and pays per DAMNED critical", () => {
   const run = game();
   run(`
-    fixture([["p69", 2]], [50, 51, 52, 40]);
+    fixture([["p128", 2]], [50, 51, 52, 40]);
     assert.equal(getParticipants()[2].window, 0);
     assert.equal(findCriticalHits().length, 1);
     assert.equal(findCriticalHits()[0].kind, "bot");
@@ -152,13 +152,13 @@ test("Eligos uses native crit ranges, never mirrors, and pays per DAMNED critica
     findCriticalHits().forEach(applyEligosCriticalReward);
     applyEligosCriticalReward({ kind: "player" });
     assert.equal(state.player.credits, 4);
-    assert.equal(state.sealStats.p69.credits, 4);
+    assert.equal(state.sealStats.p128.credits, 4);
   `);
 });
 
 test("Eligos pays once per critical in real resolution and preserves its protection", () => {
   game()(`
-    fixture([["p69"]], [50, 50, 40, 50]);
+    fixture([["p128"]], [50, 50, 40, 50]);
     state.roundState.targetModifier = 1;
     applyPenalties();
     assert.equal(state.roundState.target, 50);
@@ -268,18 +268,18 @@ test("new seals obey matching-boss suppression and Beleth no longer applies", ()
 test("new Goetic seals have valid unique names, images, elite help, and catalog entries", () => {
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
-  // the Goetic SEALS are exactly the 72 demons, each one once
-  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 72);
-  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 72);
+  // the Goetic SEALS are exactly the 70 live demons, each one once
+  assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.length"), 70);
+  assert.equal(run("new Set(GOETIC_BOSS_PASSIVE_IDS.map(id => ITEMS[id].name)).size"), 70);
   assert.equal(run("GOETIC_BOSS_PASSIVE_IDS.some(id => SPECIAL_SEAL_IDS.has(id))"), false);
-  for (const id of ["p69", "p112", "p113", "p114", "p115", "p116", "p117", "p118", "p119", "p120"]) {
+  for (const id of ["p128", "p112", "p113", "p114", "p115", "p116", "p117", "p118", "p119", "p120"]) {
     const item = run(`ITEMS.${id}`);
     assert.ok(catalog.includes(`${item.name} (${item.price} SIN)\n${item.description}`) ||
       catalog.includes(`${item.name} (${item.price} SIN)\r\n${item.description}`));
     assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
     assert.ok(run(`splitEliteDescription(ITEMS.${id}.description).elite`).length);
     assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 2 })`).length);
-    if (id === "p69") continue;
+    if (id === "p128") continue;
     assert.ok(run(`collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`));
     const image = run(`sealSigilPath(ITEMS.${id})`);
     assert.ok(fs.existsSync(path.join(root, image)), image);
@@ -300,7 +300,7 @@ test("saved rounds preserve Buer's paid threshold and Eligos shows its updated d
     assert.equal(state.player.passives[0].stack, 2);
     damageBot(state.bots[0], 201, "Test", "Test");
     assert.equal(state.sealStats.p114.credits, 3);
-    assert.equal(itemDescription({ ...ITEMS.p69, description: "Old Eligos effect", stack: 1 }), ITEMS.p69.description);
+    assert.equal(itemDescription({ ...ITEMS.p128, description: "Old Eligos effect", stack: 1 }), ITEMS.p128.description);
     assert.ok(renderShopSlot({ item: ITEMS.p62 }, 0).includes("Sold out"));
   `);
 });
@@ -483,7 +483,7 @@ test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
     const ids = collectionSections().flatMap(section => section.ids);
-    assert.equal(ids.length, 96);
+    assert.equal(ids.length, 100);
     for (const id of ids) {
       assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
       for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
@@ -650,5 +650,147 @@ test("Sitri: the most-MEMORY DAMNED gets double HEALTH, gains MEMORY, and only a
     assert.equal(sitriHost(), state.bots[2]);
     assert.equal(state.bots[2].maxHp, 2000);
     assert.equal(state.bots[0].maxHp, 1000);
+  `);
+});
+
+// ---- Boss SEALS (p121-p128) ----
+test("Zilon converts 40% of a BOSS BOUNTY to its BOUNTY (+5% per ELITE level) and spreads the rest", () => {
+  for (const [stack, converted] of [[1, 8], [3, 10]]) {
+    game()(`
+      fixture([["p121", ${stack}]], [50, 50, 50]);
+      const boss = state.bots[0];
+      boss.isBoss = true;
+      boss.bossBountyConverted = 0;
+      boss.bossBountyFactor = 1;
+      state.bossKills = 0;
+      const before = state.bots.map(bot => bot.reward);
+      assert.equal(botBossBounty(boss), 20);
+      applyZilonBossBounty();
+      assert.equal(boss.reward - before[0], ${converted});
+      const spread = state.bots.slice(1).reduce((sum, bot, index) => sum + bot.reward - before[index + 1], 0);
+      assert.equal(spread, 20 - ${converted});
+      assert.equal(botBossBounty(boss), 0);
+      applyZilonBossBounty();
+      assert.equal(boss.reward - before[0], ${converted});
+    `);
+  }
+});
+
+test("Kalha upgrades a random upgradable SEAL on every PENTAKILL and cannot be upgraded itself", () => {
+  game()(`
+    fixture([["p122"], ["p74"]], [50, 50, 50, 50, 50]);
+    state.roundState.eliminationsThisRound = BOT_COUNT;
+    checkRoundPentakillBonus();
+    assert.equal(state.player.passives.find(item => item.id === "p74").stack, 2);
+    assert.equal(state.player.passives.find(item => item.id === "p122").stack, 1);
+    assert.equal(isNonUpgradableSeal("p122"), true);
+    state.roundState.pentakillAwarded = false;
+    checkRoundPentakillBonus();
+    assert.equal(state.player.passives.find(item => item.id === "p74").stack, 3);
+  `);
+});
+
+test("Pyros reveals a DAMNED at round start and lets reveals stack, which multiplies reveal effects", () => {
+  game()(`
+    fixture([["p123"]], [10, 20, 30, 40, 50]);
+    assert.ok(revealedDamnedCount() >= 1);
+    const bot = state.bots.find(candidate => candidate.revealedByPassive);
+    const before = bot.revealStacks;
+    revealBotGuess(bot, "Test");
+    assert.equal(bot.revealStacks, before + 1);
+    assert.equal(revealMultiplicity(bot), bot.revealStacks);
+  `);
+  game()(`
+    fixture([["p64"]], [10, 20, 30, 40, 50]);
+    const bot = state.bots.find(candidate => candidate.revealedByPassive);
+    revealBotGuess(bot, "Test");
+    assert.equal(bot.revealStacks, 1);
+    assert.equal(revealMultiplicity(bot), 1);
+  `);
+});
+
+test("Padma makes every DAMNED bipolar: averaged guess, one-part personality changes, doubled personalities count twice", () => {
+  game()(`
+    fixture([["p124"]], [10, 20, 30]);
+    state.bots.forEach(bot => assert.ok(bot.type2, "bipolar"));
+    const bot = state.bots[0];
+    bot.type = "Analyst";
+    bot.type2 = "Stubborn";
+    assert.equal(JSON.stringify(personalityTypes(bot)), JSON.stringify(["Analyst", "Stubborn"]));
+    assert.equal(hasPersonality(bot, "Analyst"), true);
+    assert.equal(personalityCount(bot, "Stubborn"), 1);
+    planPersonaGuess = (target, persona) => (persona.type === "Analyst" ? 20 : 41);
+    assert.equal(planBotGuess(bot), 31);
+    setBotPersonality(bot, "Stubborn", "Test");
+    assert.equal(bot.type, "Stubborn");
+    assert.equal(bot.type2, "Stubborn");
+    assert.equal(personalityCount(bot, "Stubborn"), 2);
+    assert.equal(setBotPersonality(bot, "Stubborn", "Test"), false);
+    setBotPersonality(bot, "Follower", "Test");
+    assert.equal(bot.type, "Follower");
+    assert.equal(bot.type2, "Stubborn");
+  `);
+  game()(`
+    fixture([], [10, 20, 30]);
+    assert.equal(state.bots.some(bot => bot.type2), false);
+    assert.equal(personalityTypes(state.bots[0]).length, 1);
+  `);
+});
+
+test("Petros and Pavlos converts half of gained MEMORY and BOUNTY without reconverting, ELITE adds more", () => {
+  game()(`
+    fixture([["p125"]], [50, 50]);
+    state.round = 10;
+    const bot = state.bots[0];
+    const rewardBefore = bot.reward;
+    const memoryBefore = bot.memory.length;
+    addBotMemory(bot, 4, "Test");
+    assert.equal(bot.memory.length - memoryBefore, 2);
+    assert.equal(bot.reward - rewardBefore, 2);
+  `);
+});
+
+test("Serafeim adds ARTIFACT uses and inventory slots like Valac did", () => {
+  game()(`
+    fixture([], [50]);
+    const base = [activeInventoryLimit(), activeUseLimit()];
+    fixture([["p126"]], [50]);
+    assert.equal(activeInventoryLimit(), base[0] + 1);
+    assert.equal(activeUseLimit(), base[1] + 1);
+    fixture([["p126", 3]], [50]);
+    assert.equal(activeInventoryLimit(), base[0] + 3);
+  `);
+});
+
+test("Threon keeps MEMORY beyond the limit visible, then removes it at round end for 10 damage each", () => {
+  game()(`
+    fixture([["p127"]], [50, 50]);
+    state.round = 3;
+    const bot = state.bots[0];
+    bot.memory = [];
+    const hp = bot.hp;
+    addBotMemory(bot, 5, "Test");
+    assert.equal(bot.memory.length, botMemoryLimit(bot));
+    assert.equal(bot.memoryOverflow, 5 - botMemoryLimit(bot));
+    const overflow = bot.memoryOverflow;
+    applyMemoryOverflowDamage();
+    assert.equal(bot.memoryOverflow, 0);
+    assert.equal(hp - bot.hp, overflow * 10);
+    const boss = state.bots[1];
+    boss.isBoss = true;
+    boss.memory = [];
+    addBotMemory(boss, 6, "Test");
+    assert.equal(boss.memory.length, botMemoryLimit(boss));
+    assert.ok(boss.memoryOverflow > 0);
+  `);
+});
+
+test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as your CRITICAL", () => {
+  game()(`
+    fixture([["p128"]], [50, 50, 40, 50]);
+    state.roundState.targetModifier = 1;
+    applyPenalties();
+    assert.equal(state.player.credits > 0, true);
+    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
   `);
 });

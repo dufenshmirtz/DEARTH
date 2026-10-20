@@ -1,15 +1,16 @@
 function applyStubbornWitnessEndRoundGrowth() {
   const entries = orderedPassiveEffectEntries("p104");
   if (!entries.length) return;
-  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && personalityType(bot) === "Stubborn");
+  const targets = state.bots.filter((bot) => bot && bot.hp > 0 && !bot.eliminated && hasPersonality(bot, "Stubborn"));
   if (!targets.length) return;
   entries.forEach((entry) => {
-    const amount = Math.max(0, Math.ceil(entry.stack || 1));
-    if (amount <= 0) return;
+    const baseAmount = Math.max(0, Math.ceil(entry.stack || 1));
+    if (baseAmount <= 0) return;
     const source = passiveName("p104", "Seal of Alloces");
     let totalMemory = 0;
     let totalBounty = 0;
     targets.forEach((bot) => {
+      const amount = baseAmount * personalityCount(bot, "Stubborn");
       totalMemory += addBotMemory(bot, amount, "", { source });
       totalBounty += changeBotSin(bot, amount, "", { triggerLossDamage: false, source }).gained;
     });
@@ -89,7 +90,7 @@ function buyShopItem(slotIndex) {
 
   if (item.type === "passive") {
     const existing = passiveEntry(item.id);
-    if (existing && isSelfStackingSeal(item.id)) {
+    if (existing && isNonUpgradableSeal(item.id)) {
       slot.sold = true;
       addLog(`${item.name} cannot be upgraded.`);
       syncShopSlotCount();
@@ -593,8 +594,8 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (!item) return;
   playArtifactSfx(item.id);
   recordPlayedArtifact(item.id);
-  // Seal of Valac never triggers on its own; using ARTIFACTS while holding it is what it does
-  if (passiveStack("p25")) collectionDiscover("p25");
+  // Seal of Serafeim never triggers on its own; using ARTIFACTS while holding it is what it does
+  if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   collectionNoteArtifactUse();
   state.pendingActive = null;

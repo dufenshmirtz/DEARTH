@@ -88,7 +88,7 @@ function applyZeparAdjacentTargetDifferenceDamage(botDamages, botDamageSources) 
     revealedDamageSources.forEach(({ bot: sourceBot, damage }) => {
       const targets = adjacentLivingBots(sourceBot);
       if (!targets.length) return;
-      const echoedDamage = passiveEntryFlatDamage(entry, damage);
+      const echoedDamage = passiveEntryFlatDamage(entry, damage) * revealMultiplicity(sourceBot);
       targets.forEach((bot) => {
         addPendingBotDamage(botDamages, botDamageSources, bot, echoedDamage, "Seal of Zepar", false);
       });
@@ -142,7 +142,7 @@ function applyAstarothRevealedTargetDifferenceEcho(entry) {
   let triggered = false;
   sources.forEach((sourceBot) => {
     const baseDamage = Math.max(0, Math.ceil(round.targetDifferenceDamageByBotId?.get(sourceBot.id) || 0));
-    const damage = passiveEntryFlatDamage(entry, baseDamage);
+    const damage = passiveEntryFlatDamage(entry, baseDamage) * revealMultiplicity(sourceBot);
     const targets = adjacentLivingBots(sourceBot);
     if (!targets.length || damage <= 0) return;
     if (!triggered) {
@@ -243,7 +243,9 @@ function applyPenalties() {
 
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
-  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
+  const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
+  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
   if (playerCritThisRound) {
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
@@ -285,8 +287,8 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && passiveStack("p69")) {
-          markPassiveTriggered("p69");
+        if (hitter.kind === "bot" && passiveStack("p128")) {
+          markPassiveTriggered("p128");
           eligosBlockedCritical = true;
           return;
         }
@@ -304,7 +306,7 @@ function applyPenalties() {
       }
     });
   });
-  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p69.name} blocked DAMNED CRITICAL damage against you.`);
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -464,7 +466,8 @@ function getParticipants() {
 }
 
 function criticalDamageForVictim(hitter, victim) {
-  if (hitter.key === "player") {
+  // Seal of Dantre: a DAMNED's CRITICAL deals your CRITICAL damage (with every bonus your SEALS give it)
+  if (hitter.key === "player" || (hitter.kind === "bot" && passiveStack("p128"))) {
     return playerCriticalDamageTotal(victim);
   }
   return maxHealthCriticalDamageForVictim(victim);
@@ -545,7 +548,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player") return "10% max HEALTH";
+  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max HEALTH";
   const flatBonus = playerCriticalFlatBonus();
   const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
@@ -565,10 +568,10 @@ function findCriticalHits() {
 
 function applyEligosCriticalReward(hitter) {
   if (hitter.kind !== "bot") return;
-  orderedPassiveEffectEntries("p69").forEach((entry) => {
+  orderedPassiveEffectEntries("p128").forEach((entry) => {
     markPassiveEntryTriggered(entry);
-    const gained = gainCredits(passiveEntryScaledValue(entry, 1), true, ITEMS.p69.name);
-    state.roundState.roundEvents.push(`${ITEMS.p69.name} paid ${gained} SIN for ${hitter.name}'s CRITICAL.`);
+    const gained = gainCredits(passiveEntryScaledValue(entry, 1), true, ITEMS.p128.name);
+    state.roundState.roundEvents.push(`${ITEMS.p128.name} paid ${gained} SIN for ${hitter.name}'s CRITICAL.`);
   });
 }
 
@@ -628,7 +631,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
-    state.roundState.eliminatedPersonalities.push(personalityType(bot));
+    personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
@@ -781,6 +784,23 @@ function checkRoundPentakillBonus() {
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
+  applyKalhaPentakillUpgrade();
+}
+
+// Seal of Kalha: every PENTAKILL gives a random SEAL you own an ELITE upgrade (never one that cannot be upgraded)
+function applyKalhaPentakillUpgrade() {
+  orderedPassiveEffectEntries("p122").forEach((entry) => {
+    const choices = state.player.passives.filter(
+      (item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id)
+    );
+    if (!choices.length) return;
+    const target = randomFrom(choices);
+    target.stack = (target.stack || 1) + 1;
+    recordEliteLevelBought(target.id, target.stack);
+    markPassiveEntryTriggered(entry);
+    state.roundState.roundEvents.push(`${ITEMS.p122.name} upgraded ${target.name} to ${passiveDisplayName(target)}.`);
+    addLog(`${ITEMS.p122.name} upgraded ${target.name} to ${passiveDisplayName(target)}.`);
+  });
 }
 
 function applyKillRuleHealing(bot) {
@@ -1082,9 +1102,9 @@ function applyEliminationPassives(bot) {
     }
 
     if (entry.id === "p108") {
-      if (personalityType(bot) !== "Stubborn") return;
+      if (!hasPersonality(bot, "Stubborn")) return;
       const targets = activeBots().filter((target) => target.isBoss);
-      const damage = passiveEntryFlatDamage(entry, 30);
+      const damage = passiveEntryFlatDamage(entry, 30) * personalityCount(bot, "Stubborn");
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p108", "Seal of Orobas");
@@ -1302,7 +1322,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       markPassiveEntryTriggered(entry);
       damageBots(
         targets,
-        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)),
+        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)) * revealMultiplicity(bot),
         (bot, dealt) => `Seal of Naberius dealt ${dealt} damage to ${bot.name}'s revealed guess.`,
         "Seal of Naberius"
       );
@@ -1319,7 +1339,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       if (!living.length) return;
       const damages = new Map();
       living.forEach((bot) => {
-        const matching = living.filter((candidate) => candidate.id !== bot.id && personalityType(candidate) === personalityType(bot)).length;
+        const matching = living.filter((candidate) => candidate.id !== bot.id && sharesPersonality(candidate, bot)).length;
         const damage = passiveEntryFlatDamage(entry, matching * 10);
         if (damage > 0) damages.set(bot.id, damage);
       });
@@ -1341,7 +1361,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
         const index = state.bots.findIndex((candidate) => candidate.id === bot.id);
         const left = state.bots[index - 1];
         const right = state.bots[index + 1];
-        return left && right && left.hp > 0 && right.hp > 0 && !left.eliminated && !right.eliminated && personalityType(left) === personalityType(right);
+        return left && right && left.hp > 0 && right.hp > 0 && !left.eliminated && !right.eliminated && sharesPersonality(left, right);
       });
       const damage = passiveEntryFlatDamage(entry, 5);
       if (!targets.length || damage <= 0) return;
@@ -1352,7 +1372,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     }
 
     if (entry.id === "p105") {
-      const stubbornCount = activeBots().filter((bot) => personalityType(bot) === "Stubborn").length;
+      const stubbornCount = activeBots().reduce((sum, bot) => sum + personalityCount(bot, "Stubborn"), 0);
       const targets = activeBots().filter((bot) => bot.isBoss);
       const damage = passiveEntryFlatDamage(entry, stubbornCount * 5);
       if (!targets.length || damage <= 0) return;
@@ -1366,7 +1386,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const living = activeBots();
       const type = mostPrevalentPersonality();
       if (!living.length || !type) return;
-      const targets = living.filter((bot) => personalityType(bot) === type);
+      const targets = living.filter((bot) => hasPersonality(bot, type));
       const damage = passiveEntryFlatDamage(entry, targets.length * 5);
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
@@ -1382,6 +1402,7 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
+    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();

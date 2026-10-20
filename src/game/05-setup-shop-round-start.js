@@ -386,13 +386,13 @@ function drawActiveShopItem() {
 function drawPassiveShopItem(eliteBoosted = false) {
   // locked SEALS (see SEAL_UNLOCKS in 09-collection.js) never show up until unlocked
   const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && !isSealLocked(id));
-  const availablePool = passivePool.filter((id) => !isSelfStackingSeal(id) || directPassiveStack(id) === 0);
-  const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isSelfStackingSeal(id));
+  const availablePool = passivePool.filter((id) => !isNonUpgradableSeal(id) || directPassiveStack(id) === 0);
+  const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isNonUpgradableSeal(id));
   const freshPassives = availablePool.filter((id) => directPassiveStack(id) === 0);
   const eliteChance = eliteShopChance(eliteBoosted);
   const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
-  if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isSelfStackingSeal(id)));
+  if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isNonUpgradableSeal(id)));
   return { item: itemCopy(randomFrom(choices)), sold: false };
 }
 
@@ -811,6 +811,7 @@ function beginRound() {
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
+    pyrosRevealsDone: 0,
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
@@ -862,8 +863,11 @@ function beginRound() {
     bot.markedByPlayer = false;
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
+    bot.revealStacks = 0;
+    bot.memoryOverflow = 0;
   });
 
+  syncBipolarBots();
   enforceTwinTemperPersonalities();
   applyPendingNextRoundMarbasBonuses();
   state.bots.forEach((bot) => {
@@ -884,6 +888,43 @@ function beginRound() {
   applyGuessReveals();
   applyRevealPoisonCounters();
   ensureSitriHost();
+  applyZilonBossBounty();
+}
+
+// Seal of Zilon: a share of every BOSS's BOSS BOUNTY (40%, ELITE +5% each level) becomes regular BOUNTY on that
+// BOSS; the rest is dealt out one SIN at a time to random other DAMNED. Runs at the start of every round and only
+// moves BOSS BOUNTY that has not been converted yet (bossBountyConverted).
+function applyZilonBossBounty() {
+  const entries = orderedPassiveEffectEntries("p121");
+  if (!state.roundState || !entries.length) return;
+  const name = ITEMS.p121.name;
+  entries.forEach((entry) => {
+    const percent = Math.min(100, zilonConversionPercent(entry));
+    activeBots()
+      .filter((bot) => bot.isBoss && !bot.immortal)
+      .forEach((boss) => {
+        const available = botBossBounty(boss);
+        if (available <= 0) return;
+        const converted = Math.floor((available * percent) / 100);
+        const rest = available - converted;
+        boss.bossBountyConverted = Math.max(0, Math.ceil(boss.bossBountyConverted || 0)) + available;
+        markPassiveEntryTriggered(entry);
+        if (converted > 0) changeBotSin(boss, converted, "", { source: name });
+        const others = activeBots().filter((bot) => bot.id !== boss.id && !bot.immortal);
+        const gains = new Map();
+        for (let index = 0; index < rest; index += 1) {
+          const target = others.length ? randomFrom(others) : boss;
+          gains.set(target.id, (gains.get(target.id) || 0) + 1);
+        }
+        gains.forEach((amount, id) => {
+          const target = state.bots.find((bot) => bot.id === id);
+          if (target) changeBotSin(target, amount, "", { source: name });
+        });
+        addRoundEvent(
+          `${name} turned ${converted} of ${boss.name}'s ${available} BOSS BOUNTY into BOUNTY and spread ${rest} among the other DAMNED.`
+        );
+      });
+  });
 }
 
 function applyMarkedProspect() {
@@ -1162,7 +1203,7 @@ function planBossGuess(bot) {
 }
 
 function clampFixedWillGuess(bot, guess) {
-  if (!passiveStack("p107") || personalityType(bot) !== "Stubborn") return guess;
+  if (!passiveStack("p107") || !hasPersonality(bot, "Stubborn")) return guess;
   const previousGuess = bot?.memory?.slice().reverse().find((entry) => Number.isFinite(entry?.ownGuess))?.ownGuess;
   if (!Number.isFinite(previousGuess)) return guess;
   return clamp(guess, previousGuess - 2, previousGuess + 2);
@@ -1170,13 +1211,29 @@ function clampFixedWillGuess(bot, guess) {
 
 function planBotGuess(bot) {
   if (bot.isBoss) return planBossGuess(bot);
+  // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
+  const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
+  if (padmaActive() && bot.type2) {
+    personas.push({
+      type: bot.type2,
+      anchor: bot.anchor2 ?? bot.anchor,
+      aggression: bot.aggression2 ?? bot.aggression,
+      noise: bot.noise2 ?? bot.noise
+    });
+  }
+  const guesses = personas.map((persona) => planPersonaGuess(bot, persona));
+  const guess = guesses.reduce((sum, value) => sum + value, 0) / guesses.length;
+  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+}
 
+// one personality's guess (before the STUBBORN clamp and rounding)
+function planPersonaGuess(bot, persona) {
   const memory = bot.memory;
   const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
   let guess;
 
   if (!memory.length) {
-    guess = bot.anchor + randomInt(-12, 12);
+    guess = persona.anchor + randomInt(-12, 12);
   } else {
     const last = memory[memory.length - 1];
     const prev = memory[memory.length - 2] || last;
@@ -1185,33 +1242,33 @@ function planBotGuess(bot) {
     const trend = lastTarget - prevTarget;
     const tablePull = Number.isFinite(last.tableAverage) ? last.tableAverage * currentModifier : lastTarget;
 
-    if (bot.type === "Analyst") {
-      guess = lastTarget + trend * 0.45 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Follower") {
-      guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Stubborn") {
-      guess = bot.anchor * 0.72 + lastTarget * 0.28 + randomInt(-bot.noise, bot.noise);
-    } else if (bot.type === "Drifter") {
-      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-bot.noise * 2, bot.noise * 2);
-    } else if (bot.type === "Caller") {
-      guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-bot.noise, bot.noise);
+    if (persona.type === "Analyst") {
+      guess = lastTarget + trend * 0.45 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Follower") {
+      guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Stubborn") {
+      guess = persona.anchor * 0.72 + lastTarget * 0.28 + randomInt(-persona.noise, persona.noise);
+    } else if (persona.type === "Drifter") {
+      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-persona.noise * 2, persona.noise * 2);
+    } else if (persona.type === "Caller") {
+      guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-persona.noise, persona.noise);
     } else {
-      guess = bot.anchor * 0.42 + lastTarget * 0.58 + randomInt(-bot.noise, bot.noise);
+      guess = persona.anchor * 0.42 + lastTarget * 0.58 + randomInt(-persona.noise, persona.noise);
     }
 
     if (bot.isBoss) guess = guess * 0.82 + lastTarget * 0.18;
   }
 
-  if (Math.random() < bot.aggression * 0.62) {
+  if (Math.random() < persona.aggression * 0.62) {
     const direction = Math.random() < 0.5 ? -1 : 1;
     guess += direction * randomInt(5, 16);
   }
 
-  if (Math.random() < bot.aggression * 0.09) {
+  if (Math.random() < persona.aggression * 0.09) {
     guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
   }
 
-  return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
+  return guess;
 }
 
 function bossRevealAllowedBySeals() {
@@ -1220,6 +1277,21 @@ function bossRevealAllowedBySeals() {
 
 function revealedDamnedCount() {
   return activeBots().filter((bot) => bot.revealedByPassive).length;
+}
+
+// Seal of Pyros: DAMNED can be revealed more than once a round; every reveal adds a reveal stack
+function pyrosActive() {
+  return Boolean(passiveStack("p123"));
+}
+
+function revealStacks(bot) {
+  return bot?.revealedByPassive ? Math.max(1, Math.ceil(bot.revealStacks || 1)) : 0;
+}
+
+// how many times effects that target revealed DAMNED affect this DAMNED (one per reveal stack with Pyros)
+function revealMultiplicity(bot) {
+  if (!bot?.revealedByPassive) return 0;
+  return pyrosActive() ? revealStacks(bot) : 1;
 }
 
 function canRevealBotGuess(bot, options = {}) {
@@ -1232,16 +1304,19 @@ function canRevealBotGuess(bot, options = {}) {
 function revealBotGuess(bot, source = "", entry = null, options = {}) {
   if (!canRevealBotGuess(bot, options)) return false;
   const wasRevealed = Boolean(bot.revealedByPassive);
+  const stacked = wasRevealed && pyrosActive();
   bot.revealedByPassive = true;
+  bot.revealStacks = wasRevealed ? Math.max(1, Math.ceil(bot.revealStacks || 1)) + (stacked ? 1 : 0) : 1;
   state.roundState?.revealedBotIds?.add(bot.id);
-  if (entry && !wasRevealed) markPassiveEntryTriggered(entry);
+  if (entry && (!wasRevealed || stacked)) markPassiveEntryTriggered(entry);
   if (source && !wasRevealed) addRoundEvent(`${source} revealed ${bot.name}'s guess.`);
+  if (source && stacked) addRoundEvent(`${source} revealed ${bot.name}'s guess again (x${bot.revealStacks}).`);
   if (!wasRevealed) {
     orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
       setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
     });
   }
-  return !wasRevealed;
+  return !wasRevealed || stacked;
 }
 
 function applyHighMemoryReveals() {
@@ -1273,8 +1348,25 @@ function applyGuessReveals() {
   newlyRevealed.forEach((bot) => {
     revealBotGuess(bot);
   });
+  applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+// Seal of Pyros: at the start of every round it reveals one DAMNED (ELITE: +1 each level), chosen from ALL
+// DAMNED, including ones that are already revealed (they gain a reveal stack). Done once per round.
+function applyPyrosStartReveals(revealableBots) {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p123");
+  if (!round || !entries.length) return;
+  const owed = entries.reduce((sum, entry) => sum + 1 + passiveEntryEliteLevels(entry), 0);
+  const done = Math.max(0, Math.ceil(round.pyrosRevealsDone || 0));
+  round.pyrosRevealsDone = Math.max(done, owed);
+  for (let index = done; index < owed; index += 1) {
+    const candidates = revealableBots.filter((bot) => canRevealBotGuess(bot));
+    if (!candidates.length) return;
+    revealBotGuess(randomFrom(candidates), passiveName("p123", "Seal of Pyros"), entries[0]);
+  }
 }
 
 function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntries("p59")) {
@@ -1283,13 +1375,16 @@ function applyAmonRevealRewards(revealedBots, entries = orderedPassiveEffectEntr
   entries.forEach((entry) => {
     let triggered = false;
     revealedBots.forEach((bot) => {
-      const key = `${entry.sourceId || entry.id}:${bot.id}`;
-      if (round.amonRewardKeys.has(key)) return;
-      round.amonRewardKeys.add(key);
-      const bounty = passiveEntryScaledValue(entry, 2);
-      const bountyResult = changeBotSin(bot, bounty, "", { source: ITEMS.p59?.name || "Seal of Amon" });
-      const memoryAdded = addBotMemory(bot, 2, "", { source: ITEMS.p59?.name || "Seal of Amon" });
-      if (bountyResult.gained > 0 || memoryAdded > 0) triggered = true;
+      // one reward per reveal stack (Seal of Pyros)
+      for (let stack = 1; stack <= revealMultiplicity(bot); stack += 1) {
+        const key = `${entry.sourceId || entry.id}:${bot.id}:${stack}`;
+        if (round.amonRewardKeys.has(key)) continue;
+        round.amonRewardKeys.add(key);
+        const bounty = passiveEntryScaledValue(entry, 2);
+        const bountyResult = changeBotSin(bot, bounty, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+        const memoryAdded = addBotMemory(bot, 2, "", { source: ITEMS.p59?.name || "Seal of Amon" });
+        if (bountyResult.gained > 0 || memoryAdded > 0) triggered = true;
+      }
     });
     if (triggered) {
       markPassiveEntryTriggered(entry);
@@ -1307,7 +1402,7 @@ function applyRevealPoisonCounters() {
   entries.forEach((entry) => {
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
-      bot.poisonCounters = (bot.poisonCounters || 0) + 1;
+      bot.poisonCounters = (bot.poisonCounters || 0) + revealMultiplicity(bot);
     });
   });
   round.roundEvents.push(`Seal of Vepar added poison to ${targets.map((bot) => bot.name).join(", ")}.`);
@@ -1407,8 +1502,13 @@ function applyDevSealEntries(ids) {
       const targets = devSealTargetDamned().filter((bot) => bot.revealedByPassive);
       let total = 0;
       targets.forEach((bot) => {
-        const damage = Math.ceil(bot.hp * 0.5);
-        total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+        // once per reveal stack (Seal of Pyros): each time it takes half of the HEALTH it has left
+        let left = bot.hp;
+        for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+          const damage = Math.ceil(left * 0.5);
+          left -= damage;
+          total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
+        }
       });
       addRoundEvent(total > 0 ? `${source} queued ${total} total damage to revealed DAMNED.` : `${source} found no revealed DAMNED.`);
       return;
@@ -1418,7 +1518,7 @@ function applyDevSealEntries(ids) {
       let changed = 0;
       let vulnerable = 0;
       devSealTargetDamned().forEach((bot) => {
-        if (personalityType(bot) === "Stubborn") {
+        if (hasPersonality(bot, "Stubborn")) {
           round.padmaVulnerableBotIds?.add(bot.id);
           vulnerable += 1;
           return;

@@ -139,7 +139,7 @@ function mimicEntry() {
 
 function availableMimicTargets() {
   return state.player.passives.filter(
-    (item) => item && item.id !== "p28" && !REMOVED_PASSIVE_IDS.has(item.id) && !isSelfStackingSeal(item.id)
+    (item) => item && item.id !== "p28" && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id)
   );
 }
 
@@ -165,7 +165,7 @@ function mimicTargetEntry() {
           item.id === mimic.copiedPassiveId &&
           item.id !== "p28" &&
           !REMOVED_PASSIVE_IDS.has(item.id) &&
-          !isSelfStackingSeal(item.id)
+          !isNonUpgradableSeal(item.id)
       )
     : null;
   return target || chooseMimicTarget(mimic);
@@ -305,7 +305,9 @@ function botBossBounty(bot) {
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
-  return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus);
+  // Seal of Zilon already turned part of it into BOUNTY (bossBountyConverted)
+  const converted = Math.max(0, Math.ceil(bot.bossBountyConverted || 0));
+  return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
 function botRegularBounty(bot) {
@@ -342,7 +344,9 @@ function botRegularBountyPayoutDetails(bot, markTriggers = false) {
     applyMultiplier(2 * passivePower("p45"), ITEMS.p45?.name || "Seal of Crocell", "p45");
   }
   if (bot.revealedByPassive && passiveStack("p64")) {
-    applyMultiplier(revealedBountyMultiplier("p64"), ITEMS.p64?.name || "Seal of Vine", "p64");
+    for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+      applyMultiplier(revealedBountyMultiplier("p64"), ITEMS.p64?.name || "Seal of Vine", "p64");
+    }
   }
   if ((bot.memory?.length || 0) >= 8 && passiveStack("p67")) {
     applyMultiplier(memoryBountyMultiplier("p67"), ITEMS.p67?.name || "Seal of Caim", "p67");
@@ -423,41 +427,48 @@ function reduceBotMemoryRecord(bot, amount) {
 function applyMemoryToBountyMirror(bot, amount, options = {}) {
   const memoriesAdded = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || memoriesAdded <= 0) return;
-  const entry = orderedPassiveEffectEntries("p10")[0];
+  const entry = orderedPassiveEffectEntries("p125")[0];
   if (!entry) return;
-  const baseConverted = Math.floor(memoriesAdded / 2);
-  const converted = baseConverted > 0 ? Math.min(memoriesAdded, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  const converted = Math.min(memoriesAdded, Math.floor(memoriesAdded / 2));
   if (converted <= 0) return;
+  // ELITE: every conversion also gives +1 free BOUNTY per level (it is not taken from MEMORY)
+  const free = passiveEntryEliteLevels(entry);
   bot.memory.splice(Math.max(0, bot.memory.length - converted), converted);
   reduceBotMemoryRecord(bot, converted);
-  recordBotMemoryLoss(bot, converted, "Seal of Gusion");
+  recordBotMemoryLoss(bot, converted, ITEMS.p125.name);
   markPassiveEntryTriggered(entry);
-  changeBotSin(bot, converted, `Seal of Gusion converted ${converted} MEMORY from ${bot.name} into BOUNTY.`, {
-    source: "Seal of Gusion",
-    triggerMemoryBountyMirror: false
-  });
+  changeBotSin(
+    bot,
+    converted + free,
+    `${ITEMS.p125.name} converted ${converted} MEMORY from ${bot.name} into ${converted + free} BOUNTY.`,
+    {
+      source: ITEMS.p125.name,
+      triggerMemoryBountyMirror: false
+    }
+  );
 }
 
 function applyBountyToMemoryMirror(bot, amount, options = {}) {
   const bountyGained = Math.max(0, Math.ceil(amount));
   if (options.triggerMemoryBountyMirror === false || !state.roundState || !bot || bot.eliminated || bountyGained <= 0) return;
-  const entry = orderedPassiveEffectEntries("p10")[0];
+  const entry = orderedPassiveEffectEntries("p125")[0];
   if (!entry) return;
-  const baseConverted = Math.floor(bountyGained / 2);
-  const converted = baseConverted > 0 ? Math.min(bountyGained, baseConverted + passiveEntryEliteLevels(entry)) : 0;
+  const converted = Math.min(bountyGained, Math.floor(bountyGained / 2));
   if (converted <= 0) return;
   markPassiveEntryTriggered(entry);
   const result = changeBotSin(bot, -converted, "", {
-    source: "Seal of Gusion",
+    source: ITEMS.p125.name,
     triggerMemoryBountyMirror: false,
     triggerLossDamage: false
   });
   if (result.lost <= 0) return;
-  const added = addBotMemory(bot, result.lost, "", {
-    source: "Seal of Gusion",
+  // ELITE: every conversion also gives +1 free MEMORY per level (it is not taken from BOUNTY)
+  const free = passiveEntryEliteLevels(entry);
+  const added = addBotMemory(bot, result.lost + free, "", {
+    source: ITEMS.p125.name,
     triggerMemoryBountyMirror: false
   });
-  addRoundEvent(`Seal of Gusion converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
+  addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
 function memoryRoundLimit() {
@@ -482,21 +493,42 @@ function sitriExcessMemoryDamage(entry) {
   return doubledStackValue(entry, 10);
 }
 
+// Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
-  orderedPassiveEffectEntries("p55").forEach((entry) => {
-    if (bot.eliminated) return;
-    const damage = excess * sitriExcessMemoryDamage(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    queueEndOfRoundBotDamage(
-      bot,
-      damage,
-      `${ITEMS.p55.name} converted ${excess} excess MEMORY into ${damage} damage to ${bot.name}.`,
-      ITEMS.p55.name
-    );
+  const entries = orderedPassiveEffectEntries("p127");
+  if (!entries.length) return;
+  bot.memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0)) + excess;
+  entries.forEach((entry) => markPassiveEntryTriggered(entry));
+}
+
+function applyMemoryOverflowDamage() {
+  const entries = orderedPassiveEffectEntries("p127");
+  state.bots.forEach((bot) => {
+    const overflow = Math.max(0, Math.ceil(bot?.memoryOverflow || 0));
+    if (!bot || overflow <= 0) return;
+    bot.memoryOverflow = 0;
+    if (bot.eliminated || bot.hp <= 0) return;
+    entries.forEach((entry) => {
+      if (bot.eliminated) return;
+      const damage = overflow * sitriExcessMemoryDamage(entry);
+      if (damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      damageBot(
+        bot,
+        damage,
+        `${ITEMS.p127.name} removed ${overflow} excess MEMORY from ${bot.name} and dealt ${damage} damage.`,
+        ITEMS.p127.name
+      );
+    });
   });
+}
+
+// Seal of Zilon: share of a BOSS BOUNTY that turns into regular BOUNTY (the rest is spread among the DAMNED)
+function zilonConversionPercent(idOrItem) {
+  return 40 + 5 * eliteLevels(idOrItem);
 }
 
 function addBotMemory(bot, count, reason = "", options = {}) {
@@ -1099,7 +1131,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p63" && bot.revealedByPassive) {
-        applyFlatBonus(revealedExtraDamage(entry), ITEMS.p63?.name || "Seal of Vual", entry);
+        applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
         return;
       }
 
@@ -1123,7 +1155,11 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p75") {
-        if (bot.revealedByPassive) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
+        if (bot.revealedByPassive) {
+          for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+            applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
+          }
+        }
         return;
       }
 
@@ -1144,7 +1180,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       }
 
       if (entry.id === "p78") {
-        if (personalityType(bot) === "Stubborn") {
+        for (let i = 0; i < personalityCount(bot, "Stubborn"); i += 1) {
           applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p78?.name, entry);
         }
         return;

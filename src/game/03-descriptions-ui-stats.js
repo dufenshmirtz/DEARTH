@@ -67,7 +67,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p55", "p64", "p65", "p69", "p75", "p95", "p112", "p113"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
@@ -81,9 +81,9 @@ function itemDescription(item) {
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
   if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
-  if (item.id === "p10") {
+  if (item.id === "p125") {
     const bonus = eliteLevels(item);
-    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down${bonus ? `, plus ${bonus} extra when it triggers` : ""}.`;
+    return `Half of MEMORY gained by a DAMNED is converted to BOUNTY, rounded down. Half of BOUNTY gained by a DAMNED is converted to MEMORY, rounded down. Converted amounts are not converted again${bonus ? `. Every conversion also gives +${bonus} free MEMORY or BOUNTY` : ""}.`;
   }
   if (item.id === "p11") {
     return `When a DAMNED dies, gain ${stack} random ARTIFACT${stack === 1 ? "" : "S"} with 0 sell value if you have room.`;
@@ -111,7 +111,7 @@ function itemDescription(item) {
   if (item.id === "p22") return `Avoid 20% of damage you would take in a round, rounded down. The avoided damage becomes ${doubledStackPower(item)}x MEMORY for the living DAMNED with the most MEMORY.`;
   if (item.id === "p23") return `New non-boss DAMNED have a ${Math.min(100, Math.round(33 * passivePower(item)))}% chance to spawn with +6 BOUNTY.`;
   if (item.id === "p24") return `You can use only one ARTIFACT per round. All DAMNED pay ${bountyOathMultiplierForItem(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
-  if (item.id === "p25") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
+  if (item.id === "p126") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
   if (item.id === "p26") return `Using two matching ARTIFACTS in a round deals ${twinDetonatorDamage(item)} damage to all DAMNED.`;
   if (item.id === "p27") return `Every ARTIFACT triggers one outcome: gain ${reactiveWarrantySin(item)} SIN, deal ${reactiveWarrantyDamage(item)} damage to a random DAMNED, or refund its purchase cost.`;
   if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-HEALTH DAMNED.`;
@@ -148,8 +148,8 @@ function itemDescription(item) {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
     return `When revealed DAMNED take TARGET-difference damage, each adjacent DAMNED takes ${multiplier}x that damage.`;
   }
-  if (item.id === "p55") {
-    return `Each excess MEMORY becomes ${sitriExcessMemoryDamage(item)} damage to that DAMNED.`;
+  if (item.id === "p127") {
+    return `Excess MEMORY that would be added to a DAMNED becomes ${sitriExcessMemoryDamage(item)} damage per excess MEMORY to that DAMNED.`;
   }
   if (item.id === "p56") {
     return `At end of round, spread ${halphasRoundBossDamage()} damage randomly among enemies. ELITE pays ${halphasEliteCredits(item)} SIN each round.`;
@@ -183,8 +183,13 @@ function itemDescription(item) {
   if (item.id === "p68") {
     return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
   }
-  if (item.id === "p69") {
-    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you.`;
+  if (item.id === "p128") {
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
+  }
+  if (item.id === "p121") return `${zilonConversionPercent(item)}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.`;
+  if (item.id === "p123") {
+    const reveals = 1 + eliteLevels(item);
+    return `At the start of every round, reveal ${reveals === 1 ? "one DAMNED" : `${reveals} DAMNED`}, even ones that are already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack.`;
   }
   if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
   if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
@@ -533,7 +538,7 @@ function shopTax(item = null) {
 }
 
 function shopPrice(item) {
-  const duplicateMultiplier = item.type === "passive" && !isSelfStackingSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
+  const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
   const discountedPrice = item.type === "passive" ? Math.max(0, taxedPrice - passiveShopDiscount()) : taxedPrice;
@@ -782,6 +787,12 @@ function isSelfStackingSeal(idOrItem) {
   return SELF_STACKING_SEAL_IDS.has(id);
 }
 
+// SEALS that can never be upgraded to ELITE: the self-stacking ones plus Kalha and Padma
+function isNonUpgradableSeal(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return NON_UPGRADABLE_SEAL_IDS.has(id);
+}
+
 function selfStackingSpec(idOrItem) {
   const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   return SELF_STACKING_SEAL_SPECS[id] || null;
@@ -899,23 +910,27 @@ function applyPendingSelfStackingPentakillDamage() {
 
 function applySelfStackingRevealedDeath(bot) {
   if (!bot?.revealedByPassive) return;
-  const damage = triggerSelfStackingSeal("p102");
-  if (damage <= 0) return;
-  const targets = adjacentLivingBots(bot);
-  if (!targets.length) return;
-  queueEndOfRoundBotDamages(
-    targets,
-    damage,
-    (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
-    ITEMS.p102.name
-  );
+  // once per reveal stack (Seal of Pyros)
+  for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+    const damage = triggerSelfStackingSeal("p102");
+    if (damage <= 0) continue;
+    const targets = adjacentLivingBots(bot);
+    if (!targets.length) continue;
+    queueEndOfRoundBotDamages(
+      targets,
+      damage,
+      (target, queued) => `${ITEMS.p102.name} dealt ${queued} damage to ${target.name} from ${bot.name}'s revealed death.`,
+      ITEMS.p102.name
+    );
+  }
 }
 
 function applySelfStackingStubbornDeath(bot) {
-  if (personalityType(bot) !== "Stubborn") return;
-  const damage = triggerSelfStackingSeal("p109");
+  const stubbornParts = personalityCount(bot, "Stubborn");
+  if (!stubbornParts) return;
+  const damage = triggerSelfStackingSeal("p109") * stubbornParts;
   if (damage <= 0) return;
-  const targets = activeBots().filter((target) => personalityType(target) !== "Stubborn");
+  const targets = activeBots().filter((target) => !hasPersonality(target, "Stubborn"));
   if (!targets.length) return;
   queueEndOfRoundBotDamages(
     targets,

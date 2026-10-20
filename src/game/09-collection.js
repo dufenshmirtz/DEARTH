@@ -25,14 +25,15 @@ const SEAL_UNLOCKS = {
   p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
   p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
   p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals
-  p92: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
-  p93: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
-  p94: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
-  p95: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
-  p96: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
-  p97: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
-  p110: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  // Boss Seals (the Archangel seals p92-p97 and p110 are open from the start)
+  p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
+  p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
+  p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
+  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
+  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
+  p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
+  p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
+  p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
   // Satan Seals
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
   // Seals of Saturn
@@ -42,8 +43,6 @@ const SEAL_UNLOCKS = {
   p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
   p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
   p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
-  // Still to come: "Get six SEALS that are all ELITE level 1 or more" for a Seal of Kalha
-  // (there is no Seal of Kalha yet; the counter is recorded as flag sixEliteSeals).
 };
 
 const COLLECTION_STAT_LABELS = {
@@ -80,12 +79,12 @@ const COLLECTION_FLAG_LABELS = {
 const COLLECTION_SECTIONS = [
   { key: "player", title: "Player Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
-  { key: "bosses", title: "Boss Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
+  // the former Boss SEALS, now named after the Archangels
+  { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
   { key: "satan", title: "Satan Seals", ids: ["p111"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
-  // former Goetic SEALS whose demons now belong to newer SEALS
-  { key: "special", title: "Special Seals", ids: ["p55", "p69"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -109,7 +108,6 @@ const SEAL_BUILD_TAGS = {
   p6: ["critical"], // Orias
   p7: ["critical"], // Glasya-Labolas
   p9: ["bounty", "memory"], // Marbas
-  p10: ["bounty", "memory"], // Gusion
   p11: ["artifact"], // Valefor
   p12: ["general"], // Belial
   p13: ["general", "personality"], // Bune
@@ -120,7 +118,6 @@ const SEAL_BUILD_TAGS = {
   p19: ["general"], // Sabnock
   p20: ["artifact"], // Haagenti
   p23: ["bounty"], // Seere
-  p25: ["artifact"], // Valac
   p26: ["artifact"], // Amdusias
   p30: ["general"], // Andrealphus
   p31: ["bounty"], // Murmur
@@ -140,7 +137,6 @@ const SEAL_BUILD_TAGS = {
   p52: ["memory"], // Decarabia
   p53: ["memory"], // Samigina
   p54: ["reveal"], // Zepar
-  p55: ["memory"], // Samael Septagram (special)
   p57: ["bounty", "memory"], // Balam
   p58: ["general"], // Ipos
   p59: ["reveal", "bounty", "memory"], // Amon
@@ -151,7 +147,6 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p69: ["critical"], // Cassiel Hexagram (special)
   p70: ["artifact"], // Amy
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
@@ -187,13 +182,22 @@ const SEAL_BUILD_TAGS = {
   p79: ["artifact"], // Creation Uncreated
   p80: ["general"], // Silence in Heaven
   // Boss SEALS
-  p92: ["critical"], // Dantre
-  p93: ["bounty"], // Zilon
-  p94: ["artifact"], // Serafeim
-  p95: ["reveal"], // Pyros
-  p96: ["personality"], // Padma
-  p97: ["memory"], // Threon
-  p110: ["general"], // Petros-Pavlos (wipes MEMORY and BOUNTY)
+  p121: ["bounty"], // Zilon
+  p122: ["general"], // Kalha
+  p123: ["reveal"], // Pyros
+  p124: ["personality"], // Padma
+  p125: ["bounty", "memory"], // Petros-Pavlos
+  p126: ["artifact"], // Serafeim
+  p127: ["memory"], // Threon
+  p128: ["critical"], // Dantre
+  // Archangel SEALS (the former Boss SEALS)
+  p92: ["critical"], // Cassiel Pentagram
+  p93: ["bounty"], // Zachriel Triangle
+  p94: ["artifact"], // Aggiel Hexagram
+  p95: ["reveal"], // Samael Star
+  p96: ["personality"], // Samael Triangle
+  p97: ["memory"], // Cassiel Sigil
+  p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Seals of Saturn
