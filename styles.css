@@ -11282,3 +11282,69 @@ body.native-arcade .center-console .guess-corruption s {
 .bot-title .bot-glyph + .bot-glyph {
   margin-left: 2px;
 }
+
+/* ---------- PICK buttons under the DAMNED cards: the same border-kit frame as the other buttons ---------- */
+#app .pick-button {
+  position: relative;
+  min-height: 36px;
+  padding: 4px 10px !important;
+  font-size: 14px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--bone) !important;
+}
+
+#app .pick-button::after {
+  content: "";
+  position: absolute;
+  inset: -3px -4px;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 9px 18px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 9px 18px stretch;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+#app .pick-button:hover:not(:disabled) {
+  color: var(--blood-bright) !important;
+}
+
+#app .pick-button:hover:not(:disabled)::after,
+#app .bot-card.boss .pick-button::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .bot-card.boss .pick-button {
+  color: var(--blood-bright) !important;
+}
+
+#app .pick-button:disabled::after {
+  opacity: 0.32;
+}
+
+/* native app: the small pick button under the compact card */
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
+  min-height: 24px !important;
+  padding: 0 6px !important;
+  font-size: 11px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--bone) !important;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button::after {
+  inset: -2px -3px;
+  border-width: 7px 13px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 7px 13px stretch;
+}
+
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button:hover:not(:disabled),
+body.native-arcade #app .arena:not(.pvp-arena) .bot-card.boss.pickable .pick-button {
+  color: var(--blood-bright) !important;
+}
