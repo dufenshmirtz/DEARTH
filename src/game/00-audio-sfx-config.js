@@ -58,10 +58,10 @@ const GUESS_SFX_START_OFFSET = 0.12;
 const DEFAULT_ARTIFACT_SFX_VOLUME = levelVolume([], "item");
 const ARTIFACT_SFX = {
   a6: { src: "assets/audio/artifacts/Altar.mp3", tier: "item" },
-  a7: { src: "assets/audio/artifacts/Statue.mp3", tier: "item" },
-  a8: { src: "assets/audio/artifacts/goat.mp3", tier: "item" },
+  a7: { src: "assets/audio/artifacts/arrowSwish.mp3", tier: "item" },
+  a8: { src: "assets/audio/artifacts/goatBaa.mp3", tier: "item" },
   a9: { src: "assets/audio/artifacts/invertedCross.mp3", tier: "item" },
-  a10: { src: "assets/audio/artifacts/coin.mp3", tier: "item" },
+  a10: { src: "assets/audio/artifacts/coinDrop.mp3", tier: "item" },
   a11: { src: "assets/audio/artifacts/VialofBlood.mp3", tier: "item" },
   a12: { src: "assets/audio/artifacts/invertedCross.mp3", tier: "item" },
   a14: { src: "assets/audio/artifacts/candle.mp3", tier: "item" },
@@ -70,7 +70,7 @@ const ARTIFACT_SFX = {
   a21: { src: "assets/audio/artifacts/pentakill.mp3", tier: "item" },
   a22: { src: "assets/audio/artifacts/chalice.mp3", tier: "item" },
   a23: { src: "assets/audio/artifacts/book.mp3", tier: "item" },
-  a25: { src: "assets/audio/artifacts/lamb.mp3", tier: "item" },
+  a25: { src: "assets/audio/artifacts/lambCall.mp3", tier: "item" },
   a28: { src: "assets/audio/artifacts/skull.mp3", tier: "item" }
 };
 
