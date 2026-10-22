@@ -81,7 +81,7 @@ function applyDisplaySettings() {
 let iosLineBoilFrame = 0;
 function stepIosLineBoil() {
   const body = document.body;
-  if (body?.classList.contains("outline-boil")) {
+  if (body?.classList.contains("outline-boil") && !document.hidden) {
     iosLineBoilFrame = (iosLineBoilFrame + 1) % 3;
     body.dataset.lineFrame = String(iosLineBoilFrame);
   }

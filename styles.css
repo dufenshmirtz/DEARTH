@@ -11394,64 +11394,85 @@ body.native-arcade #app .arena:not(.pvp-arena) .bot-card {
 
 /* ---------- iPhone: the hand-drawn lines tremble like the outlines ----------
    Safari loses a line's size and position when its picture is animated through --divider-img
-   (fat, shifted lines), so on iPhone the picture is stepped by stepIosLineBoil() instead.
-   --line-0/1/2 are the same three drawings one step apart, like the animation delays elsewhere. */
-body.native-ios {
-  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
-  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
-  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
-  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
-  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
-  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
-}
-body.native-ios[data-line-frame="0"] {
-  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
-  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
-  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
-  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
-  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
-  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
-}
-body.native-ios[data-line-frame="1"] {
-  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
-  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
-  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
-  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
-  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
-  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
-}
-body.native-ios[data-line-frame="2"] {
-  --line-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png");
-  --line-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png");
-  --line-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png");
-  --line-red-0: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png");
-  --line-red-1: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
-  --line-red-2: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png");
-}
+   (fat, shifted lines), so on iPhone stepIosLineBoil() steps body[data-line-frame] 0/1/2 and
+   each line picks its drawing here. Plain per-frame rules (no inherited variables) keep the
+   restyle to the lines themselves. Phases match the animation delays used elsewhere. */
 body.native-ios.outline-boil #app .panel-header,
 body.native-ios.outline-boil #app .bot-card .bot-stats,
 body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
   animation: none !important;
 }
-body.native-ios.outline-boil #app .panel-header,
-body.native-ios.outline-boil #app .bot-card .bot-stats {
-  background-image: var(--line-0) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
 }
-body.native-ios.outline-boil #app .active-panel .panel-header,
-body.native-ios.outline-boil #app .bot-card .mini-stat.bot-health {
-  background-image: var(--line-1) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
 }
-body.native-ios.outline-boil #app .bot-card:nth-child(3n + 2) .bot-stats {
-  background-image: var(--line-2) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .active-panel .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
 }
-body.native-ios.outline-boil #app .bot-card.boss .bot-stats {
-  background-image: var(--line-red-0) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
 }
-body.native-ios.outline-boil #app .bot-card.boss .mini-stat.bot-health {
-  background-image: var(--line-red-1) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") !important;
 }
-body.native-ios.outline-boil #app .bot-card.boss:nth-child(3n + 2) .bot-stats {
-  background-image: var(--line-red-2) !important;
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card.boss .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card.boss .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="0"] #app .bot-card.boss:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .active-panel .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card.boss .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card.boss .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="1"] #app .bot-card.boss:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .active-panel .panel-header {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card.boss .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-c-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card.boss .mini-stat.bot-health {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png") !important;
+}
+body.native-ios.outline-boil[data-line-frame="2"] #app .bot-card.boss:nth-child(3n + 2) .bot-stats {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-b-red.png") !important;
 }
 
 /* iPhone: the menu art fills the whole screen (the table itself stays inside the safe area) */
