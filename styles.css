@@ -11594,3 +11594,8 @@ body.native-ios.native-arcade #app .side-panel .small-button::after,
 body.native-ios.native-arcade #app .side-panel .primary-button::after {
   transition: none !important;
 }
+
+/* iPhone: the SIN box is a little narrower, so the +SIN popup sits further left, clear of your total */
+body.native-ios.native-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
+  left: 7px !important;
+}
