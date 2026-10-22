@@ -11521,17 +11521,28 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pi
 }
 
 
-/* iPhone: the number pad's outline vanished on every tap. Pressing a key starts the key frame's
-   opacity/filter transition, Safari lifts that key onto its own layer, and the pad's outline
-   (drawn over the keys) was not repainted on top of it. The outline gets its own layer for good,
-   and the keys' frames no longer animate on iPhone, so nothing is lifted and dropped mid-tap. */
+/* iPhone: the number pad's outline vanished on every tap. Pressing a key makes Safari lift that
+   key onto its own layer, and the pad's outline, drawn on top of the keys, was not repainted
+   over it. On iPhone the outline is drawn under the keys instead (nothing has to be repainted on
+   top of a tapped key), and the keys' frames don't animate, so no key is lifted at all. */
 body.native-ios .mobile-numpad {
-  isolation: isolate;
+  position: relative;
+  z-index: 0;
 }
 body.native-ios .mobile-numpad::after {
-  transform: translateZ(0);
-  will-change: transform;
+  z-index: 0 !important;
+}
+body.native-ios #app .mobile-numpad .mobile-numpad-key {
+  z-index: 1;
 }
 body.native-ios #app .mobile-numpad-key::after {
   transition: none !important;
+}
+
+/* iPhone: the DAMNED figures sit clear of the top of the card frame */
+body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card {
+  padding-top: 12px !important;
+}
+body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-face {
+  max-height: 100% !important;
 }
