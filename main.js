@@ -2358,11 +2358,11 @@ function stepIosLineBoil() {
 if (NATIVE_IOS_APP) setTimeout(stepIosLineBoil, 0);
 
 // ---------- iPhone audio: Web Audio instead of <audio> for the short sounds ----------
-// On iPhone, <audio> ignores .volume (everything plays at full volume) and starting one is slow
-// enough to stutter taps and hit animations. So on iPhone every short sound is decoded once and
-// played through Web Audio with its own gain; the looping music keeps its <audio> element but is
-// routed through a gain node so the volume settings work. The rest of the game code is unchanged:
-// this swaps play/pause/load/volume on <audio> elements, on iPhone only.
+// On iPhone, <audio> ignores .volume (everything plays at full volume), starting one is slow
+// enough to stutter taps and hit animations, and a playing <audio> makes iOS treat the game as a
+// media player (lock screen / Now Playing controls). So on iPhone every sound, the looping music
+// included, is decoded once and played through Web Audio with its own gain. The rest of the game
+// code is unchanged: this swaps play/pause/load/volume/paused on <audio> elements, on iPhone only.
 const iosAudio = NATIVE_IOS_APP ? setupIosAudio() : null;
 
 function setupIosAudio() {
@@ -2375,9 +2375,7 @@ function setupIosAudio() {
     return null;
   }
   const proto = HTMLMediaElement.prototype;
-  const nativePlay = proto.play;
   const nativePause = proto.pause;
-  const nativeLoad = proto.load;
   const buffers = new Map(); // url -> AudioBuffer, or a pending Promise, or null when it failed
   const urlOf = (el) => el.currentSrc || el.src || "";
   const isMusic = (el) => Boolean(el.loop);
@@ -2385,11 +2383,23 @@ function setupIosAudio() {
     if (ctx.state !== "running") ctx.resume().catch(() => {});
   };
 
-  function loadBuffer(url) {
+  // the music is minutes long: decode it at a lower rate so it does not take ~90 MB of memory
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  function decoderFor(lowRate) {
+    if (!lowRate || !OfflineCtx) return ctx;
+    try {
+      return new OfflineCtx(2, 1, 32000);
+    } catch (error) {
+      return ctx;
+    }
+  }
+
+  function loadBuffer(url, lowRate = false) {
     if (!url || buffers.has(url)) return;
+    const decoder = decoderFor(lowRate);
     const pending = fetch(url)
       .then((response) => response.arrayBuffer())
-      .then((data) => new Promise((resolve, reject) => ctx.decodeAudioData(data, resolve, reject)))
+      .then((data) => new Promise((resolve, reject) => decoder.decodeAudioData(data, resolve, reject)))
       .then((buffer) => {
         buffers.set(url, buffer);
         return buffer;
@@ -2424,25 +2434,75 @@ function setupIosAudio() {
     }
   });
 
+  // ---- looping music: one buffer source at a time, remembers where it was paused ----
+  function musicState(el) {
+    if (!el.__iosMusic) el.__iosMusic = { source: null, wanted: false, offset: 0, startedAt: 0 };
+    return el.__iosMusic;
+  }
+
+  function startMusic(el) {
+    const music = musicState(el);
+    if (!music.wanted || music.source) return;
+    const buffer = buffers.get(urlOf(el));
+    if (!buffer || typeof buffer.then === "function") return; // starts when decoding finishes
+    try {
+      if (!el.__iosGain) {
+        el.__iosGain = ctx.createGain();
+        el.__iosGain.connect(ctx.destination);
+      }
+      el.__iosGain.gain.value = el.__iosVolume ?? 1;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(el.__iosGain);
+      music.offset %= buffer.duration;
+      source.start(0, music.offset);
+      music.startedAt = ctx.currentTime;
+      music.source = source;
+    } catch (error) {}
+  }
+
+  function stopMusic(el) {
+    const music = el.__iosMusic;
+    if (!music) return;
+    music.wanted = false;
+    if (!music.source) return;
+    const duration = music.source.buffer?.duration || 0;
+    if (duration) music.offset = (music.offset + ctx.currentTime - music.startedAt) % duration;
+    try {
+      music.source.stop();
+    } catch (error) {}
+    music.source = null;
+  }
+
+  const nativePaused = Object.getOwnPropertyDescriptor(proto, "paused");
+  Object.defineProperty(proto, "paused", {
+    configurable: true,
+    get() {
+      if (this.__iosMusic) return !this.__iosMusic.wanted;
+      return nativePaused?.get ? nativePaused.get.call(this) : true;
+    }
+  });
+
   proto.load = function () {
-    if (isMusic(this)) return nativeLoad.call(this);
-    loadBuffer(urlOf(this));
+    const url = urlOf(this);
+    if (!isMusic(this)) {
+      loadBuffer(url);
+      return;
+    }
+    loadBuffer(url, true);
+    const pending = buffers.get(url);
+    if (pending && typeof pending.then === "function") pending.then(() => startMusic(this));
   };
 
   proto.play = function () {
     resume();
     if (isMusic(this)) {
-      if (!this.__iosGain) {
-        try {
-          const source = ctx.createMediaElementSource(this);
-          const gain = ctx.createGain();
-          gain.gain.value = this.__iosVolume ?? 1;
-          source.connect(gain);
-          gain.connect(ctx.destination);
-          this.__iosGain = gain;
-        } catch (error) {}
-      }
-      return nativePlay.call(this);
+      const music = musicState(this);
+      music.wanted = true;
+      if (!buffers.has(urlOf(this))) this.load();
+      startMusic(this);
+      return Promise.resolve();
     }
     const url = urlOf(this);
     const buffer = buffers.get(url);
@@ -2478,6 +2538,7 @@ function setupIosAudio() {
 
   proto.pause = function () {
     stopSources(this);
+    stopMusic(this);
     return nativePause.call(this);
   };
 
