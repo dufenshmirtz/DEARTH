@@ -519,6 +519,8 @@ function primeSfxAudio() {
     try {
       const primer = audio.cloneNode(true);
       primer.volume = 0;
+      // iPhone ignores .volume on audio elements (always full), so the silent warm-up has to be muted
+      if (NATIVE_IOS_APP) primer.muted = true;
       const attempt = primer.play();
       const reset = () => {
         try {
