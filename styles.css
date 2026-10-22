@@ -11516,4 +11516,7 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pi
   justify-self: auto;
   margin-left: 0;
   margin-right: 0;
+  /* and Safari then stretches it to the card's right edge: keep it as wide as the word */
+  width: max-content !important;
 }
+
