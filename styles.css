@@ -11546,3 +11546,31 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card {
 body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-face {
   max-height: 100% !important;
 }
+
+/* iPhone: the saved-runs screen. The run list was 620px wide inside a narrower centred panel and
+   nudged left (an old desktop offset), so it hung off to the right, and with five slots the
+   remove-run question ended up below the screen. On iPhone the panel takes the list's width,
+   the rows are a little shorter so everything fits, and while "remove this run?" is asked the
+   list steps aside so the question and Yes / No sit in the middle of the screen. */
+body.native-ios #app .main-menu-panel.menu-screen-arcade-runs {
+  width: min(560px, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 24px));
+}
+body.native-ios.native-arcade #app .run-menu {
+  width: 100%;
+  gap: 8px;
+  transform: none;
+}
+body.native-ios.native-arcade #app .run-slot-list {
+  gap: 6px;
+}
+body.native-ios.native-arcade #app .main-menu .run-slot-button,
+body.native-ios.native-arcade #app .main-menu .run-remove-button {
+  min-height: 44px;
+}
+body.native-ios.native-arcade #app .main-menu .run-slot-button {
+  font-size: 20px;
+}
+body.native-ios.native-arcade #app .run-menu:has(.run-remove-confirm) .run-slot-list,
+body.native-ios.native-arcade #app .run-menu:has(.run-remove-confirm) > .secondary-menu-button {
+  display: none;
+}
