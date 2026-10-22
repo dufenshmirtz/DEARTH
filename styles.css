@@ -11520,3 +11520,18 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pi
   width: max-content !important;
 }
 
+
+/* iPhone: the number pad's outline vanished on every tap. Pressing a key starts the key frame's
+   opacity/filter transition, Safari lifts that key onto its own layer, and the pad's outline
+   (drawn over the keys) was not repainted on top of it. The outline gets its own layer for good,
+   and the keys' frames no longer animate on iPhone, so nothing is lifted and dropped mid-tap. */
+body.native-ios .mobile-numpad {
+  isolation: isolate;
+}
+body.native-ios .mobile-numpad::after {
+  transform: translateZ(0);
+  will-change: transform;
+}
+body.native-ios #app .mobile-numpad-key::after {
+  transition: none !important;
+}
