@@ -11599,3 +11599,18 @@ body.native-ios.native-arcade #app .side-panel .primary-button::after {
 body.native-ios.native-arcade #app .arena:not(.pvp-arena) .credit-wrap .player-credit-badge {
   left: 7px !important;
 }
+
+/* iPhone: the three Devil's Offerings fit inside the panel's frame (the last card's frame used to
+   run past the bottom of the panel's), with a little less air between and inside the cards */
+body.native-ios.native-arcade #app .shop-panel .shop-slots {
+  padding: 6px 10px 12px !important;
+  gap: 5px !important;
+}
+body.native-ios.native-arcade #app .shop-panel .shop-slots .item-card {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  row-gap: 2px !important;
+}
