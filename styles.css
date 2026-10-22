@@ -11508,3 +11508,12 @@ body.native-ios #app *::after {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+/* iPhone: PICK sits centred under the card. The button is placed at left 50% and pulled back by
+   half its width; Safari also applies the generic "justify-self: center" to that absolute
+   button (centring it again inside the right half), which pushed it to the right. */
+body.native-ios.native-arcade #app .arena:not(.pvp-arena) .bot-card.pickable .pick-button {
+  justify-self: auto;
+  margin-left: 0;
+  margin-right: 0;
+}
