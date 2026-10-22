@@ -90,6 +90,140 @@ function stepIosLineBoil() {
 }
 if (NATIVE_IOS_APP) setTimeout(stepIosLineBoil, 0);
 
+// ---------- iPhone audio: Web Audio instead of <audio> for the short sounds ----------
+// On iPhone, <audio> ignores .volume (everything plays at full volume) and starting one is slow
+// enough to stutter taps and hit animations. So on iPhone every short sound is decoded once and
+// played through Web Audio with its own gain; the looping music keeps its <audio> element but is
+// routed through a gain node so the volume settings work. The rest of the game code is unchanged:
+// this swaps play/pause/load/volume on <audio> elements, on iPhone only.
+const iosAudio = NATIVE_IOS_APP ? setupIosAudio() : null;
+
+function setupIosAudio() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx || typeof HTMLMediaElement === "undefined" || typeof fetch !== "function") return null;
+  let ctx;
+  try {
+    ctx = new AudioCtx();
+  } catch (error) {
+    return null;
+  }
+  const proto = HTMLMediaElement.prototype;
+  const nativePlay = proto.play;
+  const nativePause = proto.pause;
+  const nativeLoad = proto.load;
+  const buffers = new Map(); // url -> AudioBuffer, or a pending Promise, or null when it failed
+  const urlOf = (el) => el.currentSrc || el.src || "";
+  const isMusic = (el) => Boolean(el.loop);
+  const resume = () => {
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+  };
+
+  function loadBuffer(url) {
+    if (!url || buffers.has(url)) return;
+    const pending = fetch(url)
+      .then((response) => response.arrayBuffer())
+      .then((data) => new Promise((resolve, reject) => ctx.decodeAudioData(data, resolve, reject)))
+      .then((buffer) => {
+        buffers.set(url, buffer);
+        return buffer;
+      })
+      .catch(() => {
+        buffers.set(url, null);
+        return null;
+      });
+    buffers.set(url, pending);
+  }
+
+  function stopSources(el) {
+    if (!el.__iosSources) return;
+    el.__iosSources.forEach((source) => {
+      try {
+        source.onended = null;
+        source.stop();
+      } catch (error) {}
+    });
+    el.__iosSources.clear();
+  }
+
+  Object.defineProperty(proto, "volume", {
+    configurable: true,
+    get() {
+      return this.__iosVolume ?? 1;
+    },
+    set(value) {
+      const volume = Math.min(1, Math.max(0, Number(value) || 0));
+      this.__iosVolume = volume;
+      if (this.__iosGain) this.__iosGain.gain.value = volume;
+    }
+  });
+
+  proto.load = function () {
+    if (isMusic(this)) return nativeLoad.call(this);
+    loadBuffer(urlOf(this));
+  };
+
+  proto.play = function () {
+    resume();
+    if (isMusic(this)) {
+      if (!this.__iosGain) {
+        try {
+          const source = ctx.createMediaElementSource(this);
+          const gain = ctx.createGain();
+          gain.gain.value = this.__iosVolume ?? 1;
+          source.connect(gain);
+          gain.connect(ctx.destination);
+          this.__iosGain = gain;
+        } catch (error) {}
+      }
+      return nativePlay.call(this);
+    }
+    const url = urlOf(this);
+    const buffer = buffers.get(url);
+    const ended = () => setTimeout(() => this.dispatchEvent(new Event("ended")), 0);
+    // still decoding (only in the first moments after launch): skip it rather than blast it
+    if (this.muted || !buffer || typeof buffer.then === "function") {
+      loadBuffer(url);
+      ended();
+      return Promise.resolve();
+    }
+    stopSources(this); // replaying the same element restarts it, as <audio> does
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = this.playbackRate || 1;
+      const gain = ctx.createGain();
+      gain.gain.value = this.__iosVolume ?? 1;
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      if (!this.__iosSources) this.__iosSources = new Set();
+      this.__iosSources.add(source);
+      source.onended = () => {
+        this.__iosSources?.delete(source);
+        this.dispatchEvent(new Event("ended"));
+      };
+      const offset = Math.max(0, Number(this.__iosStartOffset ?? this.currentTime) || 0);
+      source.start(0, Math.min(offset, Math.max(0, buffer.duration - 0.01)));
+    } catch (error) {
+      ended();
+    }
+    return Promise.resolve();
+  };
+
+  proto.pause = function () {
+    stopSources(this);
+    return nativePause.call(this);
+  };
+
+  // iPhone only starts (and after a call or the background, restarts) audio from a touch
+  ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, resume, true));
+
+  return {
+    ctx,
+    suspend: () => ctx.suspend().catch(() => {}),
+    resume
+  };
+}
+
 // ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
 // Game animations (SEAL triggers, the READY reveal steps, hits, pops) run this many times faster.
 function animSpeed() {
@@ -506,6 +640,8 @@ function playSoundtrack() {
 function primeSfxAudio() {
   if (sfxPrimed) return;
   sfxPrimed = true;
+  // iPhone decodes every sound up front (iosAudio), so there is nothing to warm up
+  if (iosAudio) return;
   [
     ensureSealPurchaseSfx(),
     ensureButtonSfx("guess"),
@@ -519,8 +655,6 @@ function primeSfxAudio() {
     try {
       const primer = audio.cloneNode(true);
       primer.volume = 0;
-      // iPhone ignores .volume on audio elements (always full), so the silent warm-up has to be muted
-      if (NATIVE_IOS_APP) primer.muted = true;
       const attempt = primer.play();
       const reset = () => {
         try {
@@ -569,9 +703,11 @@ function pauseGameAudioForBackground() {
     ...activeOneShotSfxInstances
   ].forEach(pauseAudioElement);
   activeOneShotSfxInstances.clear();
+  iosAudio?.suspend();
 }
 
 function resumeGameAudioAfterForeground() {
+  iosAudio?.resume();
   if (!soundtrackPausedByAppBackground) return;
   soundtrackPausedByAppBackground = false;
   resumeSoundtrack();
@@ -661,6 +797,7 @@ function ensurePentakillSfx() {
 
 function playOneShot(audio, startOffset = 0) {
   try {
+    audio.__iosStartOffset = startOffset;
     audio.currentTime = Math.max(0, startOffset);
     audio.play().catch(() => {});
   } catch (error) {}
@@ -675,6 +812,7 @@ function playClonedOneShot(audio, volume, startOffset = 0) {
     instance.addEventListener("ended", cleanup, { once: true });
     instance.addEventListener("error", cleanup, { once: true });
     instance.currentTime = Math.max(0, startOffset || 0);
+    instance.__iosStartOffset = startOffset;
     instance.play().catch(cleanup);
   } catch (error) {}
 }

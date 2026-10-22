@@ -11499,3 +11499,12 @@ body.native-ios.native-arcade #app .passive-bar:has(> .passive-slot:nth-child(5)
 body.native-ios.native-arcade #app .passive-bar:has(> .passive-slot:nth-child(6)) {
   grid-auto-columns: min(108px, calc((100% - 20px) / 6)) !important;
 }
+
+/* iPhone: no backdrop blur. It sits over plain black here (so it shows nothing), but Safari
+   re-blurs it whenever anything near it moves, which costs smoothness. */
+body.native-ios #app *,
+body.native-ios #app *::before,
+body.native-ios #app *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
