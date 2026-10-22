@@ -11574,3 +11574,23 @@ body.native-ios.native-arcade #app .run-menu:has(.run-remove-confirm) .run-slot-
 body.native-ios.native-arcade #app .run-menu:has(.run-remove-confirm) > .secondary-menu-button {
   display: none;
 }
+
+/* iPhone: the same fix as the number pad, for the Items panel (Devil's Offerings / ARTIFACTS).
+   Their outlines were drawn on top of the buttons and vanished whenever a button was tapped.
+   On iPhone each frame is drawn beneath its panel's contents instead, and button frames don't
+   animate, so Safari never has to repaint an outline over a tapped button. */
+body.native-ios.native-arcade #app .shop-panel,
+body.native-ios.native-arcade #app .active-panel,
+body.native-ios.native-arcade #app .item-card {
+  z-index: 0;
+}
+body.native-ios.native-arcade #app .side-panel.mobile-open::after,
+body.native-ios.native-arcade #app .shop-panel::after,
+body.native-ios.native-arcade #app .active-panel::after,
+body.native-ios.native-arcade #app .item-card::after {
+  z-index: -1 !important;
+}
+body.native-ios.native-arcade #app .side-panel .small-button::after,
+body.native-ios.native-arcade #app .side-panel .primary-button::after {
+  transition: none !important;
+}
