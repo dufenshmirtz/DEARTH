@@ -11638,3 +11638,13 @@ body.native-arcade #app .side-panel .shop-panel .shop-slots:has(> .item-card:nth
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
 }
+
+/* Phone app (Android and iPhone): the ARTIFACTS list scrolls exactly as before, without a visible scrollbar */
+body.native-arcade #app .active-panel .active-list {
+  scrollbar-width: none;
+}
+body.native-arcade #app .active-panel .active-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
