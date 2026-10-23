@@ -483,7 +483,7 @@ test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
     const ids = collectionSections().flatMap(section => section.ids);
-    assert.equal(ids.length, 102);
+    assert.equal(ids.length, 105);
     for (const id of ids) {
       assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
       for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
@@ -949,5 +949,240 @@ test("Vepar reveals one extra DAMNED and spreads the worst guess penalty to ever
     state.roundState.playerEffectiveGuess = 60;
     applyPenalties();
     assertDamage([10, 10, 10, 10, 150]);
+  `);
+});
+
+
+// ---- Trinity SEALS: Father p131, Son p132, Holy Spirit p133 ----
+const TRINITY_STUBS = `
+  globalThis.render = () => {};
+  globalThis.playGameSfx = () => {};
+  globalThis.quietMomentSfx = () => {};
+  globalThis.performance = { now: () => 0 };
+`;
+
+test("Trinity SEALS share one slot, merge when slots are full, and sell together", () => {
+  game()(`
+    ${TRINITY_STUBS}
+    fixture([["p131"], ["p1"], ["p2"]], [50]);
+    assert.equal(ownedSealSlotCount(), 3);
+    assert.equal(passiveLimit(), 3);
+    assert.equal(hasSealSlotRoomFor(ITEMS.p133), true);
+    assert.equal(hasSealSlotRoomFor("p132"), true);
+    assert.equal(hasSealSlotRoomFor(ITEMS.p6), false);
+    state.player.passives.push(itemCopy("p133"));
+    assert.equal(ownedSealSlotCount(), 3);
+    assert.equal(trinitySlotArtPath(), "assets/seals/trinity/father-spirit.png");
+    const html = renderPassives();
+    assert.equal((html.match(/trinity-seal-slot/g) || []).length, 1);
+    assert.ok(html.includes("father-spirit.png"));
+    assert.equal((html.match(/empty-seal-slot-image/g) || []).length, 0);
+    state.player.passives.push(itemCopy("p132"));
+    assert.equal(trinitySlotArtPath(), "assets/seals/trinity/trinity.png");
+    assert.equal(ownedSealSlotCount(), 3);
+    state.player.credits = 0;
+    sellPassive(state.player.passives.findIndex(item => item.id === "p133"));
+    assert.equal(ownedTrinitySeals().length, 0);
+    assert.deepEqual(state.player.passives.map(item => item.id), ["p1", "p2"]);
+    assert.equal(state.player.credits, 48);
+  `);
+});
+
+test("Trinity SEALS cost 33, cannot be ELITE, have art for every set, and are in the catalog", () => {
+  const run = game();
+  const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").replace(/\r\n/g, "\n");
+  for (const id of ["p131", "p132", "p133"]) {
+    const item = run(`ITEMS.${id}`);
+    assert.equal(item.price, 33);
+    assert.ok(run(`isNonUpgradableSeal("${id}")`));
+    assert.ok(catalog.includes(`${item.name} (33 SIN)\n${item.description}`), item.name);
+    assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
+    assert.ok(run(`collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`));
+    assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))));
+  }
+  for (const file of Object.values(run("TRINITY_SEAL_ART"))) {
+    assert.ok(fs.existsSync(path.join(root, "assets/seals", file)), file);
+  }
+  run(`
+    fixture([["p131"]], [50]);
+    const offered = new Set();
+    for (let i = 0; i < 400; i += 1) offered.add(drawPassiveShopItem(false, true).item.id);
+    assert.equal(offered.has("p131"), false);
+  `);
+});
+
+test("Father: % TARGET difference uses max HEALTH, BOSSES included", () => {
+  const damage = (blessing) => {
+    const run = game();
+    run(`
+      fixture([["p131"]], [40, 50, 60]);
+      state.bots[2].isBoss = true;
+      state.roundState.targetModifier = 1;
+      state.roundState.trinity = { father: ${JSON.stringify(blessing)} };
+      applyPenalties();
+      assert.equal(state.roundState.target, 53);
+    `);
+    return JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  };
+  const flat = damage(null);
+  const percent = damage("percent");
+  // differences 13, 3, 7: flat damage becomes 13%, 3%, 7% of 1000 max HEALTH
+  assert.deepEqual(percent.map((value, index) => value - flat[index]), [117, 27, 63]);
+});
+
+test("Father: double damage doubles what you deal, the 20% strike hits one DAMNED at end of round", () => {
+  const base = game();
+  base(critRound("[]"));
+  const without = JSON.parse(base("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  const run = game();
+  run(critRound(`[["p131"]]`, `state.roundState.trinity = { father: "double" };`));
+  const doubled = JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  // your CRITICAL (10% of 1000) is doubled; TARGET difference is not damage you deal
+  assert.deepEqual(doubled.map((value, index) => value - without[index]), [100, 100, 100, 100, 100]);
+  game()(`
+    fixture([["p131"]], [50, 50]);
+    state.bots[1].isBoss = true;
+    state.roundState.trinity = { father: "strike" };
+    Math.random = () => 0.99;
+    applyEndOfRoundPassives();
+    assertDamage([0, 200]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p131"));
+  `);
+});
+
+test("Son: double SIN from every source but sales, +8 SIN, free rerolls keep the reroll price", () => {
+  game()(`
+    ${TRINITY_STUBS}
+    fixture([], [50]);
+    state.player.passives.push(itemCopy("p132"));
+    state.roundState.trinity = { son: "doubleSin" };
+    state.player.credits = 0;
+    assert.equal(gainCredits(5, true, "Bounty"), 10);
+    assert.equal(gainCredits(3, false, "PENTAKILL"), 6);
+    assert.equal(gainCredits(4, false, "Sold Seal of Bael"), 4);
+    assert.equal(state.player.credits, 20);
+    assert.equal(state.sealStats.p132.credits, 8);
+    state.roundState.trinity = { son: null };
+    applyTrinitySonBlessing("sin");
+    assert.equal(state.player.credits, 28);
+    state.freeRerolls = 0;
+    applyTrinitySonBlessing("rerolls");
+    assert.equal(state.freeRerolls, 4);
+    assert.equal(currentRerollCost(), 0);
+    state.rerollBaseCost = 3;
+    rerollShopClick();
+    assert.equal(state.freeRerolls, 3);
+    assert.equal(state.rerollBaseCost, 3);
+    assert.equal(state.player.credits, 28);
+    state.freeRerolls = 0;
+    assert.equal(currentRerollCost(), 3);
+  `);
+});
+
+test("Holy Spirit: every wheel outcome does what its slice says", () => {
+  const outcome = (key, setup, check) =>
+    game()(`
+      ${TRINITY_STUBS}
+      fixture([], [10, 20, 30, 40, 50]);
+      state.player.passives.push(itemCopy("p133"));
+      state.round = 30;
+      state.bots.forEach(bot => { bot.memory = []; bot.reward = 3; bot.revealedByPassive = false; bot.revealStacks = 0; });
+      state.player.actives = [];
+      ${setup}
+      state.roundState.trinity = { spirit: "${key}" };
+      applyTrinityWheelOutcome("${key}");
+      ${check}
+    `);
+  outcome("memory", "", `assert.deepEqual(state.bots.map(bot => bot.memory.length), [5, 5, 5, 5, 5]);`);
+  outcome("bounty", "", `assert.deepEqual(state.bots.map(bot => botSin(bot)).sort(), [3, 3, 3, 6, 6]);`);
+  outcome("reveal", "", `assert.equal(revealedDamnedCount(), 4);`);
+  outcome("artifacts", "", `
+    assert.equal(state.player.actives.length, 3);
+    assert.equal(new Set(state.player.actives.map(item => item.id)).size, 1);
+  `);
+  outcome("stubborn", `state.bots.forEach(bot => setBotPersonality(bot, "Analyst", "", { triggerAlterationDamage: false }));`,
+    `assert.equal(state.bots.filter(bot => hasPersonality(bot, "Stubborn")).length, 4);`);
+  outcome("eliminate", `state.bots[0].isBoss = true;`, `
+    assert.equal(state.bots.filter(bot => bot.eliminated).length, 1);
+    assert.equal(state.bots[0].eliminated, false);
+    assert.ok(state.player.credits > 0);
+  `);
+  outcome("elite", `state.player.passives.push(itemCopy("p1"));`, `
+    assert.equal(state.trinityEliteNextShop, true);
+    rerollShop();
+    assert.equal(state.shop[0].item.id, "p1");
+    assert.equal(state.trinityEliteNextShop, false);
+  `);
+  outcome("trinity", `Math.random = () => 0.1;`, `
+    assert.deepEqual(state.trinityShopSealsNextShop, ["p131", "p132"]);
+    rerollShop();
+    assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131", "p132"]);
+    assert.equal(state.shop.length, 5);
+    syncShopSlotCount();
+    assert.equal(state.shop.length, 5);
+    assert.ok(renderShopSlot(state.shop[3], 3).includes("TRINITY SEAL"));
+  `);
+  outcome("trinity", `
+    state.player.passives.push(itemCopy("p131"), itemCopy("p132"));
+    state.player.hp = 90;
+  `, `
+    assert.equal(state.player.hp, 93);
+    assert.equal(state.roundState.trinity.spiritHealed, true);
+  `);
+});
+
+test("Holy Spirit: CRITICAL whatever you guess, and no TARGET-difference damage to you", () => {
+  game()(`
+    fixture([], [49, 47, 30, 70, 100]);
+    state.player.passives.push(itemCopy("p133"));
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 0;
+    state.roundState.trinity = { spirit: "critical" };
+    assert.ok(criticalKeysForDisplay().has("player") || state.stage !== "active");
+    applyPenalties();
+    assert.ok(state.roundState.criticalHitKeys.has("player"));
+  `);
+  const hurt = (spirit) => {
+    const run = game();
+    run(`
+      fixture([], [49, 47, 30, 70, 100]);
+      state.player.passives.push(itemCopy("p133"));
+      state.roundState.targetModifier = 1;
+      state.roundState.playerEffectiveGuess = 20;
+      state.roundState.trinity = { spirit: ${JSON.stringify(spirit)} };
+      applyPenalties();
+    `);
+    return run("state.player.maxHp - state.player.hp");
+  };
+  const normal = hurt(null);
+  const shielded = hurt("shield");
+  assert.ok(normal > shielded);
+  assert.equal(normal - shielded, game()(`
+    fixture([], [49, 47, 30, 70, 100]);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 20;
+    recalculateTarget();
+    Math.abs(20 - state.roundState.target);
+  `));
+});
+
+test("Trinity rolls happen at round start, survive a save, and suppressed pieces roll nothing", () => {
+  game()(`
+    fixture([["p131"], ["p132"], ["p133"]], [50, 50, 50]);
+    beginRound();
+    const rolled = state.roundState.trinity;
+    assert.ok(Object.keys(TRINITY_FATHER_BLESSINGS).includes(rolled.father));
+    assert.ok(Object.keys(TRINITY_SON_BLESSINGS).includes(rolled.son));
+    assert.ok(TRINITY_WHEEL_OUTCOMES.some(outcome => outcome.key === rolled.spirit));
+    rolled.spinShown = true;
+    const saved = JSON.stringify(arcadeRunSaveSnapshot(), encodeArcadeSaveValue);
+    Object.assign(state, JSON.parse(saved, decodeArcadeSaveValue));
+    normalizeLoadedArcadeRun();
+    assert.equal(state.roundState.trinity.spinShown, true);
+    assert.equal(state.roundState.trinity.father, rolled.father);
+    assert.equal(ownedSealSlotCount(), 1);
+    state.roundState.kalhaSuppressedPassiveIds = new Set(["p131"]);
+    state.roundState.kalhaSuppressedById = -1;
+    assert.equal(trinityFatherBlessing(), null);
   `);
 });

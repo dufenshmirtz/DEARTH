@@ -158,6 +158,7 @@ function rerollShopClick() {
     render();
     return;
   }
+  const free = freeRerollsLeft() > 0;
   const cost = currentRerollCost();
   if (!canSpendCredits(cost)) {
     addLog(`Reroll needs ${cost} SIN.`);
@@ -170,10 +171,37 @@ function rerollShopClick() {
   }
   rerollShop();
   playGameSfx("reroll");
-  state.rerollBaseCost += 1;
-  addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
+  if (free) {
+    // a free reroll (Seal of the Son) does not raise the price of the next paid one
+    state.freeRerolls = freeRerollsLeft() - 1;
+    markPassiveTriggered("p132");
+    addLog(`Devil's Offerings rerolled for free (${ITEMS.p132.name}). ${freeRerollsLeft()} left.`);
+  } else {
+    state.rerollBaseCost += 1;
+    addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
+  }
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
+  render();
+}
+
+function passiveSellValue(item) {
+  return Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+}
+
+// the Trinity SEALS share a slot: selling it sells every one of them
+function sellTrinitySeals(index) {
+  const pieces = ownedTrinitySeals();
+  const sale = pieces.reduce((sum, item) => sum + passiveSellValue(item), 0);
+  const names = pieces.map((item) => item.name).join(", ");
+  ghostSealOut(index);
+  state.player.passives = state.player.passives.filter((item) => !pieces.includes(item));
+  refreshMimicTarget();
+  gainCredits(sale, false, `Sold ${names}`);
+  syncShopSlotCount();
+  addLog(`Sold ${names} for ${sale} SIN.`);
+  playGameSfx("sealSellGhost");
+  quietMomentSfx("sinGain");
   render();
 }
 
@@ -181,7 +209,11 @@ function sellPassive(index) {
   if (arcadeActionLocked()) return;
   const item = state.player.passives[index];
   if (!item) return;
-  const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  if (isTrinitySeal(item)) {
+    sellTrinitySeals(index);
+    return;
+  }
+  const sale = passiveSellValue(item);
   ghostSealOut(index);
   state.player.passives.splice(index, 1);
   refreshMimicTarget();

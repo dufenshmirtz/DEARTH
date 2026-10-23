@@ -308,8 +308,13 @@ function rerollCost() {
   return state.rerollBaseCost;
 }
 
+// Seal of the Son can leave free rerolls: while any are left, a reroll costs nothing
 function currentRerollCost() {
-  return rerollCost();
+  return freeRerollsLeft() > 0 ? 0 : rerollCost();
+}
+
+function freeRerollsLeft() {
+  return Math.max(0, Math.ceil(state.freeRerolls || 0));
 }
 
 function bossAbilityNullified(bot) {

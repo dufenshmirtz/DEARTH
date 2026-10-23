@@ -83,6 +83,8 @@ const COLLECTION_SECTIONS = [
   // the former Boss SEALS, now named after the Archangels
   { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
   { key: "satan", title: "Satan Seals", ids: ["p111"] },
+  // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
+  { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
   { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
 ];
@@ -202,6 +204,10 @@ const SEAL_BUILD_TAGS = {
   p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
+  // Trinity SEALS
+  p131: ["general"], // Father (TARGET difference as %, 20% strike, double damage)
+  p132: ["general"], // Son (double SIN, +8 SIN, free rerolls)
+  p133: ["general"], // Holy Spirit (the wheel)
   // Seals of Saturn
   p98: ["critical"], // Samael Star
   p99: ["memory"], // Cassiel Sigil

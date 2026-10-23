@@ -1249,6 +1249,67 @@ function sealSummonAttrs(id) {
   return { className: "seal-summoned", style: ` style="--summon-delay: ${-Math.round(elapsed)}ms"` };
 }
 
+// the shared Trinity slot plays the summon animation again whenever a new Trinity SEAL joins it
+function trinitySummonAttrs(ids) {
+  for (const id of ids) {
+    const attrs = sealSummonAttrs(id);
+    if (attrs.className) return attrs;
+  }
+  return { className: "", style: "" };
+}
+
+function renderTrinitySlotSigil(ids, extraClass = "") {
+  const src = trinitySlotArtPath(ids);
+  if (!src) return "";
+  const name = ids.map((id) => ITEMS[id]?.name || "Seal").join(" + ");
+  return `<img class="seal-sigil trinity-seal-sigil ${extraClass}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+}
+
+// one tooltip for the shared Trinity slot: every SEAL in it, with this round's blessing
+function renderTrinityTooltipHtml(pieces, sale) {
+  const blocks = pieces.map((piece) => {
+    const notice = sealSuppressionNotice(piece.id);
+    const now = trinityBlessingLine(piece.id);
+    const runDetails = sealContributionDetails(piece);
+    const main = splitEliteDescription(itemDescription(piece)).main || itemDescription(piece);
+    return `
+      <div class="trinity-tooltip-piece">
+        <div class="tooltip-title">${escapeHtml(piece.name)}</div>
+        ${now ? `<div class="trinity-tooltip-now">${descriptionHtml(`${notice || ""}${now}`)}</div>` : ""}
+        <div class="tooltip-body ${now ? "trinity-tooltip-full" : ""}">${descriptionHtml(`${now ? "" : notice || ""}${main}`)}</div>
+        ${runDetails ? `<div class="tooltip-stat-line">${descriptionHtml(runDetails)}</div>` : ""}
+      </div>
+    `;
+  });
+  return `
+    <div class="tooltip-heading">
+      <div class="tooltip-title">${pieces.length === 3 ? "The Trinity" : "Trinity SEALS"}</div>
+      <div class="tooltip-shift-hint">press shift for more</div>
+    </div>
+    ${blocks.join("")}
+    <div class="seal-tooltip-footer">
+      <span>${pieces.length} of 3 in one slot</span>
+      <span>Sell all ${sale}${SIN_MARK}</span>
+    </div>
+  `;
+}
+
+// "This round: ..." for a Trinity SEAL, once its blessing has been rolled
+function trinityBlessingLine(id) {
+  const trinity = trinityRound();
+  if (!trinity) return "";
+  if (id === "p131" && trinity.father) return `This round: ${TRINITY_FATHER_BLESSINGS[trinity.father].label}.`;
+  if (id === "p132" && trinity.son) {
+    const rerolls = trinity.son === "rerolls" && freeRerollsLeft() ? ` (${freeRerollsLeft()} left)` : "";
+    return `This round: ${TRINITY_SON_BLESSINGS[trinity.son].label}${rerolls}.`;
+  }
+  if (id === "p133" && trinity.spirit) {
+    const outcome = trinity.spirit === "trinity" && trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinityWheelOutcome(trinity.spirit);
+    return `The wheel landed on: ${outcome?.label || ""}.`;
+  }
+  return "";
+}
+
 function trackEquippedSeals(ids) {
   const now = performance.now();
   if (lastEquippedSealIds) {
@@ -1387,6 +1448,8 @@ function criticalKeysForDisplay(round = state.roundState) {
       if (Number.isFinite(participant.guess) && Math.abs(participant.guess - integer) <= participant.window) keys.add(participant.key);
     });
   } catch (error) {}
+  // Seal of the Holy Spirit, "CRITICAL": your guess is CRITICAL whatever it is
+  if (trinitySpiritOutcome() === "critical") keys.add("player");
   return keys;
 }
 
@@ -1552,6 +1615,149 @@ function watchSealTrigger() {
   }, gameMs(SEAL_SLAM_AT_MS));
 }
 
+/* ---------- Seal of the Holy Spirit: the wheel ----------
+   The outcome is rolled at the start of the round (applyTrinityRoundStart); this only shows it: a wheel of
+   the ten outcomes spins and lands on it. It lives outside the render cycle (on <body>), shows once per
+   round (roundState.trinity.spinShown is saved with the run) and a click skips to the result. */
+const TRINITY_WHEEL_SPIN_MS = 3200;
+const TRINITY_WHEEL_HOLD_MS = 1500;
+let trinityWheelTimers = [];
+
+function trinityWheelSvg(landedIndex, allOwned) {
+  const radius = 200;
+  const count = TRINITY_WHEEL_OUTCOMES.length;
+  const step = 360 / count;
+  const point = (angle, r) => {
+    const rad = (angle * Math.PI) / 180;
+    return `${(Math.sin(rad) * r).toFixed(2)},${(-Math.cos(rad) * r).toFixed(2)}`;
+  };
+  const slices = TRINITY_WHEEL_OUTCOMES.map((outcome, index) => {
+    const start = index * step;
+    const end = start + step;
+    const mid = start + step / 2;
+    const label = trinityWheelLabel(outcome, allOwned).wheel;
+    const path = `M0,0 L${point(start, radius)} A${radius},${radius} 0 0,1 ${point(end, radius)} Z`;
+    return `
+      <g class="trinity-wheel-slice ${index % 2 ? "odd" : "even"} ${index === landedIndex ? "landed" : ""}">
+        <path d="${path}"></path>
+        <text transform="rotate(${(mid - 90).toFixed(2)}) translate(${radius * 0.6},0)" text-anchor="middle" dominant-baseline="middle">${escapeHtml(label)}</text>
+      </g>`;
+  }).join("");
+  const ticks = TRINITY_WHEEL_OUTCOMES.map((_, index) => `<line x1="0" y1="${-radius}" x2="0" y2="${-radius + 14}" transform="rotate(${index * step})"></line>`).join("");
+  return `<svg class="trinity-wheel-disc" viewBox="-212 -212 424 424" aria-hidden="true">
+    ${slices}
+    <circle class="trinity-wheel-rim" r="${radius}"></circle>
+    <circle class="trinity-wheel-rim inner" r="${radius - 26}"></circle>
+    <g class="trinity-wheel-ticks">${ticks}</g>
+    <circle class="trinity-wheel-hub" r="54"></circle>
+  </svg>`;
+}
+
+function closeTrinityWheel(element) {
+  trinityWheelTimers.forEach((timer) => clearTimeout(timer));
+  trinityWheelTimers = [];
+  if (!element?.isConnected) return;
+  element.classList.add("closing");
+  setTimeout(() => element.remove(), 260);
+}
+
+// the Father's and the Son's blessings for the round, shown under the wheel (or alone without the Holy Spirit)
+function trinityBlessingsHtml(trinity) {
+  const lines = [];
+  if (trinity.father && TRINITY_FATHER_BLESSINGS[trinity.father]) {
+    lines.push([ITEMS.p131.name, TRINITY_FATHER_BLESSINGS[trinity.father].label]);
+  }
+  if (trinity.son && TRINITY_SON_BLESSINGS[trinity.son]) lines.push([ITEMS.p132.name, TRINITY_SON_BLESSINGS[trinity.son].label]);
+  if (!lines.length) return "";
+  return `<div class="trinity-wheel-blessings">${lines
+    .map(([name, label]) => `<div><span>${escapeHtml(name)}</span>${escapeHtml(label)}</div>`)
+    .join("")}</div>`;
+}
+
+// without the Holy Spirit there is no wheel: a short card names the Father's / Son's blessing
+function showTrinityBlessingCard(trinity) {
+  const element = document.createElement("div");
+  element.className = "trinity-wheel trinity-blessing-card landed";
+  element.setAttribute("role", "status");
+  element.setAttribute("aria-live", "polite");
+  element.innerHTML = `<div class="trinity-wheel-stage">${trinityBlessingsHtml(trinity)}</div>`;
+  document.body.appendChild(element);
+  element.addEventListener("click", () => closeTrinityWheel(element));
+  trinityWheelTimers.push(setTimeout(() => closeTrinityWheel(element), Math.round(2200 / Math.min(animSpeed(), 2))));
+}
+
+function showTrinityWheel(round) {
+  const trinity = round.trinity;
+  document.querySelectorAll(".trinity-wheel").forEach((element) => element.remove());
+  trinityWheelTimers.forEach((timer) => clearTimeout(timer));
+  trinityWheelTimers = [];
+  const index = Number(trinity.spiritIndex);
+  if (!trinity.spirit || !Number.isInteger(index)) {
+    showTrinityBlessingCard(trinity);
+    return;
+  }
+  const allOwned = missingTrinitySealIds().length === 0 || trinity.spiritHealed;
+  const outcome = trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinityWheelLabel(TRINITY_WHEEL_OUTCOMES[index], allOwned);
+  const step = 360 / TRINITY_WHEEL_OUTCOMES.length;
+  // land the chosen slice under the pointer at the top, a little off its centre so it doesn't look staged
+  const jitter = (Math.random() - 0.5) * step * 0.6;
+  const finalAngle = 360 * 6 - (index * step + step / 2) + jitter;
+  const reduced = motionReduced();
+  const spinMs = reduced ? 0 : Math.round(TRINITY_WHEEL_SPIN_MS / Math.min(animSpeed(), 2));
+  const holdMs = Math.round(TRINITY_WHEEL_HOLD_MS / Math.min(animSpeed(), 2));
+  const element = document.createElement("div");
+  element.className = `trinity-wheel${reduced ? " reduced" : ""}`;
+  element.setAttribute("role", "status");
+  element.setAttribute("aria-live", "polite");
+  element.innerHTML = `
+    <div class="trinity-wheel-stage">
+      <div class="trinity-wheel-title">${escapeHtml(ITEMS.p133.name)}</div>
+      <div class="trinity-wheel-frame">
+        <div class="trinity-wheel-spinner" style="--wheel-ms: ${spinMs}ms">${trinityWheelSvg(index, allOwned)}</div>
+        <img class="trinity-wheel-dove" src="${escapeAttr(sealSigilPath("p133"))}" alt="" />
+        <div class="trinity-wheel-pointer"></div>
+      </div>
+      <div class="trinity-wheel-result">${escapeHtml(outcome.label)}</div>
+      ${trinityBlessingsHtml(trinity)}
+      <div class="trinity-wheel-skip">Click to continue</div>
+    </div>`;
+  document.body.appendChild(element);
+  const spinner = element.querySelector(".trinity-wheel-spinner");
+  const land = () => {
+    if (!element.isConnected || element.classList.contains("landed")) return;
+    spinner.style.transition = "none";
+    spinner.style.transform = `rotate(${finalAngle}deg)`;
+    element.classList.add("landed");
+    momentSfx("targetLand");
+    trinityWheelTimers.push(setTimeout(() => closeTrinityWheel(element), holdMs));
+  };
+  element.addEventListener("click", () => {
+    if (element.classList.contains("landed")) closeTrinityWheel(element);
+    else land();
+  });
+  if (reduced) {
+    land();
+    return;
+  }
+  playGameSfx("reroll");
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      spinner.style.transform = `rotate(${finalAngle}deg)`;
+    })
+  );
+  trinityWheelTimers.push(setTimeout(land, spinMs + 40));
+}
+
+function watchTrinityWheel() {
+  const round = state.roundState;
+  const trinity = round?.trinity;
+  if (!trinity || !(trinity.spirit || trinity.father || trinity.son) || trinity.spinShown) return;
+  if (state.stage !== "guess" || state.gameOver || state.pauseOpen || roundRevealAnimationActive()) return;
+  if (typeof introActive === "function" && introActive()) return;
+  trinity.spinShown = true;
+  showTrinityWheel(round);
+}
+
 function afterRenderEffects() {
   if (state.mode !== "arcade") {
     lastEquippedSealIds = null;
@@ -1560,6 +1766,7 @@ function afterRenderEffects() {
   }
   syncSealRings();
   watchSealTrigger();
+  watchTrinityWheel();
   watchMoments();
   introAfterRender();
   collectionAfterRender();
@@ -2107,7 +2314,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${currentRerollCost()}${SIN_MARK}</span></button>
+          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -2142,7 +2349,8 @@ function renderShopSlot(slot, index) {
   const itemImage =
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
-  const kindLabel = item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : "SEAL") : "ARTIFACT";
+  const kindLabel =
+    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : "SEAL") : "ARTIFACT";
 
   return `
     <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""}" data-tooltip="${escapeAttr(description)}">
@@ -2227,37 +2435,44 @@ function renderPassives() {
   }
   state.player.passives.forEach((item, index) => {
     if (!item || REMOVED_PASSIVE_IDS.has(item.id) || occupiedSlots >= limit) return;
+    // the Trinity SEALS share one slot, drawn at the first one owned
+    const trinityHost = isTrinitySeal(item) ? trinityHostSeal() : null;
+    if (trinityHost && trinityHost !== item) return;
+    const pieces = trinityHost ? ownedTrinitySeals() : [item];
+    const pieceIds = pieces.map((piece) => piece.id);
     const slotCost = sealSlotCost(item);
     occupiedSlots += slotCost;
-    const sale = Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
-    const displayName = passiveDisplayName(item);
-    const description = itemDescription(item);
-    const disabledNotice = sealSuppressionNotice(item.id);
-    const tooltip = renderSealTooltipHtml(item, displayName, description, disabledNotice, sale);
+    const sale = pieces.reduce((sum, piece) => sum + Math.floor((piece.price * (piece.stack || 1)) / 2) + (piece.saleBonus || 0), 0);
+    const displayName = trinityHost ? pieces.map((piece) => piece.name).join(" + ") : passiveDisplayName(item);
+    const tooltip = trinityHost
+      ? renderTrinityTooltipHtml(pieces, sale)
+      : renderSealTooltipHtml(item, displayName, itemDescription(item), sealSuppressionNotice(item.id), sale);
     const revealStep = currentRoundRevealStep();
     const revealClass =
-      revealStep?.id === item.id ? (roundRevealEffectActive() ? "round-reveal-effect" : "round-reveal-active") : "";
+      pieceIds.includes(revealStep?.id) ? (roundRevealEffectActive() ? "round-reveal-effect" : "round-reveal-active") : "";
     // a SEAL lights up only once its trigger has been shown, which is after READY
     // (or in the reveal-time Dev SEAL animation); after READY anything new lights up straight away
     const round = state.roundState;
-    const triggerShown = Boolean(round?.penaltiesApplied || round?.animatedPassiveIds?.has(item.id));
     const triggeredClass = roundRevealAnimationActive()
-      ? revealStep?.id === item.id
+      ? pieceIds.includes(revealStep?.id)
         ? "triggered"
         : ""
-      : round?.triggeredPassiveIds?.has(item.id) && triggerShown
+      : pieceIds.some((id) => round?.triggeredPassiveIds?.has(id) && (round?.penaltiesApplied || round?.animatedPassiveIds?.has(id)))
         ? "triggered"
         : "";
-    const suppressedClass = isSealSuppressed(item.id) ? "suppressed" : "";
+    const suppressedClass = pieceIds.every((id) => isSealSuppressed(id)) ? "suppressed" : "";
     const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
-    const sealImage =
-      renderSealSigil(item, "equipped-seal-sigil") +
-      (revealClass && !SATAN_SEAL_IDS.has(item.id) ? renderSealSigil(item, "equipped-seal-sigil seal-fill-sigil") : "");
+    const sealImage = trinityHost
+      ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil") +
+        (revealClass ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil seal-fill-sigil") : "")
+      : renderSealSigil(item, "equipped-seal-sigil") +
+        (revealClass && !SATAN_SEAL_IDS.has(item.id) ? renderSealSigil(item, "equipped-seal-sigil seal-fill-sigil") : "");
     const sellDisabled = arcadeActionLocked() ? "disabled" : "";
     const wideClass = slotCost > 1 ? "wide-seal-slot" : "";
-    const summon = sealSummonAttrs(item.id);
+    const trinityClass = trinityHost ? `trinity-seal-slot trinity-count-${pieces.length}` : "";
+    const summon = trinityHost ? trinitySummonAttrs(pieceIds) : sealSummonAttrs(item.id);
     slots.push(`
-      <article class="passive-slot ${wideClass} ${triggeredClass} ${revealClass} ${suppressedClass} ${summon.className}"${summon.style} data-tooltip-html="${escapeAttr(tooltip)}">
+      <article class="passive-slot ${wideClass} ${trinityClass} ${triggeredClass} ${revealClass} ${suppressedClass} ${summon.className}"${summon.style} data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
         <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>

@@ -875,6 +875,28 @@ const ITEMS = {
     price: 15,
     description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
   },
+  // the Trinity SEALS: sold apart, but every one you own shares a single SEAL slot (see TRINITY_SEAL_IDS)
+  p131: {
+    id: "p131",
+    type: "passive",
+    name: "Seal of the Father",
+    price: 33,
+    description: "At the start of each round, one blessing is chosen at random for that round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+  },
+  p132: {
+    id: "p132",
+    type: "passive",
+    name: "Seal of the Son",
+    price: 33,
+    description: "At the start of each round, one blessing is chosen at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls this round. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+  },
+  p133: {
+    id: "p133",
+    type: "passive",
+    name: "Seal of the Holy Spirit",
+    price: 33,
+    description: "At the start of each round, spins a wheel of 10 outcomes: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+  },
   p111: {
     id: "p111",
     type: "passive",
@@ -1290,7 +1312,10 @@ const PASSIVE_IDS = [
   "p127",
   "p128",
   "p129",
-  "p130"
+  "p130",
+  "p131",
+  "p132",
+  "p133"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1328,8 +1353,22 @@ const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"])
 // the Boss SEALS, named after the eight unique BOSSES
 const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
 // SEALS that can never get an ELITE upgrade (the self-stacking ones, plus Kalha and Padma)
-const NON_UPGRADABLE_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109", "p122", "p124"]);
+const NON_UPGRADABLE_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109", "p122", "p124", "p131", "p132", "p133"]);
 const SATAN_SEAL_IDS = new Set(["p111"]);
+// the Trinity SEALS (Father, Son, Holy Spirit): each works alone, and all the ones you own share one SEAL slot,
+// drawn as one interlaced seal (TRINITY_SEAL_ART). Order here is the order of their rings in the art.
+const TRINITY_SEAL_IDS = new Set(["p131", "p132", "p133"]);
+const TRINITY_SEAL_ORDER = ["p131", "p132", "p133"];
+// art for the shared slot, by the set owned (ids in TRINITY_SEAL_ORDER order, joined by "+")
+const TRINITY_SEAL_ART = {
+  p131: "trinity/father.png",
+  p132: "trinity/son.png",
+  p133: "trinity/spirit.png",
+  "p131+p132": "trinity/father-son.png",
+  "p131+p133": "trinity/father-spirit.png",
+  "p132+p133": "trinity/son-spirit.png",
+  "p131+p132+p133": "trinity/trinity.png"
+};
 // former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
 const SPECIAL_SEAL_IDS = new Set();
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
@@ -1493,6 +1532,9 @@ const SEAL_SIGILS = {
   p127: "dev/ThreonSeal.png",
   p128: "dev/DantreSeal.png",
   p111: "satan/lucifer-wide.png",
+  p131: "trinity/father.png",
+  p132: "trinity/son.png",
+  p133: "trinity/spirit.png",
   // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
   p98: "saturn/handdrawn/Saturn-Pentacle-01.png",
   p99: "saturn/handdrawn/Saturn-Pentacle-02.png",
@@ -2028,6 +2070,10 @@ const state = {
   satanVictoryDue: false,
   satanVictoryPlayed: false,
   paleHorseBoostArmed: false,
+  // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
+  freeRerolls: 0,
+  trinityEliteNextShop: false,
+  trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,

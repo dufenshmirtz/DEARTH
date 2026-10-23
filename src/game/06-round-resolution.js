@@ -335,6 +335,13 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
+  // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
+  if (playerTargetDiffDamage > 0 && trinitySpiritOutcome() === "shield") {
+    playerDamageSources.push({ amount: playerTargetDiffDamage, source: ITEMS.p133.name, kind: "saved" });
+    round.roundEvents.push(`${ITEMS.p133.name} took your ${playerTargetDiffDamage} TARGET-difference damage away.`);
+    markPassiveEntryTriggered(trinityEntry("p133"));
+    playerTargetDiffDamage = 0;
+  }
   round.playerTargetDifferenceDamage = playerTargetDiffDamage;
   addPlayerDamage(
     playerTargetDiffDamage,
@@ -344,12 +351,25 @@ function applyPenalties() {
   const targetBotDamageSources = new Map();
   const reactionBotDamages = new Map();
   const reactionBotDamageSources = new Map();
+  // Seal of the Father, "% TARGET damage": a DAMNED's TARGET difference is taken as % of its max HEALTH
+  const fatherPercent = trinityFatherBlessing() === "percent";
+  let fatherPercentHits = 0;
   state.bots
     .filter((bot) => bot.hp > 0 && !bot.eliminated)
     .forEach((bot) => {
-      const damage = Math.ceil(Math.abs(round.botEffectiveGuesses.get(bot.id) - round.target));
-      addPendingTargetDifferenceBotDamage(targetBotDamages, targetBotDamageSources, bot, damage, "Target difference", targetDiffEntries);
+      const difference = Math.ceil(Math.abs(round.botEffectiveGuesses.get(bot.id) - round.target));
+      if (fatherPercent && Number.isFinite(bot.maxHp) && difference > 0) {
+        const damage = Math.ceil((bot.maxHp * difference) / 100);
+        fatherPercentHits += 1;
+        addPendingTargetDifferenceBotDamage(targetBotDamages, targetBotDamageSources, bot, damage, ITEMS.p131.name, targetDiffEntries);
+        return;
+      }
+      addPendingTargetDifferenceBotDamage(targetBotDamages, targetBotDamageSources, bot, difference, "Target difference", targetDiffEntries);
     });
+  if (fatherPercentHits) {
+    markPassiveEntryTriggered(trinityEntry("p131"));
+    round.roundEvents.push(`${ITEMS.p131.name} turned every DAMNED's TARGET difference into % of max HEALTH.`);
+  }
   applyZeparAdjacentTargetDifferenceDamage(targetBotDamages, targetBotDamageSources);
 
   if (round.playerDamageReduction) {
@@ -578,8 +598,18 @@ function criticalSummaryForHitter(hitter) {
 function findCriticalHits() {
   const rightInteger = state.roundState.criticalInteger;
   const participants = getParticipants();
+  // Seal of the Holy Spirit, "CRITICAL": your guess is CRITICAL whatever it is
+  const forcedPlayerCritical = trinitySpiritOutcome() === "critical";
   const hits = participants.filter((participant) => {
     if (!Number.isFinite(participant.guess)) return false;
+    if (participant.key === "player" && forcedPlayerCritical) {
+      const exact = Math.abs(participant.guess - rightInteger) <= participant.window;
+      if (!exact) {
+        markPassiveEntryTriggered(trinityEntry("p133"));
+        addRoundEvent(`${ITEMS.p133.name} made your guess CRITICAL.`);
+      }
+      return true;
+    }
     const distance = Math.abs(participant.guess - rightInteger);
     return distance <= participant.window || (distance <= participant.window + 1 && Math.random() < participant.bonusWindowChance);
   });
@@ -1199,7 +1229,20 @@ function applyEliminationPassives(bot) {
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131"]).forEach((entry) => {
+    // Seal of the Father, "20% strike": one random DAMNED, BOSSES included, takes 20% of its max HEALTH
+    if (entry.id === "p131") {
+      if (trinityFatherBlessing() !== "strike") return;
+      const targets = trinityTargets().filter((bot) => Number.isFinite(bot.maxHp));
+      if (!targets.length) return;
+      const target = randomFrom(targets);
+      const damage = Math.ceil((target.maxHp || 0) * 0.2);
+      if (damage <= 0) return;
+      markPassiveEntryTriggered(entry);
+      const name = ITEMS.p131.name;
+      damageBot(target, damage, `${name} struck ${target.name} for ${damage} damage.`, name);
+      return;
+    }
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
@@ -1695,6 +1738,8 @@ function advanceAfterSummary() {
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
+  // Seal of the Son's free rerolls are for the round they were given in
+  state.freeRerolls = 0;
   rerollShop();
   beginRound();
   render();

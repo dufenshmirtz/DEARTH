@@ -80,7 +80,49 @@ function directPassiveStack(id) {
 
 function sealSlotCost(idOrItem) {
   const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  if (TRINITY_SEAL_IDS.has(id)) {
+    // the first Trinity SEAL owned holds the slot; the others (owned or offered) merge into it
+    const host = trinityHostSeal();
+    if (!host) return 1;
+    return idOrItem === host ? 1 : 0;
+  }
   return SATAN_SEAL_IDS.has(id) ? 2 : 1;
+}
+
+// ---------- Trinity SEALS: one shared slot ----------
+function isTrinitySeal(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
+  return TRINITY_SEAL_IDS.has(id);
+}
+
+function ownedTrinitySeals() {
+  return (state.player.passives || []).filter((item) => item && isTrinitySeal(item) && !REMOVED_PASSIVE_IDS.has(item.id));
+}
+
+// the Trinity SEAL that holds the shared slot (the first one in slot order)
+function trinityHostSeal() {
+  return ownedTrinitySeals()[0] || null;
+}
+
+function trinitySetKey(ids) {
+  const owned = new Set(ids);
+  return TRINITY_SEAL_ORDER.filter((id) => owned.has(id)).join("+");
+}
+
+// art for the shared slot: one ring per Trinity SEAL owned
+function trinitySlotArtPath(ids = ownedTrinitySeals().map((item) => item.id)) {
+  const file = TRINITY_SEAL_ART[trinitySetKey(ids)];
+  return file ? `assets/seals/${file}` : "";
+}
+
+function missingTrinitySealIds() {
+  const owned = new Set(ownedTrinitySeals().map((item) => item.id));
+  return TRINITY_SEAL_ORDER.filter((id) => !owned.has(id));
+}
+
+// the active (not suppressed) entry of a Trinity SEAL, or null
+function trinityEntry(id) {
+  return orderedPassiveEffectEntries(id)[0] || null;
 }
 
 function ownedSealSlotCount() {
@@ -1192,6 +1234,11 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
         applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p79?.name, entry);
       }
     });
+  }
+
+  // Seal of the Father, "double damage" blessing: everything you deal this round is doubled
+  if (playerDealt && trinityFatherBlessing() === "double") {
+    applyMultiplier(2, ITEMS.p131.name, trinityEntry("p131"));
   }
 
   return {

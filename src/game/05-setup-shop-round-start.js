@@ -344,19 +344,31 @@ function rerollShop() {
   }
   const eliteBoosted = eliteRerollBoostCount();
   state.eliteBoostedNextReroll = 0;
-  state.shop = [drawPassiveShopItem(eliteBoosted), drawActiveShopItem(), drawActiveShopItem()];
+  // Seal of the Holy Spirit: "ELITE offer" makes this SEAL an ELITE upgrade when you own one that can take it
+  const forceElite = Boolean(state.trinityEliteNextShop);
+  state.trinityEliteNextShop = false;
+  state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
+  // Seal of the Holy Spirit: "Trinity" adds the missing Trinity SEALS as extra offers
+  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id));
+  state.trinityShopSealsNextShop = [];
+  trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
+  if (trinityOffers.length) addLog(`${ITEMS.p133.name} brought ${trinityOffers.map((id) => ITEMS[id].name).join(" and ")} to the offerings.`);
   syncShopSlotCount();
 }
 
+// extra offers (bonus: true) sit after the regular slots and are not counted in shopSlotCount()
 function syncShopSlotCount() {
   if (shopDisabledBySatan()) {
     state.shop = [];
     return;
   }
   const count = shopSlotCount();
-  while (state.shop.length < count) state.shop.push(drawActiveShopItem());
-  if (state.shop.length > count) state.shop = state.shop.slice(0, count);
+  const regular = state.shop.filter((slot) => !slot?.bonus);
+  const bonus = state.shop.filter((slot) => slot?.bonus);
+  while (regular.length < count) regular.push(drawActiveShopItem());
+  state.shop = [...regular.slice(0, count), ...bonus];
 }
 
 function drawShopItem(pool) {
@@ -383,14 +395,14 @@ function drawActiveShopItem() {
   return drawShopItem(activeShopPool());
 }
 
-function drawPassiveShopItem(eliteBoosted = false) {
+function drawPassiveShopItem(eliteBoosted = false, forceElite = false) {
   // locked SEALS (see SEAL_UNLOCKS in 09-collection.js) never show up until unlocked
   const passivePool = PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && !isSealLocked(id));
   const availablePool = passivePool.filter((id) => !isNonUpgradableSeal(id) || directPassiveStack(id) === 0);
   const ownedPassives = availablePool.filter((id) => directPassiveStack(id) > 0 && !isNonUpgradableSeal(id));
   const freshPassives = availablePool.filter((id) => directPassiveStack(id) === 0);
   const eliteChance = eliteShopChance(eliteBoosted);
-  const wantsElite = ownedPassives.length > 0 && Math.random() < eliteChance;
+  const wantsElite = ownedPassives.length > 0 && (forceElite || Math.random() < eliteChance);
   const choices = wantsElite ? ownedPassives : freshPassives.length ? freshPassives : ownedPassives;
   if (!choices.length) return drawShopItem(availablePool.length ? availablePool : passivePool.filter((id) => !isNonUpgradableSeal(id)));
   return { item: itemCopy(randomFrom(choices)), sold: false };
@@ -433,15 +445,22 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
   const normalizedEntries = mergeSourceEntries(entries);
   const base = normalizedEntries.reduce((sum, entry) => sum + entry.amount, 0);
   const multiplier = applyRoundMultiplier && state.roundState ? state.roundState.bountyMultiplier || 1 : 1;
-  const gained = Math.ceil(base * multiplier);
+  const multiplied = Math.ceil(base * multiplier);
+  // Seal of the Son ("double SIN"): the SIN from every source but sales comes twice
+  const sonBonus = Math.ceil(trinitySonSinBonus(normalizedEntries) * multiplier);
+  const gained = multiplied + sonBonus;
   state.player.credits += gained;
   if (gained > 0) {
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
-    const multiplierBonus = Math.max(0, gained - base);
+    const multiplierBonus = Math.max(0, multiplied - base);
     if (multiplierBonus > 0) {
       recordPlayerCreditSource(multiplierBonus, ITEMS.a10?.name || "Funeral Coin");
+    }
+    if (sonBonus > 0) {
+      recordPlayerCreditSource(sonBonus, ITEMS.p132.name);
+      markPassiveEntryTriggered(trinityEntry("p132"));
     }
   }
   return gained;
@@ -744,6 +763,9 @@ function startGame(options = {}) {
   resetBossKillInterval();
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
+  state.freeRerolls = 0;
+  state.trinityEliteNextShop = false;
+  state.trinityShopSealsNextShop = [];
   state.critMomentumBonus = 0;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
@@ -1049,6 +1071,226 @@ function applyStartOfRoundPassives() {
       setBotPersonality(target, "Stubborn", "Seal of Leraje");
     }
   });
+
+  applyTrinityRoundStart();
+}
+
+/* ---------- Trinity SEALS: Father, Son, Holy Spirit ----------
+   Each rolls its blessing at the start of the round (before you guess), so the player can play around it.
+   The roll is kept in state.roundState.trinity; the Holy Spirit's roll is shown as a spinning wheel. */
+const TRINITY_FATHER_BLESSINGS = {
+  percent: { label: "Every DAMNED takes its TARGET difference as % of max HEALTH", short: "% TARGET damage" },
+  strike: { label: "A random DAMNED takes 20% max-HEALTH damage at end of round", short: "20% strike" },
+  double: { label: "You deal double damage this round", short: "Double damage" }
+};
+const TRINITY_SON_BLESSINGS = {
+  doubleSin: { label: "Double SIN from every source this round", short: "Double SIN" },
+  sin: { label: "+8 SIN", short: "+8 SIN" },
+  rerolls: { label: "4 free rerolls this round", short: "4 free rerolls" }
+};
+// the Holy Spirit's wheel, in the order of its slices
+const TRINITY_WHEEL_OUTCOMES = [
+  { key: "memory", wheel: "+5 MEMORY", label: "+5 MEMORY to every DAMNED" },
+  { key: "bounty", wheel: "x2 BOUNTY", label: "Double the BOUNTY of 2 random DAMNED" },
+  { key: "reveal", wheel: "REVEAL 4", label: "Reveal 4 DAMNED guesses" },
+  { key: "artifacts", wheel: "3 ARTIFACTS", label: "3 copies of one ARTIFACT" },
+  { key: "critical", wheel: "CRITICAL", label: "Your guess is CRITICAL this round" },
+  { key: "stubborn", wheel: "4 STUBBORN", label: "4 DAMNED turn STUBBORN" },
+  { key: "elite", wheel: "ELITE OFFER", label: "The next SEAL offer is ELITE" },
+  { key: "eliminate", wheel: "ELIMINATE", label: "A random DAMNED is eliminated" },
+  { key: "shield", wheel: "NO TARGET DMG", label: "You take no TARGET-difference damage this round" },
+  { key: "trinity", wheel: "TRINITY", label: "50% chance the missing Trinity SEALS appear in the next offerings" }
+];
+
+function trinityRound() {
+  return state.roundState?.trinity || null;
+}
+
+// this round's blessing of a Trinity SEAL, or null when it is not owned or is suppressed
+function trinityFatherBlessing() {
+  const key = trinityRound()?.father;
+  return key && trinityEntry("p131") ? key : null;
+}
+
+function trinitySonBlessing() {
+  const key = trinityRound()?.son;
+  return key && trinityEntry("p132") ? key : null;
+}
+
+function trinitySpiritOutcome() {
+  const key = trinityRound()?.spirit;
+  return key && trinityEntry("p133") ? key : null;
+}
+
+function trinityWheelOutcome(key) {
+  return TRINITY_WHEEL_OUTCOMES.find((outcome) => outcome.key === key) || null;
+}
+
+// the line shown for the wheel's last slice: with all three Trinity SEALS it heals instead
+function trinityWheelLabel(outcome, allOwned = missingTrinitySealIds().length === 0) {
+  if (outcome?.key === "trinity" && allOwned) return { wheel: "HEAL 3", label: "Heal 3 HEALTH" };
+  return outcome || { wheel: "", label: "" };
+}
+
+// the DAMNED a Trinity SEAL may pick at random: living, not immortal, optionally not a BOSS
+function trinityTargets({ bosses = true } = {}) {
+  return activeBots().filter((bot) => !bot.immortal && (bosses || !bot.isBoss));
+}
+
+function applyTrinityRoundStart() {
+  const round = state.roundState;
+  if (!round) return;
+  round.trinity = { father: null, son: null, spirit: null, spiritIndex: null, spiritHealed: false, spinShown: false };
+  const fatherEntry = trinityEntry("p131");
+  if (fatherEntry) {
+    round.trinity.father = randomFrom(Object.keys(TRINITY_FATHER_BLESSINGS));
+    markPassiveEntryTriggered(fatherEntry);
+    addRoundEvent(`${ITEMS.p131.name}: ${TRINITY_FATHER_BLESSINGS[round.trinity.father].label}.`);
+    addLog(`${ITEMS.p131.name}: ${TRINITY_FATHER_BLESSINGS[round.trinity.father].label}.`);
+  }
+  const sonEntry = trinityEntry("p132");
+  if (sonEntry) {
+    round.trinity.son = randomFrom(Object.keys(TRINITY_SON_BLESSINGS));
+    markPassiveEntryTriggered(sonEntry);
+    applyTrinitySonBlessing(round.trinity.son);
+    addLog(`${ITEMS.p132.name}: ${TRINITY_SON_BLESSINGS[round.trinity.son].label}.`);
+  }
+  const spiritEntry = trinityEntry("p133");
+  if (spiritEntry) {
+    const index = randomInt(0, TRINITY_WHEEL_OUTCOMES.length - 1);
+    round.trinity.spirit = TRINITY_WHEEL_OUTCOMES[index].key;
+    round.trinity.spiritIndex = index;
+    markPassiveEntryTriggered(spiritEntry);
+    applyTrinityWheelOutcome(round.trinity.spirit);
+    const landed = round.trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : TRINITY_WHEEL_OUTCOMES[index];
+    addLog(`${ITEMS.p133.name}: the wheel landed on ${landed.label}.`);
+  }
+}
+
+function applyTrinitySonBlessing(key) {
+  const name = ITEMS.p132.name;
+  if (key === "doubleSin") {
+    addRoundEvent(`${name}: double SIN from every source this round.`);
+    return;
+  }
+  if (key === "sin") {
+    const gained = gainCredits(8, true, name);
+    addRoundEvent(`${name} paid ${gained} SIN.`);
+    return;
+  }
+  if (key === "rerolls") {
+    state.freeRerolls = Math.max(0, Math.ceil(state.freeRerolls || 0)) + 4;
+    addRoundEvent(`${name} gave you 4 free rerolls.`);
+  }
+}
+
+// Seal of the Son, "double SIN" blessing: every SIN you gain this round (sales aside) is doubled
+function trinitySonSinBonus(entries) {
+  if (trinitySonBlessing() !== "doubleSin") return 0;
+  return entries
+    .filter((entry) => !String(entry.source || "").startsWith("Sold "))
+    .reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
+}
+
+function replanTrinityGuesses(bots) {
+  bots.forEach((bot) => {
+    if (!bot || bot.eliminated || bot.hp <= 0) return;
+    bot.fresh = (bot.memory?.length || 0) === 0;
+    bot.plannedGuess = planBotGuess(bot);
+  });
+}
+
+function applyTrinityWheelOutcome(key) {
+  const round = state.roundState;
+  const name = ITEMS.p133.name;
+  if (key === "memory") {
+    const targets = activeBots();
+    targets.forEach((bot) => addBotMemory(bot, 5, "", { source: name }));
+    replanTrinityGuesses(targets);
+    addRoundEvent(`${name} gave every DAMNED +5 MEMORY.`);
+    return;
+  }
+  if (key === "bounty") {
+    const targets = shuffled(trinityTargets().filter((bot) => Number.isFinite(botSin(bot)) && botSin(bot) > 0)).slice(0, 2);
+    targets.forEach((bot) => changeBotSin(bot, botSin(bot), `${name} doubled ${bot.name}'s BOUNTY.`, { source: name }));
+    if (!targets.length) addRoundEvent(`${name} found no BOUNTY to double.`);
+    return;
+  }
+  if (key === "reveal") {
+    const hidden = shuffled(activeBots().filter((bot) => !bot.revealedByPassive && canRevealBotGuess(bot)));
+    let revealed = 0;
+    hidden.forEach((bot) => {
+      if (revealed >= 4) return;
+      if (revealBotGuess(bot, name)) revealed += 1;
+    });
+    if (!revealed) addRoundEvent(`${name} found no guess left to reveal.`);
+    return;
+  }
+  if (key === "artifacts") {
+    const id = randomFrom(ACTIVE_IDS);
+    const room = Math.max(0, activeInventoryLimit() - state.player.actives.length);
+    const count = Math.min(3, room);
+    for (let copy = 0; copy < count; copy += 1) state.player.actives.push(freeActiveCopy(id));
+    if (count) state.activeCarouselIndex = state.player.actives.length - 1;
+    addRoundEvent(
+      count
+        ? `${name} gave you ${count} ${ITEMS[id].name}${count === 1 ? "" : " copies"}.`
+        : `${name} offered ${ITEMS[id].name}, but your ARTIFACTS are full.`
+    );
+    return;
+  }
+  if (key === "critical") {
+    addRoundEvent(`${name}: your guess is CRITICAL this round.`);
+    return;
+  }
+  if (key === "stubborn") {
+    const targets = shuffled(trinityTargets({ bosses: false }).filter((bot) => !hasPersonality(bot, "Stubborn"))).slice(0, 4);
+    targets.forEach((bot) => setBotPersonality(bot, "Stubborn", name));
+    replanTrinityGuesses(targets);
+    if (!targets.length) addRoundEvent(`${name} found no DAMNED to make STUBBORN.`);
+    return;
+  }
+  if (key === "elite") {
+    state.trinityEliteNextShop = true;
+    addRoundEvent(`${name}: the next SEAL offer will be ELITE.`);
+    return;
+  }
+  if (key === "eliminate") {
+    const pool = trinityTargets({ bosses: false });
+    const target = pool.length ? randomFrom(pool) : null;
+    if (!target) {
+      addRoundEvent(`${name} found no DAMNED to eliminate.`);
+      return;
+    }
+    const hp = Math.max(0, Math.ceil(target.hp || 0));
+    target.lastDamage = (target.lastDamage || 0) + hp;
+    recordBotDamageSource(target, hp, name);
+    target.hp = 0;
+    target.deathCause = "trinity";
+    target.deathNotice = "TAKEN";
+    addRoundEvent(`${name} took ${target.name}.`);
+    resolveEliminatedBots([target]);
+    return;
+  }
+  if (key === "shield") {
+    addRoundEvent(`${name}: you take no TARGET-difference damage this round.`);
+    return;
+  }
+  if (key === "trinity") {
+    const missing = missingTrinitySealIds();
+    if (!missing.length) {
+      const healed = healPlayer(3, null, name);
+      round.trinity.spiritHealed = true;
+      addRoundEvent(healed ? `${name} healed you for ${healed}.` : `${name} found you at full HEALTH.`);
+      return;
+    }
+    if (Math.random() < 0.5) {
+      state.trinityShopSealsNextShop = missing.slice();
+      addRoundEvent(`${name}: ${missing.map((id) => ITEMS[id].name).join(" and ")} will appear in the next offerings.`);
+    } else {
+      addRoundEvent(`${name}: the other Trinity SEALS did not answer this time.`);
+    }
+  }
 }
 
 function projectedMemoryTarget(

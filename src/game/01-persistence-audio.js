@@ -401,6 +401,9 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  if (!Number.isFinite(state.freeRerolls)) state.freeRerolls = 0;
+  state.trinityEliteNextShop = Boolean(state.trinityEliteNextShop);
+  if (!Array.isArray(state.trinityShopSealsNextShop)) state.trinityShopSealsNextShop = [];
   state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
   // SEALS keep their current name and text after a rename (older saves hold a copy of both)
   [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
