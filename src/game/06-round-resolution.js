@@ -161,7 +161,6 @@ function applyPenalties() {
   state.previousTarget = round.target;
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
-  applySallosGuessShiftAwayFromTarget();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -638,6 +637,32 @@ function applyExcessDamageSpread(eliminations) {
   });
 }
 
+// Seal of Sallos: once per round, when 3 or more DAMNED have been eliminated, spread damage over the survivors (BOSSES take all of it)
+function applySallosEliminationSpread() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p71");
+  if (!entries.length || !round || round.sallosSpreadDone || round.eliminationsThisRound < 3) return;
+  round.sallosSpreadDone = true;
+  entries.forEach((entry) => {
+    const living = activeBots();
+    const bosses = living.filter((bot) => bot.isBoss);
+    const targets = bosses.length ? bosses : living;
+    if (!targets.length) return;
+    const totalDamage = passiveEntryFlatDamage(entry, 20);
+    const allocations = equalDamageSplit(totalDamage, targets);
+    const hitTargets = targets.filter((bot) => (allocations.get(bot.id) || 0) > 0);
+    if (!hitTargets.length) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${ITEMS.p71.name} spread ${totalDamage} damage after ${round.eliminationsThisRound} eliminations${bosses.length ? " onto the BOSS" : ""}.`);
+    damageBots(
+      hitTargets,
+      (bot) => allocations.get(bot.id) || 0,
+      (bot, dealt) => `${ITEMS.p71.name} dealt ${dealt} damage to ${bot.name}.`,
+      ITEMS.p71.name
+    );
+  });
+}
+
 function resolveEliminatedBots(eliminated) {
   const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
   if (!freshEliminations.length) return;
@@ -705,6 +730,7 @@ function resolveEliminatedBots(eliminated) {
 
   applyExcessDamageSpread(freshEliminations);
   applyValacSweep();
+  applySallosEliminationSpread();
 
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {

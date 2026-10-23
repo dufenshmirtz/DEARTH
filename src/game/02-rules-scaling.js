@@ -839,11 +839,6 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
-function sallosShiftValues(entry) {
-  const max = 5 + Math.max(0, (entry?.stack || 1) - 1);
-  return Array.from({ length: Math.max(1, max - 1) }, (_, index) => index + 2);
-}
-
 function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }

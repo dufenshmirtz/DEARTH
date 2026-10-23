@@ -564,6 +564,33 @@ test("Aggiel Hexagram: PENTAKILL damage waits for the NEXT end of round and hits
   `);
 });
 
+test("Sallos: 3+ eliminations spread 20 damage over the survivors (ELITE x1.5), all onto a BOSS if one lives", () => {
+  for (const [stack, total] of [[1, 20], [2, 30], [3, 45]]) {
+    game()(`
+      fixture([["p71", ${stack}]], [10, 20, 30, 40, 50]);
+      state.roundState.eliminationsThisRound = 2;
+      applySallosEliminationSpread();
+      assertDamage([0, 0, 0, 0, 0]);
+      state.bots[0].hp = state.bots[1].hp = state.bots[2].hp = 0;
+      state.bots[0].eliminated = state.bots[1].eliminated = state.bots[2].eliminated = true;
+      state.roundState.eliminationsThisRound = 3;
+      applySallosEliminationSpread();
+      assert.equal(state.bots[3].lastDamage + state.bots[4].lastDamage, ${total});
+      applySallosEliminationSpread();
+      assert.equal(state.bots[3].lastDamage + state.bots[4].lastDamage, ${total});
+    `);
+  }
+  game()(`
+    fixture([["p71"]], [10, 20, 30, 40, 50]);
+    state.bots[4].isBoss = true;
+    state.bots.slice(0, 3).forEach(bot => { bot.hp = 0; bot.eliminated = true; });
+    state.roundState.eliminationsThisRound = 3;
+    applySallosEliminationSpread();
+    assert.equal(state.bots[4].lastDamage, 20);
+    assert.equal(state.bots[3].lastDamage || 0, 0);
+  `);
+});
+
 // player 60 vs DAMNED 49, 47, 30, 70, 100 with modifier 1: TARGET 60, only you hit CRITICAL
 const CRIT_TABLE = "[49, 47, 30, 70, 100]";
 function critRound(passives, extra = "") {

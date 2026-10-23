@@ -808,6 +808,7 @@ function beginRound() {
     multiEliminationBonusPaid: false,
     eliminatedPersonalities: [],
     eliminationsThisRound: 0,
+    sallosSpreadDone: false,
     eliminationCreditRecords: [],
     pentakillAwarded: false,
     pentakillPopup: false,
@@ -1086,29 +1087,6 @@ function applyFurcasLastTargetGuessSet() {
     if (damage > 0) {
       queueEndOfRoundBotDamage(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
     }
-  });
-}
-
-function applySallosGuessShiftAwayFromTarget() {
-  const entries = orderedPassiveEffectEntries("p71");
-  const round = state.roundState;
-  if (!entries.length || !round || !Number.isFinite(round.target)) return;
-  entries.forEach((entry) => {
-    const values = sallosShiftValues(entry);
-    let shifted = 0;
-    activeBots().forEach((bot) => {
-      const current = round.botEffectiveGuesses.get(bot.id);
-      if (!Number.isFinite(current)) return;
-      const direction = current === round.target ? randomFrom([-1, 1]) : current > round.target ? 1 : -1;
-      const amount = randomFrom(values);
-      const next = Math.ceil(clamp(current + direction * amount, 0, 100));
-      if (next === current) return;
-      round.botEffectiveGuesses.set(bot.id, next);
-      shifted += 1;
-    });
-    if (!shifted) return;
-    markPassiveEntryTriggered(entry);
-    round.roundEvents.push(`Seal of Sallos shifted ${shifted} DAMNED guesses away from the TARGET without changing the average.`);
   });
 }
 

@@ -830,7 +830,7 @@ const ITEMS = {
     name: "Seal of Sallos",
     price: 14,
     description:
-      "Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level."
+      "If 3 or more DAMNED are eliminated in one round, deal 20 damage split equally among the DAMNED that remain. If a BOSS is alive, all of it goes to the BOSS instead. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p72: {
     id: "p72",
@@ -4131,11 +4131,6 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
-function sallosShiftValues(entry) {
-  const max = 5 + Math.max(0, (entry?.stack || 1) - 1);
-  return Array.from({ length: Math.max(1, max - 1) }, (_, index) => index + 2);
-}
-
 function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
@@ -4635,7 +4630,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p64", "p65", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -4773,8 +4768,7 @@ function itemDescription(item) {
     return `Sacrificial Dagger deals ${sacrificialDaggerExtraDamage(item)} extra flat damage and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
   }
   if (item.id === "p71") {
-    const values = sallosShiftValues(item);
-    return `Before damage calculation, all DAMNED guesses shift away from the TARGET by random ${values.join(", ")} without changing the average.`;
+    return `If 3 or more DAMNED are eliminated in one round, deal ${flatDamageValue(item, 20)} damage split equally among the DAMNED that remain. If a BOSS is alive, all of it goes to the BOSS instead.`;
   }
   if (item.id === "p72") {
     return `Previous TARGET below 40 sets one non-boss DAMNED guess to 100; above 40 sets one DAMNED guess to 0. ELITE deals ${furcasSelectedDamage(item)} damage to the selected DAMNED.`;
@@ -7564,6 +7558,7 @@ function beginRound() {
     multiEliminationBonusPaid: false,
     eliminatedPersonalities: [],
     eliminationsThisRound: 0,
+    sallosSpreadDone: false,
     eliminationCreditRecords: [],
     pentakillAwarded: false,
     pentakillPopup: false,
@@ -7842,29 +7837,6 @@ function applyFurcasLastTargetGuessSet() {
     if (damage > 0) {
       queueEndOfRoundBotDamage(target, damage, `Seal of Furcas dealt ${damage} damage to ${target.name}.`, "Seal of Furcas");
     }
-  });
-}
-
-function applySallosGuessShiftAwayFromTarget() {
-  const entries = orderedPassiveEffectEntries("p71");
-  const round = state.roundState;
-  if (!entries.length || !round || !Number.isFinite(round.target)) return;
-  entries.forEach((entry) => {
-    const values = sallosShiftValues(entry);
-    let shifted = 0;
-    activeBots().forEach((bot) => {
-      const current = round.botEffectiveGuesses.get(bot.id);
-      if (!Number.isFinite(current)) return;
-      const direction = current === round.target ? randomFrom([-1, 1]) : current > round.target ? 1 : -1;
-      const amount = randomFrom(values);
-      const next = Math.ceil(clamp(current + direction * amount, 0, 100));
-      if (next === current) return;
-      round.botEffectiveGuesses.set(bot.id, next);
-      shifted += 1;
-    });
-    if (!shifted) return;
-    markPassiveEntryTriggered(entry);
-    round.roundEvents.push(`Seal of Sallos shifted ${shifted} DAMNED guesses away from the TARGET without changing the average.`);
   });
 }
 
@@ -8821,7 +8793,6 @@ function applyPenalties() {
   state.previousTarget = round.target;
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
-  applySallosGuessShiftAwayFromTarget();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -9298,6 +9269,32 @@ function applyExcessDamageSpread(eliminations) {
   });
 }
 
+// Seal of Sallos: once per round, when 3 or more DAMNED have been eliminated, spread damage over the survivors (BOSSES take all of it)
+function applySallosEliminationSpread() {
+  const round = state.roundState;
+  const entries = orderedPassiveEffectEntries("p71");
+  if (!entries.length || !round || round.sallosSpreadDone || round.eliminationsThisRound < 3) return;
+  round.sallosSpreadDone = true;
+  entries.forEach((entry) => {
+    const living = activeBots();
+    const bosses = living.filter((bot) => bot.isBoss);
+    const targets = bosses.length ? bosses : living;
+    if (!targets.length) return;
+    const totalDamage = passiveEntryFlatDamage(entry, 20);
+    const allocations = equalDamageSplit(totalDamage, targets);
+    const hitTargets = targets.filter((bot) => (allocations.get(bot.id) || 0) > 0);
+    if (!hitTargets.length) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${ITEMS.p71.name} spread ${totalDamage} damage after ${round.eliminationsThisRound} eliminations${bosses.length ? " onto the BOSS" : ""}.`);
+    damageBots(
+      hitTargets,
+      (bot) => allocations.get(bot.id) || 0,
+      (bot, dealt) => `${ITEMS.p71.name} dealt ${dealt} damage to ${bot.name}.`,
+      ITEMS.p71.name
+    );
+  });
+}
+
 function resolveEliminatedBots(eliminated) {
   const freshEliminations = eliminated.filter((bot) => bot && !bot.immortal && bot.hp <= 0 && !bot.eliminated);
   if (!freshEliminations.length) return;
@@ -9365,6 +9362,7 @@ function resolveEliminatedBots(eliminated) {
 
   applyExcessDamageSpread(freshEliminations);
   applyValacSweep();
+  applySallosEliminationSpread();
 
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {

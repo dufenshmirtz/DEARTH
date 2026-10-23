@@ -176,7 +176,7 @@ Seal of Sabnock (13 SIN)
 Every time a DAMNED dies, deal 5 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Sallos (14 SIN)
-Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level.
+If 3 or more DAMNED are eliminated in one round, deal 20 damage split equally among the DAMNED that remain. If a BOSS is alive, all of it goes to the BOSS instead. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Samigina (11 SIN)
 When a non-boss DAMNED is eliminated, gain bonus SIN equal to its MEMORY. ELITE increases this SIN payout by +20% each level.

@@ -620,7 +620,7 @@ const ITEMS = {
     name: "Seal of Sallos",
     price: 14,
     description:
-      "Before damage calculation, all DAMNED guesses shift away from the TARGET by a random 2, 3, 4, or 5 without changing the average. ELITE adds one larger shift value each level."
+      "If 3 or more DAMNED are eliminated in one round, deal 20 damage split equally among the DAMNED that remain. If a BOSS is alive, all of it goes to the BOSS instead. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p72: {
     id: "p72",
