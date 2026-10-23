@@ -114,7 +114,7 @@ function render() {
   afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
-  saveArcadeRun();
+  scheduleArcadeRunSave();
 }
 
 function focusGuessInputAfterRender() {

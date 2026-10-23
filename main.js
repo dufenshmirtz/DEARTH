@@ -2417,6 +2417,8 @@ function setupIosAudio() {
       try {
         source.onended = null;
         source.stop();
+        source.disconnect();
+        source.__gain?.disconnect();
       } catch (error) {}
     });
     el.__iosSources.clear();
@@ -2522,10 +2524,16 @@ function setupIosAudio() {
       gain.gain.value = this.__iosVolume ?? 1;
       source.connect(gain);
       gain.connect(ctx.destination);
+      source.__gain = gain;
       if (!this.__iosSources) this.__iosSources = new Set();
       this.__iosSources.add(source);
       source.onended = () => {
         this.__iosSources?.delete(source);
+        // let the finished sound go; otherwise every sound ever played stays wired to the speakers
+        try {
+          source.disconnect();
+          gain.disconnect();
+        } catch (error) {}
         this.dispatchEvent(new Event("ended"));
       };
       const offset = Math.max(0, Number(this.__iosStartOffset ?? this.currentTime) || 0);
@@ -2765,7 +2773,24 @@ function removeArcadeRunSlot(slotId) {
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
 }
 
+// Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
+// longer you play. render() used to save on every redraw, which made long runs stutter, most
+// of all on iPhone. Redraws now ask for a save at most once a second; leaving the table, the
+// app going to the background and the other explicit saves still write straight away.
+let arcadeRunSaveTimer = null;
+function scheduleArcadeRunSave() {
+  if (arcadeRunSaveTimer) return;
+  arcadeRunSaveTimer = setTimeout(() => {
+    arcadeRunSaveTimer = null;
+    saveArcadeRun();
+  }, 1000);
+}
+
 function saveArcadeRun() {
+  if (arcadeRunSaveTimer) {
+    clearTimeout(arcadeRunSaveTimer);
+    arcadeRunSaveTimer = null;
+  }
   if (state.mode !== "arcade") return;
   // the story's two tutorial rounds are not a saved run until the pact is made
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
@@ -12206,7 +12231,7 @@ function render() {
   afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
-  saveArcadeRun();
+  scheduleArcadeRunSave();
 }
 
 function focusGuessInputAfterRender() {
