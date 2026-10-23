@@ -588,9 +588,9 @@ function applyCollectionFilter(screen, filter) {
 
 function collectionDescription(item) {
   try {
-    return itemDescription(item) || item.description || "";
+    return descriptionWithoutElite(itemDescription(item) || item.description || "");
   } catch (error) {
-    return item.description || "";
+    return descriptionWithoutElite(item.description || "");
   }
 }
 

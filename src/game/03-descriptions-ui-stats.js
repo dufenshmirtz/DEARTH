@@ -648,14 +648,21 @@ function descriptionHtml(value) {
   return html;
 }
 
+// the ELITE part is the trailing sentence(s) starting with "ELITE" (a mid-sentence "an ELITE upgrade" is not one)
 function splitEliteDescription(value) {
   const text = String(value || "").trim();
-  const eliteMatch = text.match(/\s+(ELITE(?:\s+levels)?:?[\s\S]*)$/i);
+  const eliteMatch = text.match(/([.!?])\s+(ELITE(?:\s+levels)?:?[\s\S]*)$/);
   if (!eliteMatch) return { main: text, elite: "" };
   return {
-    main: text.slice(0, eliteMatch.index).trim(),
-    elite: eliteMatch[1].trim()
+    main: text.slice(0, eliteMatch.index + 1).trim(),
+    elite: eliteMatch[2].trim()
   };
+}
+
+// Shop and Collection never explain ELITE scaling: that only shows on an equipped SEAL (hold Shift on its tooltip)
+function descriptionWithoutElite(value) {
+  const text = String(value || "");
+  return splitEliteDescription(text).main || text;
 }
 
 function renderSealTooltipHtml(item, displayName, description, disabledNotice, sale) {

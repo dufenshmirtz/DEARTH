@@ -2134,7 +2134,11 @@ function renderShopSlot(slot, index) {
   const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
-  const description = itemDescription(previewItem);
+  // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
+  const description =
+    item.type === "passive"
+      ? descriptionWithoutElite(itemDescription(ownedSelfStackingSeal ? previewItem : { ...item, stack: 1 }))
+      : itemDescription(previewItem);
   const itemImage =
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";

@@ -5211,14 +5211,21 @@ function descriptionHtml(value) {
   return html;
 }
 
+// the ELITE part is the trailing sentence(s) starting with "ELITE" (a mid-sentence "an ELITE upgrade" is not one)
 function splitEliteDescription(value) {
   const text = String(value || "").trim();
-  const eliteMatch = text.match(/\s+(ELITE(?:\s+levels)?:?[\s\S]*)$/i);
+  const eliteMatch = text.match(/([.!?])\s+(ELITE(?:\s+levels)?:?[\s\S]*)$/);
   if (!eliteMatch) return { main: text, elite: "" };
   return {
-    main: text.slice(0, eliteMatch.index).trim(),
-    elite: eliteMatch[1].trim()
+    main: text.slice(0, eliteMatch.index + 1).trim(),
+    elite: eliteMatch[2].trim()
   };
+}
+
+// Shop and Collection never explain ELITE scaling: that only shows on an equipped SEAL (hold Shift on its tooltip)
+function descriptionWithoutElite(value) {
+  const text = String(value || "");
+  return splitEliteDescription(text).main || text;
 }
 
 function renderSealTooltipHtml(item, displayName, description, disabledNotice, sale) {
@@ -14016,7 +14023,11 @@ function renderShopSlot(slot, index) {
   const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
-  const description = itemDescription(previewItem);
+  // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
+  const description =
+    item.type === "passive"
+      ? descriptionWithoutElite(itemDescription(ownedSelfStackingSeal ? previewItem : { ...item, stack: 1 }))
+      : itemDescription(previewItem);
   const itemImage =
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
@@ -16397,9 +16408,9 @@ function applyCollectionFilter(screen, filter) {
 
 function collectionDescription(item) {
   try {
-    return itemDescription(item) || item.description || "";
+    return descriptionWithoutElite(itemDescription(item) || item.description || "");
   } catch (error) {
-    return item.description || "";
+    return descriptionWithoutElite(item.description || "");
   }
 }
 

@@ -591,6 +591,25 @@ test("Sallos: 3+ eliminations spread 20 damage over the survivors (ELITE x1.5), 
   `);
 });
 
+test("Shop and Collection descriptions hide ELITE scaling; the equipped tooltip keeps it for Shift", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    assert.equal(descriptionWithoutElite(ITEMS.p71.description).includes("ELITE"), false);
+    for (const id of PASSIVE_IDS.filter(id => ITEMS[id])) {
+      for (const stack of [1, 2]) {
+        const text = descriptionWithoutElite(itemDescription({ ...ITEMS[id], stack }));
+        assert.ok(text.length > 0, id);
+        assert.equal(/(^|[.!?]\\s)ELITE\\b/.test(text), false, id + " " + text);
+      }
+    }
+    // Kalha says "an ELITE upgrade" mid-sentence: that is its main text, not an ELITE scaling note
+    assert.equal(splitEliteDescription(ITEMS.p122.description).main, ITEMS.p122.description);
+    const html = renderSealTooltipHtml({ ...ITEMS.p71, stack: 2 }, "x", itemDescription({ ...ITEMS.p71, stack: 2 }), "", 1);
+    assert.ok(html.includes("tooltip-elite-line"));
+    assert.ok(html.includes("ELITE"));
+  `);
+});
+
 // player 60 vs DAMNED 49, 47, 30, 70, 100 with modifier 1: TARGET 60, only you hit CRITICAL
 const CRIT_TABLE = "[49, 47, 30, 70, 100]";
 function critRound(passives, extra = "") {
