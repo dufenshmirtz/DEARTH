@@ -161,6 +161,7 @@ function applyPenalties() {
   state.previousTarget = round.target;
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
+  applyTrinityAtReady();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -1517,6 +1518,11 @@ function applyEndOfRoundPassives() {
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
+    // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
+    if (round.trinity?.spiritHealed && trinityEntry("p133")) {
+      const healed = healPlayer(3, null, ITEMS.p133.name);
+      round.roundEvents.push(healed ? `${ITEMS.p133.name} healed you for ${healed}.` : `${ITEMS.p133.name} found you at full HEALTH.`);
+    }
 
     const relicStacks = passiveStack("p18");
     if (relicStacks) {
@@ -1738,8 +1744,8 @@ function advanceAfterSummary() {
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
-  // Seal of the Son's free rerolls are for the round they were given in
-  state.freeRerolls = 0;
+  // Seal of the Son's free rerolls (given at READY) last until the end of the next round
+  if (state.round > (state.freeRerollsUntilRound || 0)) state.freeRerolls = 0;
   rerollShop();
   beginRound();
   render();

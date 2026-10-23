@@ -881,21 +881,21 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Father",
     price: 33,
-    description: "At the start of each round, one blessing is chosen at random for that round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+    description: "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p132: {
     id: "p132",
     type: "passive",
     name: "Seal of the Son",
     price: 33,
-    description: "At the start of each round, one blessing is chosen at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls this round. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+    description: "When you press READY, one of three is cast at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls until the end of next round. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p133: {
     id: "p133",
     type: "passive",
     name: "Seal of the Holy Spirit",
     price: 33,
-    description: "At the start of each round, spins a wheel of 10 outcomes: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded."
+    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p111: {
     id: "p111",
@@ -2072,6 +2072,8 @@ const state = {
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
+  freeRerollsUntilRound: 0,
+  trinityRevealsNextRound: 0,
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,

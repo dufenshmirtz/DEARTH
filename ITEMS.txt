@@ -299,16 +299,16 @@ Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100
 
 Trinity Seals
 
-The three Trinity SEALS are sold apart and each works alone; every one you own shares a single SEAL slot.
+The three Trinity SEALS are sold apart and each works alone; every one you own shares a single SEAL slot, called the Seal of God once it holds two or three.
 
 Seal of the Father (33 SIN)
-At the start of each round, one blessing is chosen at random for that round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded.
+When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
 Seal of the Holy Spirit (33 SIN)
-At the start of each round, spins a wheel of 10 outcomes: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded.
+When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
 Seal of the Son (33 SIN)
-At the start of each round, one blessing is chosen at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls this round. Shares one SEAL slot with the other Trinity SEALS. Cannot be upgraded.
+When you press READY, one of three is cast at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls until the end of next round. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
 Seals of Saturn (self-stacking)
 

@@ -402,6 +402,8 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
   if (!Number.isFinite(state.freeRerolls)) state.freeRerolls = 0;
+  if (!Number.isFinite(state.freeRerollsUntilRound)) state.freeRerollsUntilRound = 0;
+  if (!Number.isFinite(state.trinityRevealsNextRound)) state.trinityRevealsNextRound = 0;
   state.trinityEliteNextShop = Boolean(state.trinityEliteNextShop);
   if (!Array.isArray(state.trinityShopSealsNextShop)) state.trinityShopSealsNextShop = [];
   state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);

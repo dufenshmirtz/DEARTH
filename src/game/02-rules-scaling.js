@@ -115,6 +115,13 @@ function trinitySlotArtPath(ids = ownedTrinitySeals().map((item) => item.id)) {
   return file ? `assets/seals/${file}` : "";
 }
 
+// two or three Trinity SEALS together are called the Seal of God
+const TRINITY_COMBINED_NAME = "Seal of God";
+
+function trinitySlotName(pieces = ownedTrinitySeals()) {
+  return pieces.length > 1 ? TRINITY_COMBINED_NAME : pieces[0]?.name || TRINITY_COMBINED_NAME;
+}
+
 function missingTrinitySealIds() {
   const owned = new Set(ownedTrinitySeals().map((item) => item.id));
   return TRINITY_SEAL_ORDER.filter((id) => !owned.has(id));

@@ -1283,7 +1283,7 @@ function renderTrinityTooltipHtml(pieces, sale) {
   });
   return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${pieces.length === 3 ? "The Trinity" : "Trinity SEALS"}</div>
+      <div class="tooltip-title">${escapeHtml(trinitySlotName(pieces))}</div>
       <div class="tooltip-shift-hint">press shift for more</div>
     </div>
     ${blocks.join("")}
@@ -1304,8 +1304,8 @@ function trinityBlessingLine(id) {
     return `This round: ${TRINITY_SON_BLESSINGS[trinity.son].label}${rerolls}.`;
   }
   if (id === "p133" && trinity.spirit) {
-    const outcome = trinity.spirit === "trinity" && trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinityWheelOutcome(trinity.spirit);
-    return `The wheel landed on: ${outcome?.label || ""}.`;
+    const outcome = trinity.spirit === "trinity" && trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinitySpiritOutcomeInfo(trinity.spirit);
+    return `This round: ${outcome?.label || ""}.`;
   }
   return "";
 }
@@ -1615,149 +1615,6 @@ function watchSealTrigger() {
   }, gameMs(SEAL_SLAM_AT_MS));
 }
 
-/* ---------- Seal of the Holy Spirit: the wheel ----------
-   The outcome is rolled at the start of the round (applyTrinityRoundStart); this only shows it: a wheel of
-   the ten outcomes spins and lands on it. It lives outside the render cycle (on <body>), shows once per
-   round (roundState.trinity.spinShown is saved with the run) and a click skips to the result. */
-const TRINITY_WHEEL_SPIN_MS = 3200;
-const TRINITY_WHEEL_HOLD_MS = 1500;
-let trinityWheelTimers = [];
-
-function trinityWheelSvg(landedIndex, allOwned) {
-  const radius = 200;
-  const count = TRINITY_WHEEL_OUTCOMES.length;
-  const step = 360 / count;
-  const point = (angle, r) => {
-    const rad = (angle * Math.PI) / 180;
-    return `${(Math.sin(rad) * r).toFixed(2)},${(-Math.cos(rad) * r).toFixed(2)}`;
-  };
-  const slices = TRINITY_WHEEL_OUTCOMES.map((outcome, index) => {
-    const start = index * step;
-    const end = start + step;
-    const mid = start + step / 2;
-    const label = trinityWheelLabel(outcome, allOwned).wheel;
-    const path = `M0,0 L${point(start, radius)} A${radius},${radius} 0 0,1 ${point(end, radius)} Z`;
-    return `
-      <g class="trinity-wheel-slice ${index % 2 ? "odd" : "even"} ${index === landedIndex ? "landed" : ""}">
-        <path d="${path}"></path>
-        <text transform="rotate(${(mid - 90).toFixed(2)}) translate(${radius * 0.6},0)" text-anchor="middle" dominant-baseline="middle">${escapeHtml(label)}</text>
-      </g>`;
-  }).join("");
-  const ticks = TRINITY_WHEEL_OUTCOMES.map((_, index) => `<line x1="0" y1="${-radius}" x2="0" y2="${-radius + 14}" transform="rotate(${index * step})"></line>`).join("");
-  return `<svg class="trinity-wheel-disc" viewBox="-212 -212 424 424" aria-hidden="true">
-    ${slices}
-    <circle class="trinity-wheel-rim" r="${radius}"></circle>
-    <circle class="trinity-wheel-rim inner" r="${radius - 26}"></circle>
-    <g class="trinity-wheel-ticks">${ticks}</g>
-    <circle class="trinity-wheel-hub" r="54"></circle>
-  </svg>`;
-}
-
-function closeTrinityWheel(element) {
-  trinityWheelTimers.forEach((timer) => clearTimeout(timer));
-  trinityWheelTimers = [];
-  if (!element?.isConnected) return;
-  element.classList.add("closing");
-  setTimeout(() => element.remove(), 260);
-}
-
-// the Father's and the Son's blessings for the round, shown under the wheel (or alone without the Holy Spirit)
-function trinityBlessingsHtml(trinity) {
-  const lines = [];
-  if (trinity.father && TRINITY_FATHER_BLESSINGS[trinity.father]) {
-    lines.push([ITEMS.p131.name, TRINITY_FATHER_BLESSINGS[trinity.father].label]);
-  }
-  if (trinity.son && TRINITY_SON_BLESSINGS[trinity.son]) lines.push([ITEMS.p132.name, TRINITY_SON_BLESSINGS[trinity.son].label]);
-  if (!lines.length) return "";
-  return `<div class="trinity-wheel-blessings">${lines
-    .map(([name, label]) => `<div><span>${escapeHtml(name)}</span>${escapeHtml(label)}</div>`)
-    .join("")}</div>`;
-}
-
-// without the Holy Spirit there is no wheel: a short card names the Father's / Son's blessing
-function showTrinityBlessingCard(trinity) {
-  const element = document.createElement("div");
-  element.className = "trinity-wheel trinity-blessing-card landed";
-  element.setAttribute("role", "status");
-  element.setAttribute("aria-live", "polite");
-  element.innerHTML = `<div class="trinity-wheel-stage">${trinityBlessingsHtml(trinity)}</div>`;
-  document.body.appendChild(element);
-  element.addEventListener("click", () => closeTrinityWheel(element));
-  trinityWheelTimers.push(setTimeout(() => closeTrinityWheel(element), Math.round(2200 / Math.min(animSpeed(), 2))));
-}
-
-function showTrinityWheel(round) {
-  const trinity = round.trinity;
-  document.querySelectorAll(".trinity-wheel").forEach((element) => element.remove());
-  trinityWheelTimers.forEach((timer) => clearTimeout(timer));
-  trinityWheelTimers = [];
-  const index = Number(trinity.spiritIndex);
-  if (!trinity.spirit || !Number.isInteger(index)) {
-    showTrinityBlessingCard(trinity);
-    return;
-  }
-  const allOwned = missingTrinitySealIds().length === 0 || trinity.spiritHealed;
-  const outcome = trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinityWheelLabel(TRINITY_WHEEL_OUTCOMES[index], allOwned);
-  const step = 360 / TRINITY_WHEEL_OUTCOMES.length;
-  // land the chosen slice under the pointer at the top, a little off its centre so it doesn't look staged
-  const jitter = (Math.random() - 0.5) * step * 0.6;
-  const finalAngle = 360 * 6 - (index * step + step / 2) + jitter;
-  const reduced = motionReduced();
-  const spinMs = reduced ? 0 : Math.round(TRINITY_WHEEL_SPIN_MS / Math.min(animSpeed(), 2));
-  const holdMs = Math.round(TRINITY_WHEEL_HOLD_MS / Math.min(animSpeed(), 2));
-  const element = document.createElement("div");
-  element.className = `trinity-wheel${reduced ? " reduced" : ""}`;
-  element.setAttribute("role", "status");
-  element.setAttribute("aria-live", "polite");
-  element.innerHTML = `
-    <div class="trinity-wheel-stage">
-      <div class="trinity-wheel-title">${escapeHtml(ITEMS.p133.name)}</div>
-      <div class="trinity-wheel-frame">
-        <div class="trinity-wheel-spinner" style="--wheel-ms: ${spinMs}ms">${trinityWheelSvg(index, allOwned)}</div>
-        <img class="trinity-wheel-dove" src="${escapeAttr(sealSigilPath("p133"))}" alt="" />
-        <div class="trinity-wheel-pointer"></div>
-      </div>
-      <div class="trinity-wheel-result">${escapeHtml(outcome.label)}</div>
-      ${trinityBlessingsHtml(trinity)}
-      <div class="trinity-wheel-skip">Click to continue</div>
-    </div>`;
-  document.body.appendChild(element);
-  const spinner = element.querySelector(".trinity-wheel-spinner");
-  const land = () => {
-    if (!element.isConnected || element.classList.contains("landed")) return;
-    spinner.style.transition = "none";
-    spinner.style.transform = `rotate(${finalAngle}deg)`;
-    element.classList.add("landed");
-    momentSfx("targetLand");
-    trinityWheelTimers.push(setTimeout(() => closeTrinityWheel(element), holdMs));
-  };
-  element.addEventListener("click", () => {
-    if (element.classList.contains("landed")) closeTrinityWheel(element);
-    else land();
-  });
-  if (reduced) {
-    land();
-    return;
-  }
-  playGameSfx("reroll");
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      spinner.style.transform = `rotate(${finalAngle}deg)`;
-    })
-  );
-  trinityWheelTimers.push(setTimeout(land, spinMs + 40));
-}
-
-function watchTrinityWheel() {
-  const round = state.roundState;
-  const trinity = round?.trinity;
-  if (!trinity || !(trinity.spirit || trinity.father || trinity.son) || trinity.spinShown) return;
-  if (state.stage !== "guess" || state.gameOver || state.pauseOpen || roundRevealAnimationActive()) return;
-  if (typeof introActive === "function" && introActive()) return;
-  trinity.spinShown = true;
-  showTrinityWheel(round);
-}
-
 function afterRenderEffects() {
   if (state.mode !== "arcade") {
     lastEquippedSealIds = null;
@@ -1766,7 +1623,6 @@ function afterRenderEffects() {
   }
   syncSealRings();
   watchSealTrigger();
-  watchTrinityWheel();
   watchMoments();
   introAfterRender();
   collectionAfterRender();
@@ -2443,7 +2299,7 @@ function renderPassives() {
     const slotCost = sealSlotCost(item);
     occupiedSlots += slotCost;
     const sale = pieces.reduce((sum, piece) => sum + Math.floor((piece.price * (piece.stack || 1)) / 2) + (piece.saleBonus || 0), 0);
-    const displayName = trinityHost ? pieces.map((piece) => piece.name).join(" + ") : passiveDisplayName(item);
+    const displayName = trinityHost ? trinitySlotName(pieces) : passiveDisplayName(item);
     const tooltip = trinityHost
       ? renderTrinityTooltipHtml(pieces, sale)
       : renderSealTooltipHtml(item, displayName, itemDescription(item), sealSuppressionNotice(item.id), sale);

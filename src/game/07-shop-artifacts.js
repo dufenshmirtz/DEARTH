@@ -193,7 +193,7 @@ function passiveSellValue(item) {
 function sellTrinitySeals(index) {
   const pieces = ownedTrinitySeals();
   const sale = pieces.reduce((sum, item) => sum + passiveSellValue(item), 0);
-  const names = pieces.map((item) => item.name).join(", ");
+  const names = trinitySlotName(pieces);
   ghostSealOut(index);
   state.player.passives = state.player.passives.filter((item) => !pieces.includes(item));
   refreshMimicTarget();

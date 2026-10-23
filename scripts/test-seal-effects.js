@@ -1019,6 +1019,7 @@ test("Father: % TARGET difference uses max HEALTH, BOSSES included", () => {
       state.bots[2].isBoss = true;
       state.roundState.targetModifier = 1;
       state.roundState.trinity = { father: ${JSON.stringify(blessing)} };
+      applyTrinityAtReady = () => {};
       applyPenalties();
       assert.equal(state.roundState.target, 53);
     `);
@@ -1035,7 +1036,7 @@ test("Father: double damage doubles what you deal, the 20% strike hits one DAMNE
   base(critRound("[]"));
   const without = JSON.parse(base("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
   const run = game();
-  run(critRound(`[["p131"]]`, `state.roundState.trinity = { father: "double" };`));
+  run(critRound(`[["p131"]]`, `state.roundState.trinity = { father: "double" }; applyTrinityAtReady = () => {};`));
   const doubled = JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
   // your CRITICAL (10% of 1000) is doubled; TARGET difference is not damage you deal
   assert.deepEqual(doubled.map((value, index) => value - without[index]), [100, 100, 100, 100, 100]);
@@ -1079,7 +1080,7 @@ test("Son: double SIN from every source but sales, +8 SIN, free rerolls keep the
   `);
 });
 
-test("Holy Spirit: every wheel outcome does what its slice says", () => {
+test("Holy Spirit: each of its ten effects does what it says", () => {
   const outcome = (key, setup, check) =>
     game()(`
       ${TRINITY_STUBS}
@@ -1090,12 +1091,17 @@ test("Holy Spirit: every wheel outcome does what its slice says", () => {
       state.player.actives = [];
       ${setup}
       state.roundState.trinity = { spirit: "${key}" };
-      applyTrinityWheelOutcome("${key}");
+      applyTrinitySpiritOutcome("${key}");
       ${check}
     `);
   outcome("memory", "", `assert.deepEqual(state.bots.map(bot => bot.memory.length), [5, 5, 5, 5, 5]);`);
   outcome("bounty", "", `assert.deepEqual(state.bots.map(bot => botSin(bot)).sort(), [3, 3, 3, 6, 6]);`);
-  outcome("reveal", "", `assert.equal(revealedDamnedCount(), 4);`);
+  outcome("reveal", "", `
+    assert.equal(state.trinityRevealsNextRound, 4);
+    beginRound();
+    assert.equal(revealedDamnedCount(), 4);
+    assert.equal(state.trinityRevealsNextRound, 0);
+  `);
   outcome("artifacts", "", `
     assert.equal(state.player.actives.length, 3);
     assert.equal(new Set(state.player.actives.map(item => item.id)).size, 1);
@@ -1126,8 +1132,9 @@ test("Holy Spirit: every wheel outcome does what its slice says", () => {
     state.player.passives.push(itemCopy("p131"), itemCopy("p132"));
     state.player.hp = 90;
   `, `
-    assert.equal(state.player.hp, 93);
     assert.equal(state.roundState.trinity.spiritHealed, true);
+    applyEndOfRoundPassives();
+    assert.equal(state.player.hp, 93);
   `);
 });
 
@@ -1138,6 +1145,7 @@ test("Holy Spirit: CRITICAL whatever you guess, and no TARGET-difference damage 
     state.roundState.targetModifier = 1;
     state.roundState.playerEffectiveGuess = 0;
     state.roundState.trinity = { spirit: "critical" };
+    applyTrinityAtReady = () => {};
     assert.ok(criticalKeysForDisplay().has("player") || state.stage !== "active");
     applyPenalties();
     assert.ok(state.roundState.criticalHitKeys.has("player"));
@@ -1150,6 +1158,7 @@ test("Holy Spirit: CRITICAL whatever you guess, and no TARGET-difference damage 
       state.roundState.targetModifier = 1;
       state.roundState.playerEffectiveGuess = 20;
       state.roundState.trinity = { spirit: ${JSON.stringify(spirit)} };
+      applyTrinityAtReady = () => {};
       applyPenalties();
     `);
     return run("state.player.maxHp - state.player.hp");
@@ -1166,23 +1175,42 @@ test("Holy Spirit: CRITICAL whatever you guess, and no TARGET-difference damage 
   `));
 });
 
-test("Trinity rolls happen at round start, survive a save, and suppressed pieces roll nothing", () => {
+test("Trinity SEALS cast when you press READY, survive a save, and suppressed pieces cast nothing", () => {
   game()(`
-    fixture([["p131"], ["p132"], ["p133"]], [50, 50, 50]);
+    fixture([], [50, 50, 50]);
+    state.player.passives.push(itemCopy("p131"), itemCopy("p132"), itemCopy("p133"));
     beginRound();
+    assert.equal(trinityRound(), null);
+    applyPenalties();
     const rolled = state.roundState.trinity;
     assert.ok(Object.keys(TRINITY_FATHER_BLESSINGS).includes(rolled.father));
     assert.ok(Object.keys(TRINITY_SON_BLESSINGS).includes(rolled.son));
-    assert.ok(TRINITY_WHEEL_OUTCOMES.some(outcome => outcome.key === rolled.spirit));
-    rolled.spinShown = true;
+    assert.ok(TRINITY_SPIRIT_OUTCOMES.some(outcome => outcome.key === rolled.spirit));
+    ["p131", "p132", "p133"].forEach(id => assert.ok(state.roundState.triggeredPassiveIds.has(id)));
     const saved = JSON.stringify(arcadeRunSaveSnapshot(), encodeArcadeSaveValue);
     Object.assign(state, JSON.parse(saved, decodeArcadeSaveValue));
     normalizeLoadedArcadeRun();
-    assert.equal(state.roundState.trinity.spinShown, true);
     assert.equal(state.roundState.trinity.father, rolled.father);
     assert.equal(ownedSealSlotCount(), 1);
+    assert.equal(trinitySlotName(), "Seal of God");
     state.roundState.kalhaSuppressedPassiveIds = new Set(["p131"]);
     state.roundState.kalhaSuppressedById = -1;
     assert.equal(trinityFatherBlessing(), null);
+  `);
+});
+
+test("Son's free rerolls from READY last until the end of the next round", () => {
+  game()(`
+    ${TRINITY_STUBS}
+    fixture([], [50, 50, 50]);
+    state.round = 5;
+    applyTrinitySonBlessing("rerolls");
+    state.stage = "summary";
+    advanceAfterSummary();
+    assert.equal(state.round, 6);
+    assert.equal(state.freeRerolls, 4);
+    state.stage = "summary";
+    advanceAfterSummary();
+    assert.equal(state.freeRerolls, 0);
   `);
 });

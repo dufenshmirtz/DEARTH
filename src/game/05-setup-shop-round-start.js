@@ -764,6 +764,8 @@ function startGame(options = {}) {
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.freeRerolls = 0;
+  state.freeRerollsUntilRound = 0;
+  state.trinityRevealsNextRound = 0;
   state.trinityEliteNextShop = false;
   state.trinityShopSealsNextShop = [];
   state.critMomentumBonus = 0;
@@ -908,6 +910,7 @@ function beginRound() {
   applyMarkedProspect();
   applyGuessReveals();
   applyPendingNextRoundLambReveals();
+  applyTrinityPendingReveals();
   applyStartOfRoundPassives();
   applyGuessReveals();
   ensureSitriHost();
@@ -1071,13 +1074,11 @@ function applyStartOfRoundPassives() {
       setBotPersonality(target, "Stubborn", "Seal of Leraje");
     }
   });
-
-  applyTrinityRoundStart();
 }
 
 /* ---------- Trinity SEALS: Father, Son, Holy Spirit ----------
-   Each rolls its blessing at the start of the round (before you guess), so the player can play around it.
-   The roll is kept in state.roundState.trinity; the Holy Spirit's roll is shown as a spinning wheel. */
+   Each one casts one of its effects at random when you press READY, like any other SEAL, and its trigger
+   animation shows it. The roll is kept in state.roundState.trinity for the rest of the round. */
 const TRINITY_FATHER_BLESSINGS = {
   percent: { label: "Every DAMNED takes its TARGET difference as % of max HEALTH", short: "% TARGET damage" },
   strike: { label: "A random DAMNED takes 20% max-HEALTH damage at end of round", short: "20% strike" },
@@ -1086,20 +1087,20 @@ const TRINITY_FATHER_BLESSINGS = {
 const TRINITY_SON_BLESSINGS = {
   doubleSin: { label: "Double SIN from every source this round", short: "Double SIN" },
   sin: { label: "+8 SIN", short: "+8 SIN" },
-  rerolls: { label: "4 free rerolls this round", short: "4 free rerolls" }
+  rerolls: { label: "4 free rerolls until the end of next round", short: "4 free rerolls" }
 };
-// the Holy Spirit's wheel, in the order of its slices
-const TRINITY_WHEEL_OUTCOMES = [
-  { key: "memory", wheel: "+5 MEMORY", label: "+5 MEMORY to every DAMNED" },
-  { key: "bounty", wheel: "x2 BOUNTY", label: "Double the BOUNTY of 2 random DAMNED" },
-  { key: "reveal", wheel: "REVEAL 4", label: "Reveal 4 DAMNED guesses" },
-  { key: "artifacts", wheel: "3 ARTIFACTS", label: "3 copies of one ARTIFACT" },
-  { key: "critical", wheel: "CRITICAL", label: "Your guess is CRITICAL this round" },
-  { key: "stubborn", wheel: "4 STUBBORN", label: "4 DAMNED turn STUBBORN" },
-  { key: "elite", wheel: "ELITE OFFER", label: "The next SEAL offer is ELITE" },
-  { key: "eliminate", wheel: "ELIMINATE", label: "A random DAMNED is eliminated" },
-  { key: "shield", wheel: "NO TARGET DMG", label: "You take no TARGET-difference damage this round" },
-  { key: "trinity", wheel: "TRINITY", label: "50% chance the missing Trinity SEALS appear in the next offerings" }
+// the Holy Spirit's ten effects (one is cast at random)
+const TRINITY_SPIRIT_OUTCOMES = [
+  { key: "memory", label: "+5 MEMORY to every DAMNED" },
+  { key: "bounty", label: "Double the BOUNTY of 2 random DAMNED" },
+  { key: "reveal", label: "Reveal 4 DAMNED guesses next round" },
+  { key: "artifacts", label: "3 copies of one ARTIFACT" },
+  { key: "critical", label: "Your guess is CRITICAL this round" },
+  { key: "stubborn", label: "4 DAMNED turn STUBBORN" },
+  { key: "elite", label: "The next SEAL offer is ELITE" },
+  { key: "eliminate", label: "A random DAMNED is eliminated" },
+  { key: "shield", label: "You take no TARGET-difference damage this round" },
+  { key: "trinity", label: "50% chance the missing Trinity SEALS appear in the next offerings" }
 ];
 
 function trinityRound() {
@@ -1122,14 +1123,8 @@ function trinitySpiritOutcome() {
   return key && trinityEntry("p133") ? key : null;
 }
 
-function trinityWheelOutcome(key) {
-  return TRINITY_WHEEL_OUTCOMES.find((outcome) => outcome.key === key) || null;
-}
-
-// the line shown for the wheel's last slice: with all three Trinity SEALS it heals instead
-function trinityWheelLabel(outcome, allOwned = missingTrinitySealIds().length === 0) {
-  if (outcome?.key === "trinity" && allOwned) return { wheel: "HEAL 3", label: "Heal 3 HEALTH" };
-  return outcome || { wheel: "", label: "" };
+function trinitySpiritOutcomeInfo(key) {
+  return TRINITY_SPIRIT_OUTCOMES.find((outcome) => outcome.key === key) || null;
 }
 
 // the DAMNED a Trinity SEAL may pick at random: living, not immortal, optionally not a BOSS
@@ -1137,34 +1132,41 @@ function trinityTargets({ bosses = true } = {}) {
   return activeBots().filter((bot) => !bot.immortal && (bosses || !bot.isBoss));
 }
 
-function applyTrinityRoundStart() {
+// called by applyPenalties when you press READY, before any damage is worked out
+function applyTrinityAtReady() {
   const round = state.roundState;
   if (!round) return;
-  round.trinity = { father: null, son: null, spirit: null, spiritIndex: null, spiritHealed: false, spinShown: false };
+  round.trinity = { father: null, son: null, spirit: null, spiritHealed: false };
   const fatherEntry = trinityEntry("p131");
   if (fatherEntry) {
     round.trinity.father = randomFrom(Object.keys(TRINITY_FATHER_BLESSINGS));
     markPassiveEntryTriggered(fatherEntry);
     addRoundEvent(`${ITEMS.p131.name}: ${TRINITY_FATHER_BLESSINGS[round.trinity.father].label}.`);
-    addLog(`${ITEMS.p131.name}: ${TRINITY_FATHER_BLESSINGS[round.trinity.father].label}.`);
   }
   const sonEntry = trinityEntry("p132");
   if (sonEntry) {
     round.trinity.son = randomFrom(Object.keys(TRINITY_SON_BLESSINGS));
     markPassiveEntryTriggered(sonEntry);
     applyTrinitySonBlessing(round.trinity.son);
-    addLog(`${ITEMS.p132.name}: ${TRINITY_SON_BLESSINGS[round.trinity.son].label}.`);
   }
   const spiritEntry = trinityEntry("p133");
   if (spiritEntry) {
-    const index = randomInt(0, TRINITY_WHEEL_OUTCOMES.length - 1);
-    round.trinity.spirit = TRINITY_WHEEL_OUTCOMES[index].key;
-    round.trinity.spiritIndex = index;
+    round.trinity.spirit = randomFrom(TRINITY_SPIRIT_OUTCOMES).key;
     markPassiveEntryTriggered(spiritEntry);
-    applyTrinityWheelOutcome(round.trinity.spirit);
-    const landed = round.trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : TRINITY_WHEEL_OUTCOMES[index];
-    addLog(`${ITEMS.p133.name}: the wheel landed on ${landed.label}.`);
+    applyTrinitySpiritOutcome(round.trinity.spirit);
   }
+}
+
+// Seal of the Holy Spirit, "Reveal 4": the guesses are revealed at the start of the next round
+function applyTrinityPendingReveals() {
+  const count = Math.max(0, Math.ceil(state.trinityRevealsNextRound || 0));
+  state.trinityRevealsNextRound = 0;
+  if (!count || state.stage !== "guess" || !state.roundState) return;
+  const name = ITEMS.p133.name;
+  let revealed = 0;
+  shuffled(activeBots().filter((bot) => !bot.revealedByPassive && canRevealBotGuess(bot))).forEach((bot) => {
+    if (revealed < count && revealBotGuess(bot, name)) revealed += 1;
+  });
 }
 
 function applyTrinitySonBlessing(key) {
@@ -1180,6 +1182,7 @@ function applyTrinitySonBlessing(key) {
   }
   if (key === "rerolls") {
     state.freeRerolls = Math.max(0, Math.ceil(state.freeRerolls || 0)) + 4;
+    state.freeRerollsUntilRound = state.round + 1;
     addRoundEvent(`${name} gave you 4 free rerolls.`);
   }
 }
@@ -1192,21 +1195,12 @@ function trinitySonSinBonus(entries) {
     .reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
 }
 
-function replanTrinityGuesses(bots) {
-  bots.forEach((bot) => {
-    if (!bot || bot.eliminated || bot.hp <= 0) return;
-    bot.fresh = (bot.memory?.length || 0) === 0;
-    bot.plannedGuess = planBotGuess(bot);
-  });
-}
-
-function applyTrinityWheelOutcome(key) {
+function applyTrinitySpiritOutcome(key) {
   const round = state.roundState;
   const name = ITEMS.p133.name;
   if (key === "memory") {
     const targets = activeBots();
     targets.forEach((bot) => addBotMemory(bot, 5, "", { source: name }));
-    replanTrinityGuesses(targets);
     addRoundEvent(`${name} gave every DAMNED +5 MEMORY.`);
     return;
   }
@@ -1217,13 +1211,8 @@ function applyTrinityWheelOutcome(key) {
     return;
   }
   if (key === "reveal") {
-    const hidden = shuffled(activeBots().filter((bot) => !bot.revealedByPassive && canRevealBotGuess(bot)));
-    let revealed = 0;
-    hidden.forEach((bot) => {
-      if (revealed >= 4) return;
-      if (revealBotGuess(bot, name)) revealed += 1;
-    });
-    if (!revealed) addRoundEvent(`${name} found no guess left to reveal.`);
+    state.trinityRevealsNextRound = 4;
+    addRoundEvent(`${name}: 4 DAMNED guesses will be revealed next round.`);
     return;
   }
   if (key === "artifacts") {
@@ -1246,7 +1235,6 @@ function applyTrinityWheelOutcome(key) {
   if (key === "stubborn") {
     const targets = shuffled(trinityTargets({ bosses: false }).filter((bot) => !hasPersonality(bot, "Stubborn"))).slice(0, 4);
     targets.forEach((bot) => setBotPersonality(bot, "Stubborn", name));
-    replanTrinityGuesses(targets);
     if (!targets.length) addRoundEvent(`${name} found no DAMNED to make STUBBORN.`);
     return;
   }
@@ -1279,9 +1267,8 @@ function applyTrinityWheelOutcome(key) {
   if (key === "trinity") {
     const missing = missingTrinitySealIds();
     if (!missing.length) {
-      const healed = healPlayer(3, null, name);
+      // with all three Trinity SEALS it heals 3 HEALTH instead, at end of round (after the round's damage)
       round.trinity.spiritHealed = true;
-      addRoundEvent(healed ? `${name} healed you for ${healed}.` : `${name} found you at full HEALTH.`);
       return;
     }
     if (Math.random() < 0.5) {
