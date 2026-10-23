@@ -2442,7 +2442,11 @@ function setupIosAudio() {
     return el.__iosMusic;
   }
 
+  const musicEls = new Set();
+  let needsRebuild = false;
+
   function startMusic(el) {
+    musicEls.add(el);
     const music = musicState(el);
     if (!music.wanted || music.source) return;
     const buffer = buffers.get(urlOf(el));
@@ -2550,13 +2554,57 @@ function setupIosAudio() {
     return nativePause.call(this);
   };
 
-  // iPhone only starts (and after a call or the background, restarts) audio from a touch
-  ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, resume, true));
+  // After the app has been in the background, iOS can leave the audio context stuck
+  // ("interrupted", or "running" but silent), and resume() does not bring it back. So on the way
+  // back a fresh context is made; the decoded sounds carry over, and the music restarts where it
+  // was. iPhone only lets audio start from a touch, so the first tap after returning wakes it.
+  function rebuild() {
+    let fresh;
+    try {
+      fresh = new AudioCtx();
+    } catch (error) {
+      return;
+    }
+    const old = ctx;
+    const playing = [];
+    musicEls.forEach((el) => {
+      if (el.__iosMusic?.source) {
+        stopMusic(el);
+        playing.push(el);
+      }
+    });
+    ctx = fresh;
+    musicEls.forEach((el) => {
+      el.__iosGain = null;
+    });
+    try {
+      old.close().catch(() => {});
+    } catch (error) {}
+    playing.forEach((el) => {
+      el.__iosMusic.wanted = true;
+      startMusic(el);
+    });
+  }
+
+  function wake() {
+    if (needsRebuild) {
+      needsRebuild = false;
+      rebuild();
+    }
+    resume();
+  }
+
+  ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, wake, true));
 
   return {
-    ctx,
-    suspend: () => ctx.suspend().catch(() => {}),
-    resume
+    get ctx() {
+      return ctx;
+    },
+    suspend: () => {
+      needsRebuild = true;
+      ctx.suspend().catch(() => {});
+    },
+    resume: wake
   };
 }
 
@@ -3043,7 +3091,10 @@ function pauseAudioElement(audio) {
 }
 
 function pauseGameAudioForBackground() {
-  soundtrackPausedByAppBackground = Boolean(soundtrackAudio && !soundtrackAudio.paused);
+  // leaving the app fires more than one of blur / visibilitychange / pagehide: the second call
+  // must not forget that the music was playing before the first one paused it
+  soundtrackPausedByAppBackground =
+    soundtrackPausedByAppBackground || Boolean(soundtrackAudio && !soundtrackAudio.paused);
   [
     soundtrackAudio,
     sealPurchaseSfx,
