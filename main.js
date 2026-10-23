@@ -2586,7 +2586,37 @@ function setupIosAudio() {
     });
   }
 
+  // Telling that the app was away is unreliable on iPhone (page events don't always fire), so
+  // several signs are watched: the page hiding, the app's pause/resume events, timers that
+  // stopped running for a while, and an audio clock that says "running" but stands still.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) needsRebuild = true;
+  });
+  ["pause", "resume"].forEach((type) => document.addEventListener(type, () => (needsRebuild = true)));
+  window.addEventListener("pagehide", () => (needsRebuild = true));
+  let lastTick = Date.now();
+  let lastAudioTime = ctx.currentTime;
+  let lastCtx = ctx;
+  setInterval(() => {
+    const now = Date.now();
+    if (ctx !== lastCtx) {
+      // a fresh context starts its clock at 0: begin measuring again
+      lastCtx = ctx;
+      lastTick = now;
+      lastAudioTime = ctx.currentTime;
+      return;
+    }
+    const wall = (now - lastTick) / 1000;
+    if (wall > 2.5) needsRebuild = true;
+    else if (!document.hidden && ctx.state === "running" && wall > 0.8 && ctx.currentTime - lastAudioTime < 0.2) {
+      needsRebuild = true;
+    }
+    lastTick = now;
+    lastAudioTime = ctx.currentTime;
+  }, 1000);
+
   function wake() {
+    if (ctx.state === "interrupted" || ctx.state === "closed") needsRebuild = true;
     if (needsRebuild) {
       needsRebuild = false;
       rebuild();
@@ -5835,11 +5865,28 @@ function addLog(message) {
 }
 
 function showInvalidGuessPopup() {
+  // iPhone: the system alert stops the whole game until it closes, so show it in the game instead
+  if (NATIVE_IOS_APP) {
+    showInvalidGuessToast();
+    return;
+  }
   if (typeof window !== "undefined" && typeof window.alert === "function") {
     window.alert("Invalid");
   } else {
     addLog("Invalid");
   }
+}
+
+// "Invalid" over the table: lives outside #app (renders never touch it) and never blocks play
+function showInvalidGuessToast() {
+  document.querySelector(".invalid-toast")?.remove();
+  const toast = document.createElement("div");
+  toast.className = "invalid-toast";
+  toast.setAttribute("role", "alert");
+  toast.textContent = "Invalid";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("leaving"), 900);
+  setTimeout(() => toast.remove(), 1300);
 }
 
 function addRoundEvent(message) {

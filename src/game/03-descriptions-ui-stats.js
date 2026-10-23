@@ -978,11 +978,28 @@ function addLog(message) {
 }
 
 function showInvalidGuessPopup() {
+  // iPhone: the system alert stops the whole game until it closes, so show it in the game instead
+  if (NATIVE_IOS_APP) {
+    showInvalidGuessToast();
+    return;
+  }
   if (typeof window !== "undefined" && typeof window.alert === "function") {
     window.alert("Invalid");
   } else {
     addLog("Invalid");
   }
+}
+
+// "Invalid" over the table: lives outside #app (renders never touch it) and never blocks play
+function showInvalidGuessToast() {
+  document.querySelector(".invalid-toast")?.remove();
+  const toast = document.createElement("div");
+  toast.className = "invalid-toast";
+  toast.setAttribute("role", "alert");
+  toast.textContent = "Invalid";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("leaving"), 900);
+  setTimeout(() => toast.remove(), 1300);
 }
 
 function addRoundEvent(message) {

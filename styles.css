@@ -11648,3 +11648,36 @@ body.native-arcade #app .active-panel .active-list::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
+
+/* iPhone: "Invalid" guess notice in the game (instead of the system alert, which froze the game) */
+.invalid-toast {
+  position: fixed;
+  z-index: 30200;
+  top: 50%;
+  left: 50%;
+  padding: 14px 34px;
+  background: rgba(0, 0, 0, 0.94);
+  color: var(--blood-bright);
+  font-family: "Razor Keen", Inter, sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: invalid-toast-in 0.18s ease-out both;
+}
+.invalid-toast::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 16px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-card-sharp.png") 14% / 16px stretch;
+}
+.invalid-toast.leaving {
+  opacity: 0;
+  transition: opacity 0.35s ease-in;
+}
+@keyframes invalid-toast-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+}
