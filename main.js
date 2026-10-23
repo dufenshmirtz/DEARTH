@@ -2211,6 +2211,7 @@ const state = {
   pendingNextRoundMarbasBonuses: [],
   pendingNextRoundLambReveals: [],
   pendingSelfStackingPentakillDamage: 0,
+  pendingSelfStackingPentakillRound: 0,
   gameMemory: [],
   nextBotId: 1,
   nextItemUid: 1,
@@ -2679,6 +2680,7 @@ function normalizeLoadedArcadeRun() {
   });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
+  if (!Number.isFinite(state.pendingSelfStackingPentakillRound)) state.pendingSelfStackingPentakillRound = 0;
   state.runStats = normalizeRunStats(state.runStats);
   if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
   if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();
@@ -5459,15 +5461,19 @@ function queueSelfStackingPentakillDamage() {
   const damage = triggerSelfStackingSeal("p101");
   if (damage <= 0) return;
   state.pendingSelfStackingPentakillDamage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0)) + damage;
+  // remember which round queued it: the damage must wait for the NEXT end of round
+  state.pendingSelfStackingPentakillRound = Math.max(0, Math.floor(state.round || 0));
   state.roundState?.roundEvents.push(`${ITEMS.p101.name} queued ${damage} end-of-round damage.`);
 }
 
 function applyPendingSelfStackingPentakillDamage() {
   const damage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0));
   if (damage <= 0) return;
-  state.pendingSelfStackingPentakillDamage = 0;
+  // the PENTAKILL round's own end of round has no living DAMNED (and is not the "next" one): keep waiting
+  if (Math.floor(state.round || 0) <= Math.floor(state.pendingSelfStackingPentakillRound || 0)) return;
   const targets = activeBots();
   if (!targets.length) return;
+  state.pendingSelfStackingPentakillDamage = 0;
   damageBots(
     targets,
     damage,
@@ -7467,6 +7473,7 @@ function startGame(options = {}) {
   state.pendingNextRoundMarbasBonuses = [];
   state.pendingNextRoundLambReveals = [];
   state.pendingSelfStackingPentakillDamage = 0;
+  state.pendingSelfStackingPentakillRound = 0;
   state.gameMemory = [];
   state.pendingActive = null;
   state.lastUsedArtifact = null;

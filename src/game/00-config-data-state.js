@@ -2001,6 +2001,7 @@ const state = {
   pendingNextRoundMarbasBonuses: [],
   pendingNextRoundLambReveals: [],
   pendingSelfStackingPentakillDamage: 0,
+  pendingSelfStackingPentakillRound: 0,
   gameMemory: [],
   nextBotId: 1,
   nextItemUid: 1,

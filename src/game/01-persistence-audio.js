@@ -411,6 +411,7 @@ function normalizeLoadedArcadeRun() {
   });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
+  if (!Number.isFinite(state.pendingSelfStackingPentakillRound)) state.pendingSelfStackingPentakillRound = 0;
   state.runStats = normalizeRunStats(state.runStats);
   if (!state.currentRunSlotId) state.currentRunSlotId = createArcadeRunSlotId();
   if (!Number.isFinite(state.runStartedAt)) state.runStartedAt = Date.now();

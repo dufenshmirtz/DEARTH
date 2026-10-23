@@ -717,6 +717,7 @@ function startGame(options = {}) {
   state.pendingNextRoundMarbasBonuses = [];
   state.pendingNextRoundLambReveals = [];
   state.pendingSelfStackingPentakillDamage = 0;
+  state.pendingSelfStackingPentakillRound = 0;
   state.gameMemory = [];
   state.pendingActive = null;
   state.lastUsedArtifact = null;

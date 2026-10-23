@@ -542,6 +542,28 @@ test("Seal of Satan costs 20 SIN and Aggiel Hexagram stacks +20 per PENTAKILL", 
   `);
 });
 
+test("Aggiel Hexagram: PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
+  const run = game();
+  run(`
+    fixture([["p101"]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(bot => { bot.hp = 1; });
+    state.roundState.eliminationsThisRound = 5;
+    checkRoundPentakillBonus();
+    assert.equal(state.pendingSelfStackingPentakillDamage, 20);
+    // the PENTAKILL round's own end of round: everyone is dead, the damage must not be lost
+    state.bots.forEach(bot => { bot.hp = 0; bot.eliminated = true; });
+    applyEndOfRoundPassives();
+    assert.equal(state.pendingSelfStackingPentakillDamage, 20);
+    // next round: fresh DAMNED
+    state.round += 1;
+    state.bots = [1, 2, 3, 4, 5].map(() => createBot());
+    state.bots.forEach(bot => { bot.hp = bot.maxHp = 1000; });
+    applyPendingSelfStackingPentakillDamage();
+    assert.equal(state.pendingSelfStackingPentakillDamage, 0);
+    assert.deepEqual(state.bots.map(bot => bot.hp), [980, 980, 980, 980, 980]);
+  `);
+});
+
 // player 60 vs DAMNED 49, 47, 30, 70, 100 with modifier 1: TARGET 60, only you hit CRITICAL
 const CRIT_TABLE = "[49, 47, 30, 70, 100]";
 function critRound(passives, extra = "") {

@@ -893,15 +893,19 @@ function queueSelfStackingPentakillDamage() {
   const damage = triggerSelfStackingSeal("p101");
   if (damage <= 0) return;
   state.pendingSelfStackingPentakillDamage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0)) + damage;
+  // remember which round queued it: the damage must wait for the NEXT end of round
+  state.pendingSelfStackingPentakillRound = Math.max(0, Math.floor(state.round || 0));
   state.roundState?.roundEvents.push(`${ITEMS.p101.name} queued ${damage} end-of-round damage.`);
 }
 
 function applyPendingSelfStackingPentakillDamage() {
   const damage = Math.max(0, Math.ceil(state.pendingSelfStackingPentakillDamage || 0));
   if (damage <= 0) return;
-  state.pendingSelfStackingPentakillDamage = 0;
+  // the PENTAKILL round's own end of round has no living DAMNED (and is not the "next" one): keep waiting
+  if (Math.floor(state.round || 0) <= Math.floor(state.pendingSelfStackingPentakillRound || 0)) return;
   const targets = activeBots();
   if (!targets.length) return;
+  state.pendingSelfStackingPentakillDamage = 0;
   damageBots(
     targets,
     damage,
