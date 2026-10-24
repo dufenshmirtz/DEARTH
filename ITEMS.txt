@@ -232,7 +232,7 @@ Seal of the Pale Horse (20 SIN)
 If you score CRITICAL this round, DAMNED take x1.5 damage from all sources next round. ELITE adds +0.2 to the multiplier.
 
 Seal of the Red Horse (20 SIN)
-Reveal one extra DAMNED each round. Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
+Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of Silence in Heaven (20 SIN)
 DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier.
@@ -281,7 +281,7 @@ Seal of Cassiel's Pentagram (16 SIN)
 At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
 Seal of Cassiel's Sigil (16 SIN)
-Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
 
 Seal of Samael's Star (16 SIN)
 When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.

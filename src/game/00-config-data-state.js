@@ -649,7 +649,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Reveal one extra DAMNED each round. Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+    description: "Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
@@ -782,7 +782,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Cassiel's Sigil",
     price: 16,
-    description: "Reveal one extra DAMNED each round. When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",

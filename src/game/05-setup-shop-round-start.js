@@ -1544,7 +1544,8 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p75", "p95", "p102"]).length;
+  // Goetic reveal SEALS and the Seal of Zachriel Triangle; other special SEALS do not add reveals
+  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&

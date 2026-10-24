@@ -47,7 +47,7 @@ function game() {
 }
 
 test("each reveal seal adds one reveal, independent of elite level, with a shared cap of four", () => {
-  for (const id of ["p59", "p61", "p64", "p65", "p75", "p95", "p102"]) {
+  for (const id of ["p59", "p61", "p64", "p65", "p102"]) {
     game()(`
       fixture([["${id}", 4]], [10, 20, 30, 40, 50]);
       assert.equal(revealedDamnedCount(), 2);
@@ -56,7 +56,7 @@ test("each reveal seal adds one reveal, independent of elite level, with a share
     `);
   }
   game()(`
-    fixture([["p59"], ["p64"], ["p65"], ["p75"], ["p95"], ["p102"]], [10, 20, 30, 40, 50]);
+    fixture([["p59"], ["p64"], ["p65"], ["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 4);
     applyGuessReveals();
     assert.equal(revealedDamnedCount(), 4);
@@ -94,7 +94,7 @@ test("Lamb can reveal bosses below the cap and suppressed seals do not add revea
 test("new reveal text appears in saved-item and elite descriptions and the catalog", () => {
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
-  for (const id of ["p64", "p65", "p75", "p95", "p102"]) {
+  for (const id of ["p64", "p65", "p102"]) {
     const item = run(`ITEMS.${id}`);
     assert.ok(catalog.includes(item.description));
     for (const stack of [1, 2]) {
@@ -102,6 +102,31 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
         .startsWith("Reveal one extra DAMNED each round."));
     }
   }
+});
+
+test("Red Horse and Cassiel's Sigil no longer add reveals; Pyros and Zachriel Triangle still do", () => {
+  for (const id of ["p75", "p95"]) {
+    game()(`
+      fixture([["${id}", 3]], [10, 20, 30, 40, 50]);
+      assert.equal(revealedDamnedCount(), 1);
+      applyGuessReveals();
+      assert.equal(revealedDamnedCount(), 1);
+      assert.ok(!itemDescription({ ...ITEMS.${id}, stack: 1, description: "Old description" }).includes("Reveal one extra"));
+      assert.ok(!itemDescription({ ...ITEMS.${id}, stack: 2 }).includes("Reveal one extra"));
+    `);
+  }
+  game()(`
+    fixture([["p75"], ["p95"], ["p102"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+  `);
+  game()(`
+    fixture([["p123"]], [10, 20, 30, 40, 50]);
+    const stacks = state.bots.reduce((sum, bot) => sum + revealStacks(bot), 0);
+    assert.equal(stacks, 2);
+  `);
+  const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
+  assert.ok(catalog.includes(game()("ITEMS.p75.description")));
+  assert.ok(catalog.includes(game()("ITEMS.p95.description")));
 });
 
 test("boss kills heal 6 HP, normal kills heal 1, and healing respects max HP", () => {
