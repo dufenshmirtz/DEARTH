@@ -545,7 +545,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
+      "While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",
@@ -567,14 +567,14 @@ const ITEMS = {
     name: "Seal of Vine",
     price: 10,
     description:
-      "Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
+      "Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
   },
   p65: {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "Reveal one extra DAMNED each round. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -937,7 +937,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zachriel Triangle",
     price: 15,
-    description: "Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
+    description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
@@ -2079,6 +2079,7 @@ const state = {
   critMomentumBonus: 0,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
+  previousRoundRevealedEliminations: 0,
   shouldFocusGuessInput: false,
   pendingActive: null,
   lastUsedArtifact: null,

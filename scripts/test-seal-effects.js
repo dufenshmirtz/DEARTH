@@ -46,9 +46,19 @@ function game() {
   return (code) => vm.runInContext(code, context);
 }
 
-test("each reveal seal adds one reveal, independent of elite level, with a shared cap of four", () => {
+// puts every conditional reveal SEAL in its "reveal" state: below 50 HEALTH (Vepar), a winning 50% roll (Vine),
+// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Zachriel Triangle)
+const REVEAL_CONDITIONS_MET = `
+  state.player.hp = 40;
+  state.previousRoundRevealedEliminations = 1;
+  state.previousRoundEliminationsForMartyrs = 1;
+  Math.random = () => 0.1;
+`;
+
+test("each reveal seal adds one reveal when its condition holds, independent of elite level, with a shared cap of four", () => {
   for (const id of ["p59", "p61", "p64", "p65", "p102"]) {
     game()(`
+      ${REVEAL_CONDITIONS_MET}
       fixture([["${id}", 4]], [10, 20, 30, 40, 50]);
       assert.equal(revealedDamnedCount(), 2);
       applyGuessReveals();
@@ -56,6 +66,7 @@ test("each reveal seal adds one reveal, independent of elite level, with a share
     `);
   }
   game()(`
+    ${REVEAL_CONDITIONS_MET}
     fixture([["p59"], ["p64"], ["p65"], ["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 4);
     applyGuessReveals();
@@ -94,12 +105,18 @@ test("Lamb can reveal bosses below the cap and suppressed seals do not add revea
 test("new reveal text appears in saved-item and elite descriptions and the catalog", () => {
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
-  for (const id of ["p64", "p65", "p102"]) {
+  const prefixes = {
+    p61: "While you are below 50 HEALTH, reveal one extra DAMNED each round.",
+    p64: "Each round, 50% chance to reveal one extra DAMNED.",
+    p65: "If a revealed DAMNED died last round, reveal one extra DAMNED.",
+    p102: "If a DAMNED died last round, reveal one extra DAMNED."
+  };
+  for (const [id, prefix] of Object.entries(prefixes)) {
     const item = run(`ITEMS.${id}`);
     assert.ok(catalog.includes(item.description));
+    assert.ok(item.description.startsWith(prefix));
     for (const stack of [1, 2]) {
-      assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: ${stack}, description: "Old description" })`)
-        .startsWith("Reveal one extra DAMNED each round."));
+      assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: ${stack}, description: "Old description" })`).startsWith(prefix));
     }
   }
 });
@@ -116,6 +133,7 @@ test("Red Horse and Cassiel's Sigil no longer add reveals; Pyros and Zachriel Tr
     `);
   }
   game()(`
+    state.previousRoundEliminationsForMartyrs = 1;
     fixture([["p75"], ["p95"], ["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 2);
   `);
@@ -954,10 +972,9 @@ test("the worst guess penalty is 10% of max HEALTH", () => {
   `);
 });
 
-test("Vepar reveals one extra DAMNED and spreads the worst guess penalty to every revealed DAMNED", () => {
+test("Vepar spreads the worst guess penalty to every revealed DAMNED", () => {
   game()(`
     fixture([["p61"]], [60, 60, 60, 60, 0]);
-    assert.ok(revealedDamnedCount() >= 2);
     state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
     revealBotGuess(state.bots[4], "Test");
     revealBotGuess(state.bots[1], "Test");
@@ -1237,5 +1254,91 @@ test("Son's free rerolls from READY last until the end of the next round", () =>
     state.stage = "summary";
     advanceAfterSummary();
     assert.equal(state.freeRerolls, 0);
+  `);
+});
+
+// ---- conditional extra reveals: Vepar p61, Vine p64, Naberius p65, Zachriel Triangle p102 ----
+test("Amon always reveals one extra DAMNED", () => {
+  game()(`
+    fixture([["p59"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+  `);
+});
+
+test("Vepar reveals one extra DAMNED only while you are below 50 HEALTH", () => {
+  game()(`
+    state.player.hp = 50;
+    fixture([["p61"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 1);
+    assert.ok(!state.roundState.triggeredPassiveIds.has("p61"));
+  `);
+  game()(`
+    state.player.hp = 49;
+    fixture([["p61"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p61"));
+  `);
+});
+
+test("Vine has a 50% chance to reveal one extra DAMNED, rolled once per round", () => {
+  game()(`
+    Math.random = () => 0.6;
+    fixture([["p64"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 1);
+    Math.random = () => 0.1;
+    applyGuessReveals();
+    assert.equal(revealedDamnedCount(), 1, "a lost roll stays lost for the round");
+  `);
+  game()(`
+    Math.random = () => 0.1;
+    fixture([["p64"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+    applyGuessReveals();
+    assert.equal(revealedDamnedCount(), 2);
+    assert.equal(sealStatsFor("p64").triggers, 1, "re-applying reveals counts the trigger once");
+  `);
+});
+
+test("Naberius reveals one extra DAMNED only if a revealed DAMNED died last round", () => {
+  game()(`
+    state.previousRoundEliminationsForMartyrs = 1;
+    fixture([["p65"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 1, "a hidden DAMNED's death does not count");
+  `);
+  game()(`
+    state.previousRoundRevealedEliminations = 1;
+    fixture([["p65"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+  `);
+});
+
+test("Zachriel Triangle reveals one extra DAMNED only if a DAMNED died last round", () => {
+  game()(`
+    fixture([["p102"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 1);
+  `);
+  game()(`
+    state.previousRoundEliminationsForMartyrs = 1;
+    fixture([["p102"]], [10, 20, 30, 40, 50]);
+    assert.equal(revealedDamnedCount(), 2);
+  `);
+});
+
+test("last round's deaths, revealed or not, carry into the next round", () => {
+  game()(`
+    globalThis.render = () => {};
+    fixture([], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const hidden = state.bots.find(bot => !bot.revealedByPassive);
+    damageBot(hidden, 5000, "Test");
+    assert.equal(state.roundState.eliminationsThisRound, 1);
+    assert.equal(state.roundState.revealedEliminationsThisRound, 0);
+    damageBot(revealed, 5000, "Test");
+    assert.equal(state.roundState.revealedEliminationsThisRound, 1);
+    state.stage = "summary";
+    advanceAfterSummary();
+    assert.equal(state.previousRoundEliminationsForMartyrs, 2);
+    assert.equal(state.previousRoundRevealedEliminations, 1);
+    assert.equal(state.roundState.revealedEliminationsThisRound, 0);
   `);
 });

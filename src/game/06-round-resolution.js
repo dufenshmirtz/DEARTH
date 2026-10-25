@@ -708,6 +708,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
@@ -1741,6 +1742,7 @@ function advanceAfterSummary() {
     return;
   }
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
+  state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;

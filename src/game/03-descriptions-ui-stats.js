@@ -67,7 +67,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -170,16 +170,16 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
+    return `While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
   }
   if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
     return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
   }
   if (item.id === "p64") {
-    return `Reveal one extra DAMNED each round. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+    return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `Reveal one extra DAMNED each round. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {

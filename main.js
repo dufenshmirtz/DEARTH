@@ -755,7 +755,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
+      "While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",
@@ -777,14 +777,14 @@ const ITEMS = {
     name: "Seal of Vine",
     price: 10,
     description:
-      "Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
+      "Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
   },
   p65: {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "Reveal one extra DAMNED each round. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -1147,7 +1147,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zachriel Triangle",
     price: 15,
-    description: "Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
+    description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
@@ -2289,6 +2289,7 @@ const state = {
   critMomentumBonus: 0,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
+  previousRoundRevealedEliminations: 0,
   shouldFocusGuessInput: false,
   pendingActive: null,
   lastUsedArtifact: null,
@@ -4737,7 +4738,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -4840,16 +4841,16 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
+    return `While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
   }
   if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
     return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
   }
   if (item.id === "p64") {
-    return `Reveal one extra DAMNED each round. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+    return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `Reveal one extra DAMNED each round. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
@@ -7640,6 +7641,7 @@ function startGame(options = {}) {
   state.critMomentumBonus = 0;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
+  state.previousRoundRevealedEliminations = 0;
   resetBotsForRun();
   rerollShop();
   beginRound();
@@ -7701,12 +7703,15 @@ function beginRound() {
     multiEliminationBonusPaid: false,
     eliminatedPersonalities: [],
     eliminationsThisRound: 0,
+    revealedEliminationsThisRound: 0,
     sallosSpreadDone: false,
     eliminationCreditRecords: [],
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
+    vineRevealRolls: {},
+    extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
@@ -8413,8 +8418,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  // Goetic reveal SEALS and the Seal of Zachriel Triangle; other special SEALS do not add reveals
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).length;
+  const extraReveals = extraRevealEntries().length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -8432,6 +8436,44 @@ function applyGuessReveals() {
   applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS do not add reveals). Amon always does; the others only when their condition holds:
+// Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
+// died last round, Zachriel Triangle if any DAMNED died last round.
+function extraRevealEntries() {
+  return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
+    if (entry.id === "p59") return true;
+    let active = false;
+    if (entry.id === "p61") active = (state.player?.hp || 0) < 50;
+    if (entry.id === "p64") active = vineRevealRoll(entry);
+    if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
+    if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
+    if (active) markExtraRevealTriggered(entry);
+    return active;
+  });
+}
+
+// reveals are re-applied several times a round; count the trigger once
+function markExtraRevealTriggered(entry) {
+  const round = state.roundState;
+  if (!round) return;
+  if (!round.extraRevealMarked || typeof round.extraRevealMarked !== "object") round.extraRevealMarked = {};
+  const key = entry.sourceId || entry.id;
+  if (round.extraRevealMarked[key]) return;
+  round.extraRevealMarked[key] = true;
+  markPassiveEntryTriggered(entry);
+}
+
+// Seal of Vine: one 50% roll per round, kept so the reveal count does not change when reveals are re-applied
+function vineRevealRoll(entry) {
+  const round = state.roundState;
+  if (!round) return false;
+  if (!round.vineRevealRolls || typeof round.vineRevealRolls !== "object") round.vineRevealRolls = {};
+  const key = entry.sourceId || entry.id;
+  if (typeof round.vineRevealRolls[key] !== "boolean") round.vineRevealRolls[key] = Math.random() < 0.5;
+  return round.vineRevealRolls[key];
 }
 
 // Seal of Pyros: at the start of every round it reveals one DAMNED (ELITE: +1 each level), chosen from ALL
@@ -9689,6 +9731,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
@@ -10722,6 +10765,7 @@ function advanceAfterSummary() {
     return;
   }
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
+  state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
