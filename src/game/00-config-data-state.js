@@ -559,7 +559,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
   },
   p64: {
     id: "p64",

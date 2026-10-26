@@ -1342,3 +1342,22 @@ test("last round's deaths, revealed or not, carry into the next round", () => {
     assert.equal(state.roundState.revealedEliminationsThisRound, 0);
   `);
 });
+
+test("Vual: revealed DAMNED take 7 extra damage per hit (ELITE x1.5, rounded up)", () => {
+  for (const [stack, extra] of [[1, 7], [2, 11]]) {
+    game()(`
+      fixture([["p63", ${stack}]], [10, 20, 30, 40, 50]);
+      const revealed = state.bots.find(bot => bot.revealedByPassive);
+      const hidden = state.bots.find(bot => !bot.revealedByPassive);
+      damageBot(revealed, 10, "Test");
+      damageBot(hidden, 10, "Test");
+      assert.equal(revealed.maxHp - revealed.hp, 10 + ${extra});
+      assert.equal(hidden.maxHp - hidden.hp, 10);
+    `);
+  }
+  const run = game();
+  const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
+  assert.ok(catalog.includes(run("ITEMS.p63.description")));
+  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).includes("7 extra damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).includes("11 extra damage"));
+});

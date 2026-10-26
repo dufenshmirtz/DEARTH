@@ -212,7 +212,7 @@ Seal of Vine (10 SIN)
 Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%.
 
 Seal of Vual (10 SIN)
-Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
+Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
 
 Seal of Zagan (15 SIN)
 At end of round, DAMNED with the most prevalent personality take 5 damage for every DAMNED with that personality. ELITE multiplies the damage by x1.5 each level, rounded up.

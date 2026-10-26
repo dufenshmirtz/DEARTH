@@ -897,7 +897,7 @@ function fullHealthExtraDamage(idOrItem) {
 }
 
 function revealedExtraDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 15);
+  return flatDamageValue(idOrItem, 7);
 }
 
 function aimBossDamage(idOrItem) {
