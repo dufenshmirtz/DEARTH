@@ -11419,7 +11419,7 @@ body.shift-tooltip-more .floating-tooltip .trinity-tooltip-full {
   display: block;
 }
 
-/* ---------- ARTIFACTS panel: uses this round, and Cancel while an ARTIFACT picks its target ---------- */
+/* ---------- ARTIFACTS panel: ARTIFACTS used this round ---------- */
 #app .active-panel .artifact-uses-line {
   flex: 0 0 auto;
   font-family: var(--font-book) !important;
@@ -11431,22 +11431,28 @@ body.shift-tooltip-more .floating-tooltip .trinity-tooltip-full {
   white-space: nowrap;
 }
 
-#app .active-panel .artifact-pending-cancel-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+/* ---------- desktop: the "pick a target" panel (with Cancel) sits right of GUESS / READY, on the same row ---------- */
+body:not(.mobile-arcade):not(.native-arcade) .arena:not(.pvp-arena) .pending-panel {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  justify-self: start;
+  box-sizing: border-box;
+  width: min(100%, 420px);
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  row-gap: 6px;
+  font-size: 13.5px !important;
+  /* taller than GUESS / READY: overhang the row instead of pushing it up */
+  margin-block: -32px !important;
 }
 
-#app .active-panel .artifact-pending-cancel {
-  pointer-events: auto;
-  min-width: 132px;
-  min-height: 40px;
-  padding: 8px 22px;
-  font-size: 16px !important;
+body.fullscreen-layout:not(.mobile-arcade):not(.native-arcade) .arena:not(.pvp-arena) .pending-panel {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: center;
+  justify-self: start;
+  width: min(100%, 420px);
 }
 
 /* ---------- Collection: Shift shows the ELITE rule ---------- */
