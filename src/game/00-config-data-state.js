@@ -8,7 +8,6 @@ const MAX_REVEALED_DAMNED = 4;
 const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
-const NON_BOSS_MEMORY_LIMIT = 20;
 const BOT_MIN_HP = 20;
 const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;

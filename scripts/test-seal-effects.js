@@ -878,6 +878,44 @@ test("Threon keeps MEMORY beyond the limit visible, then removes it at round end
   `);
 });
 
+test("MEMORY limit is the rounds finished for DAMNED and BOSSES alike, with no cap of 20", () => {
+  game()(`
+    fixture([], [50, 50]);
+    state.round = 3;
+    const bot = state.bots[0];
+    const boss = state.bots[1];
+    boss.isBoss = true;
+    assert.equal(botMemoryLimit(bot), 2);
+    assert.equal(botMemoryLimit(boss), 2);
+    boss.memory = [];
+    addBotMemory(boss, 1, "Test");
+    addBotMemory(boss, 1, "Test");
+    assert.equal(addBotMemory(boss, 1, "Test"), 0);
+    assert.equal(boss.memory.length, 2);
+    assert.equal(boss.memoryOverflow || 0, 0);
+    state.roundState.memoryRecorded = true;
+    assert.equal(botMemoryLimit(boss), 3);
+    state.round = 31;
+    state.roundState.memoryRecorded = false;
+    bot.memory = [];
+    addBotMemory(bot, 30, "Test");
+    assert.equal(bot.memory.length, 30);
+  `);
+});
+
+test("Threon: a BOSS gaining MEMORY before round 3 ends keeps 2 and shows +1 excess", () => {
+  game()(`
+    fixture([["p127"]], [50, 50]);
+    state.round = 3;
+    const boss = state.bots[1];
+    boss.isBoss = true;
+    boss.memory = [{}, {}];
+    addBotMemory(boss, 1, "Test");
+    assert.equal(boss.memory.length, 2);
+    assert.equal(boss.memoryOverflow, 1);
+  `);
+});
+
 test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as your CRITICAL", () => {
   game()(`
     fixture([["p128"]], [50, 50, 40, 50]);

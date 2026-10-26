@@ -218,7 +218,6 @@ const MAX_REVEALED_DAMNED = 4;
 const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
-const NON_BOSS_MEMORY_LIMIT = 20;
 const BOT_MIN_HP = 20;
 const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;
@@ -3865,14 +3864,15 @@ function applyBountyToMemoryMirror(bot, amount, options = {}) {
   addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
+// MEMORY can never exceed the rounds actually finished (what a BOSS remembers). The round in play only counts
+// once it is recorded at the end of the round (rememberRound); MEMORY gained before that is excess.
 function memoryRoundLimit() {
-  return Math.max(0, Math.ceil(state.round || 0));
+  const finished = Math.max(0, Math.ceil(state.round || 0) - 1);
+  return finished + (state.roundState?.memoryRecorded ? 1 : 0);
 }
 
 function botMemoryLimit(bot) {
-  const roundLimit = memoryRoundLimit();
-  if (bot?.isBoss) return roundLimit;
-  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+  return memoryRoundLimit();
 }
 
 function trimBotMemoryToLimit(bot) {
@@ -10495,10 +10495,11 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
-    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
+    // Seal of Threon: after the end-of-round MEMORY gains, so their excess is counted this round too
+    applyMemoryOverflowDamage();
     // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
     if (round.trinity?.spiritHealed && trinityEntry("p133")) {
       const healed = healPlayer(3, null, ITEMS.p133.name);
@@ -10772,6 +10773,8 @@ function rememberRound() {
   };
 
   state.gameMemory.push(memoryEntry);
+  // this round is now finished, so it counts toward the MEMORY limit
+  round.memoryRecorded = true;
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -14190,7 +14193,11 @@ function renderBot(bot, pendingPick) {
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
   // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
-  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
+  // hovering it explains it is excess, not part of the MEMORY value
+  const memoryOverflowTooltip = `Excess MEMORY: +${memoryOverflow} past the ${memoryRoundLimit()} ${memoryRoundLimit() === 1 ? "round" : "rounds"} finished. ${ITEMS.p127.name} removes it at the end of the round and deals damage for each.`;
+  const memoryOverflowHtml = memoryOverflow
+    ? `<span class="memory-overflow" data-tooltip="${escapeAttr(memoryOverflowTooltip)}">+${memoryOverflow}</span>`
+    : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";

@@ -38,6 +38,8 @@ function rememberRound() {
   };
 
   state.gameMemory.push(memoryEntry);
+  // this round is now finished, so it counts toward the MEMORY limit
+  round.memoryRecorded = true;
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;

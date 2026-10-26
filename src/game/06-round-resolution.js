@@ -1514,10 +1514,11 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
-    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
+    // Seal of Threon: after the end-of-round MEMORY gains, so their excess is counted this round too
+    applyMemoryOverflowDamage();
     // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
     if (round.trinity?.spiritHealed && trinityEntry("p133")) {
       const healed = healPlayer(3, null, ITEMS.p133.name);

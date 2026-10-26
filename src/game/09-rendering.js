@@ -1876,7 +1876,11 @@ function renderBot(bot, pendingPick) {
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
   // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
-  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
+  // hovering it explains it is excess, not part of the MEMORY value
+  const memoryOverflowTooltip = `Excess MEMORY: +${memoryOverflow} past the ${memoryRoundLimit()} ${memoryRoundLimit() === 1 ? "round" : "rounds"} finished. ${ITEMS.p127.name} removes it at the end of the round and deals damage for each.`;
+  const memoryOverflowHtml = memoryOverflow
+    ? `<span class="memory-overflow" data-tooltip="${escapeAttr(memoryOverflowTooltip)}">+${memoryOverflow}</span>`
+    : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";

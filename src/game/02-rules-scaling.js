@@ -520,14 +520,15 @@ function applyBountyToMemoryMirror(bot, amount, options = {}) {
   addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
+// MEMORY can never exceed the rounds actually finished (what a BOSS remembers). The round in play only counts
+// once it is recorded at the end of the round (rememberRound); MEMORY gained before that is excess.
 function memoryRoundLimit() {
-  return Math.max(0, Math.ceil(state.round || 0));
+  const finished = Math.max(0, Math.ceil(state.round || 0) - 1);
+  return finished + (state.roundState?.memoryRecorded ? 1 : 0);
 }
 
 function botMemoryLimit(bot) {
-  const roundLimit = memoryRoundLimit();
-  if (bot?.isBoss) return roundLimit;
-  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+  return memoryRoundLimit();
 }
 
 function trimBotMemoryToLimit(bot) {
