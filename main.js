@@ -1076,7 +1076,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",
@@ -4738,8 +4738,8 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
-  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
@@ -10274,7 +10274,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      const damage = passiveEntryFlatDamage(entry, 30) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;

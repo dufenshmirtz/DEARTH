@@ -866,7 +866,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",

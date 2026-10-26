@@ -1251,7 +1251,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      const damage = passiveEntryFlatDamage(entry, 30) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;

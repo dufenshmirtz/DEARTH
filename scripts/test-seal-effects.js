@@ -908,7 +908,7 @@ test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as 
 
 // ---- Gusion and Valac (new Goetic SEALS p129, p130) ----
 test("Gusion lets BOSSES be revealed and hits every revealed DAMNED when one is (x1.5 per ELITE level)", () => {
-  for (const [stack, damage] of [[1, 20], [2, 30]]) {
+  for (const [stack, damage] of [[1, 30], [2, 45]]) {
     game()(`
       fixture([["p129", ${stack}]], [10, 20, 30, 40, 50]);
       assert.equal(bossRevealAllowedBySeals(), true);
@@ -930,6 +930,10 @@ test("Gusion lets BOSSES be revealed and hits every revealed DAMNED when one is 
     fixture([], [10, 20]);
     assert.equal(bossRevealAllowedBySeals(), false);
   `);
+  const run = game();
+  assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p129.description")));
+  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 1, description: "Old description" })`).includes("take 30 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 2 })`).includes("take 45 damage"));
 });
 
 test("Valac eliminates a lone non-BOSS survivor after 4 eliminations and pays +2 SIN per ELITE level on PENTAKILLS", () => {
