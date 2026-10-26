@@ -5335,7 +5335,7 @@ function splitEliteDescription(value) {
   };
 }
 
-// Shop and Collection never explain ELITE scaling: that only shows on an equipped SEAL (hold Shift on its tooltip)
+// the Shop never explains ELITE scaling: hold Shift on an equipped SEAL's tooltip, or on a SEAL in the Collection
 function descriptionWithoutElite(value) {
   const text = String(value || "");
   return splitEliteDescription(text).main || text;
@@ -9024,7 +9024,10 @@ function installArcadeEnterShortcut() {
 let shiftTooltipMoreInstalled = false;
 
 function setShiftTooltipMore(active) {
-  document.body?.classList.toggle("shift-tooltip-more", Boolean(active));
+  const body = document.body;
+  if (!body || body.classList.contains("shift-tooltip-more") === Boolean(active)) return;
+  body.classList.toggle("shift-tooltip-more", Boolean(active));
+  if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
 function installShiftTooltipMore() {
@@ -14388,7 +14391,8 @@ function consoleActionState() {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
-    hint = `${round.activeUses}/${activeUseLimit()} ARTIFACTS used. Ready applies penalties.`;
+    // the ARTIFACTS used this round are counted in the ARTIFACTS panel
+    hint = "Ready applies penalties.";
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
@@ -14434,7 +14438,11 @@ function renderConsole() {
     : "";
   const pendingText = renderPendingText();
   const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
-  const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
+  // on desktop the Cancel button sits in the ARTIFACTS panel instead (see renderActives)
+  const pendingCancel =
+    state.pendingActive && !nativeTargetPick && !artifactPanelCancelShown()
+      ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>`
+      : "";
 
   return `
     <section class="center-console" aria-label="Player action">
@@ -14582,8 +14590,22 @@ function renderShopSlot(slot, index) {
   `;
 }
 
+// desktop: while an ARTIFACT waits for its target, Cancel shows in the middle of the ARTIFACTS panel.
+// Phone web closes the item drawer to pick a target and the native app has its own pick panel, so both keep theirs.
+function artifactPanelCancelShown() {
+  return Boolean(state.pendingActive) && !isNativeArcadeApp() && !isMobileArcadeView();
+}
+
 function renderActives() {
   normalizeActiveCarouselIndex();
+  const round = state.roundState;
+  const usesLine =
+    state.stage === "active" && round
+      ? `<div class="artifact-uses-line">${Math.max(0, round.activeUses || 0)}/${activeUseLimit()} used this round</div>`
+      : "";
+  const pendingCancel = artifactPanelCancelShown()
+    ? `<div class="artifact-pending-cancel-wrap"><button id="cancelPendingActive" class="small-button pending-cancel artifact-pending-cancel">Cancel</button></div>`
+    : "";
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
   const subtitle = count >= limit ? `${count}/${limit} FULL` : `${count}/${limit}`;
@@ -14599,8 +14621,10 @@ function renderActives() {
           <div class="panel-title">ARTIFACTS</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
+        ${usesLine}
       </div>
       <div class="active-list scroll-active-list">${activeCards}</div>
+      ${pendingCancel}
     </section>
   `;
 }
@@ -16908,11 +16932,17 @@ function collectionInfoHtml(id) {
       ${progressText}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
+  // hold Shift for the ELITE rule, like an equipped SEAL's tooltip
+  const elite = splitEliteDescription(item.description || "").elite;
   return `
-    <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+    <div class="collection-info-top">
+      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div>` : ""}
+    </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
+    ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
     ${note}`;
 }
 
@@ -17016,6 +17046,20 @@ function showCollectionInfo(button, pinned) {
   info.className = `collection-info visible ${collectionSealState(id)}`;
   screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
+  collectionInfoAnchor = button;
+  positionCollectionInfo(info, button);
+}
+
+let collectionInfoAnchor = null;
+
+// Shift shows the ELITE line, which changes the box height: keep it beside its SEAL and on screen
+function repositionCollectionInfo() {
+  const info = document.querySelector(".collection-screen .collection-info.visible");
+  if (!info || !collectionInfoAnchor?.isConnected) return;
+  positionCollectionInfo(info, collectionInfoAnchor);
+}
+
+function positionCollectionInfo(info, button) {
   // beside the seal, kept on screen
   const rect = button.getBoundingClientRect();
   const width = info.offsetWidth;

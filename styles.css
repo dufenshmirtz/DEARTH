@@ -11418,3 +11418,75 @@ body.outline-boil #app .pending-panel::after {
 body.shift-tooltip-more .floating-tooltip .trinity-tooltip-full {
   display: block;
 }
+
+/* ---------- ARTIFACTS panel: uses this round, and Cancel while an ARTIFACT picks its target ---------- */
+#app .active-panel .artifact-uses-line {
+  flex: 0 0 auto;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--ash) !important;
+  white-space: nowrap;
+}
+
+#app .active-panel .artifact-pending-cancel-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#app .active-panel .artifact-pending-cancel {
+  pointer-events: auto;
+  min-width: 132px;
+  min-height: 40px;
+  padding: 8px 22px;
+  font-size: 16px !important;
+}
+
+/* ---------- Collection: Shift shows the ELITE rule ---------- */
+.collection-info-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.collection-info-shift-hint {
+  flex: 0 0 auto;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 12.5px !important;
+  color: var(--ash) !important;
+}
+
+body.shift-tooltip-more .collection-info-shift-hint {
+  color: var(--bone) !important;
+}
+
+body.mobile-arcade .collection-info-shift-hint,
+body.native-arcade .collection-info-shift-hint {
+  display: none;
+}
+
+.collection-info-elite,
+.collection-info-elite * {
+  font-family: var(--font-book) !important;
+  font-size: 13px !important;
+  line-height: 1.35;
+  color: #bdb6a9 !important;
+}
+
+.collection-info-elite {
+  display: none;
+  margin-top: 6px;
+}
+
+body.shift-tooltip-more .collection-info-elite {
+  display: block;
+}

@@ -664,7 +664,7 @@ function splitEliteDescription(value) {
   };
 }
 
-// Shop and Collection never explain ELITE scaling: that only shows on an equipped SEAL (hold Shift on its tooltip)
+// the Shop never explains ELITE scaling: hold Shift on an equipped SEAL's tooltip, or on a SEAL in the Collection
 function descriptionWithoutElite(value) {
   const text = String(value || "");
   return splitEliteDescription(text).main || text;

@@ -2030,7 +2030,8 @@ function consoleActionState() {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
-    hint = `${round.activeUses}/${activeUseLimit()} ARTIFACTS used. Ready applies penalties.`;
+    // the ARTIFACTS used this round are counted in the ARTIFACTS panel
+    hint = "Ready applies penalties.";
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
@@ -2076,7 +2077,11 @@ function renderConsole() {
     : "";
   const pendingText = renderPendingText();
   const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
-  const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
+  // on desktop the Cancel button sits in the ARTIFACTS panel instead (see renderActives)
+  const pendingCancel =
+    state.pendingActive && !nativeTargetPick && !artifactPanelCancelShown()
+      ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>`
+      : "";
 
   return `
     <section class="center-console" aria-label="Player action">
@@ -2224,8 +2229,22 @@ function renderShopSlot(slot, index) {
   `;
 }
 
+// desktop: while an ARTIFACT waits for its target, Cancel shows in the middle of the ARTIFACTS panel.
+// Phone web closes the item drawer to pick a target and the native app has its own pick panel, so both keep theirs.
+function artifactPanelCancelShown() {
+  return Boolean(state.pendingActive) && !isNativeArcadeApp() && !isMobileArcadeView();
+}
+
 function renderActives() {
   normalizeActiveCarouselIndex();
+  const round = state.roundState;
+  const usesLine =
+    state.stage === "active" && round
+      ? `<div class="artifact-uses-line">${Math.max(0, round.activeUses || 0)}/${activeUseLimit()} used this round</div>`
+      : "";
+  const pendingCancel = artifactPanelCancelShown()
+    ? `<div class="artifact-pending-cancel-wrap"><button id="cancelPendingActive" class="small-button pending-cancel artifact-pending-cancel">Cancel</button></div>`
+    : "";
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
   const subtitle = count >= limit ? `${count}/${limit} FULL` : `${count}/${limit}`;
@@ -2241,8 +2260,10 @@ function renderActives() {
           <div class="panel-title">ARTIFACTS</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
+        ${usesLine}
       </div>
       <div class="active-list scroll-active-list">${activeCards}</div>
+      ${pendingCancel}
     </section>
   `;
 }

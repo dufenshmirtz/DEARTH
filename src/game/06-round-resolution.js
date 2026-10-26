@@ -1,7 +1,10 @@
 let shiftTooltipMoreInstalled = false;
 
 function setShiftTooltipMore(active) {
-  document.body?.classList.toggle("shift-tooltip-more", Boolean(active));
+  const body = document.body;
+  if (!body || body.classList.contains("shift-tooltip-more") === Boolean(active)) return;
+  body.classList.toggle("shift-tooltip-more", Boolean(active));
+  if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
 function installShiftTooltipMore() {

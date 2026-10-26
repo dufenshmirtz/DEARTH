@@ -548,11 +548,17 @@ function collectionInfoHtml(id) {
       ${progressText}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
+  // hold Shift for the ELITE rule, like an equipped SEAL's tooltip
+  const elite = splitEliteDescription(item.description || "").elite;
   return `
-    <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+    <div class="collection-info-top">
+      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div>` : ""}
+    </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
+    ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
     ${note}`;
 }
 
@@ -656,6 +662,20 @@ function showCollectionInfo(button, pinned) {
   info.className = `collection-info visible ${collectionSealState(id)}`;
   screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
+  collectionInfoAnchor = button;
+  positionCollectionInfo(info, button);
+}
+
+let collectionInfoAnchor = null;
+
+// Shift shows the ELITE line, which changes the box height: keep it beside its SEAL and on screen
+function repositionCollectionInfo() {
+  const info = document.querySelector(".collection-screen .collection-info.visible");
+  if (!info || !collectionInfoAnchor?.isConnected) return;
+  positionCollectionInfo(info, collectionInfoAnchor);
+}
+
+function positionCollectionInfo(info, button) {
   // beside the seal, kept on screen
   const rect = button.getBoundingClientRect();
   const width = info.offsetWidth;
