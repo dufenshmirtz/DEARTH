@@ -1870,7 +1870,8 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
-  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  // excess MEMORY is only shown while Seal of Threon is active
+  const memoryOverflow = orderedPassiveEffectEntries("p127").length ? Math.max(0, Math.ceil(bot.memoryOverflow || 0)) : 0;
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`

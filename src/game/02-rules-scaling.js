@@ -544,7 +544,8 @@ function sitriExcessMemoryDamage(entry) {
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
-// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage; excess gained
+// when the round is recorded (after that) carries over to the next round.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;

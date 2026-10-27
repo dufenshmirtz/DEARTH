@@ -890,7 +890,9 @@ function beginRound() {
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
     bot.revealStacks = 0;
-    bot.memoryOverflow = 0;
+    // Seal of Threon: excess MEMORY gained when the last round was recorded (e.g. Seal of Bathin's extra) carries
+    // over and is removed for damage at the end of this round; without Threon there is no excess to keep
+    if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
 
   syncBipolarBots();

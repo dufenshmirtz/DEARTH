@@ -916,6 +916,26 @@ test("Threon: a BOSS gaining MEMORY before round 3 ends keeps 2 and shows +1 exc
   `);
 });
 
+test("Threon: excess from Bathin when the round is recorded carries over and is damaged next round", () => {
+  game()(`
+    fixture([["p127"], ["p15"]], [50, 50]);
+    state.round = 3;
+    const bot = state.bots[0];
+    bot.memory = [{}, {}];
+    rememberRound();
+    assert.equal(bot.memory.length, 3);
+    assert.equal(bot.memoryOverflow, 1);
+    globalThis.__hpAfterRecord = bot.hp;
+    state.round += 1;
+    beginRound();
+    assert.equal(bot.memoryOverflow, 1);
+    const hp = bot.hp;
+    applyMemoryOverflowDamage();
+    assert.equal(bot.memoryOverflow, 0);
+    assert.equal(hp - bot.hp, 4);
+  `);
+});
+
 test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as your CRITICAL", () => {
   game()(`
     fixture([["p128"]], [50, 50, 40, 50]);

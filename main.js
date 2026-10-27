@@ -3888,7 +3888,8 @@ function sitriExcessMemoryDamage(entry) {
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
-// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage; excess gained
+// when the round is recorded (after that) carries over to the next round.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
@@ -7759,7 +7760,9 @@ function beginRound() {
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
     bot.revealStacks = 0;
-    bot.memoryOverflow = 0;
+    // Seal of Threon: excess MEMORY gained when the last round was recorded (e.g. Seal of Bathin's extra) carries
+    // over and is removed for damage at the end of this round; without Threon there is no excess to keep
+    if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
 
   syncBipolarBots();
@@ -14187,7 +14190,8 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
-  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  // excess MEMORY is only shown while Seal of Threon is active
+  const memoryOverflow = orderedPassiveEffectEntries("p127").length ? Math.max(0, Math.ceil(bot.memoryOverflow || 0)) : 0;
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
