@@ -11782,3 +11782,15 @@ body.native-arcade #app .active-panel .active-list::-webkit-scrollbar {
 @keyframes invalid-toast-in {
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
 }
+
+/* Phone (web and app): the death screen box is narrower and Jesus and Satan stand further out, so
+   both figures show clearly beside it. The text inside keeps its size. */
+body.mobile-arcade #app .game-over-card {
+  width: min(450px, 58vw) !important;
+}
+body.mobile-arcade #app .game-over-overlay .end-figure-left {
+  left: -10vw;
+}
+body.mobile-arcade #app .game-over-overlay .end-figure-right {
+  right: -10vw;
+}
