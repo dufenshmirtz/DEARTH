@@ -266,6 +266,9 @@ const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
 const ARCADE_RUN_SAVE_VERSION = 1;
 const ARCADE_RUN_SLOT_COUNT = 5;
 const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
+// the iPhone app: same arcade build, but iOS has no "quit" and puts the Dynamic Island on a side
+const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() === "ios";
+if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.08;
@@ -2393,6 +2396,302 @@ function applyDisplaySettings() {
   document.body.dataset.animSpeed = String(animSpeed());
 }
 
+// ---------- iPhone: the hand-drawn lines tremble like the outlines ----------
+// Safari mis-draws lines whose picture is animated through a CSS variable, so on iPhone the
+// picture is stepped from here instead (body[data-line-frame] = 0/1/2, read by styles.css).
+let iosLineBoilFrame = 0;
+function stepIosLineBoil() {
+  const body = document.body;
+  if (body?.classList.contains("outline-boil") && !document.hidden) {
+    iosLineBoilFrame = (iosLineBoilFrame + 1) % 3;
+    body.dataset.lineFrame = String(iosLineBoilFrame);
+  }
+  const duration = body ? parseFloat(getComputedStyle(body).getPropertyValue("--boil-duration")) : NaN;
+  setTimeout(stepIosLineBoil, (Number.isFinite(duration) && duration > 0 ? duration : 375) / 3);
+}
+if (NATIVE_IOS_APP) setTimeout(stepIosLineBoil, 0);
+
+// ---------- iPhone audio: Web Audio instead of <audio> for the short sounds ----------
+// On iPhone, <audio> ignores .volume (everything plays at full volume), starting one is slow
+// enough to stutter taps and hit animations, and a playing <audio> makes iOS treat the game as a
+// media player (lock screen / Now Playing controls). So on iPhone every sound, the looping music
+// included, is decoded once and played through Web Audio with its own gain. The rest of the game
+// code is unchanged: this swaps play/pause/load/volume/paused on <audio> elements, on iPhone only.
+const iosAudio = NATIVE_IOS_APP ? setupIosAudio() : null;
+
+function setupIosAudio() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx || typeof HTMLMediaElement === "undefined" || typeof fetch !== "function") return null;
+  let ctx;
+  try {
+    ctx = new AudioCtx();
+  } catch (error) {
+    return null;
+  }
+  const proto = HTMLMediaElement.prototype;
+  const nativePause = proto.pause;
+  const buffers = new Map(); // url -> AudioBuffer, or a pending Promise, or null when it failed
+  const urlOf = (el) => el.currentSrc || el.src || "";
+  const isMusic = (el) => Boolean(el.loop);
+  const resume = () => {
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+  };
+
+  // the music is minutes long: decode it at a lower rate so it does not take ~90 MB of memory
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  function decoderFor(lowRate) {
+    if (!lowRate || !OfflineCtx) return ctx;
+    try {
+      return new OfflineCtx(2, 1, 32000);
+    } catch (error) {
+      return ctx;
+    }
+  }
+
+  function loadBuffer(url, lowRate = false) {
+    if (!url || buffers.has(url)) return;
+    const decoder = decoderFor(lowRate);
+    const pending = fetch(url)
+      .then((response) => response.arrayBuffer())
+      .then((data) => new Promise((resolve, reject) => decoder.decodeAudioData(data, resolve, reject)))
+      .then((buffer) => {
+        buffers.set(url, buffer);
+        return buffer;
+      })
+      .catch(() => {
+        buffers.set(url, null);
+        return null;
+      });
+    buffers.set(url, pending);
+  }
+
+  function stopSources(el) {
+    if (!el.__iosSources) return;
+    el.__iosSources.forEach((source) => {
+      try {
+        source.onended = null;
+        source.stop();
+        source.disconnect();
+        source.__gain?.disconnect();
+      } catch (error) {}
+    });
+    el.__iosSources.clear();
+  }
+
+  Object.defineProperty(proto, "volume", {
+    configurable: true,
+    get() {
+      return this.__iosVolume ?? 1;
+    },
+    set(value) {
+      const volume = Math.min(1, Math.max(0, Number(value) || 0));
+      this.__iosVolume = volume;
+      if (this.__iosGain) this.__iosGain.gain.value = volume;
+    }
+  });
+
+  // ---- looping music: one buffer source at a time, remembers where it was paused ----
+  function musicState(el) {
+    if (!el.__iosMusic) el.__iosMusic = { source: null, wanted: false, offset: 0, startedAt: 0 };
+    return el.__iosMusic;
+  }
+
+  const musicEls = new Set();
+  let needsRebuild = false;
+
+  function startMusic(el) {
+    musicEls.add(el);
+    const music = musicState(el);
+    if (!music.wanted || music.source) return;
+    const buffer = buffers.get(urlOf(el));
+    if (!buffer || typeof buffer.then === "function") return; // starts when decoding finishes
+    try {
+      if (!el.__iosGain) {
+        el.__iosGain = ctx.createGain();
+        el.__iosGain.connect(ctx.destination);
+      }
+      el.__iosGain.gain.value = el.__iosVolume ?? 1;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(el.__iosGain);
+      music.offset %= buffer.duration;
+      source.start(0, music.offset);
+      music.startedAt = ctx.currentTime;
+      music.source = source;
+    } catch (error) {}
+  }
+
+  function stopMusic(el) {
+    const music = el.__iosMusic;
+    if (!music) return;
+    music.wanted = false;
+    if (!music.source) return;
+    const duration = music.source.buffer?.duration || 0;
+    if (duration) music.offset = (music.offset + ctx.currentTime - music.startedAt) % duration;
+    try {
+      music.source.stop();
+    } catch (error) {}
+    music.source = null;
+  }
+
+  const nativePaused = Object.getOwnPropertyDescriptor(proto, "paused");
+  Object.defineProperty(proto, "paused", {
+    configurable: true,
+    get() {
+      if (this.__iosMusic) return !this.__iosMusic.wanted;
+      return nativePaused?.get ? nativePaused.get.call(this) : true;
+    }
+  });
+
+  proto.load = function () {
+    const url = urlOf(this);
+    if (!isMusic(this)) {
+      loadBuffer(url);
+      return;
+    }
+    loadBuffer(url, true);
+    const pending = buffers.get(url);
+    if (pending && typeof pending.then === "function") pending.then(() => startMusic(this));
+  };
+
+  proto.play = function () {
+    resume();
+    if (isMusic(this)) {
+      const music = musicState(this);
+      music.wanted = true;
+      if (!buffers.has(urlOf(this))) this.load();
+      startMusic(this);
+      return Promise.resolve();
+    }
+    const url = urlOf(this);
+    const buffer = buffers.get(url);
+    const ended = () => setTimeout(() => this.dispatchEvent(new Event("ended")), 0);
+    // still decoding (only in the first moments after launch): skip it rather than blast it
+    if (this.muted || !buffer || typeof buffer.then === "function") {
+      loadBuffer(url);
+      ended();
+      return Promise.resolve();
+    }
+    stopSources(this); // replaying the same element restarts it, as <audio> does
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = this.playbackRate || 1;
+      const gain = ctx.createGain();
+      gain.gain.value = this.__iosVolume ?? 1;
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      source.__gain = gain;
+      if (!this.__iosSources) this.__iosSources = new Set();
+      this.__iosSources.add(source);
+      source.onended = () => {
+        this.__iosSources?.delete(source);
+        // let the finished sound go; otherwise every sound ever played stays wired to the speakers
+        try {
+          source.disconnect();
+          gain.disconnect();
+        } catch (error) {}
+        this.dispatchEvent(new Event("ended"));
+      };
+      const offset = Math.max(0, Number(this.__iosStartOffset ?? this.currentTime) || 0);
+      source.start(0, Math.min(offset, Math.max(0, buffer.duration - 0.01)));
+    } catch (error) {
+      ended();
+    }
+    return Promise.resolve();
+  };
+
+  proto.pause = function () {
+    stopSources(this);
+    stopMusic(this);
+    return nativePause.call(this);
+  };
+
+  // After the app has been in the background, iOS can leave the audio context stuck
+  // ("interrupted", or "running" but silent), and resume() does not bring it back. So on the way
+  // back a fresh context is made; the decoded sounds carry over, and the music restarts where it
+  // was. iPhone only lets audio start from a touch, so the first tap after returning wakes it.
+  function rebuild() {
+    let fresh;
+    try {
+      fresh = new AudioCtx();
+    } catch (error) {
+      return;
+    }
+    const old = ctx;
+    const playing = [];
+    musicEls.forEach((el) => {
+      if (el.__iosMusic?.source) {
+        stopMusic(el);
+        playing.push(el);
+      }
+    });
+    ctx = fresh;
+    musicEls.forEach((el) => {
+      el.__iosGain = null;
+    });
+    try {
+      old.close().catch(() => {});
+    } catch (error) {}
+    playing.forEach((el) => {
+      el.__iosMusic.wanted = true;
+      startMusic(el);
+    });
+  }
+
+  // Telling that the app was away is unreliable on iPhone (page events don't always fire), so
+  // several signs are watched: the page hiding, the app's pause/resume events, timers that
+  // stopped running for a while, and an audio clock that says "running" but stands still.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) needsRebuild = true;
+  });
+  ["pause", "resume"].forEach((type) => document.addEventListener(type, () => (needsRebuild = true)));
+  window.addEventListener("pagehide", () => (needsRebuild = true));
+  let lastTick = Date.now();
+  let lastAudioTime = ctx.currentTime;
+  let lastCtx = ctx;
+  setInterval(() => {
+    const now = Date.now();
+    if (ctx !== lastCtx) {
+      // a fresh context starts its clock at 0: begin measuring again
+      lastCtx = ctx;
+      lastTick = now;
+      lastAudioTime = ctx.currentTime;
+      return;
+    }
+    const wall = (now - lastTick) / 1000;
+    if (wall > 2.5) needsRebuild = true;
+    else if (!document.hidden && ctx.state === "running" && wall > 0.8 && ctx.currentTime - lastAudioTime < 0.2) {
+      needsRebuild = true;
+    }
+    lastTick = now;
+    lastAudioTime = ctx.currentTime;
+  }, 1000);
+
+  function wake() {
+    if (ctx.state === "interrupted" || ctx.state === "closed") needsRebuild = true;
+    if (needsRebuild) {
+      needsRebuild = false;
+      rebuild();
+    }
+    resume();
+  }
+
+  ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, wake, true));
+
+  return {
+    get ctx() {
+      return ctx;
+    },
+    suspend: () => {
+      needsRebuild = true;
+      ctx.suspend().catch(() => {});
+    },
+    resume: wake
+  };
+}
+
 // ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
 // Game animations (SEAL triggers, the READY reveal steps, hits, pops) run this many times faster.
 function animSpeed() {
@@ -2606,7 +2905,24 @@ function removeArcadeRunSlot(slotId) {
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
 }
 
+// Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
+// longer you play. render() used to save on every redraw, which made long runs stutter, most
+// of all on iPhone. Redraws now ask for a save at most once a second; leaving the table, the
+// app going to the background and the other explicit saves still write straight away.
+let arcadeRunSaveTimer = null;
+function scheduleArcadeRunSave() {
+  if (arcadeRunSaveTimer) return;
+  arcadeRunSaveTimer = setTimeout(() => {
+    arcadeRunSaveTimer = null;
+    saveArcadeRun();
+  }, 1000);
+}
+
 function saveArcadeRun() {
+  if (arcadeRunSaveTimer) {
+    clearTimeout(arcadeRunSaveTimer);
+    arcadeRunSaveTimer = null;
+  }
   if (state.mode !== "arcade") return;
   // the story's two tutorial rounds are not a saved run until the pact is made
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
@@ -2815,6 +3131,8 @@ function playSoundtrack() {
 function primeSfxAudio() {
   if (sfxPrimed) return;
   sfxPrimed = true;
+  // iPhone decodes every sound up front (iosAudio), so there is nothing to warm up
+  if (iosAudio) return;
   [
     ensureSealPurchaseSfx(),
     ensureButtonSfx("guess"),
@@ -2863,7 +3181,10 @@ function pauseAudioElement(audio) {
 }
 
 function pauseGameAudioForBackground() {
-  soundtrackPausedByAppBackground = Boolean(soundtrackAudio && !soundtrackAudio.paused);
+  // leaving the app fires more than one of blur / visibilitychange / pagehide: the second call
+  // must not forget that the music was playing before the first one paused it
+  soundtrackPausedByAppBackground =
+    soundtrackPausedByAppBackground || Boolean(soundtrackAudio && !soundtrackAudio.paused);
   [
     soundtrackAudio,
     sealPurchaseSfx,
@@ -2876,9 +3197,11 @@ function pauseGameAudioForBackground() {
     ...activeOneShotSfxInstances
   ].forEach(pauseAudioElement);
   activeOneShotSfxInstances.clear();
+  iosAudio?.suspend();
 }
 
 function resumeGameAudioAfterForeground() {
+  iosAudio?.resume();
   if (!soundtrackPausedByAppBackground) return;
   soundtrackPausedByAppBackground = false;
   resumeSoundtrack();
@@ -2968,6 +3291,7 @@ function ensurePentakillSfx() {
 
 function playOneShot(audio, startOffset = 0) {
   try {
+    audio.__iosStartOffset = startOffset;
     audio.currentTime = Math.max(0, startOffset);
     audio.play().catch(() => {});
   } catch (error) {}
@@ -2982,6 +3306,7 @@ function playClonedOneShot(audio, volume, startOffset = 0) {
     instance.addEventListener("ended", cleanup, { once: true });
     instance.addEventListener("error", cleanup, { once: true });
     instance.currentTime = Math.max(0, startOffset || 0);
+    instance.__iosStartOffset = startOffset;
     instance.play().catch(cleanup);
   } catch (error) {}
 }
@@ -5664,11 +5989,28 @@ function addLog(message) {
 }
 
 function showInvalidGuessPopup() {
+  // iPhone: the system alert stops the whole game until it closes, so show it in the game instead
+  if (NATIVE_IOS_APP) {
+    showInvalidGuessToast();
+    return;
+  }
   if (typeof window !== "undefined" && typeof window.alert === "function") {
     window.alert("Invalid");
   } else {
     addLog("Invalid");
   }
+}
+
+// "Invalid" over the table: lives outside #app (renders never touch it) and never blocks play
+function showInvalidGuessToast() {
+  document.querySelector(".invalid-toast")?.remove();
+  const toast = document.createElement("div");
+  toast.className = "invalid-toast";
+  toast.setAttribute("role", "alert");
+  toast.textContent = "Invalid";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("leaving"), 900);
+  setTimeout(() => toast.remove(), 1300);
 }
 
 function addRoundEvent(message) {
@@ -12475,7 +12817,7 @@ function render() {
   afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
-  saveArcadeRun();
+  scheduleArcadeRunSave();
 }
 
 function focusGuessInputAfterRender() {
@@ -12539,7 +12881,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      <button class="menu-button" data-menu-action="quit">Quit</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
