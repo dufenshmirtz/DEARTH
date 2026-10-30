@@ -1297,3 +1297,30 @@ test("Son's free rerolls from READY last until the end of the next round", () =>
     assert.equal(state.freeRerolls, 0);
   `);
 });
+
+test("Goetic BOSS HEALTH growth speeds up with depth and leaves the main game alone", () => {
+  game()(`
+    state.mode = "arcade";
+    for (const spawned of [0, 4, 8]) {
+      state.bossSpawnCount = spawned;
+      assert.equal(bossHealthScaleFactor(), 1);
+    }
+    state.bossSpawnCount = 9;
+    assert.ok(Math.abs(bossHealthScaleFactor() - 1.09) < 1e-9);
+    let previousGrowth = 0;
+    for (let spawned = 9; spawned <= 40; spawned += 1) {
+      state.bossSpawnCount = spawned;
+      const before = bossHealthScaleFactor();
+      state.bossSpawnCount = spawned + 1;
+      const growth = bossHealthScaleFactor() / before;
+      assert.ok(growth > previousGrowth);
+      previousGrowth = growth;
+    }
+    state.bossSpawnCount = 8;
+    const first = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    assert.equal(first.maxHp, 500);
+    state.bossSpawnCount = 27;
+    const deep = createBot({ boss: true, bossSpec: { goeticKey: "agares" } });
+    assert.ok(deep.maxHp > 50000);
+  `);
+});

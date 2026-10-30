@@ -232,6 +232,11 @@ const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
 const HP_EXPONENTIAL_RATE = 1.2;
+// After the main game each Goetic BOSS multiplies BOSS HEALTH by 1 + RATE + RATE_STEP x depth
+// (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
+// +18% per BOSS at demon 10, +28% at demon 20, +48% at demon 40
+const ENDLESS_BOSS_HP_RATE = 0.08;
+const ENDLESS_BOSS_HP_RATE_STEP = 0.01;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const ACTIVE_USES_PER_ROUND = 2;
@@ -6435,8 +6440,17 @@ function botHealthScaleFactor() {
   return hpExponentialFactor((state.bossKills || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
+// accelerating growth for Goetic BOSSES (DAMNED keep the steady x1.2 every 3 BOSSES)
+function endlessBossHealthFactor(depth) {
+  let factor = 1;
+  for (let step = 1; step <= Math.max(0, depth || 0); step += 1) {
+    factor *= 1 + ENDLESS_BOSS_HP_RATE + ENDLESS_BOSS_HP_RATE_STEP * step;
+  }
+  return factor;
+}
+
 function bossHealthScaleFactor() {
-  return hpExponentialFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+  return endlessBossHealthFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
 function randomBotHealth() {
