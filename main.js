@@ -16772,7 +16772,7 @@ const SEAL_UNLOCKS = {
   p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
   p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
   p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
-  // Satan Seals
+  // Seal of Satan
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
   // Seals of Saturn
   p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
@@ -16813,14 +16813,14 @@ const COLLECTION_FLAG_LABELS = {
   sixEliteSeals: "six ELITE SEALS"
 };
 
-// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Player Seals"
+// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Goetic Seals"
 const COLLECTION_SECTIONS = [
-  { key: "player", title: "Player Seals" },
+  { key: "player", title: "Goetic Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
   // the former Boss SEALS, now named after the Archangels
   { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
-  { key: "satan", title: "Satan Seals", ids: ["p111"] },
+  { key: "satan", title: "Seal of Satan", ids: ["p111"] },
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
