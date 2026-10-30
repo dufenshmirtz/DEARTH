@@ -2055,7 +2055,7 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
   const corruptionFresh = Boolean(corruption && !corruption.shown);
@@ -2073,7 +2073,7 @@ function renderConsole() {
     corruptionFresh ? "corrupted-fresh" : ""
   ].filter(Boolean).join(" ");
   const corruptionNote = corruption
-    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`${BOSS_PASSIVES.corruption.name} changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
     : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()

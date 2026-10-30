@@ -1728,41 +1728,42 @@ const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [s
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
+// BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
   sinStealing: {
-    name: "Sin-Stealing"
+    name: "Greed"
   },
   soullessness: {
-    name: "Soulessness",
+    name: "Envy",
     baseDamage: 5
   },
   soulStealing: {
-    name: "Soul-stealing"
+    name: "Despair"
   },
   deathRoll: {
-    name: "Death Roll"
+    name: "Wrath"
   },
   rerollToll: {
-    name: "Reroll Toll",
+    name: "Vainglory",
     baseDamage: 5
   },
   offeringToll: {
-    name: "Offering Toll",
+    name: "Gluttony",
     baseDamage: 2
   },
   avenging: {
-    name: "Avenging",
+    name: "Pride",
     baseDamage: 4
   },
   corruption: {
-    name: "Corruption"
+    name: "Deceit"
   },
   punishment: {
-    name: "Punishment",
+    name: "Sloth",
     baseDamage: 5
   },
   lifeSteal: {
-    name: "Life-Steal"
+    name: "Lust"
   }
 };
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);

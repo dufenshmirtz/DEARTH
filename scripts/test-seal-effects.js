@@ -1324,3 +1324,21 @@ test("Goetic BOSS HEALTH growth speeds up with depth and leaves the main game al
     assert.ok(deep.maxHp > 50000);
   `);
 });
+
+test("BOSS abilities carry sin names in tooltips and the log", () => {
+  game()(`
+    const names = Object.fromEntries(Object.entries(BOSS_PASSIVES).map(([key, spec]) => [key, spec.name]));
+    assert.equal(JSON.stringify(names), JSON.stringify({
+      sinStealing: "Greed", soullessness: "Envy", soulStealing: "Despair", deathRoll: "Wrath", rerollToll: "Vainglory",
+      offeringToll: "Gluttony", avenging: "Pride", corruption: "Deceit", punishment: "Sloth", lifeSteal: "Lust"
+    }));
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bots[0].isBoss = true;
+    state.bots[0].passiveKeys = ["punishment"];
+    assert.ok(botPassiveSummary(state.bots[0]).includes("Sloth"));
+    Math.random = () => 0;
+    state.bots[0].passiveKeys = ["corruption"];
+    applyCorruptionGuessMutation(27);
+    assert.ok(state.roundState.roundEvents.some((line) => line.includes("Deceit shifted your guess")));
+  `);
+});

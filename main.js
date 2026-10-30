@@ -1938,41 +1938,42 @@ const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [s
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
+// BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
   sinStealing: {
-    name: "Sin-Stealing"
+    name: "Greed"
   },
   soullessness: {
-    name: "Soulessness",
+    name: "Envy",
     baseDamage: 5
   },
   soulStealing: {
-    name: "Soul-stealing"
+    name: "Despair"
   },
   deathRoll: {
-    name: "Death Roll"
+    name: "Wrath"
   },
   rerollToll: {
-    name: "Reroll Toll",
+    name: "Vainglory",
     baseDamage: 5
   },
   offeringToll: {
-    name: "Offering Toll",
+    name: "Gluttony",
     baseDamage: 2
   },
   avenging: {
-    name: "Avenging",
+    name: "Pride",
     baseDamage: 4
   },
   corruption: {
-    name: "Corruption"
+    name: "Deceit"
   },
   punishment: {
-    name: "Punishment",
+    name: "Sloth",
     baseDamage: 5
   },
   lifeSteal: {
-    name: "Life-Steal"
+    name: "Lust"
   }
 };
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
@@ -14389,7 +14390,7 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
   const corruptionFresh = Boolean(corruption && !corruption.shown);
@@ -14407,7 +14408,7 @@ function renderConsole() {
     corruptionFresh ? "corrupted-fresh" : ""
   ].filter(Boolean).join(" ");
   const corruptionNote = corruption
-    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`${BOSS_PASSIVES.corruption.name} changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
     : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
