@@ -11471,6 +11471,8 @@ body.native-arcade .collection-info-shift-hint {
 
 body.shift-tooltip-more .collection-info-elite {
   display: block;
+}
+
 /* ---------- iPhone app only (body.native-ios): keep the table clear of the Dynamic Island and the home bar ---------- */
 body.native-ios #app.app {
   padding: max(3px, env(safe-area-inset-top)) max(3px, env(safe-area-inset-right))
