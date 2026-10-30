@@ -7,9 +7,67 @@ function setShiftTooltipMore(active) {
   if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
+// Phones have no Shift key: SEAL tooltips and the Collection box get a More / Less button that
+// switches the same "more" mode Shift holds on desktop. Each tooltip opens short.
+let floatingTooltipOwner = null;
+let floatingTooltipTouchedAt = 0;
+
+function touchTooltipMode() {
+  return Boolean(document.body?.classList.contains("mobile-arcade"));
+}
+
+function hideFloatingTooltip() {
+  const tooltip = document.querySelector("#floatingTooltip");
+  if (tooltip) {
+    tooltip.classList.remove("visible");
+    tooltip.innerHTML = "";
+  }
+  floatingTooltipOwner = null;
+}
+
+// More makes the tooltip taller: keep it inside the screen
+function keepFloatingTooltipOnScreen(tooltip) {
+  if (!tooltip?.classList.contains("visible")) return;
+  const gap = 8;
+  const rect = tooltip.getBoundingClientRect();
+  if (rect.bottom > window.innerHeight - gap) tooltip.style.top = `${Math.max(gap, window.innerHeight - rect.height - gap)}px`;
+  if (rect.right > window.innerWidth - gap) tooltip.style.left = `${Math.max(gap, window.innerWidth - rect.width - gap)}px`;
+}
+
+function toggleTooltipMore() {
+  setShiftTooltipMore(!document.body.classList.contains("shift-tooltip-more"));
+  keepFloatingTooltipOnScreen(document.querySelector("#floatingTooltip"));
+}
+
 function installShiftTooltipMore() {
   if (shiftTooltipMoreInstalled) return;
   shiftTooltipMoreInstalled = true;
+  // phone: a tap on More is not a tap away from the SEAL; a tap anywhere else closes the tooltip
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!touchTooltipMode()) return;
+      const tooltip = document.querySelector("#floatingTooltip");
+      if (!tooltip?.classList.contains("visible")) return;
+      if (tooltip.contains(event.target)) {
+        floatingTooltipTouchedAt = Date.now();
+        return;
+      }
+      if (floatingTooltipOwner?.isConnected && floatingTooltipOwner.contains(event.target)) return;
+      hideFloatingTooltip();
+    },
+    true
+  );
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (!event.target?.closest?.("[data-tooltip-more]")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggleTooltipMore();
+    },
+    true
+  );
   document.addEventListener("keydown", (event) => {
     if (event.key === "Shift") setShiftTooltipMore(true);
   });

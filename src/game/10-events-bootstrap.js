@@ -188,6 +188,8 @@ function bindEvents() {
   if (floatingTooltip) {
     document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
       bindOn(element, "mouseenter", (event) => {
+        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
+        floatingTooltipOwner = element;
         if (element.dataset.tooltipHtml) {
           floatingTooltip.innerHTML = element.dataset.tooltipHtml;
         } else {
@@ -200,8 +202,9 @@ function bindEvents() {
         positionFloatingTooltip(event, floatingTooltip);
       });
       bindOn(element, "mouseleave", () => {
-        floatingTooltip.classList.remove("visible");
-        floatingTooltip.innerHTML = "";
+        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
+        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
+        hideFloatingTooltip();
       });
     });
   }

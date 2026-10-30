@@ -11805,3 +11805,64 @@ body:not(.native-arcade) #app .main-menu-panel.menu-screen-arcade-runs .run-menu
   width: 100%;
   transform: none;
 }
+
+/* Phone (web and app): no Shift key, so SEAL tooltips and the Collection box have a More / Less
+   button in the place of "press shift for more". It switches the same mode Shift holds on desktop.
+   Only the button takes taps; the rest of the tooltip still lets taps through. */
+.tooltip-more-button {
+  display: none;
+}
+body.mobile-arcade #app .floating-tooltip .seal-shift-hint {
+  display: none;
+}
+body.mobile-arcade #app .tooltip-more-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  min-height: 30px;
+  margin: 0;
+  padding: 2px 12px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 22% / 8px stretch !important;
+  border-style: solid !important;
+  border-width: 8px !important;
+  color: var(--bone) !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: none !important;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+body.mobile-arcade #app .tooltip-more-button span {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-style: normal !important;
+  color: inherit !important;
+}
+body.mobile-arcade #app .tooltip-more-button:active {
+  color: var(--blood-bright) !important;
+}
+body.mobile-arcade .tooltip-more-button .less-label,
+body.mobile-arcade.shift-tooltip-more .tooltip-more-button .more-label {
+  display: none;
+}
+body.mobile-arcade.shift-tooltip-more .tooltip-more-button .less-label {
+  display: inline;
+}
+body.mobile-arcade #app .floating-tooltip .tooltip-heading {
+  align-items: center;
+}
+
+/* Phone (web and app): Petros and Pavlos don't show whose ability they stole on their card; the
+   BOSS tooltip still says "Stolen from ..." */
+body.mobile-arcade #app .bot-card .boss-stolen-tag {
+  display: none !important;
+}

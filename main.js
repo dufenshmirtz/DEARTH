@@ -5677,7 +5677,8 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(displayName)}</div>
-      <div class="tooltip-shift-hint">press shift for more</div>
+      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
     </div>
     <div class="tooltip-body">${descriptionHtml(bodyText)}</div>
     ${eliteDescription ? `<div class="tooltip-elite-line">${descriptionHtml(eliteDescription)}</div>` : ""}
@@ -9372,9 +9373,67 @@ function setShiftTooltipMore(active) {
   if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
+// Phones have no Shift key: SEAL tooltips and the Collection box get a More / Less button that
+// switches the same "more" mode Shift holds on desktop. Each tooltip opens short.
+let floatingTooltipOwner = null;
+let floatingTooltipTouchedAt = 0;
+
+function touchTooltipMode() {
+  return Boolean(document.body?.classList.contains("mobile-arcade"));
+}
+
+function hideFloatingTooltip() {
+  const tooltip = document.querySelector("#floatingTooltip");
+  if (tooltip) {
+    tooltip.classList.remove("visible");
+    tooltip.innerHTML = "";
+  }
+  floatingTooltipOwner = null;
+}
+
+// More makes the tooltip taller: keep it inside the screen
+function keepFloatingTooltipOnScreen(tooltip) {
+  if (!tooltip?.classList.contains("visible")) return;
+  const gap = 8;
+  const rect = tooltip.getBoundingClientRect();
+  if (rect.bottom > window.innerHeight - gap) tooltip.style.top = `${Math.max(gap, window.innerHeight - rect.height - gap)}px`;
+  if (rect.right > window.innerWidth - gap) tooltip.style.left = `${Math.max(gap, window.innerWidth - rect.width - gap)}px`;
+}
+
+function toggleTooltipMore() {
+  setShiftTooltipMore(!document.body.classList.contains("shift-tooltip-more"));
+  keepFloatingTooltipOnScreen(document.querySelector("#floatingTooltip"));
+}
+
 function installShiftTooltipMore() {
   if (shiftTooltipMoreInstalled) return;
   shiftTooltipMoreInstalled = true;
+  // phone: a tap on More is not a tap away from the SEAL; a tap anywhere else closes the tooltip
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!touchTooltipMode()) return;
+      const tooltip = document.querySelector("#floatingTooltip");
+      if (!tooltip?.classList.contains("visible")) return;
+      if (tooltip.contains(event.target)) {
+        floatingTooltipTouchedAt = Date.now();
+        return;
+      }
+      if (floatingTooltipOwner?.isConnected && floatingTooltipOwner.contains(event.target)) return;
+      hideFloatingTooltip();
+    },
+    true
+  );
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (!event.target?.closest?.("[data-tooltip-more]")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggleTooltipMore();
+    },
+    true
+  );
   document.addEventListener("keydown", (event) => {
     if (event.key === "Shift") setShiftTooltipMore(true);
   });
@@ -13987,7 +14046,8 @@ function renderTrinityTooltipHtml(pieces, sale) {
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(trinitySlotName(pieces))}</div>
-      <div class="tooltip-shift-hint">press shift for more</div>
+      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
     </div>
     ${blocks.join("")}
     <div class="seal-tooltip-footer">
@@ -17265,7 +17325,7 @@ function collectionInfoHtml(id) {
   return `
     <div class="collection-info-top">
       <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
-      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div>` : ""}
+      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
     </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
@@ -17370,6 +17430,7 @@ function showCollectionInfo(button, pinned) {
   const info = screen?.querySelector(".collection-info");
   if (!info) return;
   const id = button.dataset.collectionSeal;
+  if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
   info.innerHTML = collectionInfoHtml(id);
   info.className = `collection-info visible ${collectionSealState(id)}`;
   screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
@@ -17688,6 +17749,8 @@ function bindEvents() {
   if (floatingTooltip) {
     document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
       bindOn(element, "mouseenter", (event) => {
+        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
+        floatingTooltipOwner = element;
         if (element.dataset.tooltipHtml) {
           floatingTooltip.innerHTML = element.dataset.tooltipHtml;
         } else {
@@ -17700,8 +17763,9 @@ function bindEvents() {
         positionFloatingTooltip(event, floatingTooltip);
       });
       bindOn(element, "mouseleave", () => {
-        floatingTooltip.classList.remove("visible");
-        floatingTooltip.innerHTML = "";
+        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
+        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
+        hideFloatingTooltip();
       });
     });
   }
