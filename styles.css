@@ -5081,7 +5081,7 @@ body.mobile-arcade .passive-slot.wide-seal-slot .equipped-seal-sigil {
   width: 134px !important;
   height: 62px !important;
 }
-}
+
 
 /* ---------- Animated main menu (rotating background, fixed doorway, glitching title) ---------- */
 .main-menu,
@@ -11793,4 +11793,15 @@ body.mobile-arcade #app .game-over-overlay .end-figure-left {
 }
 body.mobile-arcade #app .game-over-overlay .end-figure-right {
   right: -10vw;
+}
+
+/* Desktop and phone web: the saved-runs list is centred on the doorway. The panel was 360px wide
+   with the 620px list hanging off its right side (and an old offset only partly pulling it back);
+   now the panel takes the list's width and the list has no offset. */
+body:not(.native-arcade) #app .main-menu-panel.menu-screen-arcade-runs {
+  width: min(620px, 90vw);
+}
+body:not(.native-arcade) #app .main-menu-panel.menu-screen-arcade-runs .run-menu {
+  width: 100%;
+  transform: none;
 }
