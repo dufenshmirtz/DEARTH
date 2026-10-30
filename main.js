@@ -270,6 +270,9 @@ const ARCADE_RUN_SESSION_RESUME_KEY = "dearthArcadeRunResumeOnForeground";
 const ARCADE_RUN_SAVE_VERSION = 1;
 const ARCADE_RUN_SLOT_COUNT = 5;
 const NATIVE_ARCADE_APP = typeof window !== "undefined" && window.DEARTH_APP_MODE === "arcade-native";
+// the iPhone app: same arcade build, but iOS has no "quit" and puts the Dynamic Island on a side
+const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() === "ios";
+if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.08;
@@ -759,7 +762,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
+      "While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",
@@ -773,7 +776,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "Whenever a revealed DAMNED takes damage, it takes 15 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
   },
   p64: {
     id: "p64",
@@ -781,14 +784,14 @@ const ITEMS = {
     name: "Seal of Vine",
     price: 10,
     description:
-      "Reveal one extra DAMNED each round. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
+      "Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%."
   },
   p65: {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "Reveal one extra DAMNED each round. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -1080,7 +1083,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",
@@ -1151,7 +1154,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zachriel Triangle",
     price: 15,
-    description: "Reveal one extra DAMNED each round. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
+    description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
@@ -2294,6 +2297,7 @@ const state = {
   critMomentumBonus: 0,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
+  previousRoundRevealedEliminations: 0,
   shouldFocusGuessInput: false,
   pendingActive: null,
   lastUsedArtifact: null,
@@ -2395,6 +2399,302 @@ function applyDisplaySettings() {
   document.body.classList.toggle("reduce-flashes", !state.display.flashes);
   document.body.classList.toggle("text-large", Boolean(state.display.textSize));
   document.body.dataset.animSpeed = String(animSpeed());
+}
+
+// ---------- iPhone: the hand-drawn lines tremble like the outlines ----------
+// Safari mis-draws lines whose picture is animated through a CSS variable, so on iPhone the
+// picture is stepped from here instead (body[data-line-frame] = 0/1/2, read by styles.css).
+let iosLineBoilFrame = 0;
+function stepIosLineBoil() {
+  const body = document.body;
+  if (body?.classList.contains("outline-boil") && !document.hidden) {
+    iosLineBoilFrame = (iosLineBoilFrame + 1) % 3;
+    body.dataset.lineFrame = String(iosLineBoilFrame);
+  }
+  const duration = body ? parseFloat(getComputedStyle(body).getPropertyValue("--boil-duration")) : NaN;
+  setTimeout(stepIosLineBoil, (Number.isFinite(duration) && duration > 0 ? duration : 375) / 3);
+}
+if (NATIVE_IOS_APP) setTimeout(stepIosLineBoil, 0);
+
+// ---------- iPhone audio: Web Audio instead of <audio> for the short sounds ----------
+// On iPhone, <audio> ignores .volume (everything plays at full volume), starting one is slow
+// enough to stutter taps and hit animations, and a playing <audio> makes iOS treat the game as a
+// media player (lock screen / Now Playing controls). So on iPhone every sound, the looping music
+// included, is decoded once and played through Web Audio with its own gain. The rest of the game
+// code is unchanged: this swaps play/pause/load/volume/paused on <audio> elements, on iPhone only.
+const iosAudio = NATIVE_IOS_APP ? setupIosAudio() : null;
+
+function setupIosAudio() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx || typeof HTMLMediaElement === "undefined" || typeof fetch !== "function") return null;
+  let ctx;
+  try {
+    ctx = new AudioCtx();
+  } catch (error) {
+    return null;
+  }
+  const proto = HTMLMediaElement.prototype;
+  const nativePause = proto.pause;
+  const buffers = new Map(); // url -> AudioBuffer, or a pending Promise, or null when it failed
+  const urlOf = (el) => el.currentSrc || el.src || "";
+  const isMusic = (el) => Boolean(el.loop);
+  const resume = () => {
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+  };
+
+  // the music is minutes long: decode it at a lower rate so it does not take ~90 MB of memory
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  function decoderFor(lowRate) {
+    if (!lowRate || !OfflineCtx) return ctx;
+    try {
+      return new OfflineCtx(2, 1, 32000);
+    } catch (error) {
+      return ctx;
+    }
+  }
+
+  function loadBuffer(url, lowRate = false) {
+    if (!url || buffers.has(url)) return;
+    const decoder = decoderFor(lowRate);
+    const pending = fetch(url)
+      .then((response) => response.arrayBuffer())
+      .then((data) => new Promise((resolve, reject) => decoder.decodeAudioData(data, resolve, reject)))
+      .then((buffer) => {
+        buffers.set(url, buffer);
+        return buffer;
+      })
+      .catch(() => {
+        buffers.set(url, null);
+        return null;
+      });
+    buffers.set(url, pending);
+  }
+
+  function stopSources(el) {
+    if (!el.__iosSources) return;
+    el.__iosSources.forEach((source) => {
+      try {
+        source.onended = null;
+        source.stop();
+        source.disconnect();
+        source.__gain?.disconnect();
+      } catch (error) {}
+    });
+    el.__iosSources.clear();
+  }
+
+  Object.defineProperty(proto, "volume", {
+    configurable: true,
+    get() {
+      return this.__iosVolume ?? 1;
+    },
+    set(value) {
+      const volume = Math.min(1, Math.max(0, Number(value) || 0));
+      this.__iosVolume = volume;
+      if (this.__iosGain) this.__iosGain.gain.value = volume;
+    }
+  });
+
+  // ---- looping music: one buffer source at a time, remembers where it was paused ----
+  function musicState(el) {
+    if (!el.__iosMusic) el.__iosMusic = { source: null, wanted: false, offset: 0, startedAt: 0 };
+    return el.__iosMusic;
+  }
+
+  const musicEls = new Set();
+  let needsRebuild = false;
+
+  function startMusic(el) {
+    musicEls.add(el);
+    const music = musicState(el);
+    if (!music.wanted || music.source) return;
+    const buffer = buffers.get(urlOf(el));
+    if (!buffer || typeof buffer.then === "function") return; // starts when decoding finishes
+    try {
+      if (!el.__iosGain) {
+        el.__iosGain = ctx.createGain();
+        el.__iosGain.connect(ctx.destination);
+      }
+      el.__iosGain.gain.value = el.__iosVolume ?? 1;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(el.__iosGain);
+      music.offset %= buffer.duration;
+      source.start(0, music.offset);
+      music.startedAt = ctx.currentTime;
+      music.source = source;
+    } catch (error) {}
+  }
+
+  function stopMusic(el) {
+    const music = el.__iosMusic;
+    if (!music) return;
+    music.wanted = false;
+    if (!music.source) return;
+    const duration = music.source.buffer?.duration || 0;
+    if (duration) music.offset = (music.offset + ctx.currentTime - music.startedAt) % duration;
+    try {
+      music.source.stop();
+    } catch (error) {}
+    music.source = null;
+  }
+
+  const nativePaused = Object.getOwnPropertyDescriptor(proto, "paused");
+  Object.defineProperty(proto, "paused", {
+    configurable: true,
+    get() {
+      if (this.__iosMusic) return !this.__iosMusic.wanted;
+      return nativePaused?.get ? nativePaused.get.call(this) : true;
+    }
+  });
+
+  proto.load = function () {
+    const url = urlOf(this);
+    if (!isMusic(this)) {
+      loadBuffer(url);
+      return;
+    }
+    loadBuffer(url, true);
+    const pending = buffers.get(url);
+    if (pending && typeof pending.then === "function") pending.then(() => startMusic(this));
+  };
+
+  proto.play = function () {
+    resume();
+    if (isMusic(this)) {
+      const music = musicState(this);
+      music.wanted = true;
+      if (!buffers.has(urlOf(this))) this.load();
+      startMusic(this);
+      return Promise.resolve();
+    }
+    const url = urlOf(this);
+    const buffer = buffers.get(url);
+    const ended = () => setTimeout(() => this.dispatchEvent(new Event("ended")), 0);
+    // still decoding (only in the first moments after launch): skip it rather than blast it
+    if (this.muted || !buffer || typeof buffer.then === "function") {
+      loadBuffer(url);
+      ended();
+      return Promise.resolve();
+    }
+    stopSources(this); // replaying the same element restarts it, as <audio> does
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = this.playbackRate || 1;
+      const gain = ctx.createGain();
+      gain.gain.value = this.__iosVolume ?? 1;
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      source.__gain = gain;
+      if (!this.__iosSources) this.__iosSources = new Set();
+      this.__iosSources.add(source);
+      source.onended = () => {
+        this.__iosSources?.delete(source);
+        // let the finished sound go; otherwise every sound ever played stays wired to the speakers
+        try {
+          source.disconnect();
+          gain.disconnect();
+        } catch (error) {}
+        this.dispatchEvent(new Event("ended"));
+      };
+      const offset = Math.max(0, Number(this.__iosStartOffset ?? this.currentTime) || 0);
+      source.start(0, Math.min(offset, Math.max(0, buffer.duration - 0.01)));
+    } catch (error) {
+      ended();
+    }
+    return Promise.resolve();
+  };
+
+  proto.pause = function () {
+    stopSources(this);
+    stopMusic(this);
+    return nativePause.call(this);
+  };
+
+  // After the app has been in the background, iOS can leave the audio context stuck
+  // ("interrupted", or "running" but silent), and resume() does not bring it back. So on the way
+  // back a fresh context is made; the decoded sounds carry over, and the music restarts where it
+  // was. iPhone only lets audio start from a touch, so the first tap after returning wakes it.
+  function rebuild() {
+    let fresh;
+    try {
+      fresh = new AudioCtx();
+    } catch (error) {
+      return;
+    }
+    const old = ctx;
+    const playing = [];
+    musicEls.forEach((el) => {
+      if (el.__iosMusic?.source) {
+        stopMusic(el);
+        playing.push(el);
+      }
+    });
+    ctx = fresh;
+    musicEls.forEach((el) => {
+      el.__iosGain = null;
+    });
+    try {
+      old.close().catch(() => {});
+    } catch (error) {}
+    playing.forEach((el) => {
+      el.__iosMusic.wanted = true;
+      startMusic(el);
+    });
+  }
+
+  // Telling that the app was away is unreliable on iPhone (page events don't always fire), so
+  // several signs are watched: the page hiding, the app's pause/resume events, timers that
+  // stopped running for a while, and an audio clock that says "running" but stands still.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) needsRebuild = true;
+  });
+  ["pause", "resume"].forEach((type) => document.addEventListener(type, () => (needsRebuild = true)));
+  window.addEventListener("pagehide", () => (needsRebuild = true));
+  let lastTick = Date.now();
+  let lastAudioTime = ctx.currentTime;
+  let lastCtx = ctx;
+  setInterval(() => {
+    const now = Date.now();
+    if (ctx !== lastCtx) {
+      // a fresh context starts its clock at 0: begin measuring again
+      lastCtx = ctx;
+      lastTick = now;
+      lastAudioTime = ctx.currentTime;
+      return;
+    }
+    const wall = (now - lastTick) / 1000;
+    if (wall > 2.5) needsRebuild = true;
+    else if (!document.hidden && ctx.state === "running" && wall > 0.8 && ctx.currentTime - lastAudioTime < 0.2) {
+      needsRebuild = true;
+    }
+    lastTick = now;
+    lastAudioTime = ctx.currentTime;
+  }, 1000);
+
+  function wake() {
+    if (ctx.state === "interrupted" || ctx.state === "closed") needsRebuild = true;
+    if (needsRebuild) {
+      needsRebuild = false;
+      rebuild();
+    }
+    resume();
+  }
+
+  ["touchend", "click", "keydown"].forEach((type) => document.addEventListener(type, wake, true));
+
+  return {
+    get ctx() {
+      return ctx;
+    },
+    suspend: () => {
+      needsRebuild = true;
+      ctx.suspend().catch(() => {});
+    },
+    resume: wake
+  };
 }
 
 // ---------- animation speed (Settings > Gameplay): x1, x2, x4 ----------
@@ -2610,7 +2910,24 @@ function removeArcadeRunSlot(slotId) {
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
 }
 
+// Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
+// longer you play. render() used to save on every redraw, which made long runs stutter, most
+// of all on iPhone. Redraws now ask for a save at most once a second; leaving the table, the
+// app going to the background and the other explicit saves still write straight away.
+let arcadeRunSaveTimer = null;
+function scheduleArcadeRunSave() {
+  if (arcadeRunSaveTimer) return;
+  arcadeRunSaveTimer = setTimeout(() => {
+    arcadeRunSaveTimer = null;
+    saveArcadeRun();
+  }, 1000);
+}
+
 function saveArcadeRun() {
+  if (arcadeRunSaveTimer) {
+    clearTimeout(arcadeRunSaveTimer);
+    arcadeRunSaveTimer = null;
+  }
   if (state.mode !== "arcade") return;
   // the story's two tutorial rounds are not a saved run until the pact is made
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
@@ -2819,6 +3136,8 @@ function playSoundtrack() {
 function primeSfxAudio() {
   if (sfxPrimed) return;
   sfxPrimed = true;
+  // iPhone decodes every sound up front (iosAudio), so there is nothing to warm up
+  if (iosAudio) return;
   [
     ensureSealPurchaseSfx(),
     ensureButtonSfx("guess"),
@@ -2867,7 +3186,10 @@ function pauseAudioElement(audio) {
 }
 
 function pauseGameAudioForBackground() {
-  soundtrackPausedByAppBackground = Boolean(soundtrackAudio && !soundtrackAudio.paused);
+  // leaving the app fires more than one of blur / visibilitychange / pagehide: the second call
+  // must not forget that the music was playing before the first one paused it
+  soundtrackPausedByAppBackground =
+    soundtrackPausedByAppBackground || Boolean(soundtrackAudio && !soundtrackAudio.paused);
   [
     soundtrackAudio,
     sealPurchaseSfx,
@@ -2880,9 +3202,11 @@ function pauseGameAudioForBackground() {
     ...activeOneShotSfxInstances
   ].forEach(pauseAudioElement);
   activeOneShotSfxInstances.clear();
+  iosAudio?.suspend();
 }
 
 function resumeGameAudioAfterForeground() {
+  iosAudio?.resume();
   if (!soundtrackPausedByAppBackground) return;
   soundtrackPausedByAppBackground = false;
   resumeSoundtrack();
@@ -2972,6 +3296,7 @@ function ensurePentakillSfx() {
 
 function playOneShot(audio, startOffset = 0) {
   try {
+    audio.__iosStartOffset = startOffset;
     audio.currentTime = Math.max(0, startOffset);
     audio.play().catch(() => {});
   } catch (error) {}
@@ -2986,6 +3311,7 @@ function playClonedOneShot(audio, volume, startOffset = 0) {
     instance.addEventListener("ended", cleanup, { once: true });
     instance.addEventListener("error", cleanup, { once: true });
     instance.currentTime = Math.max(0, startOffset || 0);
+    instance.__iosStartOffset = startOffset;
     instance.play().catch(cleanup);
   } catch (error) {}
 }
@@ -4249,7 +4575,7 @@ function fullHealthExtraDamage(idOrItem) {
 }
 
 function revealedExtraDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 15);
+  return flatDamageValue(idOrItem, 7);
 }
 
 function aimBossDamage(idOrItem) {
@@ -4744,8 +5070,8 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p64", "p65", "p71", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
-  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
   if (item.id === "p2") {
@@ -4847,16 +5173,16 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `Reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
+    return `While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
   }
   if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
     return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
   }
   if (item.id === "p64") {
-    return `Reveal one extra DAMNED each round. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
+    return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `Reveal one extra DAMNED each round. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
@@ -5341,7 +5667,7 @@ function splitEliteDescription(value) {
   };
 }
 
-// Shop and Collection never explain ELITE scaling: that only shows on an equipped SEAL (hold Shift on its tooltip)
+// the Shop never explains ELITE scaling: hold Shift on an equipped SEAL's tooltip, or on a SEAL in the Collection
 function descriptionWithoutElite(value) {
   const text = String(value || "");
   return splitEliteDescription(text).main || text;
@@ -5670,11 +5996,28 @@ function addLog(message) {
 }
 
 function showInvalidGuessPopup() {
+  // iPhone: the system alert stops the whole game until it closes, so show it in the game instead
+  if (NATIVE_IOS_APP) {
+    showInvalidGuessToast();
+    return;
+  }
   if (typeof window !== "undefined" && typeof window.alert === "function") {
     window.alert("Invalid");
   } else {
     addLog("Invalid");
   }
+}
+
+// "Invalid" over the table: lives outside #app (renders never touch it) and never blocks play
+function showInvalidGuessToast() {
+  document.querySelector(".invalid-toast")?.remove();
+  const toast = document.createElement("div");
+  toast.className = "invalid-toast";
+  toast.setAttribute("role", "alert");
+  toast.textContent = "Invalid";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("leaving"), 900);
+  setTimeout(() => toast.remove(), 1300);
 }
 
 function addRoundEvent(message) {
@@ -7656,6 +7999,7 @@ function startGame(options = {}) {
   state.critMomentumBonus = 0;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
+  state.previousRoundRevealedEliminations = 0;
   resetBotsForRun();
   rerollShop();
   beginRound();
@@ -7717,12 +8061,15 @@ function beginRound() {
     multiEliminationBonusPaid: false,
     eliminatedPersonalities: [],
     eliminationsThisRound: 0,
+    revealedEliminationsThisRound: 0,
     sallosSpreadDone: false,
     eliminationCreditRecords: [],
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
+    vineRevealRolls: {},
+    extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
@@ -8431,8 +8778,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  // Goetic reveal SEALS and the Seal of Zachriel Triangle; other special SEALS do not add reveals
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).length;
+  const extraReveals = extraRevealEntries().length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -8450,6 +8796,44 @@ function applyGuessReveals() {
   applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS do not add reveals). Amon always does; the others only when their condition holds:
+// Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
+// died last round, Zachriel Triangle if any DAMNED died last round.
+function extraRevealEntries() {
+  return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
+    if (entry.id === "p59") return true;
+    let active = false;
+    if (entry.id === "p61") active = (state.player?.hp || 0) < 50;
+    if (entry.id === "p64") active = vineRevealRoll(entry);
+    if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
+    if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
+    if (active) markExtraRevealTriggered(entry);
+    return active;
+  });
+}
+
+// reveals are re-applied several times a round; count the trigger once
+function markExtraRevealTriggered(entry) {
+  const round = state.roundState;
+  if (!round) return;
+  if (!round.extraRevealMarked || typeof round.extraRevealMarked !== "object") round.extraRevealMarked = {};
+  const key = entry.sourceId || entry.id;
+  if (round.extraRevealMarked[key]) return;
+  round.extraRevealMarked[key] = true;
+  markPassiveEntryTriggered(entry);
+}
+
+// Seal of Vine: one 50% roll per round, kept so the reveal count does not change when reveals are re-applied
+function vineRevealRoll(entry) {
+  const round = state.roundState;
+  if (!round) return false;
+  if (!round.vineRevealRolls || typeof round.vineRevealRolls !== "object") round.vineRevealRolls = {};
+  const key = entry.sourceId || entry.id;
+  if (typeof round.vineRevealRolls[key] !== "boolean") round.vineRevealRolls[key] = Math.random() < 0.5;
+  return round.vineRevealRolls[key];
 }
 
 // Seal of Pyros: at the start of every round it reveals one DAMNED (ELITE: +1 each level), chosen from ALL
@@ -9000,7 +9384,10 @@ function installArcadeEnterShortcut() {
 let shiftTooltipMoreInstalled = false;
 
 function setShiftTooltipMore(active) {
-  document.body?.classList.toggle("shift-tooltip-more", Boolean(active));
+  const body = document.body;
+  if (!body || body.classList.contains("shift-tooltip-more") === Boolean(active)) return;
+  body.classList.toggle("shift-tooltip-more", Boolean(active));
+  if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
 function installShiftTooltipMore() {
@@ -9707,6 +10094,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
@@ -10246,7 +10634,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      const damage = passiveEntryFlatDamage(entry, 30) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;
@@ -10741,6 +11129,7 @@ function advanceAfterSummary() {
     return;
   }
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
+  state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
@@ -12449,7 +12838,7 @@ function render() {
   afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
-  saveArcadeRun();
+  scheduleArcadeRunSave();
 }
 
 function focusGuessInputAfterRender() {
@@ -12513,7 +12902,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      <button class="menu-button" data-menu-action="quit">Quit</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
@@ -14370,7 +14759,8 @@ function consoleActionState() {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
-    hint = `${round.activeUses}/${activeUseLimit()} ARTIFACTS used. Ready applies penalties.`;
+    // the ARTIFACTS used this round are counted in the ARTIFACTS panel
+    hint = "Ready applies penalties.";
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
@@ -14566,6 +14956,11 @@ function renderShopSlot(slot, index) {
 
 function renderActives() {
   normalizeActiveCarouselIndex();
+  const round = state.roundState;
+  const usesLine =
+    state.stage === "active" && round
+      ? `<div class="artifact-uses-line">${Math.max(0, round.activeUses || 0)}/${activeUseLimit()} used this round</div>`
+      : "";
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
   const subtitle = count >= limit ? `${count}/${limit} FULL` : `${count}/${limit}`;
@@ -14581,6 +14976,7 @@ function renderActives() {
           <div class="panel-title">ARTIFACTS</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
+        ${usesLine}
       </div>
       <div class="active-list scroll-active-list">${activeCards}</div>
     </section>
@@ -16890,11 +17286,17 @@ function collectionInfoHtml(id) {
       ${progressText}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
+  // hold Shift for the ELITE rule, like an equipped SEAL's tooltip
+  const elite = splitEliteDescription(item.description || "").elite;
   return `
-    <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+    <div class="collection-info-top">
+      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
+      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div>` : ""}
+    </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
+    ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
     ${note}`;
 }
 
@@ -16998,6 +17400,20 @@ function showCollectionInfo(button, pinned) {
   info.className = `collection-info visible ${collectionSealState(id)}`;
   screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
+  collectionInfoAnchor = button;
+  positionCollectionInfo(info, button);
+}
+
+let collectionInfoAnchor = null;
+
+// Shift shows the ELITE line, which changes the box height: keep it beside its SEAL and on screen
+function repositionCollectionInfo() {
+  const info = document.querySelector(".collection-screen .collection-info.visible");
+  if (!info || !collectionInfoAnchor?.isConnected) return;
+  positionCollectionInfo(info, collectionInfoAnchor);
+}
+
+function positionCollectionInfo(info, button) {
   // beside the seal, kept on screen
   const rect = button.getBoundingClientRect();
   const width = info.offsetWidth;

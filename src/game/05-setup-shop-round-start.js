@@ -771,6 +771,7 @@ function startGame(options = {}) {
   state.critMomentumBonus = 0;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
+  state.previousRoundRevealedEliminations = 0;
   resetBotsForRun();
   rerollShop();
   beginRound();
@@ -832,12 +833,15 @@ function beginRound() {
     multiEliminationBonusPaid: false,
     eliminatedPersonalities: [],
     eliminationsThisRound: 0,
+    revealedEliminationsThisRound: 0,
     sallosSpreadDone: false,
     eliminationCreditRecords: [],
     pentakillAwarded: false,
     pentakillPopup: false,
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
+    vineRevealRolls: {},
+    extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
@@ -1546,8 +1550,7 @@ function applyGuessReveals() {
   if (state.stage !== "guess" || !state.roundState) return;
   const bossRevealAllowed = bossRevealAllowedBySeals();
   const amonEntries = orderedPassiveEffectEntries("p59");
-  // Goetic reveal SEALS and the Seal of Zachriel Triangle; other special SEALS do not add reveals
-  const extraReveals = orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).length;
+  const extraReveals = extraRevealEntries().length;
   const revealableBots = state.bots.filter(
     (bot) =>
       (bossRevealAllowed || !bot.isBoss) &&
@@ -1565,6 +1568,44 @@ function applyGuessReveals() {
   applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
+}
+
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS do not add reveals). Amon always does; the others only when their condition holds:
+// Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
+// died last round, Zachriel Triangle if any DAMNED died last round.
+function extraRevealEntries() {
+  return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
+    if (entry.id === "p59") return true;
+    let active = false;
+    if (entry.id === "p61") active = (state.player?.hp || 0) < 50;
+    if (entry.id === "p64") active = vineRevealRoll(entry);
+    if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
+    if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
+    if (active) markExtraRevealTriggered(entry);
+    return active;
+  });
+}
+
+// reveals are re-applied several times a round; count the trigger once
+function markExtraRevealTriggered(entry) {
+  const round = state.roundState;
+  if (!round) return;
+  if (!round.extraRevealMarked || typeof round.extraRevealMarked !== "object") round.extraRevealMarked = {};
+  const key = entry.sourceId || entry.id;
+  if (round.extraRevealMarked[key]) return;
+  round.extraRevealMarked[key] = true;
+  markPassiveEntryTriggered(entry);
+}
+
+// Seal of Vine: one 50% roll per round, kept so the reveal count does not change when reveals are re-applied
+function vineRevealRoll(entry) {
+  const round = state.roundState;
+  if (!round) return false;
+  if (!round.vineRevealRolls || typeof round.vineRevealRolls !== "object") round.vineRevealRolls = {};
+  const key = entry.sourceId || entry.id;
+  if (typeof round.vineRevealRolls[key] !== "boolean") round.vineRevealRolls[key] = Math.random() < 0.5;
+  return round.vineRevealRolls[key];
 }
 
 // Seal of Pyros: at the start of every round it reveals one DAMNED (ELITE: +1 each level), chosen from ALL

@@ -114,7 +114,7 @@ function render() {
   afterRenderEffects();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
-  saveArcadeRun();
+  scheduleArcadeRunSave();
 }
 
 function focusGuessInputAfterRender() {
@@ -178,7 +178,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      <button class="menu-button" data-menu-action="quit">Quit</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
@@ -2035,7 +2035,8 @@ function consoleActionState() {
     buttonText = "Ready";
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
-    hint = `${round.activeUses}/${activeUseLimit()} ARTIFACTS used. Ready applies penalties.`;
+    // the ARTIFACTS used this round are counted in the ARTIFACTS panel
+    hint = "Ready applies penalties.";
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
@@ -2231,6 +2232,11 @@ function renderShopSlot(slot, index) {
 
 function renderActives() {
   normalizeActiveCarouselIndex();
+  const round = state.roundState;
+  const usesLine =
+    state.stage === "active" && round
+      ? `<div class="artifact-uses-line">${Math.max(0, round.activeUses || 0)}/${activeUseLimit()} used this round</div>`
+      : "";
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
   const subtitle = count >= limit ? `${count}/${limit} FULL` : `${count}/${limit}`;
@@ -2246,6 +2252,7 @@ function renderActives() {
           <div class="panel-title">ARTIFACTS</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
+        ${usesLine}
       </div>
       <div class="active-list scroll-active-list">${activeCards}</div>
     </section>

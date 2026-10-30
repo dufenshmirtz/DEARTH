@@ -1,7 +1,10 @@
 let shiftTooltipMoreInstalled = false;
 
 function setShiftTooltipMore(active) {
-  document.body?.classList.toggle("shift-tooltip-more", Boolean(active));
+  const body = document.body;
+  if (!body || body.classList.contains("shift-tooltip-more") === Boolean(active)) return;
+  body.classList.toggle("shift-tooltip-more", Boolean(active));
+  if (typeof repositionCollectionInfo === "function") repositionCollectionInfo();
 }
 
 function installShiftTooltipMore() {
@@ -708,6 +711,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
@@ -1247,7 +1251,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 20) * events;
+      const damage = passiveEntryFlatDamage(entry, 30) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;
@@ -1742,6 +1746,7 @@ function advanceAfterSummary() {
     return;
   }
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
+  state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
   replacePendingEliminations();
   state.rerollBaseCost = 1;
