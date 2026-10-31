@@ -1120,6 +1120,17 @@ function stackLinearMultiplier(entry) {
   return Math.max(1, entry?.stack || 1);
 }
 
+// Seal of the Red Horse: one 50% roll per revealed DAMNED (per reveal stack) per round, kept so every hit
+// on that DAMNED this round agrees
+function redHorseRoll(entry, bot, stack = 0) {
+  const round = state.roundState;
+  if (!round || !bot) return false;
+  if (!round.redHorseRolls || typeof round.redHorseRolls !== "object") round.redHorseRolls = {};
+  const key = `${entry?.sourceId || entry?.id || "p75"}:${bot.id}:${stack}`;
+  if (typeof round.redHorseRolls[key] !== "boolean") round.redHorseRolls[key] = Math.random() < 0.5;
+  return round.redHorseRolls[key];
+}
+
 function markPassiveEntryTriggered(entry) {
   if (!state.roundState || !entry) return;
   const triggerId = entry.sourceId || entry.id;
@@ -1210,6 +1221,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       if (entry.id === "p75") {
         if (bot.revealedByPassive) {
           for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+            if (!redHorseRoll(entry, bot, stack)) continue;
             applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
           }
         }

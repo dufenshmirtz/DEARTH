@@ -656,7 +656,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+    description: "Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
@@ -775,7 +775,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Zachriel's Triangle",
     price: 16,
-    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",

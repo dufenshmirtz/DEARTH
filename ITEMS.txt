@@ -232,7 +232,7 @@ Seal of the Pale Horse (20 SIN)
 If you score CRITICAL this round, DAMNED take x1.5 damage from all sources next round. ELITE adds +0.2 to the multiplier.
 
 Seal of the Red Horse (20 SIN)
-Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
+Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of Silence in Heaven (20 SIN)
 DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier.
@@ -290,7 +290,7 @@ Seal of Samael's Triangle (16 SIN)
 When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
 Seal of Zachriel's Triangle (16 SIN)
-When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%.
 
 Seal of Satan
 

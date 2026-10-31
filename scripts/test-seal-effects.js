@@ -1467,3 +1467,44 @@ test("Vual: revealed DAMNED take 7 extra damage per hit (ELITE x1.5, rounded up)
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).includes("7 extra damage"));
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).includes("11 extra damage"));
 });
+
+test("Red Horse: each revealed DAMNED has a 50% chance per round to take x1.5 damage, and the roll holds all round", () => {
+  game()(`
+    fixture([["p75"]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const hidden = state.bots.find(bot => !bot.revealedByPassive);
+    assert.ok(revealed && hidden);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 15);
+    assert.equal(scaledBotDamage(hidden, 10), 10);
+    Math.random = () => 0.99;
+    assert.equal(scaledBotDamage(revealed, 10), 15);
+  `);
+  game()(`
+    fixture([["p75", 2]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    assert.equal(scaledBotDamage(revealed, 10), 10);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 10);
+  `);
+  game()(`
+    fixture([["p75", 2]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 17);
+  `);
+});
+
+test("Zachriel's Triangle multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 30% roll", () => {
+  game()(`
+    fixture([["p93"]], [10, 20, 30, 40, 50]);
+    const rewards = [10, 3, 1, 0, 7];
+    state.bots.forEach((bot, index) => { bot.reward = rewards[index]; });
+    Math.random = () => 0.99;
+    applyDevSealEntries(["p93"]);
+    assert.deepEqual(state.bots.map(bot => bot.reward), [10, 3, 1, 0, 7]);
+    Math.random = () => 0.1;
+    applyDevSealEntries(["p93"]);
+    assert.deepEqual(state.bots.map(bot => bot.reward), [15, 5, 2, 0, 11]);
+  `);
+});

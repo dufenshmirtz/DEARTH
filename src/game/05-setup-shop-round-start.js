@@ -841,6 +841,7 @@ function beginRound() {
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
     vineRevealRolls: {},
+    redHorseRolls: {},
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
@@ -1717,10 +1718,10 @@ function applyDevSealEntries(ids) {
       devSealTargetDamned().forEach((bot) => {
         const bounty = botRegularBounty(bot);
         if (bounty <= 0) return;
-        const result = changeBotSin(bot, bounty, "", { source });
+        const result = changeBotSin(bot, Math.ceil(bounty * 0.5), "", { source });
         total += result.gained;
       });
-      addRoundEvent(total > 0 ? `${source} doubled ${total} total BOUNTY.` : `${source} found no BOUNTY to double.`);
+      addRoundEvent(total > 0 ? `${source} added ${total} total BOUNTY (x1.5).` : `${source} found no BOUNTY to multiply.`);
       return;
     }
 
