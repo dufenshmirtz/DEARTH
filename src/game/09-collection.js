@@ -671,9 +671,8 @@ function collectionDemonsHtml() {
     return `
       <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
-        <span class="collection-demon-number">${number}</span>
+        <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
-        ${slain ? `<span class="collection-demon-bound" aria-hidden="true">Bound</span>` : ""}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>`;
