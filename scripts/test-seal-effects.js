@@ -522,6 +522,37 @@ test("Petros and Pavlos can fall in the same round", () => {
   `);
 });
 
+test("slaying a Goetic BOSS discovers its demon in the Ars Goetia, once, and only in arcade runs", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    boss.goeticKey = "paimon";
+    boss.hp = 0;
+    assert.equal(isDemonSlain("paimon"), false);
+    resolveEliminatedBots([boss]);
+    assert.equal(isDemonSlain("paimon"), true);
+    collectionSlayDemon("paimon");
+    assert.equal(loadCollectionProgress().slain.filter(key => key === "paimon").length, 1);
+    // a unique BOSS is not a demon
+    const zilon = state.bots[1];
+    zilon.isBoss = true;
+    zilon.uniqueKey = "zilon";
+    zilon.hp = 0;
+    resolveEliminatedBots([zilon]);
+    assert.deepEqual([...loadCollectionProgress().slain], ["paimon"]);
+    state.mode = "pvp";
+    collectionSlayDemon("bael");
+    assert.equal(isDemonSlain("bael"), false);
+    // the tab lists all 72 in book order; the ones not slain have no name
+    const html = collectionDemonsHtml();
+    assert.equal((html.match(/data-collection-demon=/g) || []).length, 72);
+    assert.equal(html.split(">???<").length - 1, 71);
+    assert.ok(html.indexOf('"bael"') < html.indexOf('"andromalius"'));
+    assert.equal(romanNumeral(72), "LXXII");
+  `);
+});
+
 test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));

@@ -16990,6 +16990,8 @@ function defaultCollectionProgress() {
     version: 2,
     unlocked: [],
     discovered: [],
+    // the Goetic BOSSES slain at least once (GOETIC_BOSS_SPECS keys): the Ars Goetia tab
+    slain: [],
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
     flags: {}
@@ -17005,6 +17007,7 @@ function loadCollectionProgress() {
       const saved = JSON.parse(raw);
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
+      if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       for (const group of ["stats", "best"]) {
         const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
@@ -17142,6 +17145,7 @@ function collectionNoteSpend(cost) {
 }
 
 function collectionNoteElimination(bot) {
+  if (bot?.isBoss && bot.goeticKey) collectionSlayDemon(bot.goeticKey);
   if (!collectionCounts() || !bot) return;
   collectionBump("eliminations");
   if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
@@ -17201,6 +17205,93 @@ function collectionDiscover(id) {
   progress.discovered.push(id);
   saveCollectionProgress();
 }
+
+/* ---- the Ars Goetia: the 72 Goetic BOSSES ----
+   A demon is discovered the first time its BOSS is slain in a run (like a SEAL the first time it triggers).
+   The Collection lists them on its second tab in the order of the book; the ones not slain yet stay dark
+   and nameless. */
+let collectionTab = "seals";
+
+function isDemonSlain(key) {
+  return loadCollectionProgress().slain.includes(key);
+}
+
+function collectionSlayDemon(key) {
+  if (state.mode !== "arcade" || !GOETIC_BOSS_BY_KEY[key]) return;
+  const progress = loadCollectionProgress();
+  if (progress.slain.includes(key)) return;
+  progress.slain.push(key);
+  saveCollectionProgress();
+}
+
+function romanNumeral(value) {
+  const parts = [[50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let left = Math.max(0, Math.floor(value));
+  return parts.reduce((text, [size, mark]) => {
+    while (left >= size) {
+      text += mark;
+      left -= size;
+    }
+    return text;
+  }, "");
+}
+
+// small copies of the BOSS art (the full images are 1254px)
+function demonThumbPath(spec) {
+  return `${GOETIC_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
+}
+
+function collectionDemonsHtml() {
+  const cells = GOETIC_BOSS_SPECS.map((spec, index) => {
+    const slain = isDemonSlain(spec.key);
+    const number = romanNumeral(index + 1);
+    return `
+      <button class="collection-demon ${slain ? "slain" : "unslain"}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not slain`)}">
+        <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
+        <span class="collection-demon-number">${number}</span>
+        <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+      </button>`;
+  });
+  return `<div class="collection-demon-grid">${cells.join("")}</div>`;
+}
+
+function collectionDemonInfoHtml(key) {
+  const index = GOETIC_BOSS_KEYS.indexOf(key);
+  const spec = GOETIC_BOSS_SPECS[index];
+  if (!spec) return "";
+  const number = romanNumeral(index + 1);
+  if (!isDemonSlain(key)) {
+    return `
+      <div class="collection-info-status unslain">Not slain</div>
+      <div class="collection-info-name">???</div>
+      <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run.</div>`;
+  }
+  const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
+  return `
+    <div class="collection-info-status slain">Slain</div>
+    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}`;
+}
+
+// switches tabs in place, so the screen does not replay its entrance
+function applyCollectionTab(screen, tab) {
+  collectionTab = tab === "goetia" ? "goetia" : "seals";
+  if (!screen) return;
+  screen.querySelectorAll("[data-collection-tab]").forEach((button) => {
+    const active = button.dataset.collectionTab === collectionTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  screen.querySelectorAll("[data-collection-panel], [data-collection-for]").forEach((el) => {
+    el.hidden = (el.dataset.collectionPanel || el.dataset.collectionFor) !== collectionTab;
+  });
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+}
+
+const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.selected";
 
 // after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
 function collectionAfterRender() {
@@ -17343,7 +17434,7 @@ function applyCollectionFilter(screen, filter) {
   screen.querySelectorAll(".collection-section").forEach((section) => {
     section.hidden = !section.querySelector(".collection-seal:not([hidden])");
   });
-  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   hideCollectionInfo(screen);
   const body = screen.querySelector(".collection-body");
   if (body) body.scrollTop = 0;
@@ -17362,6 +17453,15 @@ function renderCollectionScreen(from) {
   const unlocked = all.filter((id) => isSealUnlocked(id)).length;
   const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
   const filter = collectionFilter();
+  const slain = GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length;
+  const goetia = collectionTab === "goetia";
+  const tabs = [
+    { key: "seals", label: "Seals" },
+    { key: "goetia", label: "Ars Goetia" }
+  ].map((tab) => {
+    const active = tab.key === collectionTab;
+    return `<button class="collection-tab${active ? " active" : ""}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
+  });
   const sections = collectionSections()
     .map(
       (section) => `
@@ -17384,22 +17484,34 @@ function renderCollectionScreen(from) {
     )
     .join("");
   return `
-    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="SEAL collection">
+    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="Collection">
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
-        <h1 class="collection-title">Collection</h1>
-        <div class="collection-counts">
+        <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
+        <div class="collection-counts" data-collection-for="seals"${goetia ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
+        <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
+          <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} slain</span>
+        </div>
       </header>
-      ${collectionFiltersHtml(all)}
-      <div class="collection-legend" aria-hidden="true">
-        <span class="legend discovered">discovered</span>
-        <span class="legend undiscovered">undiscovered</span>
-        <span class="legend locked">locked</span>
+      <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
+        ${collectionFiltersHtml(all)}
+        <div class="collection-legend" aria-hidden="true">
+          <span class="legend discovered">discovered</span>
+          <span class="legend undiscovered">undiscovered</span>
+          <span class="legend locked">locked</span>
+        </div>
+        <div class="collection-body">${sections}</div>
       </div>
-      <div class="collection-body">${sections}</div>
+      <div class="collection-panel" data-collection-panel="goetia"${goetia ? "" : " hidden"}>
+        <div class="collection-legend" aria-hidden="true">
+          <span class="legend slain">slain</span>
+          <span class="legend unslain">not slain</span>
+        </div>
+        <div class="collection-body">${collectionDemonsHtml()}</div>
+      </div>
       <div class="collection-info" aria-live="polite"></div>
     </div>`;
 }
@@ -17409,9 +17521,10 @@ function showCollectionInfo(button, pinned) {
   const info = screen?.querySelector(".collection-info");
   if (!info) return;
   const id = button.dataset.collectionSeal;
-  info.innerHTML = collectionInfoHtml(id);
-  info.className = `collection-info visible ${collectionSealState(id)}`;
-  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  const demon = button.dataset.collectionDemon;
+  info.innerHTML = demon ? collectionDemonInfoHtml(demon) : collectionInfoHtml(id);
+  info.className = `collection-info visible ${demon ? (isDemonSlain(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
   positionCollectionInfo(info, button);
@@ -17442,7 +17555,7 @@ function positionCollectionInfo(info, button) {
 
 function hideCollectionInfo(screen) {
   const info = screen?.querySelector(".collection-info");
-  if (info && !screen.querySelector(".collection-seal.selected")) info.classList.remove("visible");
+  if (info && !screen.querySelector(COLLECTION_SELECTED)) info.classList.remove("visible");
 }
 
 function closeCollection(from) {
@@ -17461,7 +17574,13 @@ function bindCollectionEvents() {
       applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
     });
   });
-  document.querySelectorAll("[data-collection-seal]").forEach((button) => {
+  document.querySelectorAll("[data-collection-tab]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      applyCollectionTab(button.closest(".collection-screen"), button.dataset.collectionTab);
+    });
+  });
+  document.querySelectorAll("[data-collection-seal], [data-collection-demon]").forEach((button) => {
     bindOn(button, "pointerenter", (event) => {
       if (event.pointerType === "mouse") showCollectionInfo(button, false);
     });
@@ -17482,12 +17601,14 @@ function bindCollectionEvents() {
   const screen = document.querySelector(".collection-screen");
   if (screen) {
     bindOn(screen, "click", () => {
-      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+      screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
       hideCollectionInfo(screen);
     });
-    bindOn(screen.querySelector(".collection-body"), "scroll", () => {
-      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
-      hideCollectionInfo(screen);
+    screen.querySelectorAll(".collection-body").forEach((body) => {
+      bindOn(body, "scroll", () => {
+        screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+        hideCollectionInfo(screen);
+      });
     });
   }
 }
