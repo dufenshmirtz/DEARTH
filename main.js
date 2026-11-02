@@ -976,49 +976,49 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Cassiel's Pentagram",
+    name: "Seal of Gabriel",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Zachriel's Triangle",
+    name: "Seal of Sachiel",
     price: 16,
     description: "When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Aggiel's Hexagram",
+    name: "Seal of Anael",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Cassiel's Sigil",
+    name: "Seal of Cassiel",
     price: 16,
     description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Samael's Triangle",
+    name: "Seal of Samael",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Samael's Star",
+    name: "Seal of Michael",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Cassiel's Hexagram",
+    name: "Seal of Raphael",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
@@ -1124,42 +1124,42 @@ const ITEMS = {
   p98: {
     id: "p98",
     type: "passive",
-    name: "Seal of Samael Star",
+    name: "Third Pentacle of Saturn",
     price: 15,
     description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
   },
   p99: {
     id: "p99",
     type: "passive",
-    name: "Seal of Cassiel Sigil",
+    name: "First Pentacle of Saturn",
     price: 15,
     description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
   },
   p100: {
     id: "p100",
     type: "passive",
-    name: "Seal of Bethor",
+    name: "Second Pentacle of Saturn",
     price: 15,
     description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
     type: "passive",
-    name: "Seal of Aggiel Hexagram",
+    name: "Fifth Pentacle of Saturn",
     price: 15,
     description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
     type: "passive",
-    name: "Seal of Zachriel Triangle",
+    name: "Fourth Pentacle of Saturn",
     price: 15,
     description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
     type: "passive",
-    name: "Seal of Cassiel Pentagram",
+    name: "Sixth Pentacle of Saturn",
     price: 15,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
   },
@@ -1201,7 +1201,7 @@ const ITEMS = {
   p109: {
     id: "p109",
     type: "passive",
-    name: "Seal of Samael Triangle",
+    name: "Seventh Pentacle of Saturn",
     price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
@@ -1565,7 +1565,7 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p55",
   "p69"
 ]);
-// the seven archangel SEALS (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
+// the seven archangel SEALS, one per planet (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 // the Boss SEALS, named after the eight unique BOSSES
 const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
@@ -8811,10 +8811,10 @@ function applyGuessReveals() {
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
 }
 
-// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Fourth Pentacle of Saturn; other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
 // Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
-// died last round, Zachriel Triangle if any DAMNED died last round.
+// died last round, the Fourth Pentacle of Saturn if any DAMNED died last round.
 function extraRevealEntries() {
   return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
@@ -16831,13 +16831,13 @@ const COLLECTION_SECTIONS = [
   { key: "player", title: "Goetic Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
-  // the former Boss SEALS, now named after the Archangels
-  { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  // the former Boss SEALS, named after the archangel of each planet, in weekday order (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
+  { key: "archangel", title: "Archangel Seals", ids: ["p97", "p92", "p96", "p110", "p93", "p94", "p95"] },
   { key: "satan", title: "Seal of Satan", ids: ["p111"] },
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p99", "p100", "p98", "p102", "p101", "p103", "p109"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -16946,13 +16946,13 @@ const SEAL_BUILD_TAGS = {
   p127: ["memory"], // Threon
   p128: ["critical"], // Dantre
   // Archangel SEALS (the former Boss SEALS)
-  p92: ["critical"], // Cassiel Pentagram
-  p93: ["bounty"], // Zachriel Triangle
-  p94: ["artifact"], // Aggiel Hexagram
-  p95: ["reveal"], // Samael Star
-  p96: ["personality"], // Samael Triangle
-  p97: ["memory"], // Cassiel Sigil
-  p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
+  p92: ["critical"], // Gabriel
+  p93: ["bounty"], // Sachiel
+  p94: ["artifact"], // Anael
+  p95: ["reveal"], // Cassiel
+  p96: ["personality"], // Samael
+  p97: ["memory"], // Michael
+  p110: ["general"], // Raphael (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Trinity SEALS
@@ -16960,13 +16960,13 @@ const SEAL_BUILD_TAGS = {
   p132: ["general"], // Son (double SIN, +8 SIN, free rerolls)
   p133: ["general"], // Holy Spirit (the wheel)
   // Seals of Saturn
-  p98: ["critical"], // Samael Star
-  p99: ["memory"], // Cassiel Sigil
-  p100: ["bounty"], // Bethor
-  p101: ["general"], // Aggiel Hexagram
-  p102: ["reveal"], // Zachriel Triangle
-  p103: ["artifact"], // Cassiel Pentagram
-  p109: ["personality"] // Samael Triangle
+  p98: ["critical"], // Third Pentacle of Saturn
+  p99: ["memory"], // First Pentacle of Saturn
+  p100: ["bounty"], // Second Pentacle of Saturn
+  p101: ["general"], // Fifth Pentacle of Saturn
+  p102: ["reveal"], // Fourth Pentacle of Saturn
+  p103: ["artifact"], // Sixth Pentacle of Saturn
+  p109: ["personality"] // Seventh Pentacle of Saturn
 };
 
 function sealBuilds(id) {

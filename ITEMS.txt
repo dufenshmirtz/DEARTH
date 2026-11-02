@@ -271,26 +271,26 @@ Seal of Zilon (16 SIN)
 
 Archangel Seals
 
-Seal of Aggiel's Hexagram (16 SIN)
+Seal of Anael (16 SIN)
 At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%.
 
-Seal of Cassiel's Hexagram (16 SIN)
-When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
-
-Seal of Cassiel's Pentagram (16 SIN)
-At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
-
-Seal of Cassiel's Sigil (16 SIN)
+Seal of Cassiel (16 SIN)
 When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
 
-Seal of Samael's Star (16 SIN)
+Seal of Gabriel (16 SIN)
+At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
+
+Seal of Michael (16 SIN)
 When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Samael's Triangle (16 SIN)
-When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
+Seal of Raphael (16 SIN)
+When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Zachriel's Triangle (16 SIN)
+Seal of Sachiel (16 SIN)
 When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%.
+
+Seal of Samael (16 SIN)
+When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
 Seal of Satan
 
@@ -312,26 +312,28 @@ When you press READY, one of three is cast at random: double SIN from every sour
 
 Seals of Saturn (self-stacking)
 
-Seal of Aggiel Hexagram (15 SIN)
-Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
+The seven Pentacles of Saturn from the Key of Solomon, in order.
 
-Seal of Bethor (15 SIN)
-At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
-
-Seal of Cassiel Pentagram (15 SIN)
-Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded.
-
-Seal of Cassiel Sigil (15 SIN)
+First Pentacle of Saturn (15 SIN)
 Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded.
 
-Seal of Samael Star (15 SIN)
+Second Pentacle of Saturn (15 SIN)
+At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
+
+Third Pentacle of Saturn (15 SIN)
 Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded.
 
-Seal of Samael Triangle (15 SIN)
-Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
-
-Seal of Zachriel Triangle (15 SIN)
+Fourth Pentacle of Saturn (15 SIN)
 If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
+
+Fifth Pentacle of Saturn (15 SIN)
+Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
+
+Sixth Pentacle of Saturn (15 SIN)
+Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded.
+
+Seventh Pentacle of Saturn (15 SIN)
+Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
 
 Unlockable Seals
 
@@ -353,12 +355,12 @@ Seal of Serafeim: Have Serafeim steal 0 SIN from you when he is first summoned.
 Seal of Threon: Use 4 ARTIFACTS in one round while Threon is active.
 Seal of Dantre: Score a PENTAKILL while Dantre is active.
 Seal of Satan: Have 666 SIN.
-Seal of Samael Star: Score 3 CRITICAL hits in a row.
-Seal of Cassiel Sigil: Beat the game 8 times (defeat the 8 BOSSES).
-Seal of Bethor: Get a SEAL to ELITE level 6.
-Seal of Aggiel Hexagram: Eliminate 66 demons (Goetic BOSSES) in total.
-Seal of Zachriel Triangle: Eliminate 666 DAMNED in total.
-Seal of Samael Triangle: Eliminate 8 DAMNED named Yannis in total.
+Third Pentacle of Saturn: Score 3 CRITICAL hits in a row.
+First Pentacle of Saturn: Beat the game 8 times (defeat the 8 BOSSES).
+Second Pentacle of Saturn: Get a SEAL to ELITE level 6.
+Fifth Pentacle of Saturn: Eliminate 66 demons (Goetic BOSSES) in total.
+Fourth Pentacle of Saturn: Eliminate 666 DAMNED in total.
+Seventh Pentacle of Saturn: Eliminate 8 DAMNED named Yannis in total.
 
 Artifacts
 

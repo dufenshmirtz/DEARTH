@@ -80,13 +80,13 @@ const COLLECTION_SECTIONS = [
   { key: "player", title: "Goetic Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
-  // the former Boss SEALS, now named after the Archangels
-  { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
+  // the former Boss SEALS, named after the archangel of each planet, in weekday order (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
+  { key: "archangel", title: "Archangel Seals", ids: ["p97", "p92", "p96", "p110", "p93", "p94", "p95"] },
   { key: "satan", title: "Seal of Satan", ids: ["p111"] },
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p99", "p100", "p98", "p102", "p101", "p103", "p109"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -195,13 +195,13 @@ const SEAL_BUILD_TAGS = {
   p127: ["memory"], // Threon
   p128: ["critical"], // Dantre
   // Archangel SEALS (the former Boss SEALS)
-  p92: ["critical"], // Cassiel Pentagram
-  p93: ["bounty"], // Zachriel Triangle
-  p94: ["artifact"], // Aggiel Hexagram
-  p95: ["reveal"], // Samael Star
-  p96: ["personality"], // Samael Triangle
-  p97: ["memory"], // Cassiel Sigil
-  p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
+  p92: ["critical"], // Gabriel
+  p93: ["bounty"], // Sachiel
+  p94: ["artifact"], // Anael
+  p95: ["reveal"], // Cassiel
+  p96: ["personality"], // Samael
+  p97: ["memory"], // Michael
+  p110: ["general"], // Raphael (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Trinity SEALS
@@ -209,13 +209,13 @@ const SEAL_BUILD_TAGS = {
   p132: ["general"], // Son (double SIN, +8 SIN, free rerolls)
   p133: ["general"], // Holy Spirit (the wheel)
   // Seals of Saturn
-  p98: ["critical"], // Samael Star
-  p99: ["memory"], // Cassiel Sigil
-  p100: ["bounty"], // Bethor
-  p101: ["general"], // Aggiel Hexagram
-  p102: ["reveal"], // Zachriel Triangle
-  p103: ["artifact"], // Cassiel Pentagram
-  p109: ["personality"] // Samael Triangle
+  p98: ["critical"], // Third Pentacle of Saturn
+  p99: ["memory"], // First Pentacle of Saturn
+  p100: ["bounty"], // Second Pentacle of Saturn
+  p101: ["general"], // Fifth Pentacle of Saturn
+  p102: ["reveal"], // Fourth Pentacle of Saturn
+  p103: ["artifact"], // Sixth Pentacle of Saturn
+  p109: ["personality"] // Seventh Pentacle of Saturn
 };
 
 function sealBuilds(id) {
