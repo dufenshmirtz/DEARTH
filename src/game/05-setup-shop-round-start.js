@@ -172,6 +172,8 @@ function skipToFirstGoeticBoss() {
   state.pendingActive = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  // testing: the bound demon's place comes first, so YOU shows up at once
+  if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
   state.goeticBossKills = 0;
   resetBossKillInterval();
   state.finalBossPhase = false;
@@ -236,7 +238,7 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  // the demon bound for this run never comes: Your Shadow takes its place (and its place in the 72)
+  // the demon bound for this run never comes: YOU takes its place (and its place in the 72)
   const shadowOf = isEndlessBoss && bossSpec?.goeticKey && bossSpec.goeticKey === state.boundDemon ? bossSpec.goeticKey : null;
   const goeticSpec = isEndlessBoss && !shadowOf ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
@@ -1430,7 +1432,7 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
-// Your Shadow plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// YOU plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
 // missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
 function planShadowGuess(bot) {
   const best = planBossGuess(bot);

@@ -10181,6 +10181,32 @@ body.mobile-arcade .collection-screen {
   justify-content: flex-end;
 }
 
+/* testing only: DEV unlock all in the Ars Goetia legend row */
+.collection-screen .collection-dev-button {
+  min-height: 0 !important;
+  padding: 0 8px !important;
+  border: 1px dashed #5d5850 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em;
+  color: #8d877c !important;
+  cursor: pointer;
+}
+
+.collection-screen .collection-dev-button.active {
+  border-color: rgba(220, 42, 47, 0.7) !important;
+  color: #e0383d !important;
+}
+
+.collection-screen .collection-dev-button:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  border-color: #dc2a2f !important;
+  color: #dc2a2f !important;
+}
+
 /* a clicked, defeated demon's box takes clicks: it holds Bind / Unbind */
 .collection-info.interactive {
   pointer-events: auto;

@@ -397,7 +397,7 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
-  // Your Shadow's Guilt (alive when the round was played): double TARGET damage
+  // YOU's Guilt (alive when the round was played): double TARGET damage
   const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
   if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round

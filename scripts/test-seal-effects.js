@@ -1607,7 +1607,7 @@ test("Seal of Sachiel multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 3
   `);
 });
 
-// ---- Ars Goetia binding: the bound demon's SEAL is free, Your Shadow comes in its place ----
+// ---- Ars Goetia binding: the bound demon's SEAL is free, YOU comes in its place ----
 const BINDING_STUBS = `
   globalThis.render = () => {};
   globalThis.playGameSfx = () => {};
@@ -1670,7 +1670,7 @@ test("the bound demon's SEAL is free in the shop, ELITE included, and a free cop
   `);
 });
 
-test("Your Shadow replaces the bound demon, counts toward the 72 and doubles your TARGET damage", () => {
+test("YOU replaces the bound demon, counts toward the 72 and doubles your TARGET damage", () => {
   game()(`
     ${BINDING_STUBS}
     fixture([], [50, 50, 50, 50, 50]);
@@ -1711,7 +1711,7 @@ test("Your Shadow replaces the bound demon, counts toward the 72 and doubles you
   `);
 });
 
-test("Your Shadow guesses the best BOSS guess, off by one of your misses from your last rounds", () => {
+test("YOU guesses the best BOSS guess, off by one of your misses from your last rounds", () => {
   game()(`
     ${BINDING_STUBS}
     fixture([], [10, 20, 30, 40, 50]);
@@ -1746,5 +1746,28 @@ test("a saved run keeps its bound demon, and saves from before binding have none
     state.boundDemon = "nobody";
     normalizeLoadedArcadeRun();
     assert.equal(state.boundDemon, null);
+  `);
+});
+
+test("DEV unlock all: every demon counts as defeated and can be bound, off again restores the real progress", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    loadCollectionProgress().slain.push("bael");
+    toggleDevAllDemons();
+    assert.equal(GOETIC_BOSS_KEYS.filter(key => isDemonSlain(key)).length, 72);
+    toggleBoundDemon("andromalius");
+    assert.equal(collectionBoundDemon(), "andromalius");
+    toggleDevAllDemons();
+    assert.deepEqual(GOETIC_BOSS_KEYS.filter(key => isDemonSlain(key)), ["bael"]);
+    assert.equal(collectionBoundDemon(), null);
+    // the skip to the Goetic BOSSES brings the bound demon's place (YOU) first
+    fixture([], [10, 20, 30]);
+    state.boundDemon = "paimon";
+    skipToFirstGoeticBoss();
+    assert.equal(state.bots[0].shadowOf, "paimon");
+    assert.equal(state.bots[0].name, "YOU");
+    assert.equal(state.goeticBossQueue.length, 71);
+    assert.ok(!state.goeticBossQueue.includes("paimon"));
   `);
 });

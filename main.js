@@ -1941,11 +1941,11 @@ const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [s
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
 /* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
-   and its BOSS never comes in that run. Your Shadow (the sinner from the story) comes in its place: it plays
+   and its BOSS never comes in that run. YOU (the sinner from the story, drawn red like the BOSSES) comes in its place: it plays
    like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
 const SHADOW_BOSS = {
-  name: "Your Shadow",
-  image: "assets/ui/intro/intro-sinner.webp",
+  name: "YOU",
+  image: "assets/bots/you/you-boss.webp",
   memoryRounds: 10
 };
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
@@ -1986,7 +1986,7 @@ const BOSS_PASSIVES = {
   lifeSteal: {
     name: "Lust"
   },
-  // only Your Shadow has it (see SHADOW_BOSS); it never rolls at random
+  // only YOU has it (see SHADOW_BOSS); it never rolls at random
   guilt: {
     name: "Guilt"
   }
@@ -7463,6 +7463,8 @@ function skipToFirstGoeticBoss() {
   state.pendingActive = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  // testing: the bound demon's place comes first, so YOU shows up at once
+  if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
   state.goeticBossKills = 0;
   resetBossKillInterval();
   state.finalBossPhase = false;
@@ -7527,7 +7529,7 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  // the demon bound for this run never comes: Your Shadow takes its place (and its place in the 72)
+  // the demon bound for this run never comes: YOU takes its place (and its place in the 72)
   const shadowOf = isEndlessBoss && bossSpec?.goeticKey && bossSpec.goeticKey === state.boundDemon ? bossSpec.goeticKey : null;
   const goeticSpec = isEndlessBoss && !shadowOf ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
@@ -8721,7 +8723,7 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
-// Your Shadow plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// YOU plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
 // missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
 function planShadowGuess(bot) {
   const best = planBossGuess(bot);
@@ -9863,7 +9865,7 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
-  // Your Shadow's Guilt (alive when the round was played): double TARGET damage
+  // YOU's Guilt (alive when the round was played): double TARGET damage
   const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
   if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
@@ -17136,6 +17138,8 @@ function defaultCollectionProgress() {
     slain: [],
     // the demon bound for the next run (a key from slain), or null
     boundDemon: null,
+    // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
+    devAllDemons: false,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
     flags: {},
@@ -17154,7 +17158,8 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
-      if (typeof saved.boundDemon === "string" && progress.slain.includes(saved.boundDemon)) progress.boundDemon = saved.boundDemon;
+      progress.devAllDemons = saved.devAllDemons === true;
+      if (typeof saved.boundDemon === "string" && GOETIC_BOSS_BY_KEY[saved.boundDemon]) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       if (saved.seals && typeof saved.seals === "object") {
         Object.entries(saved.seals).forEach(([id, record]) => {
@@ -17490,7 +17495,15 @@ function sealRecordsHtml(id) {
 let collectionTab = "seals";
 
 function isDemonSlain(key) {
-  return loadCollectionProgress().slain.includes(key);
+  const progress = loadCollectionProgress();
+  return Boolean(GOETIC_BOSS_BY_KEY[key]) && (progress.devAllDemons || progress.slain.includes(key));
+}
+
+// DEV (testing): every demon counts as defeated, so any of them can be bound; off again shows the real progress
+function toggleDevAllDemons() {
+  const progress = loadCollectionProgress();
+  progress.devAllDemons = !progress.devAllDemons;
+  saveCollectionProgress();
 }
 
 function collectionSlayDemon(key) {
@@ -17502,7 +17515,7 @@ function collectionSlayDemon(key) {
 }
 
 /* binding: one defeated demon can be bound. A run takes the one bound when it starts (state.boundDemon)
-   and keeps it to the end: its SEAL is free in Devil's Offerings and Your Shadow comes instead of it. */
+   and keeps it to the end: its SEAL is free in Devil's Offerings and YOU comes instead of it. */
 function collectionBoundDemon() {
   const key = loadCollectionProgress().boundDemon;
   return key && isDemonSlain(key) ? key : null;
@@ -17840,6 +17853,7 @@ function renderCollectionScreen(from) {
         <div class="collection-legend" aria-hidden="true">
           <span class="legend slain">defeated</span>
           <span class="legend unslain">not defeated</span>
+          <button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
       </div>
@@ -17906,6 +17920,22 @@ function bindCollectionEvents() {
     bindOn(button, "click", (event) => {
       event.stopPropagation();
       applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
+    });
+  });
+  document.querySelectorAll("[data-collection-dev-demons]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      toggleDevAllDemons();
+      const screen = button.closest(".collection-screen");
+      const body = screen?.querySelector('[data-collection-panel="goetia"] .collection-body');
+      if (body) body.innerHTML = collectionDemonsHtml();
+      const count = screen?.querySelector('[data-collection-for="goetia"] strong');
+      if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length);
+      button.classList.toggle("active", loadCollectionProgress().devAllDemons);
+      button.textContent = loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all";
+      hideCollectionInfo(screen);
+      bindCollectionEvents();
+      refreshCollectionBinding(screen);
     });
   });
   document.querySelectorAll("[data-collection-tab]").forEach((button) => {

@@ -243,6 +243,8 @@ function defaultCollectionProgress() {
     slain: [],
     // the demon bound for the next run (a key from slain), or null
     boundDemon: null,
+    // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
+    devAllDemons: false,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
     flags: {},
@@ -261,7 +263,8 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
-      if (typeof saved.boundDemon === "string" && progress.slain.includes(saved.boundDemon)) progress.boundDemon = saved.boundDemon;
+      progress.devAllDemons = saved.devAllDemons === true;
+      if (typeof saved.boundDemon === "string" && GOETIC_BOSS_BY_KEY[saved.boundDemon]) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       if (saved.seals && typeof saved.seals === "object") {
         Object.entries(saved.seals).forEach(([id, record]) => {
@@ -597,7 +600,15 @@ function sealRecordsHtml(id) {
 let collectionTab = "seals";
 
 function isDemonSlain(key) {
-  return loadCollectionProgress().slain.includes(key);
+  const progress = loadCollectionProgress();
+  return Boolean(GOETIC_BOSS_BY_KEY[key]) && (progress.devAllDemons || progress.slain.includes(key));
+}
+
+// DEV (testing): every demon counts as defeated, so any of them can be bound; off again shows the real progress
+function toggleDevAllDemons() {
+  const progress = loadCollectionProgress();
+  progress.devAllDemons = !progress.devAllDemons;
+  saveCollectionProgress();
 }
 
 function collectionSlayDemon(key) {
@@ -609,7 +620,7 @@ function collectionSlayDemon(key) {
 }
 
 /* binding: one defeated demon can be bound. A run takes the one bound when it starts (state.boundDemon)
-   and keeps it to the end: its SEAL is free in Devil's Offerings and Your Shadow comes instead of it. */
+   and keeps it to the end: its SEAL is free in Devil's Offerings and YOU comes instead of it. */
 function collectionBoundDemon() {
   const key = loadCollectionProgress().boundDemon;
   return key && isDemonSlain(key) ? key : null;
@@ -947,6 +958,7 @@ function renderCollectionScreen(from) {
         <div class="collection-legend" aria-hidden="true">
           <span class="legend slain">defeated</span>
           <span class="legend unslain">not defeated</span>
+          <button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
       </div>
@@ -1013,6 +1025,22 @@ function bindCollectionEvents() {
     bindOn(button, "click", (event) => {
       event.stopPropagation();
       applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
+    });
+  });
+  document.querySelectorAll("[data-collection-dev-demons]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      toggleDevAllDemons();
+      const screen = button.closest(".collection-screen");
+      const body = screen?.querySelector('[data-collection-panel="goetia"] .collection-body');
+      if (body) body.innerHTML = collectionDemonsHtml();
+      const count = screen?.querySelector('[data-collection-for="goetia"] strong');
+      if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length);
+      button.classList.toggle("active", loadCollectionProgress().devAllDemons);
+      button.textContent = loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all";
+      hideCollectionInfo(screen);
+      bindCollectionEvents();
+      refreshCollectionBinding(screen);
     });
   });
   document.querySelectorAll("[data-collection-tab]").forEach((button) => {

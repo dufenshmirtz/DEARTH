@@ -1731,11 +1731,11 @@ const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [s
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
 /* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
-   and its BOSS never comes in that run. Your Shadow (the sinner from the story) comes in its place: it plays
+   and its BOSS never comes in that run. YOU (the sinner from the story, drawn red like the BOSSES) comes in its place: it plays
    like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
 const SHADOW_BOSS = {
-  name: "Your Shadow",
-  image: "assets/ui/intro/intro-sinner.webp",
+  name: "YOU",
+  image: "assets/bots/you/you-boss.webp",
   memoryRounds: 10
 };
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
@@ -1776,7 +1776,7 @@ const BOSS_PASSIVES = {
   lifeSteal: {
     name: "Lust"
   },
-  // only Your Shadow has it (see SHADOW_BOSS); it never rolls at random
+  // only YOU has it (see SHADOW_BOSS); it never rolls at random
   guilt: {
     name: "Guilt"
   }
