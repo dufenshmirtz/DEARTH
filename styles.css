@@ -11651,22 +11651,12 @@ body.shift-tooltip-more .collection-info-elite {
 }
 
 /* ---------- Collection: no browser focus ring ----------
-   After any key press (Shift for the records, for example) the browser draws its own white ring around
-   the clicked button. The game never uses outlines: a focused button looks like a hovered one. */
+   After any key press (Shift for the records, for example) the browser marks the last clicked button as
+   keyboard-focused and draws its own white ring. The game never uses outlines, and a focused SEAL or demon
+   gets no look of its own either: only hover and the pinned (clicked) one are highlighted. */
 .collection-screen button:focus,
 .collection-screen button:focus-visible {
   outline: none !important;
-}
-
-.collection-screen .collection-seal:focus-visible,
-.collection-screen .collection-demon:focus-visible {
-  transform: scale(1.08) !important;
-}
-
-.collection-screen .collection-filter:focus-visible:not(.active),
-.collection-screen .collection-tab:focus-visible:not(.active),
-.collection-screen .collection-back:focus-visible {
-  color: #dc2a2f !important;
 }
 
 /* ---------- Collection: SEAL records ----------
