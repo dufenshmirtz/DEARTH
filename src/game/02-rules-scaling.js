@@ -808,11 +808,28 @@ function ascendingCritDamageBonus() {
   return passiveStack("p91") ? eliteLevels("p91") * 5 : 0;
 }
 
+function romanNumeral(value) {
+  const parts = [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let left = Math.max(0, Math.floor(value));
+  return parts.reduce((text, [size, mark]) => {
+    while (left >= size) {
+      text += mark;
+      left -= size;
+    }
+    return text;
+  }, "");
+}
+
+// ELITE levels are written in Roman numerals: "ELITE III Seal of Bael"
+function eliteLevelText(level) {
+  return `ELITE ${romanNumeral(level)}`;
+}
+
 function passiveDisplayName(item) {
   if (isSelfStackingSeal(item)) return item.name;
   const stack = item.stack || 1;
   if (stack <= 1) return item.name;
-  return stack === 2 ? `ELITE ${item.name}` : `ELITE +${stack - 1} ${item.name}`;
+  return `${eliteLevelText(stack - 1)} ${item.name}`;
 }
 
 function simpleStackCount(idOrItem) {

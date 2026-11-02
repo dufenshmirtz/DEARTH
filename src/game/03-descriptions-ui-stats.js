@@ -1224,6 +1224,7 @@ function sealStatsFor(id) {
     memory: 0,
     bounty: 0,
     bountyRemoved: 0,
+    personality: 0,
     triggers: 0
   };
   state.sealStats[id] = stats;
@@ -1239,6 +1240,7 @@ function recordSealStat(id, kind, amount) {
   if (!stats) return;
   stats[kind] = (stats[kind] || 0) + value;
   if (kind === "damage") recordRunSealDamage(id, value);
+  collectionNoteSealStat(id, kind, value, stats[kind]);
 }
 
 function recordSealTrigger(id) {
@@ -1247,6 +1249,7 @@ function recordSealTrigger(id) {
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats.triggers = (stats.triggers || 0) + 1;
+  collectionNoteSealTrigger(id);
 }
 
 function recordSealStatFromSource(kind, amount, source) {
@@ -1264,6 +1267,7 @@ function sealContributionParts(stats, { includeTriggers = false } = {}) {
   if (stats.memory > 0) parts.push(`${stats.memory} MEMORY added`);
   if (stats.bounty > 0) parts.push(`${stats.bounty} BOUNTY added`);
   if (stats.bountyRemoved > 0) parts.push(`${stats.bountyRemoved} BOUNTY removed`);
+  if (stats.personality > 0) parts.push(`${stats.personality} personalit${stats.personality === 1 ? "y" : "ies"} changed`);
   if (includeTriggers && stats.triggers > 0) parts.push(`${stats.triggers} trigger${stats.triggers === 1 ? "" : "s"}`);
   return parts;
 }

@@ -336,7 +336,7 @@ function renderRecordsMenu() {
     renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
     renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
     renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
-    renderRecordRow("Highest Elite Level Bought", recordValueText(records.highestEliteLevel, { withName: true, prefix: "ELITE " })),
+    renderRecordRow("Highest Elite Level Bought", records.highestEliteLevel?.value > 0 ? `${eliteLevelText(records.highestEliteLevel.value)}${records.highestEliteLevel.name ? ` - ${records.highestEliteLevel.name}` : ""}` : "None"),
     renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
     renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
   ].join("");
@@ -2399,7 +2399,7 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const format = (number) => (record.key === "highestEliteLevel" ? `ELITE ${number}` : formatNumber(number));
+      const format = (number) => (record.key === "highestEliteLevel" ? (number > 0 ? eliteLevelText(number) : "None") : formatNumber(number));
       const value = format(record.value);
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
       return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;

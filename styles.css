@@ -11650,6 +11650,113 @@ body.shift-tooltip-more .collection-info-elite {
   display: block;
 }
 
+/* ---------- Collection: SEAL records ----------
+   A SEAL you have beaten the game with is deep red, the red of a SEAL that triggers, and stays so on hover.
+   Its tooltip shows a small mark next to the status; Shift (or More) shows the records. */
+.collection-screen .collection-seal.beaten .collection-sigil,
+.collection-screen .collection-seal.beaten:hover .collection-sigil,
+.collection-screen .collection-seal.beaten.selected .collection-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+.collection-info-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.collection-beaten-mark {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  filter: drop-shadow(0 0 3px rgba(220, 42, 47, 0.6));
+}
+
+/* body * paints every element white: the mark's lines (currentColor) need their own red */
+.collection-beaten-mark,
+.collection-beaten-mark * {
+  color: #dc2a2f !important;
+}
+
+.collection-info-records {
+  display: none;
+  margin-top: 9px;
+  padding-top: 9px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 6px no-repeat;
+}
+
+body.shift-tooltip-more .collection-info-records {
+  display: block;
+}
+
+.collection-record-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.collection-record-row > span:first-child,
+.collection-record-table th {
+  font-family: var(--font-book) !important;
+  font-size: 13.5px !important;
+  font-weight: 400;
+  color: #d9d3c7 !important;
+  text-align: left;
+}
+
+.collection-record-lead {
+  flex: 1 1 auto;
+  min-width: 10px;
+  border-bottom: 1px dotted rgba(233, 227, 214, 0.22);
+  transform: translateY(-3px);
+}
+
+.collection-record-value,
+.collection-record-table td {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  color: var(--bone) !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.collection-record-value.zero {
+  color: #5d5850 !important;
+}
+
+/* Roman numerals read better in the book face (Razor Keen's I looks like a 1) */
+.collection-record-value.roman {
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.04em;
+}
+
+.collection-record-table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.collection-record-table thead th {
+  font-family: var(--font-book) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+  text-align: right;
+  padding: 0 0 2px 8px;
+}
+
+.collection-record-table tbody th {
+  padding: 1px 4px 1px 0;
+  line-height: 1.2;
+}
+
+.collection-record-table td {
+  text-align: right;
+  padding: 1px 0 1px 8px;
+}
+
 /* ---------- iPhone app only (body.native-ios): keep the table clear of the Dynamic Island and the home bar ---------- */
 body.native-ios #app.app {
   padding: max(3px, env(safe-area-inset-top)) max(3px, env(safe-area-inset-right))

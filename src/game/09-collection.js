@@ -243,7 +243,9 @@ function defaultCollectionProgress() {
     slain: [],
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
-    flags: {}
+    flags: {},
+    // SEAL records, by SEAL id (see normalizeSealRecord)
+    seals: {}
   };
 }
 
@@ -258,6 +260,11 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
+      if (saved.seals && typeof saved.seals === "object") {
+        Object.entries(saved.seals).forEach(([id, record]) => {
+          if (typeof id === "string" && record && typeof record === "object") progress.seals[id] = normalizeSealRecord(record);
+        });
+      }
       for (const group of ["stats", "best"]) {
         const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
         Object.keys(progress[group]).forEach((key) => {
@@ -361,7 +368,7 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0 };
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
   else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
   return state.collectionRun;
@@ -411,6 +418,7 @@ function collectionNoteElimination(bot) {
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
       run.beaten = true;
       collectionBump("gamesBeaten");
+      collectionNoteSealWins();
       if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
     }
   }
@@ -455,6 +463,130 @@ function collectionDiscover(id) {
   saveCollectionProgress();
 }
 
+/* ---- SEAL records: lifetime numbers for each SEAL, shown in the Collection while Shift is held ----
+     wins      games beaten (the 8 unique BOSSES) with the SEAL in a slot at the moment of the win;
+               a SEAL you have won with turns deep red in the Collection, like a SEAL that triggers
+     elite     the highest ELITE level it reached (not kept for SEALS that cannot be upgraded)
+     triggers  every activation, in all runs
+     total / run / round   for every amount the SEAL produces (the state.sealStats kinds below):
+               the lifetime sum, the most in one run, the most in one round
+   Only real arcade runs count (collectionCounts). */
+const SEAL_RECORD_KINDS = [
+  { key: "damage", label: "Damage dealt" },
+  { key: "healing", label: "Healing done" },
+  { key: "saved", label: "Damage negated" },
+  { key: "credits", label: "SIN gained" },
+  { key: "memory", label: "MEMORY added" },
+  { key: "bounty", label: "BOUNTY added" },
+  { key: "bountyRemoved", label: "BOUNTY removed" },
+  { key: "personality", label: "Personalities changed" }
+];
+
+function normalizeSealRecord(source = {}) {
+  const count = (value) => Math.max(0, Math.floor(Number(value) || 0));
+  const amounts = (group) =>
+    Object.fromEntries(
+      SEAL_RECORD_KINDS.map(({ key }) => [key, count(group && typeof group === "object" ? group[key] : 0)]).filter(([, value]) => value > 0)
+    );
+  return {
+    wins: count(source.wins),
+    elite: count(source.elite),
+    triggers: count(source.triggers),
+    total: amounts(source.total),
+    run: amounts(source.run),
+    round: amounts(source.round)
+  };
+}
+
+function sealRecord(id, create = false) {
+  const seals = loadCollectionProgress().seals;
+  if (!seals[id] && create) seals[id] = normalizeSealRecord();
+  return seals[id] || null;
+}
+
+function sealRecordShowsElite(id) {
+  return !NON_UPGRADABLE_SEAL_IDS.has(id) && !SELF_STACKING_SEAL_IDS.has(id);
+}
+
+function isSealBeaten(id) {
+  return (sealRecord(id)?.wins || 0) > 0;
+}
+
+// recordSealStat (03) calls this with the amount just added and the SEAL's total for this run
+function collectionNoteSealStat(id, kind, value, runTotal) {
+  if (!collectionCounts() || !ITEMS[id] || !(value > 0) || !SEAL_RECORD_KINDS.some((entry) => entry.key === kind)) return;
+  const record = sealRecord(id, true);
+  record.total[kind] = (record.total[kind] || 0) + value;
+  record.run[kind] = Math.max(record.run[kind] || 0, runTotal || 0);
+  const run = collectionRun();
+  if (!run.sealRound || run.sealRound.round !== state.round) run.sealRound = { round: state.round, values: {} };
+  const key = `${id}:${kind}`;
+  run.sealRound.values[key] = (run.sealRound.values[key] || 0) + value;
+  record.round[kind] = Math.max(record.round[kind] || 0, run.sealRound.values[key]);
+  collectionDirty = true;
+}
+
+function collectionNoteSealTrigger(id) {
+  if (!collectionCounts() || !ITEMS[id]) return;
+  sealRecord(id, true).triggers += 1;
+  collectionDirty = true;
+}
+
+// the game was just beaten: every SEAL in a slot right now gets the win
+function collectionNoteSealWins() {
+  const ids = [...new Set((state.player.passives || []).map((item) => item?.id).filter((id) => id && ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id)))];
+  ids.forEach((id) => {
+    sealRecord(id, true).wins += 1;
+    collectionDiscover(id);
+  });
+  if (ids.length) collectionDirty = true;
+}
+
+function collectionNoteSealElite() {
+  (state.player.passives || []).forEach((item) => {
+    if (!item || !ITEMS[item.id] || !sealRecordShowsElite(item.id)) return;
+    const level = Math.max(0, (item.stack || 1) - 1);
+    if (level <= 0 || level <= (sealRecord(item.id)?.elite || 0)) return;
+    sealRecord(item.id, true).elite = level;
+    collectionDirty = true;
+  });
+}
+
+// the beaten mark: one small hand-drawn symbol next to the status, no word
+const COLLECTION_BEATEN_MARKS = {
+  pentagram: `<circle cx="12" cy="12" r="10.4"/><path d="M12 21.3 6.53 4.48 20.85 14.87H3.16L17.47 4.48Z"/>`,
+  skull: `<path d="M12 2.6C6.9 2.6 4.1 6 4.1 10.2c0 2.5 1.1 4.2 2.6 5.2V18h2.2v2.4h6.2V18h2.2v-2.6c1.5-1 2.6-2.7 2.6-5.2 0-4.2-2.8-7.6-7.9-7.6Z"/><circle cx="8.9" cy="10.9" r="1.9" fill="currentColor"/><circle cx="15.1" cy="10.9" r="1.9" fill="currentColor"/><path d="M12 13.7 10.9 15.7h2.2ZM10.9 18v2.4M13.1 18v2.4"/>`,
+  trophy: `<path d="M7 3.4h10v4.6c0 3-2.2 5.5-5 5.5S7 11 7 8Z"/><path d="M7 5.4H4.4c0 2.6 1.3 4.1 3.3 4.4M17 5.4h2.6c0 2.6-1.3 4.1-3.3 4.4M12 13.5v3.4M9.4 16.9h5.2v3.6H9.4ZM8 20.5h8"/>`
+};
+const COLLECTION_BEATEN_MARK = "pentagram";
+
+function collectionBeatenMarkHtml(mark = COLLECTION_BEATEN_MARK) {
+  const shape = COLLECTION_BEATEN_MARKS[mark] || COLLECTION_BEATEN_MARKS.pentagram;
+  return `<svg class="collection-beaten-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Game beaten with this SEAL"><title>Game beaten with this SEAL</title>${shape}</svg>`;
+}
+
+// the records block: wins / ELITE / triggers, then a small table with total, best run and best round
+function sealRecordsHtml(id) {
+  const record = sealRecord(id) || normalizeSealRecord();
+  const row = (label, value, shown = value, extraClass = "") =>
+    `<div class="collection-record-row"><span>${escapeHtml(label)}</span><span class="collection-record-lead"></span><span class="collection-record-value${value > 0 ? "" : " zero"}${extraClass}">${escapeHtml(shown)}</span></div>`;
+  const rows = [
+    row("Games beaten", record.wins, formatNumber(record.wins)),
+    sealRecordShowsElite(id) ? row("Highest ELITE", record.elite, record.elite > 0 ? romanNumeral(record.elite) : "-", " roman") : "",
+    row("Times triggered", record.triggers, formatNumber(record.triggers))
+  ].join("");
+  const kinds = SEAL_RECORD_KINDS.filter(({ key }) => (record.total[key] || 0) > 0);
+  const table = kinds.length
+    ? `<table class="collection-record-table">
+        <thead><tr><th></th><th>Total</th><th>Best run</th><th>Best round</th></tr></thead>
+        <tbody>${kinds
+          .map(({ key, label }) => `<tr><th>${escapeHtml(label)}</th><td>${formatNumber(record.total[key] || 0)}</td><td>${formatNumber(record.run[key] || 0)}</td><td>${formatNumber(record.round[key] || 0)}</td></tr>`)
+          .join("")}</tbody>
+      </table>`
+    : "";
+  return `<div class="collection-info-records">${rows}${table}</div>`;
+}
+
 /* ---- the Ars Goetia: the 72 Goetic BOSSES ----
    A demon is discovered the first time its BOSS is slain in a run (like a SEAL the first time it triggers).
    The Collection lists them on its second tab in the order of the book; the ones not slain yet stay dark
@@ -471,18 +603,6 @@ function collectionSlayDemon(key) {
   if (progress.slain.includes(key)) return;
   progress.slain.push(key);
   saveCollectionProgress();
-}
-
-function romanNumeral(value) {
-  const parts = [[50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
-  let left = Math.max(0, Math.floor(value));
-  return parts.reduce((text, [size, mark]) => {
-    while (left >= size) {
-      text += mark;
-      left -= size;
-    }
-    return text;
-  }, "");
 }
 
 // small copies of the BOSS art (the full images are 1254px)
@@ -550,6 +670,7 @@ function collectionAfterRender() {
   collectionRaise("sinHeld", state.player.credits);
   collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
   collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
+  collectionNoteSealElite();
   const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
   if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
   // once per round, when it is resolved
@@ -639,17 +760,20 @@ function collectionInfoHtml(id) {
       ${progressText}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
-  // hold Shift for the ELITE rule, like an equipped SEAL's tooltip
+  // hold Shift for the ELITE rule and the SEAL's records, like an equipped SEAL's tooltip
   const elite = splitEliteDescription(item.description || "").elite;
+  const records = status === "discovered" ? sealRecordsHtml(id) : "";
+  const more = elite || records;
   return `
     <div class="collection-info-top">
-      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
-      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
+      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}${isSealBeaten(id) ? collectionBeatenMarkHtml() : ""}</div>
+      ${more ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
     </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
     ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
+    ${records}
     ${note}`;
 }
 
@@ -721,8 +845,9 @@ function renderCollectionScreen(from) {
               .map((id) => {
                 const status = collectionSealState(id);
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
+                const beaten = status !== "locked" && isSealBeaten(id) ? " beaten" : "";
                 return `
-                  <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;

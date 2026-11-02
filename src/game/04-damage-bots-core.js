@@ -798,6 +798,9 @@ function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = t
     bot.noise = archetype.noise;
   }
   if (markEntry) markPassiveEntryTriggered(markEntry);
+  // a SEAL that changes a personality: counted in its stats (ARTIFACT sources are not SEALS and are skipped)
+  const sealId = markEntry ? markEntry.sourceId || markEntry.id : sealIdFromStatSource(source);
+  if (sealId) recordSealStat(sealId, "personality", 1);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
   return true;

@@ -553,6 +553,73 @@ test("slaying a Goetic BOSS discovers its demon in the Ars Goetia, once, and onl
   `);
 });
 
+test("SEAL records: a win goes to every SEAL in a slot, plus highest ELITE, triggers and amounts per run and round", () => {
+  game()(`
+    fixture([["p1", 4], ["p12"], ["p131"], ["p99"]], [10, 20, 30, 40, 50]);
+    assert.equal(collectionCounts(), true);
+    collectionRun().uniqueKills = [...UNIQUE_BOSS_KEYS];
+    collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
+    assert.equal(sealRecord("p1").wins, 1);
+    assert.equal(sealRecord("p131").wins, 1);
+    assert.equal(isSealBeaten("p12"), true);
+    assert.equal(isSealBeaten("p2"), false);
+    assert.equal(isSealDiscovered("p12"), true);
+    // more BOSS kills in the same run do not count the win again
+    collectionNoteElimination({ isBoss: true, uniqueKey: "zilon", name: "Zilon" });
+    assert.equal(sealRecord("p1").wins, 1);
+    // highest ELITE, kept only for SEALS that can be upgraded
+    collectionNoteSealElite();
+    assert.equal(sealRecord("p1").elite, 3);
+    assert.equal(sealRecord("p99").elite, 0);
+    // amounts: lifetime total, most in one run, most in one round
+    state.sealStats = {};
+    state.round = 3;
+    recordSealStat("p1", "damage", 40);
+    recordSealStat("p1", "damage", 25);
+    state.round = 4;
+    recordSealStat("p1", "damage", 30);
+    let record = sealRecord("p1");
+    assert.deepEqual([record.total.damage, record.run.damage, record.round.damage], [95, 95, 65]);
+    // next run: the totals keep adding, the bests stay until beaten
+    state.sealStats = {};
+    resetCollectionRun();
+    state.round = 1;
+    recordSealStat("p1", "damage", 50);
+    assert.deepEqual([record.total.damage, record.run.damage, record.round.damage], [145, 95, 65]);
+    recordSealTrigger("p1");
+    recordSealTrigger("p1");
+    assert.equal(record.triggers, 2);
+    // PvP does not count
+    state.mode = "pvp";
+    recordSealStat("p1", "damage", 999);
+    recordSealTrigger("p1");
+    assert.equal(record.total.damage, 145);
+    assert.equal(record.triggers, 2);
+    state.mode = "arcade";
+    // a personality changed by a SEAL is counted for that SEAL
+    const bot = state.bots[0];
+    assert.equal(setBotPersonality(bot, bot.type === "Stubborn" ? "Analyst" : "Stubborn", ITEMS.p14.name, { triggerAlterationDamage: false }), true);
+    assert.equal(sealRecord("p14").total.personality, 1);
+    // tooltip: the mark next to the status, the records with the ELITE in Roman numerals, the table
+    const html = collectionInfoHtml("p1");
+    assert.ok(html.includes("collection-beaten-mark"));
+    assert.ok(html.includes(">III<"));
+    assert.ok(html.includes("collection-record-table"));
+    assert.ok(!collectionInfoHtml("p99").includes("Highest ELITE"));
+    // what is saved reads back the same
+    assert.deepEqual(normalizeSealRecord(JSON.parse(JSON.stringify(record))), record);
+  `);
+});
+
+test("ELITE levels are written in Roman numerals in SEAL names", () => {
+  game()(`
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 1 }), ITEMS.p16.name);
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 2 }), "ELITE I " + ITEMS.p16.name);
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 5 }), "ELITE IV " + ITEMS.p16.name);
+    assert.equal(romanNumeral(99), "XCIX");
+  `);
+});
+
 test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
