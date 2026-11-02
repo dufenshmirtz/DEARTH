@@ -105,12 +105,16 @@ function buyShopItem(slotIndex) {
       return;
     }
     spendCredits(cost);
+    // a copy taken free (the bound demon's SEAL) sells for nothing
+    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;
       recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
+      if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
@@ -188,7 +192,8 @@ function rerollShopClick() {
 }
 
 function passiveSellValue(item) {
-  return Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  const paidStacks = Math.max(0, (item.stack || 1) - (item.freeStacks || 0));
+  return Math.floor((item.price * paidStacks) / 2) + (item.saleBonus || 0);
 }
 
 // the Trinity SEALS share a slot: selling it sells every one of them

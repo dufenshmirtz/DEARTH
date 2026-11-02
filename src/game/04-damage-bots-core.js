@@ -920,7 +920,7 @@ function uniqueBossSpecFromKey(key) {
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
-  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
+  if (bot.isBoss && (bot.goeticKey || bot.shadowOf) && owned.size >= 1) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);

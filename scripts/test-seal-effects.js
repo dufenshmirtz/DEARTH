@@ -1449,7 +1449,7 @@ test("BOSS abilities carry sin names in tooltips and the log", () => {
     const names = Object.fromEntries(Object.entries(BOSS_PASSIVES).map(([key, spec]) => [key, spec.name]));
     assert.equal(JSON.stringify(names), JSON.stringify({
       sinStealing: "Greed", soullessness: "Envy", soulStealing: "Despair", deathRoll: "Wrath", rerollToll: "Vainglory",
-      offeringToll: "Gluttony", avenging: "Pride", corruption: "Deceit", punishment: "Sloth", lifeSteal: "Lust"
+      offeringToll: "Gluttony", avenging: "Pride", corruption: "Deceit", punishment: "Sloth", lifeSteal: "Lust", guilt: "Guilt"
     }));
     fixture([], [10, 20, 30, 40, 50]);
     state.bots[0].isBoss = true;
@@ -1604,5 +1604,147 @@ test("Seal of Sachiel multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 3
     Math.random = () => 0.1;
     applyDevSealEntries(["p93"]);
     assert.deepEqual(state.bots.map(bot => bot.reward), [15, 5, 2, 0, 11]);
+  `);
+});
+
+// ---- Ars Goetia binding: the bound demon's SEAL is free, Your Shadow comes in its place ----
+const BINDING_STUBS = `
+  globalThis.render = () => {};
+  globalThis.playGameSfx = () => {};
+  globalThis.playSfx = () => {};
+  globalThis.playSealPurchaseSfx = () => {};
+  globalThis.quietMomentSfx = () => {};
+  globalThis.ghostSealOut = () => {};
+  globalThis.resumeSoundtrack = () => {};
+  globalThis.playSoundtrack = () => {};
+`;
+
+test("only a defeated demon can be bound, and a run keeps the demon bound when it started", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    loadCollectionProgress().slain.push("paimon", "bael");
+    toggleBoundDemon("vassago");
+    assert.equal(collectionBoundDemon(), null);
+    toggleBoundDemon("paimon");
+    assert.equal(collectionBoundDemon(), "paimon");
+    startGame();
+    assert.equal(state.boundDemon, "paimon");
+    toggleBoundDemon("bael");
+    assert.equal(collectionBoundDemon(), "bael");
+    assert.equal(state.boundDemon, "paimon");
+    toggleBoundDemon("bael");
+    assert.equal(collectionBoundDemon(), null);
+    startGame();
+    assert.equal(state.boundDemon, null);
+  `);
+});
+
+test("the bound demon's SEAL is free in the shop, ELITE included, and a free copy sells for nothing", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30, 40, 50]);
+    state.stage = "shop";
+    state.boundDemon = "paimon";
+    const id = GOETIC_BOSS_BY_KEY.paimon.passiveId;
+    const other = GOETIC_BOSS_BY_KEY.bael.passiveId;
+    assert.equal(shopPrice(ITEMS[id]), 0);
+    assert.ok(shopPrice(ITEMS[other]) > 0);
+    state.player.credits = 0;
+    state.shop = [{ item: itemCopy(id), sold: false }, { item: itemCopy(id), sold: false }];
+    buyShopItem(0);
+    const entry = passiveEntry(id);
+    assert.ok(entry);
+    assert.equal(state.player.credits, 0);
+    assert.equal(passiveSellValue(entry), 0);
+    buyShopItem(1);
+    assert.equal(entry.stack, 2);
+    assert.equal(passiveSellValue(entry), 0);
+    // a paid copy still sells for half its price
+    state.boundDemon = null;
+    entry.stack = 3;
+    assert.equal(passiveSellValue(entry), Math.floor(ITEMS[id].price / 2));
+    state.mode = "pvp";
+    state.boundDemon = "paimon";
+    assert.ok(shopPrice(ITEMS[id]) > 0);
+  `);
+});
+
+test("Your Shadow replaces the bound demon, counts toward the 72 and doubles your TARGET damage", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [50, 50, 50, 50, 50]);
+    state.boundDemon = "paimon";
+    const shadow = createBot({ boss: true, bossSpec: { goeticKey: "paimon" } });
+    assert.equal(shadow.name, SHADOW_BOSS.name);
+    assert.equal(shadow.image, SHADOW_BOSS.image);
+    assert.equal(shadow.goeticKey, null);
+    assert.equal(shadow.shadowOf, "paimon");
+    assert.deepEqual([...shadow.passiveKeys], ["guilt"]);
+    assert.ok(!grantRandomBossPassive(shadow));
+    const demon = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    assert.equal(demon.goeticKey, "bael");
+    assert.ok(!demon.passiveKeys.includes("guilt"));
+    // Guilt never rolls on another BOSS
+    assert.ok(!BOSS_PASSIVE_KEYS.includes("guilt"));
+
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 70;
+    applyPenalties();
+    const plain = state.roundState.playerTargetDifferenceDamage;
+    assert.ok(plain > 0);
+
+    fixture([], [50, 50, 50, 50, 50]);
+    state.bots[0] = shadow;
+    shadow.hp = shadow.maxHp = 1000;
+    state.roundState.botEffectiveGuesses.set(shadow.id, 50);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 70;
+    applyPenalties();
+    assert.equal(state.roundState.playerTargetDifferenceDamage, plain * 2);
+
+    const kills = state.goeticBossKills;
+    shadow.hp = 0;
+    resolveEliminatedBots([shadow]);
+    assert.equal(state.goeticBossKills, kills + 1);
+    assert.equal(isDemonSlain("paimon"), false);
+  `);
+});
+
+test("Your Shadow guesses the best BOSS guess, off by one of your misses from your last rounds", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30, 40, 50]);
+    state.boundDemon = "paimon";
+    const shadow = createBot({ boss: true, bossSpec: { goeticKey: "paimon" } });
+    state.bots[0] = shadow;
+    const best = planBossGuess(shadow);
+    state.gameMemory = [];
+    assert.equal(planBotGuess(shadow), best);
+    state.gameMemory = [{ playerGuess: 30, target: 50 }, { playerGuess: 57, target: 50 }];
+    Math.random = () => 0;
+    assert.equal(planBotGuess(shadow), Math.max(0, best - 20));
+    Math.random = () => 0.99;
+    assert.equal(planBotGuess(shadow), Math.min(100, best + 7));
+    // only the last rounds count
+    state.gameMemory = [{ playerGuess: 0, target: 90 }, ...Array.from({ length: SHADOW_BOSS.memoryRounds }, () => ({ playerGuess: 50, target: 50 }))];
+    Math.random = () => 0;
+    assert.equal(planBotGuess(shadow), best);
+  `);
+});
+
+test("a saved run keeps its bound demon, and saves from before binding have none", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30]);
+    state.boundDemon = "paimon";
+    const saved = JSON.parse(JSON.stringify(arcadeRunSaveSnapshot(), encodeArcadeSaveValue), decodeArcadeSaveValue);
+    state.boundDemon = null;
+    Object.assign(state, saved);
+    normalizeLoadedArcadeRun();
+    assert.equal(state.boundDemon, "paimon");
+    state.boundDemon = "nobody";
+    normalizeLoadedArcadeRun();
+    assert.equal(state.boundDemon, null);
   `);
 });

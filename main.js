@@ -1940,6 +1940,14 @@ const GOETIC_BOSS_SPECS = [
 const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
+/* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
+   and its BOSS never comes in that run. Your Shadow (the sinner from the story) comes in its place: it plays
+   like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
+const SHADOW_BOSS = {
+  name: "Your Shadow",
+  image: "assets/ui/intro/intro-sinner.webp",
+  memoryRounds: 10
+};
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
@@ -1977,9 +1985,14 @@ const BOSS_PASSIVES = {
   },
   lifeSteal: {
     name: "Lust"
+  },
+  // only Your Shadow has it (see SHADOW_BOSS); it never rolls at random
+  guilt: {
+    name: "Guilt"
   }
 };
-const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const SHADOW_BOSS_PASSIVE_KEY = "guilt";
+const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
@@ -2277,6 +2290,8 @@ const state = {
   uniqueBossQueue: [],
   goeticBossQueue: [],
   goeticBossKills: 0,
+  // the demon bound when this run started (Ars Goetia): see SHADOW_BOSS
+  boundDemon: null,
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
   nextBossKillIntervalEndless: false,
@@ -3054,6 +3069,7 @@ function normalizeLoadedArcadeRun() {
     }
   });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
+  if (state.boundDemon && !GOETIC_BOSS_BY_KEY[state.boundDemon]) state.boundDemon = null;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillRound)) state.pendingSelfStackingPentakillRound = 0;
   state.runStats = normalizeRunStats(state.runStats);
@@ -3095,6 +3111,8 @@ function loadArcadeRun(slotId = "") {
       removeCorruptArcadeRunSave(slotId);
       return false;
     }
+    // saves from before the Ars Goetia binding have none
+    state.boundDemon = null;
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
@@ -5389,6 +5407,7 @@ function bossPassiveEffectDescription(key) {
   if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
   if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
   if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  if (key === SHADOW_BOSS_PASSIVE_KEY) return "While this BOSS lives, you take double TARGET damage. It guesses the way you did in your last rounds.";
   return "";
 }
 
@@ -5575,7 +5594,14 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
+// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+function isBoundDemonSeal(id) {
+  const key = state.mode === "arcade" ? state.boundDemon : null;
+  return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
+}
+
 function shopPrice(item) {
+  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
@@ -7245,7 +7271,7 @@ function uniqueBossSpecFromKey(key) {
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
-  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
+  if (bot.isBoss && (bot.goeticKey || bot.shadowOf) && owned.size >= 1) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);
@@ -7414,7 +7440,7 @@ function createFinalBoss(key) {
 }
 
 function activeGoeticBoss() {
-  return state.bots.some((bot) => bot.goeticKey && bot.hp > 0 && !bot.eliminated);
+  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf) && bot.hp > 0 && !bot.eliminated);
 }
 
 function enterFinalBossPhase() {
@@ -7501,7 +7527,9 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  // the demon bound for this run never comes: Your Shadow takes its place (and its place in the 72)
+  const shadowOf = isEndlessBoss && bossSpec?.goeticKey && bossSpec.goeticKey === state.boundDemon ? bossSpec.goeticKey : null;
+  const goeticSpec = isEndlessBoss && !shadowOf ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
   const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
@@ -7509,7 +7537,9 @@ function createBot(options = {}) {
   const passiveKeys = isBoss
     ? uniqueSpec
       ? []
-      : randomBossPassiveKeys(1)
+      : shadowOf
+        ? [SHADOW_BOSS_PASSIVE_KEY]
+        : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -7517,12 +7547,12 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : goeticSpec?.name) || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "BOSS",
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
+    image: uniqueSpec?.image || (shadowOf ? SHADOW_BOSS.image : goeticSpec?.image) || inherited?.image || randomBotImage(),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -7536,6 +7566,7 @@ function createBot(options = {}) {
     pairGroupId: bossSpec?.pairGroupId || null,
     modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
     goeticKey: goeticSpec?.key || null,
+    shadowOf,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
     modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
@@ -7980,6 +8011,8 @@ function startGame(options = {}) {
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
   resetCollectionRun();
+  // what is bound in the Ars Goetia now counts for this whole run, whatever changes later
+  state.boundDemon = boundDemonForNewRun();
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
@@ -8688,8 +8721,20 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
+// Your Shadow plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
+function planShadowGuess(bot) {
+  const best = planBossGuess(bot);
+  const misses = state.gameMemory
+    .slice(-SHADOW_BOSS.memoryRounds)
+    .filter((entry) => Number.isFinite(entry?.playerGuess) && Number.isFinite(entry?.target))
+    .map((entry) => entry.playerGuess - entry.target);
+  if (!misses.length) return best;
+  return clamp(Math.round(best + randomFrom(misses)), 0, 100);
+}
+
 function planBotGuess(bot) {
-  if (bot.isBoss) return planBossGuess(bot);
+  if (bot.isBoss) return bot.shadowOf ? planShadowGuess(bot) : planBossGuess(bot);
   // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
   const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
   if (padmaActive() && bot.type2) {
@@ -9818,6 +9863,9 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
+  // Your Shadow's Guilt (alive when the round was played): double TARGET damage
+  const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
+  if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
   if (playerTargetDiffDamage > 0 && trinitySpiritOutcome() === "shield") {
     playerDamageSources.push({ amount: playerTargetDiffDamage, source: ITEMS.p133.name, kind: "saved" });
@@ -9828,7 +9876,9 @@ function applyPenalties() {
   round.playerTargetDifferenceDamage = playerTargetDiffDamage;
   addPlayerDamage(
     playerTargetDiffDamage,
-    round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference"
+    [round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference", guiltDoubled ? `doubled by ${BOSS_PASSIVES.guilt.name}` : ""]
+      .filter(Boolean)
+      .join(", ")
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -10213,7 +10263,7 @@ function resolveEliminatedBots(eliminated) {
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
-      if (bot.goeticKey) {
+      if (bot.goeticKey || bot.shadowOf) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
@@ -11343,12 +11393,16 @@ function buyShopItem(slotIndex) {
       return;
     }
     spendCredits(cost);
+    // a copy taken free (the bound demon's SEAL) sells for nothing
+    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;
       recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
+      if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
@@ -11426,7 +11480,8 @@ function rerollShopClick() {
 }
 
 function passiveSellValue(item) {
-  return Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  const paidStacks = Math.max(0, (item.stack || 1) - (item.freeStacks || 0));
+  return Math.floor((item.price * paidStacks) / 2) + (item.saleBonus || 0);
 }
 
 // the Trinity SEALS share a slot: selling it sells every one of them
@@ -15021,7 +15076,10 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
+  // the demon bound in the Ars Goetia gives its SEAL away
+  const free = item.type === "passive" && isBoundDemonSeal(item.id) && cost <= 0;
+  const priceText = free ? "free" : `${cost}${SIN_MARK}`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
@@ -15033,10 +15091,10 @@ function renderShopSlot(slot, index) {
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
   const kindLabel =
-    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : "SEAL") : "ARTIFACT";
+    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : free ? "BOUND SEAL" : "SEAL") : "ARTIFACT";
 
   return `
-    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""} ${free ? "bound-offer" : ""}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
@@ -17076,6 +17134,8 @@ function defaultCollectionProgress() {
     discovered: [],
     // the Goetic BOSSES slain at least once (GOETIC_BOSS_SPECS keys): the Ars Goetia tab
     slain: [],
+    // the demon bound for the next run (a key from slain), or null
+    boundDemon: null,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
     flags: {},
@@ -17094,6 +17154,7 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
+      if (typeof saved.boundDemon === "string" && progress.slain.includes(saved.boundDemon)) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       if (saved.seals && typeof saved.seals === "object") {
         Object.entries(saved.seals).forEach(([id, record]) => {
@@ -17440,26 +17501,67 @@ function collectionSlayDemon(key) {
   saveCollectionProgress();
 }
 
+/* binding: one defeated demon can be bound. A run takes the one bound when it starts (state.boundDemon)
+   and keeps it to the end: its SEAL is free in Devil's Offerings and Your Shadow comes instead of it. */
+function collectionBoundDemon() {
+  const key = loadCollectionProgress().boundDemon;
+  return key && isDemonSlain(key) ? key : null;
+}
+
+function boundDemonForNewRun() {
+  return collectionBoundDemon();
+}
+
+function toggleBoundDemon(key) {
+  if (!isDemonSlain(key)) return;
+  const progress = loadCollectionProgress();
+  progress.boundDemon = progress.boundDemon === key ? null : key;
+  saveCollectionProgress();
+}
+
+// the header line and the marks on the grid, updated in place after a bind
+function collectionBoundLine() {
+  const key = collectionBoundDemon();
+  const runKey = state.mode === "arcade" ? state.boundDemon : null;
+  const name = (demonKey) => (demonKey ? GOETIC_BOSS_BY_KEY[demonKey].name : "none");
+  const runNote = state.mode === "arcade" && runKey !== key ? `<span>this run: <strong>${escapeHtml(name(runKey))}</strong></span>` : "";
+  return `<span>bound: <strong>${escapeHtml(name(key))}</strong></span>${runNote}`;
+}
+
+function refreshCollectionBinding(screen) {
+  if (!screen) return;
+  const key = collectionBoundDemon();
+  screen.querySelectorAll("[data-collection-demon]").forEach((button) => {
+    button.classList.toggle("bound", button.dataset.collectionDemon === key);
+  });
+  const line = screen.querySelector(".collection-bound-line");
+  if (line) line.innerHTML = collectionBoundLine();
+  const pinned = screen.querySelector(".collection-demon.selected");
+  if (pinned) showCollectionInfo(pinned, true);
+}
+
 // small copies of the BOSS art (the full images are 1254px)
 function demonThumbPath(spec) {
   return `${GOETIC_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
 }
 
 function collectionDemonsHtml() {
+  const bound = collectionBoundDemon();
   const cells = GOETIC_BOSS_SPECS.map((spec, index) => {
     const slain = isDemonSlain(spec.key);
     const number = romanNumeral(index + 1);
     return `
-      <button class="collection-demon ${slain ? "slain" : "unslain"}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
+      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+        ${slain ? `<span class="collection-demon-bound" aria-hidden="true">Bound</span>` : ""}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>`;
 }
 
-function collectionDemonInfoHtml(key) {
+function collectionDemonInfoHtml(key, pinned = false) {
   const index = GOETIC_BOSS_KEYS.indexOf(key);
   const spec = GOETIC_BOSS_SPECS[index];
   if (!spec) return "";
@@ -17476,7 +17578,26 @@ function collectionDemonInfoHtml(key) {
     <div class="collection-info-status slain">Defeated</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}`;
+    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
+    ${collectionDemonBindHtml(key, seal, pinned)}`;
+}
+
+function collectionDemonBindHtml(key, seal, pinned) {
+  const bound = collectionBoundDemon() === key;
+  const sealText = seal ? `${escapeHtml(seal)} costs nothing in Devil's Offerings` : "its SEAL costs nothing in Devil's Offerings";
+  const text = bound
+    ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
+    : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
+  const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">Bound in this run.</div>` : "";
+  const control = pinned
+    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
+    : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
+  return `
+    <div class="collection-info-bind">
+      <div class="collection-info-text">${text}</div>
+      ${runNote}
+      ${control}
+    </div>`;
 }
 
 // switches tabs in place, so the screen does not replay its entrance
@@ -17703,6 +17824,7 @@ function renderCollectionScreen(from) {
         </div>
         <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
           <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
+          <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
@@ -17732,8 +17854,10 @@ function showCollectionInfo(button, pinned) {
   const id = button.dataset.collectionSeal;
   const demon = button.dataset.collectionDemon;
   if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
-  info.innerHTML = demon ? collectionDemonInfoHtml(demon) : collectionInfoHtml(id);
+  info.innerHTML = demon ? collectionDemonInfoHtml(demon, pinned) : collectionInfoHtml(id);
   info.className = `collection-info visible ${demon ? (isDemonSlain(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
+  // a clicked, defeated demon's box holds the Bind button
+  if (demon && pinned && isDemonSlain(demon)) info.classList.add("interactive");
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
@@ -17792,6 +17916,8 @@ function bindCollectionEvents() {
   });
   document.querySelectorAll("[data-collection-seal], [data-collection-demon]").forEach((button) => {
     bindOn(button, "pointerenter", (event) => {
+      // a clicked demon keeps its box (with Bind) while the mouse travels to it
+      if (button.closest(".collection-screen")?.querySelector(".collection-demon.selected")) return;
       if (event.pointerType === "mouse") showCollectionInfo(button, false);
     });
     bindOn(button, "pointerleave", (event) => {
@@ -17809,6 +17935,19 @@ function bindCollectionEvents() {
     });
   });
   const screen = document.querySelector(".collection-screen");
+  const info = screen?.querySelector(".collection-info");
+  if (info) {
+    bindOn(info, "click", (event) => {
+      if (!info.classList.contains("interactive")) return;
+      event.stopPropagation();
+      const bind = event.target.closest?.("[data-collection-bind]");
+      if (!bind) return;
+      toggleBoundDemon(bind.dataset.collectionBind);
+      // the pact sound from the story when a demon is bound; the SEAL ghost when it is let go
+      playGameSfx(collectionBoundDemon() ? "introEvil" : "sealSellGhost");
+      refreshCollectionBinding(screen);
+    });
+  }
   if (screen) {
     bindOn(screen, "click", () => {
       screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));

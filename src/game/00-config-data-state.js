@@ -1730,6 +1730,14 @@ const GOETIC_BOSS_SPECS = [
 const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
+/* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
+   and its BOSS never comes in that run. Your Shadow (the sinner from the story) comes in its place: it plays
+   like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
+const SHADOW_BOSS = {
+  name: "Your Shadow",
+  image: "assets/ui/intro/intro-sinner.webp",
+  memoryRounds: 10
+};
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
@@ -1767,9 +1775,14 @@ const BOSS_PASSIVES = {
   },
   lifeSteal: {
     name: "Lust"
+  },
+  // only Your Shadow has it (see SHADOW_BOSS); it never rolls at random
+  guilt: {
+    name: "Guilt"
   }
 };
-const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const SHADOW_BOSS_PASSIVE_KEY = "guilt";
+const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
@@ -2067,6 +2080,8 @@ const state = {
   uniqueBossQueue: [],
   goeticBossQueue: [],
   goeticBossKills: 0,
+  // the demon bound when this run started (Ars Goetia): see SHADOW_BOSS
+  boundDemon: null,
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
   nextBossKillIntervalEndless: false,

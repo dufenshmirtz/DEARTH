@@ -241,6 +241,8 @@ function defaultCollectionProgress() {
     discovered: [],
     // the Goetic BOSSES slain at least once (GOETIC_BOSS_SPECS keys): the Ars Goetia tab
     slain: [],
+    // the demon bound for the next run (a key from slain), or null
+    boundDemon: null,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
     flags: {},
@@ -259,6 +261,7 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
+      if (typeof saved.boundDemon === "string" && progress.slain.includes(saved.boundDemon)) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       if (saved.seals && typeof saved.seals === "object") {
         Object.entries(saved.seals).forEach(([id, record]) => {
@@ -605,26 +608,67 @@ function collectionSlayDemon(key) {
   saveCollectionProgress();
 }
 
+/* binding: one defeated demon can be bound. A run takes the one bound when it starts (state.boundDemon)
+   and keeps it to the end: its SEAL is free in Devil's Offerings and Your Shadow comes instead of it. */
+function collectionBoundDemon() {
+  const key = loadCollectionProgress().boundDemon;
+  return key && isDemonSlain(key) ? key : null;
+}
+
+function boundDemonForNewRun() {
+  return collectionBoundDemon();
+}
+
+function toggleBoundDemon(key) {
+  if (!isDemonSlain(key)) return;
+  const progress = loadCollectionProgress();
+  progress.boundDemon = progress.boundDemon === key ? null : key;
+  saveCollectionProgress();
+}
+
+// the header line and the marks on the grid, updated in place after a bind
+function collectionBoundLine() {
+  const key = collectionBoundDemon();
+  const runKey = state.mode === "arcade" ? state.boundDemon : null;
+  const name = (demonKey) => (demonKey ? GOETIC_BOSS_BY_KEY[demonKey].name : "none");
+  const runNote = state.mode === "arcade" && runKey !== key ? `<span>this run: <strong>${escapeHtml(name(runKey))}</strong></span>` : "";
+  return `<span>bound: <strong>${escapeHtml(name(key))}</strong></span>${runNote}`;
+}
+
+function refreshCollectionBinding(screen) {
+  if (!screen) return;
+  const key = collectionBoundDemon();
+  screen.querySelectorAll("[data-collection-demon]").forEach((button) => {
+    button.classList.toggle("bound", button.dataset.collectionDemon === key);
+  });
+  const line = screen.querySelector(".collection-bound-line");
+  if (line) line.innerHTML = collectionBoundLine();
+  const pinned = screen.querySelector(".collection-demon.selected");
+  if (pinned) showCollectionInfo(pinned, true);
+}
+
 // small copies of the BOSS art (the full images are 1254px)
 function demonThumbPath(spec) {
   return `${GOETIC_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
 }
 
 function collectionDemonsHtml() {
+  const bound = collectionBoundDemon();
   const cells = GOETIC_BOSS_SPECS.map((spec, index) => {
     const slain = isDemonSlain(spec.key);
     const number = romanNumeral(index + 1);
     return `
-      <button class="collection-demon ${slain ? "slain" : "unslain"}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
+      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+        ${slain ? `<span class="collection-demon-bound" aria-hidden="true">Bound</span>` : ""}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>`;
 }
 
-function collectionDemonInfoHtml(key) {
+function collectionDemonInfoHtml(key, pinned = false) {
   const index = GOETIC_BOSS_KEYS.indexOf(key);
   const spec = GOETIC_BOSS_SPECS[index];
   if (!spec) return "";
@@ -641,7 +685,26 @@ function collectionDemonInfoHtml(key) {
     <div class="collection-info-status slain">Defeated</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}`;
+    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
+    ${collectionDemonBindHtml(key, seal, pinned)}`;
+}
+
+function collectionDemonBindHtml(key, seal, pinned) {
+  const bound = collectionBoundDemon() === key;
+  const sealText = seal ? `${escapeHtml(seal)} costs nothing in Devil's Offerings` : "its SEAL costs nothing in Devil's Offerings";
+  const text = bound
+    ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
+    : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
+  const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">Bound in this run.</div>` : "";
+  const control = pinned
+    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
+    : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
+  return `
+    <div class="collection-info-bind">
+      <div class="collection-info-text">${text}</div>
+      ${runNote}
+      ${control}
+    </div>`;
 }
 
 // switches tabs in place, so the screen does not replay its entrance
@@ -868,6 +931,7 @@ function renderCollectionScreen(from) {
         </div>
         <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
           <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
+          <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
@@ -897,8 +961,10 @@ function showCollectionInfo(button, pinned) {
   const id = button.dataset.collectionSeal;
   const demon = button.dataset.collectionDemon;
   if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
-  info.innerHTML = demon ? collectionDemonInfoHtml(demon) : collectionInfoHtml(id);
+  info.innerHTML = demon ? collectionDemonInfoHtml(demon, pinned) : collectionInfoHtml(id);
   info.className = `collection-info visible ${demon ? (isDemonSlain(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
+  // a clicked, defeated demon's box holds the Bind button
+  if (demon && pinned && isDemonSlain(demon)) info.classList.add("interactive");
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
@@ -957,6 +1023,8 @@ function bindCollectionEvents() {
   });
   document.querySelectorAll("[data-collection-seal], [data-collection-demon]").forEach((button) => {
     bindOn(button, "pointerenter", (event) => {
+      // a clicked demon keeps its box (with Bind) while the mouse travels to it
+      if (button.closest(".collection-screen")?.querySelector(".collection-demon.selected")) return;
       if (event.pointerType === "mouse") showCollectionInfo(button, false);
     });
     bindOn(button, "pointerleave", (event) => {
@@ -974,6 +1042,19 @@ function bindCollectionEvents() {
     });
   });
   const screen = document.querySelector(".collection-screen");
+  const info = screen?.querySelector(".collection-info");
+  if (info) {
+    bindOn(info, "click", (event) => {
+      if (!info.classList.contains("interactive")) return;
+      event.stopPropagation();
+      const bind = event.target.closest?.("[data-collection-bind]");
+      if (!bind) return;
+      toggleBoundDemon(bind.dataset.collectionBind);
+      // the pact sound from the story when a demon is bound; the SEAL ghost when it is let go
+      playGameSfx(collectionBoundDemon() ? "introEvil" : "sealSellGhost");
+      refreshCollectionBinding(screen);
+    });
+  }
   if (screen) {
     bindOn(screen, "click", () => {
       screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));

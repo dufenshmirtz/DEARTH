@@ -149,7 +149,7 @@ function createFinalBoss(key) {
 }
 
 function activeGoeticBoss() {
-  return state.bots.some((bot) => bot.goeticKey && bot.hp > 0 && !bot.eliminated);
+  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf) && bot.hp > 0 && !bot.eliminated);
 }
 
 function enterFinalBossPhase() {
@@ -236,7 +236,9 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  // the demon bound for this run never comes: Your Shadow takes its place (and its place in the 72)
+  const shadowOf = isEndlessBoss && bossSpec?.goeticKey && bossSpec.goeticKey === state.boundDemon ? bossSpec.goeticKey : null;
+  const goeticSpec = isEndlessBoss && !shadowOf ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
   const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
@@ -244,7 +246,9 @@ function createBot(options = {}) {
   const passiveKeys = isBoss
     ? uniqueSpec
       ? []
-      : randomBossPassiveKeys(1)
+      : shadowOf
+        ? [SHADOW_BOSS_PASSIVE_KEY]
+        : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -252,12 +256,12 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : goeticSpec?.name) || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "BOSS",
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
+    image: uniqueSpec?.image || (shadowOf ? SHADOW_BOSS.image : goeticSpec?.image) || inherited?.image || randomBotImage(),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -271,6 +275,7 @@ function createBot(options = {}) {
     pairGroupId: bossSpec?.pairGroupId || null,
     modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
     goeticKey: goeticSpec?.key || null,
+    shadowOf,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
     modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
@@ -715,6 +720,8 @@ function startGame(options = {}) {
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
   resetCollectionRun();
+  // what is bound in the Ars Goetia now counts for this whole run, whatever changes later
+  state.boundDemon = boundDemonForNewRun();
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
@@ -1423,8 +1430,20 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
+// Your Shadow plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
+function planShadowGuess(bot) {
+  const best = planBossGuess(bot);
+  const misses = state.gameMemory
+    .slice(-SHADOW_BOSS.memoryRounds)
+    .filter((entry) => Number.isFinite(entry?.playerGuess) && Number.isFinite(entry?.target))
+    .map((entry) => entry.playerGuess - entry.target);
+  if (!misses.length) return best;
+  return clamp(Math.round(best + randomFrom(misses)), 0, 100);
+}
+
 function planBotGuess(bot) {
-  if (bot.isBoss) return planBossGuess(bot);
+  if (bot.isBoss) return bot.shadowOf ? planShadowGuess(bot) : planBossGuess(bot);
   // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
   const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
   if (padmaActive() && bot.type2) {

@@ -397,6 +397,9 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
+  // Your Shadow's Guilt (alive when the round was played): double TARGET damage
+  const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
+  if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
   if (playerTargetDiffDamage > 0 && trinitySpiritOutcome() === "shield") {
     playerDamageSources.push({ amount: playerTargetDiffDamage, source: ITEMS.p133.name, kind: "saved" });
@@ -407,7 +410,9 @@ function applyPenalties() {
   round.playerTargetDifferenceDamage = playerTargetDiffDamage;
   addPlayerDamage(
     playerTargetDiffDamage,
-    round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference"
+    [round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference", guiltDoubled ? `doubled by ${BOSS_PASSIVES.guilt.name}` : ""]
+      .filter(Boolean)
+      .join(", ")
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -792,7 +797,7 @@ function resolveEliminatedBots(eliminated) {
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
-      if (bot.goeticKey) {
+      if (bot.goeticKey || bot.shadowOf) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;

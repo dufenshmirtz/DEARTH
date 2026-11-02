@@ -357,6 +357,7 @@ function bossPassiveEffectDescription(key) {
   if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
   if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
   if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  if (key === SHADOW_BOSS_PASSIVE_KEY) return "While this BOSS lives, you take double TARGET damage. It guesses the way you did in your last rounds.";
   return "";
 }
 
@@ -543,7 +544,14 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
+// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+function isBoundDemonSeal(id) {
+  const key = state.mode === "arcade" ? state.boundDemon : null;
+  return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
+}
+
 function shopPrice(item) {
+  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });

@@ -728,6 +728,7 @@ function normalizeLoadedArcadeRun() {
     }
   });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
+  if (state.boundDemon && !GOETIC_BOSS_BY_KEY[state.boundDemon]) state.boundDemon = null;
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillRound)) state.pendingSelfStackingPentakillRound = 0;
   state.runStats = normalizeRunStats(state.runStats);
@@ -769,6 +770,8 @@ function loadArcadeRun(slotId = "") {
       removeCorruptArcadeRunSave(slotId);
       return false;
     }
+    // saves from before the Ars Goetia binding have none
+    state.boundDemon = null;
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
