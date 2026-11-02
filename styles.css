@@ -11650,6 +11650,25 @@ body.shift-tooltip-more .collection-info-elite {
   display: block;
 }
 
+/* ---------- Collection: no browser focus ring ----------
+   After any key press (Shift for the records, for example) the browser draws its own white ring around
+   the clicked button. The game never uses outlines: a focused button looks like a hovered one. */
+.collection-screen button:focus,
+.collection-screen button:focus-visible {
+  outline: none !important;
+}
+
+.collection-screen .collection-seal:focus-visible,
+.collection-screen .collection-demon:focus-visible {
+  transform: scale(1.08) !important;
+}
+
+.collection-screen .collection-filter:focus-visible:not(.active),
+.collection-screen .collection-tab:focus-visible:not(.active),
+.collection-screen .collection-back:focus-visible {
+  color: #dc2a2f !important;
+}
+
 /* ---------- Collection: SEAL records ----------
    A SEAL you have beaten the game with is deep red, the red of a SEAL that triggers, and stays so on hover.
    Its tooltip shows a small mark next to the status; Shift (or More) shows the records. */

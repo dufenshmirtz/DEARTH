@@ -17450,7 +17450,7 @@ function collectionDemonsHtml() {
     const slain = isDemonSlain(spec.key);
     const number = romanNumeral(index + 1);
     return `
-      <button class="collection-demon ${slain ? "slain" : "unslain"}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not slain`)}">
+      <button class="collection-demon ${slain ? "slain" : "unslain"}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
@@ -17466,14 +17466,14 @@ function collectionDemonInfoHtml(key) {
   const number = romanNumeral(index + 1);
   if (!isDemonSlain(key)) {
     return `
-      <div class="collection-info-status unslain">Not slain</div>
+      <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
       <div class="collection-info-note">Not discovered yet: slay this BOSS in a run.</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
-    <div class="collection-info-status slain">Slain</div>
+    <div class="collection-info-status slain">Defeated</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
     ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}`;
@@ -17702,7 +17702,7 @@ function renderCollectionScreen(from) {
           <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
         <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
-          <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} slain</span>
+          <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
         </div>
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
@@ -17716,8 +17716,8 @@ function renderCollectionScreen(from) {
       </div>
       <div class="collection-panel" data-collection-panel="goetia"${goetia ? "" : " hidden"}>
         <div class="collection-legend" aria-hidden="true">
-          <span class="legend slain">slain</span>
-          <span class="legend unslain">not slain</span>
+          <span class="legend slain">defeated</span>
+          <span class="legend unslain">not defeated</span>
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
       </div>
