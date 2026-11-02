@@ -644,7 +644,7 @@ function collectionInfoHtml(id) {
   return `
     <div class="collection-info-top">
       <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
-      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div>` : ""}
+      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
     </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
@@ -771,6 +771,7 @@ function showCollectionInfo(button, pinned) {
   if (!info) return;
   const id = button.dataset.collectionSeal;
   const demon = button.dataset.collectionDemon;
+  if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
   info.innerHTML = demon ? collectionDemonInfoHtml(demon) : collectionInfoHtml(id);
   info.className = `collection-info visible ${demon ? (isDemonSlain(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));

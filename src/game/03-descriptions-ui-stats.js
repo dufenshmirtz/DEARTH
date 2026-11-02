@@ -681,7 +681,8 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(displayName)}</div>
-      <div class="tooltip-shift-hint">press shift for more</div>
+      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
     </div>
     <div class="tooltip-body">${descriptionHtml(bodyText)}</div>
     ${eliteDescription ? `<div class="tooltip-elite-line">${descriptionHtml(eliteDescription)}</div>` : ""}
