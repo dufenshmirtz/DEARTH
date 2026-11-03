@@ -563,7 +563,31 @@ function currentTargetModifier() {
         bot.modifierOverride !== undefined
     )
     .sort((left, right) => right.bossOrder - left.bossOrder);
-  return modifierBosses.length ? modifierBosses[0].modifierOverride : BASE_TARGET_MODIFIER;
+  return modifierBosses.length ? bossTargetModifierValue(modifierBosses[0]) : BASE_TARGET_MODIFIER;
+}
+
+// an Archangel's modifier cycles 0.8, 1, 1.2, 1 from the round it arrived
+function bossTargetModifierValue(bot) {
+  if (!bot?.archangelKey) return bot?.modifierOverride;
+  const start = Number.isFinite(bot.modifierCycleStartRound) ? bot.modifierCycleStartRound : state.round;
+  return ARCHANGEL_TARGET_MODIFIERS[Math.max(0, (state.round || 0) - start) % ARCHANGEL_TARGET_MODIFIERS.length];
+}
+
+// what each Archangel BOSS grows its damage on (see applyArchangel* in 06-round-resolution.js)
+const ARCHANGEL_ABILITY_TEXT = {
+  michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
+  gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
+  samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
+  anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
+  cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
+};
+
+function archangelAbilityDescription(bot) {
+  const text = ARCHANGEL_ABILITY_TEXT[bot?.archangelKey];
+  if (!text) return "";
+  return `${text} Its damage starts at 0 (now ${Math.max(0, Math.ceil(bot.archangelDamage || 0))}). While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`;
 }
 
 function playerGuessLimit() {
@@ -595,6 +619,7 @@ function botPassiveSummary(bot) {
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.archangelKey) names.push(`Archangel ${ARCHANGEL_BY_KEY[bot.archangelKey]?.name || ""}`.trim());
   bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
   return names.join(" + ") || "No Seal";
@@ -604,6 +629,7 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  if (bot.isBoss && bot.archangelKey) descriptions.push(archangelAbilityDescription(bot));
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");

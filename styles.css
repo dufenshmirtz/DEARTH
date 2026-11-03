@@ -10220,6 +10220,27 @@ body.mobile-arcade .collection-screen {
   --demon-cell: 84px;
 }
 
+.pause-dev-panel .dev-summon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Archangels tab: seven, so bigger cells */
+.collection-screen .collection-angel-grid {
+  --demon-cell: 168px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+body.mobile-arcade .collection-screen .collection-angel-grid {
+  --demon-cell: 104px;
+}
+
+@media (max-height: 560px) {
+  .collection-screen .collection-angel-grid { --demon-cell: 100px; }
+}
+
 /* Ars Goetia: the bound demon (one at a time) */
 .collection-screen .collection-demon {
   position: relative;

@@ -1903,3 +1903,157 @@ test("collection search: SEALS by name, text and build; demons by number, and by
     assert.equal((html.match(/class="collection-demon [^"]*" type="button" hidden/g) || []).length, 71);
   `);
 });
+
+// ---- Archangels: SEALS swapped with the Pentacles of Saturn, Archangel BOSSES, the Archangels tab ----
+test("Archangel and Saturn SEALS swapped effects within the same build; each Archangel BOSS matches its SEAL", () => {
+  game()(`
+    assert.equal(ITEMS.p98.name, "Seal of Gabriel");
+    assert.equal(ITEMS.p92.name, "Third Pentacle of Saturn");
+    assert.equal(ITEMS.p101.name, "Seal of Raphael");
+    assert.equal(ITEMS.p110.name, "Fifth Pentacle of Saturn");
+    const archangelSeals = COLLECTION_SECTIONS.find(section => section.key === "archangel").ids;
+    const saturnSeals = COLLECTION_SECTIONS.find(section => section.key === "saturn").ids;
+    assert.ok(archangelSeals.every(id => SELF_STACKING_SEAL_IDS.has(id) && /^Seal of /.test(ITEMS[id].name)));
+    assert.ok(saturnSeals.every(id => !SELF_STACKING_SEAL_IDS.has(id) && /Pentacle of Saturn$/.test(ITEMS[id].name)));
+    ARCHANGEL_BOSS_SPECS.forEach(spec => {
+      assert.equal(ITEMS[spec.sealId].name, "Seal of " + spec.name);
+      assert.deepEqual([...SEAL_BUILD_TAGS[spec.sealId]], [spec.build]);
+    });
+  `);
+});
+
+test("Archangels: half a demon's chance each, once per run, not after the 72, and they do not count toward the 72", () => {
+  game()(`
+    globalThis.render = () => {};
+    fixture([], [10, 20, 30]);
+    state.bossKills = UNIQUE_BOSS_KEYS.length;
+    state.uniqueBossQueue = [];
+    state.goeticBossQueue = GOETIC_BOSS_KEYS.slice();
+    state.archangelQueue = ARCHANGEL_KEYS.slice();
+    Math.random = () => 3.5 / 75.5 - 0.0001;
+    const first = takeNextBossSpec();
+    assert.ok(ARCHANGEL_BY_KEY[first.archangelKey]);
+    assert.equal(state.archangelQueue.length, 6);
+    assert.equal(state.goeticBossQueue.length, 72);
+    Math.random = () => 3 / 75 + 0.0001;
+    assert.ok(takeNextBossSpec().goeticKey);
+    state.goeticBossQueue = [];
+    Math.random = () => 0;
+    assert.equal(takeNextBossSpec(), null);
+    // an Archangel's death does not count toward the 72
+    const angel = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    state.bots.push(angel);
+    const kills = state.goeticBossKills;
+    angel.hp = 0;
+    resolveEliminatedBots([angel]);
+    assert.equal(state.goeticBossKills, kills);
+    assert.ok(isArchangelDefeated("gabriel"));
+  `);
+});
+
+test("an Archangel BOSS: its own art and ability only, and the TARGET modifier cycles 0.8, 1, 1.2, 1", () => {
+  game()(`
+    fixture([], [10, 20, 30]);
+    const angel = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(angel.name, "Michael");
+    assert.equal(angel.image, ARCHANGEL_BOSS_IMAGE_ROOT + "/04-michael.png");
+    assert.equal(angel.goeticKey, null);
+    assert.deepEqual([...angel.passiveKeys], []);
+    assert.equal(grantRandomBossPassive(angel), null);
+    assert.ok(bossAbilityText(angel).includes("MEMORY"));
+    state.bots = [angel];
+    const start = state.round;
+    const seen = [];
+    for (let step = 0; step < 6; step += 1) {
+      state.round = start + step;
+      seen.push(currentTargetModifier());
+    }
+    assert.deepEqual(seen, [0.8, 1, 1.2, 1, 0.8, 1]);
+  `);
+});
+
+test("Archangel abilities: gain, then deal the current damage to you", () => {
+  game()(`
+    globalThis.render = () => {};
+    const hurt = (fn) => { const before = state.player.hp; fn(); return before - state.player.hp; };
+    fixture([], [10, 20, 30, 40, 50]);
+    const add = (key) => { const angel = createBot({ boss: true, bossSpec: { archangelKey: key } }); angel.hp = angel.maxHp = 1000; state.bots.push(angel); return angel; };
+    state.player.hp = state.player.maxHp = 1000;
+    // Anael: every ARTIFACT
+    const anael = add("anael");
+    assert.equal(hurt(() => applyArchangelArtifactUse()), 2);
+    assert.equal(hurt(() => applyArchangelArtifactUse()), 4);
+    assert.equal(anael.archangelDamage, 4);
+    // Cassiel: a revealed DAMNED takes more than 10 at once
+    const cassiel = add("cassiel");
+    const revealed = state.bots[0];
+    revealed.revealedByPassive = true;
+    revealed.hp = revealed.maxHp = 1000;
+    assert.equal(hurt(() => damageBot(revealed, 10, "")), 0);
+    assert.equal(hurt(() => damageBot(revealed, 11, "")), 2);
+    assert.equal(cassiel.archangelDamage, 2);
+    // the end-of-round four
+    const michael = add("michael"), samael = add("samael"), sachiel = add("sachiel"), raphael = add("raphael");
+    const damned = state.bots.filter(bot => !bot.isBoss);
+    damned.forEach(bot => { bot.memory = [1, 2, 3, 4]; bot.reward = 1; });
+    setBotPersonality(damned[0], "Analyst", "", { triggerAlterationDamage: false });
+    setBotPersonality(damned[1], "Analyst", "", { triggerAlterationDamage: false });
+    state.roundState.eliminationsThisRound = 2;
+    assert.equal(hurt(() => applyArchangelEndOfRound()), 2 + 2 + 2 + 3);
+    assert.deepEqual([michael, samael, sachiel, raphael].map(bot => bot.archangelDamage), [2, 2, 2, 3]);
+    // conditions not met: no gain, no damage; a PENTAKILL spares you from Raphael
+    damned.forEach(bot => { bot.memory = []; bot.reward = 0; });
+    damned.forEach((bot, index) => setBotPersonality(bot, ["Anchor", "Analyst", "Follower", "Stubborn", "Drifter"][index], "", { triggerAlterationDamage: false }));
+    state.roundState.eliminationsThisRound = 5;
+    const otherBounty = state.bots.filter(bot => bot.isBoss).reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+    state.bots.filter(bot => bot.isBoss).forEach(bot => { bot.reward = 0; });
+    assert.equal(hurt(() => applyArchangelEndOfRound()), 0);
+  `);
+});
+
+test("Gabriel gains +3 for every CRITICAL, yours or a DAMNED's", () => {
+  game()(`
+    globalThis.render = () => {};
+    fixture([], [10, 20, 30, 40, 50]);
+    const gabriel = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    gabriel.hp = gabriel.maxHp = 1000;
+    state.bots.push(gabriel);
+    state.roundState.botEffectiveGuesses.set(gabriel.id, 0);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    applyPenalties();
+    const crits = findCriticalHits().length;
+    assert.ok(crits >= 1);
+    assert.equal(gabriel.archangelDamage, 3 * crits);
+  `);
+});
+
+test("a bound Archangel: the run starts with its SEAL (sells for nothing) and YOU comes in its place", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    toggleBoundDemon("michael");
+    assert.equal(collectionBoundDemon(), null);
+    loadCollectionProgress().archangels.push("michael");
+    toggleBoundDemon("michael");
+    assert.equal(collectionBoundDemon(), "michael");
+    startGame();
+    assert.equal(state.boundDemon, "michael");
+    const seal = passiveEntry("p99");
+    assert.ok(seal);
+    assert.equal(passiveSellValue(seal), 0);
+    assert.ok(shopPrice(ITEMS.p99) > 0);
+    const you = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(you.name, "YOU");
+    assert.equal(you.archangelKey, null);
+    state.bots.push(you);
+    const kills = state.goeticBossKills;
+    you.hp = 0;
+    resolveEliminatedBots([you]);
+    assert.equal(state.goeticBossKills, kills);
+    // the search finds a defeated Archangel by name, an unknown one only by its planet
+    assert.ok(archangelMatchesSearch("michael", "mich"));
+    assert.ok(!archangelMatchesSearch("gabriel", "gabriel"));
+    assert.ok(archangelMatchesSearch("gabriel", "moon"));
+  `);
+});

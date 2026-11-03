@@ -863,6 +863,10 @@ function renderSelfStackingDevPanel() {
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
+      <h2>Summon an Archangel (testing)</h2>
+      <div class="dev-summon-row">
+        ${ARCHANGEL_BOSS_SPECS.map((spec) => `<button class="small-button" data-pause-action="summon:${spec.key}">${escapeHtml(spec.name)}</button>`).join("")}
+      </div>
     </div>
   `;
 }
@@ -2571,6 +2575,10 @@ function updateSoundSetting(key, value, renderAfter = true) {
 }
 
 function handlePauseAction(action) {
+  if (typeof action === "string" && action.startsWith("summon:")) {
+    devSummonArchangel(action.slice("summon:".length));
+    return;
+  }
   if (action === "settings" || action === "collection") {
     state.pauseScreen = action;
     render();

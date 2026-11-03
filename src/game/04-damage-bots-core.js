@@ -261,6 +261,7 @@ function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZer
     const hpBefore = bot.hp;
     bot.hp = Math.max(0, bot.hp - damage);
     state.roundState.roundEvents.push(`${bot.name} took ${damage} damage.`);
+    applyArchangelRevealedHit(bot, damage);
     if (bot.hp <= 0) {
       recordBotExcessDamage(bot, damage, hpBefore);
       eliminated.push(bot);
@@ -588,6 +589,7 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
   if (reason) {
     addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
   }
+  applyArchangelRevealedHit(bot, damage);
   applyDirectRedirectDamage(damageDetails.redirectEntries);
   if (bot.hp <= 0) {
     recordBotExcessDamage(bot, damage, hpBefore);
@@ -921,6 +923,8 @@ function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
   if (bot.isBoss && (bot.goeticKey || bot.shadowOf) && owned.size >= 1) return null;
+  // an Archangel keeps only its own ability
+  if (bot.isBoss && bot.archangelKey) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);

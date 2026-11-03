@@ -149,7 +149,7 @@ function createFinalBoss(key) {
 }
 
 function activeGoeticBoss() {
-  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf) && bot.hp > 0 && !bot.eliminated);
+  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf || bot.archangelKey) && bot.hp > 0 && !bot.eliminated);
 }
 
 function enterFinalBossPhase() {
@@ -160,6 +160,7 @@ function enterFinalBossPhase() {
   state.nextBossKillInterval = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = [];
+  state.archangelQueue = [];
   state.pendingActive = null;
   state.mobileOfferingsOpen = false;
   state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
@@ -172,6 +173,7 @@ function skipToFirstGoeticBoss() {
   state.pendingActive = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
   // testing: the bound demon's place comes first, so YOU shows up at once
   if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
   state.goeticBossKills = 0;
@@ -182,7 +184,10 @@ function skipToFirstGoeticBoss() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * UNIQUE_BOSS_KEYS.length);
-  const firstBossSpec = takeNextBossSpec();
+  // a bound Archangel's place (YOU) comes first too
+  const boundArchangel = ARCHANGEL_BY_KEY[state.boundDemon] ? state.boundDemon : null;
+  if (boundArchangel) state.archangelQueue = state.archangelQueue.filter((key) => key !== boundArchangel);
+  const firstBossSpec = boundArchangel ? { archangelKey: boundArchangel } : takeNextBossSpec();
   state.bots = firstBossSpec ? [createBot({ boss: true, bossSpec: firstBossSpec })] : [];
   fillBots();
   state.rerollBaseCost = 1;
@@ -238,9 +243,11 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  // the demon bound for this run never comes: YOU takes its place (and its place in the 72)
-  const shadowOf = isEndlessBoss && bossSpec?.goeticKey && bossSpec.goeticKey === state.boundDemon ? bossSpec.goeticKey : null;
-  const goeticSpec = isEndlessBoss && !shadowOf ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  // the demon or Archangel bound for this run never comes: YOU takes its place (a demon's place counts in the 72)
+  const endlessKey = bossSpec?.goeticKey || bossSpec?.archangelKey || null;
+  const shadowOf = isEndlessBoss && endlessKey && endlessKey === state.boundDemon ? endlessKey : null;
+  const archangelSpec = isEndlessBoss && !shadowOf && bossSpec?.archangelKey ? ARCHANGEL_BY_KEY[bossSpec.archangelKey] || null : null;
+  const goeticSpec = isEndlessBoss && !shadowOf && !archangelSpec ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
   const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
@@ -250,7 +257,9 @@ function createBot(options = {}) {
       ? []
       : shadowOf
         ? [SHADOW_BOSS_PASSIVE_KEY]
-        : randomBossPassiveKeys(1)
+        : archangelSpec
+          ? []
+          : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -258,12 +267,16 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : goeticSpec?.name) || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : archangelSpec?.name || goeticSpec?.name) || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "BOSS",
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: uniqueSpec?.image || (shadowOf ? SHADOW_BOSS.image : goeticSpec?.image) || inherited?.image || randomBotImage(),
+    image:
+      uniqueSpec?.image ||
+      (shadowOf ? SHADOW_BOSS.image : archangelSpec ? `${ARCHANGEL_BOSS_IMAGE_ROOT}/${archangelSpec.image}` : goeticSpec?.image) ||
+      inherited?.image ||
+      randomBotImage(),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -275,12 +288,14 @@ function createBot(options = {}) {
     uniqueKey: uniqueSpec?.key || null,
     copiedUniqueKey: copiedUniqueSpec?.key || null,
     pairGroupId: bossSpec?.pairGroupId || null,
-    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
+    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) || archangelSpec ? state.round : null,
     goeticKey: goeticSpec?.key || null,
     shadowOf,
+    archangelKey: archangelSpec?.key || null,
+    archangelDamage: 0,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
-    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
+    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? (archangelSpec ? 1 : endlessModifier),
     shopTax: uniqueSpec?.shopTax || 0,
     eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
     grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
@@ -734,6 +749,7 @@ function startGame(options = {}) {
   state.player.hp = PLAYER_MAX_HP;
   state.player.credits = STARTING_CREDITS;
   state.player.passives = [];
+  grantBoundArchangelSeal();
   state.player.actives = [];
   state.log = [];
   state.roundState = null;
@@ -768,6 +784,7 @@ function startGame(options = {}) {
   state.bossSpawnCount = 0;
   state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
   state.goeticBossKills = 0;
   state.nextBossPairId = 1;
   state.finalBossPhase = false;

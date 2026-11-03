@@ -656,6 +656,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   collectionNoteArtifactUse();
+  applyArchangelArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
   addLog(message);

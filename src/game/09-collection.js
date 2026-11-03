@@ -235,7 +235,7 @@ function sealMatchesCollectionFilter(id, filter = collectionFilter()) {
 /* ---- search: one box on each tab, matched as you type ----
    SEALS match by name, text and build; demons by number (9 or IX) and, once defeated, by name (other
    spellings too: "morax", "gamigin"), their SEAL's name and "bound". Every word typed has to match. */
-const collectionSearch = { seals: "", goetia: "" };
+const collectionSearch = { seals: "", goetia: "", angels: "" };
 
 function collectionSearchText(value) {
   return String(value || "")
@@ -266,8 +266,9 @@ function collectionSealVisible(id) {
   return sealMatchesCollectionFilter(id) && sealMatchesSearch(id);
 }
 
-function demonMatchesSearch(key, query = collectionSearch.goetia) {
-  const words = collectionSearchWords(query);
+function demonMatchesSearch(key, query) {
+  if (ARCHANGEL_BY_KEY[key]) return archangelMatchesSearch(key, query ?? collectionSearch.angels);
+  const words = collectionSearchWords(query ?? collectionSearch.goetia);
   if (!words.length) return true;
   const index = GOETIC_BOSS_KEYS.indexOf(key);
   const spec = GOETIC_BOSS_SPECS[index];
@@ -283,9 +284,20 @@ function demonMatchesSearch(key, query = collectionSearch.goetia) {
   return words.every((word) => haystack.includes(word));
 }
 
+function archangelMatchesSearch(key, query = collectionSearch.angels) {
+  const words = collectionSearchWords(query);
+  if (!words.length) return true;
+  const spec = ARCHANGEL_BY_KEY[key];
+  if (!spec) return false;
+  const known = [spec.planet, "archangel"];
+  if (isArchangelDefeated(key)) known.push(spec.name, ITEMS[spec.sealId]?.name || "", spec.build, collectionBoundDemon() === key ? "bound" : "");
+  const haystack = collectionSearchText(known.join(" "));
+  return words.every((word) => haystack.includes(word));
+}
+
 function collectionSearchHtml(tab) {
   const value = collectionSearch[tab] || "";
-  const label = tab === "goetia" ? "Search demons" : "Search SEALS";
+  const label = tab === "goetia" ? "Search demons" : tab === "angels" ? "Search Archangels" : "Search SEALS";
   return `
     <label class="collection-search${value ? " has-value" : ""}">
       <img class="collection-search-icon" src="assets/ui/search-eye.png" alt="" aria-hidden="true" draggable="false" />
@@ -312,8 +324,11 @@ function applyCollectionVisibility(screen) {
   });
   const sealsEmpty = screen.querySelector('[data-collection-empty="seals"]');
   if (sealsEmpty) sealsEmpty.hidden = Boolean(screen.querySelector(".collection-seal:not([hidden])"));
-  const goetiaEmpty = screen.querySelector('[data-collection-empty="goetia"]');
-  if (goetiaEmpty) goetiaEmpty.hidden = Boolean(screen.querySelector(".collection-demon:not([hidden])"));
+  ["goetia", "angels"].forEach((tab) => {
+    const empty = screen.querySelector(`[data-collection-empty="${tab}"]`);
+    const panel = screen.querySelector(`[data-collection-panel="${tab}"]`);
+    if (empty && panel) empty.hidden = Boolean(panel.querySelector(".collection-demon:not([hidden])"));
+  });
   screen.querySelectorAll(".collection-search").forEach((label) => {
     const input = label.querySelector("[data-collection-search]");
     label.classList.toggle("has-value", Boolean(input?.value));
@@ -340,7 +355,9 @@ function defaultCollectionProgress() {
     discovered: [],
     // the Goetic BOSSES slain at least once (GOETIC_BOSS_SPECS keys): the Ars Goetia tab
     slain: [],
-    // the demon bound for the next run (a key from slain), or null
+    // the Archangel BOSSES defeated at least once (ARCHANGEL_BOSS_SPECS keys): the Archangels tab
+    archangels: [],
+    // the demon or Archangel bound for the next run (a defeated one), or null
     boundDemon: null,
     // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
     devAllDemons: false,
@@ -363,7 +380,8 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       progress.devAllDemons = saved.devAllDemons === true;
-      if (typeof saved.boundDemon === "string" && GOETIC_BOSS_BY_KEY[saved.boundDemon]) progress.boundDemon = saved.boundDemon;
+      if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
+      if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
       if (saved.seals && typeof saved.seals === "object") {
         Object.entries(saved.seals).forEach(([id, record]) => {
@@ -507,6 +525,7 @@ function collectionNoteSpend(cost) {
 
 function collectionNoteElimination(bot) {
   if (bot?.isBoss && bot.goeticKey) collectionSlayDemon(bot.goeticKey);
+  if (bot?.isBoss && bot.archangelKey) collectionDefeatArchangel(bot.archangelKey);
   if (!collectionCounts() || !bot) return;
   collectionBump("eliminations");
   if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
@@ -710,6 +729,24 @@ function toggleDevAllDemons() {
   saveCollectionProgress();
 }
 
+function isArchangelDefeated(key) {
+  const progress = loadCollectionProgress();
+  return Boolean(ARCHANGEL_BY_KEY[key]) && (progress.devAllDemons || progress.archangels.includes(key));
+}
+
+// a demon or an Archangel that can be bound
+function isBossEntryDefeated(key) {
+  return isDemonSlain(key) || isArchangelDefeated(key);
+}
+
+function collectionDefeatArchangel(key) {
+  if (state.mode !== "arcade" || !ARCHANGEL_BY_KEY[key]) return;
+  const progress = loadCollectionProgress();
+  if (progress.archangels.includes(key)) return;
+  progress.archangels.push(key);
+  saveCollectionProgress();
+}
+
 function collectionSlayDemon(key) {
   if (state.mode !== "arcade" || !GOETIC_BOSS_BY_KEY[key]) return;
   const progress = loadCollectionProgress();
@@ -722,7 +759,7 @@ function collectionSlayDemon(key) {
    and keeps it to the end: its SEAL is free in Devil's Offerings and YOU comes instead of it. */
 function collectionBoundDemon() {
   const key = loadCollectionProgress().boundDemon;
-  return key && isDemonSlain(key) ? key : null;
+  return key && isBossEntryDefeated(key) ? key : null;
 }
 
 function boundDemonForNewRun() {
@@ -730,7 +767,7 @@ function boundDemonForNewRun() {
 }
 
 function toggleBoundDemon(key) {
-  if (!isDemonSlain(key)) return;
+  if (!isBossEntryDefeated(key)) return;
   const progress = loadCollectionProgress();
   progress.boundDemon = progress.boundDemon === key ? null : key;
   saveCollectionProgress();
@@ -740,7 +777,7 @@ function toggleBoundDemon(key) {
 function collectionBoundLine() {
   const key = collectionBoundDemon();
   const runKey = state.mode === "arcade" ? state.boundDemon : null;
-  const name = (demonKey) => (demonKey ? GOETIC_BOSS_BY_KEY[demonKey].name : "none");
+  const name = (demonKey) => (demonKey ? (GOETIC_BOSS_BY_KEY[demonKey] || ARCHANGEL_BY_KEY[demonKey])?.name || "none" : "none");
   const runNote = state.mode === "arcade" && runKey !== key ? `<span>this run: <strong>${escapeHtml(name(runKey))}</strong></span>` : "";
   return `<span>bound: <strong>${escapeHtml(name(key))}</strong></span>${runNote}`;
 }
@@ -751,8 +788,9 @@ function refreshCollectionBinding(screen) {
   screen.querySelectorAll("[data-collection-demon]").forEach((button) => {
     button.classList.toggle("bound", button.dataset.collectionDemon === key);
   });
-  const line = screen.querySelector(".collection-bound-line");
-  if (line) line.innerHTML = collectionBoundLine();
+  screen.querySelectorAll(".collection-bound-line").forEach((line) => {
+    line.innerHTML = collectionBoundLine();
+  });
   const pinned = screen.querySelector(".collection-demon.selected");
   if (pinned) showCollectionInfo(pinned, true);
 }
@@ -777,7 +815,47 @@ function collectionDemonsHtml() {
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
 }
 
+function archangelThumbPath(spec) {
+  return `${ARCHANGEL_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
+}
+
+// the Archangels tab: the seven, in weekday order (Sun to Saturn); the line under each names its planet
+function collectionArchangelsHtml() {
+  const bound = collectionBoundDemon();
+  const cells = ARCHANGEL_BOSS_SPECS.map((spec) => {
+    const defeated = isArchangelDefeated(spec.key);
+    const planet = spec.planet.replace(/^the /, "");
+    return `
+      <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? spec.name : `Archangel of ${spec.planet}, not defeated`)}">
+        <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
+        <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
+        <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
+      </button>`;
+  });
+  return `<div class="collection-demon-grid collection-angel-grid">${cells.join("")}</div>${collectionEmptyHtml("angels")}`;
+}
+
+function collectionArchangelInfoHtml(key, pinned = false) {
+  const spec = ARCHANGEL_BY_KEY[key];
+  if (!spec) return "";
+  if (!isArchangelDefeated(key)) {
+    return `
+      <div class="collection-info-status unslain">Not defeated</div>
+      <div class="collection-info-name">???</div>
+      <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run.</div>`;
+  }
+  const seal = ITEMS[spec.sealId]?.name || "";
+  return `
+    <div class="collection-info-status slain">Defeated</div>
+    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+    <div class="collection-info-text">${descriptionHtml(`${ARCHANGEL_ABILITY_TEXT[key]} While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`)}</div>
+    ${collectionDemonBindHtml(key, seal, pinned)}`;
+}
+
 function collectionDemonInfoHtml(key, pinned = false) {
+  if (ARCHANGEL_BY_KEY[key]) return collectionArchangelInfoHtml(key, pinned);
   const index = GOETIC_BOSS_KEYS.indexOf(key);
   const spec = GOETIC_BOSS_SPECS[index];
   if (!spec) return "";
@@ -800,7 +878,9 @@ function collectionDemonInfoHtml(key, pinned = false) {
 
 function collectionDemonBindHtml(key, seal, pinned) {
   const bound = collectionBoundDemon() === key;
-  const sealText = seal ? `${escapeHtml(seal)} costs nothing in Devil's Offerings` : "its SEAL costs nothing in Devil's Offerings";
+  const archangel = Boolean(ARCHANGEL_BY_KEY[key]);
+  const sealName = seal ? escapeHtml(seal) : "its SEAL";
+  const sealText = archangel ? `you start with ${sealName}` : `${sealName} costs nothing in Devil's Offerings`;
   const text = bound
     ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
     : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
@@ -818,7 +898,7 @@ function collectionDemonBindHtml(key, seal, pinned) {
 
 // switches tabs in place, so the screen does not replay its entrance
 function applyCollectionTab(screen, tab) {
-  collectionTab = tab === "goetia" ? "goetia" : "seals";
+  collectionTab = ["goetia", "angels"].includes(tab) ? tab : "seals";
   if (!screen) return;
   screen.querySelectorAll("[data-collection-tab]").forEach((button) => {
     const active = button.dataset.collectionTab === collectionTab;
@@ -995,9 +1075,14 @@ function renderCollectionScreen(from) {
   const filter = collectionFilter();
   const slain = GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length;
   const goetia = collectionTab === "goetia";
+  const angels = collectionTab === "angels";
+  const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
+  const devButton = () =>
+    `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
   const tabs = [
     { key: "seals", label: "Seals" },
-    { key: "goetia", label: "Ars Goetia" }
+    { key: "goetia", label: "Ars Goetia" },
+    { key: "angels", label: "Archangels" }
   ].map((tab) => {
     const active = tab.key === collectionTab;
     return `<button class="collection-tab${active ? " active" : ""}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
@@ -1029,7 +1114,7 @@ function renderCollectionScreen(from) {
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
         <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
-        <div class="collection-counts" data-collection-for="seals"${goetia ? " hidden" : ""}>
+        <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
@@ -1037,8 +1122,12 @@ function renderCollectionScreen(from) {
           <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
+        <div class="collection-counts" data-collection-for="angels"${angels ? "" : " hidden"}>
+          <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
+          <span class="collection-bound-line">${collectionBoundLine()}</span>
+        </div>
       </header>
-      <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
+      <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
         ${collectionFiltersHtml(all)}
         <div class="collection-legend">
           ${collectionSearchHtml("seals")}
@@ -1053,9 +1142,18 @@ function renderCollectionScreen(from) {
           ${collectionSearchHtml("goetia")}
           <span class="legend slain" aria-hidden="true">defeated</span>
           <span class="legend unslain" aria-hidden="true">not defeated</span>
-          <button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>
+          ${devButton()}
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
+      </div>
+      <div class="collection-panel" data-collection-panel="angels"${angels ? "" : " hidden"}>
+        <div class="collection-legend">
+          ${collectionSearchHtml("angels")}
+          <span class="legend slain" aria-hidden="true">defeated</span>
+          <span class="legend unslain" aria-hidden="true">not defeated</span>
+          ${devButton()}
+        </div>
+        <div class="collection-body">${collectionArchangelsHtml()}</div>
       </div>
       <div class="collection-info" aria-live="polite"></div>
     </div>`;
@@ -1069,9 +1167,9 @@ function showCollectionInfo(button, pinned) {
   const demon = button.dataset.collectionDemon;
   if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
   info.innerHTML = demon ? collectionDemonInfoHtml(demon, pinned) : collectionInfoHtml(id);
-  info.className = `collection-info visible ${demon ? (isDemonSlain(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
+  info.className = `collection-info visible ${demon ? (isBossEntryDefeated(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
   // a clicked, defeated demon's box holds the Bind button
-  if (demon && pinned && isDemonSlain(demon)) info.classList.add("interactive");
+  if (demon && pinned && isBossEntryDefeated(demon)) info.classList.add("interactive");
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
@@ -1162,11 +1260,17 @@ function bindCollectionEvents() {
       const screen = button.closest(".collection-screen");
       const body = screen?.querySelector('[data-collection-panel="goetia"] .collection-body');
       if (body) body.innerHTML = collectionDemonsHtml();
+      const angelBody = screen?.querySelector('[data-collection-panel="angels"] .collection-body');
+      if (angelBody) angelBody.innerHTML = collectionArchangelsHtml();
       applyCollectionVisibility(screen);
       const count = screen?.querySelector('[data-collection-for="goetia"] strong');
       if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length);
-      button.classList.toggle("active", loadCollectionProgress().devAllDemons);
-      button.textContent = loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all";
+      const angelCount = screen?.querySelector('[data-collection-for="angels"] strong');
+      if (angelCount) angelCount.textContent = String(ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length);
+      screen?.querySelectorAll("[data-collection-dev-demons]").forEach((other) => {
+        other.classList.toggle("active", loadCollectionProgress().devAllDemons);
+        other.textContent = loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all";
+      });
       hideCollectionInfo(screen);
       bindCollectionEvents();
       refreshCollectionBinding(screen);

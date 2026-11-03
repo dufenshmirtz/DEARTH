@@ -1742,6 +1742,26 @@ const SHADOW_BOSS = {
   image: "assets/bots/you/you-boss.webp",
   memoryRounds: 10
 };
+/* The seven Archangels: late-game BOSSES drawn from the same pool as the 72 Goetic ones (each half as likely as
+   one demon, at most once per run). They do not count toward the 72. Each grows its own damage like the
+   self-stacking SEAL of its name (same build) and deals it to you, and while it lives the TARGET modifier cycles
+   0.8, 1, 1.2, 1. Defeating one discovers it in the Collection (Archangels tab), where it can be bound: a run
+   with it bound starts with its SEAL, and YOU comes in its place. Art: the Moon has the trumpet, the Sun the spear
+   and shield, Mars the sword, Mercury the scroll, Jupiter the crown, Venus the flame, Saturn the scales. */
+const ARCHANGEL_BOSS_IMAGE_ROOT = "assets/bots/archangels";
+const ARCHANGEL_BOSS_SPECS = [
+  { key: "michael", name: "Michael", image: "04-michael.png", sealId: "p99", build: "memory", planet: "the Sun" },
+  { key: "gabriel", name: "Gabriel", image: "03-gabriel.png", sealId: "p98", build: "critical", planet: "the Moon" },
+  { key: "samael", name: "Samael", image: "01-samael.png", sealId: "p109", build: "personality", planet: "Mars" },
+  { key: "raphael", name: "Raphael", image: "06-raphael.png", sealId: "p101", build: "general", planet: "Mercury" },
+  { key: "sachiel", name: "Sachiel", image: "07-sachiel.png", sealId: "p100", build: "bounty", planet: "Jupiter" },
+  { key: "anael", name: "Anael", image: "05-anael.png", sealId: "p103", build: "artifact", planet: "Venus" },
+  { key: "cassiel", name: "Cassiel", image: "02-cassiel.png", sealId: "p102", build: "reveal", planet: "Saturn" }
+];
+const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
+const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
+const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
+const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
@@ -2092,8 +2112,10 @@ const state = {
   uniqueBossQueue: [],
   goeticBossQueue: [],
   goeticBossKills: 0,
-  // the demon bound when this run started (Ars Goetia): see SHADOW_BOSS
+  // the demon or Archangel bound when this run started (Collection): see SHADOW_BOSS and ARCHANGEL_BOSS_SPECS
   boundDemon: null,
+  // the Archangels that have not come yet this run
+  archangelQueue: [],
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
   nextBossKillIntervalEndless: false,
