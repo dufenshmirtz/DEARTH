@@ -231,6 +231,104 @@ function sealMatchesCollectionFilter(id, filter = collectionFilter()) {
   return filter === "all" || sealBuilds(id).includes(filter);
 }
 
+/* ---- search: one box on each tab, matched as you type ----
+   SEALS match by name, text and build; demons by number (9 or IX) and, once defeated, by name (other
+   spellings too: "morax", "gamigin"), their SEAL's name and "bound". Every word typed has to match. */
+const collectionSearch = { seals: "", goetia: "" };
+
+function collectionSearchText(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function collectionSearchWords(query) {
+  const text = collectionSearchText(query);
+  return text ? text.split(" ") : [];
+}
+
+function sealMatchesSearch(id, query = collectionSearch.seals) {
+  const words = collectionSearchWords(query);
+  if (!words.length) return true;
+  const item = ITEMS[id];
+  if (!item) return false;
+  const builds = sealBuilds(id).map((key) => SEAL_BUILDS.find((build) => build.key === key)?.label || "");
+  const haystack = collectionSearchText([item.name, item.description, ...builds].join(" "));
+  return words.every((word) => haystack.includes(word));
+}
+
+function collectionSealVisible(id) {
+  return sealMatchesCollectionFilter(id) && sealMatchesSearch(id);
+}
+
+function demonMatchesSearch(key, query = collectionSearch.goetia) {
+  const words = collectionSearchWords(query);
+  if (!words.length) return true;
+  const index = GOETIC_BOSS_KEYS.indexOf(key);
+  const spec = GOETIC_BOSS_SPECS[index];
+  if (!spec) return false;
+  const numbers = [String(index + 1), romanNumeral(index + 1).toLowerCase()];
+  if (words.length === 1 && numbers.includes(words[0])) return true;
+  // a demon not defeated yet has no name to find
+  if (!isDemonSlain(key)) return false;
+  const seal = spec.passiveId && ITEMS[spec.passiveId] ? ITEMS[spec.passiveId].name : "";
+  const haystack = collectionSearchText(
+    [spec.name, spec.image.replace(/^\d+-|\.png$/gi, ""), seal, collectionBoundDemon() === key ? "bound" : ""].join(" ")
+  );
+  return words.every((word) => haystack.includes(word));
+}
+
+function collectionSearchHtml(tab) {
+  const value = collectionSearch[tab] || "";
+  const label = tab === "goetia" ? "Search demons" : "Search SEALS";
+  return `
+    <label class="collection-search${value ? " has-value" : ""}">
+      <svg class="collection-search-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <input class="collection-search-input" type="text" data-collection-search="${tab}" value="${escapeAttr(value)}" placeholder="Search" aria-label="${label}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
+      <button type="button" class="collection-search-clear" data-collection-search-clear="${tab}" aria-label="Clear the search">&times;</button>
+    </label>`;
+}
+
+function collectionEmptyHtml(tab) {
+  return `<div class="collection-empty" data-collection-empty="${tab}" hidden>Nothing matches your search.</div>`;
+}
+
+// shows and hides SEALS, sections and demons in place for the build filter and both searches
+function applyCollectionVisibility(screen) {
+  if (!screen) return;
+  screen.querySelectorAll(".collection-seal").forEach((button) => {
+    button.hidden = !collectionSealVisible(button.dataset.collectionSeal);
+  });
+  screen.querySelectorAll(".collection-section").forEach((section) => {
+    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
+  });
+  screen.querySelectorAll(".collection-demon").forEach((button) => {
+    button.hidden = !demonMatchesSearch(button.dataset.collectionDemon);
+  });
+  const sealsEmpty = screen.querySelector('[data-collection-empty="seals"]');
+  if (sealsEmpty) sealsEmpty.hidden = Boolean(screen.querySelector(".collection-seal:not([hidden])"));
+  const goetiaEmpty = screen.querySelector('[data-collection-empty="goetia"]');
+  if (goetiaEmpty) goetiaEmpty.hidden = Boolean(screen.querySelector(".collection-demon:not([hidden])"));
+  screen.querySelectorAll(".collection-search").forEach((label) => {
+    const input = label.querySelector("[data-collection-search]");
+    label.classList.toggle("has-value", Boolean(input?.value));
+  });
+}
+
+function applyCollectionSearch(screen, tab, value) {
+  collectionSearch[tab] = value;
+  if (!screen) return;
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+  applyCollectionVisibility(screen);
+  const body = screen.querySelector(`[data-collection-panel="${tab}"] .collection-body`);
+  if (body) body.scrollTop = 0;
+}
+
 /* ---- stored progress ---- */
 let collectionProgressCache = null;
 
@@ -669,13 +767,13 @@ function collectionDemonsHtml() {
     const slain = isDemonSlain(spec.key);
     const number = romanNumeral(index + 1);
     return `
-      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button" data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
+      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
       </button>`;
   });
-  return `<div class="collection-demon-grid">${cells.join("")}</div>`;
+  return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
 }
 
 function collectionDemonInfoHtml(key, pinned = false) {
@@ -874,12 +972,7 @@ function applyCollectionFilter(screen, filter) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-  screen.querySelectorAll(".collection-seal").forEach((button) => {
-    button.hidden = !sealMatchesCollectionFilter(button.dataset.collectionSeal, filter);
-  });
-  screen.querySelectorAll(".collection-section").forEach((section) => {
-    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
-  });
+  applyCollectionVisibility(screen);
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   hideCollectionInfo(screen);
   const body = screen.querySelector(".collection-body");
@@ -911,7 +1004,7 @@ function renderCollectionScreen(from) {
   const sections = collectionSections()
     .map(
       (section) => `
-        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => sealMatchesCollectionFilter(id, filter)) ? "" : " hidden"}>
+        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => collectionSealVisible(id)) ? "" : " hidden"}>
           <h2 class="collection-section-title">${escapeHtml(section.title)}</h2>
           <div class="collection-grid">
             ${section.ids
@@ -920,7 +1013,7 @@ function renderCollectionScreen(from) {
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
                 const beaten = status !== "locked" && isSealBeaten(id) ? " beaten" : "";
                 return `
-                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
@@ -946,17 +1039,19 @@ function renderCollectionScreen(from) {
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia ? " hidden" : ""}>
         ${collectionFiltersHtml(all)}
-        <div class="collection-legend" aria-hidden="true">
-          <span class="legend discovered">discovered</span>
-          <span class="legend undiscovered">undiscovered</span>
-          <span class="legend locked">locked</span>
+        <div class="collection-legend">
+          ${collectionSearchHtml("seals")}
+          <span class="legend discovered" aria-hidden="true">discovered</span>
+          <span class="legend undiscovered" aria-hidden="true">undiscovered</span>
+          <span class="legend locked" aria-hidden="true">locked</span>
         </div>
-        <div class="collection-body">${sections}</div>
+        <div class="collection-body">${sections}${collectionEmptyHtml("seals")}</div>
       </div>
       <div class="collection-panel" data-collection-panel="goetia"${goetia ? "" : " hidden"}>
-        <div class="collection-legend" aria-hidden="true">
-          <span class="legend slain">defeated</span>
-          <span class="legend unslain">not defeated</span>
+        <div class="collection-legend">
+          ${collectionSearchHtml("goetia")}
+          <span class="legend slain" aria-hidden="true">defeated</span>
+          <span class="legend unslain" aria-hidden="true">not defeated</span>
           <button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
@@ -1026,6 +1121,39 @@ function bindCollectionEvents() {
       applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
     });
   });
+  document.querySelectorAll("[data-collection-search]").forEach((input) => {
+    const screen = input.closest(".collection-screen");
+    bindOn(input, "input", () => applyCollectionSearch(screen, input.dataset.collectionSearch, input.value));
+    bindOn(input, "click", (event) => event.stopPropagation());
+    // typing never reaches the game's keys; Esc clears the search first, then closes the collection
+    bindOn(input, "keydown", (event) => {
+      if (event.key === "Escape" && !input.value) {
+        input.blur();
+        return;
+      }
+      event.stopPropagation();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        input.value = "";
+        applyCollectionSearch(screen, input.dataset.collectionSearch, "");
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        input.blur();
+      }
+    });
+  });
+  document.querySelectorAll("[data-collection-search-clear]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const tab = button.dataset.collectionSearchClear;
+      const screen = button.closest(".collection-screen");
+      const input = screen?.querySelector(`[data-collection-search="${tab}"]`);
+      if (input) input.value = "";
+      applyCollectionSearch(screen, tab, "");
+      input?.focus();
+    });
+  });
   document.querySelectorAll("[data-collection-dev-demons]").forEach((button) => {
     bindOn(button, "click", (event) => {
       event.stopPropagation();
@@ -1033,6 +1161,7 @@ function bindCollectionEvents() {
       const screen = button.closest(".collection-screen");
       const body = screen?.querySelector('[data-collection-panel="goetia"] .collection-body');
       if (body) body.innerHTML = collectionDemonsHtml();
+      applyCollectionVisibility(screen);
       const count = screen?.querySelector('[data-collection-for="goetia"] strong');
       if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length);
       button.classList.toggle("active", loadCollectionProgress().devAllDemons);
@@ -1069,6 +1198,7 @@ function bindCollectionEvents() {
     });
   });
   const screen = document.querySelector(".collection-screen");
+  applyCollectionVisibility(screen);
   const info = screen?.querySelector(".collection-info");
   if (info) {
     bindOn(info, "click", (event) => {

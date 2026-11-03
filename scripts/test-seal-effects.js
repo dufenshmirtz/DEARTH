@@ -1874,3 +1874,32 @@ test("Satan's toll: after refusing him, the next reroll takes all your SIN, then
     assert.equal(currentRerollCost(), 3);
   `);
 });
+
+test("collection search: SEALS by name, text and build; demons by number, and by name only once defeated", () => {
+  game()(`
+    state.mode = "arcade";
+    const paimonSeal = GOETIC_BOSS_BY_KEY.paimon.passiveId;
+    assert.ok(sealMatchesSearch(paimonSeal, ""));
+    assert.ok(sealMatchesSearch(paimonSeal, ITEMS[paimonSeal].name.toUpperCase()));
+    assert.ok(!sealMatchesSearch(paimonSeal, "zzzz"));
+    const bountyIds = collectibleSealIds().filter(id => sealBuilds(id).includes("bounty"));
+    assert.ok(bountyIds.every(id => sealMatchesSearch(id, "bounty")));
+    // every word has to match
+    assert.ok(!sealMatchesSearch(paimonSeal, ITEMS[paimonSeal].name + " zzzz"));
+
+    assert.ok(demonMatchesSearch("paimon", "9"));
+    assert.ok(demonMatchesSearch("paimon", "ix"));
+    assert.ok(!demonMatchesSearch("paimon", "19"));
+    assert.ok(!demonMatchesSearch("paimon", "paimon"));
+    loadCollectionProgress().slain.push("paimon", "marax");
+    assert.ok(demonMatchesSearch("paimon", "Paim"));
+    assert.ok(demonMatchesSearch("marax", "morax"));
+    assert.ok(!demonMatchesSearch("bael", "paimon"));
+    toggleBoundDemon("paimon");
+    assert.ok(demonMatchesSearch("paimon", "bound"));
+    assert.ok(!demonMatchesSearch("marax", "bound"));
+    collectionSearch.goetia = "paimon";
+    const html = collectionDemonsHtml();
+    assert.equal((html.match(/class="collection-demon [^"]*" type="button" hidden/g) || []).length, 71);
+  `);
+});

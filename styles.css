@@ -10253,6 +10253,111 @@ body.mobile-arcade .collection-screen {
   justify-content: flex-end;
 }
 
+/* collection: a search box at the left of each tab's legend row */
+.collection-legend {
+  position: relative;
+  align-items: center;
+}
+
+.collection-search {
+  position: absolute;
+  left: clamp(14px, 4vw, 60px);
+  top: 50%;
+  transform: translateY(calc(-50% - 4px));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: min(240px, 24vw);
+  min-width: 150px;
+  padding: 0 2px 3px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") bottom center / 100% 5px no-repeat;
+  color: #8d877c;
+  cursor: text;
+}
+
+.collection-search:focus-within,
+.collection-search.has-value {
+  color: #ece6d8;
+}
+
+.collection-search-icon {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+}
+
+.collection-screen .collection-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0;
+  padding: 2px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  color: #ece6d8 !important;
+  caret-color: #dc2a2f;
+}
+
+.collection-screen .collection-search-input::placeholder {
+  color: #5d5850;
+  font-style: italic;
+}
+
+.collection-screen .collection-search-clear {
+  display: none;
+  flex: 0 0 auto;
+  min-height: 0 !important;
+  padding: 0 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 18px !important;
+  line-height: 1;
+  color: #8d877c !important;
+  cursor: pointer;
+}
+
+.collection-search.has-value .collection-search-clear {
+  display: block;
+}
+
+.collection-screen .collection-search-clear:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  color: #dc2a2f !important;
+}
+
+.collection-empty {
+  padding: 40px 0;
+  text-align: center;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 16px !important;
+  color: #8d877c !important;
+}
+
+/* very narrow screens: the box gets its own line above the legend */
+@media (max-width: 640px) {
+  .collection-legend {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .collection-search {
+    position: static;
+    transform: none;
+    flex: 0 0 100%;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+}
+
 /* testing only: DEV unlock all in the Ars Goetia legend row */
 .collection-screen .collection-dev-button {
   min-height: 0 !important;
