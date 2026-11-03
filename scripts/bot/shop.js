@@ -10,12 +10,15 @@ const BUILDS = ["bounty", "memory", "reveal", "critical", "personality", "artifa
 
 // ---- what things are worth ----
 function sealPerRound(id, price, experience) {
-  const prior = (price || 0) * CONFIG.shop.priorPointsPerPrice;
+  // the price-based guess, on the measured scale once bot:tune has fitted it
+  const prior = (price || 0) * (experience?.priorPointsPerPrice ?? CONFIG.shop.priorPointsPerPrice);
   const known = experience?.seals?.[id];
   if (!known || !Number.isFinite(known.perRound)) return prior;
-  // trust the measurement more as it is based on more rounds
-  const weight = known.rounds / (known.rounds + 40);
-  return weight * known.perRound + (1 - weight) * prior;
+  // trust the measurement more as it is based on more rounds (half-trusted at trustRounds)
+  const weight = known.rounds / (known.rounds + CONFIG.shop.trustRounds);
+  const value = weight * known.perRound + (1 - weight) * prior;
+  // a bad first impression never drops a SEAL to nothing: it keeps getting a chance
+  return Math.max(value, prior * CONFIG.shop.valueFloor);
 }
 
 function buildMultiplier(tags, build) {

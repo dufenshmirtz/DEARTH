@@ -238,7 +238,7 @@ async function openBatch(id, quiet) {
   renderBatch();
 }
 
-const TABS = [["overview", "Overview"], ["bosses", "BOSSES"], ["seals", "SEALS"], ["artifacts", "ARTIFACTS"], ["runs", "Runs"], ["compare", "Compare"], ["settings", "Settings used"]];
+const TABS = [["overview", "Overview"], ["bosses", "BOSSES"], ["late", "Late game"], ["seals", "SEALS"], ["artifacts", "ARTIFACTS"], ["runs", "Runs"], ["compare", "Compare"], ["settings", "Settings used"]];
 
 function renderBatch() {
   const { meta, summary } = view.batch;
@@ -255,13 +255,16 @@ function renderBatch() {
   document.querySelectorAll(".tab").forEach((el) => el.addEventListener("click", () => { view.tab = el.dataset.tab; remember(); renderBatch(); }));
   const body = $("#tabBody");
   if (!summary.overview.runs) { body.innerHTML = `<div class="empty">No finished runs yet.</div>`; return; }
-  ({ overview: renderOverview, bosses: renderBosses, seals: renderSeals, artifacts: renderArtifacts, runs: renderRuns, compare: renderCompare, settings: renderSettings })[view.tab](body, summary, meta);
+  ({ overview: renderOverview, bosses: renderBosses, late: renderLate, seals: renderSeals, artifacts: renderArtifacts, runs: renderRuns, compare: renderCompare, settings: renderSettings })[view.tab](body, summary, meta);
 }
 
+// "5% (3-8%)": the range the true number most likely sits in (95%); wide with few runs
+function rangeText(value, range) { return range ? `${value}% (${range[0]}-${range[1]}%)` : `${value}%`; }
+function pmText(value, pm) { return pm === null || pm === undefined ? `${value}` : `${value} ±${pm}`; }
 function tiles(o) {
   const t = [
-    [`${o.mainWinRate}%`, `Main game won (${o.mainWins}/${o.runs})`],
-    [o.avgUniqueBossKills, "Unique BOSSES beaten (avg of 8)"],
+    [rangeText(o.mainWinRate, o.mainWinRange), `Main game won (${o.mainWins}/${o.runs})`],
+    [pmText(o.avgUniqueBossKills, o.bossKillsPlusMinus), "Unique BOSSES beaten (avg of 8)"],
     [o.avgRounds, `Rounds per run (median ${o.medianRounds})`],
     [o.endlessAvg, `Endless BOSSES after a win (best ${o.endlessBest})`],
     [`${o.critRate}%`, "Rounds with our CRITICAL"],
@@ -279,7 +282,7 @@ function alarmsHtml(alarms) {
 function bindAlarms(alarms) {
   document.querySelectorAll(".alarm.link").forEach((el) => el.addEventListener("click", () => {
     const a = alarms[+el.dataset.i];
-    const tab = { boss: "bosses", group: "bosses", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
+    const tab = { boss: "bosses", group: "bosses", late: "late", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
     view.tab = tab; renderBatch();
     if (!a.link.id) return;
     const row = document.querySelector(`[data-key="${CSS.escape(a.link.id)}"]`);
@@ -297,7 +300,8 @@ function renderOverview(body, s) {
       <div><h2>SIN at the start of each round</h2>${chartHtml("sinChart")}<div class="hint">Prices double above 150 SIN.</div></div>
     </div>
     <div class="grid2" style="margin-top:16px">
-      <div><h2>Builds</h2>${table(s.builds, [["build", "Build"], ["runs", "Runs", "num"], ["winRate", "Won %", "num"], ["avgUniqueBossKills", "BOSSES (of 8)", "num"], ["avgRounds", "Rounds", "num"], ["endlessAvg", "Endless", "num"]], "builds", "build")}</div>
+      <div><h2>Builds</h2>${table(s.builds.map((b) => ({ ...b, wonText: rangeText(b.winRate, b.winRange), bossesText: pmText(b.avgUniqueBossKills, b.bossKillsPlusMinus) })), [["build", "Build"], ["runs", "Runs", "num"], ["wonText", "Won % (likely range)", "num"], ["bossesText", "BOSSES (of 8)", "num"], ["avgRounds", "Rounds", "num"], ["endlessAvg", "Endless", "num"]], "builds", "build")}
+        <div class="hint">The ranges show where the real number most likely is. Two builds only really differ when their BOSSES ranges don't overlap (e.g. 4.1 ±0.5 vs 3.4 ±0.4 still overlap).</div></div>
       <div><h2>What ended the runs</h2>
         <table><tr><th>BOSSES alive at death</th><th class="num">Runs</th><th></th></tr>
         ${s.deaths.map((d) => `<tr><td>${esc(d.by)}</td><td class="num">${d.count} (${d.share}%)</td><td style="width:40%"><div class="bar" style="width:${(d.count / deathsMax) * 100}%"></div></td></tr>`).join("")}</table>
@@ -316,7 +320,7 @@ function renderBosses(body, s) {
   const groups = s.bossGroups || [];
   body.innerHTML = `<h2>BOSSES on their own</h2>
     ${table(s.bosses, [["name", "BOSS"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["examples", "Runs it ended"]], "bosses", "name")}
-    <div class="hint">"Ended run alone" counts deaths with only this BOSS alive; deaths with 2+ BOSSES alive count for their group below. Petros &amp; Pavlos are one BOSS. Click a run to open its log at that round.</div>
+    <div class="hint">The 8 main-game BOSSES. Goetic BOSSES (endless) are in the Late game tab. "Ended run alone" counts deaths with only this BOSS alive; deaths with 2+ BOSSES alive count for their group below. Petros &amp; Pavlos are one BOSS. Click a run to open its log at that round.</div>
     ${o ? `<h2 style="margin-top:18px">When BOSSES overlap</h2>
     <div class="tiles">
       <div class="tile"><div class="v">${o.runsWithOverlap}%</div><div class="k">Runs that met 2+ BOSSES at once</div></div>
@@ -331,12 +335,46 @@ function renderBosses(body, s) {
   body.querySelectorAll('table[data-table="groups"] tbody tr').forEach((tr) => { if (tr.textContent.includes("few")) tr.classList.add("dim"); });
 }
 
+function renderLate(body, s) {
+  const L = s.lateGame;
+  if (!L) { body.innerHTML = `<div class="empty">This report was made before the Late game view existed. Reopen the batch to rebuild it.</div>`; return; }
+  const maxDepth = Math.max(1, ...L.depth.map((d) => d.count));
+  const demons = (s.demons || []).map((d) => ({ ...d, sample: d.total ? "" : d.few ? "few" : "" }));
+  body.innerHTML = `<h2>Late game: after the 8 BOSSES</h2>
+    <div class="tiles">
+      <div class="tile"><div class="v">${L.winners}</div><div class="k">Runs that won the main game (${L.winShare}%)</div></div>
+      <div class="tile"><div class="v">${pmText(L.endlessAvg, L.endlessPlusMinus)}</div><div class="k">Goetic BOSSES beaten after the win (average)</div></div>
+      <div class="tile"><div class="v">${L.endlessMedian}</div><div class="k">Half the winning runs beat at most this many</div></div>
+      <div class="tile"><div class="v">${L.endlessBest}</div><div class="k">Best endless run</div></div>
+      <div class="tile"><div class="v">${L.endlessRoundsAvg}</div><div class="k">Rounds survived after the win</div></div>
+      <div class="tile"><div class="v">${L.hpAtWinAvg}</div><div class="k">HEALTH left when the main game is won</div></div>
+      <div class="tile"><div class="v">${L.damageMain} → ${L.damageEndless}</div><div class="k">Damage per round: main game → endless</div></div>
+    </div>
+    ${L.winners ? `<div class="grid2">
+      <div><h2>How far winning runs got</h2>
+        <table><tr><th>Goetic BOSSES beaten</th><th class="num">Runs</th><th></th></tr>
+        ${L.depth.map((d) => `<tr><td>${d.label}</td><td class="num">${d.count}</td><td style="width:50%"><div class="bar" style="width:${(d.count / maxDepth) * 100}%"></div></td></tr>`).join("")}</table></div>
+      <div><h2>What ended them</h2>
+        <table><tr><th>BOSSES alive at death</th><th class="num">Runs</th></tr>
+        ${L.endedBy.map((d) => `<tr><td>${esc(d.by)}</td><td class="num">${d.count} (${d.share}%)</td></tr>`).join("")}</table></div>
+    </div>` : `<div class="sub">No run won the main game in this batch.</div>`}
+    <h2 style="margin-top:16px">Goetic BOSSES</h2>
+    ${demons.length ? table(demons, [["name", "BOSS"], ["blocks", "Blocks SEAL"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["sample", "Sample"], ["examples", "Runs it ended"]], "demons", "name") : `<div class="sub">No Goetic BOSS met yet.</div>`}
+    <div class="hint">Each demon blocks its own SEAL while it lives. The order of demons is shuffled every run, so most are met only a few times: rows marked "few" (under 8 meetings) are rough. The first row adds them all up. Groups of BOSSES alive together are in the BOSSES tab.</div>
+    ${L.runs.length ? `<h2 style="margin-top:16px">Winning runs</h2>${table(L.runs, [["file", "Run"], ["build", "Build"], ["winRound", "Won in round", "num"], ["endless", "Goetic BOSSES after", "num"], ["endlessRounds", "Rounds after", "num"], ["hpAtWin", "HP at the win", "num"], ["diedTo", "Ended by"]], "runs", "file")}` : ""}`;
+  bindTables(body);
+  body.querySelectorAll('table[data-table="demons"] tbody tr').forEach((tr, i) => {
+    if (demons[i]?.total) tr.style.fontWeight = "bold";
+  });
+  body.querySelectorAll('table[data-table="demons"] tbody tr').forEach((tr) => { if (tr.textContent.includes("few")) tr.classList.add("dim"); });
+}
+
 function renderSeals(body, s) {
-  const rows = s.seals.map((x) => ({ ...x, wins: x.winRateOwned === null ? null : `${x.winRateOwned}% / ${x.winRateExpected ?? "-"}%`, bossesVs: x.avgBossKillsOwned === null ? null : `${x.avgBossKillsOwned} / ${x.bossKillsExpected ?? "-"}` }));
+  const rows = s.seals.map((x) => ({ ...x, sure: x.clear ? (x.bossEdge > 0 ? "stronger" : "weaker") : "", edgePm: x.bossEdgePlusMinus === null || x.bossEdgePlusMinus === undefined ? "" : `±${x.bossEdgePlusMinus}`, wins: x.winRateOwned === null ? null : `${x.winRateOwned}% / ${x.winRateExpected ?? "-"}%`, bossesVs: x.avgBossKillsOwned === null ? null : `${x.avgBossKillsOwned} / ${x.bossKillsExpected ?? "-"}` }));
   body.innerHTML = `<h2>SEALS</h2>
     <div class="filters">Find <input type="text" id="sealFind" placeholder="name or id" /></div>
-    ${table(rows, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["arrivalRound", "Usually arrives", "num"], ["bossEdge", "BOSSES vs expected", "num"], ["bossesVs", "BOSSES owned / expected", "num"], ["wins", "Won % owned / expected", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}
-    <div class="hint">Each SEAL is compared with runs that were still alive at the round it usually arrives, so a SEAL bought late doesn't look strong just because those runs had already survived. "BOSSES vs expected" = BOSSES beaten by runs that owned it minus the expected number (+1 = one more BOSS). Grey rows: owned in fewer than 8 runs. For a sure answer, run a forced-SEAL A/B batch. "Own points / round" is what the SEAL itself did (damage, healing, SIN...) on the bot's points scale.</div>`;
+    ${table(rows, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["arrivalRound", "Usually arrives", "num"], ["bossEdge", "BOSSES vs expected", "num"], ["edgePm", "Range", "num"], ["sure", "Beyond luck?"], ["bossesVs", "BOSSES owned / expected", "num"], ["wins", "Won % owned / expected", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}
+    <div class="hint">Each SEAL is compared with runs that were still alive at the round it usually arrives, so a SEAL bought late doesn't look strong just because those runs had already survived. "BOSSES vs expected" = BOSSES beaten by runs that owned it minus the expected number (+1 = one more BOSS); "Range" is how far that could be off by luck, and "Beyond luck?" says stronger/weaker only when the difference is bigger than its range. Grey rows: owned in fewer than 8 runs. For a sure answer, run a forced-SEAL A/B batch. "Own points / round" is what the SEAL itself did (damage, healing, SIN...) on the bot's points scale.</div>`;
   body.querySelectorAll('table[data-table="seals"] tbody tr').forEach((tr) => { const row = rows.find((x) => x.id === tr.dataset.key); if (row && row.runsOwned < 8) tr.classList.add("dim"); });
   bindTables(body);
   $("#sealFind").addEventListener("input", (e) => {
@@ -389,7 +427,11 @@ async function renderCompare(body, s, meta) {
       ${sameSeeds ? `<div class="sub">Same seed set: the runs start from the same dice, so differences come from the change.</div>` : `<div class="warnline">Different seed sets: differences include luck. Use the same seed set for A/B tests.</div>`}
       <div class="legend"><i style="background:var(--series-a)"></i>${esc(nameA)} <i style="background:var(--series-b)"></i>${esc(nameB)}</div>
       <table><tr><th></th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th><th class="num">Difference</th></tr>
-      ${rows.map(([k, t]) => `<tr><td>${t}</td><td class="num">${a.overview[k]}</td><td class="num">${b.overview[k]}</td><td class="num">${delta(a.overview[k], b.overview[k])}</td></tr>`).join("")}</table>
+      ${rows.map(([k, t]) => {
+        const show = (o) => k === "mainWinRate" ? rangeText(o[k], o.mainWinRange) : k === "avgUniqueBossKills" ? pmText(o[k], o.bossKillsPlusMinus) : o[k];
+        return `<tr><td>${t}</td><td class="num">${show(a.overview)}</td><td class="num">${show(b.overview)}</td><td class="num">${delta(a.overview[k], b.overview[k])}</td></tr>`;
+      }).join("")}</table>
+      ${pairedHtml(a, b, nameA, nameB)}
       <h2 style="margin-top:16px">HEALTH at the start of each round</h2>${chartHtml("cmpChart")}
       <div class="grid2" style="margin-top:16px">
         <div><h2>BOSSES: ended run %</h2><table><tr><th>BOSS</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
@@ -402,6 +444,24 @@ async function renderCompare(body, s, meta) {
       { name: nameB, color: "var(--series-b)", points: b.curve.map((c) => [c.round, c.hp, c.alive]) }
     ], { yMax: 100, unit: "HP", labels: true });
   }
+}
+
+// same seeds in both batches: compare run by run (the fairest comparison)
+function pairedHtml(a, b, nameA, nameB) {
+  const bySeed = new Map(b.runs.map((run) => [run.seed, run]));
+  const pairs = a.runs.filter((run) => bySeed.has(run.seed)).map((run) => [run, bySeed.get(run.seed)]);
+  if (pairs.length < 5) return "";
+  const diffs = pairs.map(([x, y]) => x.uniqueBossKills - y.uniqueBossKills);
+  const better = diffs.filter((d) => d > 0).length, worse = diffs.filter((d) => d < 0).length, same = diffs.length - better - worse;
+  const mean = diffs.reduce((p, c) => p + c, 0) / diffs.length;
+  const sd = Math.sqrt(diffs.reduce((p, c) => p + (c - mean) ** 2, 0) / Math.max(1, diffs.length - 1));
+  const pm = Math.round(1.96 * (sd / Math.sqrt(diffs.length)) * 100) / 100;
+  const m = Math.round(mean * 100) / 100;
+  const verdict = Math.abs(m) > pm ? (m > 0 ? `${esc(nameA)} is really better` : `${esc(nameB)} is really better`) : "the difference is within luck";
+  const winsA = pairs.filter(([x]) => x.mainWin).length, winsB = pairs.filter(([, y]) => y.mainWin).length;
+  return `<h2 style="margin-top:16px">Same seeds, run by run (${pairs.length} pairs)</h2>
+    <div>On the same dice, ${esc(nameA)} beat more BOSSES in <b>${better}</b> runs, fewer in <b>${worse}</b>, the same in <b>${same}</b>.
+    Average change: <b>${m > 0 ? "+" : ""}${m} ±${pm}</b> BOSSES per run, so ${verdict}. Main game won: ${winsA} vs ${winsB}.</div>`;
 }
 
 // ---------- tables (click a header to sort) ----------

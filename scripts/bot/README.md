@@ -33,7 +33,19 @@ then open one batch in Bot Lab > Compare and pick the other.
   Daggers are kept for BOSSES.
 - **Shop** (`shop.js`): saves for the first 3 shops, then spends. SEAL worth = experience (or price before tuning)
   x build fit; ELITE, swaps, rerolls and a 1-in-10 trial buy so every SEAL gets data.
+- **Experience** (`tune.js`): a SEAL's worth mixes what it did itself (damage, healing, SIN valued at what it was worth
+  when it came in, capped at 4x a typical SEAL) with whether runs holding it beat more BOSSES than runs still alive at
+  the round it arrived. The second part counts more as more runs hold the SEAL; measurements are only half-trusted
+  after 200 rounds, and a SEAL never drops below a quarter of its price-based estimate.
 - **Run plan** (`player.js`): one build per run, BOSS prep after 7 KOs, SIN kept for new SEAL slots.
+
+## Reading the report
+
+Bot Lab shows ranges next to win rates and averages: the real number is most likely inside them, and two batches,
+builds or SEALS only really differ when their ranges don't overlap. Compare pairs runs by seed when two batches share a
+seed set. SEALS are compared with runs still alive at the round they usually arrive ("BOSSES vs expected", with a
+"Beyond luck?" column). Deaths with 2+ BOSSES alive count for that group. The Late game tab covers everything after the
+8 BOSSES: endless depth, what ends it, and every Goetic BOSS by name with the SEAL it blocks.
 
 Every number that shapes this is in `config.js` (points scale, risk, shop habits). Each batch saves the config it used.
 

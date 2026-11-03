@@ -64,7 +64,11 @@ module.exports = {
     maxRerolls: 6,
     pileMaxRerolls: 10, // with more SIN than the working bank
     richMaxRerolls: 15, // above 150 SIN: keep rerolling to spend it (looking for ELITE upgrades)
-    priorPointsPerPrice: 0.12 // before any tuning: a SEAL earns price x this points per round
+    priorPointsPerPrice: 0.12, // before any tuning: a SEAL earns price x this points per round
+    trustRounds: 200, // a measured SEAL value counts half once it is based on this many rounds owned
+    valueCapMultiple: 4, // bot:tune caps a SEAL at this many times a typical SEAL (one lucky streak can't dominate)
+    valueFloor: 0.25, // a SEAL never counts less than this share of its price-based estimate
+    outcomeTrustRuns: 60 // "beat more BOSSES?" counts half once this many runs held the SEAL (the rest: what it did itself)
   },
 
   // ---- run plan ----

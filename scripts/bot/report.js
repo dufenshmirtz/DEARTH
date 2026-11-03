@@ -4,29 +4,40 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SUMMARY_VERSION = 2;
+const SUMMARY_VERSION = 3;
 const UNIQUE_BOSSES = ["Zilon", "Dantre", "Pyros", "Threon", "Kalha", "Serafim", "Padma", "Petros", "Pavlos"];
 const TWINS = "Petros & Pavlos";
-const GOETIC = "Goetic (endless)";
+const ALL_GOETIC = "All Goetic BOSSES";
 
-// one name per BOSS as the report counts them: the twins are one BOSS, Goetic demons are counted together
+// one name per BOSS as the report counts them: the twins are one BOSS, everyone else by name
 function bossUnit(name) {
-  if (name === "Petros" || name === "Pavlos") return TWINS;
-  return UNIQUE_BOSSES.includes(name) ? name : GOETIC;
+  return name === "Petros" || name === "Pavlos" ? TWINS : name;
+}
+function isMainBoss(unit) {
+  return unit === TWINS || UNIQUE_BOSSES.includes(unit);
 }
 
-// "Threon + Padma" and "Padma + Threon" are the same group; two Goetic demons at once are "Goetic (endless) x2"
+// "Threon + Padma" and "Padma + Threon" are the same group
 function bossGroup(names) {
-  const units = new Map();
-  names.filter(Boolean).forEach((name) => {
-    const unit = bossUnit(name);
-    if (!units.has(unit)) units.set(unit, new Set());
-    units.get(unit).add(name);
-  });
-  const parts = [...units.entries()]
-    .map(([unit, originals]) => (unit === GOETIC && originals.size > 1 ? `${unit} x${originals.size}` : unit))
-    .sort((a, b) => a.localeCompare(b));
-  return { key: parts.join(" + "), size: [...units.entries()].reduce((sum, [unit, originals]) => sum + (unit === GOETIC ? originals.size : 1), 0) };
+  const units = [...new Set(names.filter(Boolean).map(bossUnit))].sort((a, b) => a.localeCompare(b));
+  return { key: units.join(" + "), size: units.length };
+}
+
+// 95% range for a share (Wilson): with few runs the range is wide
+function shareRange(part, whole) {
+  if (!whole) return [0, 0];
+  const z = 1.96;
+  const p = part / whole;
+  const center = (p + (z * z) / (2 * whole)) / (1 + (z * z) / whole);
+  const half = (z * Math.sqrt((p * (1 - p)) / whole + (z * z) / (4 * whole * whole))) / (1 + (z * z) / whole);
+  return [Math.round(Math.max(0, center - half) * 1000) / 10, Math.round(Math.min(1, center + half) * 1000) / 10];
+}
+// +/- for an average (95%)
+function avgPlusMinus(values) {
+  if (values.length < 2) return null;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (values.length - 1);
+  return Math.round(1.96 * Math.sqrt(variance / values.length) * 100) / 100;
 }
 
 function bossNamesOf(text) {
@@ -59,8 +70,9 @@ function* readRuns(dir) {
   }
 }
 
-function buildSummary(dir, { itemNames = null } = {}) {
-  const names = itemNames || loadItemNames();
+function buildSummary(dir, { gameInfo = null } = {}) {
+  const info = gameInfo || loadGameInfo();
+  const names = info.names;
   const runs = [];
   const builds = {};
   const bosses = {};
@@ -72,6 +84,8 @@ function buildSummary(dir, { itemNames = null } = {}) {
   const artifacts = {};
   const curve = {};
   const ownership = []; // per run: { rounds, win, bosses, firstOwned: { sealId: round } }
+  const late = []; // runs that won the main game: how the endless part went
+  const lateDamage = { main: 0, mainRounds: 0, endless: 0, endlessRounds: 0 };
   let failed = 0;
   let predErrSum = 0;
   let predErrCount = 0;
@@ -87,6 +101,30 @@ function buildSummary(dir, { itemNames = null } = {}) {
     }
     const r = record.result;
     runs.push({ file: record.file, seed: record.seed, build: record.build, ...r, sealStats: undefined });
+    // late game: everything after the main-game win
+    record.rounds.forEach((round) => {
+      if (r.mainWin && round.r > r.mainWinRound) {
+        lateDamage.endless += round.dmg || 0;
+        lateDamage.endlessRounds += 1;
+      } else {
+        lateDamage.main += round.dmg || 0;
+        lateDamage.mainRounds += 1;
+      }
+    });
+    if (r.mainWin) {
+      const winRound = record.rounds.find((round) => round.r === r.mainWinRound);
+      late.push({
+        file: record.file,
+        build: record.build,
+        winRound: r.mainWinRound,
+        endless: r.endlessBossKills,
+        endlessRounds: r.rounds - r.mainWinRound,
+        hpAtWin: winRound ? winRound.hp1 : null,
+        outcome: r.outcome,
+        diedTo: r.outcome === "died" ? bossGroup(bossNamesOf(r.diedTo?.boss)).key || "no BOSS alive" : r.outcome,
+        diedRound: r.diedRound
+      });
+    }
     const b = builds[record.build] || (builds[record.build] = { runs: 0, wins: 0, uniqueKills: [], rounds: [], endless: [] });
     b.runs += 1;
     if (r.mainWin) b.wins += 1;
@@ -112,7 +150,8 @@ function buildSummary(dir, { itemNames = null } = {}) {
       arrivals.push({ unit, spawnRound: boss.spawnRound, killRound: boss.killRound, rounds: boss.rounds, hpLost: boss.hpLost });
     });
     arrivals.forEach((boss) => {
-      const entry = bosses[boss.unit] || (bosses[boss.unit] = { name: boss.unit, unique: boss.unit !== GOETIC, met: 0, killed: 0, endedRun: 0, rounds: [], hpLost: [], examples: [] });
+      const kind = isMainBoss(boss.unit) ? "main" : info.demonSeal[boss.unit] ? "goetic" : "final";
+      const entry = bosses[boss.unit] || (bosses[boss.unit] = { name: boss.unit, unique: kind === "main", kind, blocks: info.demonSeal[boss.unit] || null, met: 0, killed: 0, endedRun: 0, rounds: [], hpLost: [], examples: [] });
       entry.met += 1;
       if (boss.killRound !== null) {
         entry.killed += 1;
@@ -155,7 +194,7 @@ function buildSummary(dir, { itemNames = null } = {}) {
       deathBy[key] = (deathBy[key] || 0) + 1;
       overlap.deaths += 1;
       // a death counts for a BOSS only when it was alone; with others alive it counts for the group
-      const target = group.size >= 2 ? groups[group.key] : group.size === 1 ? bosses[group.key.replace(/ x\d+$/, "")] : null;
+      const target = group.size >= 2 ? groups[group.key] : group.size === 1 ? bosses[group.key] : null;
       if (group.size >= 2) overlap.deathsInOverlap += 1;
       if (target) {
         target.endedRun += 1;
@@ -245,6 +284,7 @@ function buildSummary(dir, { itemNames = null } = {}) {
       entry.expectedWins += winsReached[round] / reached[round];
       entry.expectedBosses += bossesReached[round] / reached[round];
       entry.arrivalRoundSum += round;
+      (entry.edgeValues || (entry.edgeValues = [])).push(run.bosses - bossesReached[round] / reached[round]);
     });
   });
 
@@ -255,6 +295,8 @@ function buildSummary(dir, { itemNames = null } = {}) {
     failed,
     mainWins: wins,
     mainWinRate: pct(wins, total),
+    mainWinRange: shareRange(wins, total),
+    bossKillsPlusMinus: avgPlusMinus(runs.map((run) => run.uniqueBossKills)),
     avgUniqueBossKills: avg(runs.map((run) => run.uniqueBossKills)),
     avgRounds: avg(runs.map((run) => run.rounds)),
     medianRounds: median(runs.map((run) => run.rounds)),
@@ -273,14 +315,19 @@ function buildSummary(dir, { itemNames = null } = {}) {
     build,
     runs: b.runs,
     winRate: pct(b.wins, b.runs),
+    winRange: shareRange(b.wins, b.runs),
     avgUniqueBossKills: avg(b.uniqueKills),
+    bossKillsPlusMinus: avgPlusMinus(b.uniqueKills),
     avgRounds: avg(b.rounds),
     endlessAvg: avg(b.endless)
   }));
 
-  const bossRows = Object.values(bosses).map((boss) => ({
+  const allBossRows = Object.values(bosses).map((boss) => ({
     name: boss.name,
     unique: boss.unique,
+    kind: boss.kind,
+    blocks: boss.blocks ? names[boss.blocks] || boss.blocks : null,
+    few: boss.met < 8,
     met: boss.met,
     killed: boss.killed,
     killRate: pct(boss.killed, boss.met),
@@ -290,7 +337,18 @@ function buildSummary(dir, { itemNames = null } = {}) {
     avgHpLost: avg(boss.hpLost),
     examples: boss.examples
   }));
-  bossRows.sort((a, b) => b.endedRunRate - a.endedRunRate);
+  allBossRows.sort((a, b) => b.endedRunRate - a.endedRunRate || b.met - a.met);
+  const bossRows = allBossRows.filter((boss) => boss.kind === "main");
+  // demons: most-met first (their percentages only mean something with enough meetings)
+  const demonRows = allBossRows.filter((boss) => boss.kind !== "main").sort((a, b) => b.met - a.met || b.endedRun - a.endedRun);
+  // every Goetic BOSS together, the one steady number for the late game while each demon has few meetings
+  const demons = Object.values(bosses).filter((boss) => boss.kind !== "main");
+  if (demons.length) {
+    const sum = (key) => demons.reduce((total, boss) => total + boss[key], 0);
+    const rounds = demons.flatMap((boss) => boss.rounds);
+    const hpLost = demons.flatMap((boss) => boss.hpLost);
+    demonRows.unshift({ name: ALL_GOETIC, total: true, kind: "goetic", blocks: null, few: false, met: sum("met"), killed: sum("killed"), killRate: pct(sum("killed"), sum("met")), endedRun: sum("endedRun"), endedRunRate: pct(sum("endedRun"), sum("met")), avgRounds: avg(rounds), avgHpLost: avg(hpLost), examples: [] });
+  }
 
   const groupRows = Object.values(groups).map((group) => ({
     name: group.name,
@@ -328,6 +386,9 @@ function buildSummary(dir, { itemNames = null } = {}) {
     avgBossKillsOwned: seal.runsOwned ? Math.round((seal.bossKillsOwned / seal.runsOwned) * 100) / 100 : null,
     bossKillsExpected: seal.runsOwned ? Math.round((seal.expectedBosses / seal.runsOwned) * 100) / 100 : null,
     bossEdge: seal.runsOwned ? Math.round(((seal.bossKillsOwned - seal.expectedBosses) / seal.runsOwned) * 100) / 100 : null,
+    bossEdgePlusMinus: seal.edgeValues ? avgPlusMinus(seal.edgeValues) : null,
+    // the difference is bigger than its +/- range: likely real, not luck
+    clear: Boolean(seal.edgeValues && seal.edgeValues.length >= 5 && Math.abs((seal.bossKillsOwned - seal.expectedBosses) / seal.runsOwned) > (avgPlusMinus(seal.edgeValues) ?? Infinity)),
     pointsPerRound: seal.roundsOwned ? Math.round((seal.pointsSum / seal.roundsOwned) * 100) / 100 : 0,
     triggersPerRound: seal.roundsOwned ? Math.round((seal.triggers / seal.roundsOwned) * 100) / 100 : 0,
     roundPointsOwned: seal.roundsOwned ? Math.round((seal.roundPointsSum / seal.roundsOwned) * 100) / 100 : 0
@@ -351,8 +412,9 @@ function buildSummary(dir, { itemNames = null } = {}) {
   const deaths = Object.entries(deathBy).map(([by, count]) => ({ by, count, share: pct(count, total) })).sort((a, b) => b.count - a.count);
   const sources = Object.entries(deathSources).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count).slice(0, 12);
 
-  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows });
-  return { version: SUMMARY_VERSION, overview, builds: buildRows, bosses: bossRows, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
+  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows: allBossRows, groupRows, overlapSummary, sealRows, artifactRows, late });
+  const lateGame = buildLateGame(late, lateDamage, total);
+  return { version: SUMMARY_VERSION, overview, builds: buildRows, bosses: bossRows, demons: demonRows, lateGame, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
 }
 
 function newItemEntry(id, names) {
@@ -360,7 +422,7 @@ function newItemEntry(id, names) {
 }
 
 // thresholds for "this looks off" (small samples are ignored)
-function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows }) {
+function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows, late }) {
   const alarms = [];
   const add = (level, text, link = null) => alarms.push({ level, text, link });
   if (overview.runs < 20) add("info", `Only ${overview.runs} runs: numbers below are rough. 100+ runs give steadier results.`);
@@ -375,19 +437,22 @@ function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, ove
   });
   if (overview.runs >= 20 && overlapSummary.deathsShared >= 30) add("medium", `${overlapSummary.deathsShared}% of deaths happen with 2+ BOSSES alive (${overlapSummary.runsWithOverlap}% of runs meet an overlap).`, { type: "group", id: null });
   sealRows.forEach((seal) => {
-    if (seal.runsOwned >= 12 && seal.bossEdge !== null) {
+    if (seal.runsOwned >= 12 && seal.bossEdge !== null && seal.clear) {
       const vs = `compared with runs still alive at round ${seal.arrivalRound}, when it usually arrives`;
       if (seal.bossEdge >= 1) add("high", `${seal.name}: +${seal.bossEdge} BOSSES beaten ${vs} (wins ${seal.winRateOwned}% vs ${seal.winRateExpected}%).`, { type: "seal", id: seal.id });
       else if (seal.bossEdge <= -1) add("medium", `${seal.name}: ${seal.bossEdge} BOSSES beaten ${vs} (wins ${seal.winRateOwned}% vs ${seal.winRateExpected}%).`, { type: "seal", id: seal.id });
       else if (seal.winEdge >= 20) add("high", `${seal.name}: ${seal.winRateOwned}% main-game wins vs ${seal.winRateExpected}% expected ${vs}.`, { type: "seal", id: seal.id });
     }
-    if (seal.offered >= 25 && seal.buyRate < 5) add("low", `${seal.name} is almost never bought (${seal.bought} of ${seal.offered} offers).`, { type: "seal", id: seal.id });
   });
-  const ppr = sealRows.filter((seal) => seal.roundsOwned >= 50).map((seal) => seal.pointsPerRound).filter((v) => v > 0);
-  const med = median(ppr);
+  // what a SEAL does itself (SIN, damage...) vs whether that turns into BOSS kills
   sealRows.forEach((seal) => {
-    if (seal.roundsOwned >= 50 && med > 0 && seal.pointsPerRound >= med * 4) add("medium", `${seal.name} produces ${seal.pointsPerRound} points per round, ${Math.round(seal.pointsPerRound / med)}x a typical SEAL.`, { type: "seal", id: seal.id });
+    if (seal.runsOwned >= 20 && seal.pointsPerRound > 0 && seal.bossEdge !== null && seal.bossEdge <= 0) {
+      const typical = median(sealRows.filter((x) => x.roundsOwned >= 50 && x.pointsPerRound > 0).map((x) => x.pointsPerRound));
+      if (typical > 0 && seal.pointsPerRound >= typical * 4) add("medium", `${seal.name} produces a lot itself (${seal.pointsPerRound} points per round, ${Math.round(seal.pointsPerRound / typical)}x a typical SEAL) but runs with it don't beat more BOSSES (${seal.bossEdge}). Its SIN/BOUNTY may not be turning into power.`, { type: "seal", id: seal.id });
+    }
   });
+  const neverBought = sealRows.filter((seal) => seal.offered >= 25 && seal.buyRate < 5);
+  if (neverBought.length) add("low", `${neverBought.length} SEALS are almost never bought by the bot (under 5% of offers), e.g. ${neverBought.slice(0, 4).map((seal) => seal.name).join(", ")}. Sort the SEALS table by Bought %.`, { type: "seal", id: neverBought[0].id });
   artifactRows.forEach((item) => {
     if (item.offered >= 40 && item.uses === 0) add("low", `${item.name} was never used (${item.offered} offers).`, { type: "artifact", id: item.id });
   });
@@ -396,8 +461,19 @@ function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, ove
     if (solid.length > 1) {
       const best = solid.reduce((a, b) => (b.winRate > a.winRate ? b : a));
       const worst = solid.reduce((a, b) => (b.winRate < a.winRate ? b : a));
-      if (best.winRate - worst.winRate >= 25) add("medium", `Builds are uneven: ${best.build} wins ${best.winRate}%, ${worst.build} only ${worst.winRate}%.`, { type: "build", id: worst.build });
+      // BOSSES beaten is steadier than wins: flag it when the two ranges don't even overlap
+      const top = solid.reduce((a, b) => (b.avgUniqueBossKills > a.avgUniqueBossKills ? b : a));
+      const bottom = solid.reduce((a, b) => (b.avgUniqueBossKills < a.avgUniqueBossKills ? b : a));
+      const apart = top.avgUniqueBossKills - (top.bossKillsPlusMinus || 0) > bottom.avgUniqueBossKills + (bottom.bossKillsPlusMinus || 0);
+      if (apart) add("high", `Builds are uneven: ${top.build} beats ${top.avgUniqueBossKills} BOSSES on average, ${bottom.build} only ${bottom.avgUniqueBossKills} (wins ${top.winRate}% vs ${bottom.winRate}%).`, { type: "build", id: bottom.build });
+      else if (best.winRate - worst.winRate >= 25) add("medium", `Builds may be uneven: ${best.build} wins ${best.winRate}%, ${worst.build} only ${worst.winRate}% (could still be luck).`, { type: "build", id: worst.build });
     }
+  }
+  if (late && late.length >= 5) {
+    const depths = late.map((run) => run.endless);
+    const mid = median(depths);
+    if (mid <= 2) add("medium", `Endless is short: half of the runs that win the main game beat at most ${mid} Goetic BOSS${mid === 1 ? "" : "ES"} after it.`, { type: "late", id: null });
+    if (mid >= 30) add("medium", `Endless may be too easy: half of the winning runs beat ${mid}+ Goetic BOSSES.`, { type: "late", id: null });
   }
   if (overview.peakSinOver150 >= 30) add("medium", `SIN piles up: ${overview.peakSinOver150}% of runs went over 150 SIN at some point.`);
   if (overview.roundCapHits) add("info", `${overview.roundCapHits} runs hit the ${"round cap"} and were stopped.`);
@@ -405,7 +481,33 @@ function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, ove
   return alarms.sort((a, b) => order[a.level] - order[b.level]);
 }
 
-function loadItemNames() {
+// the late game: runs that won the main game and how far they got after it
+function buildLateGame(late, damage, totalRuns) {
+  const depths = late.map((run) => run.endless);
+  const buckets = [["0", 0, 0], ["1-2", 1, 2], ["3-5", 3, 5], ["6-10", 6, 10], ["11-20", 11, 20], ["21+", 21, Infinity]];
+  const ended = {};
+  late.forEach((run) => {
+    ended[run.diedTo] = (ended[run.diedTo] || 0) + 1;
+  });
+  return {
+    winners: late.length,
+    winShare: pct(late.length, totalRuns),
+    endlessAvg: avg(depths),
+    endlessPlusMinus: avgPlusMinus(depths),
+    endlessMedian: median(depths),
+    endlessBest: Math.max(0, ...depths),
+    endlessRoundsAvg: avg(late.map((run) => run.endlessRounds)),
+    hpAtWinAvg: avg(late.map((run) => run.hpAtWin).filter((hp) => Number.isFinite(hp))),
+    damageMain: damage.mainRounds ? Math.round((damage.main / damage.mainRounds) * 100) / 100 : 0,
+    damageEndless: damage.endlessRounds ? Math.round((damage.endless / damage.endlessRounds) * 100) / 100 : 0,
+    depth: buckets.map(([label, lo, hi]) => ({ label, count: depths.filter((d) => d >= lo && d <= hi).length })),
+    endedBy: Object.entries(ended).map(([by, count]) => ({ by, count, share: pct(count, late.length) })).sort((a, b) => b.count - a.count),
+    runs: late.sort((a, b) => b.endless - a.endless)
+  };
+}
+
+// item names, and which SEAL each Goetic BOSS blocks while it lives
+function loadGameInfo() {
   try {
     const { GameVM } = require("./game-vm");
     const g = new GameVM("names");
@@ -413,9 +515,13 @@ function loadItemNames() {
     Object.entries(g.items).forEach(([id, item]) => {
       names[id] = item.name;
     });
-    return names;
+    const demonSeal = {};
+    g.run("GOETIC_BOSS_SPECS").forEach((spec) => {
+      demonSeal[spec.name] = spec.passiveId;
+    });
+    return { names, demonSeal };
   } catch (error) {
-    return {};
+    return { names: {}, demonSeal: {} };
   }
 }
 

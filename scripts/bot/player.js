@@ -9,7 +9,7 @@ const { TableModel } = require("./predict");
 const { chooseGuess } = require("./guess");
 const { chooseArtifacts, keepValue } = require("./artifacts");
 const { shopVisit } = require("./shop");
-const { scoreView, outcomePoints } = require("./values");
+const { scoreView, outcomePoints, sinValue } = require("./values");
 
 const UNIQUE_BOSS_COUNT = 8;
 
@@ -18,7 +18,8 @@ function round2(value) {
 }
 
 // SEAL contribution of one round in points (damage, healing, SIN... from the game's own SEAL stats)
-function sealRoundPoints(before, after, avgDamnedMaxHp) {
+// (SIN a SEAL pays is valued at what it was worth when it came in: less when SIN is piling up)
+function sealRoundPoints(before, after, avgDamnedMaxHp, sinHeld) {
   const out = {};
   const p = CONFIG.points;
   Object.keys(after).forEach((id) => {
@@ -29,11 +30,11 @@ function sealRoundPoints(before, after, avgDamnedMaxHp) {
       (d("damage") * p.killProgress) / Math.max(10, avgDamnedMaxHp) +
       d("healing") * p.hp +
       d("saved") * p.hp +
-      d("credits") * p.sin +
+      sinValue(sinHeld, sinHeld + d("credits")) +
       d("bounty") * p.bountyOnLivingDamned +
       d("memory") * 0.05;
     const triggers = d("triggers");
-    if (points > 0 || triggers > 0) out[id] = { pts: round2(points), trig: triggers };
+    if (points > 0 || triggers > 0) out[id] = { pts: round2(points), trig: triggers, cr: d("credits") };
   });
   return out;
 }
@@ -52,6 +53,7 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
   const model = new TableModel();
   const plan = { build, bossPrep: false, killsAtLastBoss: 0 };
   const record = {
+    version: 2, // 2: SEAL SIN valued at the SIN held when it came in
     seed,
     build,
     rounds: [],
@@ -198,7 +200,7 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
     entry.seals = s.player.passives.map((item) => `${item.id}${(item.stack || 1) > 1 ? `x${item.stack}` : ""}`);
     const damned = s.bots.filter((bot) => !bot.isBoss && Number.isFinite(bot.maxHp));
     const avgMaxHp = damned.length ? damned.reduce((sum, bot) => sum + bot.maxHp, 0) / damned.length : 40;
-    entry.sg = sealRoundPoints(statsBefore, s.sealStats, avgMaxHp);
+    entry.sg = sealRoundPoints(statsBefore, s.sealStats, avgMaxHp, beforeGuess.sin);
 
     // BOSSES that fell
     bossesAlive.forEach((boss, id) => {
