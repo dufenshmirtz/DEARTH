@@ -1771,3 +1771,46 @@ test("DEV unlock all: every demon counts as defeated and can be bound, off again
     assert.ok(!state.goeticBossQueue.includes("paimon"));
   `);
 });
+
+test("Jesus and Satan: infinite BOSS BOUNTY shown, regular BOUNTY starts at 0 and SEALS can add to it", () => {
+  game()(`
+    fixture([["p32"]], []);
+    state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
+    state.finalBossPhase = true;
+    assert.equal(botSinDisplay(state.bots[0]), "-∞+0 SIN");
+    assert.equal(botSinDisplay(state.bots[1]), "∞+0 SIN");
+    // Seal of Foras on a death gives every living DAMNED 1-2 BOUNTY, the final BOSSES too
+    applyBountyGrowthOnDeath(state.bots[0]);
+    state.bots.forEach(bot => assert.ok(botRegularBounty(bot) >= 1));
+    assert.equal(botSinDisplay(state.bots[1]), "∞+" + botRegularBounty(state.bots[1]) + " SIN");
+    // nothing touches the BOSS BOUNTY: a SIN-stealing BOSS keeps nothing on them
+    state.player.credits = 20;
+    assert.equal(stealPlayerSinToBoss(state.bots[1], 10, "test"), 0);
+    assert.equal(botBossBounty(state.bots[1]), 0);
+    assert.equal(state.player.credits, 20);
+  `);
+});
+
+test("Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)", () => {
+  const cases = [[7, 1, "Jesus"], [33, 10, "Jesus"], [8, 1, "Satan"], [66, 6, "Satan"], [0, 1, "Satan"]];
+  for (const [target, damage, who] of cases) {
+    game()(`
+      fixture([], []);
+      state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
+      state.finalBossPhase = true;
+      state.player.hp = 100;
+      state.roundState.target = ${target};
+      applyFinalBossTargetStrikes();
+      assert.equal(state.player.hp, ${100 - damage});
+      assert.ok(state.roundState.roundEvents.some(line => line.startsWith("${who} dealt ${damage} damage")));
+    `);
+  }
+  // no final BOSSES, no strikes
+  game()(`
+    fixture([], [10, 20]);
+    state.player.hp = 100;
+    state.roundState.target = 33;
+    applyFinalBossTargetStrikes();
+    assert.equal(state.player.hp, 100);
+  `);
+});

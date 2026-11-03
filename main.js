@@ -2205,7 +2205,8 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "Jesus's guess counts three times when calculating the TARGET average."
+      "Jesus's guess counts three times when calculating the TARGET average.",
+      "When the TARGET is odd, Jesus deals 1 damage to you. When it is 33, he deals 10."
     ]
   },
   satan: {
@@ -2215,9 +2216,16 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "The Devil disables Devil's Offerings while Satan is alive."
+      "The Devil disables Devil's Offerings while Satan is alive.",
+      "When the TARGET is even, Satan deals 1 damage to you. When it is 66, he deals 6."
     ]
   }
+};
+// the final BOSSES strike you at TARGET reveal: Jesus on an odd TARGET, Satan on an even one,
+// harder on their own number (applyFinalBossTargetStrikes)
+const FINAL_BOSS_TARGET_STRIKES = {
+  jesus: { odd: true, damage: 1, number: 33, numberDamage: 10 },
+  satan: { odd: false, damage: 1, number: 66, numberDamage: 6 }
 };
 
 const state = {
@@ -3998,9 +4006,8 @@ function rollScaledPassiveCount(id, baseCount = 1) {
 }
 
 function botSin(bot) {
-  if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
-  if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  const reward = Math.ceil(bot?.reward || 0);
+  return Number.isFinite(reward) ? Math.max(0, reward) : 0;
 }
 
 function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
@@ -4045,6 +4052,7 @@ function formatArtifactMultiplier(value) {
 }
 
 function botBossBounty(bot) {
+  // Jesus and Satan: their BOSS BOUNTY is infinite (only shown, botSinDisplay), so nothing can change it
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
@@ -4053,9 +4061,9 @@ function botBossBounty(bot) {
   return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
+// Jesus and Satan included: their regular BOUNTY starts at 0 and SEALS can change it like anyone's
 function botRegularBounty(bot) {
-  if (bot?.immortal) return 0;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  return botSin(bot);
 }
 
 function botRegularBountyPayout(bot, markTriggers = false) {
@@ -4405,7 +4413,6 @@ function checkBalamMemoryBountyEliminations() {
 
 function changeBotSin(bot, delta, reason = "", options = {}) {
   if (!bot || bot.eliminated) return { changed: 0, lost: 0, gained: 0 };
-  if (bot.immortal || !Number.isFinite(botSin(bot))) return { changed: 0, lost: 0, gained: 0 };
   const before = botSin(bot);
   const next = Math.max(0, Math.ceil(before + delta));
   bot.reward = next;
@@ -5464,6 +5471,30 @@ function applyDeathRollDamage() {
       BOSS_PASSIVES.deathRoll.name
     );
   });
+}
+
+function finalBossStrikeDamage(key, target) {
+  const rule = FINAL_BOSS_TARGET_STRIKES[key];
+  const value = Math.ceil(target);
+  if (!rule || !Number.isFinite(value)) return 0;
+  if (value === rule.number) return rule.numberDamage;
+  return (Math.abs(value) % 2 === 1) === rule.odd ? rule.damage : 0;
+}
+
+// Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)
+function applyFinalBossTargetStrikes() {
+  const round = state.roundState;
+  if (!round) return;
+  activeBots()
+    .filter((bot) => FINAL_BOSS_TARGET_STRIKES[bot.finalKey])
+    .forEach((bot) => {
+      const damage = finalBossStrikeDamage(bot.finalKey, round.target);
+      if (damage <= 0) return;
+      const rule = FINAL_BOSS_TARGET_STRIKES[bot.finalKey];
+      const target = formatNumber(round.target);
+      const why = Math.ceil(round.target) === rule.number ? `the TARGET is ${target}` : `TARGET ${target} is ${rule.odd ? "odd" : "even"}`;
+      damagePlayer(damage, `${bot.name} dealt ${damage} damage because ${why}.`, true, true, bot.name);
+    });
 }
 
 function applyRerollTollDamage() {
@@ -7307,8 +7338,8 @@ function botImagePath(entity) {
 }
 
 function botSinDisplay(bot) {
-  if (bot?.finalKey === "satan") return "∞ SIN";
-  if (bot?.finalKey === "jesus") return "-∞ SIN";
+  if (bot?.finalKey === "satan") return `∞+${botRegularBounty(bot)} SIN`;
+  if (bot?.finalKey === "jesus") return `-∞+${botRegularBounty(bot)} SIN`;
   if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
   return `${botRegularBounty(bot)} SIN`;
 }
@@ -7399,7 +7430,7 @@ function createFinalBoss(key) {
     noise: 0,
     hp: 100,
     maxHp: 100,
-    reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
+    reward: 0, // regular BOUNTY; the infinite BOSS BOUNTY is only shown (botSinDisplay)
     isBoss: true,
     bossOrder: state.bossSpawnCount + 1,
     uniqueKey: null,
@@ -7801,7 +7832,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
 function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
-    .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
+    .filter((bot) => bot && !bot.eliminated)
     .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id);
   if (total <= 0 || !ordered.length) return 0;
   const base = Math.floor(total / ordered.length);
@@ -8287,7 +8318,7 @@ function applyPendingNextRoundMarbasBonuses() {
   if (!pending.length || !state.roundState) return;
   state.pendingNextRoundMarbasBonuses = [];
   pending.forEach((bonus) => {
-    const targets = activeBots().filter((bot) => !bot.immortal);
+    const targets = activeBots();
     if (!targets.length) return;
     const source = bonus.source || "Seal of Marbas";
     let sinSpread = 0;
@@ -8341,7 +8372,7 @@ function applyStartOfRoundSinRedistribution() {
   const entries = orderedPassiveEffectEntries("p48");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const targets = shuffled(activeBots().filter((bot) => !bot.immortal && botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
+    const targets = shuffled(activeBots().filter((bot) => botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
     if (!targets.length) return;
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
@@ -8512,7 +8543,7 @@ function applyTrinitySpiritOutcome(key) {
     return;
   }
   if (key === "bounty") {
-    const targets = shuffled(trinityTargets().filter((bot) => Number.isFinite(botSin(bot)) && botSin(bot) > 0)).slice(0, 2);
+    const targets = shuffled(activeBots().filter((bot) => botSin(bot) > 0)).slice(0, 2);
     targets.forEach((bot) => changeBotSin(bot, botSin(bot), `${name} doubled ${bot.name}'s BOUNTY.`, { source: name }));
     if (!targets.length) addRoundEvent(`${name} found no BOUNTY to double.`);
     return;
@@ -9718,6 +9749,7 @@ function applyPenalties() {
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
 
   applyDeathRollDamage();
+  applyFinalBossTargetStrikes();
 
   const participants = currentRoundParticipants(activeBots);
   const iposEntries = orderedPassiveEffectEntries("p58");
@@ -11116,7 +11148,6 @@ function applyInflationEngine() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const targets = activeBots()
-      .filter((bot) => !bot.immortal)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, 2);
     if (!targets.length) return;
@@ -11157,7 +11188,7 @@ function applyRonoveDrain() {
   entries.forEach((entry) => {
     const targetCount = Math.max(1, entry.stack || 1);
     const targets = activeBots()
-      .filter((bot) => !bot.immortal && botSin(bot) > 0)
+      .filter((bot) => botSin(bot) > 0)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, targetCount);
     if (!targets.length) return;

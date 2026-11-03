@@ -16,8 +16,8 @@ function botImagePath(entity) {
 }
 
 function botSinDisplay(bot) {
-  if (bot?.finalKey === "satan") return "∞ SIN";
-  if (bot?.finalKey === "jesus") return "-∞ SIN";
+  if (bot?.finalKey === "satan") return `∞+${botRegularBounty(bot)} SIN`;
+  if (bot?.finalKey === "jesus") return `-∞+${botRegularBounty(bot)} SIN`;
   if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
   return `${botRegularBounty(bot)} SIN`;
 }
@@ -108,7 +108,7 @@ function createFinalBoss(key) {
     noise: 0,
     hp: 100,
     maxHp: 100,
-    reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
+    reward: 0, // regular BOUNTY; the infinite BOSS BOUNTY is only shown (botSinDisplay)
     isBoss: true,
     bossOrder: state.bossSpawnCount + 1,
     uniqueKey: null,
@@ -510,7 +510,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
 function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
-    .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
+    .filter((bot) => bot && !bot.eliminated)
     .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id);
   if (total <= 0 || !ordered.length) return 0;
   const base = Math.floor(total / ordered.length);
@@ -996,7 +996,7 @@ function applyPendingNextRoundMarbasBonuses() {
   if (!pending.length || !state.roundState) return;
   state.pendingNextRoundMarbasBonuses = [];
   pending.forEach((bonus) => {
-    const targets = activeBots().filter((bot) => !bot.immortal);
+    const targets = activeBots();
     if (!targets.length) return;
     const source = bonus.source || "Seal of Marbas";
     let sinSpread = 0;
@@ -1050,7 +1050,7 @@ function applyStartOfRoundSinRedistribution() {
   const entries = orderedPassiveEffectEntries("p48");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const targets = shuffled(activeBots().filter((bot) => !bot.immortal && botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
+    const targets = shuffled(activeBots().filter((bot) => botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
     if (!targets.length) return;
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
@@ -1221,7 +1221,7 @@ function applyTrinitySpiritOutcome(key) {
     return;
   }
   if (key === "bounty") {
-    const targets = shuffled(trinityTargets().filter((bot) => Number.isFinite(botSin(bot)) && botSin(bot) > 0)).slice(0, 2);
+    const targets = shuffled(activeBots().filter((bot) => botSin(bot) > 0)).slice(0, 2);
     targets.forEach((bot) => changeBotSin(bot, botSin(bot), `${name} doubled ${bot.name}'s BOUNTY.`, { source: name }));
     if (!targets.length) addRoundEvent(`${name} found no BOUNTY to double.`);
     return;

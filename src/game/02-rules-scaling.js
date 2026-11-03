@@ -304,9 +304,8 @@ function rollScaledPassiveCount(id, baseCount = 1) {
 }
 
 function botSin(bot) {
-  if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
-  if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  const reward = Math.ceil(bot?.reward || 0);
+  return Number.isFinite(reward) ? Math.max(0, reward) : 0;
 }
 
 function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
@@ -351,6 +350,7 @@ function formatArtifactMultiplier(value) {
 }
 
 function botBossBounty(bot) {
+  // Jesus and Satan: their BOSS BOUNTY is infinite (only shown, botSinDisplay), so nothing can change it
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
@@ -359,9 +359,9 @@ function botBossBounty(bot) {
   return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
+// Jesus and Satan included: their regular BOUNTY starts at 0 and SEALS can change it like anyone's
 function botRegularBounty(bot) {
-  if (bot?.immortal) return 0;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  return botSin(bot);
 }
 
 function botRegularBountyPayout(bot, markTriggers = false) {
@@ -711,7 +711,6 @@ function checkBalamMemoryBountyEliminations() {
 
 function changeBotSin(bot, delta, reason = "", options = {}) {
   if (!bot || bot.eliminated) return { changed: 0, lost: 0, gained: 0 };
-  if (bot.immortal || !Number.isFinite(botSin(bot))) return { changed: 0, lost: 0, gained: 0 };
   const before = botSin(bot);
   const next = Math.max(0, Math.ceil(before + delta));
   bot.reward = next;

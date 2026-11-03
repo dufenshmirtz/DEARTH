@@ -1995,7 +1995,8 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "Jesus's guess counts three times when calculating the TARGET average."
+      "Jesus's guess counts three times when calculating the TARGET average.",
+      "When the TARGET is odd, Jesus deals 1 damage to you. When it is 33, he deals 10."
     ]
   },
   satan: {
@@ -2005,9 +2006,16 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "The Devil disables Devil's Offerings while Satan is alive."
+      "The Devil disables Devil's Offerings while Satan is alive.",
+      "When the TARGET is even, Satan deals 1 damage to you. When it is 66, he deals 6."
     ]
   }
+};
+// the final BOSSES strike you at TARGET reveal: Jesus on an odd TARGET, Satan on an even one,
+// harder on their own number (applyFinalBossTargetStrikes)
+const FINAL_BOSS_TARGET_STRIKES = {
+  jesus: { odd: true, damage: 1, number: 33, numberDamage: 10 },
+  satan: { odd: false, damage: 1, number: 66, numberDamage: 6 }
 };
 
 const state = {

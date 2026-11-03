@@ -416,6 +416,30 @@ function applyDeathRollDamage() {
   });
 }
 
+function finalBossStrikeDamage(key, target) {
+  const rule = FINAL_BOSS_TARGET_STRIKES[key];
+  const value = Math.ceil(target);
+  if (!rule || !Number.isFinite(value)) return 0;
+  if (value === rule.number) return rule.numberDamage;
+  return (Math.abs(value) % 2 === 1) === rule.odd ? rule.damage : 0;
+}
+
+// Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)
+function applyFinalBossTargetStrikes() {
+  const round = state.roundState;
+  if (!round) return;
+  activeBots()
+    .filter((bot) => FINAL_BOSS_TARGET_STRIKES[bot.finalKey])
+    .forEach((bot) => {
+      const damage = finalBossStrikeDamage(bot.finalKey, round.target);
+      if (damage <= 0) return;
+      const rule = FINAL_BOSS_TARGET_STRIKES[bot.finalKey];
+      const target = formatNumber(round.target);
+      const why = Math.ceil(round.target) === rule.number ? `the TARGET is ${target}` : `TARGET ${target} is ${rule.odd ? "odd" : "even"}`;
+      damagePlayer(damage, `${bot.name} dealt ${damage} damage because ${why}.`, true, true, bot.name);
+    });
+}
+
 function applyRerollTollDamage() {
   applyBossPassivePlayerDamage(
     "rerollToll",

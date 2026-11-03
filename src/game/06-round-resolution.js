@@ -250,6 +250,7 @@ function applyPenalties() {
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
 
   applyDeathRollDamage();
+  applyFinalBossTargetStrikes();
 
   const participants = currentRoundParticipants(activeBots);
   const iposEntries = orderedPassiveEffectEntries("p58");
@@ -1648,7 +1649,6 @@ function applyInflationEngine() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const targets = activeBots()
-      .filter((bot) => !bot.immortal)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, 2);
     if (!targets.length) return;
@@ -1689,7 +1689,7 @@ function applyRonoveDrain() {
   entries.forEach((entry) => {
     const targetCount = Math.max(1, entry.stack || 1);
     const targets = activeBots()
-      .filter((bot) => !bot.immortal && botSin(bot) > 0)
+      .filter((bot) => botSin(bot) > 0)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, targetCount);
     if (!targets.length) return;
