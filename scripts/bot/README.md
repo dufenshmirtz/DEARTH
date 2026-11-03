@@ -17,6 +17,12 @@ Batch options: `--build bounty|memory|reveal|critical|personality|artifact` (def
 `--tag name`, `--main-only` (stop each run at the main-game win), `--seeds name` (same name = same runs),
 `--force-seal p31` (start every run holding that SEAL), `--workers N`, `--max-rounds N` (safety cap, default 1000).
 
+**Coverage** (`--coverage --per-seal 30`, or "Coverage" in Bot Lab's Start form): every SEAL is played the same number
+of times on the same seeds, each run starting with that SEAL (it is never sold) and builds rotating evenly. Each SEAL is
+compared with the average SEAL on the same seeds, so luck cancels out; the Coverage tab lists nerf and buff candidates
+(only when the difference is bigger than its range and at least 0.25 BOSSES) and the same for builds. About
+`105 SEALS x runs per SEAL` runs in total; a batch stopped early stays even. `bot:tune` uses Coverage results first.
+
 A/B test a change: run `--seeds ab1 --tag before`, change the game, run `--seeds ab1 --tag after`,
 then open one batch in Bot Lab > Compare and pick the other.
 

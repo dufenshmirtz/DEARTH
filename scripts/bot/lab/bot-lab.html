@@ -71,6 +71,8 @@ tr.click { cursor: pointer; }
 tr.click:hover td { color: var(--blood); }
 tr.flash td { background: #2a1416; }
 tr.dim td { color: var(--muted); }
+.sealname, .chip[data-seal] { cursor: help; }
+.sealname:hover, .chip[data-seal]:hover { color: var(--blood); }
 table[data-table] td:first-child { white-space: nowrap; }
 .alarm { padding: 7px 10px; border-left: 3px solid var(--ash); margin-bottom: 6px; background: var(--panel-2); cursor: default; }
 .alarm.high { border-left-color: var(--blood); }
@@ -108,16 +110,23 @@ table[data-table] td:first-child { white-space: nowrap; }
     <div class="sub" id="infoLine">Loading...</div>
     <div class="panel" style="margin-top:12px">
       <h2>Start a batch</h2>
+      <label for="fMode">Kind of batch</label>
+      <select id="fMode">
+        <option value="normal">Normal: the bot picks its SEALS</option>
+        <option value="coverage">Coverage: every SEAL played equally</option>
+      </select>
       <div class="row">
-        <div><label for="fRuns">Runs</label><input id="fRuns" type="number" min="1" max="5000" value="100" /></div>
+        <div id="runsBox"><label for="fRuns">Runs</label><input id="fRuns" type="number" min="1" max="5000" value="100" /></div>
+        <div id="perSealBox" style="display:none"><label for="fPerSeal">Runs per SEAL</label><input id="fPerSeal" type="number" min="1" max="200" value="30" /></div>
         <div><label for="fWorkers">Workers</label><input id="fWorkers" type="number" min="1" max="64" /></div>
       </div>
       <label for="fBuild">Build</label>
       <select id="fBuild"><option value="rotation">Rotation (all builds evenly)</option></select>
       <label for="fTag">Tag (optional name)</label>
       <input id="fTag" type="text" placeholder="e.g. before-seal-change" />
-      <label for="fSeal">Force a SEAL from the start (A/B test)</label>
-      <select id="fSeal"><option value="">None</option></select>
+      <div class="hint" id="coverageHint" style="display:none"></div>
+      <div id="forceBox"><label for="fSeal">Force a SEAL from the start (A/B test)</label>
+      <select id="fSeal"><option value="">None</option></select></div>
       <label for="fSeeds">Seed set (same name = same runs, for A/B)</label>
       <input id="fSeeds" type="text" placeholder="leave empty for new runs" />
       <label><input id="fMain" type="checkbox" />Stop each run at the main-game win</label>
@@ -164,6 +173,7 @@ async function loadInfo() {
   const info = view.info;
   $("#infoLine").textContent = `Game commit ${info.commit || "?"} · ${info.cpus} CPU cores`;
   $("#fWorkers").value = Math.max(1, info.cpus - 1);
+  setTimeout(updateModeForm, 0);
   info.builds.forEach((b) => $("#fBuild").insertAdjacentHTML("beforeend", `<option value="${b}">${b[0].toUpperCase() + b.slice(1)}</option>`));
   info.seals.forEach((s) => $("#fSeal").insertAdjacentHTML("beforeend", `<option value="${s.id}">${esc(s.name)} (${s.id})</option>`));
   $("#expLine").textContent = info.experience ? `Learned from ${info.experience.runs} runs (${fmtDate(info.experience.made)}).` : "None yet: SEALS are judged by price until you update it.";
@@ -215,8 +225,24 @@ async function loadInfoExperience() {
   $("#expLine").textContent = info.experience ? `Learned from ${info.experience.runs} runs (${fmtDate(info.experience.made)}).` : "None yet.";
 }
 
+// Coverage: show the total and a rough time (about 55 seconds of work per run, shared by the workers)
+function updateModeForm() {
+  const coverage = $("#fMode").value === "coverage";
+  $("#runsBox").style.display = coverage ? "none" : "";
+  $("#perSealBox").style.display = coverage ? "" : "none";
+  $("#forceBox").style.display = coverage ? "none" : "";
+  $("#coverageHint").style.display = coverage ? "" : "none";
+  if (coverage && view.info) {
+    const total = (view.info.seals.length || 105) * Math.max(1, +$("#fPerSeal").value || 1);
+    const hours = (total * 55) / Math.max(1, +$("#fWorkers").value || 1) / 3600;
+    $("#coverageHint").textContent = `${total.toLocaleString()} runs in total (${view.info.seals.length} SEALS), roughly ${hours < 1 ? Math.round(hours * 60) + " minutes" : hours.toFixed(1) + " hours"} with ${$("#fWorkers").value} workers. Every SEAL is played on the same seeds, so they are compared on equal dice. You can stop it any time: it stays even.`;
+  }
+}
+["#fMode", "#fPerSeal", "#fWorkers"].forEach((sel) => $(sel).addEventListener("input", updateModeForm));
+
 $("#startBtn").addEventListener("click", async () => {
-  const body = { runs: $("#fRuns").value, workers: $("#fWorkers").value, build: $("#fBuild").value, tag: $("#fTag").value.trim(), forceSeal: $("#fSeal").value, seeds: $("#fSeeds").value.trim(), mainOnly: $("#fMain").checked };
+  const coverage = $("#fMode").value === "coverage";
+  const body = { mode: coverage ? "coverage" : "normal", perSeal: $("#fPerSeal").value, runs: $("#fRuns").value, workers: $("#fWorkers").value, build: $("#fBuild").value, tag: $("#fTag").value.trim(), forceSeal: coverage ? "" : $("#fSeal").value, seeds: $("#fSeeds").value.trim(), mainOnly: $("#fMain").checked };
   const res = await api("/api/start", body);
   if (res.error) alertLine(res.error);
   setTimeout(pollStatus, 800);
@@ -240,22 +266,27 @@ async function openBatch(id, quiet) {
 
 const TABS = [["overview", "Overview"], ["bosses", "BOSSES"], ["late", "Late game"], ["seals", "SEALS"], ["artifacts", "ARTIFACTS"], ["runs", "Runs"], ["compare", "Compare"], ["settings", "Settings used"]];
 
+function tabsFor(summary) {
+  return summary.coverage ? [TABS[0], ["coverage", "Coverage"], ...TABS.slice(1)] : TABS;
+}
+
 function renderBatch() {
   const { meta, summary } = view.batch;
   const commitNote = meta.git?.commit && view.info?.commit && meta.git.commit !== view.info.commit
     ? `<div class="warnline">Played on commit ${esc(meta.git.commit)}${meta.git.dirty ? " (with uncommitted changes)" : ""}; the game is now at ${esc(view.info.commit)}. Logs are still valid; replays would not match.</div>`
     : meta.git?.dirty ? `<div class="warnline">Played with uncommitted changes in src/.</div>` : "";
-  const forced = meta.args?.forceSeal ? ` · forced SEAL ${esc(meta.args.forceSeal)}` : "";
+  const forced = meta.coverage ? ` · Coverage, ${meta.coverage.perSeal} runs per SEAL` : meta.args?.forceSeal ? ` · forced SEAL ${esc(meta.args.forceSeal)}` : "";
   $("#main").innerHTML = `
     <div class="top"><h1>${esc(meta.tag || meta.id)}</h1>
       <span class="sub">${fmtDate(meta.started)} · ${meta.done}/${meta.total} runs · build ${esc(meta.args?.build || "rotation")}${forced} · seeds "${esc(meta.seeds)}" · ${meta.elapsedSec ? Math.round(meta.elapsedSec / 60) + " min" : ""}</span></div>
     ${commitNote}
-    <div class="tabs">${TABS.map(([k, t]) => `<div class="tab ${view.tab === k ? "active" : ""}" data-tab="${k}">${t}</div>`).join("")}</div>
+    <div class="tabs">${tabsFor(summary).map(([k, t]) => `<div class="tab ${view.tab === k ? "active" : ""}" data-tab="${k}">${t}</div>`).join("")}</div>
     <div id="tabBody"></div>`;
   document.querySelectorAll(".tab").forEach((el) => el.addEventListener("click", () => { view.tab = el.dataset.tab; remember(); renderBatch(); }));
   const body = $("#tabBody");
   if (!summary.overview.runs) { body.innerHTML = `<div class="empty">No finished runs yet.</div>`; return; }
-  ({ overview: renderOverview, bosses: renderBosses, late: renderLate, seals: renderSeals, artifacts: renderArtifacts, runs: renderRuns, compare: renderCompare, settings: renderSettings })[view.tab](body, summary, meta);
+  if (view.tab === "coverage" && !summary.coverage) view.tab = "overview";
+  ({ overview: renderOverview, coverage: renderCoverage, bosses: renderBosses, late: renderLate, seals: renderSeals, artifacts: renderArtifacts, runs: renderRuns, compare: renderCompare, settings: renderSettings })[view.tab](body, summary, meta);
 }
 
 // "5% (3-8%)": the range the true number most likely sits in (95%); wide with few runs
@@ -282,7 +313,7 @@ function alarmsHtml(alarms) {
 function bindAlarms(alarms) {
   document.querySelectorAll(".alarm.link").forEach((el) => el.addEventListener("click", () => {
     const a = alarms[+el.dataset.i];
-    const tab = { boss: "bosses", group: "bosses", late: "late", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
+    const tab = { coverage: "coverage", boss: "bosses", group: "bosses", late: "late", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
     view.tab = tab; renderBatch();
     if (!a.link.id) return;
     const row = document.querySelector(`[data-key="${CSS.escape(a.link.id)}"]`);
@@ -333,6 +364,47 @@ function renderBosses(body, s) {
     <div class="hint">"Met" counts each time that exact group was alive at the same time. Rows marked "few" were met fewer than 8 times: treat their percentages as rough.</div>`;
   bindTables(body);
   body.querySelectorAll('table[data-table="groups"] tbody tr').forEach((tr) => { if (tr.textContent.includes("few")) tr.classList.add("dim"); });
+}
+
+const VERDICT_TEXT = { nerf: "Nerf candidate", buff: "Buff candidate", fine: "Fine", "needs runs": "Needs more runs", strong: "Strong", weak: "Weak" };
+function edgeText(edge, pm) { return `${edge > 0 ? "+" : ""}${edge}${pm === null || pm === undefined ? "" : ` ±${pm}`}`; }
+
+function renderCoverage(body, s) {
+  const c = s.coverage;
+  const nerf = c.seals.filter((x) => x.verdict === "nerf");
+  const buff = c.seals.filter((x) => x.verdict === "buff");
+  const list = (rows) => rows.length ? `<table>${rows.map((x) => `<tr><td>${sealName(x.id, x.name)}</td><td class="num">${edgeText(x.edge, x.pm)} BOSSES</td><td class="num">${x.winRate}% won</td><td class="num">${x.damagePerRound} dmg/round</td></tr>`).join("")}</table>` : `<div class="sub">None beyond luck yet.</div>`;
+  const sealRows = c.seals.map((x) => ({ ...x, verdictText: VERDICT_TEXT[x.verdict] || x.verdict, edgeShow: edgeText(x.edge, x.pm) }));
+  const buildRows = c.builds.map((x) => ({ ...x, verdictText: VERDICT_TEXT[x.verdict] || x.verdict, edgeShow: edgeText(x.edge, x.pm) }));
+  body.innerHTML = `<h2>Coverage: every SEAL on the same seeds</h2>
+    <div class="tiles">
+      <div class="tile"><div class="v">${c.runs.toLocaleString()}</div><div class="k">Runs (${c.seeds} seeds)</div></div>
+      <div class="tile"><div class="v">${c.minRuns === c.maxRuns ? c.minRuns : `${c.minRuns}-${c.maxRuns}`}</div><div class="k">Runs per SEAL</div></div>
+      <div class="tile"><div class="v">${nerf.length}</div><div class="k">Nerf candidates</div></div>
+      <div class="tile"><div class="v">${buff.length}</div><div class="k">Buff candidates</div></div>
+      <div class="tile"><div class="v">${c.needsRuns}</div><div class="k">SEALS still needing runs (under ${c.minRunsForVerdict})</div></div>
+    </div>
+    <div class="hint">Each run starts with one SEAL and is compared with the average of all SEALS on the same seed, so luck cancels out. "+0.8" = runs starting with that SEAL beat 0.8 BOSSES more than the average SEAL. A verdict needs the difference to be bigger than its ± range and at least ${c.minEffect} BOSSES; everything smaller is "Fine". Hover a SEAL name to read what it does.</div>
+    <div class="grid2" style="margin-top:12px">
+      <div><h2>Nerf candidates (stronger than average)</h2>${list(nerf)}</div>
+      <div><h2>Buff candidates (weaker than average)</h2>${list(buff.slice().reverse())}</div>
+    </div>
+    <h2 style="margin-top:16px">Builds</h2>
+    ${table(buildRows, [["build", "Build"], ["verdictText", "Verdict"], ["edgeShow", "BOSSES vs average", "num"], ["runs", "Runs", "num"], ["avgBosses", "BOSSES (of 8)", "num"], ["winRate", "Won %", "num"]], "covbuilds", "build")}
+    <div class="hint">Every build is played with every SEAL on every seed, so builds are compared fairly too.</div>
+    <h2 style="margin-top:16px">Every SEAL</h2>
+    <div class="filters">Find <input type="text" id="covFind" placeholder="name or id" /></div>
+    ${table(sealRows, [["name", "SEAL"], ["verdictText", "Verdict"], ["edge", "BOSSES vs average", "num"], ["pm", "±", "num"], ["runs", "Runs", "num"], ["avgBosses", "BOSSES (of 8)", "num"], ["winRate", "Won %", "num"], ["damagePerRound", "Its damage / round", "num"], ["ownPointsPerRound", "Its points / round", "num"], ["avgRounds", "Rounds per run", "num"]], "coverage", "id")}
+    <div class="hint">"Its damage / round" and "Its points / round" are what the SEAL itself did (damage; and damage, healing, SIN... on the bot's points scale). They explain a verdict but don't decide it: only BOSSES beaten does.</div>`;
+  bindTables(body);
+  body.querySelectorAll('table[data-table="coverage"] tbody tr').forEach((tr) => {
+    const row = sealRows.find((x) => x.id === tr.dataset.key);
+    if (row && row.verdict === "needs runs") tr.classList.add("dim");
+  });
+  $("#covFind").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    body.querySelectorAll('table[data-table="coverage"] tbody tr').forEach((tr) => { tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
 }
 
 function renderLate(body, s) {
@@ -465,10 +537,16 @@ function pairedHtml(a, b, nameA, nameB) {
 }
 
 // ---------- tables (click a header to sort) ----------
+// a SEAL name that shows what the SEAL does on hover
+function sealName(id, name) {
+  return `<span class="sealname" data-seal="${esc(id)}">${esc(name)}</span>`;
+}
+
 function cellHtml(row, key, tableId) {
   const v = row[key];
+  if (key === "name" && (tableId === "seals" || tableId === "coverage") && row.id) return sealName(row.id, v);
   if (key === "examples") return (v || []).map((e) => `<a href="#" data-run="${esc(e.file)}" data-round="${e.round}">${esc(e.file.replace(/^run-0*|\.json$/g, ""))} (r${e.round})</a>`).join(", ");
-  if (key === "bossEdge" && typeof v === "number") return v > 0 ? `+${v}` : `${v}`;
+  if ((key === "bossEdge" || (key === "edge" && tableId === "coverage")) && typeof v === "number") return v > 0 ? `+${v}` : `${v}`;
   if (tableId === "runs" && key === "file") return `<a href="#" data-run="${esc(v)}">${esc(v.replace(/\.json$/, ""))}</a>`;
   return esc(v === null || v === undefined ? "-" : v);
 }
@@ -557,7 +635,7 @@ function renderRun(scrollTo) {
     </div>
     ${r.diedTo ? `<div class="warnline">Died in round ${r.diedRound}${r.diedTo.boss ? ` against ${esc(r.diedTo.boss)}` : ""} at ${r.diedTo.hpBefore} HP: ${esc(r.diedTo.sources.join(", "))}</div>` : ""}
     <h3>BOSSES</h3><div>${bosses || "<span class='sub'>none</span>"}</div>
-    <h3>Final SEALS</h3><div>${r.finalSeals.map((s) => `<span class="chip">${esc(s.name)}${s.stack > 1 ? ` ELITE${s.stack > 2 ? " +" + (s.stack - 1) : ""}` : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
+    <h3>Final SEALS</h3><div>${r.finalSeals.map((s) => `<span class="chip" data-seal="${esc(s.id)}">${esc(s.name)}${s.stack > 1 ? ` ELITE${s.stack > 2 ? " +" + (s.stack - 1) : ""}` : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
     <h2 style="margin-top:16px">Rounds</h2>
     <div class="filters"><label style="margin:0"><input type="checkbox" id="fBoss" ${filter.boss ? "checked" : ""}/>BOSS rounds only</label>
       Damage at least <input type="number" id="fDmg" min="0" value="${filter.dmg}" />
@@ -612,10 +690,31 @@ function roundDetail(x) {
       <h4>Shop</h4>${steps.length ? `<ul>${steps.map((s) => `<li>${s.after ? "<span class='sub'>after the round:</span> " : ""}${esc(s.action === "reroll" ? `Reroll for ${s.price} SIN` : s.action === "sell" ? `Sold ${s.name} for ${s.sin} SIN` : `${s.action === "elite" ? "ELITE " : "Bought "}${s.name} for ${s.price} SIN`)} <span class="sub">· ${esc(s.why || "")}</span></li>`).join("")}</ul>` : `<div class="sub">Bought nothing${x.r <= (view.batch?.meta.config?.shop?.savingShops || 3) ? " (saving rounds)" : ""}.</div>`}
       <h4>ARTIFACTS</h4>${x.art ? `<div>${esc(x.art.why)}</div>${x.art.used.length ? `<div class="sub">Expected ${x.art.expected} points from this round, got ${x.art.actual}${x.art.actual < x.art.expected - 15 ? " <span class='bad'>(the dice went against it)</span>" : ""}.</div>` : ""}<div class="sub">${x.art.considered} options tried. Best: ${(x.art.top || []).map((t) => `${esc(t.what)} (${t.gain})`).join("; ")}</div>` : `<div class="sub">No ARTIFACT to use.</div>`}
       <h4>Damage taken</h4><div>${x.srcs?.length ? esc(x.srcs.join(", ")) : "<span class='sub'>none</span>"}</div>
-      <h4>SEALS held</h4><div>${(x.seals || []).map((t) => `<span class="chip">${esc(view.info?.seals.find((s) => s.id === t.split("x")[0])?.name || t)}${t.includes("x") ? " ELITE" : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
+      <h4>SEALS held</h4><div>${(x.seals || []).map((t) => `<span class="chip" data-seal="${esc(t.split("x")[0])}">${esc(view.info?.seals.find((s) => s.id === t.split("x")[0])?.name || t)}${t.includes("x") ? " ELITE" : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
       ${sealPts.length ? `<div class="sub" style="margin-top:4px">${sealPts.join(" · ")}</div>` : ""}
     </div></div>`;
 }
+
+// hover a SEAL name anywhere: its description in the tooltip
+document.addEventListener("mouseover", (e) => {
+  const el = e.target.closest?.("[data-seal]");
+  if (!el || !view.info) return;
+  const seal = view.info.seals.find((x) => x.id === el.dataset.seal);
+  if (!seal) return;
+  const tip = $("#tip");
+  tip.innerHTML = `<b>${esc(seal.name)}</b> <span style="color:var(--ash)">${esc(seal.id)} · ${seal.price} SIN</span><div style="white-space:normal;max-width:360px;margin-top:4px">${esc(seal.description || "")}</div>`;
+  tip.style.display = "block";
+});
+document.addEventListener("mousemove", (e) => {
+  const tip = $("#tip");
+  if (tip.style.display !== "block" || !e.target.closest?.("[data-seal]")) return;
+  const x = Math.min(e.pageX + 14, window.scrollX + window.innerWidth - 390);
+  tip.style.left = `${x}px`;
+  tip.style.top = `${e.pageY + 14}px`;
+});
+document.addEventListener("mouseout", (e) => {
+  if (e.target.closest?.("[data-seal]")) $("#tip").style.display = "none";
+});
 
 // ---------- start ----------
 (async () => {

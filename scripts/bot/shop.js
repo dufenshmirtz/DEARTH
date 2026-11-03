@@ -79,7 +79,7 @@ function shopVisit(g, plan, opts) {
     const spendable = obs.sin - reserve;
     const rich = obs.sin > cfg.sinCap;
     const owned = new Map(obs.seals.map((seal) => [seal.id, seal]));
-    const ownedWorth = obs.seals.map((seal) => ({
+    const ownedWorth = obs.seals.filter((seal) => seal.id !== plan.forcedSeal).map((seal) => ({
       seal,
       worth: sealWorth(seal.id, seal.tags, seal.price, obs, plan, experience) * (1 + 0.5 * (seal.stack - 1))
     }));

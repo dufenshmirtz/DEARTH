@@ -4,7 +4,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SUMMARY_VERSION = 3;
+const SUMMARY_VERSION = 4;
 const UNIQUE_BOSSES = ["Zilon", "Dantre", "Pyros", "Threon", "Kalha", "Serafim", "Padma", "Petros", "Pavlos"];
 const TWINS = "Petros & Pavlos";
 const ALL_GOETIC = "All Goetic BOSSES";
@@ -85,6 +85,7 @@ function buildSummary(dir, { gameInfo = null } = {}) {
   const curve = {};
   const ownership = []; // per run: { rounds, win, bosses, firstOwned: { sealId: round } }
   const late = []; // runs that won the main game: how the endless part went
+  const coverageRuns = []; // Coverage batches: one forced SEAL per run, same seeds for every SEAL
   const lateDamage = { main: 0, mainRounds: 0, endless: 0, endlessRounds: 0 };
   let failed = 0;
   let predErrSum = 0;
@@ -100,7 +101,21 @@ function buildSummary(dir, { gameInfo = null } = {}) {
       continue;
     }
     const r = record.result;
-    runs.push({ file: record.file, seed: record.seed, build: record.build, ...r, sealStats: undefined });
+    runs.push({ file: record.file, seed: record.seed, build: record.build, forcedSeal: record.forcedSeal || null, ...r, sealStats: undefined });
+    if (record.coverage) {
+      const id = record.coverage.seal;
+      coverageRuns.push({
+        file: record.file,
+        seed: record.coverage.seed,
+        seal: id,
+        build: record.build,
+        bosses: r.uniqueBossKills,
+        win: Boolean(r.mainWin),
+        rounds: r.rounds,
+        damage: r.sealStats?.[id]?.damage || 0,
+        ownPoints: record.rounds.reduce((sum, round) => sum + (round.sg?.[id]?.pts || 0), 0)
+      });
+    }
     // late game: everything after the main-game win
     record.rounds.forEach((round) => {
       if (r.mainWin && round.r > r.mainWinRound) {
@@ -412,9 +427,10 @@ function buildSummary(dir, { gameInfo = null } = {}) {
   const deaths = Object.entries(deathBy).map(([by, count]) => ({ by, count, share: pct(count, total) })).sort((a, b) => b.count - a.count);
   const sources = Object.entries(deathSources).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count).slice(0, 12);
 
-  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows: allBossRows, groupRows, overlapSummary, sealRows, artifactRows, late });
+  const coverage = coverageRuns.length ? buildCoverage(coverageRuns, names) : null;
+  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows: allBossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage });
   const lateGame = buildLateGame(late, lateDamage, total);
-  return { version: SUMMARY_VERSION, overview, builds: buildRows, bosses: bossRows, demons: demonRows, lateGame, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
+  return { version: SUMMARY_VERSION, overview, coverage, builds: buildRows, bosses: bossRows, demons: demonRows, lateGame, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
 }
 
 function newItemEntry(id, names) {
@@ -422,9 +438,17 @@ function newItemEntry(id, names) {
 }
 
 // thresholds for "this looks off" (small samples are ignored)
-function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows, late }) {
+function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage }) {
   const alarms = [];
   const add = (level, text, link = null) => alarms.push({ level, text, link });
+  if (coverage) {
+    const nerf = coverage.seals.filter((seal) => seal.verdict === "nerf");
+    const buff = coverage.seals.filter((seal) => seal.verdict === "buff");
+    if (nerf.length) add("high", `Coverage: ${nerf.length} SEAL${nerf.length > 1 ? "S" : ""} clearly stronger than average (nerf candidates), e.g. ${nerf.slice(0, 3).map((seal) => `${seal.name} +${seal.edge}`).join(", ")}.`, { type: "coverage", id: null });
+    if (buff.length) add("high", `Coverage: ${buff.length} SEAL${buff.length > 1 ? "S" : ""} clearly weaker than average (buff candidates), e.g. ${buff.slice(0, 3).map((seal) => `${seal.name} ${seal.edge}`).join(", ")}.`, { type: "coverage", id: null });
+    coverage.builds.filter((build) => build.verdict !== "fine").forEach((build) => add("high", `Coverage: the ${build.build} build is clearly ${build.verdict === "strong" ? "stronger" : "weaker"} than average (${build.edge > 0 ? "+" : ""}${build.edge} BOSSES ±${build.pm}).`, { type: "coverage", id: null }));
+    if (coverage.needsRuns) add("info", `Coverage: ${coverage.needsRuns} SEALS have fewer than ${COVERAGE_MIN_RUNS} runs yet; their verdicts wait for more data.`, { type: "coverage", id: null });
+  }
   if (overview.runs < 20) add("info", `Only ${overview.runs} runs: numbers below are rough. 100+ runs give steadier results.`);
   bossRows.forEach((boss) => {
     if (boss.met < 8) return;
@@ -481,6 +505,80 @@ function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, ove
   return alarms.sort((a, b) => order[a.level] - order[b.level]);
 }
 
+// ---- Coverage: every SEAL played on the same seeds ----
+const COVERAGE_MIN_RUNS = 10; // a verdict needs at least this many runs per SEAL
+const COVERAGE_MIN_EFFECT = 0.25; // and a difference of at least this many BOSSES (smaller is "fine" for balance)
+
+function verdictFor(edge, pm, runs) {
+  if (runs < COVERAGE_MIN_RUNS || pm === null) return "needs runs";
+  if (edge > pm && edge >= COVERAGE_MIN_EFFECT) return "nerf";
+  if (edge < -pm && edge <= -COVERAGE_MIN_EFFECT) return "buff";
+  return "fine";
+}
+
+// Each run is compared with the average of all SEALS on the same seed, so the dice cancel out:
+// "+0.8" = runs starting with this SEAL beat 0.8 BOSSES more than the average SEAL on the same seeds.
+function buildCoverage(list, names) {
+  const bySeed = new Map();
+  list.forEach((run) => {
+    if (!bySeed.has(run.seed)) bySeed.set(run.seed, []);
+    bySeed.get(run.seed).push(run);
+  });
+  const seedMean = new Map();
+  bySeed.forEach((runs, seed) => {
+    if (runs.length >= 2) seedMean.set(seed, runs.reduce((sum, run) => sum + run.bosses, 0) / runs.length);
+  });
+  const group = (key) => {
+    const out = new Map();
+    list.forEach((run) => {
+      if (!seedMean.has(run.seed)) return;
+      if (!out.has(run[key])) out.set(run[key], []);
+      out.get(run[key]).push(run);
+    });
+    return out;
+  };
+  const summarize = (runs) => {
+    const diffs = runs.map((run) => run.bosses - seedMean.get(run.seed));
+    const edge = Math.round((diffs.reduce((a, b) => a + b, 0) / diffs.length) * 100) / 100;
+    const pm = avgPlusMinus(diffs);
+    const wins = runs.filter((run) => run.win).length;
+    return { runs: runs.length, avgBosses: avg(runs.map((run) => run.bosses)), wins, winRate: pct(wins, runs.length), edge, pm };
+  };
+  const seals = [...group("seal").entries()].map(([id, runs]) => {
+    const base = summarize(runs);
+    const rounds = runs.reduce((sum, run) => sum + run.rounds, 0);
+    return {
+      id,
+      name: names[id] || id,
+      ...base,
+      verdict: verdictFor(base.edge, base.pm, base.runs),
+      damagePerRound: rounds ? Math.round((runs.reduce((sum, run) => sum + run.damage, 0) / rounds) * 100) / 100 : 0,
+      ownPointsPerRound: rounds ? Math.round((runs.reduce((sum, run) => sum + run.ownPoints, 0) / rounds) * 100) / 100 : 0,
+      avgRounds: avg(runs.map((run) => run.rounds)),
+      examples: runs.slice(0, 3).map((run) => ({ file: run.file, round: null }))
+    };
+  });
+  seals.sort((a, b) => b.edge - a.edge);
+  const builds = [...group("build").entries()].map(([build, runs]) => {
+    const base = summarize(runs);
+    const verdict = verdictFor(base.edge, base.pm, base.runs);
+    return { build, ...base, verdict: verdict === "nerf" ? "strong" : verdict === "buff" ? "weak" : verdict };
+  });
+  builds.sort((a, b) => b.edge - a.edge);
+  const counts = seals.map((seal) => seal.runs);
+  return {
+    runs: list.length,
+    seeds: seedMean.size,
+    minRuns: Math.min(...counts),
+    maxRuns: Math.max(...counts),
+    needsRuns: seals.filter((seal) => seal.verdict === "needs runs").length,
+    minRunsForVerdict: COVERAGE_MIN_RUNS,
+    minEffect: COVERAGE_MIN_EFFECT,
+    seals,
+    builds
+  };
+}
+
 // the late game: runs that won the main game and how far they got after it
 function buildLateGame(late, damage, totalRuns) {
   const depths = late.map((run) => run.endless);
@@ -525,4 +623,4 @@ function loadGameInfo() {
   }
 }
 
-module.exports = { buildSummary, readRuns, SUMMARY_VERSION, bossGroup };
+module.exports = { buildSummary, buildCoverage, readRuns, SUMMARY_VERSION, bossGroup };

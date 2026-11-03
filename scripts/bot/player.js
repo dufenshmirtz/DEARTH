@@ -47,7 +47,7 @@ function copyStats(stats) {
   return out;
 }
 
-function playRun({ seed, build, mainOnly = false, experience = null, forceSeal = null, maxRounds = CONFIG.run.maxRounds, onRound = null }) {
+function playRun({ seed, build, mainOnly = false, experience = null, forceSeal = null, coverage = null, maxRounds = CONFIG.run.maxRounds, onRound = null }) {
   const g = new GameVM(seed);
   const rng = createRng(`${seed}:bot`);
   const model = new TableModel();
@@ -77,7 +77,9 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
   if (forceSeal && g.items[forceSeal]?.type === "passive") {
     g.run(`state.player.passives.push(itemCopy(${JSON.stringify(forceSeal)})); refreshMimicTarget();`);
     record.forcedSeal = forceSeal;
+    plan.forcedSeal = forceSeal; // never sold: the run is about this SEAL
   }
+  if (coverage) record.coverage = coverage;
 
   while (!s.gameOver && s.round <= maxRounds) {
     const roundNo = s.round;

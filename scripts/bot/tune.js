@@ -8,7 +8,7 @@
 // Re-run after big changes (several new SEALS); small number tweaks don't need it.
 const fs = require("node:fs");
 const path = require("node:path");
-const { readRuns } = require("./report");
+const { readRuns, buildCoverage } = require("./report");
 const { RUNS_DIR, EXPERIENCE_FILE } = require("./run");
 const CONFIG = require("./config");
 
@@ -31,11 +31,17 @@ function tune(batchNames) {
   const rounds = [];
   const sinCorrection = {}; // SEAL id -> points to take off its own total (old runs only)
   const runsInfo = []; // per run: rounds, BOSSES beaten, round each SEAL first arrived
+  const coverageRuns = [];
   let runCount = 0;
   for (const dir of dirs) {
     for (const record of readRuns(dir)) {
-      if (record.error || record.forcedSeal) continue;
+      if (record.error) continue;
       runCount += 1;
+      // Coverage runs (every SEAL on the same seeds) give the fairest SEAL comparison: keep them apart
+      if (record.coverage) {
+        const id = record.coverage.seal;
+        coverageRuns.push({ seed: `${path.basename(dir)}:${record.coverage.seed}`, seal: id, build: record.build, bosses: record.result.uniqueBossKills, win: Boolean(record.result.mainWin), rounds: record.result.rounds, damage: 0, ownPoints: 0 });
+      }
       record.rounds.forEach((round) => {
         if (!Number.isFinite(round.pts) || round.pts <= -999) return;
         const bucket = Math.floor((round.r - 1) / 5);
@@ -93,6 +99,13 @@ function tune(batchNames) {
   // what really matters: did runs holding the SEAL beat more BOSSES than runs alive at the same round?
   // (SIN or BOUNTY that never turns into BOSS kills shouldn't make a SEAL look good)
   const outcome = sealOutcomes(runsInfo);
+  // where Coverage batches measured a SEAL against the average SEAL on the same seeds, trust that instead
+  if (coverageRuns.length) {
+    buildCoverage(coverageRuns, {}).seals.forEach((seal) => {
+      if (seal.runs < 10) return;
+      outcome[seal.id] = { runs: seal.runs, bossEdge: seal.edge, remaining: seal.avgRounds, coverage: true };
+    });
+  }
   Object.entries(raw).forEach(([id, entry]) => {
     const capped = entry.perRound > cap;
     const ownPoints = Math.min(entry.perRound, cap);
@@ -112,6 +125,7 @@ function tune(batchNames) {
       bossEdge: o ? round2(o.bossEdge) : null,
       outcomePerRound: outcomePerRound === null ? null : round2(outcomePerRound),
       runs: o ? o.runs : 0,
+      fromCoverage: Boolean(o && o.coverage),
       direct: round2(entry.direct),
       matched: round2(entry.matched),
       rounds: entry.rounds

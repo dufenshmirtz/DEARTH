@@ -15,7 +15,7 @@ const EXPERIENCE_FILE = path.join(__dirname, "data", "experience.json");
 const BUILDS = ["bounty", "memory", "reveal", "critical", "personality", "artifact"];
 
 function parseArgs(argv) {
-  const args = { runs: 100, build: "rotation", tag: "", mainOnly: false, workers: Math.max(1, os.cpus().length - 1), seeds: "", forceSeal: "", maxRounds: 1000 };
+  const args = { runs: 100, build: "rotation", tag: "", mainOnly: false, workers: Math.max(1, os.cpus().length - 1), seeds: "", forceSeal: "", maxRounds: 1000, mode: "normal", perSeal: 30 };
   for (let i = 0; i < argv.length; i += 1) {
     const key = argv[i];
     const next = () => argv[++i];
@@ -27,6 +27,8 @@ function parseArgs(argv) {
     else if (key === "--seeds") args.seeds = String(next() || "").replace(/[^a-zA-Z0-9_-]+/g, "-");
     else if (key === "--force-seal") args.forceSeal = String(next() || "");
     else if (key === "--max-rounds") args.maxRounds = Math.max(10, parseInt(next(), 10) || 1000);
+    else if (key === "--coverage") args.mode = "coverage";
+    else if (key === "--per-seal") args.perSeal = Math.max(1, parseInt(next(), 10) || 30);
   }
   if (args.build !== "rotation" && !BUILDS.includes(args.build)) {
     throw new Error(`Unknown build "${args.build}". Use one of: ${BUILDS.join(", ")} (or leave it out for the rotation).`);
@@ -56,6 +58,13 @@ function loadExperience() {
   } catch (error) {
     return null;
   }
+}
+
+// every SEAL that can be offered in the game (removed ones left out)
+function coverageSealIds() {
+  const { GameVM } = require("./game-vm");
+  const g = new GameVM("coverage-list");
+  return g.run("PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id))");
 }
 
 function writeJson(file, data) {
@@ -103,17 +112,35 @@ async function runBatch(args, { onProgress } = {}) {
   writeJson(path.join(dir, "batch.json"), meta);
 
   const jobs = [];
-  for (let i = 0; i < args.runs; i += 1) {
-    jobs.push({
-      index: i,
-      seed: `${seeds}-${i + 1}`,
-      build: args.build === "rotation" ? BUILDS[i % BUILDS.length] : args.build,
-      mainOnly: args.mainOnly,
-      forceSeal: args.forceSeal || null,
-      maxRounds: args.maxRounds,
-      experience
-    });
+  if (args.mode === "coverage") {
+    // Coverage: every SEAL gets the same seeds. Seed j is played once per SEAL, each time starting with that SEAL,
+    // so SEALS are compared on identical dice. All SEALS of seed 1 come first, then seed 2..., so a batch stopped
+    // early is still even.
+    const sealIds = coverageSealIds();
+    meta.coverage = { perSeal: args.perSeal, seals: sealIds.length };
+    meta.total = sealIds.length * args.perSeal;
+    for (let j = 0; j < args.perSeal; j += 1) {
+      sealIds.forEach((id, i) => {
+        // builds rotate across both seeds and SEALS: every seed is played with every build, and every SEAL
+        // gets every build equally often
+        const build = args.build === "rotation" ? BUILDS[(j + i) % BUILDS.length] : args.build;
+        jobs.push({ index: jobs.length, seed: `${seeds}-${j + 1}`, build, mainOnly: args.mainOnly, forceSeal: id, coverage: { seed: j + 1, seal: id }, maxRounds: args.maxRounds, experience });
+      });
+    }
+  } else {
+    for (let i = 0; i < args.runs; i += 1) {
+      jobs.push({
+        index: i,
+        seed: `${seeds}-${i + 1}`,
+        build: args.build === "rotation" ? BUILDS[i % BUILDS.length] : args.build,
+        mainOnly: args.mainOnly,
+        forceSeal: args.forceSeal || null,
+        maxRounds: args.maxRounds,
+        experience
+      });
+    }
   }
+  writeJson(path.join(dir, "batch.json"), meta);
 
   const workerCount = Math.min(args.workers, jobs.length);
   let nextJob = 0;
@@ -170,12 +197,15 @@ if (require.main === module) {
     console.error(error.message);
     process.exit(1);
   }
-  console.log(`DEARTH bot: ${args.runs} runs, build ${args.build}, ${args.workers} workers${args.tag ? `, tag ${args.tag}` : ""}`);
+  console.log(args.mode === "coverage"
+    ? `DEARTH bot: Coverage, ${args.perSeal} runs for every SEAL, build ${args.build}, ${args.workers} workers${args.tag ? `, tag ${args.tag}` : ""}`
+    : `DEARTH bot: ${args.runs} runs, build ${args.build}, ${args.workers} workers${args.tag ? `, tag ${args.tag}` : ""}`);
   runBatch(args, {
     onProgress: (meta, message) => {
       const r = message.record?.result;
       const line = message.error ? "ERROR" : `${r.mainWin ? "WON " : "lost"} ${r.uniqueBossKills}/8 bosses${r.endlessBossKills ? ` +${r.endlessBossKills} endless` : ""}, ${r.rounds} rounds`;
-      process.stdout.write(`  [${meta.done}/${meta.total}] ${message.record?.build || ""} ${line}\n`);
+      const forced = message.record?.coverage ? ` [${message.record.forcedSeal}]` : "";
+      process.stdout.write(`  [${meta.done}/${meta.total}] ${message.record?.build || ""}${forced} ${line}\n`);
     }
   }).then(({ dir, meta, summary }) => {
     console.log(`\nDone in ${Math.round(meta.elapsedSec / 60)} min. Main game won in ${summary.overview.mainWins}/${summary.overview.runs} runs (${summary.overview.mainWinRate}%).`);
@@ -187,4 +217,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runBatch, parseArgs, RUNS_DIR, BUILDS, EXPERIENCE_FILE, ROOT };
+module.exports = { runBatch, parseArgs, coverageSealIds, RUNS_DIR, BUILDS, EXPERIENCE_FILE, ROOT };

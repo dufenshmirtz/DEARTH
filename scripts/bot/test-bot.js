@@ -46,3 +46,12 @@ test("the same seed plays the same run", () => {
   );
   assert.ok(a.rounds.length >= 1);
 });
+
+test("a Coverage run keeps its forced SEAL the whole run", () => {
+  const run = playRun({ seed: "keep-forced", build: "bounty", forceSeal: "p13", coverage: { seed: 1, seal: "p13" }, maxRounds: 12 });
+  assert.equal(run.forcedSeal, "p13");
+  assert.deepEqual(run.coverage, { seed: 1, seal: "p13" });
+  run.rounds.forEach((round) => {
+    if (round.seals) assert.ok(round.seals.some((tag) => tag.split("x")[0] === "p13"), `round ${round.r} lost the forced SEAL`);
+  });
+});

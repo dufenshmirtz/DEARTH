@@ -72,7 +72,7 @@ function sealList() {
     const g = new GameVM("lab");
     return g
       .run("PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id))")
-      .map((id) => ({ id, name: g.items[id]?.name || id }))
+      .map((id) => ({ id, name: g.items[id]?.name || id, price: g.items[id]?.price || 0, description: g.items[id]?.description || "" }))
       .sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     return [];
@@ -116,12 +116,14 @@ function jobStatus() {
 }
 
 function batchArgs(body) {
-  const args = ["--runs", String(Math.max(1, Math.min(5000, parseInt(body.runs, 10) || 100)))];
+  const args = body.mode === "coverage"
+    ? ["--coverage", "--per-seal", String(Math.max(1, Math.min(200, parseInt(body.perSeal, 10) || 30)))]
+    : ["--runs", String(Math.max(1, Math.min(5000, parseInt(body.runs, 10) || 100)))];
   if (body.build && body.build !== "rotation" && BUILDS.includes(body.build)) args.push("--build", body.build);
   if (body.tag) args.push("--tag", String(body.tag).replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 40));
   if (body.mainOnly) args.push("--main-only");
   if (body.seeds) args.push("--seeds", String(body.seeds).replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 40));
-  if (body.forceSeal && /^p\d+$/.test(body.forceSeal)) args.push("--force-seal", body.forceSeal);
+  if (body.mode !== "coverage" && body.forceSeal && /^p\d+$/.test(body.forceSeal)) args.push("--force-seal", body.forceSeal);
   if (body.workers) args.push("--workers", String(Math.max(1, Math.min(64, parseInt(body.workers, 10) || 1))));
   return args;
 }
