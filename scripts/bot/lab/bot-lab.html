@@ -184,7 +184,7 @@ async function loadBatches() {
   $("#batchList").innerHTML = view.batches.length
     ? view.batches.map((b) => {
         const o = b.overview;
-        const done = b.finished ? "" : ` · ${b.done}/${b.total} running or stopped`;
+        const done = b.finished ? "" : b.running ? ` · running ${b.done}/${b.total}` : ` · stopped at ${b.done}/${b.total}${b.canContinue ? " (can continue)" : ""}`;
         const git = b.git?.commit ? `${b.git.commit}${b.git.dirty ? "*" : ""}` : "";
         return `<div class="batch ${b.id === view.batchId ? "active" : ""}" data-id="${esc(b.id)}">
           <div class="bname">${esc(b.tag || b.id)}</div>
@@ -266,6 +266,14 @@ async function openBatch(id, quiet) {
 
 const TABS = [["overview", "Overview"], ["bosses", "BOSSES"], ["late", "Late game"], ["seals", "SEALS"], ["artifacts", "ARTIFACTS"], ["runs", "Runs"], ["compare", "Compare"], ["settings", "Settings used"]];
 
+// a stopped batch: continue it exactly where it stopped, or say why that is blocked
+function continueHtml(meta, check) {
+  if (meta.finished || !check) return "";
+  if (check.running) return `<div class="warnline">Running: ${meta.done}/${meta.total} runs so far. The report below shows the runs finished up to now.</div>`;
+  if (check.ok) return `<div class="panel" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span>Stopped at <b>${check.done}</b> of <b>${check.total}</b> runs. The report below covers those.</span><button id="continueBtn" class="primary">Continue</button><span class="sub">Plays only the missing runs, on the same seeds and settings, with the Workers number on the left. The result is the same as if it had never been stopped.</span></div>`;
+  return `<div class="warnline">Stopped at ${meta.done} of ${meta.total} runs. Can't continue: ${esc(check.reason)}</div>`;
+}
+
 function tabsFor(summary) {
   return summary.coverage ? [TABS[0], ["coverage", "Coverage"], ...TABS.slice(1)] : TABS;
 }
@@ -280,9 +288,15 @@ function renderBatch() {
     <div class="top"><h1>${esc(meta.tag || meta.id)}</h1>
       <span class="sub">${fmtDate(meta.started)} · ${meta.done}/${meta.total} runs · build ${esc(meta.args?.build || "rotation")}${forced} · seeds "${esc(meta.seeds)}" · ${meta.elapsedSec ? Math.round(meta.elapsedSec / 60) + " min" : ""}</span></div>
     ${commitNote}
+    ${continueHtml(meta, view.batch.continueCheck)}
     <div class="tabs">${tabsFor(summary).map(([k, t]) => `<div class="tab ${view.tab === k ? "active" : ""}" data-tab="${k}">${t}</div>`).join("")}</div>
     <div id="tabBody"></div>`;
   document.querySelectorAll(".tab").forEach((el) => el.addEventListener("click", () => { view.tab = el.dataset.tab; remember(); renderBatch(); }));
+  $("#continueBtn")?.addEventListener("click", async () => {
+    const res = await api("/api/continue", { id: meta.id, workers: $("#fWorkers").value });
+    if (res.error) alertLine(res.error);
+    setTimeout(pollStatus, 800);
+  });
   const body = $("#tabBody");
   if (!summary.overview.runs) { body.innerHTML = `<div class="empty">No finished runs yet.</div>`; return; }
   if (view.tab === "coverage" && !summary.coverage) view.tab = "overview";

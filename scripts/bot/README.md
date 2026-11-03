@@ -23,6 +23,12 @@ compared with the average SEAL on the same seeds, so luck cancels out; the Cover
 (only when the difference is bigger than its range and at least 0.25 BOSSES) and the same for builds. About
 `105 SEALS x runs per SEAL` runs in total; a batch stopped early stays even. `bot:tune` uses Coverage results first.
 
+**Stop and Continue**: Stop keeps every finished run. A stopped batch shows a Continue button in Bot Lab
+(or `pnpm run bot -- --continue <batch folder name>`): it plays only the missing runs, on the same seeds and settings,
+so the result is identical to a batch that was never stopped (a run cut off by Stop is simply played again). Continue is
+blocked if the game code, the bot's play code/settings or its experience changed since the batch started, so a batch can
+never mix runs played under different rules. Only the number of workers may change.
+
 A/B test a change: run `--seeds ab1 --tag before`, change the game, run `--seeds ab1 --tag after`,
 then open one batch in Bot Lab > Compare and pick the other.
 

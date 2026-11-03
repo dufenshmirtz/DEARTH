@@ -7,7 +7,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn, execSync } = require("node:child_process");
-const { RUNS_DIR, BUILDS, ROOT, EXPERIENCE_FILE } = require("./run");
+const { RUNS_DIR, BUILDS, ROOT, EXPERIENCE_FILE, checkContinue, isRunning, fingerprint } = require("./run");
 
 const PORT = Number(process.env.BOT_LAB_PORT) || 5178;
 const LAB_PAGE = path.join(__dirname, "lab", "bot-lab.html");
@@ -43,6 +43,7 @@ function currentCommit() {
 
 function listBatches() {
   if (!fs.existsSync(RUNS_DIR)) return [];
+  const now = fingerprint();
   return fs
     .readdirSync(RUNS_DIR)
     .filter((name) => fs.existsSync(path.join(RUNS_DIR, name, "batch.json")))
@@ -60,6 +61,8 @@ function listBatches() {
         seeds: meta.seeds,
         git: meta.git,
         overview: summary ? summary.overview : null,
+        running: isRunning(path.join(RUNS_DIR, name)),
+        canContinue: !meta.finished ? checkContinue(path.join(RUNS_DIR, name), now).ok : false,
         alarms: summary ? summary.alarms.filter((alarm) => alarm.level === "high").length : 0
       };
     })
@@ -109,8 +112,13 @@ function jobStatus() {
   const running = job.exitCode === null;
   let batch = null;
   if (job.kind === "run") {
-    const newest = listBatches()[0];
-    if (newest && new Date(newest.started) >= new Date(job.started) - 5000) batch = newest;
+    const all = listBatches();
+    const continuing = job.args.indexOf("--continue");
+    if (continuing >= 0) batch = all.find((entry) => entry.id === job.args[continuing + 1]) || null;
+    else {
+      const newest = all[0];
+      if (newest && new Date(newest.started) >= new Date(job.started) - 5000) batch = newest;
+    }
   }
   return { running, kind: job.kind, args: job.args, started: job.started, finished: job.finished || null, exitCode: job.exitCode, lines: job.lines.slice(-60), batch };
 }
@@ -195,11 +203,21 @@ const server = http.createServer(async (req, res) => {
         summary = report.buildSummary(dir);
         fs.writeFileSync(path.join(dir, "summary.json"), JSON.stringify(summary));
       }
-      return send(res, 200, { meta, summary });
+      const continueCheck = meta.finished ? null : checkContinue(dir);
+      return send(res, 200, { meta, summary, continueCheck });
     }
     if (req.method === "POST" && parts[1] === "start") {
       const body = await readBody(req);
       return send(res, 200, startJob("run", batchArgs(body)));
+    }
+    if (req.method === "POST" && parts[1] === "continue") {
+      const body = await readBody(req);
+      const id = safeName(String(body.id || ""));
+      if (!id) return send(res, 400, { error: "bad name" });
+      const check = checkContinue(path.join(RUNS_DIR, id));
+      if (!check.ok) return send(res, 200, { error: check.reason });
+      const workers = String(Math.max(1, Math.min(64, parseInt(body.workers, 10) || 1)));
+      return send(res, 200, startJob("run", ["--continue", id, "--workers", workers]));
     }
     if (req.method === "POST" && parts[1] === "tune") {
       const body = await readBody(req);
