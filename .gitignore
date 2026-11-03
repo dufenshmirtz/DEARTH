@@ -22,3 +22,6 @@ coverage/
 
 # Claude deliverables (local only)
 Claude outputs/
+
+# balance bot results (local only)
+bot-runs/

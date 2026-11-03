@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DEARTH Bot Lab</title>
+<style>
+@font-face { font-family: "Razor Keen"; src: url("/fonts/razor-keen.regular.otf") format("opentype"); font-display: swap; }
+@font-face { font-family: "Alegreya"; src: url("/fonts/alegreya/alegreya-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+:root {
+  --bg: #0d0b0a;
+  --panel: #171413;
+  --panel-2: #1f1b19;
+  --line: #3a332e;
+  --bone: #e9e3d6;
+  --ash: #8d877c;
+  --muted: #6c665d;
+  --blood: #dc2a2f;
+  --blood-dim: #7a1a1d;
+  --series-a: #dc2a2f;
+  --series-b: #2f9fc0;
+  --good: #5fae6b;
+  --warn: #d8a13a;
+  --font-ui: "Razor Keen", "Trebuchet MS", sans-serif;
+  --font-book: "Alegreya", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--bone); font-family: var(--font-book); font-size: 15px; }
+h1, h2, h3, .label, button, th, .tab { font-family: var(--font-ui); letter-spacing: 0.04em; font-weight: 400; }
+h1 { font-size: 26px; margin: 0; }
+h2 { font-size: 18px; margin: 0 0 10px; }
+h3 { font-size: 15px; margin: 14px 0 6px; color: var(--ash); }
+a { color: var(--bone); }
+.app { display: grid; grid-template-columns: 330px 1fr; min-height: 100vh; }
+.side { border-right: 1px solid var(--line); padding: 16px; background: var(--panel); overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+.main { padding: 16px 22px 60px; min-width: 0; }
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.sub { color: var(--ash); font-size: 13px; }
+.panel { background: var(--panel-2); border: 1px solid var(--line); padding: 12px; margin-bottom: 14px; }
+label { display: block; font-size: 13px; color: var(--ash); margin: 8px 0 3px; }
+input, select { width: 100%; background: var(--bg); color: var(--bone); border: 1px solid var(--line); padding: 6px 8px; font-family: var(--font-book); font-size: 14px; }
+input[type="checkbox"] { width: auto; margin-right: 6px; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+button { background: transparent; color: var(--bone); border: 1px solid var(--line); padding: 7px 12px; cursor: pointer; font-size: 14px; }
+button:hover:not(:disabled) { color: var(--blood); border-color: var(--blood); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.primary { border-color: var(--bone); }
+.hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.progress { height: 6px; background: var(--bg); border: 1px solid var(--line); margin: 8px 0; }
+.progress > div { height: 100%; background: var(--blood); width: 0; }
+.log { font-family: Consolas, monospace; font-size: 11.5px; color: var(--ash); max-height: 160px; overflow-y: auto; white-space: pre-wrap; }
+.batch { padding: 8px 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.batch:hover .bname, .batch.active .bname { color: var(--blood); }
+.bname { font-family: var(--font-ui); font-size: 14px; }
+.bmeta { font-size: 12px; color: var(--ash); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 10px 0 14px; flex-wrap: wrap; }
+.tab { padding: 7px 12px; cursor: pointer; color: var(--ash); border: 1px solid transparent; border-bottom: none; }
+.tab:hover { color: var(--blood); }
+.tab.active { color: var(--bone); border-color: var(--line); background: var(--panel-2); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.tile { background: var(--panel-2); border: 1px solid var(--line); padding: 10px 12px; }
+.tile .v { font-size: 26px; font-family: var(--font-ui); }
+.tile .k { font-size: 12px; color: var(--ash); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ash); font-size: 12.5px; cursor: pointer; white-space: nowrap; position: sticky; top: 0; background: var(--bg); }
+th:hover { color: var(--blood); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.click { cursor: pointer; }
+tr.click:hover td { color: var(--blood); }
+tr.flash td { background: #2a1416; }
+.alarm { padding: 7px 10px; border-left: 3px solid var(--ash); margin-bottom: 6px; background: var(--panel-2); cursor: default; }
+.alarm.high { border-left-color: var(--blood); }
+.alarm.medium { border-left-color: var(--warn); }
+.alarm.link { cursor: pointer; }
+.alarm.link:hover { color: var(--blood); }
+.lvl { font-family: var(--font-ui); font-size: 11px; color: var(--ash); margin-right: 8px; text-transform: uppercase; }
+.bar { height: 10px; background: var(--blood); border-radius: 0 4px 4px 0; min-width: 2px; }
+.warnline { color: var(--warn); font-size: 13px; margin: 6px 0; }
+.chip { display: inline-block; border: 1px solid var(--line); padding: 2px 7px; margin: 2px 4px 2px 0; font-size: 12.5px; }
+.chip.dead { border-color: var(--blood-dim); }
+.crit { color: var(--good); }
+.bad { color: var(--blood); }
+.round-detail td { background: var(--panel); }
+.detail { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 6px 2px 10px; }
+.detail h4 { font-family: var(--font-ui); font-weight: 400; margin: 6px 0 4px; color: var(--ash); font-size: 13px; }
+.detail ul { margin: 0; padding-left: 18px; }
+.detail table { font-size: 12.5px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; }
+.tip { position: absolute; pointer-events: none; background: var(--panel-2); border: 1px solid var(--line); padding: 5px 8px; font-size: 12px; display: none; white-space: nowrap; }
+.legend { font-size: 12.5px; color: var(--ash); margin: 4px 0; }
+.legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; margin: 0 5px 0 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.empty { color: var(--ash); padding: 30px 0; }
+.filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: 13px; color: var(--ash); }
+.filters input[type="number"], .filters input[type="text"] { width: 110px; }
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } .side { position: static; max-height: none; } .grid2, .detail { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="top"><h1>DEARTH Bot Lab</h1></div>
+    <div class="sub" id="infoLine">Loading...</div>
+    <div class="panel" style="margin-top:12px">
+      <h2>Start a batch</h2>
+      <div class="row">
+        <div><label for="fRuns">Runs</label><input id="fRuns" type="number" min="1" max="5000" value="100" /></div>
+        <div><label for="fWorkers">Workers</label><input id="fWorkers" type="number" min="1" max="64" /></div>
+      </div>
+      <label for="fBuild">Build</label>
+      <select id="fBuild"><option value="rotation">Rotation (all builds evenly)</option></select>
+      <label for="fTag">Tag (optional name)</label>
+      <input id="fTag" type="text" placeholder="e.g. before-seal-change" />
+      <label for="fSeal">Force a SEAL from the start (A/B test)</label>
+      <select id="fSeal"><option value="">None</option></select>
+      <label for="fSeeds">Seed set (same name = same runs, for A/B)</label>
+      <input id="fSeeds" type="text" placeholder="leave empty for new runs" />
+      <label><input id="fMain" type="checkbox" />Stop each run at the main-game win</label>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+      </div>
+      <div class="hint">Runs keep going if you close this tab. Keep the Bot Lab window (terminal) open.</div>
+    </div>
+    <div class="panel" id="statusPanel" style="display:none">
+      <h2 id="statusTitle">Running</h2>
+      <div class="progress"><div id="statusBar"></div></div>
+      <div class="sub" id="statusText"></div>
+      <div class="log" id="statusLog"></div>
+    </div>
+    <div class="panel">
+      <h2>Experience</h2>
+      <div class="sub" id="expLine"></div>
+      <button id="tuneBtn" style="margin-top:8px">Update from all batches</button>
+      <div class="hint">Re-run after big changes (several new SEALS). Small tweaks don't need it.</div>
+    </div>
+    <h2>Batches</h2>
+    <div id="batchList"></div>
+  </aside>
+  <main class="main" id="main"><div class="empty">Pick a batch on the left, or start one.</div></main>
+</div>
+<div class="tip" id="tip"></div>
+<script>
+"use strict";
+const $ = (sel) => document.querySelector(sel);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const api = async (url, body) => {
+  const res = await fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  return res.json();
+};
+const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "");
+const view = { info: null, batches: [], batch: null, batchId: null, tab: "overview", run: null, compare: null, sort: {} };
+const saved = (() => { try { return JSON.parse(localStorage.getItem("botLabView") || "{}"); } catch (e) { return {}; } })();
+const remember = () => { try { localStorage.setItem("botLabView", JSON.stringify({ batchId: view.batchId, tab: view.tab })); } catch (e) {} };
+
+// ---------- side panel ----------
+async function loadInfo() {
+  view.info = await api("/api/info");
+  const info = view.info;
+  $("#infoLine").textContent = `Game commit ${info.commit || "?"} · ${info.cpus} CPU cores`;
+  $("#fWorkers").value = Math.max(1, info.cpus - 1);
+  info.builds.forEach((b) => $("#fBuild").insertAdjacentHTML("beforeend", `<option value="${b}">${b[0].toUpperCase() + b.slice(1)}</option>`));
+  info.seals.forEach((s) => $("#fSeal").insertAdjacentHTML("beforeend", `<option value="${s.id}">${esc(s.name)} (${s.id})</option>`));
+  $("#expLine").textContent = info.experience ? `Learned from ${info.experience.runs} runs (${fmtDate(info.experience.made)}).` : "None yet: SEALS are judged by price until you update it.";
+}
+
+async function loadBatches() {
+  view.batches = await api("/api/batches");
+  $("#batchList").innerHTML = view.batches.length
+    ? view.batches.map((b) => {
+        const o = b.overview;
+        const done = b.finished ? "" : ` · ${b.done}/${b.total} running or stopped`;
+        const git = b.git?.commit ? `${b.git.commit}${b.git.dirty ? "*" : ""}` : "";
+        return `<div class="batch ${b.id === view.batchId ? "active" : ""}" data-id="${esc(b.id)}">
+          <div class="bname">${esc(b.tag || b.id)}</div>
+          <div class="bmeta">${fmtDate(b.started)} · ${b.total} runs · ${esc(b.args?.build || "rotation")}${done}</div>
+          <div class="bmeta">${o ? `Won ${o.mainWinRate}% · ${o.avgUniqueBossKills}/8 bosses avg` : ""}${b.alarms ? ` · <span class="bad">${b.alarms} alarm${b.alarms > 1 ? "s" : ""}</span>` : ""} ${git ? `· ${git}` : ""}</div>
+        </div>`;
+      }).join("")
+    : `<div class="sub">No batches yet.</div>`;
+  document.querySelectorAll(".batch").forEach((el) => el.addEventListener("click", () => openBatch(el.dataset.id)));
+}
+
+let pollTimer = null;
+async function pollStatus() {
+  const st = await api("/api/status");
+  const panel = $("#statusPanel");
+  if (!st.kind) { panel.style.display = "none"; $("#startBtn").disabled = false; $("#stopBtn").disabled = true; return; }
+  panel.style.display = "block";
+  $("#startBtn").disabled = st.running;
+  $("#tuneBtn").disabled = st.running;
+  $("#stopBtn").disabled = !st.running;
+  $("#statusTitle").textContent = st.running ? (st.kind === "tune" ? "Updating experience" : "Running") : st.exitCode === 0 ? "Finished" : "Stopped";
+  const b = st.batch;
+  const pctDone = b && b.total ? Math.round((b.done / b.total) * 100) : st.running ? 0 : 100;
+  $("#statusBar").style.width = `${pctDone}%`;
+  $("#statusText").textContent = b ? `${b.done}/${b.total} runs · ${esc(b.id)}` : "";
+  $("#statusLog").textContent = st.lines.slice(-14).join("\n");
+  $("#statusLog").scrollTop = 1e6;
+  if (st.running) {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(async () => { await loadBatches(); pollStatus(); if (view.batchId && b && view.batchId === b.id && !view.run && view.tab === "overview") openBatch(view.batchId, true); }, 3000);
+  } else {
+    await loadBatches();
+    if (st.kind === "tune") loadInfoExperience();
+  }
+}
+async function loadInfoExperience() {
+  const info = await api("/api/info");
+  $("#expLine").textContent = info.experience ? `Learned from ${info.experience.runs} runs (${fmtDate(info.experience.made)}).` : "None yet.";
+}
+
+$("#startBtn").addEventListener("click", async () => {
+  const body = { runs: $("#fRuns").value, workers: $("#fWorkers").value, build: $("#fBuild").value, tag: $("#fTag").value.trim(), forceSeal: $("#fSeal").value, seeds: $("#fSeeds").value.trim(), mainOnly: $("#fMain").checked };
+  const res = await api("/api/start", body);
+  if (res.error) alertLine(res.error);
+  setTimeout(pollStatus, 800);
+});
+$("#stopBtn").addEventListener("click", async () => { await api("/api/stop", {}); setTimeout(pollStatus, 500); });
+$("#tuneBtn").addEventListener("click", async () => { await api("/api/tune", {}); setTimeout(pollStatus, 500); });
+function alertLine(text) { $("#statusPanel").style.display = "block"; $("#statusText").textContent = text; }
+
+// ---------- batch report ----------
+async function openBatch(id, quiet) {
+  view.batchId = id;
+  view.run = null;
+  if (!quiet) view.compare = null;
+  remember();
+  document.querySelectorAll(".batch").forEach((el) => el.classList.toggle("active", el.dataset.id === id));
+  const data = await api(`/api/batch/${encodeURIComponent(id)}`);
+  if (data.error) { $("#main").innerHTML = `<div class="empty">${esc(data.error)}</div>`; return; }
+  view.batch = data;
+  renderBatch();
+}
+
+const TABS = [["overview", "Overview"], ["bosses", "BOSSES"], ["seals", "SEALS"], ["artifacts", "ARTIFACTS"], ["runs", "Runs"], ["compare", "Compare"], ["settings", "Settings used"]];
+
+function renderBatch() {
+  const { meta, summary } = view.batch;
+  const commitNote = meta.git?.commit && view.info?.commit && meta.git.commit !== view.info.commit
+    ? `<div class="warnline">Played on commit ${esc(meta.git.commit)}${meta.git.dirty ? " (with uncommitted changes)" : ""}; the game is now at ${esc(view.info.commit)}. Logs are still valid; replays would not match.</div>`
+    : meta.git?.dirty ? `<div class="warnline">Played with uncommitted changes in src/.</div>` : "";
+  const forced = meta.args?.forceSeal ? ` · forced SEAL ${esc(meta.args.forceSeal)}` : "";
+  $("#main").innerHTML = `
+    <div class="top"><h1>${esc(meta.tag || meta.id)}</h1>
+      <span class="sub">${fmtDate(meta.started)} · ${meta.done}/${meta.total} runs · build ${esc(meta.args?.build || "rotation")}${forced} · seeds "${esc(meta.seeds)}" · ${meta.elapsedSec ? Math.round(meta.elapsedSec / 60) + " min" : ""}</span></div>
+    ${commitNote}
+    <div class="tabs">${TABS.map(([k, t]) => `<div class="tab ${view.tab === k ? "active" : ""}" data-tab="${k}">${t}</div>`).join("")}</div>
+    <div id="tabBody"></div>`;
+  document.querySelectorAll(".tab").forEach((el) => el.addEventListener("click", () => { view.tab = el.dataset.tab; remember(); renderBatch(); }));
+  const body = $("#tabBody");
+  if (!summary.overview.runs) { body.innerHTML = `<div class="empty">No finished runs yet.</div>`; return; }
+  ({ overview: renderOverview, bosses: renderBosses, seals: renderSeals, artifacts: renderArtifacts, runs: renderRuns, compare: renderCompare, settings: renderSettings })[view.tab](body, summary, meta);
+}
+
+function tiles(o) {
+  const t = [
+    [`${o.mainWinRate}%`, `Main game won (${o.mainWins}/${o.runs})`],
+    [o.avgUniqueBossKills, "Unique BOSSES beaten (avg of 8)"],
+    [o.avgRounds, `Rounds per run (median ${o.medianRounds})`],
+    [o.endlessAvg, `Endless BOSSES after a win (best ${o.endlessBest})`],
+    [`${o.critRate}%`, "Rounds with our CRITICAL"],
+    [`${o.worstRate}%`, "Rounds with our worst guess"],
+    [o.avgDamagePerRound, "Damage taken per round"],
+    [o.predictionError ?? "-", "Guess-reading error (avg distance)"]
+  ];
+  return `<div class="tiles">${t.map(([v, k]) => `<div class="tile"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join("")}</div>`;
+}
+
+function alarmsHtml(alarms) {
+  if (!alarms.length) return `<div class="sub">No alarms: nothing stands out.</div>`;
+  return alarms.map((a, i) => `<div class="alarm ${a.level} ${a.link ? "link" : ""}" data-i="${i}"><span class="lvl">${a.level}</span>${esc(a.text)}</div>`).join("");
+}
+function bindAlarms(alarms) {
+  document.querySelectorAll(".alarm.link").forEach((el) => el.addEventListener("click", () => {
+    const a = alarms[+el.dataset.i];
+    const tab = { boss: "bosses", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
+    view.tab = tab; renderBatch();
+    const row = document.querySelector(`[data-key="${CSS.escape(a.link.id)}"]`);
+    if (row) { row.classList.add("flash"); row.scrollIntoView({ block: "center" }); }
+  }));
+}
+
+function renderOverview(body, s) {
+  const deathsMax = Math.max(1, ...s.deaths.map((d) => d.count));
+  body.innerHTML = `
+    ${tiles(s.overview)}
+    <h2>Alarms</h2>${alarmsHtml(s.alarms)}
+    <div class="grid2" style="margin-top:16px">
+      <div><h2>HEALTH at the start of each round</h2>${chartHtml("hpChart")}<div class="hint">Average over runs still alive at that point (5-round steps).</div></div>
+      <div><h2>SIN at the start of each round</h2>${chartHtml("sinChart")}<div class="hint">Prices double above 150 SIN.</div></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div><h2>Builds</h2>${table(s.builds, [["build", "Build"], ["runs", "Runs", "num"], ["winRate", "Won %", "num"], ["avgUniqueBossKills", "BOSSES (of 8)", "num"], ["avgRounds", "Rounds", "num"], ["endlessAvg", "Endless", "num"]], "builds", "build")}</div>
+      <div><h2>What ended the runs</h2>
+        <table><tr><th>Alive at death</th><th class="num">Runs</th><th></th></tr>
+        ${s.deaths.map((d) => `<tr><td>${esc(d.by)}</td><td class="num">${d.count} (${d.share}%)</td><td style="width:40%"><div class="bar" style="width:${(d.count / deathsMax) * 100}%"></div></td></tr>`).join("")}</table>
+        <h3>Damage in the final round</h3>
+        <table>${s.deathSources.map((d) => `<tr><td>${esc(d.source)}</td><td class="num">${d.count}</td></tr>`).join("")}</table>
+      </div>
+    </div>`;
+  bindTables(body);
+  bindAlarms(s.alarms);
+  lineChart("hpChart", [{ name: "HEALTH", color: "var(--series-a)", points: s.curve.map((c) => [c.round, c.hp, c.alive]) }], { yMax: 100, unit: "HP" });
+  lineChart("sinChart", [{ name: "SIN", color: "var(--series-a)", points: s.curve.map((c) => [c.round, c.sin, c.alive]) }], { unit: "SIN" });
+}
+
+function renderBosses(body, s) {
+  body.innerHTML = `<h2>BOSSES</h2>
+    ${table(s.bosses, [["name", "BOSS"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["examples", "Runs it ended"]], "bosses", "name")}
+    <div class="hint">"Ended run" counts runs that died while this BOSS was alive. Click a run to open its log at that round.</div>`;
+  bindTables(body);
+}
+
+function renderSeals(body, s) {
+  body.innerHTML = `<h2>SEALS</h2>
+    <div class="filters">Find <input type="text" id="sealFind" placeholder="name or id" /></div>
+    ${table(s.seals, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["winRateOwned", "Won % when owned", "num"], ["avgBossKillsOwned", "BOSSES when owned", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}
+    <div class="hint">"Won % when owned" compares runs that held this SEAL at any point; strong builds lift every SEAL in them, so use a forced-SEAL A/B batch to be sure. "Own points / round" is what the SEAL itself did (damage, healing, SIN...), on the bot's points scale. Overall win rate: ${s.overview.mainWinRate}%.</div>`;
+  bindTables(body);
+  $("#sealFind").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    body.querySelectorAll("tbody tr").forEach((tr) => { tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+}
+
+function renderArtifacts(body, s) {
+  body.innerHTML = `<h2>ARTIFACTS</h2>
+    ${table(s.artifacts, [["name", "ARTIFACT"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["uses", "Used", "num"], ["avgGain", "Points gained per use", "num"]], "artifacts", "id")}
+    <div class="hint">Points gained = how much better the round went than doing nothing, as the bot measured it before using it.</div>`;
+  bindTables(body);
+}
+
+function renderRuns(body, s) {
+  body.innerHTML = `<h2>Runs</h2>
+    ${table(s.runs.map((r) => ({ ...r, won: r.mainWin ? "won" : "", died: r.diedTo?.boss || (r.outcome === "died" ? "no BOSS" : r.outcome) })), [["file", "Run"], ["build", "Build"], ["won", "Main game"], ["uniqueBossKills", "BOSSES", "num"], ["endlessBossKills", "Endless", "num"], ["rounds", "Rounds", "num"], ["died", "Ended by"], ["crits", "CRITICALS", "num"], ["avgDamage", "Dmg / round", "num"], ["peakSin", "Peak SIN", "num"]], "runs", "file")}`;
+  bindTables(body);
+}
+
+function renderSettings(body, s, meta) {
+  const exp = meta.experience ? `Experience: ${meta.experience.runs} runs, made ${fmtDate(meta.experience.made)}.` : "Experience: none (SEALS judged by price).";
+  body.innerHTML = `<h2>Settings this batch played with</h2><div class="sub">${esc(exp)} Change them in scripts/bot/config.js.</div>
+    ${Object.entries(meta.config || {}).map(([group, values]) => `<h3>${esc(group)}</h3><table>${Object.entries(values).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${esc(v)}</td></tr>`).join("")}</table>`).join("")}`;
+}
+
+// ---------- compare two batches ----------
+async function renderCompare(body, s, meta) {
+  const others = view.batches.filter((b) => b.id !== meta.id && b.overview);
+  body.innerHTML = `<h2>Compare with another batch</h2>
+    <div class="filters"><select id="cmpSel" style="width:auto"><option value="">Choose a batch...</option>${others.map((b) => `<option value="${esc(b.id)}" ${view.compare?.meta.id === b.id ? "selected" : ""}>${esc(b.tag || b.id)} (${fmtDate(b.started)})</option>`).join("")}</select></div>
+    <div id="cmpBody"></div>`;
+  $("#cmpSel").addEventListener("change", async (e) => {
+    view.compare = e.target.value ? await api(`/api/batch/${encodeURIComponent(e.target.value)}`) : null;
+    drawCompare();
+  });
+  drawCompare();
+  function drawCompare() {
+    const out = $("#cmpBody");
+    if (!view.compare) { out.innerHTML = `<div class="sub">Tip: run two batches with the same seed set (one with a change, one without) for a fair comparison.</div>`; return; }
+    const a = s, b = view.compare.summary;
+    const nameA = meta.tag || meta.id, nameB = view.compare.meta.tag || view.compare.meta.id;
+    const sameSeeds = meta.seeds === view.compare.meta.seeds;
+    const rows = [["mainWinRate", "Main game won %"], ["avgUniqueBossKills", "Unique BOSSES beaten"], ["avgRounds", "Rounds per run"], ["endlessAvg", "Endless BOSSES after a win"], ["critRate", "CRITICAL rounds %"], ["avgDamagePerRound", "Damage per round"], ["runs", "Runs"]];
+    const delta = (x, y) => { const d = Math.round((x - y) * 100) / 100; return d > 0 ? `+${d}` : `${d}`; };
+    const bossNames = [...new Set([...a.bosses, ...b.bosses].map((x) => x.name))];
+    const sealIds = a.seals.filter((x) => x.runsOwned >= 5).map((x) => x.id).filter((id) => b.seals.find((y) => y.id === id && y.runsOwned >= 5));
+    out.innerHTML = `
+      ${sameSeeds ? `<div class="sub">Same seed set: the runs start from the same dice, so differences come from the change.</div>` : `<div class="warnline">Different seed sets: differences include luck. Use the same seed set for A/B tests.</div>`}
+      <div class="legend"><i style="background:var(--series-a)"></i>${esc(nameA)} <i style="background:var(--series-b)"></i>${esc(nameB)}</div>
+      <table><tr><th></th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th><th class="num">Difference</th></tr>
+      ${rows.map(([k, t]) => `<tr><td>${t}</td><td class="num">${a.overview[k]}</td><td class="num">${b.overview[k]}</td><td class="num">${delta(a.overview[k], b.overview[k])}</td></tr>`).join("")}</table>
+      <h2 style="margin-top:16px">HEALTH at the start of each round</h2>${chartHtml("cmpChart")}
+      <div class="grid2" style="margin-top:16px">
+        <div><h2>BOSSES: ended run %</h2><table><tr><th>BOSS</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
+          ${bossNames.map((n) => { const x = a.bosses.find((q) => q.name === n), y = b.bosses.find((q) => q.name === n); return `<tr><td>${esc(n)}</td><td class="num">${x ? x.endedRunRate + "%" : "-"}</td><td class="num">${y ? y.endedRunRate + "%" : "-"}</td></tr>`; }).join("")}</table></div>
+        <div><h2>SEALS: won % when owned</h2><table><tr><th>SEAL</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
+          ${sealIds.map((id) => { const x = a.seals.find((q) => q.id === id), y = b.seals.find((q) => q.id === id); return `<tr><td>${esc(x.name)}</td><td class="num">${x.winRateOwned}%</td><td class="num">${y.winRateOwned}%</td></tr>`; }).join("") || `<tr><td colspan="3" class="sub">Not enough shared SEALS.</td></tr>`}</table></div>
+      </div>`;
+    lineChart("cmpChart", [
+      { name: nameA, color: "var(--series-a)", points: a.curve.map((c) => [c.round, c.hp, c.alive]) },
+      { name: nameB, color: "var(--series-b)", points: b.curve.map((c) => [c.round, c.hp, c.alive]) }
+    ], { yMax: 100, unit: "HP", labels: true });
+  }
+}
+
+// ---------- tables (click a header to sort) ----------
+function cellHtml(row, key, tableId) {
+  const v = row[key];
+  if (key === "examples") return (v || []).map((e) => `<a href="#" data-run="${esc(e.file)}" data-round="${e.round}">${esc(e.file.replace(/^run-0*|\.json$/g, ""))} (r${e.round})</a>`).join(", ");
+  if (tableId === "runs" && key === "file") return `<a href="#" data-run="${esc(v)}">${esc(v.replace(/\.json$/, ""))}</a>`;
+  return esc(v === null || v === undefined ? "-" : v);
+}
+function table(rows, cols, id, keyField) {
+  const sort = view.sort[id];
+  const sorted = sort ? rows.slice().sort((x, y) => {
+    const a = x[sort.key], b = y[sort.key];
+    const cmp = typeof a === "number" || typeof b === "number" ? (a ?? -Infinity) - (b ?? -Infinity) : String(a ?? "").localeCompare(String(b ?? ""));
+    return sort.dir * cmp;
+  }) : rows;
+  return `<table data-table="${id}"><thead><tr>${cols.map(([k, t, cls]) => `<th class="${cls || ""}" data-sort="${k}">${t}${sort?.key === k ? (sort.dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead>
+    <tbody>${sorted.map((r) => `<tr data-key="${esc(r[keyField])}">${cols.map(([k, , cls]) => `<td class="${cls || ""}">${cellHtml(r, k, id)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+function bindTables(root) {
+  root.querySelectorAll("table[data-table] th[data-sort]").forEach((th) => th.addEventListener("click", () => {
+    const id = th.closest("table").dataset.table, key = th.dataset.sort;
+    const cur = view.sort[id];
+    view.sort[id] = { key, dir: cur && cur.key === key ? -cur.dir : -1 };
+    renderBatch();
+  }));
+  root.querySelectorAll("a[data-run]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openRun(a.dataset.run, a.dataset.round ? +a.dataset.round : null); }));
+}
+
+// ---------- line chart (one y-axis; hover shows the values) ----------
+function chartHtml(id) { return `<div class="chart" id="${id}"></div>`; }
+function lineChart(id, series, { yMax = null, unit = "", labels = false } = {}) {
+  const host = document.getElementById(id);
+  if (!host) return;
+  const W = 640, H = 220, L = 44, R = labels ? 90 : 16, T = 12, B = 28;
+  const xs = series.flatMap((s) => s.points.map((p) => p[0]));
+  const ys = series.flatMap((s) => s.points.map((p) => p[1]));
+  if (!xs.length) { host.innerHTML = `<div class="sub">No data.</div>`; return; }
+  const xMin = Math.min(...xs), xMax = Math.max(...xs, xMin + 1);
+  const top = yMax ?? niceMax(Math.max(...ys, 1));
+  const x = (v) => L + ((v - xMin) / (xMax - xMin)) * (W - L - R);
+  const y = (v) => T + (1 - v / top) * (H - T - B);
+  const ticks = [0, top / 4, top / 2, (3 * top) / 4, top];
+  const xticks = niceTicks(xMin, xMax, 6);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map((s) => s.name).join(", "))} by round">`;
+  ticks.forEach((t) => { svg += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 6}" y="${y(t) + 4}" fill="var(--ash)" font-size="11" text-anchor="end">${Math.round(t)}</text>`; });
+  xticks.forEach((t) => { svg += `<text x="${x(t)}" y="${H - 8}" fill="var(--ash)" font-size="11" text-anchor="middle">r${t}</text>`; });
+  series.forEach((s) => {
+    const d = s.points.map((p, i) => `${i ? "L" : "M"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (labels && s.points.length) { const p = s.points[s.points.length - 1]; svg += `<text x="${x(p[0]) + 6}" y="${y(p[1]) + 4}" fill="var(--bone)" font-size="11">${esc(s.name.slice(0, 14))}</text>`; }
+  });
+  svg += `<line id="${id}-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--ash)" stroke-width="1" visibility="hidden"/>`;
+  svg += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent" id="${id}-hit"/></svg>`;
+  host.innerHTML = svg;
+  const tip = $("#tip"), hit = document.getElementById(`${id}-hit`), cross = document.getElementById(`${id}-cross`);
+  hit.addEventListener("mousemove", (e) => {
+    const box = host.querySelector("svg").getBoundingClientRect();
+    const vx = ((e.clientX - box.left) / box.width) * W;
+    const all = [...new Set(xs)].sort((a, b) => a - b);
+    const nearest = all.reduce((best, v) => (Math.abs(x(v) - vx) < Math.abs(x(best) - vx) ? v : best), all[0]);
+    cross.setAttribute("x1", x(nearest)); cross.setAttribute("x2", x(nearest)); cross.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>Rounds ${nearest}-${nearest + 4}</b><br>` + series.map((s) => { const p = s.points.find((q) => q[0] === nearest); return p ? `${esc(s.name)}: ${p[1]} ${unit} <span style="color:var(--ash)">(${p[2]} runs)</span>` : ""; }).filter(Boolean).join("<br>");
+    tip.style.display = "block"; tip.style.left = `${e.pageX + 14}px`; tip.style.top = `${e.pageY - 10}px`;
+  });
+  hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+}
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; }
+function niceTicks(a, b, n) { const step = Math.max(5, Math.ceil((b - a) / n / 5) * 5); const out = []; for (let t = Math.ceil(a / step) * step; t <= b; t += step) out.push(t); if (!out.length) out.push(a); return out; }
+
+// ---------- one run, round by round ----------
+async function openRun(file, round = null) {
+  const run = await api(`/api/batch/${encodeURIComponent(view.batchId)}/run/${encodeURIComponent(file)}`);
+  if (run.error) return;
+  view.run = { file, data: run, open: new Set(round ? [round] : []), filter: { boss: false, dmg: 0 } };
+  renderRun(round);
+}
+
+function renderRun(scrollTo) {
+  const { data: run, file, filter } = view.run;
+  const r = run.result;
+  const bosses = run.bosses.map((b) => `<span class="chip ${b.killRound === null ? "dead" : ""}">${esc(b.name)} r${b.spawnRound}${b.killRound !== null ? `-${b.killRound} (${b.hpLost} HP)` : " (alive at the end)"}</span>`).join("");
+  const rounds = run.rounds.filter((x) => (!filter.boss || x.boss) && (x.dmg || 0) >= filter.dmg);
+  $("#main").innerHTML = `
+    <div class="top"><button id="backBtn">Back to the report</button><h1>${esc(file.replace(/\.json$/, ""))}</h1>
+      <span class="sub">build ${esc(run.build)} · seed ${esc(run.seed)}${run.forcedSeal ? ` · forced ${esc(run.forcedSeal)}` : ""}</span></div>
+    <div class="tiles">
+      <div class="tile"><div class="v">${r.mainWin ? "Won" : "Lost"}</div><div class="k">Main game${r.mainWinRound ? ` (round ${r.mainWinRound})` : ""}</div></div>
+      <div class="tile"><div class="v">${r.uniqueBossKills}/8</div><div class="k">Unique BOSSES${r.endlessBossKills ? ` · +${r.endlessBossKills} endless` : ""}</div></div>
+      <div class="tile"><div class="v">${r.rounds}</div><div class="k">Rounds · ${r.kills} KOs</div></div>
+      <div class="tile"><div class="v">${r.crits}</div><div class="k">CRITICALS · ${r.worsts} worst guesses</div></div>
+    </div>
+    ${r.diedTo ? `<div class="warnline">Died in round ${r.diedRound}${r.diedTo.boss ? ` against ${esc(r.diedTo.boss)}` : ""} at ${r.diedTo.hpBefore} HP: ${esc(r.diedTo.sources.join(", "))}</div>` : ""}
+    <h3>BOSSES</h3><div>${bosses || "<span class='sub'>none</span>"}</div>
+    <h3>Final SEALS</h3><div>${r.finalSeals.map((s) => `<span class="chip">${esc(s.name)}${s.stack > 1 ? ` ELITE${s.stack > 2 ? " +" + (s.stack - 1) : ""}` : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
+    <h2 style="margin-top:16px">Rounds</h2>
+    <div class="filters"><label style="margin:0"><input type="checkbox" id="fBoss" ${filter.boss ? "checked" : ""}/>BOSS rounds only</label>
+      Damage at least <input type="number" id="fDmg" min="0" value="${filter.dmg}" />
+      Go to round <input type="number" id="fGo" min="1" />
+      <button id="expandAll">Open all</button></div>
+    <table><thead><tr><th class="num">Round</th><th class="num">HP</th><th class="num">SIN</th><th>BOSS</th><th class="num">Guess</th><th class="num">TARGET</th><th class="num">Damage</th><th class="num">KOs</th><th>Shop</th><th>ARTIFACTS</th></tr></thead>
+    <tbody>${rounds.map(roundRow).join("")}</tbody></table>`;
+  $("#backBtn").addEventListener("click", () => { view.run = null; renderBatch(); });
+  $("#fBoss").addEventListener("change", (e) => { filter.boss = e.target.checked; renderRun(); });
+  $("#fDmg").addEventListener("change", (e) => { filter.dmg = +e.target.value || 0; renderRun(); });
+  $("#fGo").addEventListener("change", (e) => { const n = +e.target.value; view.run.open.add(n); renderRun(n); });
+  $("#expandAll").addEventListener("click", () => { run.rounds.forEach((x) => view.run.open.add(x.r)); renderRun(); });
+  document.querySelectorAll("tr[data-round]").forEach((tr) => tr.addEventListener("click", () => {
+    const n = +tr.dataset.round; view.run.open.has(n) ? view.run.open.delete(n) : view.run.open.add(n); renderRun(n);
+  }));
+  if (scrollTo) { const row = document.querySelector(`tr[data-round="${scrollTo}"]`); if (row) row.scrollIntoView({ block: "center" }); }
+}
+
+function shopText(steps) {
+  return (steps || []).map((s) => s.action === "reroll" ? `reroll (${s.price})` : s.action === "sell" ? `sold ${s.name}` : `${s.action === "elite" ? "ELITE " : ""}${s.name}${s.trial ? " (trial)" : ""}`).join(", ");
+}
+
+function roundRow(x) {
+  const g = x.guess || {};
+  const shop = [shopText(x.shop), x.shopEnd ? `after: ${shopText(x.shopEnd)}` : ""].filter(Boolean).join("; ");
+  const art = x.art?.used?.length ? x.art.used.join("; ") : "";
+  const target = x.T !== x.Tf && x.Tf !== undefined ? `${x.T} → ${x.Tf}` : x.Tf ?? x.T ?? "-";
+  const tags = `${x.crit ? ` <span class="crit">CRIT</span>` : ""}${x.worst ? ` <span class="bad">WORST</span>` : ""}${x.bossKilled ? ` <span class="crit">beat ${esc(x.bossKilled)}</span>` : ""}${x.mainWin ? ` <span class="crit">MAIN GAME WON</span>` : ""}`;
+  let html = `<tr class="click" data-round="${x.r}"><td class="num">${x.r}${x.prep ? " <span class='sub'>prep</span>" : ""}</td><td class="num">${x.hp0}→${x.hp1 ?? 0}</td><td class="num">${x.sin0}→${x.sin1 ?? "-"}</td><td>${esc(x.boss || "")}</td>
+    <td class="num">${g.g ?? "-"}${g.n ? ` <span class="sub">(aimed ${g.i})</span>` : ""}</td><td class="num">${target}</td><td class="num ${x.dmg >= 15 ? "bad" : ""}">${x.dmg ?? "-"}${tags}</td><td class="num">${x.kills ?? 0}</td><td>${esc(shop)}</td><td>${esc(art)}</td></tr>`;
+  if (view.run.open.has(x.r)) html += `<tr class="round-detail"><td colspan="10">${roundDetail(x)}</td></tr>`;
+  return html;
+}
+
+function roundDetail(x) {
+  const g = x.guess || {};
+  const steps = [...(x.shop || []), ...(x.shopEnd || []).map((s) => ({ ...s, after: true }))];
+  const preds = (g.preds || []).map((p) => {
+    const miss = Number.isFinite(p.actual) && !p.revealed ? Math.abs(p.actual - p.mean) : null;
+    return `<tr><td>${esc(p.name)}</td><td>${esc(p.type || "")}</td><td class="num">${p.revealed ? `${p.mean} (revealed)` : `${p.mean} ± ${Math.round(p.sd)}`}</td><td class="num ${miss !== null && miss > 2 * Math.max(3, p.sd) ? "bad" : ""}">${p.actual ?? "-"}</td></tr>`;
+  }).join("");
+  const sealPts = Object.entries(x.sg || {}).map(([id, v]) => `${esc(view.info?.seals.find((s) => s.id === id)?.name || id)}: ${v.pts} pts${v.trig ? `, ${v.trig} triggers` : ""}`);
+  return `<div class="detail">
+    <div>
+      <h4>Guess</h4>
+      <div>Aimed at <b>${g.i}</b>${g.n ? `, typed ${g.g} (human error ${g.n > 0 ? "+" : ""}${g.n})` : ""}. Expected TARGET ${g.eT} (likely ${g.tr?.[0]}-${g.tr?.[1]}), CRITICAL chance ${Math.round((g.pc || 0) * 100)}%, worst-guess risk ${Math.round((g.pw || 0) * 100)}%, expected damage ${g.ed}${g.safe ? ". <span class='bad'>Safe mode</span> (low HEALTH)" : ""}.</div>
+      <div class="sub">Best guesses checked on copies of the game: ${(g.cand || []).map((c) => `${c.guess} (${c.score})`).join(", ")}</div>
+      <h4>How it read the table</h4>
+      <table><tr><th>DAMNED</th><th>Kind</th><th class="num">Expected</th><th class="num">Actual</th></tr>${preds}</table>
+    </div>
+    <div>
+      <h4>Shop</h4>${steps.length ? `<ul>${steps.map((s) => `<li>${s.after ? "<span class='sub'>after the round:</span> " : ""}${esc(s.action === "reroll" ? `Reroll for ${s.price} SIN` : s.action === "sell" ? `Sold ${s.name} for ${s.sin} SIN` : `${s.action === "elite" ? "ELITE " : "Bought "}${s.name} for ${s.price} SIN`)} <span class="sub">· ${esc(s.why || "")}</span></li>`).join("")}</ul>` : `<div class="sub">Bought nothing${x.r <= (view.batch?.meta.config?.shop?.savingShops || 3) ? " (saving rounds)" : ""}.</div>`}
+      <h4>ARTIFACTS</h4>${x.art ? `<div>${esc(x.art.why)}</div>${x.art.used.length ? `<div class="sub">Expected ${x.art.expected} points from this round, got ${x.art.actual}${x.art.actual < x.art.expected - 15 ? " <span class='bad'>(the dice went against it)</span>" : ""}.</div>` : ""}<div class="sub">${x.art.considered} options tried. Best: ${(x.art.top || []).map((t) => `${esc(t.what)} (${t.gain})`).join("; ")}</div>` : `<div class="sub">No ARTIFACT to use.</div>`}
+      <h4>Damage taken</h4><div>${x.srcs?.length ? esc(x.srcs.join(", ")) : "<span class='sub'>none</span>"}</div>
+      <h4>SEALS held</h4><div>${(x.seals || []).map((t) => `<span class="chip">${esc(view.info?.seals.find((s) => s.id === t.split("x")[0])?.name || t)}${t.includes("x") ? " ELITE" : ""}</span>`).join("") || "<span class='sub'>none</span>"}</div>
+      ${sealPts.length ? `<div class="sub" style="margin-top:4px">${sealPts.join(" · ")}</div>` : ""}
+    </div></div>`;
+}
+
+// ---------- start ----------
+(async () => {
+  await loadInfo();
+  await loadBatches();
+  pollStatus();
+  if (saved.tab) view.tab = saved.tab;
+  if (saved.batchId && view.batches.find((b) => b.id === saved.batchId)) openBatch(saved.batchId);
+  else if (view.batches[0]) openBatch(view.batches[0].id);
+})();
+</script>
+</body>
+</html>
