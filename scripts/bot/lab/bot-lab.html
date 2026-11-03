@@ -70,6 +70,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 tr.click { cursor: pointer; }
 tr.click:hover td { color: var(--blood); }
 tr.flash td { background: #2a1416; }
+tr.dim td { color: var(--muted); }
+table[data-table] td:first-child { white-space: nowrap; }
 .alarm { padding: 7px 10px; border-left: 3px solid var(--ash); margin-bottom: 6px; background: var(--panel-2); cursor: default; }
 .alarm.high { border-left-color: var(--blood); }
 .alarm.medium { border-left-color: var(--warn); }
@@ -277,8 +279,9 @@ function alarmsHtml(alarms) {
 function bindAlarms(alarms) {
   document.querySelectorAll(".alarm.link").forEach((el) => el.addEventListener("click", () => {
     const a = alarms[+el.dataset.i];
-    const tab = { boss: "bosses", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
+    const tab = { boss: "bosses", group: "bosses", seal: "seals", artifact: "artifacts", build: "overview" }[a.link.type];
     view.tab = tab; renderBatch();
+    if (!a.link.id) return;
     const row = document.querySelector(`[data-key="${CSS.escape(a.link.id)}"]`);
     if (row) { row.classList.add("flash"); row.scrollIntoView({ block: "center" }); }
   }));
@@ -296,7 +299,7 @@ function renderOverview(body, s) {
     <div class="grid2" style="margin-top:16px">
       <div><h2>Builds</h2>${table(s.builds, [["build", "Build"], ["runs", "Runs", "num"], ["winRate", "Won %", "num"], ["avgUniqueBossKills", "BOSSES (of 8)", "num"], ["avgRounds", "Rounds", "num"], ["endlessAvg", "Endless", "num"]], "builds", "build")}</div>
       <div><h2>What ended the runs</h2>
-        <table><tr><th>Alive at death</th><th class="num">Runs</th><th></th></tr>
+        <table><tr><th>BOSSES alive at death</th><th class="num">Runs</th><th></th></tr>
         ${s.deaths.map((d) => `<tr><td>${esc(d.by)}</td><td class="num">${d.count} (${d.share}%)</td><td style="width:40%"><div class="bar" style="width:${(d.count / deathsMax) * 100}%"></div></td></tr>`).join("")}</table>
         <h3>Damage in the final round</h3>
         <table>${s.deathSources.map((d) => `<tr><td>${esc(d.source)}</td><td class="num">${d.count}</td></tr>`).join("")}</table>
@@ -309,17 +312,32 @@ function renderOverview(body, s) {
 }
 
 function renderBosses(body, s) {
-  body.innerHTML = `<h2>BOSSES</h2>
-    ${table(s.bosses, [["name", "BOSS"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["examples", "Runs it ended"]], "bosses", "name")}
-    <div class="hint">"Ended run" counts runs that died while this BOSS was alive. Click a run to open its log at that round.</div>`;
+  const o = s.overlap;
+  const groups = s.bossGroups || [];
+  body.innerHTML = `<h2>BOSSES on their own</h2>
+    ${table(s.bosses, [["name", "BOSS"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["examples", "Runs it ended"]], "bosses", "name")}
+    <div class="hint">"Ended run alone" counts deaths with only this BOSS alive; deaths with 2+ BOSSES alive count for their group below. Petros &amp; Pavlos are one BOSS. Click a run to open its log at that round.</div>
+    ${o ? `<h2 style="margin-top:18px">When BOSSES overlap</h2>
+    <div class="tiles">
+      <div class="tile"><div class="v">${o.runsWithOverlap}%</div><div class="k">Runs that met 2+ BOSSES at once</div></div>
+      <div class="tile"><div class="v">${o.bossRoundsShared}%</div><div class="k">BOSS rounds with 2+ BOSSES alive</div></div>
+      <div class="tile"><div class="v">${o.damageSolo} → ${o.damageShared}</div><div class="k">Damage per round: one BOSS → 2+ BOSSES</div></div>
+      <div class="tile"><div class="v">${o.deathsShared}%</div><div class="k">Deaths with 2+ BOSSES alive</div></div>
+    </div>` : ""}
+    <h2 style="margin-top:6px">BOSS groups</h2>
+    ${groups.length ? table(groups.map((g) => ({ ...g, sample: g.few ? "few" : "" })), [["name", "Together"], ["met", "Met", "num"], ["endedRun", "Ended run", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRoundsTogether", "Rounds together", "num"], ["damagePerRound", "Damage per round", "num"], ["sample", "Sample"], ["examples", "Runs it ended"]], "groups", "name") : `<div class="sub">No overlaps in this batch.</div>`}
+    <div class="hint">"Met" counts each time that exact group was alive at the same time. Rows marked "few" were met fewer than 8 times: treat their percentages as rough.</div>`;
   bindTables(body);
+  body.querySelectorAll('table[data-table="groups"] tbody tr').forEach((tr) => { if (tr.textContent.includes("few")) tr.classList.add("dim"); });
 }
 
 function renderSeals(body, s) {
+  const rows = s.seals.map((x) => ({ ...x, wins: x.winRateOwned === null ? null : `${x.winRateOwned}% / ${x.winRateExpected ?? "-"}%`, bossesVs: x.avgBossKillsOwned === null ? null : `${x.avgBossKillsOwned} / ${x.bossKillsExpected ?? "-"}` }));
   body.innerHTML = `<h2>SEALS</h2>
     <div class="filters">Find <input type="text" id="sealFind" placeholder="name or id" /></div>
-    ${table(s.seals, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["winRateOwned", "Won % when owned", "num"], ["avgBossKillsOwned", "BOSSES when owned", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}
-    <div class="hint">"Won % when owned" compares runs that held this SEAL at any point; strong builds lift every SEAL in them, so use a forced-SEAL A/B batch to be sure. "Own points / round" is what the SEAL itself did (damage, healing, SIN...), on the bot's points scale. Overall win rate: ${s.overview.mainWinRate}%.</div>`;
+    ${table(rows, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["arrivalRound", "Usually arrives", "num"], ["bossEdge", "BOSSES vs expected", "num"], ["bossesVs", "BOSSES owned / expected", "num"], ["wins", "Won % owned / expected", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}
+    <div class="hint">Each SEAL is compared with runs that were still alive at the round it usually arrives, so a SEAL bought late doesn't look strong just because those runs had already survived. "BOSSES vs expected" = BOSSES beaten by runs that owned it minus the expected number (+1 = one more BOSS). Grey rows: owned in fewer than 8 runs. For a sure answer, run a forced-SEAL A/B batch. "Own points / round" is what the SEAL itself did (damage, healing, SIN...) on the bot's points scale.</div>`;
+  body.querySelectorAll('table[data-table="seals"] tbody tr').forEach((tr) => { const row = rows.find((x) => x.id === tr.dataset.key); if (row && row.runsOwned < 8) tr.classList.add("dim"); });
   bindTables(body);
   $("#sealFind").addEventListener("input", (e) => {
     const q = e.target.value.toLowerCase();
@@ -376,8 +394,8 @@ async function renderCompare(body, s, meta) {
       <div class="grid2" style="margin-top:16px">
         <div><h2>BOSSES: ended run %</h2><table><tr><th>BOSS</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
           ${bossNames.map((n) => { const x = a.bosses.find((q) => q.name === n), y = b.bosses.find((q) => q.name === n); return `<tr><td>${esc(n)}</td><td class="num">${x ? x.endedRunRate + "%" : "-"}</td><td class="num">${y ? y.endedRunRate + "%" : "-"}</td></tr>`; }).join("")}</table></div>
-        <div><h2>SEALS: won % when owned</h2><table><tr><th>SEAL</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
-          ${sealIds.map((id) => { const x = a.seals.find((q) => q.id === id), y = b.seals.find((q) => q.id === id); return `<tr><td>${esc(x.name)}</td><td class="num">${x.winRateOwned}%</td><td class="num">${y.winRateOwned}%</td></tr>`; }).join("") || `<tr><td colspan="3" class="sub">Not enough shared SEALS.</td></tr>`}</table></div>
+        <div><h2>SEALS: BOSSES vs expected</h2><table><tr><th>SEAL</th><th class="num">${esc(nameA)}</th><th class="num">${esc(nameB)}</th></tr>
+          ${sealIds.map((id) => { const x = a.seals.find((q) => q.id === id), y = b.seals.find((q) => q.id === id); const f = (v) => (v === undefined || v === null ? "-" : v > 0 ? `+${v}` : `${v}`); return `<tr><td>${esc(x.name)}</td><td class="num">${f(x.bossEdge)}</td><td class="num">${f(y.bossEdge)}</td></tr>`; }).join("") || `<tr><td colspan="3" class="sub">Not enough shared SEALS.</td></tr>`}</table></div>
       </div>`;
     lineChart("cmpChart", [
       { name: nameA, color: "var(--series-a)", points: a.curve.map((c) => [c.round, c.hp, c.alive]) },
@@ -390,6 +408,7 @@ async function renderCompare(body, s, meta) {
 function cellHtml(row, key, tableId) {
   const v = row[key];
   if (key === "examples") return (v || []).map((e) => `<a href="#" data-run="${esc(e.file)}" data-round="${e.round}">${esc(e.file.replace(/^run-0*|\.json$/g, ""))} (r${e.round})</a>`).join(", ");
+  if (key === "bossEdge" && typeof v === "number") return v > 0 ? `+${v}` : `${v}`;
   if (tableId === "runs" && key === "file") return `<a href="#" data-run="${esc(v)}">${esc(v.replace(/\.json$/, ""))}</a>`;
   return esc(v === null || v === undefined ? "-" : v);
 }

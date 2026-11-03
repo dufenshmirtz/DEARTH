@@ -4,7 +4,34 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const SUMMARY_VERSION = 2;
 const UNIQUE_BOSSES = ["Zilon", "Dantre", "Pyros", "Threon", "Kalha", "Serafim", "Padma", "Petros", "Pavlos"];
+const TWINS = "Petros & Pavlos";
+const GOETIC = "Goetic (endless)";
+
+// one name per BOSS as the report counts them: the twins are one BOSS, Goetic demons are counted together
+function bossUnit(name) {
+  if (name === "Petros" || name === "Pavlos") return TWINS;
+  return UNIQUE_BOSSES.includes(name) ? name : GOETIC;
+}
+
+// "Threon + Padma" and "Padma + Threon" are the same group; two Goetic demons at once are "Goetic (endless) x2"
+function bossGroup(names) {
+  const units = new Map();
+  names.filter(Boolean).forEach((name) => {
+    const unit = bossUnit(name);
+    if (!units.has(unit)) units.set(unit, new Set());
+    units.get(unit).add(name);
+  });
+  const parts = [...units.entries()]
+    .map(([unit, originals]) => (unit === GOETIC && originals.size > 1 ? `${unit} x${originals.size}` : unit))
+    .sort((a, b) => a.localeCompare(b));
+  return { key: parts.join(" + "), size: [...units.entries()].reduce((sum, [unit, originals]) => sum + (unit === GOETIC ? originals.size : 1), 0) };
+}
+
+function bossNamesOf(text) {
+  return text ? String(text).split(" + ") : [];
+}
 
 function pct(part, whole) {
   return whole ? Math.round((part / whole) * 1000) / 10 : 0;
@@ -37,11 +64,14 @@ function buildSummary(dir, { itemNames = null } = {}) {
   const runs = [];
   const builds = {};
   const bosses = {};
+  const groups = {};
+  const overlap = { bossRounds: 0, overlapRounds: 0, soloDamage: 0, overlapDamage: 0, runsWithOverlap: 0, deaths: 0, deathsInOverlap: 0 };
   const deathBy = {};
   const deathSources = {};
   const seals = {};
   const artifacts = {};
   const curve = {};
+  const ownership = []; // per run: { rounds, win, bosses, firstOwned: { sealId: round } }
   let failed = 0;
   let predErrSum = 0;
   let predErrCount = 0;
@@ -64,10 +94,25 @@ function buildSummary(dir, { itemNames = null } = {}) {
     b.rounds.push(r.rounds);
     if (r.mainWin) b.endless.push(r.endlessBossKills);
 
-    // BOSSES
+    // BOSSES, one entry per arrival (the twins arrive together and count as one BOSS)
+    const arrivals = [];
     record.bosses.forEach((boss) => {
-      const key = boss.unique ? boss.name : "Goetic (endless)";
-      const entry = bosses[key] || (bosses[key] = { name: key, unique: boss.unique, met: 0, killed: 0, endedRun: 0, rounds: [], hpLost: [], examples: [] });
+      const unit = bossUnit(boss.name);
+      const twin = unit === TWINS ? arrivals.find((entry) => entry.unit === TWINS && entry.spawnRound === boss.spawnRound) : null;
+      if (twin) {
+        // the pair is beaten when both are; the fight lasts until the second one falls
+        if (twin.killRound === null || boss.killRound === null) twin.killRound = null;
+        else if (boss.killRound > twin.killRound) {
+          twin.killRound = boss.killRound;
+          twin.rounds = boss.rounds;
+          twin.hpLost = boss.hpLost;
+        }
+        return;
+      }
+      arrivals.push({ unit, spawnRound: boss.spawnRound, killRound: boss.killRound, rounds: boss.rounds, hpLost: boss.hpLost });
+    });
+    arrivals.forEach((boss) => {
+      const entry = bosses[boss.unit] || (bosses[boss.unit] = { name: boss.unit, unique: boss.unit !== GOETIC, met: 0, killed: 0, endedRun: 0, rounds: [], hpLost: [], examples: [] });
       entry.met += 1;
       if (boss.killRound !== null) {
         entry.killed += 1;
@@ -75,19 +120,46 @@ function buildSummary(dir, { itemNames = null } = {}) {
         entry.hpLost.push(boss.hpLost);
       }
     });
+
+    // rounds with 2+ BOSSES alive: each stretch with the same group is one meeting
+    let current = null;
+    let hadOverlap = false;
+    const lastRound = record.rounds[record.rounds.length - 1];
+    record.rounds.forEach((round) => {
+      const group = bossGroup(bossNamesOf(round.boss));
+      if (group.size >= 1) {
+        overlap.bossRounds += 1;
+        if (group.size >= 2) {
+          overlap.overlapRounds += 1;
+          overlap.overlapDamage += round.dmg || 0;
+        } else overlap.soloDamage += round.dmg || 0;
+      }
+      if (group.size < 2) {
+        current = null;
+        return;
+      }
+      hadOverlap = true;
+      if (!current || current.key !== group.key) {
+        const entry = groups[group.key] || (groups[group.key] = { name: group.key, size: group.size, met: 0, endedRun: 0, rounds: 0, damage: 0, examples: [] });
+        entry.met += 1;
+        current = { key: group.key, entry };
+      }
+      current.entry.rounds += 1;
+      current.entry.damage += round.dmg || 0;
+    });
+    if (hadOverlap) overlap.runsWithOverlap += 1;
+
     if (r.outcome === "died") {
-      const alive = r.diedTo?.boss;
-      const key = alive || "no BOSS alive";
+      const group = bossGroup(bossNamesOf(r.diedTo?.boss));
+      const key = group.size ? group.key : "no BOSS alive";
       deathBy[key] = (deathBy[key] || 0) + 1;
-      // which BOSS ended it (unique ones by name, Goetic ones together)
-      if (alive) {
-        alive.split(" + ").forEach((name) => {
-          const bossKey = UNIQUE_BOSSES.includes(name) ? name : "Goetic (endless)";
-          if (bosses[bossKey]) {
-            bosses[bossKey].endedRun += 1;
-            if (bosses[bossKey].examples.length < 5) bosses[bossKey].examples.push({ file: record.file, round: r.diedRound });
-          }
-        });
+      overlap.deaths += 1;
+      // a death counts for a BOSS only when it was alone; with others alive it counts for the group
+      const target = group.size >= 2 ? groups[group.key] : group.size === 1 ? bosses[group.key.replace(/ x\d+$/, "")] : null;
+      if (group.size >= 2) overlap.deathsInOverlap += 1;
+      if (target) {
+        target.endedRun += 1;
+        if (target.examples.length < 5) target.examples.push({ file: record.file, round: r.diedRound });
       }
       (r.diedTo?.sources || []).forEach((source) => {
         const label = source.replace(/: \d+$/, "").replace(/CRITICAL from .*/, "CRITICAL from a DAMNED");
@@ -137,13 +209,44 @@ function buildSummary(dir, { itemNames = null } = {}) {
         owned.add(id);
       });
     });
+    const firstOwned = {};
+    record.rounds.forEach((round) => {
+      (round.seals || []).forEach((tag) => {
+        const id = tag.split("x")[0];
+        if (!(id in firstOwned)) firstOwned[id] = round.r;
+      });
+    });
     owned.forEach((id) => {
       const entry = seals[id];
       entry.runsOwned += 1;
       if (r.mainWin) entry.winsOwned += 1;
       entry.bossKillsOwned += r.uniqueBossKills;
     });
+    ownership.push({ rounds: r.rounds, win: Boolean(r.mainWin), bosses: r.uniqueBossKills, firstOwned });
   }
+
+  // fair comparison for SEALS: runs that were still alive at the round the SEAL arrived
+  // (a SEAL bought in round 30 is only ever owned by runs that already survived 30 rounds)
+  const maxRound = Math.max(1, ...ownership.map((run) => run.rounds));
+  const reached = new Array(maxRound + 2).fill(0);
+  const winsReached = new Array(maxRound + 2).fill(0);
+  const bossesReached = new Array(maxRound + 2).fill(0);
+  ownership.forEach((run) => {
+    for (let round = 1; round <= run.rounds; round += 1) {
+      reached[round] += 1;
+      if (run.win) winsReached[round] += 1;
+      bossesReached[round] += run.bosses;
+    }
+  });
+  ownership.forEach((run) => {
+    Object.entries(run.firstOwned).forEach(([id, round]) => {
+      const entry = seals[id];
+      if (!entry || !reached[round]) return;
+      entry.expectedWins += winsReached[round] / reached[round];
+      entry.expectedBosses += bossesReached[round] / reached[round];
+      entry.arrivalRoundSum += round;
+    });
+  });
 
   const total = runs.length;
   const wins = runs.filter((run) => run.mainWin).length;
@@ -189,6 +292,27 @@ function buildSummary(dir, { itemNames = null } = {}) {
   }));
   bossRows.sort((a, b) => b.endedRunRate - a.endedRunRate);
 
+  const groupRows = Object.values(groups).map((group) => ({
+    name: group.name,
+    size: group.size,
+    met: group.met,
+    endedRun: group.endedRun,
+    endedRunRate: pct(group.endedRun, group.met),
+    avgRoundsTogether: group.met ? Math.round((group.rounds / group.met) * 100) / 100 : 0,
+    damagePerRound: group.rounds ? Math.round((group.damage / group.rounds) * 100) / 100 : 0,
+    few: group.met < 8,
+    examples: group.examples
+  }));
+  groupRows.sort((a, b) => b.endedRun - a.endedRun || b.met - a.met);
+
+  const overlapSummary = {
+    runsWithOverlap: pct(overlap.runsWithOverlap, runs.length),
+    bossRoundsShared: pct(overlap.overlapRounds, overlap.bossRounds),
+    damageSolo: overlap.bossRounds - overlap.overlapRounds ? Math.round((overlap.soloDamage / (overlap.bossRounds - overlap.overlapRounds)) * 100) / 100 : 0,
+    damageShared: overlap.overlapRounds ? Math.round((overlap.overlapDamage / overlap.overlapRounds) * 100) / 100 : 0,
+    deathsShared: pct(overlap.deathsInOverlap, overlap.deaths)
+  };
+
   const sealRows = Object.values(seals).map((seal) => ({
     id: seal.id,
     name: seal.name,
@@ -197,13 +321,18 @@ function buildSummary(dir, { itemNames = null } = {}) {
     buyRate: pct(seal.bought, seal.offered),
     runsOwned: seal.runsOwned,
     roundsOwned: seal.roundsOwned,
+    arrivalRound: seal.runsOwned ? Math.round(seal.arrivalRoundSum / seal.runsOwned) : null,
     winRateOwned: seal.runsOwned ? pct(seal.winsOwned, seal.runsOwned) : null,
+    winRateExpected: seal.runsOwned ? pct(seal.expectedWins, seal.runsOwned) : null,
+    winEdge: seal.runsOwned ? Math.round((pct(seal.winsOwned, seal.runsOwned) - pct(seal.expectedWins, seal.runsOwned)) * 10) / 10 : null,
     avgBossKillsOwned: seal.runsOwned ? Math.round((seal.bossKillsOwned / seal.runsOwned) * 100) / 100 : null,
+    bossKillsExpected: seal.runsOwned ? Math.round((seal.expectedBosses / seal.runsOwned) * 100) / 100 : null,
+    bossEdge: seal.runsOwned ? Math.round(((seal.bossKillsOwned - seal.expectedBosses) / seal.runsOwned) * 100) / 100 : null,
     pointsPerRound: seal.roundsOwned ? Math.round((seal.pointsSum / seal.roundsOwned) * 100) / 100 : 0,
     triggersPerRound: seal.roundsOwned ? Math.round((seal.triggers / seal.roundsOwned) * 100) / 100 : 0,
     roundPointsOwned: seal.roundsOwned ? Math.round((seal.roundPointsSum / seal.roundsOwned) * 100) / 100 : 0
   }));
-  sealRows.sort((a, b) => (b.winRateOwned ?? -1) - (a.winRateOwned ?? -1));
+  sealRows.sort((a, b) => (b.bossEdge ?? -99) - (a.bossEdge ?? -99));
 
   const artifactRows = Object.values(artifacts).map((item) => ({
     id: item.id,
@@ -222,30 +351,35 @@ function buildSummary(dir, { itemNames = null } = {}) {
   const deaths = Object.entries(deathBy).map(([by, count]) => ({ by, count, share: pct(count, total) })).sort((a, b) => b.count - a.count);
   const sources = Object.entries(deathSources).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count).slice(0, 12);
 
-  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows, sealRows, artifactRows });
-  return { overview, builds: buildRows, bosses: bossRows, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
+  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows });
+  return { version: SUMMARY_VERSION, overview, builds: buildRows, bosses: bossRows, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
 }
 
 function newItemEntry(id, names) {
-  return { id, name: names[id] || id, offered: 0, bought: 0, uses: 0, gainSum: 0, runsOwned: 0, winsOwned: 0, roundsOwned: 0, pointsSum: 0, triggers: 0, roundPointsSum: 0, bossKillsOwned: 0 };
+  return { id, name: names[id] || id, offered: 0, bought: 0, uses: 0, gainSum: 0, runsOwned: 0, winsOwned: 0, roundsOwned: 0, pointsSum: 0, triggers: 0, roundPointsSum: 0, bossKillsOwned: 0, expectedWins: 0, expectedBosses: 0, arrivalRoundSum: 0 };
 }
 
 // thresholds for "this looks off" (small samples are ignored)
-function buildAlarms({ overview, overallWin, buildRows, bossRows, sealRows, artifactRows }) {
+function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows }) {
   const alarms = [];
   const add = (level, text, link = null) => alarms.push({ level, text, link });
   if (overview.runs < 20) add("info", `Only ${overview.runs} runs: numbers below are rough. 100+ runs give steadier results.`);
   bossRows.forEach((boss) => {
     if (boss.met < 8) return;
-    if (boss.endedRunRate >= 30) add("high", `${boss.name} ends ${boss.endedRunRate}% of the runs that reach it (${boss.endedRun}/${boss.met}).`, { type: "boss", id: boss.name });
+    if (boss.endedRunRate >= 30) add("high", `${boss.name} alone ends ${boss.endedRunRate}% of the runs that reach it (${boss.endedRun}/${boss.met}).`, { type: "boss", id: boss.name });
     else if (boss.unique && boss.killRate >= 98 && boss.avgHpLost <= 3) add("low", `${boss.name} is almost never a threat: beaten ${boss.killRate}% of the time for ${boss.avgHpLost} HP on average.`, { type: "boss", id: boss.name });
     if (boss.avgRounds >= 12) add("medium", `${boss.name} fights last ${boss.avgRounds} rounds on average.`, { type: "boss", id: boss.name });
   });
+  groupRows.forEach((group) => {
+    if (group.met >= 5 && group.endedRunRate >= 40) add("high", `${group.name} together end ${group.endedRunRate}% of the runs where they meet (${group.endedRun}/${group.met}).`, { type: "group", id: group.name });
+  });
+  if (overview.runs >= 20 && overlapSummary.deathsShared >= 30) add("medium", `${overlapSummary.deathsShared}% of deaths happen with 2+ BOSSES alive (${overlapSummary.runsWithOverlap}% of runs meet an overlap).`, { type: "group", id: null });
   sealRows.forEach((seal) => {
-    if (seal.runsOwned >= 12 && seal.winRateOwned !== null) {
-      const diff = Math.round((seal.winRateOwned - overallWin) * 10) / 10;
-      if (diff >= 20) add("high", `${seal.name}: ${seal.winRateOwned}% main-game wins when owned (overall ${overallWin}%).`, { type: "seal", id: seal.id });
-      if (diff <= -20) add("medium", `${seal.name}: only ${seal.winRateOwned}% main-game wins when owned (overall ${overallWin}%).`, { type: "seal", id: seal.id });
+    if (seal.runsOwned >= 12 && seal.bossEdge !== null) {
+      const vs = `compared with runs still alive at round ${seal.arrivalRound}, when it usually arrives`;
+      if (seal.bossEdge >= 1) add("high", `${seal.name}: +${seal.bossEdge} BOSSES beaten ${vs} (wins ${seal.winRateOwned}% vs ${seal.winRateExpected}%).`, { type: "seal", id: seal.id });
+      else if (seal.bossEdge <= -1) add("medium", `${seal.name}: ${seal.bossEdge} BOSSES beaten ${vs} (wins ${seal.winRateOwned}% vs ${seal.winRateExpected}%).`, { type: "seal", id: seal.id });
+      else if (seal.winEdge >= 20) add("high", `${seal.name}: ${seal.winRateOwned}% main-game wins vs ${seal.winRateExpected}% expected ${vs}.`, { type: "seal", id: seal.id });
     }
     if (seal.offered >= 25 && seal.buyRate < 5) add("low", `${seal.name} is almost never bought (${seal.bought} of ${seal.offered} offers).`, { type: "seal", id: seal.id });
   });
@@ -285,4 +419,4 @@ function loadItemNames() {
   }
 }
 
-module.exports = { buildSummary, readRuns };
+module.exports = { buildSummary, readRuns, SUMMARY_VERSION, bossGroup };

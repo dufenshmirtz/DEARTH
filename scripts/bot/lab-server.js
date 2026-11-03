@@ -185,8 +185,14 @@ const server = http.createServer(async (req, res) => {
       const meta = readJson(path.join(dir, "batch.json"));
       if (!meta) return send(res, 404, { error: "batch not found" });
       let summary = readJson(path.join(dir, "summary.json"));
+      const report = require("./report");
       // a batch still running (or stopped): build the report from the runs finished so far
-      if (!summary) summary = require("./report").buildSummary(dir);
+      if (!summary) summary = report.buildSummary(dir);
+      // a finished batch made by an older version of the report: rebuild it once with the new stats
+      else if ((summary.version || 1) < report.SUMMARY_VERSION) {
+        summary = report.buildSummary(dir);
+        fs.writeFileSync(path.join(dir, "summary.json"), JSON.stringify(summary));
+      }
       return send(res, 200, { meta, summary });
     }
     if (req.method === "POST" && parts[1] === "start") {
