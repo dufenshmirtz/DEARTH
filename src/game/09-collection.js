@@ -850,7 +850,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
     <div class="collection-info-status slain">Defeated</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-    <div class="collection-info-text">${descriptionHtml(`${ARCHANGEL_ABILITY_TEXT[key]} While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`)}</div>
+    <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
     ${collectionDemonBindHtml(key, seal, pinned)}`;
 }
 

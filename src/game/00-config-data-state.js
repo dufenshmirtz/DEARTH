@@ -1761,6 +1761,7 @@ const ARCHANGEL_BOSS_SPECS = [
 const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
 const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
+const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the HEALTH a Goetic BOSS would have at the same point
 const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working

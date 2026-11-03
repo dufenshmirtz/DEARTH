@@ -1971,6 +1971,7 @@ const ARCHANGEL_BOSS_SPECS = [
 const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
 const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
+const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the HEALTH a Goetic BOSS would have at the same point
 const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
@@ -7640,7 +7641,7 @@ function createBot(options = {}) {
   const archangelSpec = isEndlessBoss && !shadowOf && bossSpec?.archangelKey ? ARCHANGEL_BY_KEY[bossSpec.archangelKey] || null : null;
   const goeticSpec = isEndlessBoss && !shadowOf && !archangelSpec ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
-  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
+  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? (archangelSpec ? ARCHANGEL_HEALTH_FACTOR : 1);
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
@@ -18184,7 +18185,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
     <div class="collection-info-status slain">Defeated</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-    <div class="collection-info-text">${descriptionHtml(`${ARCHANGEL_ABILITY_TEXT[key]} While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`)}</div>
+    <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
     ${collectionDemonBindHtml(key, seal, pinned)}`;
 }
 

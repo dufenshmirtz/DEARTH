@@ -1959,6 +1959,23 @@ test("an Archangel BOSS: its own art and ability only, and the TARGET modifier c
     assert.equal(angel.image, ARCHANGEL_BOSS_IMAGE_ROOT + "/04-michael.png");
     assert.equal(angel.goeticKey, null);
     assert.deepEqual([...angel.passiveKeys], []);
+    // 1.5x the HEALTH of a Goetic BOSS arriving at the same point; YOU in its place has the plain amount
+    state.bossSpawnCount = 20;
+    const plain = (80 + bossHealthBonus()) * bossHealthScaleFactor();
+    const demon = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    state.bossSpawnCount = 20;
+    const strong = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    assert.equal(demon.maxHp, Math.ceil(plain));
+    assert.equal(strong.maxHp, Math.ceil(plain * 1.5));
+    state.boundDemon = "michael";
+    state.bossSpawnCount = 20;
+    const you = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(you.name, "YOU");
+    assert.equal(you.maxHp, Math.ceil(plain));
+    state.boundDemon = null;
+    // the Collection text is the ability only
+    loadCollectionProgress().archangels.push("michael");
+    assert.ok(!collectionArchangelInfoHtml("michael").includes("modifier"));
     assert.equal(grantRandomBossPassive(angel), null);
     assert.ok(bossAbilityText(angel).includes("MEMORY"));
     state.bots = [angel];
