@@ -769,49 +769,49 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Gabriel",
+    name: "Third Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Sachiel",
+    name: "Second Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Anael",
+    name: "Sixth Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Cassiel",
+    name: "Fourth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Samael",
+    name: "Seventh Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Michael",
+    name: "First Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Raphael",
+    name: "Fifth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
@@ -917,42 +917,42 @@ const ITEMS = {
   p98: {
     id: "p98",
     type: "passive",
-    name: "Third Pentacle of Saturn",
+    name: "Seal of Gabriel",
     price: 15,
     description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
   },
   p99: {
     id: "p99",
     type: "passive",
-    name: "First Pentacle of Saturn",
+    name: "Seal of Michael",
     price: 15,
     description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
   },
   p100: {
     id: "p100",
     type: "passive",
-    name: "Second Pentacle of Saturn",
+    name: "Seal of Sachiel",
     price: 15,
     description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
     type: "passive",
-    name: "Fifth Pentacle of Saturn",
+    name: "Seal of Raphael",
     price: 15,
     description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
     type: "passive",
-    name: "Fourth Pentacle of Saturn",
+    name: "Seal of Cassiel",
     price: 15,
     description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
     type: "passive",
-    name: "Sixth Pentacle of Saturn",
+    name: "Seal of Anael",
     price: 15,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
   },
@@ -994,7 +994,7 @@ const ITEMS = {
   p109: {
     id: "p109",
     type: "passive",
-    name: "Seventh Pentacle of Saturn",
+    name: "Seal of Samael",
     price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
@@ -1525,13 +1525,13 @@ const SEAL_SIGILS = {
   p90: "020_Bifrons.png",
   p91: "003_Aim.png",
   // archangel SEALS (old boss-seal effects); the Dev art below is now used by the Boss SEALS
-  p92: "archangel seals/Cassiel-Pentagram.png",
-  p93: "archangel seals/Zachriel-Triangle.png",
-  p94: "archangel seals/Aggiel-Hexagram.png",
-  p95: "archangel seals/Cassiel-Sigil.png",
-  p96: "archangel seals/Samael-Triangle.png",
-  p97: "archangel seals/Samael-Star.png",
-  p110: "archangel seals/Cassiel-Hexagram.png",
+  p92: "saturn/handdrawn/Saturn-Pentacle-01.png",
+  p93: "saturn/handdrawn/Saturn-Pentacle-03.png",
+  p94: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  p95: "saturn/handdrawn/Saturn-Pentacle-05.png",
+  p96: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p97: "saturn/handdrawn/Saturn-Pentacle-02.png",
+  p110: "saturn/handdrawn/Saturn-Pentacle-04.png",
   // Boss SEALS
   p121: "dev/ZilonSeal.png",
   p122: "dev/KalhaSeal.png",
@@ -1545,19 +1545,20 @@ const SEAL_SIGILS = {
   p131: "trinity/father.png",
   p132: "trinity/son.png",
   p133: "trinity/spirit.png",
-  // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
-  p98: "saturn/handdrawn/Saturn-Pentacle-01.png",
-  p99: "saturn/handdrawn/Saturn-Pentacle-02.png",
-  p100: "saturn/handdrawn/Saturn-Pentacle-03.png",
-  p101: "saturn/handdrawn/Saturn-Pentacle-04.png",
-  p102: "saturn/handdrawn/Saturn-Pentacle-05.png",
-  p103: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  // self-stacking SEALS: the Archangel Seals since Nov 2026 (they swapped effects with the Pentacles of Saturn;
+  // the old art stays in seals/self-stacking/)
+  p98: "archangel seals/Cassiel-Pentagram.png",
+  p99: "archangel seals/Samael-Star.png",
+  p100: "archangel seals/Zachriel-Triangle.png",
+  p101: "archangel seals/Cassiel-Hexagram.png",
+  p102: "archangel seals/Cassiel-Sigil.png",
+  p103: "archangel seals/Aggiel-Hexagram.png",
   p104: "004_Allocer.png",
   p105: "008_Andras.png",
   p106: "071_Zagan.png",
   p107: "050_Ose.png",
   p108: "049_Orobas.png",
-  p109: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p109: "archangel seals/Samael-Triangle.png",
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",

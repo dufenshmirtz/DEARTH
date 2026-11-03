@@ -47,7 +47,7 @@ function game() {
 }
 
 // puts every conditional reveal SEAL in its "reveal" state: below 50 HEALTH (Vepar), a winning 50% roll (Vine),
-// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Fourth Pentacle of Saturn)
+// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Seal of Cassiel (p102))
 const REVEAL_CONDITIONS_MET = `
   state.player.hp = 40;
   state.previousRoundRevealedEliminations = 1;
@@ -121,7 +121,7 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   }
 });
 
-test("Red Horse and the Seal of Cassiel no longer add reveals; Pyros and the Fourth Pentacle of Saturn still do", () => {
+test("Red Horse and the Fourth Pentacle of Saturn (p95) no longer add reveals; Pyros and the Seal of Cassiel (p102) still do", () => {
   for (const id of ["p75", "p95"]) {
     game()(`
       fixture([["${id}", 3]], [10, 20, 30, 40, 50]);
@@ -675,7 +675,7 @@ test("Corruption shows the changed guess: the effective guess and what was typed
   `);
 });
 
-test("Seal of Satan costs 20 SIN and the Fifth Pentacle of Saturn stacks +20 per PENTAKILL", () => {
+test("Seal of Satan costs 20 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
   game()(`
     assert.equal(ITEMS.p111.price, 20);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
@@ -683,7 +683,7 @@ test("Seal of Satan costs 20 SIN and the Fifth Pentacle of Saturn stacks +20 per
   `);
 });
 
-test("Fifth Pentacle of Saturn: PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
+test("Seal of Raphael (p101): PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
   const run = game();
   run(`
     fixture([["p101"]], [10, 20, 30, 40, 50]);
@@ -1461,7 +1461,7 @@ test("BOSS abilities carry sin names in tooltips and the log", () => {
     assert.ok(state.roundState.roundEvents.some((line) => line.includes("Deceit shifted your guess")));
   `);
 });
-// ---- conditional extra reveals: Vepar p61, Vine p64, Naberius p65, Fourth Pentacle of Saturn p102 ----
+// ---- conditional extra reveals: Vepar p61, Vine p64, Naberius p65, Seal of Cassiel (p102) p102 ----
 test("Amon always reveals one extra DAMNED", () => {
   game()(`
     fixture([["p59"]], [10, 20, 30, 40, 50]);
@@ -1516,7 +1516,7 @@ test("Naberius reveals one extra DAMNED only if a revealed DAMNED died last roun
   `);
 });
 
-test("Fourth Pentacle of Saturn reveals one extra DAMNED only if a DAMNED died last round", () => {
+test("Seal of Cassiel (p102) reveals one extra DAMNED only if a DAMNED died last round", () => {
   game()(`
     fixture([["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 1);
@@ -1593,7 +1593,7 @@ test("Red Horse: each revealed DAMNED has a 50% chance per round to take x1.5 da
   `);
 });
 
-test("Seal of Sachiel multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 30% roll", () => {
+test("Second Pentacle of Saturn multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 30% roll", () => {
   game()(`
     fixture([["p93"]], [10, 20, 30, 40, 50]);
     const rewards = [10, 3, 1, 0, 7];

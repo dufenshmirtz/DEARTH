@@ -25,7 +25,7 @@ const SEAL_UNLOCKS = {
   p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
   p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
   p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals (the Archangel seals p92-p97 and p110 are open from the start)
+  // Boss Seals (the Pentacles of Saturn p92-p97 and p110 are open from the start)
   p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
   p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
   p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
@@ -36,7 +36,7 @@ const SEAL_UNLOCKS = {
   p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
   // Seal of Satan
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
-  // Seals of Saturn
+  // the Archangel Seals (self-stacking since they swapped effects with the Pentacles of Saturn)
   p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
   p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
   p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
@@ -80,13 +80,14 @@ const COLLECTION_SECTIONS = [
   { key: "player", title: "Goetic Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
-  // the former Boss SEALS, named after the archangel of each planet, in weekday order (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
-  { key: "archangel", title: "Archangel Seals", ids: ["p97", "p92", "p96", "p110", "p93", "p94", "p95"] },
+  // the self-stacking SEALS, named after the archangel of each planet, in weekday order (Sun, Moon, Mars, Mercury,
+  // Jupiter, Venus, Saturn): Michael, Gabriel, Samael, Raphael, Sachiel, Anael, Cassiel
+  { key: "archangel", title: "Archangel Seals", ids: ["p99", "p98", "p109", "p101", "p100", "p103", "p102"] },
   { key: "satan", title: "Seal of Satan", ids: ["p111"] },
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
-  // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p99", "p100", "p98", "p102", "p101", "p103", "p109"] }
+  // the seven Pentacles of Saturn (in pentacle order); they took the Archangel Seals' old chance effects
+  { key: "saturn", title: "Seals of Saturn", ids: ["p97", "p93", "p92", "p95", "p110", "p94", "p96"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -194,28 +195,28 @@ const SEAL_BUILD_TAGS = {
   p126: ["artifact"], // Serafeim
   p127: ["memory"], // Threon
   p128: ["critical"], // Dantre
-  // Archangel SEALS (the former Boss SEALS)
-  p92: ["critical"], // Gabriel
-  p93: ["bounty"], // Sachiel
-  p94: ["artifact"], // Anael
-  p95: ["reveal"], // Cassiel
-  p96: ["personality"], // Samael
-  p97: ["memory"], // Michael
-  p110: ["general"], // Raphael (wipes MEMORY and BOUNTY)
+  // Seals of Saturn (chance effects at READY / reveal)
+  p92: ["critical"], // Third Pentacle of Saturn
+  p93: ["bounty"], // Second Pentacle of Saturn
+  p94: ["artifact"], // Sixth Pentacle of Saturn
+  p95: ["reveal"], // Fourth Pentacle of Saturn
+  p96: ["personality"], // Seventh Pentacle of Saturn
+  p97: ["memory"], // First Pentacle of Saturn
+  p110: ["general"], // Fifth Pentacle of Saturn (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Trinity SEALS
   p131: ["general"], // Father (TARGET difference as %, 20% strike, double damage)
   p132: ["general"], // Son (double SIN, +8 SIN, free rerolls)
   p133: ["general"], // Holy Spirit (the wheel)
-  // Seals of Saturn
-  p98: ["critical"], // Third Pentacle of Saturn
-  p99: ["memory"], // First Pentacle of Saturn
-  p100: ["bounty"], // Second Pentacle of Saturn
-  p101: ["general"], // Fifth Pentacle of Saturn
-  p102: ["reveal"], // Fourth Pentacle of Saturn
-  p103: ["artifact"], // Sixth Pentacle of Saturn
-  p109: ["personality"] // Seventh Pentacle of Saturn
+  // Archangel SEALS (self-stacking)
+  p98: ["critical"], // Gabriel
+  p99: ["memory"], // Michael
+  p100: ["bounty"], // Sachiel
+  p101: ["general"], // Raphael
+  p102: ["reveal"], // Cassiel
+  p103: ["artifact"], // Anael
+  p109: ["personality"] // Samael
 };
 
 function sealBuilds(id) {

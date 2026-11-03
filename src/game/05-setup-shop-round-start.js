@@ -1596,10 +1596,10 @@ function applyGuessReveals() {
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
 }
 
-// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Fourth Pentacle of Saturn; other special
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
 // Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
-// died last round, the Fourth Pentacle of Saturn if any DAMNED died last round.
+// died last round, the Seal of Cassiel (p102) if any DAMNED died last round.
 function extraRevealEntries() {
   return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
