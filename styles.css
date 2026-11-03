@@ -10280,10 +10280,24 @@ body.mobile-arcade .collection-screen {
   color: #ece6d8;
 }
 
+/* the hand-drawn eye (assets/ui/search-eye.png): dim until you search */
 .collection-search-icon {
   flex: 0 0 auto;
-  width: 15px;
-  height: 15px;
+  width: 26px;
+  height: 26px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+  pointer-events: none;
+}
+
+.collection-search:focus-within .collection-search-icon,
+.collection-search.has-value .collection-search-icon {
+  opacity: 1;
+}
+
+.collection-search:hover .collection-search-icon {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
 }
 
 .collection-screen .collection-search-input {
@@ -10298,15 +10312,17 @@ body.mobile-arcade .collection-screen {
   background: transparent !important;
   box-shadow: none !important;
   outline: none;
-  font-family: var(--font-book) !important;
-  font-size: 15px !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 19px !important;
+  letter-spacing: 0.03em;
   color: #ece6d8 !important;
   caret-color: #dc2a2f;
 }
 
 .collection-screen .collection-search-input::placeholder {
-  color: #5d5850;
-  font-style: italic;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #8d877c;
+  opacity: 1;
 }
 
 .collection-screen .collection-search-clear {
