@@ -208,9 +208,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, "127.0.0.1", () => {
-  const url = `http://localhost:${PORT}`;
-  console.log(`Bot Lab is open at ${url}  (keep this window open while batches run; Ctrl+C to close)`);
+function openBrowser(url) {
   if (process.argv.includes("--no-open")) return;
   const opener = process.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : process.platform === "darwin" ? ["open", [url]] : ["xdg-open", [url]];
   try {
@@ -218,6 +216,23 @@ server.listen(PORT, "127.0.0.1", () => {
     child.on("error", () => {});
     child.unref();
   } catch (error) {
-    // no browser to open: the address above still works
+    // no browser to open: the address still works
   }
+}
+
+// Bot Lab already open in another window: just show it again
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.log(`Bot Lab is already running at http://localhost:${PORT}. Opening it; you can close this window.`);
+    openBrowser(`http://localhost:${PORT}`);
+    setTimeout(() => process.exit(0), 1500);
+    return;
+  }
+  throw error;
+});
+
+server.listen(PORT, "127.0.0.1", () => {
+  const url = `http://localhost:${PORT}`;
+  console.log(`Bot Lab is open at ${url}  (keep this window open while batches run; Ctrl+C to close)`);
+  openBrowser(url);
 });

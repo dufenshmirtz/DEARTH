@@ -8,6 +8,7 @@ records every decision and outcome, and builds a balance report. Dev tool only: 
 | Command | What it does |
 |---|---|
 | `pnpm run bot -- --runs 300` | Plays a batch in the background (all CPU cores but one). Results in `bot-runs/<date>_<tag>/` |
+| `start_bot_lab.bat` (double-click, repo root) | Same as `pnpm run bot:lab`, no command line needed |
 | `pnpm run bot:lab` | Opens Bot Lab in the browser (http://localhost:5178): Start button, reports, alarms, run logs, compare |
 | `pnpm run bot:tune` | Updates the bot's experience (what each SEAL / ARTIFACT is worth) from the batches in `bot-runs/` |
 | `node --test scripts/bot/test-bot.js` | Checks the bot plays fair and its look-aheads leave the game untouched |
