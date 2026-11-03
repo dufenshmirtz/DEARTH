@@ -164,6 +164,11 @@ function rerollShopClick() {
     render();
     return;
   }
+  if (satanRerollTollActive()) {
+    rerollShopPayingSatanToll();
+    render();
+    return;
+  }
   const free = freeRerollsLeft() > 0;
   const cost = currentRerollCost();
   if (!canSpendCredits(cost)) {
@@ -189,6 +194,20 @@ function rerollShopClick() {
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
   render();
+}
+
+// Satan's toll: this reroll takes every SIN you hold. The SIN is lost to him, not spent, so it feeds no
+// spending SEAL (Furfur, Shax) and the normal reroll price does not go up.
+function rerollShopPayingSatanToll() {
+  const lost = Math.max(0, Math.ceil(state.player.credits || 0));
+  state.player.credits = 0;
+  state.satanRerollToll = false;
+  state.satanTightwadAbove = false;
+  rerollShop();
+  playGameSfx("reroll");
+  addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
+  applyRerollTollDamage();
+  if (state.player.hp <= 0) finishGameOverRound();
 }
 
 function passiveSellValue(item) {

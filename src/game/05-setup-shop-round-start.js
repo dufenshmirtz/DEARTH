@@ -721,6 +721,7 @@ function startGame(options = {}) {
   state.satanTightwadDue = false;
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;
+  state.satanRerollToll = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;

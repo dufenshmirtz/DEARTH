@@ -308,8 +308,15 @@ function rerollCost() {
   return state.rerollBaseCost;
 }
 
+// Satan's toll: once his offer is refused (09-intro-story.js), the next reroll costs every SIN you hold.
+// It comes before free rerolls (they are kept for later) and goes away once paid.
+function satanRerollTollActive() {
+  return Boolean(state.satanRerollToll && state.mode === "arcade");
+}
+
 // Seal of the Son can leave free rerolls: while any are left, a reroll costs nothing
 function currentRerollCost() {
+  if (satanRerollTollActive()) return Math.max(0, Math.ceil(state.player.credits || 0));
   return freeRerollsLeft() > 0 ? 0 : rerollCost();
 }
 

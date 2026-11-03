@@ -2106,6 +2106,7 @@ const state = {
   satanTightwadDue: false,
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
+  satanRerollToll: false,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,

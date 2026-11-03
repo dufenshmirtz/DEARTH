@@ -2316,6 +2316,7 @@ const state = {
   satanTightwadDue: false,
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
+  satanRerollToll: false,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
@@ -5371,8 +5372,15 @@ function rerollCost() {
   return state.rerollBaseCost;
 }
 
+// Satan's toll: once his offer is refused (09-intro-story.js), the next reroll costs every SIN you hold.
+// It comes before free rerolls (they are kept for later) and goes away once paid.
+function satanRerollTollActive() {
+  return Boolean(state.satanRerollToll && state.mode === "arcade");
+}
+
 // Seal of the Son can leave free rerolls: while any are left, a reroll costs nothing
 function currentRerollCost() {
+  if (satanRerollTollActive()) return Math.max(0, Math.ceil(state.player.credits || 0));
   return freeRerollsLeft() > 0 ? 0 : rerollCost();
 }
 
@@ -8049,6 +8057,7 @@ function startGame(options = {}) {
   state.satanTightwadDue = false;
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;
+  state.satanRerollToll = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -11501,6 +11510,11 @@ function rerollShopClick() {
     render();
     return;
   }
+  if (satanRerollTollActive()) {
+    rerollShopPayingSatanToll();
+    render();
+    return;
+  }
   const free = freeRerollsLeft() > 0;
   const cost = currentRerollCost();
   if (!canSpendCredits(cost)) {
@@ -11526,6 +11540,20 @@ function rerollShopClick() {
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
   render();
+}
+
+// Satan's toll: this reroll takes every SIN you hold. The SIN is lost to him, not spent, so it feeds no
+// spending SEAL (Furfur, Shax) and the normal reroll price does not go up.
+function rerollShopPayingSatanToll() {
+  const lost = Math.max(0, Math.ceil(state.player.credits || 0));
+  state.player.credits = 0;
+  state.satanRerollToll = false;
+  state.satanTightwadAbove = false;
+  rerollShop();
+  playGameSfx("reroll");
+  addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
+  applyRerollTollDamage();
+  if (state.player.hp <= 0) finishGameOverRound();
 }
 
 function passiveSellValue(item) {
@@ -15101,7 +15129,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
+          <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -16650,7 +16678,9 @@ function satanLeaveScene(phase) {
    Round brings him in at once. Same entrance and box. At the end of his talk the box asks YES / NO
    (click, or Y / N): YES leaves you with STARTING_CREDITS SIN, NO changes nothing. He comes again only
    once the SIN has gone back under the line and reached it again, and from the second time in a run he
-   says one line. The offer stays due until it is answered, so reloading the save brings it back. */
+   says one line. The offer stays due until it is answered, so reloading the save brings it back.
+   NO also sets Satan's toll (state.satanRerollToll): the next reroll costs all the SIN you hold
+   (currentRerollCost, rerollShopPayingSatanToll). YES lifts it. */
 function noteSatanTightwad() {
   if (state.mode !== "arcade") return;
   const above = Math.ceil(state.player.credits || 0) >= SATAN_TIGHTWAD_SIN;
@@ -16754,12 +16784,14 @@ function satanTightwadChoose(yes) {
   state.satanTightwadDue = false;
   state.satanTightwadOffers = (state.satanTightwadOffers || 0) + 1;
   if (!yes) {
-    addLog("You refused Satan's offer.");
+    state.satanRerollToll = true;
+    addLog("You refused Satan's offer. Your next reroll will cost all your SIN.");
     saveArcadeRun();
     satanLeaveScene("tightwad");
     return;
   }
   const taken = satanTightwadPay();
+  state.satanRerollToll = false;
   addLog(`Satan took ${taken} SIN. You are left with ${STARTING_CREDITS} SIN.`);
   saveArcadeRun();
   // the pact sound and the red pulse, as when the pact was sealed; the SIN drops behind the veil

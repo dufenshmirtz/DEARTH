@@ -7415,6 +7415,13 @@ body.mobile-arcade #app .bot-glyph {
   background: rgba(141, 135, 124, 0.75);
 }
 
+/* Satan's toll: the reroll costs all your SIN */
+#app .reroll-button.satan-toll:not(:disabled),
+#app .reroll-button.satan-toll:not(:disabled) .reroll-cost {
+  color: #ff3b3b !important;
+  text-shadow: 0 0 8px rgba(220, 20, 20, 0.6);
+}
+
 
 /* ELITE offerings: a second, red frame inside the first and a slow shimmer */
 #app .item-card.elite-offer::before {

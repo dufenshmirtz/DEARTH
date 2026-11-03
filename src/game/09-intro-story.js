@@ -702,7 +702,9 @@ function satanLeaveScene(phase) {
    Round brings him in at once. Same entrance and box. At the end of his talk the box asks YES / NO
    (click, or Y / N): YES leaves you with STARTING_CREDITS SIN, NO changes nothing. He comes again only
    once the SIN has gone back under the line and reached it again, and from the second time in a run he
-   says one line. The offer stays due until it is answered, so reloading the save brings it back. */
+   says one line. The offer stays due until it is answered, so reloading the save brings it back.
+   NO also sets Satan's toll (state.satanRerollToll): the next reroll costs all the SIN you hold
+   (currentRerollCost, rerollShopPayingSatanToll). YES lifts it. */
 function noteSatanTightwad() {
   if (state.mode !== "arcade") return;
   const above = Math.ceil(state.player.credits || 0) >= SATAN_TIGHTWAD_SIN;
@@ -806,12 +808,14 @@ function satanTightwadChoose(yes) {
   state.satanTightwadDue = false;
   state.satanTightwadOffers = (state.satanTightwadOffers || 0) + 1;
   if (!yes) {
-    addLog("You refused Satan's offer.");
+    state.satanRerollToll = true;
+    addLog("You refused Satan's offer. Your next reroll will cost all your SIN.");
     saveArcadeRun();
     satanLeaveScene("tightwad");
     return;
   }
   const taken = satanTightwadPay();
+  state.satanRerollToll = false;
   addLog(`Satan took ${taken} SIN. You are left with ${STARTING_CREDITS} SIN.`);
   saveArcadeRun();
   // the pact sound and the red pulse, as when the pact was sealed; the SIN drops behind the veil

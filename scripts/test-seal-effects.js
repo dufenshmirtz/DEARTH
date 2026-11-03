@@ -1850,3 +1850,27 @@ test("Satan's offer: due on reaching 1500 SIN, again only after dropping under, 
     assert.equal(state.satanTightwadDue, false);
   `);
 });
+
+test("Satan's toll: after refusing him, the next reroll takes all your SIN, then rerolls cost as before", () => {
+  game()(`
+    fixture([], []);
+    state.stage = "guess";
+    state.rerollBaseCost = 3;
+    state.freeRerolls = 2;
+    state.player.credits = 1600;
+    state.satanRerollToll = true;
+    assert.equal(currentRerollCost(), 1600);
+    state.player.credits = 1234;
+    assert.equal(currentRerollCost(), 1234);
+    render = () => {};
+    playGameSfx = () => {};
+    rerollShopClick();
+    assert.equal(state.player.credits, 0);
+    assert.equal(state.satanRerollToll, false);
+    assert.equal(state.freeRerolls, 2);
+    assert.equal(state.rerollBaseCost, 3);
+    assert.equal(currentRerollCost(), 0); // the free rerolls are back in charge
+    state.freeRerolls = 0;
+    assert.equal(currentRerollCost(), 3);
+  `);
+});
