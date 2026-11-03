@@ -29,6 +29,9 @@ const ENDLESS_BOSS_HP_RATE = 0.08;
 const ENDLESS_BOSS_HP_RATE_STEP = 0.01;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
+// holding this much SIN at the end of a round brings Satan with his offer (09-intro-story.js); past 1500
+// the price pressure above leaves nothing in the shop affordable
+const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 // KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
@@ -2100,6 +2103,9 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanTightwadDue: false,
+  satanTightwadAbove: false,
+  satanTightwadOffers: 0,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,

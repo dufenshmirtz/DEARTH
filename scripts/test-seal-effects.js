@@ -1814,3 +1814,39 @@ test("Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)"
     assert.equal(state.player.hp, 100);
   `);
 });
+
+test("Satan's offer: due on reaching 1500 SIN, again only after dropping under, YES leaves the starting SIN", () => {
+  game()(`
+    fixture([], []);
+    state.player.credits = 1499;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+    state.player.credits = 1500;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, true);
+    assert.equal(satanTightwadLines(), SATAN_TIGHTWAD_LINES);
+    // refused: no new offer while the SIN stays over the line
+    state.satanTightwadDue = false;
+    state.satanTightwadOffers = 1;
+    state.player.credits = 2400;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+    // under the line and back over it: he comes again, with one line
+    state.player.credits = 900;
+    noteSatanTightwad();
+    state.player.credits = 1600;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, true);
+    assert.equal(satanTightwadLines(), SATAN_TIGHTWAD_AGAIN_LINES);
+    // YES
+    assert.equal(satanTightwadPay(), 1600 - STARTING_CREDITS);
+    assert.equal(state.player.credits, STARTING_CREDITS);
+    assert.equal(state.satanTightwadAbove, false);
+    // not outside the arcade run
+    state.mode = "pvp";
+    state.satanTightwadDue = false;
+    state.player.credits = 5000;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+  `);
+});

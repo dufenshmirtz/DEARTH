@@ -239,6 +239,9 @@ const ENDLESS_BOSS_HP_RATE = 0.08;
 const ENDLESS_BOSS_HP_RATE_STEP = 0.01;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
+// holding this much SIN at the end of a round brings Satan with his offer (09-intro-story.js); past 1500
+// the price pressure above leaves nothing in the shop affordable
+const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 // KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
@@ -2310,6 +2313,9 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanTightwadDue: false,
+  satanTightwadAbove: false,
+  satanTightwadOffers: 0,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
@@ -8040,6 +8046,9 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanTightwadDue = false;
+  state.satanTightwadAbove = false;
+  state.satanTightwadOffers = 0;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -10008,6 +10017,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
 
@@ -11298,6 +11308,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // too much SIN held: the results wait for Satan's offer; moving on brings him in now
+  if (introState.phase === "tightwad" || introState.phase === "tightwad-leave") return;
+  if (satanTightwadHoldsSummary()) {
+    startSatanTightwadNow();
     return;
   }
   clearDevTemporaryArtifacts();
@@ -16014,9 +16030,20 @@ const SATAN_VICTORY_LINES = [
   ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
 ];
 
+// the player ends a round holding SATAN_TIGHTWAD_SIN or more: Satan offers to take it all (YES / NO at the end)
+const SATAN_TIGHTWAD_LINES = [
+  ["satan", "Wow, we got a tightwad here don't we? I thought we had an understanding about how things work out here you little bitch."],
+  ["satan", "Well, you are not yet in my domain, so I can't -technically- force you to hold your end, but my taxation system will soon become unbearable for you. I'm sure that you will last as long as the next damned without my help."],
+  ["satan", "But if by chance you came to your senses, I can help you unload the burden of this huge load of SIN{SIN} that would send you to my deepest dungeon."],
+  ["satan", "The offer is simple: Give it all to me NOW, and I will forgive you. What say you, flesh puppet?"]
+];
+
+// the second time (and after) in the same run
+const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the right choice flesh puppet..."]];
+
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
-// phase: off | black | judgement | booting | tutorial | pact | reveal
+// phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
 const introState = {
   phase: "off",
   timers: [],
@@ -16063,7 +16090,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory", "tightwad"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -16073,7 +16100,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -16240,9 +16267,10 @@ function introFitText() {
   text.style.fontSize = "";
   const max = parseFloat(getComputedStyle(text).fontSize) || 24;
   let size = max;
+  // "important": the box's font-size rules are !important and would win over a plain inline size
   while (size > 9 && text.scrollHeight > text.clientHeight + 1) {
     size -= 1;
-    text.style.fontSize = `${size}px`;
+    text.style.setProperty("font-size", `${size}px`, "important");
   }
 }
 
@@ -16267,6 +16295,14 @@ function introShowLine(index) {
   introTypeTo(introState.ends[0]);
 }
 
+// a part of a line has finished typing; Satan's offer asks YES / NO as soon as its last part is down
+function introPartTyped() {
+  introSetWaiting(true);
+  const lastLine = introState.lineIndex === introState.lines.length - 1;
+  const lastPart = introState.chunk === introState.ends.length - 1;
+  if (introState.phase === "tightwad" && lastLine && lastPart) satanTightwadAsk();
+}
+
 function introTypeTo(end) {
   clearInterval(introState.typeTimer);
   introSetWaiting(false);
@@ -16276,7 +16312,7 @@ function introTypeTo(end) {
       clearInterval(introState.typeTimer);
       introState.typeTimer = null;
       introState.typing = false;
-      introSetWaiting(true);
+      introPartTyped();
       return;
     }
     introState.shown += 1;
@@ -16292,7 +16328,8 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory", "tightwad"].includes(introState.phase) || !introState.box) return;
+  if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
     // finish the current part at once
@@ -16301,7 +16338,7 @@ function introAdvance() {
     introState.typeTimer = null;
     introState.typing = false;
     introDrawText();
-    introSetWaiting(true);
+    introPartTyped();
     return;
   }
   if (!introState.waiting) return;
@@ -16322,6 +16359,7 @@ function introAdvance() {
   }
   if (introState.phase === "judgement") introBootGame();
   else if (introState.phase === "victory") satanVictoryLeave();
+  else if (introState.phase === "tightwad") satanTightwadAsk();
   else introSealPact();
 }
 
@@ -16329,13 +16367,20 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+    if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
     "keydown",
     (event) => {
       if (!introCapturesInput()) return;
+      // Satan's offer: Y / N answer it
+      if (introState.phase === "tightwad" && introState.box?.classList.contains("intro-choosing") && /^[yn]$/i.test(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+        satanTightwadChoose(event.key.toLowerCase() === "y");
+        return;
+      }
       if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
         event.preventDefault();
         event.stopPropagation();
@@ -16373,7 +16418,8 @@ function introBindSkip(layer) {
   });
 }
 
-// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end
+// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end;
+// Satan's offer: straight to its YES / NO
 function introSkip() {
   if (introState.phase === "judgement") {
     introClearTimers();
@@ -16388,6 +16434,11 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanVictoryLeave();
+  } else if (introState.phase === "tightwad") {
+    // the offer cannot be skipped, only its talk: straight to YES / NO
+    introClearTimers();
+    introState.typing = false;
+    satanTightwadSkipToChoice();
   }
 }
 
@@ -16475,8 +16526,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+  if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
   satanVictoryAfterRender();
+  satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
   if (state.round >= 2 && state.stage === "summary") {
     const check = () => {
@@ -16545,13 +16597,19 @@ function startSatanVictoryNow() {
 function startSatanVictory() {
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = true;
+  satanOpenScene("victory", SATAN_VICTORY_LINES, "satan-victory-layer");
+  saveArcadeRun();
+}
+
+// Satan walks in during a run: the table dims, he stands on the right, his box covers the SEAL slots
+function satanOpenScene(phase, lines, layerClass) {
   introBindKeys();
-  introState.phase = "victory";
-  introState.lines = SATAN_VICTORY_LINES;
+  introState.phase = phase;
+  introState.lines = lines;
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   document.querySelector("#floatingTooltip")?.classList.remove("visible");
   const layer = document.createElement("div");
-  layer.className = "intro-pact-layer satan-victory-layer";
+  layer.className = `intro-pact-layer ${layerClass}`;
   layer.innerHTML = `
     <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
     ${introBoxHtml("pact")}`;
@@ -16562,13 +16620,17 @@ function startSatanVictory() {
   introState.box = layer.querySelector(".intro-box");
   introPlacePactBox();
   introShowLine(0);
-  saveArcadeRun();
 }
 
 function satanVictoryLeave() {
-  if (introState.phase !== "victory") return;
+  satanLeaveScene("victory");
+}
+
+// he laughs and goes; the run carries on
+function satanLeaveScene(phase) {
+  if (introState.phase !== phase) return;
   introSetWaiting(false);
-  introState.phase = "victory-leave";
+  introState.phase = `${phase}-leave`;
   introPlaySfx("introLaugh");
   introState.box?.classList.add("intro-box-leave");
   introState.layer?.classList.add("intro-pact-leaving");
@@ -16580,6 +16642,137 @@ function satanVictoryLeave() {
     introState.phase = "off";
     render();
   }, 1300);
+}
+
+/* ---- Satan's offer: too much SIN held ----
+   Ending a round with SATAN_TIGHTWAD_SIN or more (the shop's price pressure has priced everything out by
+   then) makes state.satanTightwadDue; the results wait for him like for the victory speech, and Next
+   Round brings him in at once. Same entrance and box. At the end of his talk the box asks YES / NO
+   (click, or Y / N): YES leaves you with STARTING_CREDITS SIN, NO changes nothing. He comes again only
+   once the SIN has gone back under the line and reached it again, and from the second time in a run he
+   says one line. The offer stays due until it is answered, so reloading the save brings it back. */
+function noteSatanTightwad() {
+  if (state.mode !== "arcade") return;
+  const above = Math.ceil(state.player.credits || 0) >= SATAN_TIGHTWAD_SIN;
+  if (above && !state.satanTightwadAbove) state.satanTightwadDue = true;
+  state.satanTightwadAbove = above;
+}
+
+function satanTightwadLines() {
+  return (state.satanTightwadOffers || 0) > 0 ? SATAN_TIGHTWAD_AGAIN_LINES : SATAN_TIGHTWAD_LINES;
+}
+
+// YES: Satan takes everything over the starting SIN; returns how much he took
+function satanTightwadPay() {
+  const before = Math.max(0, Math.ceil(state.player.credits || 0));
+  const taken = Math.max(0, before - STARTING_CREDITS);
+  state.player.credits = STARTING_CREDITS;
+  state.satanTightwadAbove = false;
+  return taken;
+}
+
+function satanTightwadHoldsSummary() {
+  return Boolean(
+    state.satanTightwadDue &&
+      !state.satanVictoryDue &&
+      introState.phase === "off" &&
+      state.mode === "arcade" &&
+      state.stage === "summary" &&
+      !state.gameOver &&
+      state.player.hp > 0
+  );
+}
+
+function satanTightwadReady() {
+  return (
+    satanTightwadHoldsSummary() &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function satanTightwadAfterRender() {
+  if (!satanTightwadHoldsSummary() || introState.pactTimer) return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanTightwadReady()) startSatanTightwad();
+    else if (satanTightwadHoldsSummary()) introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanTightwadNow() {
+  if (!satanTightwadHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanTightwad();
+}
+
+function startSatanTightwad() {
+  satanOpenScene("tightwad", satanTightwadLines(), "satan-tightwad-layer");
+}
+
+// the last line stays up and YES / NO appear under it
+function satanTightwadAsk() {
+  const box = introState.box;
+  if (introState.phase !== "tightwad" || !box || box.classList.contains("intro-choosing")) return;
+  introSetWaiting(false);
+  box.classList.add("intro-choosing");
+  const choice = document.createElement("div");
+  choice.className = "intro-choice";
+  choice.innerHTML = `
+    <button class="intro-choice-button" type="button" data-choice="yes">Yes</button>
+    <button class="intro-choice-button" type="button" data-choice="no">No</button>`;
+  choice.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const button = event.target.closest("[data-choice]");
+    if (button) satanTightwadChoose(button.dataset.choice === "yes");
+  });
+  box.appendChild(choice);
+  introFitText();
+}
+
+function satanTightwadSkipToChoice() {
+  if (introState.box?.classList.contains("intro-choosing")) return;
+  const last = introState.lines.length - 1;
+  if (introState.lineIndex !== last) introShowLine(last);
+  clearInterval(introState.typeTimer);
+  introState.typeTimer = null;
+  introState.typing = false;
+  introState.chunk = introState.ends.length - 1;
+  introState.shown = introState.glyphs.length;
+  introDrawText();
+  satanTightwadAsk();
+}
+
+function satanTightwadChoose(yes) {
+  const box = introState.box;
+  if (introState.phase !== "tightwad" || !box?.classList.contains("intro-choosing")) return;
+  box.querySelector(".intro-choice")?.remove();
+  box.classList.remove("intro-choosing");
+  state.satanTightwadDue = false;
+  state.satanTightwadOffers = (state.satanTightwadOffers || 0) + 1;
+  if (!yes) {
+    addLog("You refused Satan's offer.");
+    saveArcadeRun();
+    satanLeaveScene("tightwad");
+    return;
+  }
+  const taken = satanTightwadPay();
+  addLog(`Satan took ${taken} SIN. You are left with ${STARTING_CREDITS} SIN.`);
+  saveArcadeRun();
+  // the pact sound and the red pulse, as when the pact was sealed; the SIN drops behind the veil
+  box.classList.add("intro-box-hush", "intro-box-pulse");
+  introState.glyphs = [];
+  introState.shown = 0;
+  introDrawText();
+  introPlaySfx("introEvil");
+  render();
+  introLater(() => {
+    introState.box?.classList.remove("intro-box-pulse");
+    satanLeaveScene("tightwad");
+  }, 2000);
 }
 
 /* ---- 3. Satan's pact ---- */

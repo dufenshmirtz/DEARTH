@@ -718,6 +718,9 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanTightwadDue = false;
+  state.satanTightwadAbove = false;
+  state.satanTightwadOffers = 0;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;

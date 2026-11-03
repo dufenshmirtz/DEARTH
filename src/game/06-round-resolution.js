@@ -509,6 +509,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
 
@@ -1799,6 +1800,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // too much SIN held: the results wait for Satan's offer; moving on brings him in now
+  if (introState.phase === "tightwad" || introState.phase === "tightwad-leave") return;
+  if (satanTightwadHoldsSummary()) {
+    startSatanTightwadNow();
     return;
   }
   clearDevTemporaryArtifacts();
