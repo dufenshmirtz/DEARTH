@@ -4,7 +4,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SUMMARY_VERSION = 4;
+const SUMMARY_VERSION = 5;
 const UNIQUE_BOSSES = ["Zilon", "Dantre", "Pyros", "Threon", "Kalha", "Serafim", "Padma", "Petros", "Pavlos"];
 const TWINS = "Petros & Pavlos";
 const ALL_GOETIC = "All Goetic BOSSES";
@@ -32,6 +32,24 @@ function shareRange(part, whole) {
   const half = (z * Math.sqrt((p * (1 - p)) / whole + (z * z) / (4 * whole * whole))) / (1 + (z * z) / whole);
   return [Math.round(Math.max(0, center - half) * 1000) / 10, Math.round(Math.min(1, center + half) * 1000) / 10];
 }
+// Coverage batches replay each seed once per SEAL: runs on the same seed share their dice, so ranges must count
+// games (seeds), not runs. Averages each seed first, then the range across seeds.
+function seedLevel(list, value) {
+  const bySeed = new Map();
+  list.forEach((item) => {
+    if (!bySeed.has(item.seed)) bySeed.set(item.seed, []);
+    bySeed.get(item.seed).push(value(item));
+  });
+  const means = [...bySeed.values()].map((values) => values.reduce((a, b) => a + b, 0) / values.length);
+  const mean = means.length ? means.reduce((a, b) => a + b, 0) / means.length : 0;
+  return { games: means.length, mean, pm: avgPlusMinus(means) };
+}
+function seedShareRange(list, isHit) {
+  const level = seedLevel(list, (item) => (isHit(item) ? 1 : 0));
+  if (level.pm === null) return [0, 100];
+  return [Math.round(Math.max(0, level.mean - level.pm) * 1000) / 10, Math.round(Math.min(1, level.mean + level.pm) * 1000) / 10];
+}
+
 // +/- for an average (95%)
 function avgPlusMinus(values) {
   if (values.length < 2) return null;
@@ -86,6 +104,9 @@ function buildSummary(dir, { gameInfo = null } = {}) {
   const ownership = []; // per run: { rounds, win, bosses, firstOwned: { sealId: round } }
   const late = []; // runs that won the main game: how the endless part went
   const coverageRuns = []; // Coverage batches: one forced SEAL per run, same seeds for every SEAL
+  const abilities = {}; // late-game BOSSES by their random ability (recorded since run version 3)
+  const archangels = {}; // Archangels by name (fixed powers)
+  let abilityRuns = 0;
   const lateDamage = { main: 0, mainRounds: 0, endless: 0, endlessRounds: 0 };
   let failed = 0;
   let predErrSum = 0;
@@ -129,6 +150,7 @@ function buildSummary(dir, { gameInfo = null } = {}) {
     if (r.mainWin) {
       const winRound = record.rounds.find((round) => round.r === r.mainWinRound);
       late.push({
+        seed: record.seed,
         file: record.file,
         build: record.build,
         winRound: r.mainWinRound,
@@ -140,12 +162,44 @@ function buildSummary(dir, { gameInfo = null } = {}) {
         diedRound: r.diedRound
       });
     }
-    const b = builds[record.build] || (builds[record.build] = { runs: 0, wins: 0, uniqueKills: [], rounds: [], endless: [] });
+    const b = builds[record.build] || (builds[record.build] = { runs: 0, wins: 0, uniqueKills: [], rounds: [], endless: [], items: [] });
+    b.items.push({ seed: record.seed, win: Boolean(r.mainWin), bosses: r.uniqueBossKills });
     b.runs += 1;
     if (r.mainWin) b.wins += 1;
     b.uniqueKills.push(r.uniqueBossKills);
     b.rounds.push(r.rounds);
     if (r.mainWin) b.endless.push(r.endlessBossKills);
+
+    // late-game BOSSES by ability / Archangels by name (only runs that recorded BOSS kinds)
+    if (record.bosses.some((boss) => boss.kind)) {
+      abilityRuns += 1;
+      const lateKey = (boss) => (boss.kind === "archangel" ? boss.name : boss.abilities && boss.abilities.length ? boss.abilities.join(" + ") : "(no ability)");
+      const lateBucket = (boss) => (boss.kind === "archangel" ? archangels : abilities);
+      const isLate = (boss) => boss.kind && boss.kind !== "main" && boss.kind !== "final";
+      record.bosses.filter(isLate).forEach((boss) => {
+        const bucket = lateBucket(boss);
+        const key = lateKey(boss);
+        const entry = bucket[key] || (bucket[key] = { name: key, met: 0, killed: 0, endedAlone: 0, endedWithOthers: 0, rounds: [], hpLost: [], examples: [] });
+        entry.met += 1;
+        if (boss.killRound !== null) {
+          entry.killed += 1;
+          entry.rounds.push(boss.rounds);
+          entry.hpLost.push(boss.hpLost);
+        }
+      });
+      if (r.outcome === "died") {
+        const alive = record.bosses.filter((boss) => boss.killRound === null);
+        const units = new Set(alive.map((boss) => bossUnit(boss.name))).size;
+        alive.filter(isLate).forEach((boss) => {
+          const entry = lateBucket(boss)[lateKey(boss)];
+          if (!entry) return;
+          if (units === 1) {
+            entry.endedAlone += 1;
+            if (entry.examples.length < 5) entry.examples.push({ file: record.file, round: r.diedRound });
+          } else entry.endedWithOthers += 1;
+        });
+      }
+    }
 
     // BOSSES, one entry per arrival (the twins arrive together and count as one BOSS)
     const arrivals = [];
@@ -162,10 +216,16 @@ function buildSummary(dir, { gameInfo = null } = {}) {
         }
         return;
       }
-      arrivals.push({ unit, spawnRound: boss.spawnRound, killRound: boss.killRound, rounds: boss.rounds, hpLost: boss.hpLost });
+      arrivals.push({ unit, recordedKind: boss.kind || null, spawnRound: boss.spawnRound, killRound: boss.killRound, rounds: boss.rounds, hpLost: boss.hpLost });
     });
     arrivals.forEach((boss) => {
-      const kind = isMainBoss(boss.unit) ? "main" : info.demonSeal[boss.unit] ? "goetic" : "final";
+      const kind = isMainBoss(boss.unit)
+        ? "main"
+        : boss.recordedKind === "archangel"
+          ? "archangel"
+          : info.demonSeal[boss.unit] || boss.recordedKind === "goetic" || boss.recordedKind === "shadow"
+            ? "goetic"
+            : "final";
       const entry = bosses[boss.unit] || (bosses[boss.unit] = { name: boss.unit, unique: kind === "main", kind, blocks: info.demonSeal[boss.unit] || null, met: 0, killed: 0, endedRun: 0, rounds: [], hpLost: [], examples: [] });
       entry.met += 1;
       if (boss.killRound !== null) {
@@ -305,13 +365,15 @@ function buildSummary(dir, { gameInfo = null } = {}) {
 
   const total = runs.length;
   const wins = runs.filter((run) => run.mainWin).length;
+  const isCoverage = coverageRuns.length > 0;
   const overview = {
     runs: total,
     failed,
     mainWins: wins,
     mainWinRate: pct(wins, total),
-    mainWinRange: shareRange(wins, total),
-    bossKillsPlusMinus: avgPlusMinus(runs.map((run) => run.uniqueBossKills)),
+    mainWinRange: isCoverage ? seedShareRange(runs, (run) => run.mainWin) : shareRange(wins, total),
+    bossKillsPlusMinus: isCoverage ? seedLevel(runs, (run) => run.uniqueBossKills).pm : avgPlusMinus(runs.map((run) => run.uniqueBossKills)),
+    games: isCoverage ? seedLevel(runs, () => 0).games : total,
     avgUniqueBossKills: avg(runs.map((run) => run.uniqueBossKills)),
     avgRounds: avg(runs.map((run) => run.rounds)),
     medianRounds: median(runs.map((run) => run.rounds)),
@@ -330,9 +392,9 @@ function buildSummary(dir, { gameInfo = null } = {}) {
     build,
     runs: b.runs,
     winRate: pct(b.wins, b.runs),
-    winRange: shareRange(b.wins, b.runs),
+    winRange: isCoverage ? seedShareRange(b.items, (item) => item.win) : shareRange(b.wins, b.runs),
     avgUniqueBossKills: avg(b.uniqueKills),
-    bossKillsPlusMinus: avgPlusMinus(b.uniqueKills),
+    bossKillsPlusMinus: isCoverage ? seedLevel(b.items, (item) => item.bosses).pm : avgPlusMinus(b.uniqueKills),
     avgRounds: avg(b.rounds),
     endlessAvg: avg(b.endless)
   }));
@@ -355,9 +417,9 @@ function buildSummary(dir, { gameInfo = null } = {}) {
   allBossRows.sort((a, b) => b.endedRunRate - a.endedRunRate || b.met - a.met);
   const bossRows = allBossRows.filter((boss) => boss.kind === "main");
   // demons: most-met first (their percentages only mean something with enough meetings)
-  const demonRows = allBossRows.filter((boss) => boss.kind !== "main").sort((a, b) => b.met - a.met || b.endedRun - a.endedRun);
+  const demonRows = allBossRows.filter((boss) => boss.kind === "goetic").sort((a, b) => b.met - a.met || b.endedRun - a.endedRun);
   // every Goetic BOSS together, the one steady number for the late game while each demon has few meetings
-  const demons = Object.values(bosses).filter((boss) => boss.kind !== "main");
+  const demons = Object.values(bosses).filter((boss) => boss.kind === "goetic");
   if (demons.length) {
     const sum = (key) => demons.reduce((total, boss) => total + boss[key], 0);
     const rounds = demons.flatMap((boss) => boss.rounds);
@@ -428,8 +490,11 @@ function buildSummary(dir, { gameInfo = null } = {}) {
   const sources = Object.entries(deathSources).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count).slice(0, 12);
 
   const coverage = coverageRuns.length ? buildCoverage(coverageRuns, names) : null;
-  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows: allBossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage });
-  const lateGame = buildLateGame(late, lateDamage, total);
+  const lateGame = buildLateGame(late, lateDamage, total, isCoverage);
+  lateGame.abilities = lateRows(abilities);
+  lateGame.archangels = lateRows(archangels);
+  lateGame.abilityRuns = abilityRuns;
+  const alarms = buildAlarms({ overview, overallWin, buildRows, bossRows: allBossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage, lateGame });
   return { version: SUMMARY_VERSION, overview, coverage, builds: buildRows, bosses: bossRows, demons: demonRows, lateGame, bossGroups: groupRows, overlap: overlapSummary, deaths, deathSources: sources, seals: sealRows, artifacts: artifactRows, curve: curveRows, runs, alarms };
 }
 
@@ -438,7 +503,7 @@ function newItemEntry(id, names) {
 }
 
 // thresholds for "this looks off" (small samples are ignored)
-function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage }) {
+function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, overlapSummary, sealRows, artifactRows, late, coverage, lateGame }) {
   const alarms = [];
   const add = (level, text, link = null) => alarms.push({ level, text, link });
   if (coverage) {
@@ -450,12 +515,20 @@ function buildAlarms({ overview, overallWin, buildRows, bossRows, groupRows, ove
     if (coverage.needsRuns) add("info", `Coverage: ${coverage.needsRuns} SEALS have fewer than ${COVERAGE_MIN_RUNS} runs yet; their verdicts wait for more data.`, { type: "coverage", id: null });
   }
   if (overview.runs < 20) add("info", `Only ${overview.runs} runs: numbers below are rough. 100+ runs give steadier results.`);
+  // a Goetic BOSS's danger comes from its random ability, not its name: judge those by ability (when recorded)
+  const byAbility = Boolean(lateGame && lateGame.abilityRuns);
   bossRows.forEach((boss) => {
     if (boss.met < 8) return;
+    if (byAbility && boss.kind === "goetic") return;
     if (boss.endedRunRate >= 30) add("high", `${boss.name} alone ends ${boss.endedRunRate}% of the runs that reach it (${boss.endedRun}/${boss.met}).`, { type: "boss", id: boss.name });
     else if (boss.unique && boss.killRate >= 98 && boss.avgHpLost <= 3) add("low", `${boss.name} is almost never a threat: beaten ${boss.killRate}% of the time for ${boss.avgHpLost} HP on average.`, { type: "boss", id: boss.name });
     if (boss.avgRounds >= 12) add("medium", `${boss.name} fights last ${boss.avgRounds} rounds on average.`, { type: "boss", id: boss.name });
   });
+  if (byAbility) {
+    lateGame.abilities.concat(lateGame.archangels).forEach((row) => {
+      if (row.met >= 8 && row.endedRunRate >= 30) add("high", `${lateGame.archangels.includes(row) ? row.name : `A Goetic BOSS with ${row.name}`} alone ends ${row.endedRunRate}% of the runs that reach it (${row.endedRun}/${row.met}).`, { type: "late", id: row.name });
+    });
+  }
   groupRows.forEach((group) => {
     if (group.met >= 5 && group.endedRunRate >= 40) add("high", `${group.name} together end ${group.endedRunRate}% of the runs where they meet (${group.endedRun}/${group.met}).`, { type: "group", id: group.name });
   });
@@ -560,7 +633,11 @@ function buildCoverage(list, names) {
   });
   seals.sort((a, b) => b.edge - a.edge);
   const builds = [...group("build").entries()].map(([build, runs]) => {
+    // a build is played on many SEALS per seed: average it per seed first (runs on one seed share their dice)
     const base = summarize(runs);
+    const level = seedLevel(runs.map((run) => ({ seed: run.seed, diff: run.bosses - seedMean.get(run.seed) })), (item) => item.diff);
+    base.edge = Math.round(level.mean * 100) / 100;
+    base.pm = level.pm;
     const verdict = verdictFor(base.edge, base.pm, base.runs);
     return { build, ...base, verdict: verdict === "nerf" ? "strong" : verdict === "buff" ? "weak" : verdict };
   });
@@ -688,7 +765,25 @@ function combineCoverage(dirs, { gameInfo = null } = {}) {
 }
 
 // the late game: runs that won the main game and how far they got after it
-function buildLateGame(late, damage, totalRuns) {
+function lateRows(bucket) {
+  return Object.values(bucket)
+    .map((entry) => ({
+      name: entry.name,
+      met: entry.met,
+      killed: entry.killed,
+      killRate: pct(entry.killed, entry.met),
+      endedRun: entry.endedAlone,
+      endedRunRate: pct(entry.endedAlone, entry.met),
+      endedWithOthers: entry.endedWithOthers,
+      avgRounds: avg(entry.rounds),
+      avgHpLost: avg(entry.hpLost),
+      few: entry.met < 8,
+      examples: entry.examples
+    }))
+    .sort((a, b) => b.endedRunRate - a.endedRunRate || b.met - a.met);
+}
+
+function buildLateGame(late, damage, totalRuns, isCoverage = false) {
   const depths = late.map((run) => run.endless);
   const buckets = [["0", 0, 0], ["1-2", 1, 2], ["3-5", 3, 5], ["6-10", 6, 10], ["11-20", 11, 20], ["21+", 21, Infinity]];
   const ended = {};
@@ -699,7 +794,7 @@ function buildLateGame(late, damage, totalRuns) {
     winners: late.length,
     winShare: pct(late.length, totalRuns),
     endlessAvg: avg(depths),
-    endlessPlusMinus: avgPlusMinus(depths),
+    endlessPlusMinus: isCoverage ? seedLevel(late, (run) => run.endless).pm : avgPlusMinus(depths),
     endlessMedian: median(depths),
     endlessBest: Math.max(0, ...depths),
     endlessRoundsAvg: avg(late.map((run) => run.endlessRounds)),

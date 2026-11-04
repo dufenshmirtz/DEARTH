@@ -39,6 +39,20 @@ function sealRoundPoints(before, after, avgDamnedMaxHp, sinHeld) {
   return out;
 }
 
+// what kind of BOSS it is and what it can do (late-game BOSSES get a random ability, so the name alone says little)
+let abilityNames = null;
+function bossTraits(bot) {
+  const kind = bot.uniqueKey ? "main" : bot.archangelKey ? "archangel" : bot.shadowOf ? "shadow" : bot.goeticKey ? "goetic" : bot.finalKey ? "final" : "other";
+  const keys = Array.isArray(bot.passiveKeys) ? bot.passiveKeys : [];
+  return {
+    kind,
+    abilities: keys.map((key) => (abilityNames && abilityNames[key]) || key),
+    abilityKeys: keys,
+    modifier: Number.isFinite(bot.modifierOverride) ? bot.modifierOverride : null,
+    blocks: bot.goeticPassiveId || null
+  };
+}
+
 function copyStats(stats) {
   const out = {};
   Object.keys(stats || {}).forEach((id) => {
@@ -53,7 +67,7 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
   const model = new TableModel();
   const plan = { build, bossPrep: false, killsAtLastBoss: 0 };
   const record = {
-    version: 2, // 2: SEAL SIN valued at the SIN held when it came in
+    version: 3, // 2: SEAL SIN valued at the SIN held when it came in; 3: BOSS kind and abilities recorded
     seed,
     build,
     rounds: [],
@@ -73,6 +87,17 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
 
   g.api.startRun();
   const s = g.state;
+  if (!abilityNames) {
+    abilityNames = {};
+    try {
+      const passives = g.run("typeof BOSS_PASSIVES === 'object' ? BOSS_PASSIVES : {}");
+      Object.keys(passives).forEach((key) => {
+        abilityNames[key] = passives[key]?.name || key;
+      });
+    } catch (error) {
+      // older game: keys only
+    }
+  }
   // A/B tests: start the run already holding one SEAL
   if (forceSeal && g.items[forceSeal]?.type === "passive") {
     g.run(`state.player.passives.push(itemCopy(${JSON.stringify(forceSeal)})); refreshMimicTarget();`);
@@ -89,7 +114,7 @@ function playRun({ seed, build, mainOnly = false, experience = null, forceSeal =
     // BOSSES that arrived
     s.bots.forEach((bot) => {
       if (bot.isBoss && !bot.eliminated && !bossesAlive.has(bot.id)) {
-        const boss = { id: bot.id, name: bot.name, key: bot.uniqueKey || bot.goeticKey || bot.finalKey || null, unique: Boolean(bot.uniqueKey), spawnRound: roundNo, hpAtSpawn: s.player.hp, killRound: null };
+        const boss = { id: bot.id, name: bot.name, key: bot.uniqueKey || bot.goeticKey || bot.finalKey || null, unique: Boolean(bot.uniqueKey), spawnRound: roundNo, hpAtSpawn: s.player.hp, killRound: null, ...bossTraits(bot) };
         bossesAlive.set(bot.id, boss);
         record.bosses.push(boss);
       }

@@ -249,7 +249,9 @@ async function runBatch(args, { onProgress, continueId = null } = {}) {
     meta.continued = [...(meta.continued || []), started.toISOString()];
     meta.finished = null;
   } else {
-    const id = `${stamp(started)}${args.tag ? `_${args.tag}` : ""}`;
+    // short random code: two PCs starting a batch in the same minute still get different names and seeds
+    const code = crypto.randomBytes(4).readUInt32BE(0).toString(36).padStart(4, "0").slice(-4);
+    const id = `${stamp(started)}${args.tag ? `_${args.tag}` : ""}_${code}`;
     dir = path.join(RUNS_DIR, id);
     let n = 2;
     while (fs.existsSync(dir)) dir = path.join(RUNS_DIR, `${id}-${n++}`);

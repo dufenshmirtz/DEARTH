@@ -310,7 +310,7 @@ function rangeText(value, range) { return range ? `${value}% (${range[0]}-${rang
 function pmText(value, pm) { return pm === null || pm === undefined ? `${value}` : `${value} ±${pm}`; }
 function tiles(o) {
   const t = [
-    [rangeText(o.mainWinRate, o.mainWinRange), `Main game won (${o.mainWins}/${o.runs})`],
+    [rangeText(o.mainWinRate, o.mainWinRange), o.games && o.games < o.runs ? `Main game won (${o.mainWins}/${o.runs} runs, ${o.games} different games)` : `Main game won (${o.mainWins}/${o.runs})`],
     [pmText(o.avgUniqueBossKills, o.bossKillsPlusMinus), "Unique BOSSES beaten (avg of 8)"],
     [o.avgRounds, `Rounds per run (median ${o.medianRounds})`],
     [o.endlessAvg, `Endless BOSSES after a win (best ${o.endlessBest})`],
@@ -337,9 +337,15 @@ function bindAlarms(alarms) {
   }));
 }
 
+function coverageNote(s) {
+  const o = s.overview;
+  return o.games && o.games < o.runs ? `<div class="warnline">A Coverage batch: ${o.runs.toLocaleString()} runs but only ${o.games} different games (each replayed once per SEAL), so the ranges below are based on ${o.games} games. For SEALS and builds, use the Coverage tab.</div>` : "";
+}
+
 function renderOverview(body, s) {
   const deathsMax = Math.max(1, ...s.deaths.map((d) => d.count));
   body.innerHTML = `
+    ${coverageNote(s)}
     ${tiles(s.overview)}
     <h2>Alarms</h2>${alarmsHtml(s.alarms)}
     <div class="grid2" style="margin-top:16px">
@@ -423,6 +429,28 @@ function renderCoverage(body, s) {
   });
 }
 
+function abilityTable(L) {
+  if (!L.abilityRuns) return `<div class="sub">This batch was played before BOSS abilities were recorded. New batches show each ability here.</div>`;
+  const rows = (L.abilities || []).map((x) => ({ ...x, sample: x.few ? "few" : "" }));
+  if (!rows.length) return `<div class="sub">No Goetic BOSS met yet.</div>`;
+  return `${table(rows, [["name", "Ability"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["endedWithOthers", "Alive at a death with others", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["sample", "Sample"], ["examples", "Runs it ended"]], "abilities", "name")}
+    <div class="hint">Every Goetic BOSS gets one random ability, whatever its name. "Ended run alone" counts deaths with only that BOSS alive; deaths with several BOSSES alive are in "Alive at a death with others". Rows marked "few" (under 8 meetings) are rough.</div>`;
+}
+
+// a Coverage batch: every run starts with a forced SEAL, so "bought" and "BOSSES vs expected" mean little here
+function renderSealsCoverage(body, s) {
+  const rows = s.seals;
+  body.innerHTML = `<h2>SEALS</h2>
+    <div class="warnline">This is a Coverage batch: every run starts with one SEAL on purpose. Which SEAL is strong or weak is in the Coverage tab; this table only shows what the bot also bought along the way and what each SEAL did itself.</div>
+    <div class="filters">Find <input type="text" id="sealFind" placeholder="name or id" /></div>
+    ${table(rows, [["name", "SEAL"], ["id", "Id"], ["offered", "Offered", "num"], ["bought", "Bought by the bot", "num"], ["buyRate", "Bought %", "num"], ["runsOwned", "Runs owned", "num"], ["pointsPerRound", "Own points / round", "num"], ["triggersPerRound", "Triggers / round", "num"]], "seals", "id")}`;
+  bindTables(body);
+  $("#sealFind").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    body.querySelectorAll("tbody tr").forEach((tr) => { tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+}
+
 function renderLate(body, s) {
   const L = s.lateGame;
   if (!L) { body.innerHTML = `<div class="empty">This report was made before the Late game view existed. Reopen the batch to rebuild it.</div>`; return; }
@@ -446,9 +474,12 @@ function renderLate(body, s) {
         <table><tr><th>BOSSES alive at death</th><th class="num">Runs</th></tr>
         ${L.endedBy.map((d) => `<tr><td>${esc(d.by)}</td><td class="num">${d.count} (${d.share}%)</td></tr>`).join("")}</table></div>
     </div>` : `<div class="sub">No run won the main game in this batch.</div>`}
-    <h2 style="margin-top:16px">Goetic BOSSES</h2>
+    <h2 style="margin-top:16px">Goetic BOSSES by ability</h2>
+    ${abilityTable(L)}
+    ${L.archangels && L.archangels.length ? `<h2 style="margin-top:16px">Archangels</h2>${table(L.archangels.map((x) => ({ ...x, sample: x.few ? "few" : "" })), [["name", "Archangel"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["endedWithOthers", "Alive at a death with others", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["sample", "Sample"], ["examples", "Runs it ended"]], "archangels", "name")}<div class="hint">Archangels have fixed powers, so they are judged by name.</div>` : ""}
+    <h2 style="margin-top:16px">Goetic BOSSES by blocked SEAL</h2>
     ${demons.length ? table(demons, [["name", "BOSS"], ["blocks", "Blocks SEAL"], ["met", "Met", "num"], ["killed", "Beaten", "num"], ["killRate", "Beaten %", "num"], ["endedRun", "Ended run alone", "num"], ["endedRunRate", "Ended run %", "num"], ["avgRounds", "Rounds to beat", "num"], ["avgHpLost", "HP lost in fight", "num"], ["sample", "Sample"], ["examples", "Runs it ended"]], "demons", "name") : `<div class="sub">No Goetic BOSS met yet.</div>`}
-    <div class="hint">Each demon blocks its own SEAL while it lives. The order of demons is shuffled every run, so most are met only a few times: rows marked "few" (under 8 meetings) are rough. The first row adds them all up. Groups of BOSSES alive together are in the BOSSES tab.</div>
+    <div class="hint">The demon's name only decides which SEAL it blocks while it lives; its danger comes from its random ability (table above). Most demons are met only a few times: rows marked "few" (under 8 meetings) are rough. The first row adds them all up.</div>
     ${L.runs.length ? `<h2 style="margin-top:16px">Winning runs</h2>${table(L.runs, [["file", "Run"], ["build", "Build"], ["winRound", "Won in round", "num"], ["endless", "Goetic BOSSES after", "num"], ["endlessRounds", "Rounds after", "num"], ["hpAtWin", "HP at the win", "num"], ["diedTo", "Ended by"]], "runs", "file")}` : ""}`;
   bindTables(body);
   body.querySelectorAll('table[data-table="demons"] tbody tr').forEach((tr, i) => {
@@ -458,6 +489,7 @@ function renderLate(body, s) {
 }
 
 function renderSeals(body, s) {
+  if (s.coverage) return renderSealsCoverage(body, s);
   const rows = s.seals.map((x) => ({ ...x, sure: x.clear ? (x.bossEdge > 0 ? "stronger" : "weaker") : "", edgePm: x.bossEdgePlusMinus === null || x.bossEdgePlusMinus === undefined ? "" : `±${x.bossEdgePlusMinus}`, wins: x.winRateOwned === null ? null : `${x.winRateOwned}% / ${x.winRateExpected ?? "-"}%`, bossesVs: x.avgBossKillsOwned === null ? null : `${x.avgBossKillsOwned} / ${x.bossKillsExpected ?? "-"}` }));
   body.innerHTML = `<h2>SEALS</h2>
     <div class="filters">Find <input type="text" id="sealFind" placeholder="name or id" /></div>

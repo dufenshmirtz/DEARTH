@@ -7,14 +7,15 @@ records every decision and outcome, and builds a balance report. Dev tool only: 
 
 | Command | What it does |
 |---|---|
-| `pnpm run bot -- --runs 300` | Plays a batch in the background (all CPU cores but one). Results in `bot-runs/<date>_<tag>/` |
+| `pnpm run bot -- --runs 300` | Plays a batch in the background (all CPU cores but one). Results in `bot-runs/<date>_<tag>_<code>/` |
 | `start_bot_lab.bat` (double-click, repo root) | Same as `pnpm run bot:lab`, no command line needed |
 | `pnpm run bot:lab` | Opens Bot Lab in the browser (http://localhost:5178): Start button, reports, alarms, run logs, compare |
 | `pnpm run bot:tune` | Updates the bot's experience (what each SEAL / ARTIFACT is worth) from the batches in `bot-runs/` |
 | `node --test scripts/bot/test-bot.js` | Checks the bot plays fair and its look-aheads leave the game untouched |
 
 Batch options: `--build bounty|memory|reveal|critical|personality|artifact` (default: even rotation),
-`--tag name`, `--main-only` (stop each run at the main-game win), `--seeds name` (same name = same runs),
+`--tag name`, `--main-only` (stop each run at the main-game win), `--seeds name` (same name = same runs; by default
+each batch gets its own seeds from its folder name, which ends in a short random code so two PCs never play the same games),
 `--force-seal p31` (start every run holding that SEAL), `--workers N`, `--max-rounds N` (safety cap, default 1000).
 
 **Coverage** (`--coverage --per-seal 30`, or "Coverage" in Bot Lab's Start form): every SEAL is played the same number
@@ -63,7 +64,9 @@ Bot Lab shows ranges next to win rates and averages: the real number is most lik
 builds or SEALS only really differ when their ranges don't overlap. Compare pairs runs by seed when two batches share a
 seed set. SEALS are compared with runs still alive at the round they usually arrive ("BOSSES vs expected", with a
 "Beyond luck?" column). Deaths with 2+ BOSSES alive count for that group. The Late game tab covers everything after the
-8 BOSSES: endless depth, what ends it, and every Goetic BOSS by name with the SEAL it blocks.
+8 BOSSES: endless depth, what ends it, Goetic BOSSES by ability (abilities are handed out at random, so a demon's name
+says little; recorded from batches started after Nov 2026) and by the SEAL they block, and the Archangels on their own.
+In Coverage batches every seed is played once per SEAL, so ranges count different games (seeds), not runs.
 
 Every number that shapes this is in `config.js` (points scale, risk, shop habits). Each batch saves the config it used.
 
