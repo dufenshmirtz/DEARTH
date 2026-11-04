@@ -12521,7 +12521,7 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
 
 .deal-button.pact-calling {
   color: var(--pact-call) !important;
-  animation: pact-calling 1.6s ease-in-out infinite;
+  animation: pact-calling 6s ease-in-out infinite;
 }
 
 /* hover still turns it blood red, like every button */
@@ -12576,6 +12576,47 @@ body.native-arcade .native-arcade-frame .native-seal-actions {
 
 .end-stat-pact strong {
   color: var(--blood-bright, #dc2a2f);
+}
+
+/* in Satan's deal, YES / NO and ASK / LEAVE wear the game's button frame (white text, all red on hover) */
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button,
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus:not(:disabled),
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:active:not(:disabled) {
+  position: relative;
+  overflow: visible;
+  padding: 0.4em 1.4em;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: -4px -5px;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 12px 24px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 12px 24px stretch;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus-visible {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled)::after,
+.satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus-visible::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
 }
 
 /* the box where you tell him what you want, under his line */
