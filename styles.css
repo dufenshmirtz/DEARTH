@@ -12578,7 +12578,7 @@ body.native-arcade .native-arcade-frame .native-seal-actions {
   color: var(--blood-bright, #dc2a2f);
 }
 
-/* in Satan's deal, YES / NO and ASK / LEAVE wear the game's button frame (white text, all red on hover) */
+/* in Satan's deal, YES / NO and ASK / LEAVE wear the game's button frame, in his red (brighter on hover) */
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button,
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus:not(:disabled),
@@ -12589,7 +12589,7 @@ body.native-arcade .native-arcade-frame .native-seal-actions {
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: #fff !important;
+  color: var(--blood-bright, #dc2a2f) !important;
 }
 
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button::after {
@@ -12604,18 +12604,19 @@ body.native-arcade .native-arcade-frame .native-seal-actions {
   border-color: transparent;
   border-width: 12px 24px;
   border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 fill / 12px 24px stretch;
-  opacity: 0.9;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 0.85;
   transition: opacity 0.2s ease, filter 0.2s ease;
 }
 
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus-visible {
-  color: var(--blood-bright, #dc2a2f) !important;
+  color: #ff5a5f !important;
 }
 
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled)::after,
 .satan-deal-layer .intro-box .intro-choice-button.intro-choice-button:focus-visible::after {
-  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(130%);
   opacity: 1;
 }
 

@@ -18881,7 +18881,8 @@ const SATAN_DEAL_BUTTONS = { yes: "Yes", no: "No", ask: "Ask", leave: "Leave" };
 /* ---- numbers ---- */
 const SATAN_DEAL_ROLL_MIN = 0.8;
 const SATAN_DEAL_ROLL_MAX = 1.25;
-const SATAN_DEAL_LOW_HP = 0.25; // the Pause button pulses under this share of max HEALTH
+const SATAN_DEAL_LOW_HP = 0.25; // the DEAL button pulses under this share of max HEALTH
+const SATAN_DEAL_PULSE_MS = 6000; // one slow fade to red and back (keep equal to the pact-calling animation in styles.css)
 const SATAN_DEAL_BUILD_STACK = 4; // this many SEALS sharing a build with the SEAL asked for...
 const SATAN_DEAL_BUILD_FACTOR = 1.5; // ...make the price this much higher
 const SATAN_DEAL_SEAL_ACCEPT = 0.5;
@@ -19783,7 +19784,9 @@ function satanDealButtonHtml() {
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
   const pulse = satanPactPulseActive() ? "pact-calling" : "";
-  return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}" ${disabled}>DEAL</button>`;
+  // every render rebuilds the button: the delay keeps the slow pulse running from where it was
+  const phase = pulse ? ` style="animation-delay: -${Date.now() % SATAN_DEAL_PULSE_MS}ms"` : "";
+  return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
 }
 function bindPvpEvents() {
   if (state.mode !== "pvp" || !state.pvp) return;
