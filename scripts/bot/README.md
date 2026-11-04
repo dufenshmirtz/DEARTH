@@ -23,6 +23,12 @@ compared with the average SEAL on the same seeds, so luck cancels out; the Cover
 (only when the difference is bigger than its range and at least 0.25 BOSSES) and the same for builds. About
 `105 SEALS x runs per SEAL` runs in total; a batch stopped early stays even. `bot:tune` uses Coverage results first.
 
+**Combine Coverage batches** (button above the batch list in Bot Lab): pick several Coverage batches, e.g. from several
+PCs, and read them as one Coverage table. Only batches played on the same game, bot and experience can be mixed; the
+same game played twice (same seed set, seed and SEAL) counts once; only seeds every SEAL has played are used. Each batch
+keeps a small `coverage-rows.json` cache so combining is quick after the first time. When copying batches between PCs,
+two folders with the same name are different batches: rename one (e.g. `..._v`) instead of overwriting.
+
 **Stop and Continue**: Stop keeps every finished run. A stopped batch shows a Continue button in Bot Lab
 (or `pnpm run bot -- --continue <batch folder name>`): it plays only the missing runs, on the same seeds and settings,
 so the result is identical to a batch that was never stopped (a run cut off by Stop is simply played again). Continue is

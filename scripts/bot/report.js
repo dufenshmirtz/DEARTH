@@ -579,6 +579,114 @@ function buildCoverage(list, names) {
   };
 }
 
+// ---- combining Coverage batches (several PCs, several sessions) into one table ----
+// Each batch keeps a small cache of its Coverage rows (coverage-rows.json) so combining doesn't re-read every run.
+function coverageRows(dir) {
+  const runsDir = path.join(dir, "runs");
+  const files = fs.existsSync(runsDir) ? fs.readdirSync(runsDir).filter((name) => /^run-\d+\.json$/.test(name)) : [];
+  const cacheFile = path.join(dir, "coverage-rows.json");
+  try {
+    const cache = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
+    if (cache.files === files.length && Array.isArray(cache.rows)) return cache.rows;
+  } catch (error) {
+    // no cache yet
+  }
+  const rows = [];
+  for (const record of readRuns(dir)) {
+    if (record.error || !record.coverage) continue;
+    const id = record.coverage.seal;
+    const r = record.result;
+    rows.push({
+      file: record.file,
+      seed: record.coverage.seed,
+      seal: id,
+      build: record.build,
+      bosses: r.uniqueBossKills,
+      win: Boolean(r.mainWin),
+      rounds: r.rounds,
+      damage: r.sealStats?.[id]?.damage || 0,
+      ownPoints: record.rounds.reduce((sum, round) => sum + (round.sg?.[id]?.pts || 0), 0)
+    });
+  }
+  try {
+    fs.writeFileSync(cacheFile, JSON.stringify({ files: files.length, rows }));
+  } catch (error) {
+    // read-only folder: just don't cache
+  }
+  return rows;
+}
+
+// Combine Coverage batches into one fair table:
+// - only batches played on the same game, bot and experience (their fingerprints match) are mixed;
+// - the same game played twice (same seed set, seed and SEAL, e.g. two PCs started in the same minute) counts once;
+// - only seeds that every SEAL has played are used, so every SEAL is compared on exactly the same games.
+function combineCoverage(dirs, { gameInfo = null } = {}) {
+  const info = gameInfo || loadGameInfo();
+  const included = [];
+  const excluded = [];
+  let reference = null;
+  const seen = new Set();
+  const rows = [];
+  let duplicates = 0;
+  for (const dir of dirs) {
+    const id = path.basename(dir);
+    let meta = null;
+    try {
+      meta = JSON.parse(fs.readFileSync(path.join(dir, "batch.json"), "utf8"));
+    } catch (error) {
+      excluded.push({ id, reason: "batch.json is missing or unreadable" });
+      continue;
+    }
+    if (meta.args?.mode !== "coverage") {
+      excluded.push({ id, reason: "not a Coverage batch" });
+      continue;
+    }
+    const fp = meta.fingerprint;
+    if (!fp) {
+      excluded.push({ id, reason: "made before batches recorded their game version, so it can't be checked" });
+      continue;
+    }
+    const key = `${fp.game}|${fp.bot}|${fp.experience}`;
+    if (!reference) reference = { key, id, fp };
+    else if (key !== reference.key) {
+      const what = [fp.game !== reference.fp.game && "game code", fp.bot !== reference.fp.bot && "bot code/settings", fp.experience !== reference.fp.experience && "experience file"].filter(Boolean).join(", ");
+      excluded.push({ id, reason: `played with a different ${what} than ${reference.id}` });
+      continue;
+    }
+    let used = 0;
+    let dup = 0;
+    coverageRows(dir).forEach((row) => {
+      const gameKey = `${meta.seeds}:${row.seed}:${row.seal}`;
+      if (seen.has(gameKey)) {
+        dup += 1;
+        return;
+      }
+      seen.add(gameKey);
+      rows.push({ ...row, seed: `${meta.seeds}:${row.seed}`, batch: id });
+      used += 1;
+    });
+    duplicates += dup;
+    included.push({ id, tag: meta.tag || null, runs: used + dup, used, duplicates: dup, finished: Boolean(meta.finished) });
+  }
+  // keep only seeds every SEAL has played
+  const sealCount = new Set(rows.map((row) => row.seal)).size;
+  const perSeed = new Map();
+  rows.forEach((row) => perSeed.set(row.seed, (perSeed.get(row.seed) || 0) + 1));
+  const complete = new Set([...perSeed.entries()].filter(([, count]) => count >= sealCount).map(([seed]) => seed));
+  const usable = rows.filter((row) => complete.has(row.seed));
+  const coverage = usable.length ? buildCoverage(usable, info.names) : null;
+  return {
+    coverage,
+    included,
+    excluded,
+    duplicates,
+    incompleteRuns: rows.length - usable.length,
+    seeds: complete.size,
+    sealCount,
+    fingerprint: reference ? reference.fp : null
+  };
+}
+
 // the late game: runs that won the main game and how far they got after it
 function buildLateGame(late, damage, totalRuns) {
   const depths = late.map((run) => run.endless);
@@ -623,4 +731,4 @@ function loadGameInfo() {
   }
 }
 
-module.exports = { buildSummary, buildCoverage, readRuns, SUMMARY_VERSION, bossGroup };
+module.exports = { buildSummary, buildCoverage, combineCoverage, coverageRows, readRuns, SUMMARY_VERSION, bossGroup };

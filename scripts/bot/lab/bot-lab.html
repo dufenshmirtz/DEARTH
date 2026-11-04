@@ -149,6 +149,7 @@ table[data-table] td:first-child { white-space: nowrap; }
       <div class="hint">Re-run after big changes (several new SEALS). Small tweaks don't need it.</div>
     </div>
     <h2>Batches</h2>
+    <button id="combineBtn" style="width:100%;margin-bottom:8px">Combine Coverage batches</button>
     <div id="batchList"></div>
   </aside>
   <main class="main" id="main"><div class="empty">Pick a batch on the left, or start one.</div></main>
@@ -261,6 +262,7 @@ async function openBatch(id, quiet) {
   const data = await api(`/api/batch/${encodeURIComponent(id)}`);
   if (data.error) { $("#main").innerHTML = `<div class="empty">${esc(data.error)}</div>`; return; }
   view.batch = data;
+  view.rerender = null;
   renderBatch();
 }
 
@@ -579,7 +581,7 @@ function bindTables(root) {
     const id = th.closest("table").dataset.table, key = th.dataset.sort;
     const cur = view.sort[id];
     view.sort[id] = { key, dir: cur && cur.key === key ? -cur.dir : -1 };
-    renderBatch();
+    (view.rerender || renderBatch)();
   }));
   root.querySelectorAll("a[data-run]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openRun(a.dataset.run, a.dataset.round ? +a.dataset.round : null); }));
 }
@@ -729,6 +731,53 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseout", (e) => {
   if (e.target.closest?.("[data-seal]")) $("#tip").style.display = "none";
 });
+
+// ---------- several Coverage batches as one table ----------
+async function openCombine() {
+  view.batchId = null;
+  view.run = null;
+  document.querySelectorAll(".batch").forEach((el) => el.classList.remove("active"));
+  const list = await api("/api/coverage-batches");
+  let chosen;
+  try { chosen = new Set(JSON.parse(localStorage.getItem("botLabCombine") || "null") || []); } catch (e) { chosen = new Set(); }
+  // by default: every Coverage batch of the newest game version
+  if (!chosen.size && list.length) list.filter((b) => b.group === list[0].group).forEach((b) => chosen.add(b.id));
+  const groups = [...new Set(list.map((b) => b.group))];
+  $("#main").innerHTML = `
+    <div class="top"><h1>Combine Coverage batches</h1></div>
+    <div class="sub">Pick Coverage batches to read as one table, e.g. from several PCs or sessions. Only batches played on the same game, bot and experience can be combined (each group below is one version). The same game played twice counts once, and only seeds that every SEAL has played are used.</div>
+    ${list.length ? groups.map((group, gi) => `<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">${gi === 0 ? "Newest version" : "Older version"} <span class="sub">${esc(group === "none" ? "no version recorded (can't be combined)" : group)}</span></h3>
+      ${list.filter((b) => b.group === group).map((b) => `<label style="display:flex;gap:8px;align-items:center;color:var(--bone)"><input type="checkbox" class="cmbBox" value="${esc(b.id)}" ${chosen.has(b.id) ? "checked" : ""} ${b.group === "none" ? "disabled" : ""}/>${esc(b.tag || b.id)} <span class="sub">${fmtDate(b.started)} · ${b.perSeal} per SEAL · ${b.done}/${b.total} runs${b.finished ? "" : " (not finished)"}</span></label>`).join("")}</div>`).join("") : `<div class="empty">No Coverage batches yet.</div>`}
+    <button class="primary" id="cmbGo" style="margin-top:10px">Combine</button>
+    <div id="cmbOut" style="margin-top:16px"></div>`;
+  $("#cmbGo").addEventListener("click", async () => {
+    const ids = [...document.querySelectorAll(".cmbBox:checked")].map((el) => el.value);
+    try { localStorage.setItem("botLabCombine", JSON.stringify(ids)); } catch (e) {}
+    if (!ids.length) { $("#cmbOut").innerHTML = `<div class="sub">Pick at least one batch.</div>`; return; }
+    $("#cmbOut").innerHTML = `<div class="sub">Combining... The first time, every run is read once (this can take a minute for big batches); after that it is quick.</div>`;
+    const res = await api("/api/combine", { ids });
+    if (res.error) { $("#cmbOut").innerHTML = `<div class="warnline">${esc(res.error)}</div>`; return; }
+    view.combined = res;
+    renderCombined();
+  });
+}
+
+function renderCombined() {
+  const r = view.combined;
+  const out = $("#cmbOut");
+  if (!out) return;
+  view.rerender = renderCombined;
+  const inc = r.included.map((b) => `${esc(b.tag || b.id)}: ${b.used} runs${b.duplicates ? ` (+${b.duplicates} duplicate games skipped)` : ""}`).join("<br>");
+  const exc = r.excluded.length ? `<div class="warnline">Left out: ${r.excluded.map((b) => `${esc(b.id)} (${esc(b.reason)})`).join("; ")}</div>` : "";
+  const notes = [
+    r.duplicates ? `${r.duplicates} runs were the same games as runs in another batch (same seeds), counted once.` : "",
+    r.incompleteRuns ? `${r.incompleteRuns} runs skipped from seeds not every SEAL has played yet (finish or continue those batches to use them).` : ""
+  ].filter(Boolean).join(" ");
+  out.innerHTML = `<div class="panel"><b>${r.included.length} batch${r.included.length === 1 ? "" : "es"}</b>, ${r.seeds} complete seeds = ${r.seeds} runs for every SEAL.<div class="sub" style="margin-top:6px">${inc}</div>${notes ? `<div class="sub" style="margin-top:6px">${notes}</div>` : ""}</div>${exc}<div id="cmbCov"></div>`;
+  if (!r.coverage) { $("#cmbCov").innerHTML = `<div class="empty">No complete seeds yet in the chosen batches.</div>`; return; }
+  renderCoverage($("#cmbCov"), { coverage: r.coverage });
+}
+$("#combineBtn").addEventListener("click", openCombine);
 
 // ---------- start ----------
 (async () => {

@@ -182,6 +182,23 @@ const server = http.createServer(async (req, res) => {
       });
     }
     if (req.method === "GET" && parts[1] === "batches") return send(res, 200, listBatches());
+    if (req.method === "GET" && parts[1] === "coverage-batches") {
+      // Coverage batches, grouped by what they were played with (only one group can be combined)
+      const list = listBatches()
+        .filter((b) => b.args?.mode === "coverage")
+        .map((b) => {
+          const meta = readJson(path.join(RUNS_DIR, b.id, "batch.json")) || {};
+          const fp = meta.fingerprint;
+          return { id: b.id, tag: b.tag, started: b.started, done: b.done, total: b.total, finished: b.finished, perSeal: b.args?.perSeal, group: fp ? `game ${fp.game.slice(0, 6)} · bot ${fp.bot.slice(0, 6)} · experience ${fp.experience.slice(0, 6)}` : "none" };
+        });
+      return send(res, 200, list);
+    }
+    if (req.method === "POST" && parts[1] === "combine") {
+      const body = await readBody(req);
+      const ids = (Array.isArray(body.ids) ? body.ids : []).map((id) => safeName(String(id))).filter(Boolean);
+      if (!ids.length) return send(res, 200, { error: "Pick at least one batch." });
+      return send(res, 200, require("./report").combineCoverage(ids.map((id) => path.join(RUNS_DIR, id))));
+    }
     if (req.method === "GET" && parts[1] === "status") return send(res, 200, jobStatus());
     if (req.method === "GET" && parts[1] === "batch" && parts[2]) {
       const id = safeName(parts[2]);

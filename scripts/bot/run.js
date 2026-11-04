@@ -336,6 +336,14 @@ async function runBatch(args, { onProgress, continueId = null } = {}) {
   const { buildSummary } = require("./report");
   const summary = buildSummary(dir);
   writeJson(path.join(dir, "summary.json"), summary);
+  // small cache of the Coverage rows so "Combine Coverage batches" doesn't have to re-read every run
+  if (meta.coverage) {
+    try {
+      require("./report").coverageRows(dir);
+    } catch (error) {
+      // only a speed-up
+    }
+  }
   meta.finished = new Date().toISOString();
   meta.elapsedSec = elapsedBefore + Math.round((Date.now() - t0) / 1000);
   writeJson(path.join(dir, "batch.json"), meta);
