@@ -18751,8 +18751,8 @@ function openCollectionFromMenu() {
   render();
 }
 /* ---------- Satan's Pact: one deal with the Devil per run ----------
-   The DEAL button under Pause (it pulses red while you are under 25% HEALTH, until you open the
-   deal once). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
+   The DEAL button under Pause (it pulses slowly to red until you open the deal once in the run, and
+   fast while you are under 25% HEALTH). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
    what you want; he names his price; YES signs, NO throws the chance away for the rest of the run.
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
    SEAL, the deal stays locked until your next BOSS kill.
@@ -18794,7 +18794,7 @@ const SATAN_DEAL_LINES = {
   askPlaceholder: "Tell him what you want...",
 
   // asked for something he does not understand ({Q} is what you typed)
-  gibberish: [["satan", "\"{Q}\"? What the hell is that supposed to mean? Speak clearly, I don't have all eternity. Well, I do, but still."]],
+  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for nonsense. Make a reasonable request before eternity catches up with you little puppet."]],
   // things he never gives
   angel: [["satan", "Feathers? You come to ME and ask for feathers? Go pray to your little Archangels, see how far that gets you."]],
   trinity: [["satan", "That one belongs to the big guy upstairs. Even I don't touch his toys."]],
@@ -18881,8 +18881,9 @@ const SATAN_DEAL_BUTTONS = { yes: "Yes", no: "No", ask: "Ask", leave: "Leave" };
 /* ---- numbers ---- */
 const SATAN_DEAL_ROLL_MIN = 0.8;
 const SATAN_DEAL_ROLL_MAX = 1.25;
-const SATAN_DEAL_LOW_HP = 0.25; // the DEAL button pulses under this share of max HEALTH
+const SATAN_DEAL_LOW_HP = 0.25; // under this share of max HEALTH the DEAL button pulses fast
 const SATAN_DEAL_PULSE_MS = 6000; // one slow fade to red and back (keep equal to the pact-calling animation in styles.css)
+const SATAN_DEAL_PULSE_FAST_MS = 1600; // the same under 25% HEALTH (.pact-urgent in styles.css)
 const SATAN_DEAL_BUILD_STACK = 4; // this many SEALS sharing a build with the SEAL asked for...
 const SATAN_DEAL_BUILD_FACTOR = 1.5; // ...make the price this much higher
 const SATAN_DEAL_SEAL_ACCEPT = 0.5;
@@ -18928,9 +18929,14 @@ function satanPactCanOpenNow() {
   return satanPactAvailable() && !introActive() && !roundRevealAnimationActive() && !state.pendingActive && state.player.hp > 0;
 }
 
+// DEAL pulses slowly until you open it once in the run; under 25% HEALTH it pulses fast
 function satanPactPulseActive() {
   const pact = satanPact();
-  return satanPactAvailable() && !pact.opened && !introActive() && state.player.hp > 0 && state.player.hp < playerMaxHp() * SATAN_DEAL_LOW_HP;
+  return satanPactAvailable() && !pact.opened && !introActive() && state.player.hp > 0;
+}
+
+function satanPactPulseUrgent() {
+  return satanPactPulseActive() && state.player.hp < playerMaxHp() * SATAN_DEAL_LOW_HP;
 }
 
 // the round "this round" means: the current one before READY, the next one from the results on
@@ -19783,9 +19789,11 @@ function satanDealButtonHtml() {
     tooltip = "Not right now.";
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
-  const pulse = satanPactPulseActive() ? "pact-calling" : "";
-  // every render rebuilds the button: the delay keeps the slow pulse running from where it was
-  const phase = pulse ? ` style="animation-delay: -${Date.now() % SATAN_DEAL_PULSE_MS}ms"` : "";
+  const urgent = satanPactPulseUrgent();
+  const pulse = satanPactPulseActive() ? `pact-calling${urgent ? " pact-urgent" : ""}` : "";
+  // every render rebuilds the button: the delay keeps the pulse running from where it was
+  const period = urgent ? SATAN_DEAL_PULSE_FAST_MS : SATAN_DEAL_PULSE_MS;
+  const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
   return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
 }
 function bindPvpEvents() {

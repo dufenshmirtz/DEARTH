@@ -12505,8 +12505,8 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
 }
 
 /* ---------- Satan's Pact (09-satan-pact.js) ---------- */
-/* the DEAL button sits under Pause (same frame and hover). Under 25% HEALTH, before the deal is
-   opened, it pulses blood red. The buttons' colours are !important, so the pulse runs through a
+/* the DEAL button sits under Pause (same frame and hover). Until the deal is opened once in the
+   run it pulses slowly to blood red, fast under 25% HEALTH. The buttons' colours are !important, so the pulse runs through a
    registered colour property. */
 @property --pact-call {
   syntax: "<color>";
@@ -12522,6 +12522,11 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
 .deal-button.pact-calling {
   color: var(--pact-call) !important;
   animation: pact-calling 6s ease-in-out infinite;
+}
+
+/* under 25% HEALTH the same pulse, fast */
+.deal-button.pact-calling.pact-urgent {
+  animation-duration: 1.6s;
 }
 
 /* hover still turns it blood red, like every button */
