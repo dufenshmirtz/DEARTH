@@ -47,7 +47,7 @@ function game() {
 }
 
 // puts every conditional reveal SEAL in its "reveal" state: below 50 HEALTH (Vepar), a winning 50% roll (Vine),
-// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Zachriel Triangle)
+// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Seal of Cassiel (p102))
 const REVEAL_CONDITIONS_MET = `
   state.player.hp = 40;
   state.previousRoundRevealedEliminations = 1;
@@ -121,7 +121,7 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   }
 });
 
-test("Red Horse and Cassiel's Sigil no longer add reveals; Pyros and Zachriel Triangle still do", () => {
+test("Red Horse and the Fourth Pentacle of Saturn (p95) no longer add reveals; Pyros and the Seal of Cassiel (p102) still do", () => {
   for (const id of ["p75", "p95"]) {
     game()(`
       fixture([["${id}", 3]], [10, 20, 30, 40, 50]);
@@ -522,6 +522,104 @@ test("Petros and Pavlos can fall in the same round", () => {
   `);
 });
 
+test("slaying a Goetic BOSS discovers its demon in the Ars Goetia, once, and only in arcade runs", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    boss.goeticKey = "paimon";
+    boss.hp = 0;
+    assert.equal(isDemonSlain("paimon"), false);
+    resolveEliminatedBots([boss]);
+    assert.equal(isDemonSlain("paimon"), true);
+    collectionSlayDemon("paimon");
+    assert.equal(loadCollectionProgress().slain.filter(key => key === "paimon").length, 1);
+    // a unique BOSS is not a demon
+    const zilon = state.bots[1];
+    zilon.isBoss = true;
+    zilon.uniqueKey = "zilon";
+    zilon.hp = 0;
+    resolveEliminatedBots([zilon]);
+    assert.deepEqual([...loadCollectionProgress().slain], ["paimon"]);
+    state.mode = "pvp";
+    collectionSlayDemon("bael");
+    assert.equal(isDemonSlain("bael"), false);
+    // the tab lists all 72 in book order; the ones not slain have no name
+    const html = collectionDemonsHtml();
+    assert.equal((html.match(/data-collection-demon=/g) || []).length, 72);
+    assert.equal(html.split(">???<").length - 1, 71);
+    assert.ok(html.indexOf('"bael"') < html.indexOf('"andromalius"'));
+    assert.equal(romanNumeral(72), "LXXII");
+  `);
+});
+
+test("SEAL records: a win goes to every SEAL in a slot, plus highest ELITE, triggers and amounts per run and round", () => {
+  game()(`
+    fixture([["p1", 4], ["p12"], ["p131"], ["p99"]], [10, 20, 30, 40, 50]);
+    assert.equal(collectionCounts(), true);
+    collectionRun().uniqueKills = [...UNIQUE_BOSS_KEYS];
+    collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
+    assert.equal(sealRecord("p1").wins, 1);
+    assert.equal(sealRecord("p131").wins, 1);
+    assert.equal(isSealBeaten("p12"), true);
+    assert.equal(isSealBeaten("p2"), false);
+    assert.equal(isSealDiscovered("p12"), true);
+    // more BOSS kills in the same run do not count the win again
+    collectionNoteElimination({ isBoss: true, uniqueKey: "zilon", name: "Zilon" });
+    assert.equal(sealRecord("p1").wins, 1);
+    // highest ELITE, kept only for SEALS that can be upgraded
+    collectionNoteSealElite();
+    assert.equal(sealRecord("p1").elite, 3);
+    assert.equal(sealRecord("p99").elite, 0);
+    // amounts: lifetime total, most in one run, most in one round
+    state.sealStats = {};
+    state.round = 3;
+    recordSealStat("p1", "damage", 40);
+    recordSealStat("p1", "damage", 25);
+    state.round = 4;
+    recordSealStat("p1", "damage", 30);
+    let record = sealRecord("p1");
+    assert.deepEqual([record.total.damage, record.run.damage, record.round.damage], [95, 95, 65]);
+    // next run: the totals keep adding, the bests stay until beaten
+    state.sealStats = {};
+    resetCollectionRun();
+    state.round = 1;
+    recordSealStat("p1", "damage", 50);
+    assert.deepEqual([record.total.damage, record.run.damage, record.round.damage], [145, 95, 65]);
+    recordSealTrigger("p1");
+    recordSealTrigger("p1");
+    assert.equal(record.triggers, 2);
+    // PvP does not count
+    state.mode = "pvp";
+    recordSealStat("p1", "damage", 999);
+    recordSealTrigger("p1");
+    assert.equal(record.total.damage, 145);
+    assert.equal(record.triggers, 2);
+    state.mode = "arcade";
+    // a personality changed by a SEAL is counted for that SEAL
+    const bot = state.bots[0];
+    assert.equal(setBotPersonality(bot, bot.type === "Stubborn" ? "Analyst" : "Stubborn", ITEMS.p14.name, { triggerAlterationDamage: false }), true);
+    assert.equal(sealRecord("p14").total.personality, 1);
+    // tooltip: the mark next to the status, the records with the ELITE in Roman numerals, the table
+    const html = collectionInfoHtml("p1");
+    assert.ok(html.includes("collection-beaten-mark"));
+    assert.ok(html.includes(">III<"));
+    assert.ok(html.includes("collection-record-table"));
+    assert.ok(!collectionInfoHtml("p99").includes("Highest ELITE"));
+    // what is saved reads back the same
+    assert.deepEqual(normalizeSealRecord(JSON.parse(JSON.stringify(record))), record);
+  `);
+});
+
+test("ELITE levels are written in Roman numerals in SEAL names", () => {
+  game()(`
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 1 }), ITEMS.p16.name);
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 2 }), "ELITE I " + ITEMS.p16.name);
+    assert.equal(passiveDisplayName({ ...ITEMS.p16, stack: 5 }), "ELITE IV " + ITEMS.p16.name);
+    assert.equal(romanNumeral(99), "XCIX");
+  `);
+});
+
 test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
@@ -577,7 +675,7 @@ test("Corruption shows the changed guess: the effective guess and what was typed
   `);
 });
 
-test("Seal of Satan costs 20 SIN and Aggiel Hexagram stacks +20 per PENTAKILL", () => {
+test("Seal of Satan costs 20 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
   game()(`
     assert.equal(ITEMS.p111.price, 20);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
@@ -585,7 +683,7 @@ test("Seal of Satan costs 20 SIN and Aggiel Hexagram stacks +20 per PENTAKILL", 
   `);
 });
 
-test("Aggiel Hexagram: PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
+test("Seal of Raphael (p101): PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
   const run = game();
   run(`
     fixture([["p101"]], [10, 20, 30, 40, 50]);
@@ -893,6 +991,64 @@ test("Threon keeps MEMORY beyond the limit visible, then removes it at round end
     addBotMemory(boss, 6, "Test");
     assert.equal(boss.memory.length, botMemoryLimit(boss));
     assert.ok(boss.memoryOverflow > 0);
+  `);
+});
+
+test("MEMORY limit is the rounds finished for DAMNED and BOSSES alike, with no cap of 20", () => {
+  game()(`
+    fixture([], [50, 50]);
+    state.round = 3;
+    const bot = state.bots[0];
+    const boss = state.bots[1];
+    boss.isBoss = true;
+    assert.equal(botMemoryLimit(bot), 2);
+    assert.equal(botMemoryLimit(boss), 2);
+    boss.memory = [];
+    addBotMemory(boss, 1, "Test");
+    addBotMemory(boss, 1, "Test");
+    assert.equal(addBotMemory(boss, 1, "Test"), 0);
+    assert.equal(boss.memory.length, 2);
+    assert.equal(boss.memoryOverflow || 0, 0);
+    state.roundState.memoryRecorded = true;
+    assert.equal(botMemoryLimit(boss), 3);
+    state.round = 31;
+    state.roundState.memoryRecorded = false;
+    bot.memory = [];
+    addBotMemory(bot, 30, "Test");
+    assert.equal(bot.memory.length, 30);
+  `);
+});
+
+test("Threon: a BOSS gaining MEMORY before round 3 ends keeps 2 and shows +1 excess", () => {
+  game()(`
+    fixture([["p127"]], [50, 50]);
+    state.round = 3;
+    const boss = state.bots[1];
+    boss.isBoss = true;
+    boss.memory = [{}, {}];
+    addBotMemory(boss, 1, "Test");
+    assert.equal(boss.memory.length, 2);
+    assert.equal(boss.memoryOverflow, 1);
+  `);
+});
+
+test("Threon: excess from Bathin when the round is recorded carries over and is damaged next round", () => {
+  game()(`
+    fixture([["p127"], ["p15"]], [50, 50]);
+    state.round = 3;
+    const bot = state.bots[0];
+    bot.memory = [{}, {}];
+    rememberRound();
+    assert.equal(bot.memory.length, 3);
+    assert.equal(bot.memoryOverflow, 1);
+    globalThis.__hpAfterRecord = bot.hp;
+    state.round += 1;
+    beginRound();
+    assert.equal(bot.memoryOverflow, 1);
+    const hp = bot.hp;
+    applyMemoryOverflowDamage();
+    assert.equal(bot.memoryOverflow, 0);
+    assert.equal(hp - bot.hp, 4);
   `);
 });
 
@@ -1261,7 +1417,51 @@ test("Son's free rerolls from READY last until the end of the next round", () =>
   `);
 });
 
-// ---- conditional extra reveals: Vepar p61, Vine p64, Naberius p65, Zachriel Triangle p102 ----
+test("Goetic BOSS HEALTH growth speeds up with depth and leaves the main game alone", () => {
+  game()(`
+    state.mode = "arcade";
+    for (const spawned of [0, 4, 8]) {
+      state.bossSpawnCount = spawned;
+      assert.equal(bossHealthScaleFactor(), 1);
+    }
+    state.bossSpawnCount = 9;
+    assert.ok(Math.abs(bossHealthScaleFactor() - 1.09) < 1e-9);
+    let previousGrowth = 0;
+    for (let spawned = 9; spawned <= 40; spawned += 1) {
+      state.bossSpawnCount = spawned;
+      const before = bossHealthScaleFactor();
+      state.bossSpawnCount = spawned + 1;
+      const growth = bossHealthScaleFactor() / before;
+      assert.ok(growth > previousGrowth);
+      previousGrowth = growth;
+    }
+    state.bossSpawnCount = 8;
+    const first = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    assert.equal(first.maxHp, 500);
+    state.bossSpawnCount = 27;
+    const deep = createBot({ boss: true, bossSpec: { goeticKey: "agares" } });
+    assert.ok(deep.maxHp > 50000);
+  `);
+});
+
+test("BOSS abilities carry sin names in tooltips and the log", () => {
+  game()(`
+    const names = Object.fromEntries(Object.entries(BOSS_PASSIVES).map(([key, spec]) => [key, spec.name]));
+    assert.equal(JSON.stringify(names), JSON.stringify({
+      sinStealing: "Greed", soullessness: "Envy", soulStealing: "Despair", deathRoll: "Wrath", rerollToll: "Vainglory",
+      offeringToll: "Gluttony", avenging: "Pride", corruption: "Deceit", punishment: "Sloth", lifeSteal: "Lust", guilt: "Guilt"
+    }));
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bots[0].isBoss = true;
+    state.bots[0].passiveKeys = ["punishment"];
+    assert.ok(botPassiveSummary(state.bots[0]).includes("Sloth"));
+    Math.random = () => 0;
+    state.bots[0].passiveKeys = ["corruption"];
+    applyCorruptionGuessMutation(27);
+    assert.ok(state.roundState.roundEvents.some((line) => line.includes("Deceit shifted your guess")));
+  `);
+});
+// ---- conditional extra reveals: Vepar p61, Vine p64, Naberius p65, Seal of Cassiel (p102) p102 ----
 test("Amon always reveals one extra DAMNED", () => {
   game()(`
     fixture([["p59"]], [10, 20, 30, 40, 50]);
@@ -1316,7 +1516,7 @@ test("Naberius reveals one extra DAMNED only if a revealed DAMNED died last roun
   `);
 });
 
-test("Zachriel Triangle reveals one extra DAMNED only if a DAMNED died last round", () => {
+test("Seal of Cassiel (p102) reveals one extra DAMNED only if a DAMNED died last round", () => {
   game()(`
     fixture([["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 1);
@@ -1364,4 +1564,513 @@ test("Vual: revealed DAMNED take 7 extra damage per hit (ELITE x1.5, rounded up)
   assert.ok(catalog.includes(run("ITEMS.p63.description")));
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).includes("7 extra damage"));
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).includes("11 extra damage"));
+});
+
+test("Red Horse: each revealed DAMNED has a 50% chance per round to take x1.5 damage, and the roll holds all round", () => {
+  game()(`
+    fixture([["p75"]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const hidden = state.bots.find(bot => !bot.revealedByPassive);
+    assert.ok(revealed && hidden);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 15);
+    assert.equal(scaledBotDamage(hidden, 10), 10);
+    Math.random = () => 0.99;
+    assert.equal(scaledBotDamage(revealed, 10), 15);
+  `);
+  game()(`
+    fixture([["p75", 2]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    assert.equal(scaledBotDamage(revealed, 10), 10);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 10);
+  `);
+  game()(`
+    fixture([["p75", 2]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    Math.random = () => 0.1;
+    assert.equal(scaledBotDamage(revealed, 10), 17);
+  `);
+});
+
+test("Second Pentacle of Saturn multiplies every DAMNED BOUNTY by x1.5 (rounded up) on a 30% roll", () => {
+  game()(`
+    fixture([["p93"]], [10, 20, 30, 40, 50]);
+    const rewards = [10, 3, 1, 0, 7];
+    state.bots.forEach((bot, index) => { bot.reward = rewards[index]; });
+    Math.random = () => 0.99;
+    applyDevSealEntries(["p93"]);
+    assert.deepEqual(state.bots.map(bot => bot.reward), [10, 3, 1, 0, 7]);
+    Math.random = () => 0.1;
+    applyDevSealEntries(["p93"]);
+    assert.deepEqual(state.bots.map(bot => bot.reward), [15, 5, 2, 0, 11]);
+  `);
+});
+
+// ---- Ars Goetia binding: the bound demon's SEAL is free, YOU comes in its place ----
+const BINDING_STUBS = `
+  globalThis.render = () => {};
+  globalThis.playGameSfx = () => {};
+  globalThis.playSfx = () => {};
+  globalThis.playSealPurchaseSfx = () => {};
+  globalThis.quietMomentSfx = () => {};
+  globalThis.ghostSealOut = () => {};
+  globalThis.resumeSoundtrack = () => {};
+  globalThis.playSoundtrack = () => {};
+`;
+
+test("only a defeated demon can be bound, and a run keeps the demon bound when it started", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    loadCollectionProgress().slain.push("paimon", "bael");
+    toggleBoundDemon("vassago");
+    assert.equal(collectionBoundDemon(), null);
+    toggleBoundDemon("paimon");
+    assert.equal(collectionBoundDemon(), "paimon");
+    startGame();
+    assert.equal(state.boundDemon, "paimon");
+    toggleBoundDemon("bael");
+    assert.equal(collectionBoundDemon(), "bael");
+    assert.equal(state.boundDemon, "paimon");
+    toggleBoundDemon("bael");
+    assert.equal(collectionBoundDemon(), null);
+    startGame();
+    assert.equal(state.boundDemon, null);
+  `);
+});
+
+test("the bound demon's SEAL is free in the shop, ELITE included, and a free copy sells for nothing", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30, 40, 50]);
+    state.stage = "shop";
+    state.boundDemon = "paimon";
+    const id = GOETIC_BOSS_BY_KEY.paimon.passiveId;
+    const other = GOETIC_BOSS_BY_KEY.bael.passiveId;
+    assert.equal(shopPrice(ITEMS[id]), 0);
+    assert.ok(shopPrice(ITEMS[other]) > 0);
+    state.player.credits = 0;
+    state.shop = [{ item: itemCopy(id), sold: false }, { item: itemCopy(id), sold: false }];
+    buyShopItem(0);
+    const entry = passiveEntry(id);
+    assert.ok(entry);
+    assert.equal(state.player.credits, 0);
+    assert.equal(passiveSellValue(entry), 0);
+    buyShopItem(1);
+    assert.equal(entry.stack, 2);
+    assert.equal(passiveSellValue(entry), 0);
+    // a paid copy still sells for half its price
+    state.boundDemon = null;
+    entry.stack = 3;
+    assert.equal(passiveSellValue(entry), Math.floor(ITEMS[id].price / 2));
+    state.mode = "pvp";
+    state.boundDemon = "paimon";
+    assert.ok(shopPrice(ITEMS[id]) > 0);
+  `);
+});
+
+test("YOU replaces the bound demon, counts toward the 72 and doubles your TARGET damage", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [50, 50, 50, 50, 50]);
+    state.boundDemon = "paimon";
+    const shadow = createBot({ boss: true, bossSpec: { goeticKey: "paimon" } });
+    assert.equal(shadow.name, SHADOW_BOSS.name);
+    assert.equal(shadow.image, SHADOW_BOSS.image);
+    assert.equal(shadow.goeticKey, null);
+    assert.equal(shadow.shadowOf, "paimon");
+    assert.deepEqual([...shadow.passiveKeys], ["guilt"]);
+    assert.ok(!grantRandomBossPassive(shadow));
+    const demon = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    assert.equal(demon.goeticKey, "bael");
+    assert.ok(!demon.passiveKeys.includes("guilt"));
+    // Guilt never rolls on another BOSS
+    assert.ok(!BOSS_PASSIVE_KEYS.includes("guilt"));
+
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 70;
+    applyPenalties();
+    const plain = state.roundState.playerTargetDifferenceDamage;
+    assert.ok(plain > 0);
+
+    fixture([], [50, 50, 50, 50, 50]);
+    state.bots[0] = shadow;
+    shadow.hp = shadow.maxHp = 1000;
+    state.roundState.botEffectiveGuesses.set(shadow.id, 50);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 70;
+    applyPenalties();
+    assert.equal(state.roundState.playerTargetDifferenceDamage, plain * 2);
+
+    const kills = state.goeticBossKills;
+    shadow.hp = 0;
+    resolveEliminatedBots([shadow]);
+    assert.equal(state.goeticBossKills, kills + 1);
+    assert.equal(isDemonSlain("paimon"), false);
+  `);
+});
+
+test("YOU guesses the best BOSS guess, off by one of your misses from your last rounds", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30, 40, 50]);
+    state.boundDemon = "paimon";
+    const shadow = createBot({ boss: true, bossSpec: { goeticKey: "paimon" } });
+    state.bots[0] = shadow;
+    const best = planBossGuess(shadow);
+    state.gameMemory = [];
+    assert.equal(planBotGuess(shadow), best);
+    state.gameMemory = [{ playerGuess: 30, target: 50 }, { playerGuess: 57, target: 50 }];
+    Math.random = () => 0;
+    assert.equal(planBotGuess(shadow), Math.max(0, best - 20));
+    Math.random = () => 0.99;
+    assert.equal(planBotGuess(shadow), Math.min(100, best + 7));
+    // only the last rounds count
+    state.gameMemory = [{ playerGuess: 0, target: 90 }, ...Array.from({ length: SHADOW_BOSS.memoryRounds }, () => ({ playerGuess: 50, target: 50 }))];
+    Math.random = () => 0;
+    assert.equal(planBotGuess(shadow), best);
+  `);
+});
+
+test("a saved run keeps its bound demon, and saves from before binding have none", () => {
+  game()(`
+    ${BINDING_STUBS}
+    fixture([], [10, 20, 30]);
+    state.boundDemon = "paimon";
+    const saved = JSON.parse(JSON.stringify(arcadeRunSaveSnapshot(), encodeArcadeSaveValue), decodeArcadeSaveValue);
+    state.boundDemon = null;
+    Object.assign(state, saved);
+    normalizeLoadedArcadeRun();
+    assert.equal(state.boundDemon, "paimon");
+    state.boundDemon = "nobody";
+    normalizeLoadedArcadeRun();
+    assert.equal(state.boundDemon, null);
+  `);
+});
+
+test("DEV unlock all: every demon counts as defeated and can be bound, off again restores the real progress", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    loadCollectionProgress().slain.push("bael");
+    toggleDevAllDemons();
+    assert.equal(GOETIC_BOSS_KEYS.filter(key => isDemonSlain(key)).length, 72);
+    toggleBoundDemon("andromalius");
+    assert.equal(collectionBoundDemon(), "andromalius");
+    toggleDevAllDemons();
+    assert.deepEqual(GOETIC_BOSS_KEYS.filter(key => isDemonSlain(key)), ["bael"]);
+    assert.equal(collectionBoundDemon(), null);
+    // the skip to the Goetic BOSSES brings the bound demon's place (YOU) first
+    fixture([], [10, 20, 30]);
+    state.boundDemon = "paimon";
+    skipToFirstGoeticBoss();
+    assert.equal(state.bots[0].shadowOf, "paimon");
+    assert.equal(state.bots[0].name, "YOU");
+    assert.equal(state.goeticBossQueue.length, 71);
+    assert.ok(!state.goeticBossQueue.includes("paimon"));
+  `);
+});
+
+test("Jesus and Satan: infinite BOSS BOUNTY shown, regular BOUNTY starts at 0 and SEALS can add to it", () => {
+  game()(`
+    fixture([["p32"]], []);
+    state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
+    state.finalBossPhase = true;
+    assert.equal(botSinDisplay(state.bots[0]), "-∞+0 SIN");
+    assert.equal(botSinDisplay(state.bots[1]), "∞+0 SIN");
+    // Seal of Foras on a death gives every living DAMNED 1-2 BOUNTY, the final BOSSES too
+    applyBountyGrowthOnDeath(state.bots[0]);
+    state.bots.forEach(bot => assert.ok(botRegularBounty(bot) >= 1));
+    assert.equal(botSinDisplay(state.bots[1]), "∞+" + botRegularBounty(state.bots[1]) + " SIN");
+    // nothing touches the BOSS BOUNTY: a SIN-stealing BOSS keeps nothing on them
+    state.player.credits = 20;
+    assert.equal(stealPlayerSinToBoss(state.bots[1], 10, "test"), 0);
+    assert.equal(botBossBounty(state.bots[1]), 0);
+    assert.equal(state.player.credits, 20);
+  `);
+});
+
+test("Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)", () => {
+  const cases = [[7, 1, "Jesus"], [33, 10, "Jesus"], [8, 1, "Satan"], [66, 6, "Satan"], [0, 1, "Satan"]];
+  for (const [target, damage, who] of cases) {
+    game()(`
+      fixture([], []);
+      state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
+      state.finalBossPhase = true;
+      state.player.hp = 100;
+      state.roundState.target = ${target};
+      applyFinalBossTargetStrikes();
+      assert.equal(state.player.hp, ${100 - damage});
+      assert.ok(state.roundState.roundEvents.some(line => line.startsWith("${who} dealt ${damage} damage")));
+    `);
+  }
+  // no final BOSSES, no strikes
+  game()(`
+    fixture([], [10, 20]);
+    state.player.hp = 100;
+    state.roundState.target = 33;
+    applyFinalBossTargetStrikes();
+    assert.equal(state.player.hp, 100);
+  `);
+});
+
+test("Satan's offer: due on reaching 1500 SIN, again only after dropping under, YES leaves the starting SIN", () => {
+  game()(`
+    fixture([], []);
+    state.player.credits = 1499;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+    state.player.credits = 1500;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, true);
+    assert.equal(satanTightwadLines(), SATAN_TIGHTWAD_LINES);
+    // refused: no new offer while the SIN stays over the line
+    state.satanTightwadDue = false;
+    state.satanTightwadOffers = 1;
+    state.player.credits = 2400;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+    // under the line and back over it: he comes again, with one line
+    state.player.credits = 900;
+    noteSatanTightwad();
+    state.player.credits = 1600;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, true);
+    assert.equal(satanTightwadLines(), SATAN_TIGHTWAD_AGAIN_LINES);
+    // YES
+    assert.equal(satanTightwadPay(), 1600 - STARTING_CREDITS);
+    assert.equal(state.player.credits, STARTING_CREDITS);
+    assert.equal(state.satanTightwadAbove, false);
+    // not outside the arcade run
+    state.mode = "pvp";
+    state.satanTightwadDue = false;
+    state.player.credits = 5000;
+    noteSatanTightwad();
+    assert.equal(state.satanTightwadDue, false);
+  `);
+});
+
+test("Satan's toll: after refusing him, the next reroll takes all your SIN, then rerolls cost as before", () => {
+  game()(`
+    fixture([], []);
+    state.stage = "guess";
+    state.rerollBaseCost = 3;
+    state.freeRerolls = 2;
+    state.player.credits = 1600;
+    state.satanRerollToll = true;
+    assert.equal(currentRerollCost(), 1600);
+    state.player.credits = 1234;
+    assert.equal(currentRerollCost(), 1234);
+    render = () => {};
+    playGameSfx = () => {};
+    rerollShopClick();
+    assert.equal(state.player.credits, 0);
+    assert.equal(state.satanRerollToll, false);
+    assert.equal(state.freeRerolls, 2);
+    assert.equal(state.rerollBaseCost, 3);
+    assert.equal(currentRerollCost(), 0); // the free rerolls are back in charge
+    state.freeRerolls = 0;
+    assert.equal(currentRerollCost(), 3);
+  `);
+});
+
+test("collection search: SEALS by name, text and build; demons by number, and by name only once defeated", () => {
+  game()(`
+    state.mode = "arcade";
+    const paimonSeal = GOETIC_BOSS_BY_KEY.paimon.passiveId;
+    assert.ok(sealMatchesSearch(paimonSeal, ""));
+    assert.ok(sealMatchesSearch(paimonSeal, ITEMS[paimonSeal].name.toUpperCase()));
+    assert.ok(!sealMatchesSearch(paimonSeal, "zzzz"));
+    const bountyIds = collectibleSealIds().filter(id => sealBuilds(id).includes("bounty"));
+    assert.ok(bountyIds.every(id => sealMatchesSearch(id, "bounty")));
+    // every word has to match
+    assert.ok(!sealMatchesSearch(paimonSeal, ITEMS[paimonSeal].name + " zzzz"));
+
+    assert.ok(demonMatchesSearch("paimon", "9"));
+    assert.ok(demonMatchesSearch("paimon", "ix"));
+    assert.ok(!demonMatchesSearch("paimon", "19"));
+    assert.ok(!demonMatchesSearch("paimon", "paimon"));
+    loadCollectionProgress().slain.push("paimon", "marax");
+    assert.ok(demonMatchesSearch("paimon", "Paim"));
+    assert.ok(demonMatchesSearch("marax", "morax"));
+    assert.ok(!demonMatchesSearch("bael", "paimon"));
+    toggleBoundDemon("paimon");
+    assert.ok(demonMatchesSearch("paimon", "bound"));
+    assert.ok(!demonMatchesSearch("marax", "bound"));
+    collectionSearch.goetia = "paimon";
+    const html = collectionDemonsHtml();
+    assert.equal((html.match(/class="collection-demon [^"]*" type="button" hidden/g) || []).length, 71);
+  `);
+});
+
+// ---- Archangels: SEALS swapped with the Pentacles of Saturn, Archangel BOSSES, the Archangels tab ----
+test("Archangel and Saturn SEALS swapped effects within the same build; each Archangel BOSS matches its SEAL", () => {
+  game()(`
+    assert.equal(ITEMS.p98.name, "Seal of Gabriel");
+    assert.equal(ITEMS.p92.name, "Third Pentacle of Saturn");
+    assert.equal(ITEMS.p101.name, "Seal of Raphael");
+    assert.equal(ITEMS.p110.name, "Fifth Pentacle of Saturn");
+    const archangelSeals = COLLECTION_SECTIONS.find(section => section.key === "archangel").ids;
+    const saturnSeals = COLLECTION_SECTIONS.find(section => section.key === "saturn").ids;
+    assert.ok(archangelSeals.every(id => SELF_STACKING_SEAL_IDS.has(id) && /^Seal of /.test(ITEMS[id].name)));
+    assert.ok(saturnSeals.every(id => !SELF_STACKING_SEAL_IDS.has(id) && /Pentacle of Saturn$/.test(ITEMS[id].name)));
+    ARCHANGEL_BOSS_SPECS.forEach(spec => {
+      assert.equal(ITEMS[spec.sealId].name, "Seal of " + spec.name);
+      assert.deepEqual([...SEAL_BUILD_TAGS[spec.sealId]], [spec.build]);
+    });
+  `);
+});
+
+test("Archangels: half a demon's chance each, once per run, not after the 72, and they do not count toward the 72", () => {
+  game()(`
+    globalThis.render = () => {};
+    fixture([], [10, 20, 30]);
+    state.bossKills = UNIQUE_BOSS_KEYS.length;
+    state.uniqueBossQueue = [];
+    state.goeticBossQueue = GOETIC_BOSS_KEYS.slice();
+    state.archangelQueue = ARCHANGEL_KEYS.slice();
+    Math.random = () => 3.5 / 75.5 - 0.0001;
+    const first = takeNextBossSpec();
+    assert.ok(ARCHANGEL_BY_KEY[first.archangelKey]);
+    assert.equal(state.archangelQueue.length, 6);
+    assert.equal(state.goeticBossQueue.length, 72);
+    Math.random = () => 3 / 75 + 0.0001;
+    assert.ok(takeNextBossSpec().goeticKey);
+    state.goeticBossQueue = [];
+    Math.random = () => 0;
+    assert.equal(takeNextBossSpec(), null);
+    // an Archangel's death does not count toward the 72
+    const angel = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    state.bots.push(angel);
+    const kills = state.goeticBossKills;
+    angel.hp = 0;
+    resolveEliminatedBots([angel]);
+    assert.equal(state.goeticBossKills, kills);
+    assert.ok(isArchangelDefeated("gabriel"));
+  `);
+});
+
+test("an Archangel BOSS: its own art and ability only, and the TARGET modifier cycles 0.8, 1, 1.2, 1", () => {
+  game()(`
+    fixture([], [10, 20, 30]);
+    const angel = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(angel.name, "Michael");
+    assert.equal(angel.image, ARCHANGEL_BOSS_IMAGE_ROOT + "/04-michael.png");
+    assert.equal(angel.goeticKey, null);
+    assert.deepEqual([...angel.passiveKeys], []);
+    // 1.5x the HEALTH of a Goetic BOSS arriving at the same point; YOU in its place has the plain amount
+    state.bossSpawnCount = 20;
+    const plain = (80 + bossHealthBonus()) * bossHealthScaleFactor();
+    const demon = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    state.bossSpawnCount = 20;
+    const strong = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    assert.equal(demon.maxHp, Math.ceil(plain));
+    assert.equal(strong.maxHp, Math.ceil(plain * 1.5));
+    state.boundDemon = "michael";
+    state.bossSpawnCount = 20;
+    const you = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(you.name, "YOU");
+    assert.equal(you.maxHp, Math.ceil(plain));
+    state.boundDemon = null;
+    // the Collection text is the ability only
+    loadCollectionProgress().archangels.push("michael");
+    assert.ok(!collectionArchangelInfoHtml("michael").includes("modifier"));
+    assert.equal(grantRandomBossPassive(angel), null);
+    assert.ok(bossAbilityText(angel).includes("MEMORY"));
+    state.bots = [angel];
+    const start = state.round;
+    const seen = [];
+    for (let step = 0; step < 6; step += 1) {
+      state.round = start + step;
+      seen.push(currentTargetModifier());
+    }
+    assert.deepEqual(seen, [0.8, 1, 1.2, 1, 0.8, 1]);
+  `);
+});
+
+test("Archangel abilities: gain, then deal the current damage to you", () => {
+  game()(`
+    globalThis.render = () => {};
+    const hurt = (fn) => { const before = state.player.hp; fn(); return before - state.player.hp; };
+    fixture([], [10, 20, 30, 40, 50]);
+    const add = (key) => { const angel = createBot({ boss: true, bossSpec: { archangelKey: key } }); angel.hp = angel.maxHp = 1000; state.bots.push(angel); return angel; };
+    state.player.hp = state.player.maxHp = 1000;
+    // Anael: every ARTIFACT
+    const anael = add("anael");
+    assert.equal(hurt(() => applyArchangelArtifactUse()), 2);
+    assert.equal(hurt(() => applyArchangelArtifactUse()), 4);
+    assert.equal(anael.archangelDamage, 4);
+    // Cassiel: a revealed DAMNED takes more than 10 at once
+    const cassiel = add("cassiel");
+    const revealed = state.bots[0];
+    revealed.revealedByPassive = true;
+    revealed.hp = revealed.maxHp = 1000;
+    assert.equal(hurt(() => damageBot(revealed, 10, "")), 0);
+    assert.equal(hurt(() => damageBot(revealed, 11, "")), 2);
+    assert.equal(cassiel.archangelDamage, 2);
+    // the end-of-round four
+    const michael = add("michael"), samael = add("samael"), sachiel = add("sachiel"), raphael = add("raphael");
+    const damned = state.bots.filter(bot => !bot.isBoss);
+    damned.forEach(bot => { bot.memory = [1, 2, 3, 4]; bot.reward = 1; });
+    setBotPersonality(damned[0], "Analyst", "", { triggerAlterationDamage: false });
+    setBotPersonality(damned[1], "Analyst", "", { triggerAlterationDamage: false });
+    state.roundState.eliminationsThisRound = 2;
+    assert.equal(hurt(() => applyArchangelEndOfRound()), 2 + 2 + 2 + 3);
+    assert.deepEqual([michael, samael, sachiel, raphael].map(bot => bot.archangelDamage), [2, 2, 2, 3]);
+    // conditions not met: no gain, no damage; a PENTAKILL spares you from Raphael
+    damned.forEach(bot => { bot.memory = []; bot.reward = 0; });
+    damned.forEach((bot, index) => setBotPersonality(bot, ["Anchor", "Analyst", "Follower", "Stubborn", "Drifter"][index], "", { triggerAlterationDamage: false }));
+    state.roundState.eliminationsThisRound = 5;
+    const otherBounty = state.bots.filter(bot => bot.isBoss).reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+    state.bots.filter(bot => bot.isBoss).forEach(bot => { bot.reward = 0; });
+    assert.equal(hurt(() => applyArchangelEndOfRound()), 0);
+  `);
+});
+
+test("Gabriel gains +3 for every CRITICAL, yours or a DAMNED's", () => {
+  game()(`
+    globalThis.render = () => {};
+    fixture([], [10, 20, 30, 40, 50]);
+    const gabriel = createBot({ boss: true, bossSpec: { archangelKey: "gabriel" } });
+    gabriel.hp = gabriel.maxHp = 1000;
+    state.bots.push(gabriel);
+    state.roundState.botEffectiveGuesses.set(gabriel.id, 0);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 60;
+    applyPenalties();
+    const crits = findCriticalHits().length;
+    assert.ok(crits >= 1);
+    assert.equal(gabriel.archangelDamage, 3 * crits);
+  `);
+});
+
+test("a bound Archangel: the run starts with its SEAL (sells for nothing) and YOU comes in its place", () => {
+  game()(`
+    ${BINDING_STUBS}
+    state.mode = "arcade";
+    toggleBoundDemon("michael");
+    assert.equal(collectionBoundDemon(), null);
+    loadCollectionProgress().archangels.push("michael");
+    toggleBoundDemon("michael");
+    assert.equal(collectionBoundDemon(), "michael");
+    startGame();
+    assert.equal(state.boundDemon, "michael");
+    const seal = passiveEntry("p99");
+    assert.ok(seal);
+    assert.equal(passiveSellValue(seal), 0);
+    assert.ok(shopPrice(ITEMS.p99) > 0);
+    const you = createBot({ boss: true, bossSpec: { archangelKey: "michael" } });
+    assert.equal(you.name, "YOU");
+    assert.equal(you.archangelKey, null);
+    state.bots.push(you);
+    const kills = state.goeticBossKills;
+    you.hp = 0;
+    resolveEliminatedBots([you]);
+    assert.equal(state.goeticBossKills, kills);
+    // the search finds a defeated Archangel by name, an unknown one only by its planet
+    assert.ok(archangelMatchesSearch("michael", "mich"));
+    assert.ok(!archangelMatchesSearch("gabriel", "gabriel"));
+    assert.ok(archangelMatchesSearch("gabriel", "moon"));
+  `);
 });

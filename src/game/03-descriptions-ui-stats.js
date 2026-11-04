@@ -67,7 +67,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -214,7 +214,7 @@ function itemDescription(item) {
     return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
   }
   if (item.id === "p74") return `DAMNED with 10 or more BOUNTY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
-  if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  if (item.id === "p75") return `Each round, every revealed DAMNED has a 50% chance to take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   if (item.id === "p76") {
     return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead.`;
   }
@@ -273,7 +273,7 @@ function itemDescription(item) {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
   }
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
-  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
+  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to multiply every DAMNED BOUNTY by x1.5.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
   if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
   if (item.id === "p96") {
@@ -308,8 +308,15 @@ function rerollCost() {
   return state.rerollBaseCost;
 }
 
+// Satan's toll: once his offer is refused (09-intro-story.js), the next reroll costs every SIN you hold.
+// It comes before free rerolls (they are kept for later) and goes away once paid.
+function satanRerollTollActive() {
+  return Boolean(state.satanRerollToll && state.mode === "arcade");
+}
+
 // Seal of the Son can leave free rerolls: while any are left, a reroll costs nothing
 function currentRerollCost() {
+  if (satanRerollTollActive()) return Math.max(0, Math.ceil(state.player.credits || 0));
   return freeRerollsLeft() > 0 ? 0 : rerollCost();
 }
 
@@ -357,6 +364,7 @@ function bossPassiveEffectDescription(key) {
   if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
   if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
   if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  if (key === SHADOW_BOSS_PASSIVE_KEY) return "While this BOSS lives, you take double TARGET damage. It guesses the way you did in your last rounds.";
   return "";
 }
 
@@ -413,6 +421,30 @@ function applyDeathRollDamage() {
       BOSS_PASSIVES.deathRoll.name
     );
   });
+}
+
+function finalBossStrikeDamage(key, target) {
+  const rule = FINAL_BOSS_TARGET_STRIKES[key];
+  const value = Math.ceil(target);
+  if (!rule || !Number.isFinite(value)) return 0;
+  if (value === rule.number) return rule.numberDamage;
+  return (Math.abs(value) % 2 === 1) === rule.odd ? rule.damage : 0;
+}
+
+// Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)
+function applyFinalBossTargetStrikes() {
+  const round = state.roundState;
+  if (!round) return;
+  activeBots()
+    .filter((bot) => FINAL_BOSS_TARGET_STRIKES[bot.finalKey])
+    .forEach((bot) => {
+      const damage = finalBossStrikeDamage(bot.finalKey, round.target);
+      if (damage <= 0) return;
+      const rule = FINAL_BOSS_TARGET_STRIKES[bot.finalKey];
+      const target = formatNumber(round.target);
+      const why = Math.ceil(round.target) === rule.number ? `the TARGET is ${target}` : `TARGET ${target} is ${rule.odd ? "odd" : "even"}`;
+      damagePlayer(damage, `${bot.name} dealt ${damage} damage because ${why}.`, true, true, bot.name);
+    });
 }
 
 function applyRerollTollDamage() {
@@ -531,7 +563,31 @@ function currentTargetModifier() {
         bot.modifierOverride !== undefined
     )
     .sort((left, right) => right.bossOrder - left.bossOrder);
-  return modifierBosses.length ? modifierBosses[0].modifierOverride : BASE_TARGET_MODIFIER;
+  return modifierBosses.length ? bossTargetModifierValue(modifierBosses[0]) : BASE_TARGET_MODIFIER;
+}
+
+// an Archangel's modifier cycles 0.8, 1, 1.2, 1 from the round it arrived
+function bossTargetModifierValue(bot) {
+  if (!bot?.archangelKey) return bot?.modifierOverride;
+  const start = Number.isFinite(bot.modifierCycleStartRound) ? bot.modifierCycleStartRound : state.round;
+  return ARCHANGEL_TARGET_MODIFIERS[Math.max(0, (state.round || 0) - start) % ARCHANGEL_TARGET_MODIFIERS.length];
+}
+
+// what each Archangel BOSS grows its damage on (see applyArchangel* in 06-round-resolution.js)
+const ARCHANGEL_ABILITY_TEXT = {
+  michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
+  gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
+  samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
+  anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
+  cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
+};
+
+function archangelAbilityDescription(bot) {
+  const text = ARCHANGEL_ABILITY_TEXT[bot?.archangelKey];
+  if (!text) return "";
+  return `${text} Its damage starts at 0 (now ${Math.max(0, Math.ceil(bot.archangelDamage || 0))}). While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`;
 }
 
 function playerGuessLimit() {
@@ -543,7 +599,14 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
+// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+function isBoundDemonSeal(id) {
+  const key = state.mode === "arcade" ? state.boundDemon : null;
+  return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
+}
+
 function shopPrice(item) {
+  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
@@ -556,6 +619,7 @@ function botPassiveSummary(bot) {
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.archangelKey) names.push(`Archangel ${ARCHANGEL_BY_KEY[bot.archangelKey]?.name || ""}`.trim());
   bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
   return names.join(" + ") || "No Seal";
@@ -565,6 +629,7 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  if (bot.isBoss && bot.archangelKey) descriptions.push(archangelAbilityDescription(bot));
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
@@ -1224,6 +1289,7 @@ function sealStatsFor(id) {
     memory: 0,
     bounty: 0,
     bountyRemoved: 0,
+    personality: 0,
     triggers: 0
   };
   state.sealStats[id] = stats;
@@ -1239,6 +1305,7 @@ function recordSealStat(id, kind, amount) {
   if (!stats) return;
   stats[kind] = (stats[kind] || 0) + value;
   if (kind === "damage") recordRunSealDamage(id, value);
+  collectionNoteSealStat(id, kind, value, stats[kind]);
 }
 
 function recordSealTrigger(id) {
@@ -1247,6 +1314,7 @@ function recordSealTrigger(id) {
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats.triggers = (stats.triggers || 0) + 1;
+  collectionNoteSealTrigger(id);
 }
 
 function recordSealStatFromSource(kind, amount, source) {
@@ -1264,6 +1332,7 @@ function sealContributionParts(stats, { includeTriggers = false } = {}) {
   if (stats.memory > 0) parts.push(`${stats.memory} MEMORY added`);
   if (stats.bounty > 0) parts.push(`${stats.bounty} BOUNTY added`);
   if (stats.bountyRemoved > 0) parts.push(`${stats.bountyRemoved} BOUNTY removed`);
+  if (stats.personality > 0) parts.push(`${stats.personality} personalit${stats.personality === 1 ? "y" : "ies"} changed`);
   if (includeTriggers && stats.triggers > 0) parts.push(`${stats.triggers} trigger${stats.triggers === 1 ? "" : "s"}`);
   return parts;
 }

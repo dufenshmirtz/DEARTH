@@ -2,7 +2,7 @@ DEARTH ITEM CATALOG
 
 Generated from main.js. main.js is the gameplay source of truth; update this file whenever a SEAL or ARTIFACT changes.
 
-Player Seals
+Goetic Seals
 
 Seal of Agares (14 SIN)
 At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take 5 damage per BOUNTY gained from this SEAL. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -232,7 +232,7 @@ Seal of the Pale Horse (20 SIN)
 If you score CRITICAL this round, DAMNED take x1.5 damage from all sources next round. ELITE adds +0.2 to the multiplier.
 
 Seal of the Red Horse (20 SIN)
-Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
+Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of Silence in Heaven (20 SIN)
 DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier.
@@ -269,30 +269,32 @@ Excess MEMORY that would be added to a DAMNED becomes 4 damage per excess MEMORY
 Seal of Zilon (16 SIN)
 40% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY. ELITE adds +5% to the converted share.
 
-Archangel Seals
+Archangel Seals (self-stacking)
 
-Seal of Aggiel's Hexagram (16 SIN)
-At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%.
+They took the self-stacking effects from the Pentacles of Saturn in Nov 2026.
 
-Seal of Cassiel's Hexagram (16 SIN)
-When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
+Seal of Anael (15 SIN)
+Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded.
 
-Seal of Cassiel's Pentagram (16 SIN)
-At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
+Seal of Cassiel (15 SIN)
+If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
 
-Seal of Cassiel's Sigil (16 SIN)
-When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
+Seal of Gabriel (15 SIN)
+Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded.
 
-Seal of Samael's Star (16 SIN)
-When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
+Seal of Michael (15 SIN)
+Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded.
 
-Seal of Samael's Triangle (16 SIN)
-When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
+Seal of Raphael (15 SIN)
+Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
 
-Seal of Zachriel's Triangle (16 SIN)
-When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%.
+Seal of Sachiel (15 SIN)
+At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
 
-Satan Seals
+Seal of Samael (15 SIN)
+Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
+
+Seal of Satan
 
 Seal of Satan (20 SIN)
 Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level.
@@ -310,28 +312,30 @@ When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; d
 Seal of the Son (33 SIN)
 When you press READY, one of three is cast at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls until the end of next round. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
-Seals of Saturn (self-stacking)
+Seals of Saturn
 
-Seal of Aggiel Hexagram (15 SIN)
-Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
+The seven Pentacles of Saturn from the Key of Solomon, in order. They took the Archangel Seals' old chance effects in Nov 2026.
 
-Seal of Bethor (15 SIN)
-At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
+First Pentacle of Saturn (16 SIN)
+When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Cassiel Pentagram (15 SIN)
-Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded.
+Second Pentacle of Saturn (16 SIN)
+When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%.
 
-Seal of Cassiel Sigil (15 SIN)
-Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded.
+Third Pentacle of Saturn (16 SIN)
+At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
-Seal of Samael Star (15 SIN)
-Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded.
+Fourth Pentacle of Saturn (16 SIN)
+When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
 
-Seal of Samael Triangle (15 SIN)
-Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
+Fifth Pentacle of Saturn (16 SIN)
+When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
 
-Seal of Zachriel Triangle (15 SIN)
-If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded.
+Sixth Pentacle of Saturn (16 SIN)
+At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%.
+
+Seventh Pentacle of Saturn (16 SIN)
+When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
 Unlockable Seals
 
@@ -353,12 +357,12 @@ Seal of Serafeim: Have Serafeim steal 0 SIN from you when he is first summoned.
 Seal of Threon: Use 4 ARTIFACTS in one round while Threon is active.
 Seal of Dantre: Score a PENTAKILL while Dantre is active.
 Seal of Satan: Have 666 SIN.
-Seal of Samael Star: Score 3 CRITICAL hits in a row.
-Seal of Cassiel Sigil: Beat the game 8 times (defeat the 8 BOSSES).
-Seal of Bethor: Get a SEAL to ELITE level 6.
-Seal of Aggiel Hexagram: Eliminate 66 demons (Goetic BOSSES) in total.
-Seal of Zachriel Triangle: Eliminate 666 DAMNED in total.
-Seal of Samael Triangle: Eliminate 8 DAMNED named Yannis in total.
+Seal of Gabriel: Score 3 CRITICAL hits in a row.
+Seal of Michael: Beat the game 8 times (defeat the 8 BOSSES).
+Seal of Sachiel: Get a SEAL to ELITE level 6.
+Seal of Raphael: Eliminate 66 demons (Goetic BOSSES) in total.
+Seal of Cassiel: Eliminate 666 DAMNED in total.
+Seal of Samael: Eliminate 8 DAMNED named Yannis in total.
 
 Artifacts
 

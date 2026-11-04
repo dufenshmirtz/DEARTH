@@ -38,6 +38,8 @@ function rememberRound() {
   };
 
   state.gameMemory.push(memoryEntry);
+  // this round is now finished, so it counts toward the MEMORY limit
+  round.memoryRecorded = true;
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -103,12 +105,16 @@ function buyShopItem(slotIndex) {
       return;
     }
     spendCredits(cost);
+    // a copy taken free (the bound demon's SEAL) sells for nothing
+    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;
       recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
+      if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
@@ -158,6 +164,11 @@ function rerollShopClick() {
     render();
     return;
   }
+  if (satanRerollTollActive()) {
+    rerollShopPayingSatanToll();
+    render();
+    return;
+  }
   const free = freeRerollsLeft() > 0;
   const cost = currentRerollCost();
   if (!canSpendCredits(cost)) {
@@ -185,8 +196,23 @@ function rerollShopClick() {
   render();
 }
 
+// Satan's toll: this reroll takes every SIN you hold. The SIN is lost to him, not spent, so it feeds no
+// spending SEAL (Furfur, Shax) and the normal reroll price does not go up.
+function rerollShopPayingSatanToll() {
+  const lost = Math.max(0, Math.ceil(state.player.credits || 0));
+  state.player.credits = 0;
+  state.satanRerollToll = false;
+  state.satanTightwadAbove = false;
+  rerollShop();
+  playGameSfx("reroll");
+  addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
+  applyRerollTollDamage();
+  if (state.player.hp <= 0) finishGameOverRound();
+}
+
 function passiveSellValue(item) {
-  return Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  const paidStacks = Math.max(0, (item.stack || 1) - (item.freeStacks || 0));
+  return Math.floor((item.price * paidStacks) / 2) + (item.saleBonus || 0);
 }
 
 // the Trinity SEALS share a slot: selling it sells every one of them
@@ -630,6 +656,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   collectionNoteArtifactUse();
+  applyArchangelArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
   addLog(message);

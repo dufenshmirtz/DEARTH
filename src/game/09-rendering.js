@@ -336,7 +336,7 @@ function renderRecordsMenu() {
     renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
     renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
     renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
-    renderRecordRow("Highest Elite Level Bought", recordValueText(records.highestEliteLevel, { withName: true, prefix: "ELITE " })),
+    renderRecordRow("Highest Elite Level Bought", records.highestEliteLevel?.value > 0 ? `${eliteLevelText(records.highestEliteLevel.value)}${records.highestEliteLevel.name ? ` - ${records.highestEliteLevel.name}` : ""}` : "None"),
     renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
     renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
   ].join("");
@@ -863,6 +863,10 @@ function renderSelfStackingDevPanel() {
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
+      <h2>Summon an Archangel (testing)</h2>
+      <div class="dev-summon-row">
+        ${ARCHANGEL_BOSS_SPECS.map((spec) => `<button class="small-button" data-pause-action="summon:${spec.key}">${escapeHtml(spec.name)}</button>`).join("")}
+      </div>
     </div>
   `;
 }
@@ -1871,13 +1875,18 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
-  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  // excess MEMORY is only shown while Seal of Threon is active
+  const memoryOverflow = orderedPassiveEffectEntries("p127").length ? Math.max(0, Math.ceil(bot.memoryOverflow || 0)) : 0;
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
   // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
-  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
+  // hovering it explains it is excess, not part of the MEMORY value
+  const memoryOverflowTooltip = `Excess MEMORY: +${memoryOverflow} past the ${memoryRoundLimit()} ${memoryRoundLimit() === 1 ? "round" : "rounds"} finished. ${ITEMS.p127.name} removes it at the end of the round and deals damage for each.`;
+  const memoryOverflowHtml = memoryOverflow
+    ? `<span class="memory-overflow" data-tooltip="${escapeAttr(memoryOverflowTooltip)}">+${memoryOverflow}</span>`
+    : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -2052,7 +2061,7 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
   const corruptionFresh = Boolean(corruption && !corruption.shown);
@@ -2070,7 +2079,7 @@ function renderConsole() {
     corruptionFresh ? "corrupted-fresh" : ""
   ].filter(Boolean).join(" ");
   const corruptionNote = corruption
-    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`${BOSS_PASSIVES.corruption.name} changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
     : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
@@ -2172,7 +2181,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
+          <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -2196,7 +2205,10 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
+  // the demon bound in the Ars Goetia gives its SEAL away
+  const free = item.type === "passive" && isBoundDemonSeal(item.id) && cost <= 0;
+  const priceText = free ? "free" : `${cost}${SIN_MARK}`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
@@ -2208,10 +2220,10 @@ function renderShopSlot(slot, index) {
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
   const kindLabel =
-    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : "SEAL") : "ARTIFACT";
+    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : free ? "BOUND SEAL" : "SEAL") : "ARTIFACT";
 
   return `
-    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""} ${free ? "bound-offer" : ""}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
@@ -2394,7 +2406,7 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const format = (number) => (record.key === "highestEliteLevel" ? `ELITE ${number}` : formatNumber(number));
+      const format = (number) => (record.key === "highestEliteLevel" ? (number > 0 ? eliteLevelText(number) : "None") : formatNumber(number));
       const value = format(record.value);
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
       return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
@@ -2563,6 +2575,10 @@ function updateSoundSetting(key, value, renderAfter = true) {
 }
 
 function handlePauseAction(action) {
+  if (typeof action === "string" && action.startsWith("summon:")) {
+    devSummonArchangel(action.slice("summon:".length));
+    return;
+  }
   if (action === "settings" || action === "collection") {
     state.pauseScreen = action;
     render();

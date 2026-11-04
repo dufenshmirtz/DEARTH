@@ -250,6 +250,7 @@ function applyPenalties() {
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
 
   applyDeathRollDamage();
+  applyFinalBossTargetStrikes();
 
   const participants = currentRoundParticipants(activeBots);
   const iposEntries = orderedPassiveEffectEntries("p58");
@@ -328,6 +329,8 @@ function applyPenalties() {
   // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
   const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
+  // Gabriel: every CRITICAL, yours or a DAMNED's
+  criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
@@ -397,6 +400,9 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
+  // YOU's Guilt (alive when the round was played): double TARGET damage
+  const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
+  if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
   if (playerTargetDiffDamage > 0 && trinitySpiritOutcome() === "shield") {
     playerDamageSources.push({ amount: playerTargetDiffDamage, source: ITEMS.p133.name, kind: "saved" });
@@ -407,7 +413,9 @@ function applyPenalties() {
   round.playerTargetDifferenceDamage = playerTargetDiffDamage;
   addPlayerDamage(
     playerTargetDiffDamage,
-    round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference"
+    [round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference", guiltDoubled ? `doubled by ${BOSS_PASSIVES.guilt.name}` : ""]
+      .filter(Boolean)
+      .join(", ")
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -503,6 +511,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
 
@@ -792,7 +801,8 @@ function resolveEliminatedBots(eliminated) {
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
-      if (bot.goeticKey) {
+      // an Archangel, or YOU in an Archangel's place, is not one of the 72
+      if (bot.goeticKey || (bot.shadowOf && GOETIC_BOSS_BY_KEY[bot.shadowOf])) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
@@ -1109,6 +1119,8 @@ function takeNextBossSpec() {
     return uniqueBossSpecFromKey(state.uniqueBossQueue.shift());
   }
   if (!allSpecialBossesKilled()) return null;
+  const archangelKey = rollArchangelSpawn();
+  if (archangelKey) return { archangelKey };
   if (state.goeticBossQueue.length) {
     return { goeticKey: state.goeticBossQueue.shift() };
   }
@@ -1116,6 +1128,102 @@ function takeNextBossSpec() {
     state.finalBossQueued = true;
   }
   return null;
+}
+
+/* ---- Archangel BOSSES (ARCHANGEL_BOSS_SPECS) ----
+   In the late game each boss spawn may be an Archangel instead of the next Goetic demon: every Archangel still
+   to come weighs half a demon. Once the 72 are done no more Archangels come. */
+function rollArchangelSpawn() {
+  if (!state.goeticBossQueue.length) return null;
+  if (!Array.isArray(state.archangelQueue)) state.archangelQueue = [];
+  const waiting = state.archangelQueue.filter((key) => ARCHANGEL_BY_KEY[key]);
+  if (!waiting.length) return null;
+  const weight = waiting.length * ARCHANGEL_SPAWN_WEIGHT;
+  if (Math.random() >= weight / (state.goeticBossQueue.length + weight)) return null;
+  const key = randomFrom(waiting);
+  state.archangelQueue = waiting.filter((other) => other !== key);
+  return key;
+}
+
+// testing (Pause > DEV): an Archangel takes the place of a regular DAMNED right away
+function devSummonArchangel(key) {
+  if (state.mode !== "arcade" || !ARCHANGEL_BY_KEY[key] || state.stage !== "guess") {
+    addLog("Testing: an Archangel can be summoned during GUESS only.");
+    render();
+    return;
+  }
+  const index = state.bots.findIndex((bot) => bot && !bot.isBoss && !bot.eliminated);
+  if (index < 0) return;
+  const angel = createBot({ boss: true, bossSpec: { archangelKey: key } });
+  angel.plannedGuess = planBotGuess(angel);
+  state.bots[index] = angel;
+  state.archangelQueue = (state.archangelQueue || []).filter((other) => other !== key);
+  state.pauseOpen = false;
+  state.pauseDevOpen = false;
+  addLog(`Testing: ${angel.name} summoned.`);
+  render();
+}
+
+// a run with an Archangel bound starts with its SEAL (sells for nothing, like a SEAL taken free)
+function grantBoundArchangelSeal() {
+  const spec = state.mode === "arcade" ? ARCHANGEL_BY_KEY[state.boundDemon] : null;
+  if (!spec || !ITEMS[spec.sealId] || state.player.passives.some((item) => item?.id === spec.sealId)) return;
+  const seal = itemCopy(spec.sealId);
+  seal.freeStacks = 1;
+  state.player.passives.push(seal);
+}
+
+function livingArchangels(key) {
+  return (state.bots || []).filter((bot) => bot?.isBoss && bot.archangelKey === key && bot.hp > 0 && !bot.eliminated && !bossAbilityNullified(bot));
+}
+
+// the Archangel gains damage, then deals all of it to you (through addPlayerDamage while penalties are tallied)
+function applyArchangelTrigger(key, gain, why, addPlayerDamage = null) {
+  let dealt = 0;
+  livingArchangels(key).forEach((bot) => {
+    if (!(gain > 0)) return;
+    bot.archangelDamage = Math.max(0, Math.ceil(bot.archangelDamage || 0)) + gain;
+    const damage = bot.archangelDamage;
+    const text = `${bot.name} gained +${gain} damage for ${why} and dealt ${damage} damage to you.`;
+    if (addPlayerDamage) {
+      addPlayerDamage(damage, bot.name);
+      state.roundState?.roundEvents.push(text);
+    } else {
+      damagePlayer(damage, text, true, true, bot.name);
+    }
+    dealt += damage;
+  });
+  return dealt;
+}
+
+function applyArchangelEndOfRound() {
+  const round = state.roundState;
+  if (!round) return;
+  const damned = activeBots().filter((bot) => !bot.isBoss);
+  // Michael: average non-boss MEMORY over 3
+  if (damned.length && damned.reduce((sum, bot) => sum + (bot.memory?.length || 0), 0) / damned.length > 3) {
+    applyArchangelTrigger("michael", 2, "the DAMNED's MEMORY");
+  }
+  // Samael: two DAMNED share a personality
+  const seen = new Set();
+  const shared = damned.some((bot) => [...new Set(personalityTypes(bot))].some((type) => (seen.has(type) ? true : (seen.add(type), false))));
+  if (shared) applyArchangelTrigger("samael", 2, "a shared personality");
+  // Sachiel: the regular BOUNTY of all DAMNED over 4
+  if (activeBots().reduce((sum, bot) => sum + botRegularBounty(bot), 0) > 4) applyArchangelTrigger("sachiel", 2, "the DAMNED's BOUNTY");
+  // Raphael: +1 for every elimination short of 5
+  const shortOfPentakill = Math.max(0, 5 - (round.eliminationsThisRound || 0));
+  if (shortOfPentakill > 0) applyArchangelTrigger("raphael", shortOfPentakill, "the souls you spared");
+}
+
+// Anael: every ARTIFACT you use
+function applyArchangelArtifactUse() {
+  applyArchangelTrigger("anael", 2, "an ARTIFACT");
+}
+
+// Cassiel: a revealed DAMNED takes more than 10 damage at once
+function applyArchangelRevealedHit(bot, damage) {
+  if (!bot || bot.isBoss || !bot.revealedByPassive || !(damage > 10) || !state.roundState) return;
+  applyArchangelTrigger("cassiel", 2, `${bot.name}'s wound`);
 }
 
 function applyEliminationPassives(bot) {
@@ -1576,10 +1684,11 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
-    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
+    // Seal of Threon: after the end-of-round MEMORY gains, so their excess is counted this round too
+    applyMemoryOverflowDamage();
     // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
     if (round.trinity?.spiritHealed && trinityEntry("p133")) {
       const healed = healPlayer(3, null, ITEMS.p133.name);
@@ -1613,6 +1722,7 @@ function applyEndOfRoundPassives() {
     applyFixedWillEndRound();
     applyInflationEngine();
     applySelfStackingBountySumDamage();
+    applyArchangelEndOfRound();
     applyLowProfileReward();
     applyPursonReward();
     applyPandoriumContractCleanup();
@@ -1642,7 +1752,6 @@ function applyInflationEngine() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const targets = activeBots()
-      .filter((bot) => !bot.immortal)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, 2);
     if (!targets.length) return;
@@ -1683,7 +1792,7 @@ function applyRonoveDrain() {
   entries.forEach((entry) => {
     const targetCount = Math.max(1, entry.stack || 1);
     const targets = activeBots()
-      .filter((bot) => !bot.immortal && botSin(bot) > 0)
+      .filter((bot) => botSin(bot) > 0)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, targetCount);
     if (!targets.length) return;
@@ -1793,6 +1902,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // too much SIN held: the results wait for Satan's offer; moving on brings him in now
+  if (introState.phase === "tightwad" || introState.phase === "tightwad-leave") return;
+  if (satanTightwadHoldsSummary()) {
+    startSatanTightwadNow();
     return;
   }
   clearDevTemporaryArtifacts();

@@ -261,6 +261,7 @@ function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZer
     const hpBefore = bot.hp;
     bot.hp = Math.max(0, bot.hp - damage);
     state.roundState.roundEvents.push(`${bot.name} took ${damage} damage.`);
+    applyArchangelRevealedHit(bot, damage);
     if (bot.hp <= 0) {
       recordBotExcessDamage(bot, damage, hpBefore);
       eliminated.push(bot);
@@ -493,8 +494,17 @@ function botHealthScaleFactor() {
   return hpExponentialFactor((state.bossKills || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
+// accelerating growth for Goetic BOSSES (DAMNED keep the steady x1.2 every 3 BOSSES)
+function endlessBossHealthFactor(depth) {
+  let factor = 1;
+  for (let step = 1; step <= Math.max(0, depth || 0); step += 1) {
+    factor *= 1 + ENDLESS_BOSS_HP_RATE + ENDLESS_BOSS_HP_RATE_STEP * step;
+  }
+  return factor;
+}
+
 function bossHealthScaleFactor() {
-  return hpExponentialFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+  return endlessBossHealthFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
 function randomBotHealth() {
@@ -579,6 +589,7 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
   if (reason) {
     addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
   }
+  applyArchangelRevealedHit(bot, damage);
   applyDirectRedirectDamage(damageDetails.redirectEntries);
   if (bot.hp <= 0) {
     recordBotExcessDamage(bot, damage, hpBefore);
@@ -789,6 +800,9 @@ function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = t
     bot.noise = archetype.noise;
   }
   if (markEntry) markPassiveEntryTriggered(markEntry);
+  // a SEAL that changes a personality: counted in its stats (ARTIFACT sources are not SEALS and are skipped)
+  const sealId = markEntry ? markEntry.sourceId || markEntry.id : sealIdFromStatSource(source);
+  if (sealId) recordSealStat(sealId, "personality", 1);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
   return true;
@@ -908,7 +922,9 @@ function uniqueBossSpecFromKey(key) {
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
-  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
+  if (bot.isBoss && (bot.goeticKey || bot.shadowOf) && owned.size >= 1) return null;
+  // an Archangel keeps only its own ability
+  if (bot.isBoss && bot.archangelKey) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);

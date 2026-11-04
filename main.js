@@ -218,7 +218,6 @@ const MAX_REVEALED_DAMNED = 4;
 const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
-const NON_BOSS_MEMORY_LIMIT = 20;
 const BOT_MIN_HP = 20;
 const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;
@@ -233,8 +232,16 @@ const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
 const HP_EXPONENTIAL_RATE = 1.2;
+// After the main game each Goetic BOSS multiplies BOSS HEALTH by 1 + RATE + RATE_STEP x depth
+// (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
+// +18% per BOSS at demon 10, +28% at demon 20, +48% at demon 40
+const ENDLESS_BOSS_HP_RATE = 0.08;
+const ENDLESS_BOSS_HP_RATE_STEP = 0.01;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
+// holding this much SIN at the end of a round brings Satan with his offer (09-intro-story.js); past 1500
+// the price pressure above leaves nothing in the shop affordable
+const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 // KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
@@ -862,7 +869,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+    description: "Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
@@ -972,49 +979,49 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Cassiel's Pentagram",
+    name: "Third Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Zachriel's Triangle",
+    name: "Second Pentacle of Saturn",
     price: 16,
-    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Aggiel's Hexagram",
+    name: "Sixth Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Cassiel's Sigil",
+    name: "Fourth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Samael's Triangle",
+    name: "Seventh Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Samael's Star",
+    name: "First Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Cassiel's Hexagram",
+    name: "Fifth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
@@ -1120,42 +1127,42 @@ const ITEMS = {
   p98: {
     id: "p98",
     type: "passive",
-    name: "Seal of Samael Star",
+    name: "Seal of Gabriel",
     price: 15,
     description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
   },
   p99: {
     id: "p99",
     type: "passive",
-    name: "Seal of Cassiel Sigil",
+    name: "Seal of Michael",
     price: 15,
     description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
   },
   p100: {
     id: "p100",
     type: "passive",
-    name: "Seal of Bethor",
+    name: "Seal of Sachiel",
     price: 15,
     description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
     type: "passive",
-    name: "Seal of Aggiel Hexagram",
+    name: "Seal of Raphael",
     price: 15,
     description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
     type: "passive",
-    name: "Seal of Zachriel Triangle",
+    name: "Seal of Cassiel",
     price: 15,
     description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
     type: "passive",
-    name: "Seal of Cassiel Pentagram",
+    name: "Seal of Anael",
     price: 15,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
   },
@@ -1197,7 +1204,7 @@ const ITEMS = {
   p109: {
     id: "p109",
     type: "passive",
-    name: "Seal of Samael Triangle",
+    name: "Seal of Samael",
     price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
@@ -1561,7 +1568,7 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p55",
   "p69"
 ]);
-// the seven archangel SEALS (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
+// the seven archangel SEALS, one per planet (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 // the Boss SEALS, named after the eight unique BOSSES
 const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
@@ -1728,13 +1735,13 @@ const SEAL_SIGILS = {
   p90: "020_Bifrons.png",
   p91: "003_Aim.png",
   // archangel SEALS (old boss-seal effects); the Dev art below is now used by the Boss SEALS
-  p92: "archangel seals/Cassiel-Pentagram.png",
-  p93: "archangel seals/Zachriel-Triangle.png",
-  p94: "archangel seals/Aggiel-Hexagram.png",
-  p95: "archangel seals/Cassiel-Sigil.png",
-  p96: "archangel seals/Samael-Triangle.png",
-  p97: "archangel seals/Samael-Star.png",
-  p110: "archangel seals/Cassiel-Hexagram.png",
+  p92: "saturn/handdrawn/Saturn-Pentacle-01.png",
+  p93: "saturn/handdrawn/Saturn-Pentacle-03.png",
+  p94: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  p95: "saturn/handdrawn/Saturn-Pentacle-05.png",
+  p96: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p97: "saturn/handdrawn/Saturn-Pentacle-02.png",
+  p110: "saturn/handdrawn/Saturn-Pentacle-04.png",
   // Boss SEALS
   p121: "dev/ZilonSeal.png",
   p122: "dev/KalhaSeal.png",
@@ -1748,19 +1755,20 @@ const SEAL_SIGILS = {
   p131: "trinity/father.png",
   p132: "trinity/son.png",
   p133: "trinity/spirit.png",
-  // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
-  p98: "saturn/handdrawn/Saturn-Pentacle-01.png",
-  p99: "saturn/handdrawn/Saturn-Pentacle-02.png",
-  p100: "saturn/handdrawn/Saturn-Pentacle-03.png",
-  p101: "saturn/handdrawn/Saturn-Pentacle-04.png",
-  p102: "saturn/handdrawn/Saturn-Pentacle-05.png",
-  p103: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  // self-stacking SEALS: the Archangel Seals since Nov 2026 (they swapped effects with the Pentacles of Saturn;
+  // the old art stays in seals/self-stacking/)
+  p98: "archangel seals/Cassiel-Pentagram.png",
+  p99: "archangel seals/Samael-Star.png",
+  p100: "archangel seals/Zachriel-Triangle.png",
+  p101: "archangel seals/Cassiel-Hexagram.png",
+  p102: "archangel seals/Cassiel-Sigil.png",
+  p103: "archangel seals/Aggiel-Hexagram.png",
   p104: "004_Allocer.png",
   p105: "008_Andras.png",
   p106: "071_Zagan.png",
   p107: "050_Ose.png",
   p108: "049_Orobas.png",
-  p109: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p109: "archangel seals/Samael-Triangle.png",
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",
@@ -1936,45 +1944,80 @@ const GOETIC_BOSS_SPECS = [
 const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
+/* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
+   and its BOSS never comes in that run. YOU (the sinner from the story, drawn red like the BOSSES) comes in its place: it plays
+   like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
+const SHADOW_BOSS = {
+  name: "YOU",
+  image: "assets/bots/you/you-boss.webp",
+  memoryRounds: 10
+};
+/* The seven Archangels: late-game BOSSES drawn from the same pool as the 72 Goetic ones (each half as likely as
+   one demon, at most once per run). They do not count toward the 72. Each grows its own damage like the
+   self-stacking SEAL of its name (same build) and deals it to you, and while it lives the TARGET modifier cycles
+   0.8, 1, 1.2, 1. Defeating one discovers it in the Collection (Archangels tab), where it can be bound: a run
+   with it bound starts with its SEAL, and YOU comes in its place. Art: the Moon has the trumpet, the Sun the spear
+   and shield, Mars the sword, Mercury the scroll, Jupiter the crown, Venus the flame, Saturn the scales. */
+const ARCHANGEL_BOSS_IMAGE_ROOT = "assets/bots/archangels";
+const ARCHANGEL_BOSS_SPECS = [
+  { key: "michael", name: "Michael", image: "04-michael.png", sealId: "p99", build: "memory", planet: "the Sun" },
+  { key: "gabriel", name: "Gabriel", image: "03-gabriel.png", sealId: "p98", build: "critical", planet: "the Moon" },
+  { key: "samael", name: "Samael", image: "01-samael.png", sealId: "p109", build: "personality", planet: "Mars" },
+  { key: "raphael", name: "Raphael", image: "06-raphael.png", sealId: "p101", build: "general", planet: "Mercury" },
+  { key: "sachiel", name: "Sachiel", image: "07-sachiel.png", sealId: "p100", build: "bounty", planet: "Jupiter" },
+  { key: "anael", name: "Anael", image: "05-anael.png", sealId: "p103", build: "artifact", planet: "Venus" },
+  { key: "cassiel", name: "Cassiel", image: "02-cassiel.png", sealId: "p102", build: "reveal", planet: "Saturn" }
+];
+const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
+const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
+const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
+const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the HEALTH a Goetic BOSS would have at the same point
+const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
+// BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
   sinStealing: {
-    name: "Sin-Stealing"
+    name: "Greed"
   },
   soullessness: {
-    name: "Soulessness",
+    name: "Envy",
     baseDamage: 5
   },
   soulStealing: {
-    name: "Soul-stealing"
+    name: "Despair"
   },
   deathRoll: {
-    name: "Death Roll"
+    name: "Wrath"
   },
   rerollToll: {
-    name: "Reroll Toll",
+    name: "Vainglory",
     baseDamage: 5
   },
   offeringToll: {
-    name: "Offering Toll",
+    name: "Gluttony",
     baseDamage: 2
   },
   avenging: {
-    name: "Avenging",
+    name: "Pride",
     baseDamage: 4
   },
   corruption: {
-    name: "Corruption"
+    name: "Deceit"
   },
   punishment: {
-    name: "Punishment",
+    name: "Sloth",
     baseDamage: 5
   },
   lifeSteal: {
-    name: "Life-Steal"
+    name: "Lust"
+  },
+  // only YOU has it (see SHADOW_BOSS); it never rolls at random
+  guilt: {
+    name: "Guilt"
   }
 };
-const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const SHADOW_BOSS_PASSIVE_KEY = "guilt";
+const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
@@ -2187,7 +2230,8 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "Jesus's guess counts three times when calculating the TARGET average."
+      "Jesus's guess counts three times when calculating the TARGET average.",
+      "When the TARGET is odd, Jesus deals 1 damage to you. When it is 33, he deals 10."
     ]
   },
   satan: {
@@ -2197,9 +2241,16 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "The Devil disables Devil's Offerings while Satan is alive."
+      "The Devil disables Devil's Offerings while Satan is alive.",
+      "When the TARGET is even, Satan deals 1 damage to you. When it is 66, he deals 6."
     ]
   }
+};
+// the final BOSSES strike you at TARGET reveal: Jesus on an odd TARGET, Satan on an even one,
+// harder on their own number (applyFinalBossTargetStrikes)
+const FINAL_BOSS_TARGET_STRIKES = {
+  jesus: { odd: true, damage: 1, number: 33, numberDamage: 10 },
+  satan: { odd: false, damage: 1, number: 66, numberDamage: 6 }
 };
 
 const state = {
@@ -2272,6 +2323,10 @@ const state = {
   uniqueBossQueue: [],
   goeticBossQueue: [],
   goeticBossKills: 0,
+  // the demon or Archangel bound when this run started (Collection): see SHADOW_BOSS and ARCHANGEL_BOSS_SPECS
+  boundDemon: null,
+  // the Archangels that have not come yet this run
+  archangelQueue: [],
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
   nextBossKillIntervalEndless: false,
@@ -2282,6 +2337,10 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanTightwadDue: false,
+  satanTightwadAbove: false,
+  satanTightwadOffers: 0,
+  satanRerollToll: false,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
@@ -3049,6 +3108,8 @@ function normalizeLoadedArcadeRun() {
     }
   });
   if (!Number.isFinite(state.totalArtifactsUsed)) state.totalArtifactsUsed = 0;
+  if (state.boundDemon && !GOETIC_BOSS_BY_KEY[state.boundDemon] && !ARCHANGEL_BY_KEY[state.boundDemon]) state.boundDemon = null;
+  state.archangelQueue = Array.isArray(state.archangelQueue) ? state.archangelQueue.filter((key) => ARCHANGEL_BY_KEY[key]) : [];
   if (!Number.isFinite(state.pendingSelfStackingPentakillDamage)) state.pendingSelfStackingPentakillDamage = 0;
   if (!Number.isFinite(state.pendingSelfStackingPentakillRound)) state.pendingSelfStackingPentakillRound = 0;
   state.runStats = normalizeRunStats(state.runStats);
@@ -3069,7 +3130,7 @@ function normalizeLoadedArcadeRun() {
   state.bots.forEach((bot) => {
     if (!Array.isArray(bot.passiveKeys)) bot.passiveKeys = [];
     bot.passiveKeys = bot.passiveKeys.filter((key) => BOSS_PASSIVES[key]);
-    if (bot.isBoss && !bot.uniqueKey && !bot.finalKey && !bot.passiveKeys.length) {
+    if (bot.isBoss && !bot.uniqueKey && !bot.finalKey && !bot.archangelKey && !bot.passiveKeys.length) {
       bot.passiveKeys = randomBossPassiveKeys(1);
     }
     if (bot.buffPassiveKey && !PYROS_GIFT_PASSIVES[bot.buffPassiveKey]) bot.buffPassiveKey = null;
@@ -3090,6 +3151,9 @@ function loadArcadeRun(slotId = "") {
       removeCorruptArcadeRunSave(slotId);
       return false;
     }
+    // saves from before the Ars Goetia binding have none; saves from before the Archangels get all seven
+    state.boundDemon = null;
+    state.archangelQueue = ARCHANGEL_KEYS.slice();
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
@@ -3975,9 +4039,8 @@ function rollScaledPassiveCount(id, baseCount = 1) {
 }
 
 function botSin(bot) {
-  if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
-  if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  const reward = Math.ceil(bot?.reward || 0);
+  return Number.isFinite(reward) ? Math.max(0, reward) : 0;
 }
 
 function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
@@ -4022,6 +4085,7 @@ function formatArtifactMultiplier(value) {
 }
 
 function botBossBounty(bot) {
+  // Jesus and Satan: their BOSS BOUNTY is infinite (only shown, botSinDisplay), so nothing can change it
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
@@ -4030,9 +4094,9 @@ function botBossBounty(bot) {
   return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
+// Jesus and Satan included: their regular BOUNTY starts at 0 and SEALS can change it like anyone's
 function botRegularBounty(bot) {
-  if (bot?.immortal) return 0;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  return botSin(bot);
 }
 
 function botRegularBountyPayout(bot, markTriggers = false) {
@@ -4191,14 +4255,15 @@ function applyBountyToMemoryMirror(bot, amount, options = {}) {
   addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
+// MEMORY can never exceed the rounds actually finished (what a BOSS remembers). The round in play only counts
+// once it is recorded at the end of the round (rememberRound); MEMORY gained before that is excess.
 function memoryRoundLimit() {
-  return Math.max(0, Math.ceil(state.round || 0));
+  const finished = Math.max(0, Math.ceil(state.round || 0) - 1);
+  return finished + (state.roundState?.memoryRecorded ? 1 : 0);
 }
 
 function botMemoryLimit(bot) {
-  const roundLimit = memoryRoundLimit();
-  if (bot?.isBoss) return roundLimit;
-  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+  return memoryRoundLimit();
 }
 
 function trimBotMemoryToLimit(bot) {
@@ -4214,7 +4279,8 @@ function sitriExcessMemoryDamage(entry) {
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
-// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage; excess gained
+// when the round is recorded (after that) carries over to the next round.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
@@ -4380,7 +4446,6 @@ function checkBalamMemoryBountyEliminations() {
 
 function changeBotSin(bot, delta, reason = "", options = {}) {
   if (!bot || bot.eliminated) return { changed: 0, lost: 0, gained: 0 };
-  if (bot.immortal || !Number.isFinite(botSin(bot))) return { changed: 0, lost: 0, gained: 0 };
   const before = botSin(bot);
   const next = Math.max(0, Math.ceil(before + delta));
   bot.reward = next;
@@ -4477,11 +4542,28 @@ function ascendingCritDamageBonus() {
   return passiveStack("p91") ? eliteLevels("p91") * 5 : 0;
 }
 
+function romanNumeral(value) {
+  const parts = [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let left = Math.max(0, Math.floor(value));
+  return parts.reduce((text, [size, mark]) => {
+    while (left >= size) {
+      text += mark;
+      left -= size;
+    }
+    return text;
+  }, "");
+}
+
+// ELITE levels are written in Roman numerals: "ELITE III Seal of Bael"
+function eliteLevelText(level) {
+  return `ELITE ${romanNumeral(level)}`;
+}
+
 function passiveDisplayName(item) {
   if (isSelfStackingSeal(item)) return item.name;
   const stack = item.stack || 1;
   if (stack <= 1) return item.name;
-  return stack === 2 ? `ELITE ${item.name}` : `ELITE +${stack - 1} ${item.name}`;
+  return `${eliteLevelText(stack - 1)} ${item.name}`;
 }
 
 function simpleStackCount(idOrItem) {
@@ -4789,6 +4871,17 @@ function stackLinearMultiplier(entry) {
   return Math.max(1, entry?.stack || 1);
 }
 
+// Seal of the Red Horse: one 50% roll per revealed DAMNED (per reveal stack) per round, kept so every hit
+// on that DAMNED this round agrees
+function redHorseRoll(entry, bot, stack = 0) {
+  const round = state.roundState;
+  if (!round || !bot) return false;
+  if (!round.redHorseRolls || typeof round.redHorseRolls !== "object") round.redHorseRolls = {};
+  const key = `${entry?.sourceId || entry?.id || "p75"}:${bot.id}:${stack}`;
+  if (typeof round.redHorseRolls[key] !== "boolean") round.redHorseRolls[key] = Math.random() < 0.5;
+  return round.redHorseRolls[key];
+}
+
 function markPassiveEntryTriggered(entry) {
   if (!state.roundState || !entry) return;
   const triggerId = entry.sourceId || entry.id;
@@ -4879,6 +4972,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       if (entry.id === "p75") {
         if (bot.revealedByPassive) {
           for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+            if (!redHorseRoll(entry, bot, stack)) continue;
             applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
           }
         }
@@ -5063,7 +5157,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -5210,7 +5304,7 @@ function itemDescription(item) {
     return `When a DAMNED dies from excess damage, split ${flatDamagePower(item)}x that excess damage equally among the other living enemies.`;
   }
   if (item.id === "p74") return `DAMNED with 10 or more BOUNTY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
-  if (item.id === "p75") return `Revealed DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
+  if (item.id === "p75") return `Each round, every revealed DAMNED has a 50% chance to take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources.`;
   if (item.id === "p76") {
     return `Non-boss DAMNED with 10 or more MEMORY take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources. If a BOSS is active, this SEAL's damage is dealt to that BOSS instead.`;
   }
@@ -5269,7 +5363,7 @@ function itemDescription(item) {
     return `When a STUBBORN DAMNED dies, all BOSSES take ${flatDamageValue(item, 30)} damage.`;
   }
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
-  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to double every DAMNED BOUNTY.`;
+  if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to multiply every DAMNED BOUNTY by x1.5.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
   if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
   if (item.id === "p96") {
@@ -5304,8 +5398,15 @@ function rerollCost() {
   return state.rerollBaseCost;
 }
 
+// Satan's toll: once his offer is refused (09-intro-story.js), the next reroll costs every SIN you hold.
+// It comes before free rerolls (they are kept for later) and goes away once paid.
+function satanRerollTollActive() {
+  return Boolean(state.satanRerollToll && state.mode === "arcade");
+}
+
 // Seal of the Son can leave free rerolls: while any are left, a reroll costs nothing
 function currentRerollCost() {
+  if (satanRerollTollActive()) return Math.max(0, Math.ceil(state.player.credits || 0));
   return freeRerollsLeft() > 0 ? 0 : rerollCost();
 }
 
@@ -5353,6 +5454,7 @@ function bossPassiveEffectDescription(key) {
   if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
   if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
   if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  if (key === SHADOW_BOSS_PASSIVE_KEY) return "While this BOSS lives, you take double TARGET damage. It guesses the way you did in your last rounds.";
   return "";
 }
 
@@ -5409,6 +5511,30 @@ function applyDeathRollDamage() {
       BOSS_PASSIVES.deathRoll.name
     );
   });
+}
+
+function finalBossStrikeDamage(key, target) {
+  const rule = FINAL_BOSS_TARGET_STRIKES[key];
+  const value = Math.ceil(target);
+  if (!rule || !Number.isFinite(value)) return 0;
+  if (value === rule.number) return rule.numberDamage;
+  return (Math.abs(value) % 2 === 1) === rule.odd ? rule.damage : 0;
+}
+
+// Jesus strikes on an odd TARGET (10 on 33), Satan on an even one (6 on 66)
+function applyFinalBossTargetStrikes() {
+  const round = state.roundState;
+  if (!round) return;
+  activeBots()
+    .filter((bot) => FINAL_BOSS_TARGET_STRIKES[bot.finalKey])
+    .forEach((bot) => {
+      const damage = finalBossStrikeDamage(bot.finalKey, round.target);
+      if (damage <= 0) return;
+      const rule = FINAL_BOSS_TARGET_STRIKES[bot.finalKey];
+      const target = formatNumber(round.target);
+      const why = Math.ceil(round.target) === rule.number ? `the TARGET is ${target}` : `TARGET ${target} is ${rule.odd ? "odd" : "even"}`;
+      damagePlayer(damage, `${bot.name} dealt ${damage} damage because ${why}.`, true, true, bot.name);
+    });
 }
 
 function applyRerollTollDamage() {
@@ -5527,7 +5653,31 @@ function currentTargetModifier() {
         bot.modifierOverride !== undefined
     )
     .sort((left, right) => right.bossOrder - left.bossOrder);
-  return modifierBosses.length ? modifierBosses[0].modifierOverride : BASE_TARGET_MODIFIER;
+  return modifierBosses.length ? bossTargetModifierValue(modifierBosses[0]) : BASE_TARGET_MODIFIER;
+}
+
+// an Archangel's modifier cycles 0.8, 1, 1.2, 1 from the round it arrived
+function bossTargetModifierValue(bot) {
+  if (!bot?.archangelKey) return bot?.modifierOverride;
+  const start = Number.isFinite(bot.modifierCycleStartRound) ? bot.modifierCycleStartRound : state.round;
+  return ARCHANGEL_TARGET_MODIFIERS[Math.max(0, (state.round || 0) - start) % ARCHANGEL_TARGET_MODIFIERS.length];
+}
+
+// what each Archangel BOSS grows its damage on (see applyArchangel* in 06-round-resolution.js)
+const ARCHANGEL_ABILITY_TEXT = {
+  michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
+  gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
+  samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
+  anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
+  cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
+};
+
+function archangelAbilityDescription(bot) {
+  const text = ARCHANGEL_ABILITY_TEXT[bot?.archangelKey];
+  if (!text) return "";
+  return `${text} Its damage starts at 0 (now ${Math.max(0, Math.ceil(bot.archangelDamage || 0))}). While it lives, the TARGET modifier cycles 0.8, 1, 1.2, 1.`;
 }
 
 function playerGuessLimit() {
@@ -5539,7 +5689,14 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
+// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+function isBoundDemonSeal(id) {
+  const key = state.mode === "arcade" ? state.boundDemon : null;
+  return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
+}
+
 function shopPrice(item) {
+  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
@@ -5552,6 +5709,7 @@ function botPassiveSummary(bot) {
   const names = [];
   if (bot.isBoss && bot.uniqueKey) names.push(`${UNIQUE_BOSS_SPECS[bot.uniqueKey].name}'s Seal`);
   if (bot.isBoss && bot.copiedUniqueKey) names.push(`Borrowed ${UNIQUE_BOSS_SPECS[bot.copiedUniqueKey].name}'s Seal`);
+  if (bot.isBoss && bot.archangelKey) names.push(`Archangel ${ARCHANGEL_BY_KEY[bot.archangelKey]?.name || ""}`.trim());
   bot.passiveKeys?.forEach((key) => names.push(botPassiveKeyName(key)));
   if (bot.buffPassiveKey) names.push(`Pyros Gift: ${botPassiveKeyName(bot.buffPassiveKey)}`);
   return names.join(" + ") || "No Seal";
@@ -5561,6 +5719,7 @@ function botPassiveDescription(bot) {
   if (!bot) return "";
   const descriptions = [];
   if (bot.isBoss && bot.uniqueKey) descriptions.push(...UNIQUE_BOSS_SPECS[bot.uniqueKey].descriptions);
+  if (bot.isBoss && bot.archangelKey) descriptions.push(archangelAbilityDescription(bot));
   bot.passiveKeys?.forEach((key) => descriptions.push(botPassiveKeyDescription(key)));
   if (bot.buffPassiveKey) descriptions.push(`Pyros gift: ${botPassiveKeyDescription(bot.buffPassiveKey)}`);
   return descriptions.join(" ");
@@ -6220,6 +6379,7 @@ function sealStatsFor(id) {
     memory: 0,
     bounty: 0,
     bountyRemoved: 0,
+    personality: 0,
     triggers: 0
   };
   state.sealStats[id] = stats;
@@ -6235,6 +6395,7 @@ function recordSealStat(id, kind, amount) {
   if (!stats) return;
   stats[kind] = (stats[kind] || 0) + value;
   if (kind === "damage") recordRunSealDamage(id, value);
+  collectionNoteSealStat(id, kind, value, stats[kind]);
 }
 
 function recordSealTrigger(id) {
@@ -6243,6 +6404,7 @@ function recordSealTrigger(id) {
   const stats = sealStatsFor(id);
   if (!stats) return;
   stats.triggers = (stats.triggers || 0) + 1;
+  collectionNoteSealTrigger(id);
 }
 
 function recordSealStatFromSource(kind, amount, source) {
@@ -6260,6 +6422,7 @@ function sealContributionParts(stats, { includeTriggers = false } = {}) {
   if (stats.memory > 0) parts.push(`${stats.memory} MEMORY added`);
   if (stats.bounty > 0) parts.push(`${stats.bounty} BOUNTY added`);
   if (stats.bountyRemoved > 0) parts.push(`${stats.bountyRemoved} BOUNTY removed`);
+  if (stats.personality > 0) parts.push(`${stats.personality} personalit${stats.personality === 1 ? "y" : "ies"} changed`);
   if (includeTriggers && stats.triggers > 0) parts.push(`${stats.triggers} trigger${stats.triggers === 1 ? "" : "s"}`);
   return parts;
 }
@@ -6546,6 +6709,7 @@ function applyPendingBotDamageBatch(botDamages, botDamageSources, bots, { logZer
     const hpBefore = bot.hp;
     bot.hp = Math.max(0, bot.hp - damage);
     state.roundState.roundEvents.push(`${bot.name} took ${damage} damage.`);
+    applyArchangelRevealedHit(bot, damage);
     if (bot.hp <= 0) {
       recordBotExcessDamage(bot, damage, hpBefore);
       eliminated.push(bot);
@@ -6778,8 +6942,17 @@ function botHealthScaleFactor() {
   return hpExponentialFactor((state.bossKills || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
+// accelerating growth for Goetic BOSSES (DAMNED keep the steady x1.2 every 3 BOSSES)
+function endlessBossHealthFactor(depth) {
+  let factor = 1;
+  for (let step = 1; step <= Math.max(0, depth || 0); step += 1) {
+    factor *= 1 + ENDLESS_BOSS_HP_RATE + ENDLESS_BOSS_HP_RATE_STEP * step;
+  }
+  return factor;
+}
+
 function bossHealthScaleFactor() {
-  return hpExponentialFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
+  return endlessBossHealthFactor((state.bossSpawnCount || 0) - ENDLESS_SCALING_BREAKPOINT_BOSSES);
 }
 
 function randomBotHealth() {
@@ -6864,6 +7037,7 @@ function damageBot(bot, amount, reason, source = undefined, playerDealt = true) 
   if (reason) {
     addRoundEvent(damage !== rawDamage && sourceLabel ? `${sourceLabel} dealt ${damage} damage to ${bot.name}.` : reason);
   }
+  applyArchangelRevealedHit(bot, damage);
   applyDirectRedirectDamage(damageDetails.redirectEntries);
   if (bot.hp <= 0) {
     recordBotExcessDamage(bot, damage, hpBefore);
@@ -7074,6 +7248,9 @@ function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = t
     bot.noise = archetype.noise;
   }
   if (markEntry) markPassiveEntryTriggered(markEntry);
+  // a SEAL that changes a personality: counted in its stats (ARTIFACT sources are not SEALS and are skipped)
+  const sealId = markEntry ? markEntry.sourceId || markEntry.id : sealIdFromStatSource(source);
+  if (sealId) recordSealStat(sealId, "personality", 1);
   if (source) addRoundEvent(`${source} changed ${bot.name}'s personality to ${archetype.type}.`);
   if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
   return true;
@@ -7193,7 +7370,9 @@ function uniqueBossSpecFromKey(key) {
 function grantRandomBossPassive(bot) {
   if (!bot || bot.hp <= 0 || bot.eliminated) return null;
   const owned = new Set([...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean));
-  if (bot.isBoss && bot.goeticKey && owned.size >= 1) return null;
+  if (bot.isBoss && (bot.goeticKey || bot.shadowOf) && owned.size >= 1) return null;
+  // an Archangel keeps only its own ability
+  if (bot.isBoss && bot.archangelKey) return null;
   const choices = BOSS_PASSIVE_KEYS.filter((key) => !owned.has(key));
   if (!choices.length) return null;
   const key = randomFrom(choices);
@@ -7229,8 +7408,8 @@ function botImagePath(entity) {
 }
 
 function botSinDisplay(bot) {
-  if (bot?.finalKey === "satan") return "∞ SIN";
-  if (bot?.finalKey === "jesus") return "-∞ SIN";
+  if (bot?.finalKey === "satan") return `∞+${botRegularBounty(bot)} SIN`;
+  if (bot?.finalKey === "jesus") return `-∞+${botRegularBounty(bot)} SIN`;
   if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
   return `${botRegularBounty(bot)} SIN`;
 }
@@ -7321,7 +7500,7 @@ function createFinalBoss(key) {
     noise: 0,
     hp: 100,
     maxHp: 100,
-    reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
+    reward: 0, // regular BOUNTY; the infinite BOSS BOUNTY is only shown (botSinDisplay)
     isBoss: true,
     bossOrder: state.bossSpawnCount + 1,
     uniqueKey: null,
@@ -7362,7 +7541,7 @@ function createFinalBoss(key) {
 }
 
 function activeGoeticBoss() {
-  return state.bots.some((bot) => bot.goeticKey && bot.hp > 0 && !bot.eliminated);
+  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf || bot.archangelKey) && bot.hp > 0 && !bot.eliminated);
 }
 
 function enterFinalBossPhase() {
@@ -7373,6 +7552,7 @@ function enterFinalBossPhase() {
   state.nextBossKillInterval = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = [];
+  state.archangelQueue = [];
   state.pendingActive = null;
   state.mobileOfferingsOpen = false;
   state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
@@ -7385,6 +7565,9 @@ function skipToFirstGoeticBoss() {
   state.pendingActive = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
+  // testing: the bound demon's place comes first, so YOU shows up at once
+  if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
   state.goeticBossKills = 0;
   resetBossKillInterval();
   state.finalBossPhase = false;
@@ -7393,7 +7576,10 @@ function skipToFirstGoeticBoss() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * UNIQUE_BOSS_KEYS.length);
-  const firstBossSpec = takeNextBossSpec();
+  // a bound Archangel's place (YOU) comes first too
+  const boundArchangel = ARCHANGEL_BY_KEY[state.boundDemon] ? state.boundDemon : null;
+  if (boundArchangel) state.archangelQueue = state.archangelQueue.filter((key) => key !== boundArchangel);
+  const firstBossSpec = boundArchangel ? { archangelKey: boundArchangel } : takeNextBossSpec();
   state.bots = firstBossSpec ? [createBot({ boss: true, bossSpec: firstBossSpec })] : [];
   fillBots();
   state.rerollBaseCost = 1;
@@ -7449,15 +7635,23 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  // the demon or Archangel bound for this run never comes: YOU takes its place (a demon's place counts in the 72)
+  const endlessKey = bossSpec?.goeticKey || bossSpec?.archangelKey || null;
+  const shadowOf = isEndlessBoss && endlessKey && endlessKey === state.boundDemon ? endlessKey : null;
+  const archangelSpec = isEndlessBoss && !shadowOf && bossSpec?.archangelKey ? ARCHANGEL_BY_KEY[bossSpec.archangelKey] || null : null;
+  const goeticSpec = isEndlessBoss && !shadowOf && !archangelSpec ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
-  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
+  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? (archangelSpec ? ARCHANGEL_HEALTH_FACTOR : 1);
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
     ? uniqueSpec
       ? []
-      : randomBossPassiveKeys(1)
+      : shadowOf
+        ? [SHADOW_BOSS_PASSIVE_KEY]
+        : archangelSpec
+          ? []
+          : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -7465,12 +7659,16 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : archangelSpec?.name || goeticSpec?.name) || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "BOSS",
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
+    image:
+      uniqueSpec?.image ||
+      (shadowOf ? SHADOW_BOSS.image : archangelSpec ? `${ARCHANGEL_BOSS_IMAGE_ROOT}/${archangelSpec.image}` : goeticSpec?.image) ||
+      inherited?.image ||
+      randomBotImage(),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -7482,11 +7680,14 @@ function createBot(options = {}) {
     uniqueKey: uniqueSpec?.key || null,
     copiedUniqueKey: copiedUniqueSpec?.key || null,
     pairGroupId: bossSpec?.pairGroupId || null,
-    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
+    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) || archangelSpec ? state.round : null,
     goeticKey: goeticSpec?.key || null,
+    shadowOf,
+    archangelKey: archangelSpec?.key || null,
+    archangelDamage: 0,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
-    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
+    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? (archangelSpec ? 1 : endlessModifier),
     shopTax: uniqueSpec?.shopTax || 0,
     eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
     grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
@@ -7716,7 +7917,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
 function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
-    .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
+    .filter((bot) => bot && !bot.eliminated)
     .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id);
   if (total <= 0 || !ordered.length) return 0;
   const base = Math.floor(total / ordered.length);
@@ -7924,16 +8125,23 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanTightwadDue = false;
+  state.satanTightwadAbove = false;
+  state.satanTightwadOffers = 0;
+  state.satanRerollToll = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
   resetCollectionRun();
+  // what is bound in the Ars Goetia now counts for this whole run, whatever changes later
+  state.boundDemon = boundDemonForNewRun();
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
   state.player.hp = PLAYER_MAX_HP;
   state.player.credits = STARTING_CREDITS;
   state.player.passives = [];
+  grantBoundArchangelSeal();
   state.player.actives = [];
   state.log = [];
   state.roundState = null;
@@ -7968,6 +8176,7 @@ function startGame(options = {}) {
   state.bossSpawnCount = 0;
   state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
   state.goeticBossKills = 0;
   state.nextBossPairId = 1;
   state.finalBossPhase = false;
@@ -8054,6 +8263,7 @@ function beginRound() {
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
     vineRevealRolls: {},
+    redHorseRolls: {},
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
@@ -8107,7 +8317,9 @@ function beginRound() {
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
     bot.revealStacks = 0;
-    bot.memoryOverflow = 0;
+    // Seal of Threon: excess MEMORY gained when the last round was recorded (e.g. Seal of Bathin's extra) carries
+    // over and is removed for damage at the end of this round; without Threon there is no excess to keep
+    if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
 
   syncBipolarBots();
@@ -8197,7 +8409,7 @@ function applyPendingNextRoundMarbasBonuses() {
   if (!pending.length || !state.roundState) return;
   state.pendingNextRoundMarbasBonuses = [];
   pending.forEach((bonus) => {
-    const targets = activeBots().filter((bot) => !bot.immortal);
+    const targets = activeBots();
     if (!targets.length) return;
     const source = bonus.source || "Seal of Marbas";
     let sinSpread = 0;
@@ -8251,7 +8463,7 @@ function applyStartOfRoundSinRedistribution() {
   const entries = orderedPassiveEffectEntries("p48");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const targets = shuffled(activeBots().filter((bot) => !bot.immortal && botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
+    const targets = shuffled(activeBots().filter((bot) => botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
     if (!targets.length) return;
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
@@ -8422,7 +8634,7 @@ function applyTrinitySpiritOutcome(key) {
     return;
   }
   if (key === "bounty") {
-    const targets = shuffled(trinityTargets().filter((bot) => Number.isFinite(botSin(bot)) && botSin(bot) > 0)).slice(0, 2);
+    const targets = shuffled(activeBots().filter((bot) => botSin(bot) > 0)).slice(0, 2);
     targets.forEach((bot) => changeBotSin(bot, botSin(bot), `${name} doubled ${bot.name}'s BOUNTY.`, { source: name }));
     if (!targets.length) addRoundEvent(`${name} found no BOUNTY to double.`);
     return;
@@ -8633,8 +8845,20 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
+// YOU plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
+function planShadowGuess(bot) {
+  const best = planBossGuess(bot);
+  const misses = state.gameMemory
+    .slice(-SHADOW_BOSS.memoryRounds)
+    .filter((entry) => Number.isFinite(entry?.playerGuess) && Number.isFinite(entry?.target))
+    .map((entry) => entry.playerGuess - entry.target);
+  if (!misses.length) return best;
+  return clamp(Math.round(best + randomFrom(misses)), 0, 100);
+}
+
 function planBotGuess(bot) {
-  if (bot.isBoss) return planBossGuess(bot);
+  if (bot.isBoss) return bot.shadowOf ? planShadowGuess(bot) : planBossGuess(bot);
   // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
   const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
   if (padmaActive() && bot.type2) {
@@ -8781,10 +9005,10 @@ function applyGuessReveals() {
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
 }
 
-// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
 // Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
-// died last round, Zachriel Triangle if any DAMNED died last round.
+// died last round, the Seal of Cassiel (p102) if any DAMNED died last round.
 function extraRevealEntries() {
   return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
@@ -8928,10 +9152,10 @@ function applyDevSealEntries(ids) {
       devSealTargetDamned().forEach((bot) => {
         const bounty = botRegularBounty(bot);
         if (bounty <= 0) return;
-        const result = changeBotSin(bot, bounty, "", { source });
+        const result = changeBotSin(bot, Math.ceil(bounty * 0.5), "", { source });
         total += result.gained;
       });
-      addRoundEvent(total > 0 ? `${source} doubled ${total} total BOUNTY.` : `${source} found no BOUNTY to double.`);
+      addRoundEvent(total > 0 ? `${source} added ${total} total BOUNTY (x1.5).` : `${source} found no BOUNTY to multiply.`);
       return;
     }
 
@@ -9616,6 +9840,7 @@ function applyPenalties() {
   const playerIgnoresWorstPenalty = round.edgeGambitStacks > 0;
 
   applyDeathRollDamage();
+  applyFinalBossTargetStrikes();
 
   const participants = currentRoundParticipants(activeBots);
   const iposEntries = orderedPassiveEffectEntries("p58");
@@ -9694,6 +9919,8 @@ function applyPenalties() {
   // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
   const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
+  // Gabriel: every CRITICAL, yours or a DAMNED's
+  criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
@@ -9763,6 +9990,9 @@ function applyPenalties() {
   const playerTargetDiffBaseDamage = Math.ceil(Math.abs(round.playerEffectiveGuess - round.target));
   let playerTargetDiffDamage = playerTargetDiffBaseDamage;
   if (round.edgeGambitStacks) playerTargetDiffDamage = Math.ceil(playerTargetDiffDamage * 0.5);
+  // YOU's Guilt (alive when the round was played): double TARGET damage
+  const guiltDoubled = playerTargetDiffDamage > 0 && activeBots.some((bot) => botHasPassive(bot, SHADOW_BOSS_PASSIVE_KEY));
+  if (guiltDoubled) playerTargetDiffDamage *= 2;
   // Seal of the Holy Spirit, "No TARGET damage": your TARGET difference does not hurt you this round
   if (playerTargetDiffDamage > 0 && trinitySpiritOutcome() === "shield") {
     playerDamageSources.push({ amount: playerTargetDiffDamage, source: ITEMS.p133.name, kind: "saved" });
@@ -9773,7 +10003,9 @@ function applyPenalties() {
   round.playerTargetDifferenceDamage = playerTargetDiffDamage;
   addPlayerDamage(
     playerTargetDiffDamage,
-    round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference"
+    [round.edgeGambitStacks ? "Target difference halved by Seal of Andras" : "Target difference", guiltDoubled ? `doubled by ${BOSS_PASSIVES.guilt.name}` : ""]
+      .filter(Boolean)
+      .join(", ")
   );
   const targetBotDamages = new Map();
   const targetBotDamageSources = new Map();
@@ -9869,6 +10101,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
 
@@ -10158,7 +10391,8 @@ function resolveEliminatedBots(eliminated) {
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
-      if (bot.goeticKey) {
+      // an Archangel, or YOU in an Archangel's place, is not one of the 72
+      if (bot.goeticKey || (bot.shadowOf && GOETIC_BOSS_BY_KEY[bot.shadowOf])) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
@@ -10475,6 +10709,8 @@ function takeNextBossSpec() {
     return uniqueBossSpecFromKey(state.uniqueBossQueue.shift());
   }
   if (!allSpecialBossesKilled()) return null;
+  const archangelKey = rollArchangelSpawn();
+  if (archangelKey) return { archangelKey };
   if (state.goeticBossQueue.length) {
     return { goeticKey: state.goeticBossQueue.shift() };
   }
@@ -10482,6 +10718,102 @@ function takeNextBossSpec() {
     state.finalBossQueued = true;
   }
   return null;
+}
+
+/* ---- Archangel BOSSES (ARCHANGEL_BOSS_SPECS) ----
+   In the late game each boss spawn may be an Archangel instead of the next Goetic demon: every Archangel still
+   to come weighs half a demon. Once the 72 are done no more Archangels come. */
+function rollArchangelSpawn() {
+  if (!state.goeticBossQueue.length) return null;
+  if (!Array.isArray(state.archangelQueue)) state.archangelQueue = [];
+  const waiting = state.archangelQueue.filter((key) => ARCHANGEL_BY_KEY[key]);
+  if (!waiting.length) return null;
+  const weight = waiting.length * ARCHANGEL_SPAWN_WEIGHT;
+  if (Math.random() >= weight / (state.goeticBossQueue.length + weight)) return null;
+  const key = randomFrom(waiting);
+  state.archangelQueue = waiting.filter((other) => other !== key);
+  return key;
+}
+
+// testing (Pause > DEV): an Archangel takes the place of a regular DAMNED right away
+function devSummonArchangel(key) {
+  if (state.mode !== "arcade" || !ARCHANGEL_BY_KEY[key] || state.stage !== "guess") {
+    addLog("Testing: an Archangel can be summoned during GUESS only.");
+    render();
+    return;
+  }
+  const index = state.bots.findIndex((bot) => bot && !bot.isBoss && !bot.eliminated);
+  if (index < 0) return;
+  const angel = createBot({ boss: true, bossSpec: { archangelKey: key } });
+  angel.plannedGuess = planBotGuess(angel);
+  state.bots[index] = angel;
+  state.archangelQueue = (state.archangelQueue || []).filter((other) => other !== key);
+  state.pauseOpen = false;
+  state.pauseDevOpen = false;
+  addLog(`Testing: ${angel.name} summoned.`);
+  render();
+}
+
+// a run with an Archangel bound starts with its SEAL (sells for nothing, like a SEAL taken free)
+function grantBoundArchangelSeal() {
+  const spec = state.mode === "arcade" ? ARCHANGEL_BY_KEY[state.boundDemon] : null;
+  if (!spec || !ITEMS[spec.sealId] || state.player.passives.some((item) => item?.id === spec.sealId)) return;
+  const seal = itemCopy(spec.sealId);
+  seal.freeStacks = 1;
+  state.player.passives.push(seal);
+}
+
+function livingArchangels(key) {
+  return (state.bots || []).filter((bot) => bot?.isBoss && bot.archangelKey === key && bot.hp > 0 && !bot.eliminated && !bossAbilityNullified(bot));
+}
+
+// the Archangel gains damage, then deals all of it to you (through addPlayerDamage while penalties are tallied)
+function applyArchangelTrigger(key, gain, why, addPlayerDamage = null) {
+  let dealt = 0;
+  livingArchangels(key).forEach((bot) => {
+    if (!(gain > 0)) return;
+    bot.archangelDamage = Math.max(0, Math.ceil(bot.archangelDamage || 0)) + gain;
+    const damage = bot.archangelDamage;
+    const text = `${bot.name} gained +${gain} damage for ${why} and dealt ${damage} damage to you.`;
+    if (addPlayerDamage) {
+      addPlayerDamage(damage, bot.name);
+      state.roundState?.roundEvents.push(text);
+    } else {
+      damagePlayer(damage, text, true, true, bot.name);
+    }
+    dealt += damage;
+  });
+  return dealt;
+}
+
+function applyArchangelEndOfRound() {
+  const round = state.roundState;
+  if (!round) return;
+  const damned = activeBots().filter((bot) => !bot.isBoss);
+  // Michael: average non-boss MEMORY over 3
+  if (damned.length && damned.reduce((sum, bot) => sum + (bot.memory?.length || 0), 0) / damned.length > 3) {
+    applyArchangelTrigger("michael", 2, "the DAMNED's MEMORY");
+  }
+  // Samael: two DAMNED share a personality
+  const seen = new Set();
+  const shared = damned.some((bot) => [...new Set(personalityTypes(bot))].some((type) => (seen.has(type) ? true : (seen.add(type), false))));
+  if (shared) applyArchangelTrigger("samael", 2, "a shared personality");
+  // Sachiel: the regular BOUNTY of all DAMNED over 4
+  if (activeBots().reduce((sum, bot) => sum + botRegularBounty(bot), 0) > 4) applyArchangelTrigger("sachiel", 2, "the DAMNED's BOUNTY");
+  // Raphael: +1 for every elimination short of 5
+  const shortOfPentakill = Math.max(0, 5 - (round.eliminationsThisRound || 0));
+  if (shortOfPentakill > 0) applyArchangelTrigger("raphael", shortOfPentakill, "the souls you spared");
+}
+
+// Anael: every ARTIFACT you use
+function applyArchangelArtifactUse() {
+  applyArchangelTrigger("anael", 2, "an ARTIFACT");
+}
+
+// Cassiel: a revealed DAMNED takes more than 10 damage at once
+function applyArchangelRevealedHit(bot, damage) {
+  if (!bot || bot.isBoss || !bot.revealedByPassive || !(damage > 10) || !state.roundState) return;
+  applyArchangelTrigger("cassiel", 2, `${bot.name}'s wound`);
 }
 
 function applyEliminationPassives(bot) {
@@ -10942,10 +11274,11 @@ function applyEndOfRoundPassives() {
   round.resolvingEndOfRoundPassives = true;
   try {
     applyQueuedEndOfRoundBotDamage();
-    applyMemoryOverflowDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
     applySitriHostMemory();
+    // Seal of Threon: after the end-of-round MEMORY gains, so their excess is counted this round too
+    applyMemoryOverflowDamage();
     // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
     if (round.trinity?.spiritHealed && trinityEntry("p133")) {
       const healed = healPlayer(3, null, ITEMS.p133.name);
@@ -10979,6 +11312,7 @@ function applyEndOfRoundPassives() {
     applyFixedWillEndRound();
     applyInflationEngine();
     applySelfStackingBountySumDamage();
+    applyArchangelEndOfRound();
     applyLowProfileReward();
     applyPursonReward();
     applyPandoriumContractCleanup();
@@ -11008,7 +11342,6 @@ function applyInflationEngine() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const targets = activeBots()
-      .filter((bot) => !bot.immortal)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, 2);
     if (!targets.length) return;
@@ -11049,7 +11382,7 @@ function applyRonoveDrain() {
   entries.forEach((entry) => {
     const targetCount = Math.max(1, entry.stack || 1);
     const targets = activeBots()
-      .filter((bot) => !bot.immortal && botSin(bot) > 0)
+      .filter((bot) => botSin(bot) > 0)
       .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id)
       .slice(0, targetCount);
     if (!targets.length) return;
@@ -11161,6 +11494,12 @@ function advanceAfterSummary() {
     startSatanVictoryNow();
     return;
   }
+  // too much SIN held: the results wait for Satan's offer; moving on brings him in now
+  if (introState.phase === "tightwad" || introState.phase === "tightwad-leave") return;
+  if (satanTightwadHoldsSummary()) {
+    startSatanTightwadNow();
+    return;
+  }
   clearDevTemporaryArtifacts();
   rememberRound();
   if (state.player.hp <= 0) {
@@ -11220,6 +11559,8 @@ function rememberRound() {
   };
 
   state.gameMemory.push(memoryEntry);
+  // this round is now finished, so it counts toward the MEMORY limit
+  round.memoryRecorded = true;
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -11285,12 +11626,16 @@ function buyShopItem(slotIndex) {
       return;
     }
     spendCredits(cost);
+    // a copy taken free (the bound demon's SEAL) sells for nothing
+    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
+      if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;
       recordEliteLevelBought(existing.id, existing.stack);
       addLog(`Upgraded ${existing.name} to ${passiveDisplayName(existing)}.`);
     } else {
       const boughtSeal = itemCopy(item.id);
+      if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
       addLog(`Bought ${item.name}.`);
@@ -11340,6 +11685,11 @@ function rerollShopClick() {
     render();
     return;
   }
+  if (satanRerollTollActive()) {
+    rerollShopPayingSatanToll();
+    render();
+    return;
+  }
   const free = freeRerollsLeft() > 0;
   const cost = currentRerollCost();
   if (!canSpendCredits(cost)) {
@@ -11367,8 +11717,23 @@ function rerollShopClick() {
   render();
 }
 
+// Satan's toll: this reroll takes every SIN you hold. The SIN is lost to him, not spent, so it feeds no
+// spending SEAL (Furfur, Shax) and the normal reroll price does not go up.
+function rerollShopPayingSatanToll() {
+  const lost = Math.max(0, Math.ceil(state.player.credits || 0));
+  state.player.credits = 0;
+  state.satanRerollToll = false;
+  state.satanTightwadAbove = false;
+  rerollShop();
+  playGameSfx("reroll");
+  addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
+  applyRerollTollDamage();
+  if (state.player.hp <= 0) finishGameOverRound();
+}
+
 function passiveSellValue(item) {
-  return Math.floor((item.price * (item.stack || 1)) / 2) + (item.saleBonus || 0);
+  const paidStacks = Math.max(0, (item.stack || 1) - (item.freeStacks || 0));
+  return Math.floor((item.price * paidStacks) / 2) + (item.saleBonus || 0);
 }
 
 // the Trinity SEALS share a slot: selling it sells every one of them
@@ -11812,6 +12177,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
   collectionNoteArtifactUse();
+  applyArchangelArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
   addLog(message);
@@ -13098,7 +13464,7 @@ function renderRecordsMenu() {
     renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
     renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
     renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
-    renderRecordRow("Highest Elite Level Bought", recordValueText(records.highestEliteLevel, { withName: true, prefix: "ELITE " })),
+    renderRecordRow("Highest Elite Level Bought", records.highestEliteLevel?.value > 0 ? `${eliteLevelText(records.highestEliteLevel.value)}${records.highestEliteLevel.name ? ` - ${records.highestEliteLevel.name}` : ""}` : "None"),
     renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
     renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
   ].join("");
@@ -13625,6 +13991,10 @@ function renderSelfStackingDevPanel() {
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
+      <h2>Summon an Archangel (testing)</h2>
+      <div class="dev-summon-row">
+        ${ARCHANGEL_BOSS_SPECS.map((spec) => `<button class="small-button" data-pause-action="summon:${spec.key}">${escapeHtml(spec.name)}</button>`).join("")}
+      </div>
     </div>
   `;
 }
@@ -14633,13 +15003,18 @@ function renderBot(bot, pendingPick) {
         : "--";
   const rawNote =
     state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
-  const memoryOverflow = Math.max(0, Math.ceil(bot.memoryOverflow || 0));
+  // excess MEMORY is only shown while Seal of Threon is active
+  const memoryOverflow = orderedPassiveEffectEntries("p127").length ? Math.max(0, Math.ceil(bot.memoryOverflow || 0)) : 0;
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
     ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
     : "No memory";
   // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
-  const memoryOverflowHtml = memoryOverflow ? `<span class="memory-overflow">+${memoryOverflow}</span>` : "";
+  // hovering it explains it is excess, not part of the MEMORY value
+  const memoryOverflowTooltip = `Excess MEMORY: +${memoryOverflow} past the ${memoryRoundLimit()} ${memoryRoundLimit() === 1 ? "round" : "rounds"} finished. ${ITEMS.p127.name} removes it at the end of the round and deals damage for each.`;
+  const memoryOverflowHtml = memoryOverflow
+    ? `<span class="memory-overflow" data-tooltip="${escapeAttr(memoryOverflowTooltip)}">+${memoryOverflow}</span>`
+    : "";
   const pickClass = pendingPick ? "pickable" : "";
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
@@ -14814,7 +15189,7 @@ function consoleActionState() {
 
 function renderConsole() {
   const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
-  // the guess that counts: a BOSS's Corruption can shift it away from what was typed
+  // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
   const corruptionFresh = Boolean(corruption && !corruption.shown);
@@ -14832,7 +15207,7 @@ function renderConsole() {
     corruptionFresh ? "corrupted-fresh" : ""
   ].filter(Boolean).join(" ");
   const corruptionNote = corruption
-    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`Corruption changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
+    ? `<span class="guess-corruption${corruptionFresh ? " fresh" : ""}" aria-label="${escapeAttr(`${BOSS_PASSIVES.corruption.name} changed your guess from ${corruption.from} to ${corruption.to}`)}"><span class="guess-corruption-label">${escapeHtml(BOSS_PASSIVES.corruption.name)}</span><s>${corruption.from}</s></span>`
     : "";
   const nativeInputType = isNativeArcadeApp() ? "text" : "number";
   const nativeInputLock = isNativeArcadeApp()
@@ -14934,7 +15309,7 @@ function renderShop() {
           <div class="elite-chance-label">${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""}>Reroll <span class="reroll-cost">${freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
+          <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
         </div>
       </div>
       <div class="shop-slots">
@@ -14958,7 +15333,10 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${cost}${SIN_MARK}` : full ? "Full" : `Buy ${cost}${SIN_MARK}`;
+  // the demon bound in the Ars Goetia gives its SEAL away
+  const free = item.type === "passive" && isBoundDemonSeal(item.id) && cost <= 0;
+  const priceText = free ? "free" : `${cost}${SIN_MARK}`;
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
@@ -14970,10 +15348,10 @@ function renderShopSlot(slot, index) {
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
   const kindLabel =
-    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : "SEAL") : "ARTIFACT";
+    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : free ? "BOUND SEAL" : "SEAL") : "ARTIFACT";
 
   return `
-    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""} ${free ? "bound-offer" : ""}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
@@ -15156,7 +15534,7 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const format = (number) => (record.key === "highestEliteLevel" ? `ELITE ${number}` : formatNumber(number));
+      const format = (number) => (record.key === "highestEliteLevel" ? (number > 0 ? eliteLevelText(number) : "None") : formatNumber(number));
       const value = format(record.value);
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
       return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
@@ -15325,6 +15703,10 @@ function updateSoundSetting(key, value, renderAfter = true) {
 }
 
 function handlePauseAction(action) {
+  if (typeof action === "string" && action.startsWith("summon:")) {
+    devSummonArchangel(action.slice("summon:".length));
+    return;
+  }
   if (action === "settings" || action === "collection") {
     state.pauseScreen = action;
     render();
@@ -15860,9 +16242,20 @@ const SATAN_VICTORY_LINES = [
   ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
 ];
 
+// the player ends a round holding SATAN_TIGHTWAD_SIN or more: Satan offers to take it all (YES / NO at the end)
+const SATAN_TIGHTWAD_LINES = [
+  ["satan", "Wow, we got a tightwad here don't we? I thought we had an understanding about how things work out here you little bitch."],
+  ["satan", "Well, you are not yet in my domain, so I can't -technically- force you to hold your end, but my taxation system will soon become unbearable for you. I'm sure that you will last as long as the next damned without my help."],
+  ["satan", "But if by chance you came to your senses, I can help you unload the burden of this huge load of SIN{SIN} that would send you to my deepest dungeon."],
+  ["satan", "The offer is simple: Give it all to me NOW, and I will forgive you. What say you, flesh puppet?"]
+];
+
+// the second time (and after) in the same run
+const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the right choice flesh puppet..."]];
+
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
-// phase: off | black | judgement | booting | tutorial | pact | reveal
+// phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
 const introState = {
   phase: "off",
   timers: [],
@@ -15909,7 +16302,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory", "tightwad"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -15919,7 +16312,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -16086,9 +16479,10 @@ function introFitText() {
   text.style.fontSize = "";
   const max = parseFloat(getComputedStyle(text).fontSize) || 24;
   let size = max;
+  // "important": the box's font-size rules are !important and would win over a plain inline size
   while (size > 9 && text.scrollHeight > text.clientHeight + 1) {
     size -= 1;
-    text.style.fontSize = `${size}px`;
+    text.style.setProperty("font-size", `${size}px`, "important");
   }
 }
 
@@ -16113,6 +16507,14 @@ function introShowLine(index) {
   introTypeTo(introState.ends[0]);
 }
 
+// a part of a line has finished typing; Satan's offer asks YES / NO as soon as its last part is down
+function introPartTyped() {
+  introSetWaiting(true);
+  const lastLine = introState.lineIndex === introState.lines.length - 1;
+  const lastPart = introState.chunk === introState.ends.length - 1;
+  if (introState.phase === "tightwad" && lastLine && lastPart) satanTightwadAsk();
+}
+
 function introTypeTo(end) {
   clearInterval(introState.typeTimer);
   introSetWaiting(false);
@@ -16122,7 +16524,7 @@ function introTypeTo(end) {
       clearInterval(introState.typeTimer);
       introState.typeTimer = null;
       introState.typing = false;
-      introSetWaiting(true);
+      introPartTyped();
       return;
     }
     introState.shown += 1;
@@ -16138,7 +16540,8 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory", "tightwad"].includes(introState.phase) || !introState.box) return;
+  if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
     // finish the current part at once
@@ -16147,7 +16550,7 @@ function introAdvance() {
     introState.typeTimer = null;
     introState.typing = false;
     introDrawText();
-    introSetWaiting(true);
+    introPartTyped();
     return;
   }
   if (!introState.waiting) return;
@@ -16168,6 +16571,7 @@ function introAdvance() {
   }
   if (introState.phase === "judgement") introBootGame();
   else if (introState.phase === "victory") satanVictoryLeave();
+  else if (introState.phase === "tightwad") satanTightwadAsk();
   else introSealPact();
 }
 
@@ -16175,13 +16579,20 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+    if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
     "keydown",
     (event) => {
       if (!introCapturesInput()) return;
+      // Satan's offer: Y / N answer it
+      if (introState.phase === "tightwad" && introState.box?.classList.contains("intro-choosing") && /^[yn]$/i.test(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+        satanTightwadChoose(event.key.toLowerCase() === "y");
+        return;
+      }
       if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
         event.preventDefault();
         event.stopPropagation();
@@ -16219,7 +16630,8 @@ function introBindSkip(layer) {
   });
 }
 
-// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end
+// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end;
+// Satan's offer: straight to its YES / NO
 function introSkip() {
   if (introState.phase === "judgement") {
     introClearTimers();
@@ -16234,6 +16646,11 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanVictoryLeave();
+  } else if (introState.phase === "tightwad") {
+    // the offer cannot be skipped, only its talk: straight to YES / NO
+    introClearTimers();
+    introState.typing = false;
+    satanTightwadSkipToChoice();
   }
 }
 
@@ -16321,8 +16738,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (introState.phase === "pact" || introState.phase === "victory") introPlacePactBox();
+  if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
   satanVictoryAfterRender();
+  satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
   if (state.round >= 2 && state.stage === "summary") {
     const check = () => {
@@ -16391,13 +16809,19 @@ function startSatanVictoryNow() {
 function startSatanVictory() {
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = true;
+  satanOpenScene("victory", SATAN_VICTORY_LINES, "satan-victory-layer");
+  saveArcadeRun();
+}
+
+// Satan walks in during a run: the table dims, he stands on the right, his box covers the SEAL slots
+function satanOpenScene(phase, lines, layerClass) {
   introBindKeys();
-  introState.phase = "victory";
-  introState.lines = SATAN_VICTORY_LINES;
+  introState.phase = phase;
+  introState.lines = lines;
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   document.querySelector("#floatingTooltip")?.classList.remove("visible");
   const layer = document.createElement("div");
-  layer.className = "intro-pact-layer satan-victory-layer";
+  layer.className = `intro-pact-layer ${layerClass}`;
   layer.innerHTML = `
     <div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
     ${introBoxHtml("pact")}`;
@@ -16408,13 +16832,17 @@ function startSatanVictory() {
   introState.box = layer.querySelector(".intro-box");
   introPlacePactBox();
   introShowLine(0);
-  saveArcadeRun();
 }
 
 function satanVictoryLeave() {
-  if (introState.phase !== "victory") return;
+  satanLeaveScene("victory");
+}
+
+// he laughs and goes; the run carries on
+function satanLeaveScene(phase) {
+  if (introState.phase !== phase) return;
   introSetWaiting(false);
-  introState.phase = "victory-leave";
+  introState.phase = `${phase}-leave`;
   introPlaySfx("introLaugh");
   introState.box?.classList.add("intro-box-leave");
   introState.layer?.classList.add("intro-pact-leaving");
@@ -16426,6 +16854,141 @@ function satanVictoryLeave() {
     introState.phase = "off";
     render();
   }, 1300);
+}
+
+/* ---- Satan's offer: too much SIN held ----
+   Ending a round with SATAN_TIGHTWAD_SIN or more (the shop's price pressure has priced everything out by
+   then) makes state.satanTightwadDue; the results wait for him like for the victory speech, and Next
+   Round brings him in at once. Same entrance and box. At the end of his talk the box asks YES / NO
+   (click, or Y / N): YES leaves you with STARTING_CREDITS SIN, NO changes nothing. He comes again only
+   once the SIN has gone back under the line and reached it again, and from the second time in a run he
+   says one line. The offer stays due until it is answered, so reloading the save brings it back.
+   NO also sets Satan's toll (state.satanRerollToll): the next reroll costs all the SIN you hold
+   (currentRerollCost, rerollShopPayingSatanToll). YES lifts it. */
+function noteSatanTightwad() {
+  if (state.mode !== "arcade") return;
+  const above = Math.ceil(state.player.credits || 0) >= SATAN_TIGHTWAD_SIN;
+  if (above && !state.satanTightwadAbove) state.satanTightwadDue = true;
+  state.satanTightwadAbove = above;
+}
+
+function satanTightwadLines() {
+  return (state.satanTightwadOffers || 0) > 0 ? SATAN_TIGHTWAD_AGAIN_LINES : SATAN_TIGHTWAD_LINES;
+}
+
+// YES: Satan takes everything over the starting SIN; returns how much he took
+function satanTightwadPay() {
+  const before = Math.max(0, Math.ceil(state.player.credits || 0));
+  const taken = Math.max(0, before - STARTING_CREDITS);
+  state.player.credits = STARTING_CREDITS;
+  state.satanTightwadAbove = false;
+  return taken;
+}
+
+function satanTightwadHoldsSummary() {
+  return Boolean(
+    state.satanTightwadDue &&
+      !state.satanVictoryDue &&
+      introState.phase === "off" &&
+      state.mode === "arcade" &&
+      state.stage === "summary" &&
+      !state.gameOver &&
+      state.player.hp > 0
+  );
+}
+
+function satanTightwadReady() {
+  return (
+    satanTightwadHoldsSummary() &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function satanTightwadAfterRender() {
+  if (!satanTightwadHoldsSummary() || introState.pactTimer) return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanTightwadReady()) startSatanTightwad();
+    else if (satanTightwadHoldsSummary()) introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanTightwadNow() {
+  if (!satanTightwadHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanTightwad();
+}
+
+function startSatanTightwad() {
+  satanOpenScene("tightwad", satanTightwadLines(), "satan-tightwad-layer");
+}
+
+// the last line stays up and YES / NO appear under it
+function satanTightwadAsk() {
+  const box = introState.box;
+  if (introState.phase !== "tightwad" || !box || box.classList.contains("intro-choosing")) return;
+  introSetWaiting(false);
+  box.classList.add("intro-choosing");
+  const choice = document.createElement("div");
+  choice.className = "intro-choice";
+  choice.innerHTML = `
+    <button class="intro-choice-button" type="button" data-choice="yes">Yes</button>
+    <button class="intro-choice-button" type="button" data-choice="no">No</button>`;
+  choice.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const button = event.target.closest("[data-choice]");
+    if (button) satanTightwadChoose(button.dataset.choice === "yes");
+  });
+  box.appendChild(choice);
+  introFitText();
+}
+
+function satanTightwadSkipToChoice() {
+  if (introState.box?.classList.contains("intro-choosing")) return;
+  const last = introState.lines.length - 1;
+  if (introState.lineIndex !== last) introShowLine(last);
+  clearInterval(introState.typeTimer);
+  introState.typeTimer = null;
+  introState.typing = false;
+  introState.chunk = introState.ends.length - 1;
+  introState.shown = introState.glyphs.length;
+  introDrawText();
+  satanTightwadAsk();
+}
+
+function satanTightwadChoose(yes) {
+  const box = introState.box;
+  if (introState.phase !== "tightwad" || !box?.classList.contains("intro-choosing")) return;
+  box.querySelector(".intro-choice")?.remove();
+  box.classList.remove("intro-choosing");
+  state.satanTightwadDue = false;
+  state.satanTightwadOffers = (state.satanTightwadOffers || 0) + 1;
+  if (!yes) {
+    state.satanRerollToll = true;
+    addLog("You refused Satan's offer. Your next reroll will cost all your SIN.");
+    saveArcadeRun();
+    satanLeaveScene("tightwad");
+    return;
+  }
+  const taken = satanTightwadPay();
+  state.satanRerollToll = false;
+  addLog(`Satan took ${taken} SIN. You are left with ${STARTING_CREDITS} SIN.`);
+  saveArcadeRun();
+  // the pact sound and the red pulse, as when the pact was sealed; the SIN drops behind the veil
+  box.classList.add("intro-box-hush", "intro-box-pulse");
+  introState.glyphs = [];
+  introState.shown = 0;
+  introDrawText();
+  introPlaySfx("introEvil");
+  render();
+  introLater(() => {
+    introState.box?.classList.remove("intro-box-pulse");
+    satanLeaveScene("tightwad");
+  }, 2000);
 }
 
 /* ---- 3. Satan's pact ---- */
@@ -16797,7 +17360,7 @@ const SEAL_UNLOCKS = {
   p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
   p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
   p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals (the Archangel seals p92-p97 and p110 are open from the start)
+  // Boss Seals (the Pentacles of Saturn p92-p97 and p110 are open from the start)
   p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
   p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
   p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
@@ -16806,9 +17369,9 @@ const SEAL_UNLOCKS = {
   p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
   p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
   p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
-  // Satan Seals
+  // Seal of Satan
   p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
-  // Seals of Saturn
+  // the Archangel Seals (self-stacking since they swapped effects with the Pentacles of Saturn)
   p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
   p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
   p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
@@ -16847,18 +17410,19 @@ const COLLECTION_FLAG_LABELS = {
   sixEliteSeals: "six ELITE SEALS"
 };
 
-// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Player Seals"
+// sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Goetic Seals"
 const COLLECTION_SECTIONS = [
-  { key: "player", title: "Player Seals" },
+  { key: "player", title: "Goetic Seals" },
   { key: "apocalypse", title: "Apocalypse Seals", ids: ["p74", "p75", "p76", "p77", "p78", "p79", "p80"] },
   { key: "bosses", title: "Boss Seals", ids: ["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"] },
-  // the former Boss SEALS, now named after the Archangels
-  { key: "archangel", title: "Archangel Seals", ids: ["p92", "p93", "p94", "p95", "p96", "p97", "p110"] },
-  { key: "satan", title: "Satan Seals", ids: ["p111"] },
+  // the self-stacking SEALS, named after the archangel of each planet, in weekday order (Sun, Moon, Mars, Mercury,
+  // Jupiter, Venus, Saturn): Michael, Gabriel, Samael, Raphael, Sachiel, Anael, Cassiel
+  { key: "archangel", title: "Archangel Seals", ids: ["p99", "p98", "p109", "p101", "p100", "p103", "p102"] },
+  { key: "satan", title: "Seal of Satan", ids: ["p111"] },
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
-  // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  // the seven Pentacles of Saturn (in pentacle order); they took the Archangel Seals' old chance effects
+  { key: "saturn", title: "Seals of Saturn", ids: ["p97", "p93", "p92", "p95", "p110", "p94", "p96"] }
 ];
 
 /* ---- builds: the collection filters ----
@@ -16966,28 +17530,28 @@ const SEAL_BUILD_TAGS = {
   p126: ["artifact"], // Serafeim
   p127: ["memory"], // Threon
   p128: ["critical"], // Dantre
-  // Archangel SEALS (the former Boss SEALS)
-  p92: ["critical"], // Cassiel Pentagram
-  p93: ["bounty"], // Zachriel Triangle
-  p94: ["artifact"], // Aggiel Hexagram
-  p95: ["reveal"], // Samael Star
-  p96: ["personality"], // Samael Triangle
-  p97: ["memory"], // Cassiel Sigil
-  p110: ["general"], // Cassiel Hexagram (wipes MEMORY and BOUNTY)
+  // Seals of Saturn (chance effects at READY / reveal)
+  p92: ["critical"], // Third Pentacle of Saturn
+  p93: ["bounty"], // Second Pentacle of Saturn
+  p94: ["artifact"], // Sixth Pentacle of Saturn
+  p95: ["reveal"], // Fourth Pentacle of Saturn
+  p96: ["personality"], // Seventh Pentacle of Saturn
+  p97: ["memory"], // First Pentacle of Saturn
+  p110: ["general"], // Fifth Pentacle of Saturn (wipes MEMORY and BOUNTY)
   // Satan SEALS
   p111: ["general"], // Satan
   // Trinity SEALS
   p131: ["general"], // Father (TARGET difference as %, 20% strike, double damage)
   p132: ["general"], // Son (double SIN, +8 SIN, free rerolls)
   p133: ["general"], // Holy Spirit (the wheel)
-  // Seals of Saturn
-  p98: ["critical"], // Samael Star
-  p99: ["memory"], // Cassiel Sigil
-  p100: ["bounty"], // Bethor
-  p101: ["general"], // Aggiel Hexagram
-  p102: ["reveal"], // Zachriel Triangle
-  p103: ["artifact"], // Cassiel Pentagram
-  p109: ["personality"] // Samael Triangle
+  // Archangel SEALS (self-stacking)
+  p98: ["critical"], // Gabriel
+  p99: ["memory"], // Michael
+  p100: ["bounty"], // Sachiel
+  p101: ["general"], // Raphael
+  p102: ["reveal"], // Cassiel
+  p103: ["artifact"], // Anael
+  p109: ["personality"] // Samael
 };
 
 function sealBuilds(id) {
@@ -17003,6 +17567,119 @@ function sealMatchesCollectionFilter(id, filter = collectionFilter()) {
   return filter === "all" || sealBuilds(id).includes(filter);
 }
 
+/* ---- search: one box on each tab, matched as you type ----
+   SEALS match by name, text and build; demons by number (9 or IX) and, once defeated, by name (other
+   spellings too: "morax", "gamigin"), their SEAL's name and "bound". Every word typed has to match. */
+const collectionSearch = { seals: "", goetia: "", angels: "" };
+
+function collectionSearchText(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function collectionSearchWords(query) {
+  const text = collectionSearchText(query);
+  return text ? text.split(" ") : [];
+}
+
+function sealMatchesSearch(id, query = collectionSearch.seals) {
+  const words = collectionSearchWords(query);
+  if (!words.length) return true;
+  const item = ITEMS[id];
+  if (!item) return false;
+  const builds = sealBuilds(id).map((key) => SEAL_BUILDS.find((build) => build.key === key)?.label || "");
+  const haystack = collectionSearchText([item.name, item.description, ...builds].join(" "));
+  return words.every((word) => haystack.includes(word));
+}
+
+function collectionSealVisible(id) {
+  return sealMatchesCollectionFilter(id) && sealMatchesSearch(id);
+}
+
+function demonMatchesSearch(key, query) {
+  if (ARCHANGEL_BY_KEY[key]) return archangelMatchesSearch(key, query ?? collectionSearch.angels);
+  const words = collectionSearchWords(query ?? collectionSearch.goetia);
+  if (!words.length) return true;
+  const index = GOETIC_BOSS_KEYS.indexOf(key);
+  const spec = GOETIC_BOSS_SPECS[index];
+  if (!spec) return false;
+  const numbers = [String(index + 1), romanNumeral(index + 1).toLowerCase()];
+  if (words.length === 1 && numbers.includes(words[0])) return true;
+  // a demon not defeated yet has no name to find
+  if (!isDemonSlain(key)) return false;
+  const seal = spec.passiveId && ITEMS[spec.passiveId] ? ITEMS[spec.passiveId].name : "";
+  const haystack = collectionSearchText(
+    [spec.name, spec.image.replace(/^\d+-|\.png$/gi, ""), seal, collectionBoundDemon() === key ? "bound" : ""].join(" ")
+  );
+  return words.every((word) => haystack.includes(word));
+}
+
+function archangelMatchesSearch(key, query = collectionSearch.angels) {
+  const words = collectionSearchWords(query);
+  if (!words.length) return true;
+  const spec = ARCHANGEL_BY_KEY[key];
+  if (!spec) return false;
+  const known = [spec.planet, "archangel"];
+  if (isArchangelDefeated(key)) known.push(spec.name, ITEMS[spec.sealId]?.name || "", spec.build, collectionBoundDemon() === key ? "bound" : "");
+  const haystack = collectionSearchText(known.join(" "));
+  return words.every((word) => haystack.includes(word));
+}
+
+function collectionSearchHtml(tab) {
+  const value = collectionSearch[tab] || "";
+  const label = tab === "goetia" ? "Search demons" : tab === "angels" ? "Search Archangels" : "Search SEALS";
+  return `
+    <label class="collection-search${value ? " has-value" : ""}">
+      <img class="collection-search-icon" src="assets/ui/search-eye.png" alt="" aria-hidden="true" draggable="false" />
+      <input class="collection-search-input" type="text" data-collection-search="${tab}" value="${escapeAttr(value)}" placeholder="Search" aria-label="${label}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
+      <button type="button" class="collection-search-clear" data-collection-search-clear="${tab}" aria-label="Clear the search">&times;</button>
+    </label>`;
+}
+
+function collectionEmptyHtml(tab) {
+  return `<div class="collection-empty" data-collection-empty="${tab}" hidden>Nothing matches your search.</div>`;
+}
+
+// shows and hides SEALS, sections and demons in place for the build filter and both searches
+function applyCollectionVisibility(screen) {
+  if (!screen) return;
+  screen.querySelectorAll(".collection-seal").forEach((button) => {
+    button.hidden = !collectionSealVisible(button.dataset.collectionSeal);
+  });
+  screen.querySelectorAll(".collection-section").forEach((section) => {
+    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
+  });
+  screen.querySelectorAll(".collection-demon").forEach((button) => {
+    button.hidden = !demonMatchesSearch(button.dataset.collectionDemon);
+  });
+  const sealsEmpty = screen.querySelector('[data-collection-empty="seals"]');
+  if (sealsEmpty) sealsEmpty.hidden = Boolean(screen.querySelector(".collection-seal:not([hidden])"));
+  ["goetia", "angels"].forEach((tab) => {
+    const empty = screen.querySelector(`[data-collection-empty="${tab}"]`);
+    const panel = screen.querySelector(`[data-collection-panel="${tab}"]`);
+    if (empty && panel) empty.hidden = Boolean(panel.querySelector(".collection-demon:not([hidden])"));
+  });
+  screen.querySelectorAll(".collection-search").forEach((label) => {
+    const input = label.querySelector("[data-collection-search]");
+    label.classList.toggle("has-value", Boolean(input?.value));
+  });
+}
+
+function applyCollectionSearch(screen, tab, value) {
+  collectionSearch[tab] = value;
+  if (!screen) return;
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+  applyCollectionVisibility(screen);
+  const body = screen.querySelector(`[data-collection-panel="${tab}"] .collection-body`);
+  if (body) body.scrollTop = 0;
+}
+
 /* ---- stored progress ---- */
 let collectionProgressCache = null;
 
@@ -17011,9 +17688,19 @@ function defaultCollectionProgress() {
     version: 2,
     unlocked: [],
     discovered: [],
+    // the Goetic BOSSES slain at least once (GOETIC_BOSS_SPECS keys): the Ars Goetia tab
+    slain: [],
+    // the Archangel BOSSES defeated at least once (ARCHANGEL_BOSS_SPECS keys): the Archangels tab
+    archangels: [],
+    // the demon or Archangel bound for the next run (a defeated one), or null
+    boundDemon: null,
+    // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
+    devAllDemons: false,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
     best: Object.fromEntries(Object.keys(COLLECTION_BEST_LABELS).map((key) => [key, 0])),
-    flags: {}
+    flags: {},
+    // SEAL records, by SEAL id (see normalizeSealRecord)
+    seals: {}
   };
 }
 
@@ -17026,7 +17713,16 @@ function loadCollectionProgress() {
       const saved = JSON.parse(raw);
       if (Array.isArray(saved.unlocked)) progress.unlocked = saved.unlocked.filter((id) => typeof id === "string");
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
+      if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
+      progress.devAllDemons = saved.devAllDemons === true;
+      if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
+      if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
+      if (saved.seals && typeof saved.seals === "object") {
+        Object.entries(saved.seals).forEach(([id, record]) => {
+          if (typeof id === "string" && record && typeof record === "object") progress.seals[id] = normalizeSealRecord(record);
+        });
+      }
       for (const group of ["stats", "best"]) {
         const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
         Object.keys(progress[group]).forEach((key) => {
@@ -17130,7 +17826,7 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0 };
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
   else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
   return state.collectionRun;
@@ -17163,6 +17859,8 @@ function collectionNoteSpend(cost) {
 }
 
 function collectionNoteElimination(bot) {
+  if (bot?.isBoss && bot.goeticKey) collectionSlayDemon(bot.goeticKey);
+  if (bot?.isBoss && bot.archangelKey) collectionDefeatArchangel(bot.archangelKey);
   if (!collectionCounts() || !bot) return;
   collectionBump("eliminations");
   if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
@@ -17179,6 +17877,7 @@ function collectionNoteElimination(bot) {
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
       run.beaten = true;
       collectionBump("gamesBeaten");
+      collectionNoteSealWins();
       if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
     }
   }
@@ -17223,6 +17922,333 @@ function collectionDiscover(id) {
   saveCollectionProgress();
 }
 
+/* ---- SEAL records: lifetime numbers for each SEAL, shown in the Collection while Shift is held ----
+     wins      games beaten (the 8 unique BOSSES) with the SEAL in a slot at the moment of the win;
+               a SEAL you have won with turns deep red in the Collection, like a SEAL that triggers
+     elite     the highest ELITE level it reached (not kept for SEALS that cannot be upgraded)
+     triggers  every activation, in all runs
+     total / run / round   for every amount the SEAL produces (the state.sealStats kinds below):
+               the lifetime sum, the most in one run, the most in one round
+   Only real arcade runs count (collectionCounts). */
+const SEAL_RECORD_KINDS = [
+  { key: "damage", label: "Damage dealt" },
+  { key: "healing", label: "Healing done" },
+  { key: "saved", label: "Damage negated" },
+  { key: "credits", label: "SIN gained" },
+  { key: "memory", label: "MEMORY added" },
+  { key: "bounty", label: "BOUNTY added" },
+  { key: "bountyRemoved", label: "BOUNTY removed" },
+  { key: "personality", label: "Personalities changed" }
+];
+
+function normalizeSealRecord(source = {}) {
+  const count = (value) => Math.max(0, Math.floor(Number(value) || 0));
+  const amounts = (group) =>
+    Object.fromEntries(
+      SEAL_RECORD_KINDS.map(({ key }) => [key, count(group && typeof group === "object" ? group[key] : 0)]).filter(([, value]) => value > 0)
+    );
+  return {
+    wins: count(source.wins),
+    elite: count(source.elite),
+    triggers: count(source.triggers),
+    total: amounts(source.total),
+    run: amounts(source.run),
+    round: amounts(source.round)
+  };
+}
+
+function sealRecord(id, create = false) {
+  const seals = loadCollectionProgress().seals;
+  if (!seals[id] && create) seals[id] = normalizeSealRecord();
+  return seals[id] || null;
+}
+
+function sealRecordShowsElite(id) {
+  return !NON_UPGRADABLE_SEAL_IDS.has(id) && !SELF_STACKING_SEAL_IDS.has(id);
+}
+
+function isSealBeaten(id) {
+  return (sealRecord(id)?.wins || 0) > 0;
+}
+
+// recordSealStat (03) calls this with the amount just added and the SEAL's total for this run
+function collectionNoteSealStat(id, kind, value, runTotal) {
+  if (!collectionCounts() || !ITEMS[id] || !(value > 0) || !SEAL_RECORD_KINDS.some((entry) => entry.key === kind)) return;
+  const record = sealRecord(id, true);
+  record.total[kind] = (record.total[kind] || 0) + value;
+  record.run[kind] = Math.max(record.run[kind] || 0, runTotal || 0);
+  const run = collectionRun();
+  if (!run.sealRound || run.sealRound.round !== state.round) run.sealRound = { round: state.round, values: {} };
+  const key = `${id}:${kind}`;
+  run.sealRound.values[key] = (run.sealRound.values[key] || 0) + value;
+  record.round[kind] = Math.max(record.round[kind] || 0, run.sealRound.values[key]);
+  collectionDirty = true;
+}
+
+function collectionNoteSealTrigger(id) {
+  if (!collectionCounts() || !ITEMS[id]) return;
+  sealRecord(id, true).triggers += 1;
+  collectionDirty = true;
+}
+
+// the game was just beaten: every SEAL in a slot right now gets the win
+function collectionNoteSealWins() {
+  const ids = [...new Set((state.player.passives || []).map((item) => item?.id).filter((id) => id && ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id)))];
+  ids.forEach((id) => {
+    sealRecord(id, true).wins += 1;
+    collectionDiscover(id);
+  });
+  if (ids.length) collectionDirty = true;
+}
+
+function collectionNoteSealElite() {
+  (state.player.passives || []).forEach((item) => {
+    if (!item || !ITEMS[item.id] || !sealRecordShowsElite(item.id)) return;
+    const level = Math.max(0, (item.stack || 1) - 1);
+    if (level <= 0 || level <= (sealRecord(item.id)?.elite || 0)) return;
+    sealRecord(item.id, true).elite = level;
+    collectionDirty = true;
+  });
+}
+
+// the beaten mark: one small hand-drawn symbol next to the status, no word
+const COLLECTION_BEATEN_MARKS = {
+  pentagram: `<circle cx="12" cy="12" r="10.4"/><path d="M12 21.3 6.53 4.48 20.85 14.87H3.16L17.47 4.48Z"/>`,
+  skull: `<path d="M12 2.6C6.9 2.6 4.1 6 4.1 10.2c0 2.5 1.1 4.2 2.6 5.2V18h2.2v2.4h6.2V18h2.2v-2.6c1.5-1 2.6-2.7 2.6-5.2 0-4.2-2.8-7.6-7.9-7.6Z"/><circle cx="8.9" cy="10.9" r="1.9" fill="currentColor"/><circle cx="15.1" cy="10.9" r="1.9" fill="currentColor"/><path d="M12 13.7 10.9 15.7h2.2ZM10.9 18v2.4M13.1 18v2.4"/>`,
+  trophy: `<path d="M7 3.4h10v4.6c0 3-2.2 5.5-5 5.5S7 11 7 8Z"/><path d="M7 5.4H4.4c0 2.6 1.3 4.1 3.3 4.4M17 5.4h2.6c0 2.6-1.3 4.1-3.3 4.4M12 13.5v3.4M9.4 16.9h5.2v3.6H9.4ZM8 20.5h8"/>`
+};
+const COLLECTION_BEATEN_MARK = "pentagram";
+
+function collectionBeatenMarkHtml(mark = COLLECTION_BEATEN_MARK) {
+  const shape = COLLECTION_BEATEN_MARKS[mark] || COLLECTION_BEATEN_MARKS.pentagram;
+  return `<svg class="collection-beaten-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Game beaten with this SEAL"><title>Game beaten with this SEAL</title>${shape}</svg>`;
+}
+
+// the records block: wins / ELITE / triggers, then a small table with total, best run and best round
+function sealRecordsHtml(id) {
+  const record = sealRecord(id) || normalizeSealRecord();
+  const row = (label, value, shown = value, extraClass = "") =>
+    `<div class="collection-record-row"><span>${escapeHtml(label)}</span><span class="collection-record-lead"></span><span class="collection-record-value${value > 0 ? "" : " zero"}${extraClass}">${escapeHtml(shown)}</span></div>`;
+  const rows = [
+    row("Games beaten", record.wins, formatNumber(record.wins)),
+    sealRecordShowsElite(id) ? row("Highest ELITE", record.elite, record.elite > 0 ? romanNumeral(record.elite) : "-", " roman") : "",
+    row("Times triggered", record.triggers, formatNumber(record.triggers))
+  ].join("");
+  const kinds = SEAL_RECORD_KINDS.filter(({ key }) => (record.total[key] || 0) > 0);
+  const table = kinds.length
+    ? `<table class="collection-record-table">
+        <thead><tr><th></th><th>Total</th><th>Best run</th><th>Best round</th></tr></thead>
+        <tbody>${kinds
+          .map(({ key, label }) => `<tr><th>${escapeHtml(label)}</th><td>${formatNumber(record.total[key] || 0)}</td><td>${formatNumber(record.run[key] || 0)}</td><td>${formatNumber(record.round[key] || 0)}</td></tr>`)
+          .join("")}</tbody>
+      </table>`
+    : "";
+  return `<div class="collection-info-records">${rows}${table}</div>`;
+}
+
+/* ---- the Ars Goetia: the 72 Goetic BOSSES ----
+   A demon is discovered the first time its BOSS is slain in a run (like a SEAL the first time it triggers).
+   The Collection lists them on its second tab in the order of the book; the ones not slain yet stay dark
+   and nameless. */
+let collectionTab = "seals";
+
+function isDemonSlain(key) {
+  const progress = loadCollectionProgress();
+  return Boolean(GOETIC_BOSS_BY_KEY[key]) && (progress.devAllDemons || progress.slain.includes(key));
+}
+
+// DEV (testing): every demon counts as defeated, so any of them can be bound; off again shows the real progress
+function toggleDevAllDemons() {
+  const progress = loadCollectionProgress();
+  progress.devAllDemons = !progress.devAllDemons;
+  saveCollectionProgress();
+}
+
+function isArchangelDefeated(key) {
+  const progress = loadCollectionProgress();
+  return Boolean(ARCHANGEL_BY_KEY[key]) && (progress.devAllDemons || progress.archangels.includes(key));
+}
+
+// a demon or an Archangel that can be bound
+function isBossEntryDefeated(key) {
+  return isDemonSlain(key) || isArchangelDefeated(key);
+}
+
+function collectionDefeatArchangel(key) {
+  if (state.mode !== "arcade" || !ARCHANGEL_BY_KEY[key]) return;
+  const progress = loadCollectionProgress();
+  if (progress.archangels.includes(key)) return;
+  progress.archangels.push(key);
+  saveCollectionProgress();
+}
+
+function collectionSlayDemon(key) {
+  if (state.mode !== "arcade" || !GOETIC_BOSS_BY_KEY[key]) return;
+  const progress = loadCollectionProgress();
+  if (progress.slain.includes(key)) return;
+  progress.slain.push(key);
+  saveCollectionProgress();
+}
+
+/* binding: one defeated demon can be bound. A run takes the one bound when it starts (state.boundDemon)
+   and keeps it to the end: its SEAL is free in Devil's Offerings and YOU comes instead of it. */
+function collectionBoundDemon() {
+  const key = loadCollectionProgress().boundDemon;
+  return key && isBossEntryDefeated(key) ? key : null;
+}
+
+function boundDemonForNewRun() {
+  return collectionBoundDemon();
+}
+
+function toggleBoundDemon(key) {
+  if (!isBossEntryDefeated(key)) return;
+  const progress = loadCollectionProgress();
+  progress.boundDemon = progress.boundDemon === key ? null : key;
+  saveCollectionProgress();
+}
+
+// the header line and the marks on the grid, updated in place after a bind
+function collectionBoundLine() {
+  const key = collectionBoundDemon();
+  const runKey = state.mode === "arcade" ? state.boundDemon : null;
+  const name = (demonKey) => (demonKey ? (GOETIC_BOSS_BY_KEY[demonKey] || ARCHANGEL_BY_KEY[demonKey])?.name || "none" : "none");
+  const runNote = state.mode === "arcade" && runKey !== key ? `<span>this run: <strong>${escapeHtml(name(runKey))}</strong></span>` : "";
+  return `<span>bound: <strong>${escapeHtml(name(key))}</strong></span>${runNote}`;
+}
+
+function refreshCollectionBinding(screen) {
+  if (!screen) return;
+  const key = collectionBoundDemon();
+  screen.querySelectorAll("[data-collection-demon]").forEach((button) => {
+    button.classList.toggle("bound", button.dataset.collectionDemon === key);
+  });
+  screen.querySelectorAll(".collection-bound-line").forEach((line) => {
+    line.innerHTML = collectionBoundLine();
+  });
+  const pinned = screen.querySelector(".collection-demon.selected");
+  if (pinned) showCollectionInfo(pinned, true);
+}
+
+// small copies of the BOSS art (the full images are 1254px)
+function demonThumbPath(spec) {
+  return `${GOETIC_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
+}
+
+function collectionDemonsHtml() {
+  const bound = collectionBoundDemon();
+  const cells = GOETIC_BOSS_SPECS.map((spec, index) => {
+    const slain = isDemonSlain(spec.key);
+    const number = romanNumeral(index + 1);
+    return `
+      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
+        <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
+        <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
+        <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+      </button>`;
+  });
+  return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
+}
+
+function archangelThumbPath(spec) {
+  return `${ARCHANGEL_BOSS_IMAGE_ROOT}/thumbs/${spec.image.replace(/\.png$/i, ".webp")}`;
+}
+
+// the Archangels tab: the seven, in weekday order (Sun to Saturn); the line under each names its planet
+function collectionArchangelsHtml() {
+  const bound = collectionBoundDemon();
+  const cells = ARCHANGEL_BOSS_SPECS.map((spec) => {
+    const defeated = isArchangelDefeated(spec.key);
+    const planet = spec.planet.replace(/^the /, "");
+    return `
+      <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? spec.name : `Archangel of ${spec.planet}, not defeated`)}">
+        <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
+        <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
+        <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
+      </button>`;
+  });
+  return `<div class="collection-demon-grid collection-angel-grid">${cells.join("")}</div>${collectionEmptyHtml("angels")}`;
+}
+
+function collectionArchangelInfoHtml(key, pinned = false) {
+  const spec = ARCHANGEL_BY_KEY[key];
+  if (!spec) return "";
+  if (!isArchangelDefeated(key)) {
+    return `
+      <div class="collection-info-status unslain">Not defeated</div>
+      <div class="collection-info-name">???</div>
+      <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run.</div>`;
+  }
+  const seal = ITEMS[spec.sealId]?.name || "";
+  return `
+    <div class="collection-info-status slain">Defeated</div>
+    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+    <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
+    ${collectionDemonBindHtml(key, seal, pinned)}`;
+}
+
+function collectionDemonInfoHtml(key, pinned = false) {
+  if (ARCHANGEL_BY_KEY[key]) return collectionArchangelInfoHtml(key, pinned);
+  const index = GOETIC_BOSS_KEYS.indexOf(key);
+  const spec = GOETIC_BOSS_SPECS[index];
+  if (!spec) return "";
+  const number = romanNumeral(index + 1);
+  if (!isDemonSlain(key)) {
+    return `
+      <div class="collection-info-status unslain">Not defeated</div>
+      <div class="collection-info-name">???</div>
+      <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run.</div>`;
+  }
+  const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
+  return `
+    <div class="collection-info-status slain">Defeated</div>
+    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
+    ${collectionDemonBindHtml(key, seal, pinned)}`;
+}
+
+function collectionDemonBindHtml(key, seal, pinned) {
+  const bound = collectionBoundDemon() === key;
+  const archangel = Boolean(ARCHANGEL_BY_KEY[key]);
+  const sealName = seal ? escapeHtml(seal) : "its SEAL";
+  const sealText = archangel ? `you start with ${sealName}` : `${sealName} costs nothing in Devil's Offerings`;
+  const text = bound
+    ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
+    : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
+  const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">Bound in this run.</div>` : "";
+  const control = pinned
+    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
+    : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
+  return `
+    <div class="collection-info-bind">
+      <div class="collection-info-text">${text}</div>
+      ${runNote}
+      ${control}
+    </div>`;
+}
+
+// switches tabs in place, so the screen does not replay its entrance
+function applyCollectionTab(screen, tab) {
+  collectionTab = ["goetia", "angels"].includes(tab) ? tab : "seals";
+  if (!screen) return;
+  screen.querySelectorAll("[data-collection-tab]").forEach((button) => {
+    const active = button.dataset.collectionTab === collectionTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  screen.querySelectorAll("[data-collection-panel], [data-collection-for]").forEach((el) => {
+    el.hidden = (el.dataset.collectionPanel || el.dataset.collectionFor) !== collectionTab;
+  });
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+  hideCollectionInfo(screen);
+}
+
+const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.selected";
+
 // after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
 function collectionAfterRender() {
   if (!collectionCounts()) return;
@@ -17231,6 +18257,7 @@ function collectionAfterRender() {
   collectionRaise("sinHeld", state.player.credits);
   collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
   collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
+  collectionNoteSealElite();
   const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
   if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
   // once per round, when it is resolved
@@ -17320,17 +18347,20 @@ function collectionInfoHtml(id) {
       ${progressText}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
-  // hold Shift for the ELITE rule, like an equipped SEAL's tooltip
+  // hold Shift for the ELITE rule and the SEAL's records, like an equipped SEAL's tooltip
   const elite = splitEliteDescription(item.description || "").elite;
+  const records = status === "discovered" ? sealRecordsHtml(id) : "";
+  const more = elite || records;
   return `
     <div class="collection-info-top">
-      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}</div>
-      ${elite ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
+      <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}${isSealBeaten(id) ? collectionBeatenMarkHtml() : ""}</div>
+      ${more ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
     </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
     ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
+    ${records}
     ${note}`;
 }
 
@@ -17358,13 +18388,8 @@ function applyCollectionFilter(screen, filter) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-  screen.querySelectorAll(".collection-seal").forEach((button) => {
-    button.hidden = !sealMatchesCollectionFilter(button.dataset.collectionSeal, filter);
-  });
-  screen.querySelectorAll(".collection-section").forEach((section) => {
-    section.hidden = !section.querySelector(".collection-seal:not([hidden])");
-  });
-  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  applyCollectionVisibility(screen);
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   hideCollectionInfo(screen);
   const body = screen.querySelector(".collection-body");
   if (body) body.scrollTop = 0;
@@ -17383,18 +18408,33 @@ function renderCollectionScreen(from) {
   const unlocked = all.filter((id) => isSealUnlocked(id)).length;
   const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
   const filter = collectionFilter();
+  const slain = GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length;
+  const goetia = collectionTab === "goetia";
+  const angels = collectionTab === "angels";
+  const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
+  const devButton = () =>
+    `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
+  const tabs = [
+    { key: "seals", label: "Seals" },
+    { key: "goetia", label: "Ars Goetia" },
+    { key: "angels", label: "Archangels" }
+  ].map((tab) => {
+    const active = tab.key === collectionTab;
+    return `<button class="collection-tab${active ? " active" : ""}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
+  });
   const sections = collectionSections()
     .map(
       (section) => `
-        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => sealMatchesCollectionFilter(id, filter)) ? "" : " hidden"}>
+        <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => collectionSealVisible(id)) ? "" : " hidden"}>
           <h2 class="collection-section-title">${escapeHtml(section.title)}</h2>
           <div class="collection-grid">
             ${section.ids
               .map((id) => {
                 const status = collectionSealState(id);
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
+                const beaten = status !== "locked" && isSealBeaten(id) ? " beaten" : "";
                 return `
-                  <button class="collection-seal ${status}${wide}" type="button" data-collection-seal="${id}"${sealMatchesCollectionFilter(id, filter) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
@@ -17405,22 +18445,51 @@ function renderCollectionScreen(from) {
     )
     .join("");
   return `
-    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="SEAL collection">
+    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="Collection">
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
-        <h1 class="collection-title">Collection</h1>
-        <div class="collection-counts">
+        <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
+        <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong>${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
+        <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
+          <span><strong>${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
+          <span class="collection-bound-line">${collectionBoundLine()}</span>
+        </div>
+        <div class="collection-counts" data-collection-for="angels"${angels ? "" : " hidden"}>
+          <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
+          <span class="collection-bound-line">${collectionBoundLine()}</span>
+        </div>
       </header>
-      ${collectionFiltersHtml(all)}
-      <div class="collection-legend" aria-hidden="true">
-        <span class="legend discovered">discovered</span>
-        <span class="legend undiscovered">undiscovered</span>
-        <span class="legend locked">locked</span>
+      <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
+        ${collectionFiltersHtml(all)}
+        <div class="collection-legend">
+          ${collectionSearchHtml("seals")}
+          <span class="legend discovered" aria-hidden="true">discovered</span>
+          <span class="legend undiscovered" aria-hidden="true">undiscovered</span>
+          <span class="legend locked" aria-hidden="true">locked</span>
+        </div>
+        <div class="collection-body">${sections}${collectionEmptyHtml("seals")}</div>
       </div>
-      <div class="collection-body">${sections}</div>
+      <div class="collection-panel" data-collection-panel="goetia"${goetia ? "" : " hidden"}>
+        <div class="collection-legend">
+          ${collectionSearchHtml("goetia")}
+          <span class="legend slain" aria-hidden="true">defeated</span>
+          <span class="legend unslain" aria-hidden="true">not defeated</span>
+          ${devButton()}
+        </div>
+        <div class="collection-body">${collectionDemonsHtml()}</div>
+      </div>
+      <div class="collection-panel" data-collection-panel="angels"${angels ? "" : " hidden"}>
+        <div class="collection-legend">
+          ${collectionSearchHtml("angels")}
+          <span class="legend slain" aria-hidden="true">defeated</span>
+          <span class="legend unslain" aria-hidden="true">not defeated</span>
+          ${devButton()}
+        </div>
+        <div class="collection-body">${collectionArchangelsHtml()}</div>
+      </div>
       <div class="collection-info" aria-live="polite"></div>
     </div>`;
 }
@@ -17430,10 +18499,13 @@ function showCollectionInfo(button, pinned) {
   const info = screen?.querySelector(".collection-info");
   if (!info) return;
   const id = button.dataset.collectionSeal;
+  const demon = button.dataset.collectionDemon;
   if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every SEAL opens short (More shows the rest)
-  info.innerHTML = collectionInfoHtml(id);
-  info.className = `collection-info visible ${collectionSealState(id)}`;
-  screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+  info.innerHTML = demon ? collectionDemonInfoHtml(demon, pinned) : collectionInfoHtml(id);
+  info.className = `collection-info visible ${demon ? (isBossEntryDefeated(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
+  // a clicked, defeated demon's box holds the Bind button
+  if (demon && pinned && isBossEntryDefeated(demon)) info.classList.add("interactive");
+  screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
   positionCollectionInfo(info, button);
@@ -17464,7 +18536,7 @@ function positionCollectionInfo(info, button) {
 
 function hideCollectionInfo(screen) {
   const info = screen?.querySelector(".collection-info");
-  if (info && !screen.querySelector(".collection-seal.selected")) info.classList.remove("visible");
+  if (info && !screen.querySelector(COLLECTION_SELECTED)) info.classList.remove("visible");
 }
 
 function closeCollection(from) {
@@ -17483,8 +18555,72 @@ function bindCollectionEvents() {
       applyCollectionFilter(button.closest(".collection-screen"), button.dataset.collectionFilter);
     });
   });
-  document.querySelectorAll("[data-collection-seal]").forEach((button) => {
+  document.querySelectorAll("[data-collection-search]").forEach((input) => {
+    const screen = input.closest(".collection-screen");
+    bindOn(input, "input", () => applyCollectionSearch(screen, input.dataset.collectionSearch, input.value));
+    bindOn(input, "click", (event) => event.stopPropagation());
+    // typing never reaches the game's keys; Esc clears the search first, then closes the collection
+    bindOn(input, "keydown", (event) => {
+      if (event.key === "Escape" && !input.value) {
+        input.blur();
+        return;
+      }
+      event.stopPropagation();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        input.value = "";
+        applyCollectionSearch(screen, input.dataset.collectionSearch, "");
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        input.blur();
+      }
+    });
+  });
+  document.querySelectorAll("[data-collection-search-clear]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const tab = button.dataset.collectionSearchClear;
+      const screen = button.closest(".collection-screen");
+      const input = screen?.querySelector(`[data-collection-search="${tab}"]`);
+      if (input) input.value = "";
+      applyCollectionSearch(screen, tab, "");
+      input?.focus();
+    });
+  });
+  document.querySelectorAll("[data-collection-dev-demons]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      toggleDevAllDemons();
+      const screen = button.closest(".collection-screen");
+      const body = screen?.querySelector('[data-collection-panel="goetia"] .collection-body');
+      if (body) body.innerHTML = collectionDemonsHtml();
+      const angelBody = screen?.querySelector('[data-collection-panel="angels"] .collection-body');
+      if (angelBody) angelBody.innerHTML = collectionArchangelsHtml();
+      applyCollectionVisibility(screen);
+      const count = screen?.querySelector('[data-collection-for="goetia"] strong');
+      if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length);
+      const angelCount = screen?.querySelector('[data-collection-for="angels"] strong');
+      if (angelCount) angelCount.textContent = String(ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length);
+      screen?.querySelectorAll("[data-collection-dev-demons]").forEach((other) => {
+        other.classList.toggle("active", loadCollectionProgress().devAllDemons);
+        other.textContent = loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all";
+      });
+      hideCollectionInfo(screen);
+      bindCollectionEvents();
+      refreshCollectionBinding(screen);
+    });
+  });
+  document.querySelectorAll("[data-collection-tab]").forEach((button) => {
+    bindOn(button, "click", (event) => {
+      event.stopPropagation();
+      applyCollectionTab(button.closest(".collection-screen"), button.dataset.collectionTab);
+    });
+  });
+  document.querySelectorAll("[data-collection-seal], [data-collection-demon]").forEach((button) => {
     bindOn(button, "pointerenter", (event) => {
+      // a clicked demon keeps its box (with Bind) while the mouse travels to it
+      if (button.closest(".collection-screen")?.querySelector(".collection-demon.selected")) return;
       if (event.pointerType === "mouse") showCollectionInfo(button, false);
     });
     bindOn(button, "pointerleave", (event) => {
@@ -17502,14 +18638,30 @@ function bindCollectionEvents() {
     });
   });
   const screen = document.querySelector(".collection-screen");
+  applyCollectionVisibility(screen);
+  const info = screen?.querySelector(".collection-info");
+  if (info) {
+    bindOn(info, "click", (event) => {
+      if (!info.classList.contains("interactive")) return;
+      event.stopPropagation();
+      const bind = event.target.closest?.("[data-collection-bind]");
+      if (!bind) return;
+      toggleBoundDemon(bind.dataset.collectionBind);
+      // the pact sound from the story when a demon is bound; the SEAL ghost when it is let go
+      playGameSfx(collectionBoundDemon() ? "introEvil" : "sealSellGhost");
+      refreshCollectionBinding(screen);
+    });
+  }
   if (screen) {
     bindOn(screen, "click", () => {
-      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
+      screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
       hideCollectionInfo(screen);
     });
-    bindOn(screen.querySelector(".collection-body"), "scroll", () => {
-      screen.querySelectorAll(".collection-seal.selected").forEach((el) => el.classList.remove("selected"));
-      hideCollectionInfo(screen);
+    screen.querySelectorAll(".collection-body").forEach((body) => {
+      bindOn(body, "scroll", () => {
+        screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
+        hideCollectionInfo(screen);
+      });
     });
   }
 }

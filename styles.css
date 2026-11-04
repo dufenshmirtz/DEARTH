@@ -7415,6 +7415,13 @@ body.mobile-arcade #app .bot-glyph {
   background: rgba(141, 135, 124, 0.75);
 }
 
+/* Satan's toll: the reroll costs all your SIN */
+#app .reroll-button.satan-toll:not(:disabled),
+#app .reroll-button.satan-toll:not(:disabled) .reroll-cost {
+  color: #ff3b3b !important;
+  text-shadow: 0 0 8px rgba(220, 20, 20, 0.6);
+}
+
 
 /* ELITE offerings: a second, red frame inside the first and a slow shimmer */
 #app .item-card.elite-offer::before {
@@ -7441,6 +7448,15 @@ body.mobile-arcade #app .bot-glyph {
 
 #app .item-card.elite-offer .item-name {
   color: #fff !important;
+}
+
+/* the bound demon's SEAL (Ars Goetia): free in this run */
+#app .item-card.bound-offer .item-kind {
+  color: #e0383d !important;
+}
+
+#app .item-card.bound-offer .shop-buy-button:not(:disabled) {
+  color: #e0383d !important;
 }
 
 /* the wide Seal of Satan sigil in the shop */
@@ -9438,6 +9454,74 @@ body.mobile-arcade .intro-box-pact::before {
   visibility: hidden;
 }
 
+/* Satan's offer: YES / NO under his last line (the text shrinks to make room) */
+.intro-choice {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: clamp(18px, 3vw, 48px);
+  margin-top: clamp(6px, 1.2vh, 14px);
+  cursor: default;
+  animation: intro-choice-in 0.6s ease-out both;
+}
+
+@keyframes intro-choice-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+.intro-box .intro-choice-button.intro-choice-button,
+.intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
+.intro-box .intro-choice-button.intro-choice-button:focus:not(:disabled),
+.intro-box .intro-choice-button.intro-choice-button:active:not(:disabled) {
+  min-width: 4.6em;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 0.3em 1em;
+  border: 1px solid rgba(214, 38, 38, 0.6) !important;
+  border-radius: 0 !important;
+  border-image: none !important;
+  outline: none !important;
+  background: rgba(40, 0, 0, 0.55) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  font-size: clamp(13px, 1.35vw, 22px) !important;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--intro-red) !important;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.intro-box .intro-choice-button.intro-choice-button::before,
+.intro-box .intro-choice-button.intro-choice-button::after {
+  content: none !important;
+  display: none !important;
+}
+
+.intro-box .intro-choice-button.intro-choice-button:hover:not(:disabled),
+.intro-box .intro-choice-button.intro-choice-button:focus-visible {
+  background: rgba(120, 6, 6, 0.75) !important;
+  box-shadow: 0 0 16px rgba(220, 20, 20, 0.55) !important;
+  color: #ffd9d9 !important;
+}
+
+.intro-box.intro-choosing .intro-text {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+.intro-box.intro-choosing .intro-skip,
+.intro-box.intro-choosing .intro-next {
+  visibility: hidden;
+}
+
+body.mobile-arcade .intro-choice {
+  margin-top: 4px;
+}
+
 /* Satan's conversation: the table dims, he stands on the right, his box sits over the SEAL slots */
 .intro-pact-layer {
   background: rgba(0, 0, 0, 0.38);
@@ -9965,12 +10049,437 @@ body.mobile-arcade .collection-grid {
   gap: 6px;
 }
 
+/* collection: two tabs (Seals / Ars Goetia) take the title's place */
+.collection-tabs {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: clamp(10px, 2.4vw, 34px);
+}
+
+.collection-screen .collection-tab {
+  position: relative;
+  min-height: 0 !important;
+  padding: 0 6px 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(26px, 4.4vh, 48px) !important;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: #8d877c !important;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.collection-screen .collection-tab::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 0;
+  height: 8px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") center / 100% 8px no-repeat;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(105%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.collection-screen .collection-tab:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.collection-screen .collection-tab:hover:not(.active) {
+  color: #dc2a2f !important;
+}
+
+.collection-screen .collection-tab.active {
+  color: #ece6d8 !important;
+}
+
+.collection-screen .collection-tab.active::after {
+  opacity: 1;
+}
+
+.collection-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.collection-legend .slain::before { background: #d42a2f; box-shadow: 0 0 6px rgba(220, 40, 40, 0.7); }
+.collection-legend .unslain::before { background: #2c2a27; border: 1px solid #5d5850; }
+
+/* collection: the Ars Goetia (the 72 Goetic BOSSES) */
+.collection-demon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--demon-cell, 118px), 1fr));
+  gap: 16px 10px;
+}
+
+.collection-screen .collection-demon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 2px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.collection-screen .collection-demon:hover:not(:disabled),
+.collection-screen .collection-demon.selected {
+  transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.collection-demon-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  transition: transform 0.15s ease, filter 0.2s ease;
+  pointer-events: none;
+}
+
+.collection-demon.slain .collection-demon-art {
+  filter: drop-shadow(0 0 5px rgba(220, 42, 47, 0.35));
+}
+
+.collection-demon.unslain .collection-demon-art {
+  filter: grayscale(1) brightness(0.17);
+}
+
+.collection-demon:hover .collection-demon-art,
+.collection-demon.selected .collection-demon-art {
+  transform: scale(1.06);
+}
+
+.collection-demon.slain:hover .collection-demon-art,
+.collection-demon.slain.selected .collection-demon-art {
+  filter: drop-shadow(0 0 9px rgba(230, 30, 30, 0.8));
+}
+
+.collection-demon.unslain:hover .collection-demon-art,
+.collection-demon.unslain.selected .collection-demon-art {
+  filter: grayscale(1) brightness(0.32);
+}
+
+.collection-demon-number {
+  font-family: var(--font-book) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.08em;
+  color: #5d5850 !important;
+}
+
+.collection-demon-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 16px !important;
+  color: #ece6d8 !important;
+  transition: color 0.15s ease;
+}
+
+.collection-demon.unslain .collection-demon-name {
+  color: #5d5850 !important;
+}
+
+.collection-screen .collection-demon:hover .collection-demon-name,
+.collection-screen .collection-demon.selected .collection-demon-name {
+  color: #dc2a2f !important;
+}
+
+.collection-info-status.slain { color: #e0383d !important; }
+.collection-info-status.unslain { color: #8d877c !important; }
+.collection-info.slain .collection-info-name { color: #e0383d !important; }
+.collection-info.unslain .collection-info-name { color: #8d877c !important; }
+
+.collection-info-number {
+  margin: -4px 0 8px;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 13px !important;
+  color: #a79f92 !important;
+}
+
+body.mobile-arcade .collection-screen {
+  --demon-cell: 84px;
+}
+
+.pause-dev-panel .dev-summon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Archangels tab: seven, so bigger cells */
+.collection-screen .collection-angel-grid {
+  --demon-cell: 168px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+body.mobile-arcade .collection-screen .collection-angel-grid {
+  --demon-cell: 104px;
+}
+
+@media (max-height: 560px) {
+  .collection-screen .collection-angel-grid { --demon-cell: 100px; }
+}
+
+/* Ars Goetia: the bound demon (one at a time) */
+.collection-screen .collection-demon {
+  position: relative;
+}
+
+/* "IX · BOUND": the mark sits on the numeral line under the figure, so the art stays clear */
+.collection-demon-bound {
+  display: none;
+  font-family: var(--font-book) !important;
+  font-size: inherit !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e0383d !important;
+}
+
+.collection-demon.bound .collection-demon-bound {
+  display: inline;
+}
+
+.collection-demon.bound .collection-demon-number {
+  color: #e0383d !important;
+}
+
+.collection-demon.slain.bound .collection-demon-art {
+  filter: drop-shadow(0 0 10px rgba(230, 30, 30, 0.9)) brightness(1.15);
+}
+
+.collection-bound-line {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* collection: a search box at the left of each tab's legend row */
+.collection-legend {
+  position: relative;
+  align-items: center;
+}
+
+.collection-search {
+  position: absolute;
+  left: clamp(14px, 4vw, 60px);
+  top: 50%;
+  transform: translateY(calc(-50% - 4px));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: min(240px, 24vw);
+  min-width: 150px;
+  padding: 0 2px 3px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-b.png") bottom center / 100% 5px no-repeat;
+  color: #8d877c;
+  cursor: text;
+}
+
+.collection-search:focus-within,
+.collection-search.has-value {
+  color: #ece6d8;
+}
+
+/* the hand-drawn eye (assets/ui/search-eye.png): dim until you search */
+.collection-search-icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+  pointer-events: none;
+}
+
+.collection-search:focus-within .collection-search-icon,
+.collection-search.has-value .collection-search-icon {
+  opacity: 1;
+}
+
+.collection-search:hover .collection-search-icon {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+.collection-screen .collection-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0;
+  padding: 2px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 19px !important;
+  letter-spacing: 0.03em;
+  color: #ece6d8 !important;
+  caret-color: #dc2a2f;
+}
+
+.collection-screen .collection-search-input::placeholder {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #8d877c;
+  opacity: 1;
+}
+
+.collection-screen .collection-search-clear {
+  display: none;
+  flex: 0 0 auto;
+  min-height: 0 !important;
+  padding: 0 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 18px !important;
+  line-height: 1;
+  color: #8d877c !important;
+  cursor: pointer;
+}
+
+.collection-search.has-value .collection-search-clear {
+  display: block;
+}
+
+.collection-screen .collection-search-clear:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  color: #dc2a2f !important;
+}
+
+.collection-empty {
+  padding: 40px 0;
+  text-align: center;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: 16px !important;
+  color: #8d877c !important;
+}
+
+/* very narrow screens: the box gets its own line above the legend */
+@media (max-width: 640px) {
+  .collection-legend {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .collection-search {
+    position: static;
+    transform: none;
+    flex: 0 0 100%;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+}
+
+/* testing only: DEV unlock all in the Ars Goetia legend row */
+.collection-screen .collection-dev-button {
+  min-height: 0 !important;
+  padding: 0 8px !important;
+  border: 1px dashed #5d5850 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em;
+  color: #8d877c !important;
+  cursor: pointer;
+}
+
+.collection-screen .collection-dev-button.active {
+  border-color: rgba(220, 42, 47, 0.7) !important;
+  color: #e0383d !important;
+}
+
+.collection-screen .collection-dev-button:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  border-color: #dc2a2f !important;
+  color: #dc2a2f !important;
+}
+
+/* a clicked, defeated demon's box takes clicks: it holds Bind / Unbind */
+.collection-info.interactive {
+  pointer-events: auto;
+}
+
+.collection-info-bind {
+  margin-top: 10px;
+  padding-top: 10px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 6px no-repeat;
+}
+
+.collection-screen .collection-bind-button {
+  position: relative;
+  display: block;
+  min-height: 0 !important;
+  margin: 10px auto 0;
+  padding: 5px 22px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 19px !important;
+  color: #ece6d8 !important;
+  cursor: pointer;
+}
+
+.collection-screen .collection-bind-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 12px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+}
+
+.collection-screen .collection-bind-button:hover:not(:disabled),
+.collection-screen .collection-bind-button:focus-visible {
+  transform: none !important;
+  background: transparent !important;
+  outline: none;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .collection-bind-button:hover:not(:disabled)::after,
+.collection-screen .collection-bind-button:focus-visible::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
 @media (max-height: 560px) {
   .collection-filters { padding-bottom: 2px; }
   .collection-screen .collection-filter { font-size: 16px !important; padding: 0 9px 6px !important; }
   .collection-legend { padding-bottom: 6px; font-size: 12px !important; }
   .collection-section-title { margin: 4px 0 6px; }
   .collection-screen .collection-back { font-size: 16px !important; padding: 4px 14px !important; }
+  .collection-screen .collection-tab { font-size: 24px !important; padding-bottom: 9px !important; }
+  .collection-screen { --demon-cell: 80px; }
+  .collection-demon-grid { gap: 10px 6px; }
+  .collection-demon-name { font-size: 13px !important; }
+  .collection-demon-number { font-size: 10px !important; }
 }
 
 /* "Seal unlocked" toast */
@@ -10038,18 +10547,20 @@ body.mobile-arcade .collection-grid {
 }
 
 /* main menu Satan: the eyes kindle on hover (with a breathing bloom), flare on click,
-   then a dark red bloom swells from them and the collection surfaces */
+   then a dark red bloom swells from them and the collection surfaces.
+   satan-eyes.webp is traced from the whites of his eyes in satan-head.webp (2x size), so it
+   sits exactly in the head box. The bloom never scales (a scale would pull it off the eyes);
+   it grows by blur instead, and it breathes by brightness so the hover fade stays smooth. */
 .menu-fig-satan .fig-eyes {
-  filter: drop-shadow(0 0 1.5px rgba(255, 60, 40, 0.9)) !important;
-  transition: opacity 0.45s ease, filter 0.45s ease, transform 0.45s ease;
+  filter: drop-shadow(0 0 1px rgba(255, 70, 40, 0.95)) drop-shadow(0 0 3px rgba(220, 20, 10, 0.55)) !important;
+  transition: opacity 0.5s ease-out, filter 0.45s ease;
 }
 
 .menu-fig .fig-eyes-bloom {
   opacity: 0;
   mix-blend-mode: screen;
   filter: blur(4px) brightness(1.5) saturate(1.3);
-  transform: scale(1.04);
-  transition: opacity 0.6s ease;
+  transition: opacity 0.7s ease-out, filter 0.45s ease;
   pointer-events: none;
 }
 
@@ -10058,27 +10569,26 @@ body.mobile-arcade .collection-grid {
 }
 
 .menu-fig-satan.eyes-lit .fig-eyes-bloom {
-  opacity: 0.85;
-  animation: satan-eye-breathe 2.6s ease-in-out 0.45s infinite;
+  opacity: 0.9;
+  animation: satan-eye-breathe 2.6s ease-in-out 0.5s infinite;
 }
 
 @keyframes satan-eye-breathe {
-  0%, 100% { opacity: 0.85; }
-  40% { opacity: 0.55; }
-  55% { opacity: 0.95; }
+  0%, 100% { filter: blur(4px) brightness(1.5) saturate(1.3); }
+  40% { filter: blur(4px) brightness(1.05) saturate(1.2); }
+  55% { filter: blur(4.5px) brightness(1.7) saturate(1.35); }
 }
 
 .menu-fig-satan.eyes-flare .fig-eyes {
   opacity: 1;
-  filter: brightness(1.35) drop-shadow(0 0 2px #ff9a80) !important;
+  filter: brightness(1.35) drop-shadow(0 0 2px #ff9a80) drop-shadow(0 0 5px rgba(255, 40, 20, 0.8)) !important;
 }
 
 .menu-fig-satan.eyes-flare .fig-eyes-bloom {
   opacity: 1;
   animation: none;
-  filter: blur(7px) brightness(2.2) saturate(1.4);
-  transform: scale(1.12);
-  transition: opacity 0.2s ease, filter 0.45s ease, transform 0.45s ease;
+  filter: blur(8px) brightness(2.2) saturate(1.4);
+  transition: opacity 0.2s ease, filter 0.45s ease;
 }
 
 .menu-satan-veil {
@@ -11471,6 +11981,122 @@ body.native-arcade .collection-info-shift-hint {
 
 body.shift-tooltip-more .collection-info-elite {
   display: block;
+}
+
+/* ---------- Collection: no browser focus ring ----------
+   After any key press (Shift for the records, for example) the browser marks the last clicked button as
+   keyboard-focused and draws its own white ring. The game never uses outlines, and a focused SEAL or demon
+   gets no look of its own either: only hover and the pinned (clicked) one are highlighted. */
+.collection-screen button:focus,
+.collection-screen button:focus-visible {
+  outline: none !important;
+}
+
+/* ---------- Collection: SEAL records ----------
+   A SEAL you have beaten the game with is deep red, the red of a SEAL that triggers, and stays so on hover.
+   Its tooltip shows a small mark next to the status; Shift (or More) shows the records. */
+.collection-screen .collection-seal.beaten .collection-sigil,
+.collection-screen .collection-seal.beaten:hover .collection-sigil,
+.collection-screen .collection-seal.beaten.selected .collection-sigil {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%) !important;
+}
+
+.collection-info-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.collection-beaten-mark {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  filter: drop-shadow(0 0 3px rgba(220, 42, 47, 0.6));
+}
+
+/* body * paints every element white: the mark's lines (currentColor) need their own red */
+.collection-beaten-mark,
+.collection-beaten-mark * {
+  color: #dc2a2f !important;
+}
+
+.collection-info-records {
+  display: none;
+  margin-top: 9px;
+  padding-top: 9px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 6px no-repeat;
+}
+
+body.shift-tooltip-more .collection-info-records {
+  display: block;
+}
+
+.collection-record-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.collection-record-row > span:first-child,
+.collection-record-table th {
+  font-family: var(--font-book) !important;
+  font-size: 13.5px !important;
+  font-weight: 400;
+  color: #d9d3c7 !important;
+  text-align: left;
+}
+
+.collection-record-lead {
+  flex: 1 1 auto;
+  min-width: 10px;
+  border-bottom: 1px dotted rgba(233, 227, 214, 0.22);
+  transform: translateY(-3px);
+}
+
+.collection-record-value,
+.collection-record-table td {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  color: var(--bone) !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.collection-record-value.zero {
+  color: #5d5850 !important;
+}
+
+/* Roman numerals read better in the book face (Razor Keen's I looks like a 1) */
+.collection-record-value.roman {
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.04em;
+}
+
+.collection-record-table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.collection-record-table thead th {
+  font-family: var(--font-book) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+  text-align: right;
+  padding: 0 0 2px 8px;
+}
+
+.collection-record-table tbody th {
+  padding: 1px 4px 1px 0;
+  line-height: 1.2;
+}
+
+.collection-record-table td {
+  text-align: right;
+  padding: 1px 0 1px 8px;
 }
 
 /* ---------- iPhone app only (body.native-ios): keep the table clear of the Dynamic Island and the home bar ---------- */

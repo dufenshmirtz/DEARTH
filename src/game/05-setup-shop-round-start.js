@@ -16,8 +16,8 @@ function botImagePath(entity) {
 }
 
 function botSinDisplay(bot) {
-  if (bot?.finalKey === "satan") return "∞ SIN";
-  if (bot?.finalKey === "jesus") return "-∞ SIN";
+  if (bot?.finalKey === "satan") return `∞+${botRegularBounty(bot)} SIN`;
+  if (bot?.finalKey === "jesus") return `-∞+${botRegularBounty(bot)} SIN`;
   if (bot?.isBoss) return `${botBossBounty(bot)}+${botRegularBounty(bot)} SIN`;
   return `${botRegularBounty(bot)} SIN`;
 }
@@ -108,7 +108,7 @@ function createFinalBoss(key) {
     noise: 0,
     hp: 100,
     maxHp: 100,
-    reward: key === "satan" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY,
+    reward: 0, // regular BOUNTY; the infinite BOSS BOUNTY is only shown (botSinDisplay)
     isBoss: true,
     bossOrder: state.bossSpawnCount + 1,
     uniqueKey: null,
@@ -149,7 +149,7 @@ function createFinalBoss(key) {
 }
 
 function activeGoeticBoss() {
-  return state.bots.some((bot) => bot.goeticKey && bot.hp > 0 && !bot.eliminated);
+  return state.bots.some((bot) => (bot.goeticKey || bot.shadowOf || bot.archangelKey) && bot.hp > 0 && !bot.eliminated);
 }
 
 function enterFinalBossPhase() {
@@ -160,6 +160,7 @@ function enterFinalBossPhase() {
   state.nextBossKillInterval = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = [];
+  state.archangelQueue = [];
   state.pendingActive = null;
   state.mobileOfferingsOpen = false;
   state.bots = [createFinalBoss("jesus"), createFinalBoss("satan")];
@@ -172,6 +173,9 @@ function skipToFirstGoeticBoss() {
   state.pendingActive = null;
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
+  // testing: the bound demon's place comes first, so YOU shows up at once
+  if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
   state.goeticBossKills = 0;
   resetBossKillInterval();
   state.finalBossPhase = false;
@@ -180,7 +184,10 @@ function skipToFirstGoeticBoss() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * UNIQUE_BOSS_KEYS.length);
-  const firstBossSpec = takeNextBossSpec();
+  // a bound Archangel's place (YOU) comes first too
+  const boundArchangel = ARCHANGEL_BY_KEY[state.boundDemon] ? state.boundDemon : null;
+  if (boundArchangel) state.archangelQueue = state.archangelQueue.filter((key) => key !== boundArchangel);
+  const firstBossSpec = boundArchangel ? { archangelKey: boundArchangel } : takeNextBossSpec();
   state.bots = firstBossSpec ? [createBot({ boss: true, bossSpec: firstBossSpec })] : [];
   fillBots();
   state.rerollBaseCost = 1;
@@ -236,15 +243,23 @@ function createBot(options = {}) {
         : randomFrom(BOT_ARCHETYPES);
   const bossOrder = isBoss ? state.bossSpawnCount + 1 : 0;
   const isEndlessBoss = isBoss && !uniqueSpec;
-  const goeticSpec = isEndlessBoss ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
+  // the demon or Archangel bound for this run never comes: YOU takes its place (a demon's place counts in the 72)
+  const endlessKey = bossSpec?.goeticKey || bossSpec?.archangelKey || null;
+  const shadowOf = isEndlessBoss && endlessKey && endlessKey === state.boundDemon ? endlessKey : null;
+  const archangelSpec = isEndlessBoss && !shadowOf && bossSpec?.archangelKey ? ARCHANGEL_BY_KEY[bossSpec.archangelKey] || null : null;
+  const goeticSpec = isEndlessBoss && !shadowOf && !archangelSpec ? goeticBossSpecFromKey(bossSpec?.goeticKey) : null;
   const bossBaseHp = 80 + bossHealthBonus();
-  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? 1;
+  const statFactor = uniqueSpec?.statFactor ?? bossSpec?.statFactor ?? (archangelSpec ? ARCHANGEL_HEALTH_FACTOR : 1);
   const maxHp = isBoss ? Math.ceil(bossBaseHp * bossHealthScaleFactor() * statFactor) : randomBotHealth();
   const endlessModifier = isEndlessBoss ? randomInt(6, 12) / 10 : null;
   const passiveKeys = isBoss
     ? uniqueSpec
       ? []
-      : randomBossPassiveKeys(1)
+      : shadowOf
+        ? [SHADOW_BOSS_PASSIVE_KEY]
+        : archangelSpec
+          ? []
+          : randomBossPassiveKeys(1)
     : [];
   const reward = randomInt(1, 5);
   const loadedSpawnChance = Math.min(1, passiveStack("p23") ? 0.33 * passivePower("p23") : 0);
@@ -252,12 +267,16 @@ function createBot(options = {}) {
   if (loadedSpawnBonus) markPassiveTriggered("p23");
   const bot = {
     id: state.nextBotId++,
-    name: isBoss ? uniqueSpec?.name || goeticSpec?.name || "PandoriumBeast" : profile.name,
+    name: isBoss ? uniqueSpec?.name || (shadowOf ? SHADOW_BOSS.name : archangelSpec?.name || goeticSpec?.name) || "PandoriumBeast" : profile.name,
     flag: profile?.flag || "🏴",
     country: profile?.country || "BOSS",
     type: isBoss ? "BOSS" : inherited?.type || archetype.type,
     color: isBoss ? "#d64f45" : archetype.color,
-    image: uniqueSpec?.image || goeticSpec?.image || inherited?.image || randomBotImage(),
+    image:
+      uniqueSpec?.image ||
+      (shadowOf ? SHADOW_BOSS.image : archangelSpec ? `${ARCHANGEL_BOSS_IMAGE_ROOT}/${archangelSpec.image}` : goeticSpec?.image) ||
+      inherited?.image ||
+      randomBotImage(),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -269,11 +288,14 @@ function createBot(options = {}) {
     uniqueKey: uniqueSpec?.key || null,
     copiedUniqueKey: copiedUniqueSpec?.key || null,
     pairGroupId: bossSpec?.pairGroupId || null,
-    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) ? state.round : null,
+    modifierCycleStartRound: ["petros", "pavlos"].includes(uniqueSpec?.key) || archangelSpec ? state.round : null,
     goeticKey: goeticSpec?.key || null,
+    shadowOf,
+    archangelKey: archangelSpec?.key || null,
+    archangelDamage: 0,
     goeticPassiveId: goeticSpec?.passiveId || null,
     goeticSealName: goeticSpec?.sealName || null,
-    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? endlessModifier,
+    modifierOverride: uniqueSpec?.modifierOverride ?? copiedUniqueSpec?.modifierOverride ?? (archangelSpec ? 1 : endlessModifier),
     shopTax: uniqueSpec?.shopTax || 0,
     eliminationDamage: uniqueSpec?.eliminationDamage || copiedUniqueSpec?.eliminationDamage || 0,
     grantsBuffs: Boolean(uniqueSpec?.grantsBuffs || copiedUniqueSpec?.grantsBuffs),
@@ -503,7 +525,7 @@ function gainEliminationCreditsFromSourceEntries(entries, applyRoundMultiplier =
 function distributeSinAmongHighest(amount, targets, entry) {
   const total = Math.max(0, Math.ceil(amount));
   const ordered = targets
-    .filter((bot) => bot && !bot.eliminated && !bot.immortal && Number.isFinite(botRegularBounty(bot)))
+    .filter((bot) => bot && !bot.eliminated)
     .sort((left, right) => botSin(right) - botSin(left) || left.id - right.id);
   if (total <= 0 || !ordered.length) return 0;
   const base = Math.floor(total / ordered.length);
@@ -711,16 +733,23 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanTightwadDue = false;
+  state.satanTightwadAbove = false;
+  state.satanTightwadOffers = 0;
+  state.satanRerollToll = false;
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
   resetCollectionRun();
+  // what is bound in the Ars Goetia now counts for this whole run, whatever changes later
+  state.boundDemon = boundDemonForNewRun();
   state.round = 1;
   state.stage = "guess";
   state.player.maxHp = PLAYER_MAX_HP;
   state.player.hp = PLAYER_MAX_HP;
   state.player.credits = STARTING_CREDITS;
   state.player.passives = [];
+  grantBoundArchangelSeal();
   state.player.actives = [];
   state.log = [];
   state.roundState = null;
@@ -755,6 +784,7 @@ function startGame(options = {}) {
   state.bossSpawnCount = 0;
   state.uniqueBossQueue = shuffled(UNIQUE_BOSS_KEYS);
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
+  state.archangelQueue = ARCHANGEL_KEYS.slice();
   state.goeticBossKills = 0;
   state.nextBossPairId = 1;
   state.finalBossPhase = false;
@@ -841,6 +871,7 @@ function beginRound() {
     revealedBotIds: new Set(),
     pyrosRevealsDone: 0,
     vineRevealRolls: {},
+    redHorseRolls: {},
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
@@ -894,7 +925,9 @@ function beginRound() {
     bot.diffMarkedByPlayer = false;
     bot.revealedByPassive = false;
     bot.revealStacks = 0;
-    bot.memoryOverflow = 0;
+    // Seal of Threon: excess MEMORY gained when the last round was recorded (e.g. Seal of Bathin's extra) carries
+    // over and is removed for damage at the end of this round; without Threon there is no excess to keep
+    if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
 
   syncBipolarBots();
@@ -984,7 +1017,7 @@ function applyPendingNextRoundMarbasBonuses() {
   if (!pending.length || !state.roundState) return;
   state.pendingNextRoundMarbasBonuses = [];
   pending.forEach((bonus) => {
-    const targets = activeBots().filter((bot) => !bot.immortal);
+    const targets = activeBots();
     if (!targets.length) return;
     const source = bonus.source || "Seal of Marbas";
     let sinSpread = 0;
@@ -1038,7 +1071,7 @@ function applyStartOfRoundSinRedistribution() {
   const entries = orderedPassiveEffectEntries("p48");
   if (!entries.length) return;
   entries.forEach((entry) => {
-    const targets = shuffled(activeBots().filter((bot) => !bot.immortal && botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
+    const targets = shuffled(activeBots().filter((bot) => botRegularBounty(bot) > 0)).slice(0, Math.max(1, entry.stack || 1));
     if (!targets.length) return;
     markPassiveEntryTriggered(entry);
     targets.forEach((bot) => {
@@ -1209,7 +1242,7 @@ function applyTrinitySpiritOutcome(key) {
     return;
   }
   if (key === "bounty") {
-    const targets = shuffled(trinityTargets().filter((bot) => Number.isFinite(botSin(bot)) && botSin(bot) > 0)).slice(0, 2);
+    const targets = shuffled(activeBots().filter((bot) => botSin(bot) > 0)).slice(0, 2);
     targets.forEach((bot) => changeBotSin(bot, botSin(bot), `${name} doubled ${bot.name}'s BOUNTY.`, { source: name }));
     if (!targets.length) addRoundEvent(`${name} found no BOUNTY to double.`);
     return;
@@ -1420,8 +1453,20 @@ function clampFixedWillGuess(bot, guess) {
   return clamp(guess, previousGuess - 2, previousGuess + 2);
 }
 
+// YOU plays like you did: the best guess a BOSS can work out, then off by exactly as much as you
+// missed the TARGET in one of your last SHADOW_BOSS.memoryRounds rounds (a new one is picked each round)
+function planShadowGuess(bot) {
+  const best = planBossGuess(bot);
+  const misses = state.gameMemory
+    .slice(-SHADOW_BOSS.memoryRounds)
+    .filter((entry) => Number.isFinite(entry?.playerGuess) && Number.isFinite(entry?.target))
+    .map((entry) => entry.playerGuess - entry.target);
+  if (!misses.length) return best;
+  return clamp(Math.round(best + randomFrom(misses)), 0, 100);
+}
+
 function planBotGuess(bot) {
-  if (bot.isBoss) return planBossGuess(bot);
+  if (bot.isBoss) return bot.shadowOf ? planShadowGuess(bot) : planBossGuess(bot);
   // Seal of Padma: a bipolar DAMNED guesses the average of what both of its personalities would guess
   const personas = [{ type: bot.type, anchor: bot.anchor, aggression: bot.aggression, noise: bot.noise }];
   if (padmaActive() && bot.type2) {
@@ -1568,10 +1613,10 @@ function applyGuessReveals() {
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
 }
 
-// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Zachriel Triangle; other special
+// SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
 // Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
-// died last round, Zachriel Triangle if any DAMNED died last round.
+// died last round, the Seal of Cassiel (p102) if any DAMNED died last round.
 function extraRevealEntries() {
   return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
@@ -1715,10 +1760,10 @@ function applyDevSealEntries(ids) {
       devSealTargetDamned().forEach((bot) => {
         const bounty = botRegularBounty(bot);
         if (bounty <= 0) return;
-        const result = changeBotSin(bot, bounty, "", { source });
+        const result = changeBotSin(bot, Math.ceil(bounty * 0.5), "", { source });
         total += result.gained;
       });
-      addRoundEvent(total > 0 ? `${source} doubled ${total} total BOUNTY.` : `${source} found no BOUNTY to double.`);
+      addRoundEvent(total > 0 ? `${source} added ${total} total BOUNTY (x1.5).` : `${source} found no BOUNTY to multiply.`);
       return;
     }
 

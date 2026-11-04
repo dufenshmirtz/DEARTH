@@ -304,9 +304,8 @@ function rollScaledPassiveCount(id, baseCount = 1) {
 }
 
 function botSin(bot) {
-  if (bot?.finalKey === "satan") return Number.POSITIVE_INFINITY;
-  if (bot?.finalKey === "jesus") return Number.NEGATIVE_INFINITY;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  const reward = Math.ceil(bot?.reward || 0);
+  return Number.isFinite(reward) ? Math.max(0, reward) : 0;
 }
 
 function scalingBonus(progress, earlyStep, lateStep, endlessStep = lateStep) {
@@ -351,6 +350,7 @@ function formatArtifactMultiplier(value) {
 }
 
 function botBossBounty(bot) {
+  // Jesus and Satan: their BOSS BOUNTY is infinite (only shown, botSinDisplay), so nothing can change it
   if (!bot?.isBoss || bot?.immortal) return 0;
   const factor = Number.isFinite(bot.bossBountyFactor) ? bot.bossBountyFactor : 1;
   const bonus = Math.max(0, Math.ceil(bot.bossBountyBonus || 0));
@@ -359,9 +359,9 @@ function botBossBounty(bot) {
   return Math.max(0, Math.ceil((20 + state.bossKills) * factor) + bonus - converted);
 }
 
+// Jesus and Satan included: their regular BOUNTY starts at 0 and SEALS can change it like anyone's
 function botRegularBounty(bot) {
-  if (bot?.immortal) return 0;
-  return Math.max(0, Math.ceil(bot?.reward || 0));
+  return botSin(bot);
 }
 
 function botRegularBountyPayout(bot, markTriggers = false) {
@@ -520,14 +520,15 @@ function applyBountyToMemoryMirror(bot, amount, options = {}) {
   addRoundEvent(`${ITEMS.p125.name} converted ${result.lost} BOUNTY from ${bot.name} into ${added} MEMORY.`);
 }
 
+// MEMORY can never exceed the rounds actually finished (what a BOSS remembers). The round in play only counts
+// once it is recorded at the end of the round (rememberRound); MEMORY gained before that is excess.
 function memoryRoundLimit() {
-  return Math.max(0, Math.ceil(state.round || 0));
+  const finished = Math.max(0, Math.ceil(state.round || 0) - 1);
+  return finished + (state.roundState?.memoryRecorded ? 1 : 0);
 }
 
 function botMemoryLimit(bot) {
-  const roundLimit = memoryRoundLimit();
-  if (bot?.isBoss) return roundLimit;
-  return Math.min(NON_BOSS_MEMORY_LIMIT, roundLimit);
+  return memoryRoundLimit();
 }
 
 function trimBotMemoryToLimit(bot) {
@@ -543,7 +544,8 @@ function sitriExcessMemoryDamage(entry) {
 }
 
 // Seal of Threon: MEMORY beyond the limit is kept on the DAMNED as visible overflow (bot.memoryOverflow, shown
-// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage.
+// past the limit in its MEMORY line). At end of round the overflow is removed and each point deals damage; excess gained
+// when the round is recorded (after that) carries over to the next round.
 function applyExcessMemoryDamage(bot, excessMemory) {
   const excess = Math.max(0, Math.ceil(excessMemory));
   if (!state.roundState || !bot || bot.eliminated || excess <= 0) return;
@@ -709,7 +711,6 @@ function checkBalamMemoryBountyEliminations() {
 
 function changeBotSin(bot, delta, reason = "", options = {}) {
   if (!bot || bot.eliminated) return { changed: 0, lost: 0, gained: 0 };
-  if (bot.immortal || !Number.isFinite(botSin(bot))) return { changed: 0, lost: 0, gained: 0 };
   const before = botSin(bot);
   const next = Math.max(0, Math.ceil(before + delta));
   bot.reward = next;
@@ -806,11 +807,28 @@ function ascendingCritDamageBonus() {
   return passiveStack("p91") ? eliteLevels("p91") * 5 : 0;
 }
 
+function romanNumeral(value) {
+  const parts = [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let left = Math.max(0, Math.floor(value));
+  return parts.reduce((text, [size, mark]) => {
+    while (left >= size) {
+      text += mark;
+      left -= size;
+    }
+    return text;
+  }, "");
+}
+
+// ELITE levels are written in Roman numerals: "ELITE III Seal of Bael"
+function eliteLevelText(level) {
+  return `ELITE ${romanNumeral(level)}`;
+}
+
 function passiveDisplayName(item) {
   if (isSelfStackingSeal(item)) return item.name;
   const stack = item.stack || 1;
   if (stack <= 1) return item.name;
-  return stack === 2 ? `ELITE ${item.name}` : `ELITE +${stack - 1} ${item.name}`;
+  return `${eliteLevelText(stack - 1)} ${item.name}`;
 }
 
 function simpleStackCount(idOrItem) {
@@ -1118,6 +1136,17 @@ function stackLinearMultiplier(entry) {
   return Math.max(1, entry?.stack || 1);
 }
 
+// Seal of the Red Horse: one 50% roll per revealed DAMNED (per reveal stack) per round, kept so every hit
+// on that DAMNED this round agrees
+function redHorseRoll(entry, bot, stack = 0) {
+  const round = state.roundState;
+  if (!round || !bot) return false;
+  if (!round.redHorseRolls || typeof round.redHorseRolls !== "object") round.redHorseRolls = {};
+  const key = `${entry?.sourceId || entry?.id || "p75"}:${bot.id}:${stack}`;
+  if (typeof round.redHorseRolls[key] !== "boolean") round.redHorseRolls[key] = Math.random() < 0.5;
+  return round.redHorseRolls[key];
+}
+
 function markPassiveEntryTriggered(entry) {
   if (!state.roundState || !entry) return;
   const triggerId = entry.sourceId || entry.id;
@@ -1208,6 +1237,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       if (entry.id === "p75") {
         if (bot.revealedByPassive) {
           for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
+            if (!redHorseRoll(entry, bot, stack)) continue;
             applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p75?.name, entry);
           }
         }

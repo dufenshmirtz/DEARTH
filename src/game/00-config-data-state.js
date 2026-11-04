@@ -8,7 +8,6 @@ const MAX_REVEALED_DAMNED = 4;
 const ACTIVE_LIMIT = 5;
 const BOT_COUNT = 5;
 const PLAYER_MAX_HP = 100;
-const NON_BOSS_MEMORY_LIMIT = 20;
 const BOT_MIN_HP = 20;
 const BOT_MAX_HP = 60;
 const STARTING_CREDITS = 8;
@@ -23,8 +22,16 @@ const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
 const HP_EXPONENTIAL_RATE = 1.2;
+// After the main game each Goetic BOSS multiplies BOSS HEALTH by 1 + RATE + RATE_STEP x depth
+// (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
+// +18% per BOSS at demon 10, +28% at demon 20, +48% at demon 40
+const ENDLESS_BOSS_HP_RATE = 0.08;
+const ENDLESS_BOSS_HP_RATE_STEP = 0.01;
 const HP_EXPONENTIAL_STEP_BOSSES = 3;
 const SIN_PRICE_PRESSURE_INTERVAL = 150;
+// holding this much SIN at the end of a round brings Satan with his offer (09-intro-story.js); past 1500
+// the price pressure above leaves nothing in the shop affordable
+const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
 // KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
@@ -652,7 +659,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Red Horse",
     price: 20,
-    description: "Revealed DAMNED take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
+    description: "Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier."
   },
   p76: {
     id: "p76",
@@ -762,49 +769,49 @@ const ITEMS = {
   p92: {
     id: "p92",
     type: "passive",
-    name: "Seal of Cassiel's Pentagram",
+    name: "Third Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
     type: "passive",
-    name: "Seal of Zachriel's Triangle",
+    name: "Second Pentacle of Saturn",
     price: 16,
-    description: "When you press READY, 30% chance to double every DAMNED BOUNTY. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance to multiply every DAMNED BOUNTY by x1.5. ELITE adds +5% chance, capped at 80%."
   },
   p94: {
     id: "p94",
     type: "passive",
-    name: "Seal of Aggiel's Hexagram",
+    name: "Sixth Pentacle of Saturn",
     price: 16,
     description: "At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this round. ELITE adds +5% chance, capped at 80%."
   },
   p95: {
     id: "p95",
     type: "passive",
-    name: "Seal of Cassiel's Sigil",
+    name: "Fourth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
     type: "passive",
-    name: "Seal of Samael's Triangle",
+    name: "Seventh Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%."
   },
   p97: {
     id: "p97",
     type: "passive",
-    name: "Seal of Samael's Star",
+    name: "First Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY. ELITE adds +5% chance, capped at 80%."
   },
   p110: {
     id: "p110",
     type: "passive",
-    name: "Seal of Cassiel's Hexagram",
+    name: "Fifth Pentacle of Saturn",
     price: 16,
     description: "When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%."
   },
@@ -910,42 +917,42 @@ const ITEMS = {
   p98: {
     id: "p98",
     type: "passive",
-    name: "Seal of Samael Star",
+    name: "Seal of Gabriel",
     price: 15,
     description: "Whenever you hit CRITICAL, this SEAL gains +3 damage, then your CRITICAL hits deal its current damage as extra damage. Cannot be upgraded."
   },
   p99: {
     id: "p99",
     type: "passive",
-    name: "Seal of Cassiel Sigil",
+    name: "Seal of Michael",
     price: 15,
     description: "Whenever a non-boss DAMNED exceeds 10 MEMORY, this SEAL gains +2 damage, then that DAMNED takes its current damage. Cannot be upgraded."
   },
   p100: {
     id: "p100",
     type: "passive",
-    name: "Seal of Bethor",
+    name: "Seal of Sachiel",
     price: 15,
     description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
     type: "passive",
-    name: "Seal of Aggiel Hexagram",
+    name: "Seal of Raphael",
     price: 15,
     description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
     type: "passive",
-    name: "Seal of Zachriel Triangle",
+    name: "Seal of Cassiel",
     price: 15,
     description: "If a DAMNED died last round, reveal one extra DAMNED. Whenever a revealed DAMNED dies, this SEAL gains +1 damage, then adjacent DAMNED take its current damage. Cannot be upgraded."
   },
   p103: {
     id: "p103",
     type: "passive",
-    name: "Seal of Cassiel Pentagram",
+    name: "Seal of Anael",
     price: 15,
     description: "Every 20 ARTIFACTS used, this SEAL gains +1 damage. After that, every ARTIFACT used deals its current damage to all DAMNED. Cannot be upgraded."
   },
@@ -987,7 +994,7 @@ const ITEMS = {
   p109: {
     id: "p109",
     type: "passive",
-    name: "Seal of Samael Triangle",
+    name: "Seal of Samael",
     price: 15,
     description: "Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded."
   },
@@ -1351,7 +1358,7 @@ const REMOVED_PASSIVE_IDS = new Set([
   "p55",
   "p69"
 ]);
-// the seven archangel SEALS (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
+// the seven archangel SEALS, one per planet (they kept the effects of the old Dev/boss SEALS, which are now the Boss SEALS below)
 const DEV_SEAL_IDS = new Set(["p92", "p93", "p94", "p95", "p96", "p97", "p110"]);
 // the Boss SEALS, named after the eight unique BOSSES
 const BOSS_SEAL_IDS = new Set(["p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"]);
@@ -1518,13 +1525,13 @@ const SEAL_SIGILS = {
   p90: "020_Bifrons.png",
   p91: "003_Aim.png",
   // archangel SEALS (old boss-seal effects); the Dev art below is now used by the Boss SEALS
-  p92: "archangel seals/Cassiel-Pentagram.png",
-  p93: "archangel seals/Zachriel-Triangle.png",
-  p94: "archangel seals/Aggiel-Hexagram.png",
-  p95: "archangel seals/Cassiel-Sigil.png",
-  p96: "archangel seals/Samael-Triangle.png",
-  p97: "archangel seals/Samael-Star.png",
-  p110: "archangel seals/Cassiel-Hexagram.png",
+  p92: "saturn/handdrawn/Saturn-Pentacle-01.png",
+  p93: "saturn/handdrawn/Saturn-Pentacle-03.png",
+  p94: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  p95: "saturn/handdrawn/Saturn-Pentacle-05.png",
+  p96: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p97: "saturn/handdrawn/Saturn-Pentacle-02.png",
+  p110: "saturn/handdrawn/Saturn-Pentacle-04.png",
   // Boss SEALS
   p121: "dev/ZilonSeal.png",
   p122: "dev/KalhaSeal.png",
@@ -1538,19 +1545,20 @@ const SEAL_SIGILS = {
   p131: "trinity/father.png",
   p132: "trinity/son.png",
   p133: "trinity/spirit.png",
-  // self-stacking SEALS: the Pentacles of Saturn (the old art stays in seals/self-stacking/)
-  p98: "saturn/handdrawn/Saturn-Pentacle-01.png",
-  p99: "saturn/handdrawn/Saturn-Pentacle-02.png",
-  p100: "saturn/handdrawn/Saturn-Pentacle-03.png",
-  p101: "saturn/handdrawn/Saturn-Pentacle-04.png",
-  p102: "saturn/handdrawn/Saturn-Pentacle-05.png",
-  p103: "saturn/handdrawn/Saturn-Pentacle-06.png",
+  // self-stacking SEALS: the Archangel Seals since Nov 2026 (they swapped effects with the Pentacles of Saturn;
+  // the old art stays in seals/self-stacking/)
+  p98: "archangel seals/Cassiel-Pentagram.png",
+  p99: "archangel seals/Samael-Star.png",
+  p100: "archangel seals/Zachriel-Triangle.png",
+  p101: "archangel seals/Cassiel-Hexagram.png",
+  p102: "archangel seals/Cassiel-Sigil.png",
+  p103: "archangel seals/Aggiel-Hexagram.png",
   p104: "004_Allocer.png",
   p105: "008_Andras.png",
   p106: "071_Zagan.png",
   p107: "050_Ose.png",
   p108: "049_Orobas.png",
-  p109: "saturn/handdrawn/Saturn-Pentacle-07.png",
+  p109: "archangel seals/Samael-Triangle.png",
   p112: "034_Furfur.png",
   p113: "039_Halphas.png",
   p114: "022_Buer.png",
@@ -1726,45 +1734,80 @@ const GOETIC_BOSS_SPECS = [
 const GOETIC_BOSS_BY_KEY = Object.fromEntries(GOETIC_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const GOETIC_BOSS_KEYS = GOETIC_BOSS_SPECS.map((spec) => spec.key);
 const GOETIC_BOSS_TOTAL = GOETIC_BOSS_KEYS.length;
+/* The demon bound in the Ars Goetia (Collection) when a run starts: its SEAL is free in Devil's Offerings
+   and its BOSS never comes in that run. YOU (the sinner from the story, drawn red like the BOSSES) comes in its place: it plays
+   like you did in your last rounds and, while it lives, you take double TARGET damage (Guilt). */
+const SHADOW_BOSS = {
+  name: "YOU",
+  image: "assets/bots/you/you-boss.webp",
+  memoryRounds: 10
+};
+/* The seven Archangels: late-game BOSSES drawn from the same pool as the 72 Goetic ones (each half as likely as
+   one demon, at most once per run). They do not count toward the 72. Each grows its own damage like the
+   self-stacking SEAL of its name (same build) and deals it to you, and while it lives the TARGET modifier cycles
+   0.8, 1, 1.2, 1. Defeating one discovers it in the Collection (Archangels tab), where it can be bound: a run
+   with it bound starts with its SEAL, and YOU comes in its place. Art: the Moon has the trumpet, the Sun the spear
+   and shield, Mars the sword, Mercury the scroll, Jupiter the crown, Venus the flame, Saturn the scales. */
+const ARCHANGEL_BOSS_IMAGE_ROOT = "assets/bots/archangels";
+const ARCHANGEL_BOSS_SPECS = [
+  { key: "michael", name: "Michael", image: "04-michael.png", sealId: "p99", build: "memory", planet: "the Sun" },
+  { key: "gabriel", name: "Gabriel", image: "03-gabriel.png", sealId: "p98", build: "critical", planet: "the Moon" },
+  { key: "samael", name: "Samael", image: "01-samael.png", sealId: "p109", build: "personality", planet: "Mars" },
+  { key: "raphael", name: "Raphael", image: "06-raphael.png", sealId: "p101", build: "general", planet: "Mercury" },
+  { key: "sachiel", name: "Sachiel", image: "07-sachiel.png", sealId: "p100", build: "bounty", planet: "Jupiter" },
+  { key: "anael", name: "Anael", image: "05-anael.png", sealId: "p103", build: "artifact", planet: "Venus" },
+  { key: "cassiel", name: "Cassiel", image: "02-cassiel.png", sealId: "p102", build: "reveal", planet: "Saturn" }
+];
+const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
+const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
+const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
+const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the HEALTH a Goetic BOSS would have at the same point
+const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
+// BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
 const BOSS_PASSIVES = {
   sinStealing: {
-    name: "Sin-Stealing"
+    name: "Greed"
   },
   soullessness: {
-    name: "Soulessness",
+    name: "Envy",
     baseDamage: 5
   },
   soulStealing: {
-    name: "Soul-stealing"
+    name: "Despair"
   },
   deathRoll: {
-    name: "Death Roll"
+    name: "Wrath"
   },
   rerollToll: {
-    name: "Reroll Toll",
+    name: "Vainglory",
     baseDamage: 5
   },
   offeringToll: {
-    name: "Offering Toll",
+    name: "Gluttony",
     baseDamage: 2
   },
   avenging: {
-    name: "Avenging",
+    name: "Pride",
     baseDamage: 4
   },
   corruption: {
-    name: "Corruption"
+    name: "Deceit"
   },
   punishment: {
-    name: "Punishment",
+    name: "Sloth",
     baseDamage: 5
   },
   lifeSteal: {
-    name: "Life-Steal"
+    name: "Lust"
+  },
+  // only YOU has it (see SHADOW_BOSS); it never rolls at random
+  guilt: {
+    name: "Guilt"
   }
 };
-const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES);
+const SHADOW_BOSS_PASSIVE_KEY = "guilt";
+const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
@@ -1977,7 +2020,8 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "Jesus's guess counts three times when calculating the TARGET average."
+      "Jesus's guess counts three times when calculating the TARGET average.",
+      "When the TARGET is odd, Jesus deals 1 damage to you. When it is 33, he deals 10."
     ]
   },
   satan: {
@@ -1987,9 +2031,16 @@ const FINAL_BOSS_SPECS = {
     color: "#d64f45",
     descriptions: [
       "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
-      "The Devil disables Devil's Offerings while Satan is alive."
+      "The Devil disables Devil's Offerings while Satan is alive.",
+      "When the TARGET is even, Satan deals 1 damage to you. When it is 66, he deals 6."
     ]
   }
+};
+// the final BOSSES strike you at TARGET reveal: Jesus on an odd TARGET, Satan on an even one,
+// harder on their own number (applyFinalBossTargetStrikes)
+const FINAL_BOSS_TARGET_STRIKES = {
+  jesus: { odd: true, damage: 1, number: 33, numberDamage: 10 },
+  satan: { odd: false, damage: 1, number: 66, numberDamage: 6 }
 };
 
 const state = {
@@ -2062,6 +2113,10 @@ const state = {
   uniqueBossQueue: [],
   goeticBossQueue: [],
   goeticBossKills: 0,
+  // the demon or Archangel bound when this run started (Collection): see SHADOW_BOSS and ARCHANGEL_BOSS_SPECS
+  boundDemon: null,
+  // the Archangels that have not come yet this run
+  archangelQueue: [],
   killsSinceBossSpawn: 0,
   nextBossKillInterval: null,
   nextBossKillIntervalEndless: false,
@@ -2072,6 +2127,10 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanTightwadDue: false,
+  satanTightwadAbove: false,
+  satanTightwadOffers: 0,
+  satanRerollToll: false,
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
