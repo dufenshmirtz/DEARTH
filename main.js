@@ -13305,7 +13305,6 @@ function renderMainMenu() {
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
-      <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button" data-menu-action="options">Options</button>
       ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
@@ -13404,6 +13403,7 @@ function renderOptionsMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
+      <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -17345,7 +17345,7 @@ function triggerMenuJesus() {
    Some SEALS start locked: they never appear in the Devil's Offerings until their achievement is met
    once, and then stay unlocked forever (localStorage COLLECTION_STORAGE_KEY).
    A SEAL is "discovered" the first time it triggers in a run.
-   The collection (Collection in the main menu or clicking Satan there, or Pause > Collection) shows every SEAL that can be
+   The collection (Options > Collection or clicking Satan in the main menu, or Pause > Collection) shows every SEAL that can be
    bought: locked (dark, hover shows the achievement), unlocked but undiscovered (white),
    discovered (red).
 

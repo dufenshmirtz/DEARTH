@@ -2,7 +2,7 @@
    Some SEALS start locked: they never appear in the Devil's Offerings until their achievement is met
    once, and then stay unlocked forever (localStorage COLLECTION_STORAGE_KEY).
    A SEAL is "discovered" the first time it triggers in a run.
-   The collection (Collection in the main menu or clicking Satan there, or Pause > Collection) shows every SEAL that can be
+   The collection (Options > Collection or clicking Satan in the main menu, or Pause > Collection) shows every SEAL that can be
    bought: locked (dark, hover shows the achievement), unlocked but undiscovered (white),
    discovered (red).
 

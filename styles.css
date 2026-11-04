@@ -12493,13 +12493,13 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
   display: none !important;
 }
 
-/* main menu has four buttons (Play, Collection, Options, Quit): on short phone screens pack them tighter so Play stays clear of the logo */
+/* Options has four buttons (Settings, Records, Collection, Back): on short phone screens pack them tighter so the top one stays clear of the logo */
 @media (max-height: 520px) {
-  #app .main-menu-panel.menu-screen-main .main-menu-actions {
+  #app .main-menu-panel.menu-screen-options .main-menu-actions {
     gap: 4px;
   }
 
-  #app .main-menu-panel.menu-screen-main .menu-button {
+  #app .main-menu-panel.menu-screen-options .menu-button {
     min-height: 40px;
   }
 }

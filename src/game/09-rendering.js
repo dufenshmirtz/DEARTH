@@ -177,7 +177,6 @@ function renderMainMenu() {
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
-      <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button" data-menu-action="options">Options</button>
       ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
@@ -276,6 +275,7 @@ function renderOptionsMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
+      <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
