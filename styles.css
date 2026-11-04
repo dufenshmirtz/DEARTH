@@ -12492,3 +12492,14 @@ body.mobile-arcade #app .floating-tooltip .tooltip-heading {
 body.mobile-arcade #app .bot-card .boss-stolen-tag {
   display: none !important;
 }
+
+/* main menu has four buttons (Play, Collection, Options, Quit): on short phone screens pack them tighter so Play stays clear of the logo */
+@media (max-height: 520px) {
+  #app .main-menu-panel.menu-screen-main .main-menu-actions {
+    gap: 4px;
+  }
+
+  #app .main-menu-panel.menu-screen-main .menu-button {
+    min-height: 40px;
+  }
+}
