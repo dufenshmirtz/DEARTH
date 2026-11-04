@@ -98,6 +98,9 @@ function bindEvents() {
   const pauseButton = document.querySelector("#pauseButton");
   if (pauseButton) bindOn(pauseButton, "click", openPauseMenu);
 
+  const dealButton = document.querySelector("#dealButton");
+  if (dealButton) bindOn(dealButton, "click", openSatanDeal);
+
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
 

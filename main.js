@@ -13679,6 +13679,7 @@ function renderArcadeApp() {
         </main>
         <div class="native-seal-actions" aria-label="Menu controls">
           ${renderPauseButton()}
+          ${satanDealButtonHtml()}
           ${renderMobileOfferingsButton()}
         </div>
         <section class="native-console-panel ${playerGuessCritical ? "critical-guess-panel" : ""}" aria-label="Player guess">
@@ -13701,6 +13702,7 @@ function renderArcadeApp() {
     <div class="play-column">
       <main class="arena">
         ${renderPauseButton()}
+        ${satanDealButtonHtml()}
         ${renderMobileOfferingsButton()}
         ${renderTopbar()}
         ${renderBots()}
@@ -13754,9 +13756,7 @@ function renderMobileOfferingsBackdrop() {
 }
 
 function renderPauseButton() {
-  // under 25% HEALTH, with the deal not yet opened, Satan calls from behind the Pause button
-  const calling = state.mode === "arcade" && satanPactPulseActive();
-  return `<button class="pause-button ${calling ? "pact-calling" : ""}" id="pauseButton" aria-label="Pause">Pause</button>`;
+  return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
 }
 
 function currentRoundRevealStep() {
@@ -13982,7 +13982,6 @@ function renderPauseMenu() {
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
-          ${satanDealPauseButtonHtml()}
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
@@ -15746,10 +15745,6 @@ function handlePauseAction(action) {
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
     render();
-    return;
-  }
-  if (action === "deal") {
-    openSatanDeal();
     return;
   }
   if (action === "dev") {
@@ -18756,7 +18751,7 @@ function openCollectionFromMenu() {
   render();
 }
 /* ---------- Satan's Pact: one deal with the Devil per run ----------
-   Pause > Make a Deal (the Pause button pulses red while you are under 25% HEALTH, until you open the
+   The DEAL button under Pause (it pulses red while you are under 25% HEALTH, until you open the
    deal once). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
    what you want; he names his price; YES signs, NO throws the chance away for the rest of the run.
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
@@ -19772,15 +19767,15 @@ function satanDealBoxRect(rect) {
   return { left: rect.left, top: Math.max(4, bottom - height), width: Math.min(width, window.innerWidth - rect.left - 4), height: Math.min(height, bottom - 4) };
 }
 
-/* ---- the Pause menu ---- */
-function satanDealPauseButtonHtml() {
+/* ---- the DEAL button, under the Pause button ---- */
+// hidden in the story's tutorial; greyed out once the deal is made, refused or locked
+function satanDealButtonHtml() {
   if (state.mode !== "arcade") return "";
+  if (["black", "judgement", "booting", "tutorial", "pact", "reveal"].includes(introState.phase)) return "";
   const pact = satanPact();
-  let label = "Make a Deal";
-  let tooltip = "Ask Satan for something. Once per run.";
+  let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    label = pact.outcome === "signed" ? "Deal Signed" : "Deal Refused";
-    tooltip = pact.outcome === "signed" ? `You signed: ${pact.request}.` : "You refused Satan. He will not offer again this run.";
+    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He will not offer again this run.";
   } else if (satanPactLocked()) {
     tooltip = "Satan is not listening. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {
@@ -19788,7 +19783,7 @@ function satanDealPauseButtonHtml() {
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
   const pulse = satanPactPulseActive() ? "pact-calling" : "";
-  return `<button class="primary-button pause-deal-button ${pulse}" data-pause-action="deal" data-tooltip="${escapeAttr(tooltip)}" ${disabled}>${escapeHtml(label)}</button>`;
+  return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}" ${disabled}>DEAL</button>`;
 }
 function bindPvpEvents() {
   if (state.mode !== "pvp" || !state.pvp) return;
@@ -19889,6 +19884,9 @@ function bindEvents() {
 
   const pauseButton = document.querySelector("#pauseButton");
   if (pauseButton) bindOn(pauseButton, "click", openPauseMenu);
+
+  const dealButton = document.querySelector("#dealButton");
+  if (dealButton) bindOn(dealButton, "click", openSatanDeal);
 
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);

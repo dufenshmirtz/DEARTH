@@ -539,6 +539,7 @@ function renderArcadeApp() {
         </main>
         <div class="native-seal-actions" aria-label="Menu controls">
           ${renderPauseButton()}
+          ${satanDealButtonHtml()}
           ${renderMobileOfferingsButton()}
         </div>
         <section class="native-console-panel ${playerGuessCritical ? "critical-guess-panel" : ""}" aria-label="Player guess">
@@ -561,6 +562,7 @@ function renderArcadeApp() {
     <div class="play-column">
       <main class="arena">
         ${renderPauseButton()}
+        ${satanDealButtonHtml()}
         ${renderMobileOfferingsButton()}
         ${renderTopbar()}
         ${renderBots()}
@@ -614,9 +616,7 @@ function renderMobileOfferingsBackdrop() {
 }
 
 function renderPauseButton() {
-  // under 25% HEALTH, with the deal not yet opened, Satan calls from behind the Pause button
-  const calling = state.mode === "arcade" && satanPactPulseActive();
-  return `<button class="pause-button ${calling ? "pact-calling" : ""}" id="pauseButton" aria-label="Pause">Pause</button>`;
+  return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
 }
 
 function currentRoundRevealStep() {
@@ -842,7 +842,6 @@ function renderPauseMenu() {
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
-          ${satanDealPauseButtonHtml()}
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
@@ -2606,10 +2605,6 @@ function handlePauseAction(action) {
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
     render();
-    return;
-  }
-  if (action === "deal") {
-    openSatanDeal();
     return;
   }
   if (action === "dev") {
