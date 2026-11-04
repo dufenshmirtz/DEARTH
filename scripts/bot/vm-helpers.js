@@ -2,25 +2,27 @@
 // and gives the bot a small API that presses the same "buttons" a player does.
 Math.random = () => __rng();
 localStorage.setItem("dearthIntroSeenV1", "1");
-render = function () {};
-saveArcadeRun = function () {};
-saveArcadeRunForNativeExit = function () {};
-showInvalidGuessPopup = function () {};
-showInvalidGuessToast = function () {};
-showNextCollectionToast = function () {};
-resumeSoundtrack = function () {};
-playSoundtrack = function () {};
-playGameSfx = function () {};
-playArtifactSfx = function () {};
-playGuessSfx = function () {};
-playReadySfx = function () {};
-playNextRoundSfx = function () {};
-playPentakillSfx = function () {};
-playSealPurchaseSfx = function () {};
-playClockTickSfx = function () {};
-playOneShot = function () {};
-playClonedOneShot = function () {};
-playRoundRevealStepSfx = function () {};
+// screen and sound functions become no-ops; each only if this version of the game has it (an older or newer
+// game may not: assigning a name that doesn't exist stops the bot on some Node versions)
+if (typeof render === "function") render = function () {};
+if (typeof saveArcadeRun === "function") saveArcadeRun = function () {};
+if (typeof saveArcadeRunForNativeExit === "function") saveArcadeRunForNativeExit = function () {};
+if (typeof showInvalidGuessPopup === "function") showInvalidGuessPopup = function () {};
+if (typeof showInvalidGuessToast === "function") showInvalidGuessToast = function () {};
+if (typeof showNextCollectionToast === "function") showNextCollectionToast = function () {};
+if (typeof resumeSoundtrack === "function") resumeSoundtrack = function () {};
+if (typeof playSoundtrack === "function") playSoundtrack = function () {};
+if (typeof playGameSfx === "function") playGameSfx = function () {};
+if (typeof playArtifactSfx === "function") playArtifactSfx = function () {};
+if (typeof playGuessSfx === "function") playGuessSfx = function () {};
+if (typeof playReadySfx === "function") playReadySfx = function () {};
+if (typeof playNextRoundSfx === "function") playNextRoundSfx = function () {};
+if (typeof playPentakillSfx === "function") playPentakillSfx = function () {};
+if (typeof playSealPurchaseSfx === "function") playSealPurchaseSfx = function () {};
+if (typeof playClockTickSfx === "function") playClockTickSfx = function () {};
+if (typeof playOneShot === "function") playOneShot = function () {};
+if (typeof playClonedOneShot === "function") playClonedOneShot = function () {};
+if (typeof playRoundRevealStepSfx === "function") playRoundRevealStepSfx = function () {};
 state.sound.muted = true;
 
 const __bot = (() => {
