@@ -70,10 +70,36 @@ function coverageSealIds() {
 }
 
 // write to a temporary file first, then swap it in: a Stop in the middle never leaves half a file
+// (Windows refuses the swap while another program has the file open for a moment, e.g. Bot Lab reading
+// batch.json or an antivirus scan: try again a few times, then write it in place. Never stop the batch over it.)
+function sleepMs(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
 function writeJson(file, data) {
+  const text = JSON.stringify(data);
   const temp = `${file}.tmp`;
-  fs.writeFileSync(temp, JSON.stringify(data));
-  fs.renameSync(temp, file);
+  try {
+    fs.writeFileSync(temp, text);
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      try {
+        fs.renameSync(temp, file);
+        return true;
+      } catch (error) {
+        if (!["EPERM", "EBUSY", "EACCES"].includes(error.code)) throw error;
+        sleepMs(30 + attempt * 20);
+      }
+    }
+    fs.writeFileSync(file, text);
+    try {
+      fs.unlinkSync(temp);
+    } catch (error) {
+      // a leftover .tmp is harmless
+    }
+    return true;
+  } catch (error) {
+    console.error(`  (could not save ${path.basename(file)}: ${error.code || error.message}; the batch goes on)`);
+    return false;
+  }
 }
 
 function readJsonSafe(file) {
@@ -112,10 +138,12 @@ function hashFiles(files) {
 }
 function fingerprint() {
   const { SOURCE_FILES } = require(path.join(ROOT, "scripts", "build-game.js"));
-  // only the files that decide how runs are played (the report, Bot Lab and tuning can change freely)
-  const notPlay = new Set(["test-bot.js", "report.js", "tune.js", "lab-server.js"]);
+  // only the files that decide how a run is played (the report, Bot Lab, tuning and the batch runner can change
+  // freely; which runs a batch contains is checked separately with the list of runs below)
+  const notPlay = new Set(["test-bot.js", "report.js", "tune.js", "lab-server.js", "run.js"]);
   const botFiles = fs.readdirSync(__dirname).filter((name) => name.endsWith(".js") && !notPlay.has(name)).sort();
   return {
+    v: 2,
     game: hashFiles(SOURCE_FILES.map((name) => path.join(ROOT, "src", "game", name))),
     bot: hashFiles(botFiles.map((name) => path.join(__dirname, name))),
     experience: fs.existsSync(EXPERIENCE_FILE) ? hashFiles([EXPERIENCE_FILE]) : "none"
@@ -169,6 +197,13 @@ function buildJobs(args, seeds, experience) {
   return { jobs, coverage: null };
 }
 
+// the list of runs a batch is made of (seed, build, forced SEAL, settings per run)
+function jobsHash(jobs) {
+  const hash = crypto.createHash("sha1");
+  jobs.forEach((job) => hash.update(JSON.stringify([job.index, job.seed, job.build, job.mainOnly, job.forceSeal || null, job.coverage || null, job.maxRounds])));
+  return hash.digest("hex").slice(0, 16);
+}
+
 function runFile(dir, index) {
   return path.join(dir, "runs", `run-${String(index + 1).padStart(4, "0")}.json`);
 }
@@ -190,6 +225,7 @@ function checkContinue(dir, now = fingerprint()) {
   if (now.game !== meta.fingerprint.game) changed.push("the game code (src/game)");
   if (now.bot !== meta.fingerprint.bot) changed.push("the bot code or its settings (scripts/bot, config.js)");
   if (now.experience !== meta.fingerprint.experience) changed.push("the bot's experience (Update from all batches was clicked since)");
+  if (meta.fingerprint.jobs && jobsHash(buildJobs(meta.args, meta.seeds, null).jobs) !== meta.fingerprint.jobs) changed.push("the list of runs this batch is made of");
   if (changed.length) return { ok: false, reason: `Since this batch started, ${changed.join(", ")} changed. Continuing would mix runs played under different rules, so it is blocked. Start a new batch instead.` };
   const runsDir = path.join(dir, "runs");
   const done = fs.existsSync(runsDir) ? fs.readdirSync(runsDir).filter((name) => /^run-\d+\.json$/.test(name) && readJsonSafe(path.join(runsDir, name))).length : 0;
@@ -238,6 +274,14 @@ async function runBatch(args, { onProgress, continueId = null } = {}) {
 
   const { jobs, coverage } = buildJobs(args, meta.seeds, experience);
   if (coverage) meta.coverage = coverage;
+  if (!continueId) meta.fingerprint.jobs = jobsHash(jobs);
+  // leftovers of an interrupted save
+  try {
+    fs.readdirSync(path.join(dir, "runs")).filter((name) => name.endsWith(".tmp")).forEach((name) => fs.unlinkSync(path.join(dir, "runs", name)));
+    if (fs.existsSync(path.join(dir, "batch.json.tmp"))) fs.unlinkSync(path.join(dir, "batch.json.tmp"));
+  } catch (error) {
+    // harmless
+  }
   meta.total = jobs.length;
   // runs already on disk are kept; a run cut off by Stop was never written, so it is simply played again
   // (same seed, same result as if it had never been stopped)
@@ -336,4 +380,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runBatch, parseArgs, checkContinue, isRunning, fingerprint, buildJobs, jobDone, coverageSealIds, RUNS_DIR, BUILDS, EXPERIENCE_FILE, ROOT };
+module.exports = { runBatch, parseArgs, checkContinue, isRunning, fingerprint, buildJobs, jobDone, jobsHash, writeJson, coverageSealIds, RUNS_DIR, BUILDS, EXPERIENCE_FILE, ROOT };

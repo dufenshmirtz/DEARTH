@@ -55,3 +55,33 @@ test("a Coverage run keeps its forced SEAL the whole run", () => {
     if (round.seals) assert.ok(round.seals.some((tag) => tag.split("x")[0] === "p13"), `round ${round.r} lost the forced SEAL`);
   });
 });
+
+test("saving a file survives Windows briefly locking it, and never throws", () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const { writeJson } = require("./run");
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "bot-")), "batch.json");
+  fs.writeFileSync(file, "{}");
+  const realRename = fs.renameSync;
+  let refusals = 0;
+  fs.renameSync = (...args) => {
+    if (refusals < 3) {
+      refusals += 1;
+      const error = new Error("busy");
+      error.code = "EPERM";
+      throw error;
+    }
+    return realRename(...args);
+  };
+  try {
+    assert.equal(writeJson(file, { a: 1 }), true);
+    assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")), { a: 1 });
+    // always busy: falls back to writing in place
+    refusals = -1000;
+    assert.equal(writeJson(file, { a: 2 }), true);
+    assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")), { a: 2 });
+  } finally {
+    fs.renameSync = realRename;
+  }
+});
