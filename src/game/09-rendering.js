@@ -614,7 +614,9 @@ function renderMobileOfferingsBackdrop() {
 }
 
 function renderPauseButton() {
-  return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
+  // under 25% HEALTH, with the deal not yet opened, Satan calls from behind the Pause button
+  const calling = state.mode === "arcade" && satanPactPulseActive();
+  return `<button class="pause-button ${calling ? "pact-calling" : ""}" id="pauseButton" aria-label="Pause">Pause</button>`;
 }
 
 function currentRoundRevealStep() {
@@ -840,6 +842,7 @@ function renderPauseMenu() {
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
+          ${satanDealPauseButtonHtml()}
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
@@ -2389,6 +2392,7 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         <div class="end-actions">
@@ -2602,6 +2606,10 @@ function handlePauseAction(action) {
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
     render();
+    return;
+  }
+  if (action === "deal") {
+    openSatanDeal();
     return;
   }
   if (action === "dev") {

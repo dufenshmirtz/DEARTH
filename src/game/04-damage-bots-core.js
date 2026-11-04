@@ -340,6 +340,9 @@ function resolvePlayerDamageMemoryConversions(conversions = []) {
 
 function damagePlayer(amount, reason, echo = true, respectReduction = true, source = undefined, applySealConversion = true) {
   let damage = Math.max(0, Math.ceil(amount));
+  // Satan's Pact curse: more damage taken for a few rounds
+  const pactMultiplier = satanPactDamageTakenMultiplier();
+  if (pactMultiplier !== 1) damage = Math.ceil(damage * pactMultiplier);
   const sourceDamage = damage;
   let reductionSaved = 0;
   if (respectReduction && state.roundState?.playerDamageReduction) {
@@ -359,7 +362,10 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
     resolvePlayerDamageMemoryConversions(conversion.conversions);
     return 0;
   }
-  state.player.hp = Math.max(introPlayerHpFloor(), state.player.hp - damage);
+  let nextHp = state.player.hp - damage;
+  // Satan's Pact "cheat death": back with 1 HEALTH, and he collects
+  if (nextHp <= 0 && satanPactCheatDeathArmed()) nextHp = satanPactCheatDeath();
+  state.player.hp = Math.max(introPlayerHpFloor(), nextHp);
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordPlayerDamageSource(sourceDamage, sourceLabel);
@@ -552,7 +558,9 @@ function activeInventoryLimit() {
 }
 
 function activeUseLimit() {
-  return hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p126");
+  const base = hasPassive("p24") ? 1 : ACTIVE_USES_PER_ROUND + baseEditionBonus("p126");
+  // Satan's Pact: extra uses this round, or a cap for a few rounds
+  return satanPactUseLimit(base);
 }
 
 function bountyOathMultiplier() {

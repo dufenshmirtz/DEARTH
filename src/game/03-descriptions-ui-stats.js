@@ -531,7 +531,8 @@ function aliveFinalBoss(key) {
 }
 
 function shopDisabledBySatan() {
-  return state.finalBossPhase && aliveFinalBoss("satan");
+  // the final Satan, or a Satan's Pact price (Devil's Offerings closed for a few rounds)
+  return Boolean((state.finalBossPhase && aliveFinalBoss("satan")) || satanPactShopClosed());
 }
 
 function activePetrosPavlosBosses() {

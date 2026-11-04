@@ -142,7 +142,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory", "tightwad"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -152,7 +152,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -353,6 +353,8 @@ function introPartTyped() {
   const lastLine = introState.lineIndex === introState.lines.length - 1;
   const lastPart = introState.chunk === introState.ends.length - 1;
   if (introState.phase === "tightwad" && lastLine && lastPart) satanTightwadAsk();
+  // Satan's Pact: the box to type in, or YES / NO (09-satan-pact.js)
+  if (introState.phase === "deal" && lastLine && lastPart) satanDealAfterTalk();
 }
 
 function introTypeTo(end) {
@@ -380,7 +382,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory", "tightwad"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory", "tightwad", "deal"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -412,6 +414,7 @@ function introAdvance() {
   if (introState.phase === "judgement") introBootGame();
   else if (introState.phase === "victory") satanVictoryLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
+  else if (introState.phase === "deal") satanDealEndOfLines();
   else introSealPact();
 }
 
@@ -419,13 +422,21 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
+    if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
     "keydown",
     (event) => {
       if (!introCapturesInput()) return;
+      // Satan's Pact: typing in his box is typing (its own Enter / Esc)
+      if (introState.phase === "deal" && event.target?.closest?.(".pact-ask")) return;
+      if (introState.phase === "deal" && introState.box?.classList.contains("intro-choosing") && /^[yn]$/i.test(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+        satanDealChoose(event.key.toLowerCase() === "y");
+        return;
+      }
       // Satan's offer: Y / N answer it
       if (introState.phase === "tightwad" && introState.box?.classList.contains("intro-choosing") && /^[yn]$/i.test(event.key)) {
         event.preventDefault();
@@ -491,6 +502,10 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanTightwadSkipToChoice();
+  } else if (introState.phase === "deal") {
+    introClearTimers();
+    introState.typing = false;
+    satanDealSkip();
   }
 }
 
@@ -578,7 +593,7 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (["pact", "victory", "tightwad"].includes(introState.phase)) introPlacePactBox();
+  if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
   satanVictoryAfterRender();
   satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
@@ -852,7 +867,8 @@ function introPactRect() {
 function introPlacePactBox() {
   const box = introState.box;
   if (!box || !box.classList.contains("intro-box-pact")) return;
-  const rect = introPactRect();
+  // Satan's Pact needs more room on a phone (09-satan-pact.js)
+  const rect = introState.phase === "deal" ? satanDealBoxRect(introPactRect()) : introPactRect();
   if (!rect) return;
   box.style.left = `${rect.left}px`;
   box.style.top = `${rect.top}px`;

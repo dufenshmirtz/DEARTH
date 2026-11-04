@@ -2074,3 +2074,264 @@ test("a bound Archangel: the run starts with its SEAL (sells for nothing) and YO
     assert.ok(archangelMatchesSearch("gabriel", "moon"));
   `);
 });
+
+// ---------- Satan's Pact (09-satan-pact.js) ----------
+const PACT_SETUP = `
+  state.mode = "arcade";
+  state.round = 3;
+  state.stage = "guess";
+  state.bossKills = 0;
+  state.pact = satanPactFresh();
+  state.player.hp = 80;
+  state.player.maxHp = 100;
+  state.player.credits = 0;
+  state.player.passives = [];
+  state.player.actives = [];
+  state.bots = [createBot(), createBot(), createBot()];
+  state.bots[0].name = "Nikos";
+  state.bots[1].name = "Haruto";
+  Math.random = () => 0.5;
+`;
+
+test("Satan's Pact reads what you typed: typos, counts, numbers and kinds of request", () => {
+  game()(`
+    ${PACT_SETUP}
+    const read = (text) => satanPactParse(text);
+    assert.equal(read("gimme the pamion seal").intent, "seal");
+    assert.equal(read("gimme the pamion seal").id, "p2");
+    const candles = read("3 black candels please");
+    assert.equal(candles.intent, "artifact");
+    assert.equal(candles.id, "a14");
+    assert.equal(candles.count, 3);
+    assert.equal(read("a dagger").id, "a15");
+    assert.equal(read("a dagger").count, 1);
+    assert.equal(read("heal me for 10").intent, "heal");
+    assert.equal(read("heal me for 10").n, 10);
+    assert.equal(read("50 sin").intent, "sin");
+    assert.equal(read("50 sin").n, 50);
+    assert.equal(read("kill nikos").intent, "kill");
+    assert.equal(read("kill nikos").botId, state.bots[0].id);
+    assert.equal(read("one more artifact use").intent, "uses");
+    assert.equal(read("let me cheat death").intent, "cheatDeath");
+    assert.equal(read("elite on paimon").intent, "elite");
+    assert.equal(read("your own seal").intent, "satanSeal");
+    assert.equal(read("banana").intent, "gibberish");
+    assert.equal(read("").intent, "gibberish");
+  `);
+});
+
+test("Satan's Pact: 1 ARTIFACT costs HEALTH, 3x its price in SIN, or a use cap, among the ones you can pay", () => {
+  game()(`
+    ${PACT_SETUP}
+    // low on HEALTH and SIN: only the use cap is left
+    state.player.hp = 2;
+    state.player.credits = 0;
+    const offer = satanPactArtifactOffer("a14", 1);
+    assert.equal(offer.price.length, 1);
+    assert.equal(offer.price[0].type, "useCap");
+    assert.equal(offer.price[0].cap, 1);
+    assert.equal(offer.price[0].from, 3);
+    // plenty of both: the HEALTH option is half the Devil's Offerings price, at least 2
+    state.player.hp = 80;
+    state.player.credits = 100;
+    const unit = shopPrice({ ...ITEMS.a14 });
+    Math.random = () => 0.01;
+    const cheap = satanPactArtifactOffer("a14", 1);
+    assert.equal(cheap.price[0].type, "hp");
+    assert.ok(cheap.price[0].n >= 2);
+    assert.ok(cheap.price[0].n <= Math.max(2, Math.round(0.5 * unit * 1.25)));
+    Math.random = () => 0.5;
+    const middle = satanPactArtifactOffer("a14", 1);
+    assert.equal(middle.price[0].type, "sin");
+    assert.equal(middle.price[0].n, Math.round(3 * unit * satanPactRoll()));
+  `);
+});
+
+test("Satan's Pact: 2 to 4 copies close the Offerings or cost HEALTH, never more than fit", () => {
+  game()(`
+    ${PACT_SETUP}
+    const many = satanPactArtifactOffer("a14", 9);
+    assert.equal(many.gain.count, 4);
+    assert.equal(many.lines[0][1], SATAN_DEAL_LINES.artifactsCapped[0][1]);
+    state.player.actives = [freeActiveCopy("a6"), freeActiveCopy("a6"), freeActiveCopy("a6")];
+    assert.equal(satanPactArtifactOffer("a14", 4).gain.count, activeInventoryLimit() - 3);
+    state.player.hp = 1;
+    const closed = satanPactArtifactOffer("a14", 2);
+    assert.equal(closed.price[0].type, "shopClosed");
+    state.player.actives = [1, 2, 3, 4, 5].map(() => freeActiveCopy("a6"));
+    assert.equal(satanPactArtifactOffer("a14", 1).refuse, "handsFull");
+  `);
+});
+
+test("Satan's Pact: SEALS and ELITE wait for every SEAL slot; angels, Trinity, Saturn and Apocalypse are never sold", () => {
+  game()(`
+    ${PACT_SETUP}
+    assert.equal(satanPactAnswer("seal of paimon").refuse, "tooEarly");
+    assert.equal(satanPactAnswer("elite paimon").refuse, "tooEarly");
+    assert.equal(satanPactAnswer("seal of michael").refuse, "angel");
+    assert.equal(satanPactAnswer("seal of the father").refuse, "trinity");
+    assert.equal(satanPactAnswer("first pentacle of saturn").refuse, "saturn");
+    assert.equal(satanPactAnswer("seal of the white horse").refuse, "apocalypse");
+    state.bossKills = 6;
+    state.player.passives = [itemCopy("p16")];
+    assert.equal(satanPactAnswer("seal of satan").refuse, "satanSealNotEmpty");
+    state.player.passives = [];
+    assert.equal(satanPactAnswer("seal of satan").gain.id, "p111");
+    assert.equal(satanPactAnswer("seal of satan").price.length, 0);
+  `);
+});
+
+test("Satan's Pact: refusals and gibberish keep the chance; a turned-down SEAL locks it until the next BOSS kill; NO uses it up", () => {
+  game()(`
+    ${PACT_SETUP}
+    satanPactRequest("banana");
+    satanPactRequest("seal of michael");
+    assert.equal(state.pact.used, false);
+    assert.equal(satanPactAvailable(), true);
+    state.bossKills = 6;
+    state.player.passives = [itemCopy("p16"), itemCopy("p8")];
+    Math.random = () => 0.9; // over the 50% the demon agrees with
+    const refused = satanPactRequest("seal of paimon");
+    assert.equal(refused.next, "leave");
+    assert.equal(satanPactAvailable(), false);
+    state.bossKills = 7;
+    assert.equal(satanPactAvailable(), true);
+    Math.random = () => 0.1;
+    const offer = satanPactRequest("seal of paimon");
+    assert.equal(offer.next, "offer");
+    assert.ok(state.pact.offer);
+    satanPactRefuse();
+    assert.equal(state.pact.used, true);
+    assert.equal(satanPactAvailable(), false);
+  `);
+});
+
+test("Satan's Pact: a new Goetic SEAL takes a random SEAL of yours, HEALTH and 20% of your SIN", () => {
+  game()(`
+    ${PACT_SETUP}
+    state.bossKills = 6;
+    state.player.credits = 100;
+    state.player.passives = [itemCopy("p16"), itemCopy("p8")];
+    Math.random = () => 0.1;
+    satanPactRequest("seal of paimon");
+    const parts = state.pact.offer.price.map((part) => part.type);
+    assert.deepEqual(parts, ["loseSeal", "hp", "sin"]);
+    satanPactSign();
+    assert.equal(state.pact.used, true);
+    assert.equal(state.pact.outcome, "signed");
+    assert.ok(hasPassive("p2"));
+    assert.equal(state.player.passives.length, 2);
+    assert.ok(state.player.hp < 80);
+    assert.ok(state.player.credits < 100);
+    assert.equal(passiveEntry("p2").freeStacks, 1);
+  `);
+});
+
+test("Satan's Pact: ELITE on the SEAL you asked for, or the other one it lands on for a cheaper debt", () => {
+  game()(`
+    ${PACT_SETUP}
+    state.bossKills = 6;
+    state.player.passives = [itemCopy("p2"), itemCopy("p8"), itemCopy("p16")];
+    Math.random = () => 0.01; // lands on the first weight: Paimon, which you asked for
+    const mine = satanPactEliteOffer("p2");
+    assert.equal(mine.gain.id, "p2");
+    assert.ok(["bossHealth", "loseSeal"].includes(mine.price[0].type));
+    Math.random = () => 0.99; // the last SEAL in the list
+    const other = satanPactEliteOffer("p2");
+    assert.equal(other.gain.id, "p16");
+    assert.equal(other.price[0].type, "bossHealth");
+    assert.ok(other.price[0].pct <= Math.round(30 * 1.25));
+    state.pact.offer = { gain: other.gain, price: other.price, request: other.request };
+    satanPactSign();
+    assert.equal(passiveEntry("p16").stack, 2);
+    assert.equal(state.pact.bossDebt.healthPct, other.price[0].pct);
+  `);
+});
+
+test("Satan's Pact: heal up to 5, SIN at a BOSS debt (and HEALTH past 20), never a HEALTH price that kills", () => {
+  game()(`
+    ${PACT_SETUP}
+    const heal = satanPactHealOffer(40);
+    assert.equal(heal.gain.n, 5);
+    assert.equal(heal.lines, SATAN_DEAL_LINES.healTooMuch);
+    assert.equal(heal.price[0].pct, Math.round(10 * 5 * satanPactRoll()));
+    state.player.hp = 100;
+    assert.equal(satanPactHealOffer(3).refuse, "fullHealth");
+    state.player.hp = 80;
+    const small = satanPactSinOffer(20);
+    assert.deepEqual(small.price.map((part) => part.type), ["bossHealth"]);
+    assert.equal(small.price[0].zeroBounty, true);
+    const big = satanPactSinOffer(50);
+    assert.deepEqual(big.price.map((part) => part.type), ["bossHealth", "hp"]);
+    assert.equal(big.price[1].n, Math.round(10 * satanPactRoll()));
+    state.player.hp = 3;
+    const capped = satanPactSinOffer(200);
+    assert.ok(capped.gain.n < 200);
+    assert.ok(state.player.hp - capped.price[1].n >= 1);
+    assert.equal(satanPactSinOffer(null).refuse, "sinHowMuch");
+  `);
+});
+
+test("Satan's Pact prices act on the game: ARTIFACT uses, closed Offerings, more damage taken, BOSS debt", () => {
+  game()(`
+    ${PACT_SETUP}
+    fixture([], [10, 20, 30]);
+    state.round = 3;
+    state.stage = "guess";
+    const base = activeUseLimit();
+    state.pact = satanPactFresh();
+    state.pact.offer = satanPactUsesOffer(2);
+    satanPactSign();
+    assert.equal(activeUseLimit(), base + 2);
+    state.round = 4;
+    assert.equal(activeUseLimit(), 1);
+    state.round = 3;
+    state.pact.shopClosed = { from: 3, to: 4 };
+    assert.equal(shopDisabledBySatan(), true);
+    state.round = 5;
+    assert.equal(shopDisabledBySatan(), false);
+    state.pact.damageTaken = { from: 5, to: 5, pct: 50 };
+    state.player.hp = 80;
+    damagePlayer(10, null);
+    assert.equal(state.player.hp, 65);
+    state.pact.bossDebt = { healthPct: 50, zeroBounty: true, pairGroupId: null };
+    const fake = { isBoss: true, maxHp: 200, hp: 20, bossBountyFactor: 1, name: "BOSS" };
+    satanPactApplyBossDebt(fake);
+    assert.equal(fake.maxHp, 300);
+    assert.equal(fake.hp, 300);
+    assert.equal(fake.bossBountyFactor, 0);
+    assert.equal(state.pact.bossDebt, null);
+    state.pact.bossDebt = { healthPct: 50, zeroBounty: true, pairGroupId: null };
+    const boss = createBot({ boss: true });
+    assert.equal(boss.bossBountyFactor, 0);
+    assert.equal(boss.hp, boss.maxHp);
+    assert.equal(state.pact.bossDebt, null);
+    assert.equal(createBot({ boss: true }).bossBountyFactor, 1);
+  `);
+});
+
+test("Satan's Pact: killing a DAMNED keeps its BOUNTY and takes your ARTIFACTS for a round; cheat death works once", () => {
+  game()(`
+    ${PACT_SETUP}
+    fixture([], [10, 20, 30]);
+    state.round = 3;
+    state.stage = "guess";
+    state.pact = satanPactFresh();
+    const victim = state.bots[1];
+    state.player.credits = 0;
+    state.pact.offer = satanPactKillOffer(victim.id);
+    satanPactSign();
+    assert.equal(victim.eliminated, true);
+    assert.equal(state.player.credits, 0);
+    assert.equal(activeUseLimit(), 0);
+    state.pact = satanPactFresh();
+    state.pact.cheatDeath = true;
+    state.player.hp = 5;
+    state.player.credits = 40;
+    damagePlayer(50, null);
+    assert.equal(state.player.hp, 1);
+    assert.equal(state.pact.cheatDeath, false);
+    damagePlayer(50, null);
+    assert.equal(state.player.hp, 0);
+  `);
+});

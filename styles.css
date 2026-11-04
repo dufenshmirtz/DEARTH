@@ -12503,3 +12503,102 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
     min-height: 40px;
   }
 }
+
+/* ---------- Satan's Pact (09-satan-pact.js) ---------- */
+/* under 25% HEALTH, before the deal is opened, the Pause button (and Make a Deal inside) pulse blood red.
+   The buttons' colours are !important, so the pulse runs through a registered colour property. */
+@property --pact-call {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #ffffff;
+}
+
+@keyframes pact-calling {
+  0%, 100% { --pact-call: #ffffff; }
+  50% { --pact-call: #dc2a2f; }
+}
+
+.pause-button.pact-calling,
+.pause-deal-button.pact-calling {
+  color: var(--pact-call) !important;
+  animation: pact-calling 1.6s ease-in-out infinite;
+}
+
+/* hover still turns it blood red, like every button */
+.pause-button.pact-calling:hover:not(:disabled),
+.pause-deal-button.pact-calling:hover:not(:disabled) {
+  animation: none;
+  --pact-call: #dc2a2f;
+}
+
+body.reduce-flashes .pause-button.pact-calling,
+body.reduce-flashes .pause-deal-button.pact-calling {
+  animation: none;
+  --pact-call: #dc2a2f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pause-button.pact-calling,
+  .pause-deal-button.pact-calling {
+    animation: none;
+    --pact-call: #dc2a2f;
+  }
+}
+
+.pause-card .pause-deal-button:hover:not(:disabled),
+.pause-card .pause-deal-button:focus-visible {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+.end-stat-pact strong {
+  color: var(--blood-bright, #dc2a2f);
+}
+
+/* the box where you tell him what you want, under his line */
+.intro-box .pact-ask {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1.2vw, 18px);
+  padding: 0 4px;
+}
+
+.intro-box .pact-ask .pact-ask-input {
+  flex: 1 1 9em;
+  min-width: 0;
+  max-width: 24em;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.3em 0.6em;
+  border: 0;
+  border-bottom: 1px solid rgba(214, 38, 38, 0.6);
+  border-radius: 0;
+  outline: none;
+  background: rgba(20, 0, 0, 0.6);
+  box-shadow: none;
+  color: #ece6d8;
+  font-family: inherit;
+  font-size: clamp(13px, 1.35vw, 22px);
+  font-style: italic;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.intro-box .pact-ask .pact-ask-input::placeholder {
+  color: rgba(236, 230, 216, 0.45);
+}
+
+.intro-box .pact-ask .pact-ask-input:focus {
+  border-bottom-color: var(--intro-red, #dc2a2f);
+  background: rgba(40, 0, 0, 0.75);
+}
+
+body.mobile-arcade .intro-box .pact-ask {
+  gap: 6px;
+}
+
+body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
+  flex-basis: 100%;
+  max-width: none;
+  font-size: 14px;
+}

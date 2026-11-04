@@ -326,6 +326,8 @@ function createBot(options = {}) {
     revealedByPassive: false,
     fresh: true
   };
+  // Satan's Pact debt: this BOSS comes with more HEALTH (and maybe no BOSS BOUNTY)
+  if (isBoss && bot.countsAsBossSpawn !== false) satanPactApplyBossDebt(bot);
   if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
   seedNewBotMemoryFromVassago(bot);
   if (isBoss && bot.countsAsBossSpawn !== false) state.bossSpawnCount += 1;
@@ -737,6 +739,7 @@ function startGame(options = {}) {
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;
   state.satanRerollToll = false;
+  state.pact = satanPactFresh();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
