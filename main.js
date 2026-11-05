@@ -7408,8 +7408,20 @@ function randomBotProfile() {
   };
 }
 
-function randomBotImage() {
-  return `assets/bots/occult-stickmen-pack/${randomFrom(BOT_IMAGE_FILES)}`;
+function randomBotImage(taken = null) {
+  const free = taken ? BOT_IMAGE_FILES.filter((file) => !taken.has(`assets/bots/occult-stickmen-pack/${file}`)) : [];
+  return `assets/bots/occult-stickmen-pack/${randomFrom(free.length ? free : BOT_IMAGE_FILES)}`;
+}
+
+// art already worn by a living DAMNED, or coming back with one that is about to return (inherited replacement)
+function livingDamnedImages() {
+  const taken = new Set();
+  (state.bots || []).forEach((bot) => {
+    if (!bot) return;
+    if (!bot.eliminated && bot.image) taken.add(bot.image);
+    if (bot.pendingReplacementInheritance?.image) taken.add(bot.pendingReplacementInheritance.image);
+  });
+  return taken;
 }
 
 function botImagePath(entity) {
@@ -7575,8 +7587,7 @@ function skipToFirstGoeticBoss() {
   state.uniqueBossQueue = [];
   state.goeticBossQueue = shuffled(GOETIC_BOSS_KEYS);
   state.archangelQueue = ARCHANGEL_KEYS.slice();
-  // testing: the bound demon's place comes first, so YOU shows up at once
-  if (state.boundDemon) state.goeticBossQueue = [state.boundDemon, ...state.goeticBossQueue.filter((key) => key !== state.boundDemon)];
+  // a bound demon or Archangel gets no head start: YOU comes at its place in the shuffled order, like any other BOSS
   state.goeticBossKills = 0;
   resetBossKillInterval();
   state.finalBossPhase = false;
@@ -7585,10 +7596,7 @@ function skipToFirstGoeticBoss() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * UNIQUE_BOSS_KEYS.length);
-  // a bound Archangel's place (YOU) comes first too
-  const boundArchangel = ARCHANGEL_BY_KEY[state.boundDemon] ? state.boundDemon : null;
-  if (boundArchangel) state.archangelQueue = state.archangelQueue.filter((key) => key !== boundArchangel);
-  const firstBossSpec = boundArchangel ? { archangelKey: boundArchangel } : takeNextBossSpec();
+  const firstBossSpec = takeNextBossSpec();
   state.bots = firstBossSpec ? [createBot({ boss: true, bossSpec: firstBossSpec })] : [];
   fillBots();
   state.rerollBaseCost = 1;
@@ -7677,7 +7685,7 @@ function createBot(options = {}) {
       uniqueSpec?.image ||
       (shadowOf ? SHADOW_BOSS.image : archangelSpec ? `${ARCHANGEL_BOSS_IMAGE_ROOT}/${archangelSpec.image}` : goeticSpec?.image) ||
       inherited?.image ||
-      randomBotImage(),
+      randomBotImage(livingDamnedImages()),
     anchor: isBoss ? 50 : clamp(inherited?.anchor ?? archetype.anchor + randomInt(-8, 8), 0, 100),
     aggression: isBoss ? 0 : inherited?.aggression ?? archetype.aggression,
     noise: isBoss ? 0 : inherited?.noise ?? archetype.noise,
@@ -10612,8 +10620,9 @@ function replacePendingEliminations() {
   }
   const pairedBossSpecs = [];
   const normalReplacementIndexes = [];
-  state.bots = state.bots.map((bot, index) => {
-    if (!bot.eliminated) return bot;
+  // replaced in place, one by one, so each fresh DAMNED sees the art the ones before it took
+  state.bots.forEach((bot, index) => {
+    if (!bot.eliminated) return;
     const bossSpec = bot.pendingReplacementSpec;
     const replacement = createBot({ boss: Boolean(bossSpec), bossSpec, inheritFrom: bot.pendingReplacementInheritance });
     if (bossSpec) {
@@ -10622,7 +10631,7 @@ function replacePendingEliminations() {
     } else {
       normalReplacementIndexes.push(index);
     }
-    return replacement;
+    state.bots[index] = replacement;
   });
   pairedBossSpecs.forEach((bossSpec) => {
     const replacementIndex = normalReplacementIndexes.shift();

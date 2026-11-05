@@ -393,6 +393,33 @@ test("each boss gets a fresh random 8-12 kill interval, unaffected by round chan
   `);
 });
 
+test("the living DAMNED never share art: a fresh DAMNED takes an image none of the others wears", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    let seed = 11;
+    Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const distinct = () => new Set(state.bots.filter(bot => !bot.eliminated).map(bot => bot.image)).size;
+    for (let tries = 0; tries < 100; tries += 1) {
+      resetBotsForRun();
+      assert.equal(distinct(), 5);
+      // three die at once; one comes back with its own art (inherited), the other two are fresh
+      const [comeback] = state.bots;
+      comeback.eliminated = true;
+      comeback.pendingReplacementInheritance = {
+        name: comeback.name, flag: comeback.flag, country: comeback.country, type: comeback.type,
+        anchor: comeback.anchor, aggression: comeback.aggression, noise: comeback.noise,
+        color: comeback.color, image: comeback.image, memory: []
+      };
+      state.bots[2].eliminated = true;
+      state.bots[4].eliminated = true;
+      const keptImage = comeback.image;
+      replacePendingEliminations();
+      assert.equal(state.bots[0].image, keptImage);
+      assert.equal(distinct(), 5);
+    }
+  `);
+});
+
 test("a pentakill queues only one boss and keeps remaining kills toward the next", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
@@ -1761,14 +1788,23 @@ test("DEV unlock all: every demon counts as defeated and can be bound, off again
     toggleDevAllDemons();
     assert.deepEqual(GOETIC_BOSS_KEYS.filter(key => isDemonSlain(key)), ["bael"]);
     assert.equal(collectionBoundDemon(), null);
-    // the skip to the Goetic BOSSES brings the bound demon's place (YOU) first
+    // the skip to the Goetic BOSSES gives the bound demon's place (YOU) no head start: it is as likely as any other
     fixture([], [10, 20, 30]);
-    state.boundDemon = "paimon";
-    skipToFirstGoeticBoss();
-    assert.equal(state.bots[0].shadowOf, "paimon");
-    assert.equal(state.bots[0].name, "YOU");
-    assert.equal(state.goeticBossQueue.length, 71);
-    assert.ok(!state.goeticBossQueue.includes("paimon"));
+    let seed = 7;
+    Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const bound of ["paimon", "michael"]) {
+      state.boundDemon = bound;
+      let youFirst = 0;
+      for (let tries = 0; tries < 60; tries += 1) {
+        skipToFirstGoeticBoss();
+        const first = state.bots[0];
+        if (first.shadowOf === bound) youFirst += 1;
+        // the bound place is still to come when it was not first
+        else assert.ok(state.goeticBossQueue.includes(bound) || state.archangelQueue.includes(bound));
+      }
+      assert.ok(youFirst < 10, bound + " came first " + youFirst + " times out of 60");
+    }
+    state.boundDemon = null;
   `);
 });
 

@@ -1010,8 +1010,9 @@ function replacePendingEliminations() {
   }
   const pairedBossSpecs = [];
   const normalReplacementIndexes = [];
-  state.bots = state.bots.map((bot, index) => {
-    if (!bot.eliminated) return bot;
+  // replaced in place, one by one, so each fresh DAMNED sees the art the ones before it took
+  state.bots.forEach((bot, index) => {
+    if (!bot.eliminated) return;
     const bossSpec = bot.pendingReplacementSpec;
     const replacement = createBot({ boss: Boolean(bossSpec), bossSpec, inheritFrom: bot.pendingReplacementInheritance });
     if (bossSpec) {
@@ -1020,7 +1021,7 @@ function replacePendingEliminations() {
     } else {
       normalReplacementIndexes.push(index);
     }
-    return replacement;
+    state.bots[index] = replacement;
   });
   pairedBossSpecs.forEach((bossSpec) => {
     const replacementIndex = normalReplacementIndexes.shift();
