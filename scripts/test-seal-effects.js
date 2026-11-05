@@ -420,6 +420,35 @@ test("the living DAMNED never share art: a fresh DAMNED takes an image none of t
   `);
 });
 
+test("STUBBORN effects can make a BOSS STUBBORN for good, and every STUBBORN rule then counts it", () => {
+  game()(`
+    fixture([["p107"]], [10, 20, 30]);
+    state.bots.forEach(bot => { bot.type = "Stubborn"; });
+    const boss = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    boss.hp = boss.maxHp = 1000;
+    state.bots.push(boss);
+    assert.equal(hasPersonality(boss, "Stubborn"), false);
+    // a BOSS can only become STUBBORN: other personalities do nothing
+    assert.equal(setBotPersonality(boss, "Analyst", "test"), false);
+    // Seal of Ose picks a BOSS that is not STUBBORN yet when every DAMNED already is
+    applyFixedWillEndRound();
+    assert.equal(boss.stubborn, true);
+    assert.deepEqual([...personalityTypes(boss)], ["Stubborn"]);
+    assert.equal(setBotPersonality(boss, "Stubborn", "test"), false);
+    // its guess is held within 2 of its last one like any STUBBORN DAMNED (Seal of Ose)
+    boss.memory = [{ ownGuess: 50 }];
+    assert.equal(clampFixedWillGuess(boss, 80), 52);
+    // Seal of Bifrons never tries to give a BOSS another personality
+    state.bots.forEach(bot => { if (!bot.isBoss) bot.type = "Analyst"; });
+    state.player.passives = [{ ...ITEMS.p90, stack: 1 }];
+    applyForcedDoctrineEndRound();
+    assert.equal(boss.stubborn, true);
+    // Jesus and Satan never turn STUBBORN
+    const jesus = createFinalBoss("jesus");
+    assert.equal(setBotPersonality(jesus, "Stubborn", "test"), false);
+  `);
+});
+
 test("a pentakill queues only one boss and keeps remaining kills toward the next", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);

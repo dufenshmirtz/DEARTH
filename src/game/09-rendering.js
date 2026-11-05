@@ -695,6 +695,15 @@ function displayedBotType(bot) {
   return hidden ? hidden.from : bot.type;
 }
 
+// a BOSS made STUBBORN while READY resolves shows it once its SEAL's step of the seal animation is reached
+function displayedBossStubborn(bot) {
+  if (!bot?.stubborn) return false;
+  const changes = bot.personalityChanges || [];
+  if (!changes.length || !roundRevealAnimationActive()) return true;
+  const visible = roundRevealVisibleSealIds() || new Set();
+  return !changes.some((change) => change.to === "Stubborn" && !visible.has(sealIdFromStatSource(change.source)));
+}
+
 // both personalities of a bipolar DAMNED (Seal of Padma) as the card should show them
 function displayedBotTypes(bot) {
   if (bot?.isBoss) return [];
@@ -1812,9 +1821,11 @@ function bossGlyphHtml(bot) {
   const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
   const tooltip = glyphTooltipHtml(
     bossTooltipTitle(bot),
-    "BOSS",
+    displayedBossStubborn(bot) ? "STUBBORN BOSS" : "BOSS",
     bossAbilityText(bot),
-    "No personality: always plays the best guess it can work out.",
+    displayedBossStubborn(bot)
+      ? "STUBBORN: every STUBBORN rule counts it. Otherwise it still plays the best guess it can work out."
+      : "No personality: always plays the best guess it can work out.",
     borrowed ? bossStolenTooltipHtml(borrowed) : ""
   );
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
@@ -1900,7 +1911,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotTypes(bot).join(" / "));
+  const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));

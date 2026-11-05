@@ -7156,8 +7156,15 @@ function padmaActive() {
   return Boolean(passiveStack("p124"));
 }
 
+// BOSSES have no personality, but STUBBORN effects can make one STUBBORN (bot.stubborn) for the rest of its life:
+// from then on every STUBBORN rule counts it. It still plays the best guess it can work out (Seal of Ose's clamp aside).
+function bossCanTurnStubborn(bot) {
+  return Boolean(bot?.isBoss && !bot.stubborn && !bot.finalKey && !bot.immortal && !bot.eliminated);
+}
+
 function personalityTypes(bot) {
-  if (!bot || bot.isBoss || !bot.type) return [];
+  if (bot?.isBoss) return bot.stubborn ? ["Stubborn"] : [];
+  if (!bot || !bot.type) return [];
   return padmaActive() && bot.type2 ? [bot.type, bot.type2] : [bot.type];
 }
 
@@ -7228,7 +7235,8 @@ function applyPersonalityAlterationDamage(bot, source = "Personality alteration"
 // With Seal of Padma a change alters only ONE of the two personalities: the first one that would actually
 // change (Analyst + Stubborn told to become Stubborn turns Analyst into Stubborn). `slot` forces a part.
 function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = true, markEntry = null, slot = null } = {}) {
-  if (!bot || bot.isBoss || bot.eliminated || !type) return false;
+  if (bot?.isBoss) return makeBossStubborn(bot, type, source, { triggerAlterationDamage, markEntry });
+  if (!bot || bot.eliminated || !type) return false;
   const types = personalityTypes(bot);
   let index = slot;
   if (index === null) {
@@ -7265,6 +7273,22 @@ function setBotPersonality(bot, type, source = "", { triggerAlterationDamage = t
   return true;
 }
 
+// a BOSS can only ever become STUBBORN, and stays STUBBORN
+function makeBossStubborn(bot, type, source, { triggerAlterationDamage = true, markEntry = null } = {}) {
+  if (type !== "Stubborn" || !bossCanTurnStubborn(bot)) return false;
+  bot.stubborn = true;
+  if (state.roundState?.penaltiesApplied && source) {
+    bot.personalityChanges = bot.personalityChanges || [];
+    bot.personalityChanges.push({ from: null, to: "Stubborn", source, slot: 0 });
+  }
+  if (markEntry) markPassiveEntryTriggered(markEntry);
+  const sealId = markEntry ? markEntry.sourceId || markEntry.id : sealIdFromStatSource(source);
+  if (sealId) recordSealStat(sealId, "personality", 1);
+  if (source) addRoundEvent(`${source} made ${bot.name} a STUBBORN BOSS.`);
+  if (triggerAlterationDamage) applyPersonalityAlterationDamage(bot, source || "a SEAL");
+  return true;
+}
+
 function allowedTwinTemperType() {
   return randomFrom(["Analyst", "Stubborn"]);
 }
@@ -7288,7 +7312,7 @@ function applyForcedDoctrineEndRound() {
   const prevalent = mostPrevalentPersonality();
   if (!prevalent) return;
   entries.forEach((entry) => {
-    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== prevalent));
+    const targets = activeBots().filter((bot) => !bot.isBoss && personalityTypes(bot).some((type) => type !== prevalent));
     if (!targets.length) return;
     const target = randomFrom(targets);
     setBotPersonality(target, prevalent, passiveName("p90", "Seal of Bifrons"), { markEntry: entry });
@@ -7302,7 +7326,7 @@ function applyFixedWillEndRound() {
   if (!entries.length) return;
   entries.forEach((entry) => {
     const name = passiveName("p107", "Seal of Ose");
-    const targets = activeBots().filter((bot) => personalityTypes(bot).some((type) => type !== "Stubborn"));
+    const targets = activeBots().filter((bot) => bossCanTurnStubborn(bot) || personalityTypes(bot).some((type) => type !== "Stubborn"));
     if (targets.length) {
       const target = randomFrom(targets);
       setBotPersonality(target, "Stubborn", name, { markEntry: entry });
@@ -13844,6 +13868,15 @@ function displayedBotType(bot) {
   return hidden ? hidden.from : bot.type;
 }
 
+// a BOSS made STUBBORN while READY resolves shows it once its SEAL's step of the seal animation is reached
+function displayedBossStubborn(bot) {
+  if (!bot?.stubborn) return false;
+  const changes = bot.personalityChanges || [];
+  if (!changes.length || !roundRevealAnimationActive()) return true;
+  const visible = roundRevealVisibleSealIds() || new Set();
+  return !changes.some((change) => change.to === "Stubborn" && !visible.has(sealIdFromStatSource(change.source)));
+}
+
 // both personalities of a bipolar DAMNED (Seal of Padma) as the card should show them
 function displayedBotTypes(bot) {
   if (bot?.isBoss) return [];
@@ -14961,9 +14994,11 @@ function bossGlyphHtml(bot) {
   const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
   const tooltip = glyphTooltipHtml(
     bossTooltipTitle(bot),
-    "BOSS",
+    displayedBossStubborn(bot) ? "STUBBORN BOSS" : "BOSS",
     bossAbilityText(bot),
-    "No personality: always plays the best guess it can work out.",
+    displayedBossStubborn(bot)
+      ? "STUBBORN: every STUBBORN rule counts it. Otherwise it still plays the best guess it can work out."
+      : "No personality: always plays the best guess it can work out.",
     borrowed ? bossStolenTooltipHtml(borrowed) : ""
   );
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
@@ -15049,7 +15084,7 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
-  const typeLabel = bot.isBoss ? "Boss" : normalizeGameText(displayedBotTypes(bot).join(" / "));
+  const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
