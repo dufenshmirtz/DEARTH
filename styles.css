@@ -7939,6 +7939,11 @@ body.mobile-arcade #app .game-over-card .end-actions .primary-button {
   font-size: 12px !important;
 }
 
+/* playtest builds: Give feedback sits on its own row, under Main Menu */
+#app .game-over-card .end-actions .end-feedback {
+  grid-column: 2;
+}
+
 #app .game-over-card .end-menu:hover:not(:disabled) {
   color: var(--blood-bright) !important;
 }

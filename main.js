@@ -22023,7 +22023,7 @@ function satanDealButtonHtml() {
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
   return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
 }
-/* ---------- Playtest feedback: a "Δώσε feedback" button that opens the Google Form with the run filled in ----------
+/* ---------- Playtest feedback: a "Give feedback" button that opens the Google Form with the run filled in ----------
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
    demo.html (generated from index.html by build:game) turns it on; index.html leaves it off. */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
@@ -22048,6 +22048,8 @@ const FEEDBACK_RESULT = {
   loss: "Ήττα",
   quit: "Σταμάτησε στη μέση"
 };
+
+const FEEDBACK_NONE = "Κανένα";
 
 const TESTER_ID_KEY = "dearthPlaytestTesterId";
 
@@ -22088,14 +22090,16 @@ function buildFeedbackUrl(runData) {
     .map(([name, count]) => `${name} ×${count}`)
     .join(", ");
 
+  // an empty answer would stop a required field (and the Next button) on the form
+  const orNone = (text) => (String(text).trim() ? String(text) : FEEDBACK_NONE);
   const params = new URLSearchParams({ usp: "pp_url" });
   params.set(FEEDBACK_FIELDS.build, PLAYTEST_BUILD_LABEL);
   params.set(FEEDBACK_FIELDS.testerId, getPlaytestTesterId());
   params.set(FEEDBACK_FIELDS.result, result);
   params.set(FEEDBACK_FIELDS.round, String(round));
-  params.set(FEEDBACK_FIELDS.seals, seals.join(", "));
-  params.set(FEEDBACK_FIELDS.artifacts, artifacts);
-  params.set(FEEDBACK_FIELDS.bosses, bosses.join(", "));
+  params.set(FEEDBACK_FIELDS.seals, orNone(seals.join(", ")));
+  params.set(FEEDBACK_FIELDS.artifacts, orNone(artifacts));
+  params.set(FEEDBACK_FIELDS.bosses, orNone(bosses.join(", ")));
   params.set(FEEDBACK_FIELDS.totalRounds, String(totalRounds));
 
   return FEEDBACK_FORM_URL + "?" + params.toString();
@@ -22170,8 +22174,8 @@ function openPlaytestFeedbackFromRun(quit = false) {
 
 function renderPlaytestFeedbackButton(where) {
   if (!playtestFeedbackAvailable()) return "";
-  if (where === "pause") return `<button class="primary-button" data-pause-action="feedback">Δώσε feedback</button>`;
-  return `<button class="primary-button end-feedback" id="playtestFeedback">Δώσε feedback</button>`;
+  if (where === "pause") return `<button class="primary-button" data-pause-action="feedback">Give feedback</button>`;
+  return `<button class="primary-button end-feedback" id="playtestFeedback">Give feedback</button>`;
 }
 function bindPvpEvents() {
   if (state.mode !== "pvp" || !state.pvp) return;
