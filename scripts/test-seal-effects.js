@@ -2416,7 +2416,7 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
   `);
 });
 
-test("the playtest build hides DEV / Unlock, the Collection DEV button, PvP and Quit; index.html keeps them", () => {
+test("the playtest build hides DEV / Unlock, the Collection DEV button and PvP, and Quit does nothing; index.html keeps them", () => {
   const check = `
     state.pauseOpen = true;
     state.pauseScreen = "main";
@@ -2440,9 +2440,13 @@ test("the playtest build hides DEV / Unlock, the Collection DEV button, PvP and 
   assert.deepEqual({ ...normal(check) }, { dev: true, unlock: true, feedback: false, quit: true, pvp: true, pvpAvailable: true, devDemons: true });
   const demo = playtestGame();
   demo(setup);
-  assert.deepEqual({ ...demo(check) }, { dev: false, unlock: false, feedback: true, quit: false, pvp: false, pvpAvailable: false, devDemons: false });
+  assert.deepEqual({ ...demo(check) }, { dev: false, unlock: false, feedback: true, quit: true, pvp: false, pvpAvailable: false, devDemons: false });
   demo(`
     handlePauseAction("dev");
     assert.equal(state.pauseDevOpen, false);
+    state.mode = "menu";
+    state.menuScreen = "main";
+    handleMenuAction("quit");
+    assert.equal(state.menuScreen, "main");
   `);
 });
