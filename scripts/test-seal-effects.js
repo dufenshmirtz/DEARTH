@@ -3598,5 +3598,8 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
     startGame();
     assert.deepEqual(Array.from(state.bossesDefeated), []);
     assert.equal(playtestTotalRounds(), 2);
+    // no SKIP / INF in the playtest build, and INF left on from a saved run does nothing
+    state.playtestInfiniteMoney = true;
+    assert.equal(playtestMoneyModeActive(), false);
   `);
 });
