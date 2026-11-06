@@ -778,6 +778,7 @@ function startGame(options = {}) {
   state.nextItemUid = 1;
   state.eliminations = 0;
   state.bossKills = 0;
+  state.bossesDefeated = [];
   state.itemsBought = 0;
   state.totalArtifactsUsed = 0;
   state.selfStackingGameConditionCounts = Object.fromEntries(Object.values(SELF_STACKING_SEAL_SPECS).map((spec) => [spec.key, 0]));

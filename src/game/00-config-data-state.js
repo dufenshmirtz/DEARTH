@@ -2103,6 +2103,7 @@ const state = {
   nextItemUid: 1,
   eliminations: 0,
   bossKills: 0,
+  bossesDefeated: [],
   itemsBought: 0,
   totalArtifactsUsed: 0,
   selfStackingGameConditionCounts: {},
