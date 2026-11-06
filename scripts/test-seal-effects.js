@@ -2403,6 +2403,10 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
     assert.equal(url.searchParams.get("entry.447387122"), "Zilon, Pyros");
     assert.equal(url.searchParams.get("entry.420559722"), "2");
     assert.ok(renderPlaytestFeedbackButton("pause").includes('data-pause-action="feedback"'));
+    const empty = new URL(buildFeedbackUrl({ result: "Ήττα", round: 1 }));
+    assert.equal(empty.searchParams.get("entry.324056541"), "Κανένα");
+    assert.equal(empty.searchParams.get("entry.1858571614"), "Κανένα");
+    assert.equal(empty.searchParams.get("entry.447387122"), "Κανένα");
     startGame();
     assert.deepEqual(Array.from(state.bossesDefeated), []);
     assert.equal(playtestTotalRounds(), 2);
