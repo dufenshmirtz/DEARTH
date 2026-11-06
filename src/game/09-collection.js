@@ -461,7 +461,7 @@ function isUnlockableSeal(id) {
 function isSealUnlocked(id) {
   if (!isUnlockableSeal(id)) return true;
   // Pause > Unlock (testing): every SEAL counts as unlocked for the rest of this run
-  if (state.devUnlockAllSeals && state.mode !== "menu") return true;
+  if (state.devUnlockAllSeals && !PLAYTEST_BUILD && state.mode !== "menu") return true;
   return loadCollectionProgress().unlocked.includes(id);
 }
 
@@ -758,7 +758,7 @@ let collectionTab = "seals";
 
 function isDemonSlain(key) {
   const progress = loadCollectionProgress();
-  return Boolean(GOETIC_BOSS_BY_KEY[key]) && (progress.devAllDemons || progress.slain.includes(key));
+  return Boolean(GOETIC_BOSS_BY_KEY[key]) && ((progress.devAllDemons && !PLAYTEST_BUILD) || progress.slain.includes(key));
 }
 
 // DEV (testing): every demon counts as defeated, so any of them can be bound; off again shows the real progress
@@ -770,7 +770,7 @@ function toggleDevAllDemons() {
 
 function isArchangelDefeated(key) {
   const progress = loadCollectionProgress();
-  return Boolean(ARCHANGEL_BY_KEY[key]) && (progress.devAllDemons || progress.archangels.includes(key));
+  return Boolean(ARCHANGEL_BY_KEY[key]) && ((progress.devAllDemons && !PLAYTEST_BUILD) || progress.archangels.includes(key));
 }
 
 // a demon or an Archangel that can be bound
@@ -1128,8 +1128,9 @@ function renderCollectionScreen(from) {
   const goetia = collectionTab === "goetia";
   const angels = collectionTab === "angels";
   const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
+  // no DEV button in the playtest build
   const devButton = () =>
-    `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
+    PLAYTEST_BUILD ? "" : `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
   const tabs = [
     { key: "seals", label: "Seals" },
     { key: "goetia", label: "Ars Goetia" },

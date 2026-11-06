@@ -3603,3 +3603,34 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
     assert.equal(playtestMoneyModeActive(), false);
   `);
 });
+
+test("the playtest build hides DEV / Unlock, the Collection DEV button, PvP and Quit; index.html keeps them", () => {
+  const check = `
+    state.pauseOpen = true;
+    state.pauseScreen = "main";
+    const pause = renderPauseMenu();
+    const shown = {
+      dev: pause.includes('data-pause-action="dev"'),
+      unlock: pause.includes('data-pause-action="unlock-all"'),
+      feedback: pause.includes('data-pause-action="feedback"'),
+      quit: renderMainMenu().includes('data-menu-action="quit"'),
+      pvp: renderPlayMenu().includes('data-menu-action="pvp"'),
+      pvpAvailable: pvpAvailable()
+    };
+    state.devUnlockAllSeals = true;
+    loadCollectionProgress().devAllDemons = true;
+    shown.devDemons = isDemonSlain(GOETIC_BOSS_KEYS[0]);
+    shown;
+  `;
+  const setup = `${BINDING_STUBS} startGame(); state.mode = "arcade";`;
+  const normal = game();
+  normal(setup);
+  assert.deepEqual({ ...normal(check) }, { dev: true, unlock: true, feedback: false, quit: true, pvp: true, pvpAvailable: true, devDemons: true });
+  const demo = playtestGame();
+  demo(setup);
+  assert.deepEqual({ ...demo(check) }, { dev: false, unlock: false, feedback: true, quit: false, pvp: false, pvpAvailable: false, devDemons: false });
+  demo(`
+    handlePauseAction("dev");
+    assert.equal(state.pauseDevOpen, false);
+  `);
+});
