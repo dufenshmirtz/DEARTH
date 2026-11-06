@@ -178,7 +178,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
+      ${NATIVE_IOS_APP || PLAYTEST_BUILD ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
@@ -198,7 +198,7 @@ function renderPlayMenu() {
   return `
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="arcade">Arcade</button>
-      ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">PvP</button>`}
+      ${pvpAvailable() ? `<button class="menu-button" data-menu-action="pvp">PvP</button>` : ""}
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -212,7 +212,7 @@ function renderArcadeOptionsMenu() {
     <div class="main-menu-actions">
       ${primaryButton}
       <button class="menu-button" data-menu-action="load-run">Load Run</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="${isNativeArcadeApp() ? "back" : "play"}">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="${pvpAvailable() ? "play" : "back"}">Back</button>
     </div>
   `;
 }
@@ -837,8 +837,8 @@ function renderPauseMenu() {
   return `
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
-        ${state.mode === "arcade" ? `<button class="small-button pause-dev-button" data-pause-action="dev">DEV</button>` : ""}
-        ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
+        ${state.mode === "arcade" && !PLAYTEST_BUILD ? `<button class="small-button pause-dev-button" data-pause-action="dev">DEV</button>` : ""}
+        ${state.mode === "arcade" && !PLAYTEST_BUILD ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
           <button class="primary-button" data-pause-action="resume">Resume</button>
@@ -848,7 +848,7 @@ function renderPauseMenu() {
           ${state.mode === "arcade" ? renderPlaytestFeedbackButton("pause") : ""}
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
         </div>
-        ${state.pauseDevOpen && state.mode === "arcade" ? renderSelfStackingDevPanel() : ""}
+        ${state.pauseDevOpen && state.mode === "arcade" && !PLAYTEST_BUILD ? renderSelfStackingDevPanel() : ""}
       </section>
     </div>
   `;
@@ -2464,8 +2464,8 @@ function confirmRunRemoval(slotId) {
 function handleMenuAction(action) {
   resumeSoundtrack();
   if (action === "play") {
-    // on the phone app there is no PvP, so Play skips the Arcade / PvP choice
-    state.menuScreen = isNativeArcadeApp() ? "arcade-options" : "play";
+    // on the phone app and the playtest build there is no PvP, so Play skips the Arcade / PvP choice
+    state.menuScreen = pvpAvailable() ? "play" : "arcade-options";
     state.pendingRunDeleteSlotId = null;
     render();
     return;
@@ -2524,6 +2524,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    if (PLAYTEST_BUILD) return;
     state.menuScreen = "quit";
     render();
     window.close();
@@ -2588,6 +2589,8 @@ function updateSoundSetting(key, value, renderAfter = true) {
 }
 
 function handlePauseAction(action) {
+  // the playtest build has no DEV / Unlock under Pause
+  if (PLAYTEST_BUILD && (action === "dev" || action === "unlock-all" || (typeof action === "string" && action.startsWith("summon:")))) return;
   if (typeof action === "string" && action.startsWith("summon:")) {
     devSummonArchangel(action.slice("summon:".length));
     return;

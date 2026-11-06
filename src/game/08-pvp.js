@@ -136,8 +136,13 @@ function pvpMaybeAutoAdvance() {
   pvpClearAutoTimer();
 }
 
+// no PvP in the native app or the playtest build (demo.html)
+function pvpAvailable() {
+  return !isNativeArcadeApp() && !PLAYTEST_BUILD;
+}
+
 function startPvpMode() {
-  if (isNativeArcadeApp()) {
+  if (!pvpAvailable()) {
     showMainMenu();
     return;
   }
@@ -157,7 +162,7 @@ function pvpLocalServerUrl() {
 }
 
 function pvpShouldAutoStartFromHash() {
-  return typeof location !== "undefined" && location.hash === "#pvp" && !isNativeArcadeApp();
+  return typeof location !== "undefined" && location.hash === "#pvp" && pvpAvailable();
 }
 
 async function pvpOpenServedHostIfAvailable() {
@@ -173,7 +178,7 @@ async function pvpOpenServedHostIfAvailable() {
 }
 
 async function requestPvpMode() {
-  if (isNativeArcadeApp()) {
+  if (!pvpAvailable()) {
     showMainMenu();
     return;
   }
