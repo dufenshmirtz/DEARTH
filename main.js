@@ -14665,7 +14665,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      ${NATIVE_IOS_APP || PLAYTEST_BUILD ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
@@ -17352,6 +17352,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    // the playtest build keeps the button (the menu looks the same) but it does nothing
     if (PLAYTEST_BUILD) return;
     state.menuScreen = "quit";
     render();
@@ -22037,7 +22038,7 @@ function satanDealButtonHtml() {
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
    demo.html (generated from index.html by build:game) turns it on; index.html leaves it off.
    The playtest build also hides the SKIP / INF test buttons (09-rendering.js, playtestMoneyModeActive), DEV / Unlock
-   under Pause, the Collection's DEV button (and ignores those flags left on by index.html), PvP (pvpAvailable) and Quit. */
+   under Pause, the Collection's DEV button (and ignores those flags left on by index.html), PvP (pvpAvailable); Quit stays on the menu but does nothing. */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 

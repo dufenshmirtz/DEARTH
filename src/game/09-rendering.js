@@ -179,7 +179,7 @@ function renderMainMenu() {
     <div class="main-menu-actions">
       <button class="menu-button" data-menu-action="play">Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
-      ${NATIVE_IOS_APP || PLAYTEST_BUILD ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
   `;
 }
@@ -2866,6 +2866,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    // the playtest build keeps the button (the menu looks the same) but it does nothing
     if (PLAYTEST_BUILD) return;
     state.menuScreen = "quit";
     render();
