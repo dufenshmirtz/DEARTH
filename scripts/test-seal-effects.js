@@ -1377,14 +1377,28 @@ test("Holy Spirit: each of its ten effects does what it says", () => {
     assert.equal(state.shop[0].item.id, "p1");
     assert.equal(state.trinityEliteNextShop, false);
   `);
+  // the 50% hits: only ONE of the two missing Trinity SEALS is offered, picked at random
   outcome("trinity", `Math.random = () => 0.1;`, `
-    assert.deepEqual(state.trinityShopSealsNextShop, ["p131", "p132"]);
+    assert.deepEqual(state.trinityShopSealsNextShop, ["p131"]);
     rerollShop();
-    assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131", "p132"]);
-    assert.equal(state.shop.length, 5);
+    assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131"]);
+    assert.equal(state.shop.length, 4);
     syncShopSlotCount();
-    assert.equal(state.shop.length, 5);
+    assert.equal(state.shop.length, 4);
     assert.ok(renderShopSlot(state.shop[3], 3).includes("TRINITY SEAL"));
+  `);
+  outcome("trinity", `const rolls = [0.1, 0.9]; Math.random = () => rolls.shift() ?? 0.5;`, `
+    assert.deepEqual(state.trinityShopSealsNextShop, ["p132"]);
+  `);
+  // the 50% misses: nothing is offered
+  outcome("trinity", `Math.random = () => 0.7;`, `
+    assert.deepEqual(state.trinityShopSealsNextShop, []);
+    rerollShop();
+    assert.equal(state.shop.filter(slot => slot.bonus).length, 0);
+  `);
+  // only one missing: that one
+  outcome("trinity", `state.player.passives.push(itemCopy("p132")); Math.random = () => 0.1;`, `
+    assert.deepEqual(state.trinityShopSealsNextShop, ["p131"]);
   `);
   outcome("trinity", `
     state.player.passives.push(itemCopy("p131"), itemCopy("p132"));

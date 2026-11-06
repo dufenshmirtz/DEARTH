@@ -382,7 +382,7 @@ function rerollShop() {
   state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
-  // Seal of the Holy Spirit: "Trinity" adds the missing Trinity SEALS as extra offers
+  // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
   const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id));
   state.trinityShopSealsNextShop = [];
   trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
@@ -1148,7 +1148,7 @@ const TRINITY_SPIRIT_OUTCOMES = [
   { key: "elite", label: "The next SEAL offer is ELITE" },
   { key: "eliminate", label: "A random DAMNED is eliminated" },
   { key: "shield", label: "You take no TARGET-difference damage this round" },
-  { key: "trinity", label: "50% chance the missing Trinity SEALS appear in the next offerings" }
+  { key: "trinity", label: "50% chance the next offerings hold one missing Trinity SEAL" }
 ];
 
 function trinityRound() {
@@ -1319,9 +1319,11 @@ function applyTrinitySpiritOutcome(key) {
       round.trinity.spiritHealed = true;
       return;
     }
+    // 50%: ONE of the missing Trinity SEALS (picked at random) is offered in the next shop
     if (Math.random() < 0.5) {
-      state.trinityShopSealsNextShop = missing.slice();
-      addRoundEvent(`${name}: ${missing.map((id) => ITEMS[id].name).join(" and ")} will appear in the next offerings.`);
+      const pick = missing[Math.floor(Math.random() * missing.length)];
+      state.trinityShopSealsNextShop = [pick];
+      addRoundEvent(`${name}: ${ITEMS[pick].name} will appear in the next offerings.`);
     } else {
       addRoundEvent(`${name}: the other Trinity SEALS did not answer this time.`);
     }

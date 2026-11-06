@@ -1115,7 +1115,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Holy Spirit",
     price: 33,
-    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p111: {
     id: "p111",
@@ -5157,7 +5157,7 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p133"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -7807,7 +7807,7 @@ function rerollShop() {
   state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
-  // Seal of the Holy Spirit: "Trinity" adds the missing Trinity SEALS as extra offers
+  // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
   const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id));
   state.trinityShopSealsNextShop = [];
   trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
@@ -8573,7 +8573,7 @@ const TRINITY_SPIRIT_OUTCOMES = [
   { key: "elite", label: "The next SEAL offer is ELITE" },
   { key: "eliminate", label: "A random DAMNED is eliminated" },
   { key: "shield", label: "You take no TARGET-difference damage this round" },
-  { key: "trinity", label: "50% chance the missing Trinity SEALS appear in the next offerings" }
+  { key: "trinity", label: "50% chance the next offerings hold one missing Trinity SEAL" }
 ];
 
 function trinityRound() {
@@ -8744,9 +8744,11 @@ function applyTrinitySpiritOutcome(key) {
       round.trinity.spiritHealed = true;
       return;
     }
+    // 50%: ONE of the missing Trinity SEALS (picked at random) is offered in the next shop
     if (Math.random() < 0.5) {
-      state.trinityShopSealsNextShop = missing.slice();
-      addRoundEvent(`${name}: ${missing.map((id) => ITEMS[id].name).join(" and ")} will appear in the next offerings.`);
+      const pick = missing[Math.floor(Math.random() * missing.length)];
+      state.trinityShopSealsNextShop = [pick];
+      addRoundEvent(`${name}: ${ITEMS[pick].name} will appear in the next offerings.`);
     } else {
       addRoundEvent(`${name}: the other Trinity SEALS did not answer this time.`);
     }

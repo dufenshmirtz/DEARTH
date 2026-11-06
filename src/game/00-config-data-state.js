@@ -905,7 +905,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Holy Spirit",
     price: 33,
-    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the missing Trinity SEALS appear in the next offerings (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p111: {
     id: "p111",
