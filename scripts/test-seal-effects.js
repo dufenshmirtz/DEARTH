@@ -2352,7 +2352,7 @@ function playtestGame() {
       removeItem: (key) => storage.delete(key)
     }
   });
-  const flagged = sources.replace("const PLAYTEST_BUILD = false;", "const PLAYTEST_BUILD = true;");
+  const flagged = sources.replace(/const PLAYTEST_BUILD = [^;]+;/, "const PLAYTEST_BUILD = true;");
   assert.notEqual(flagged, sources);
   vm.runInContext(flagged, context);
   return (code) => vm.runInContext(code, context);
