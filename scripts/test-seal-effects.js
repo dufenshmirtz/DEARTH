@@ -1710,7 +1710,7 @@ test("only a defeated demon can be bound, and a run keeps the demon bound when i
   `);
 });
 
-test("the bound demon's SEAL is free in the shop, ELITE included, and a free copy sells for nothing", () => {
+test("the bound demon's SEAL is free in the shop (its ELITE upgrades are not), and a free copy sells for nothing", () => {
   game()(`
     ${BINDING_STUBS}
     fixture([], [10, 20, 30, 40, 50]);
@@ -1727,12 +1727,21 @@ test("the bound demon's SEAL is free in the shop, ELITE included, and a free cop
     assert.ok(entry);
     assert.equal(state.player.credits, 0);
     assert.equal(passiveSellValue(entry), 0);
+    // the ELITE upgrade costs what any SEAL's upgrade costs
+    const upgradePrice = shopPrice(ITEMS[id]);
+    assert.ok(upgradePrice > 0);
+    state.boundDemon = null;
+    assert.equal(upgradePrice, shopPrice(ITEMS[id]));
+    state.boundDemon = "paimon";
+    assert.ok(!/Upgrade free|Take free/.test(renderShopSlot(state.shop[1], 1)));
+    buyShopItem(1);
+    assert.equal(entry.stack, 1);
+    state.player.credits = upgradePrice;
     buyShopItem(1);
     assert.equal(entry.stack, 2);
-    assert.equal(passiveSellValue(entry), 0);
-    // a paid copy still sells for half its price
-    state.boundDemon = null;
-    entry.stack = 3;
+    assert.equal(state.player.credits, 0);
+    assert.equal(entry.freeStacks, 1);
+    // the paid upgrade sells for half its price, the free copy for nothing
     assert.equal(passiveSellValue(entry), Math.floor(ITEMS[id].price / 2));
     state.mode = "pvp";
     state.boundDemon = "paimon";

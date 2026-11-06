@@ -104,9 +104,9 @@ function buyShopItem(slotIndex) {
       render();
       return;
     }
+    // a copy taken free (the bound demon's SEAL, not yet owned) sells for nothing
+    const free = isFreeBoundSealOffer(item);
     spendCredits(cost);
-    // a copy taken free (the bound demon's SEAL) sells for nothing
-    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
       if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;

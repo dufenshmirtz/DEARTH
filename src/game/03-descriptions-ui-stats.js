@@ -600,14 +600,19 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
-// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+// the bound demon's SEAL (Ars Goetia)
 function isBoundDemonSeal(id) {
   const key = state.mode === "arcade" ? state.boundDemon : null;
   return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
 }
 
+// only the plain SEAL is free while you don't own it; its ELITE upgrades cost SIN as usual
+function isFreeBoundSealOffer(item) {
+  return item?.type === "passive" && isBoundDemonSeal(item.id) && directPassiveStack(item.id) === 0;
+}
+
 function shopPrice(item) {
-  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
+  if (isFreeBoundSealOffer(item)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });

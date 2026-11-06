@@ -5690,14 +5690,19 @@ function shopTax(item = null) {
   return item.type === "passive" ? 6 : 3;
 }
 
-// the bound demon's SEAL (Ars Goetia) costs nothing in this run, ELITE upgrades included
+// the bound demon's SEAL (Ars Goetia)
 function isBoundDemonSeal(id) {
   const key = state.mode === "arcade" ? state.boundDemon : null;
   return Boolean(key && GOETIC_BOSS_BY_KEY[key]?.passiveId === id);
 }
 
+// only the plain SEAL is free while you don't own it; its ELITE upgrades cost SIN as usual
+function isFreeBoundSealOffer(item) {
+  return item?.type === "passive" && isBoundDemonSeal(item.id) && directPassiveStack(item.id) === 0;
+}
+
 function shopPrice(item) {
-  if (item.type === "passive" && isBoundDemonSeal(item.id)) return 0;
+  if (isFreeBoundSealOffer(item)) return 0;
   const duplicateMultiplier = item.type === "passive" && !isNonUpgradableSeal(item.id) ? directPassiveStack(item.id) + 1 : 1;
   const basePrice = item.price * duplicateMultiplier;
   const taxedPrice = basePrice + shopTax({ ...item, price: basePrice });
@@ -11672,9 +11677,9 @@ function buyShopItem(slotIndex) {
       render();
       return;
     }
+    // a copy taken free (the bound demon's SEAL, not yet owned) sells for nothing
+    const free = isFreeBoundSealOffer(item);
     spendCredits(cost);
-    // a copy taken free (the bound demon's SEAL) sells for nothing
-    const free = cost <= 0 && isBoundDemonSeal(item.id);
     if (existing) {
       existing.stack = (existing.stack || 1) + 1;
       if (free) existing.freeStacks = (existing.freeStacks || 0) + 1;
@@ -15394,8 +15399,8 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  // the demon bound in the Ars Goetia gives its SEAL away
-  const free = item.type === "passive" && isBoundDemonSeal(item.id) && cost <= 0;
+  // the demon bound in the Ars Goetia gives its SEAL away (not its ELITE upgrades)
+  const free = isFreeBoundSealOffer(item) && cost <= 0;
   const priceText = free ? "free" : `${cost}${SIN_MARK}`;
   const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;

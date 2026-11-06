@@ -2219,8 +2219,8 @@ function renderShopSlot(slot, index) {
       ? passiveCopies === 0 && !hasSealSlotRoomFor(item)
       : state.player.actives.length >= activeInventoryLimit();
   const disabled = arcadeActionLocked() || shopDisabledBySatan() || !canSpendCredits(cost) || full || ownedSelfStackingSeal ? "disabled" : "";
-  // the demon bound in the Ars Goetia gives its SEAL away
-  const free = item.type === "passive" && isBoundDemonSeal(item.id) && cost <= 0;
+  // the demon bound in the Ars Goetia gives its SEAL away (not its ELITE upgrades)
+  const free = isFreeBoundSealOffer(item) && cost <= 0;
   const priceText = free ? "free" : `${cost}${SIN_MARK}`;
   const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
