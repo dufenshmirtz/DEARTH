@@ -1062,6 +1062,7 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
+          ${state.mode === "arcade" ? renderPlaytestFeedbackButton("pause") : ""}
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
           ${state.mode === "arcade" && isNativeArcadeApp() ? renderPauseBoundPlate("in-actions") : ""}
         </div>
@@ -2727,6 +2728,7 @@ function renderOverlay() {
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
           <button class="primary-button end-restart" id="restartGame">Restart</button>
+          ${renderPlaytestFeedbackButton("end")}
         </div>
       </section>
     </div>
@@ -2947,6 +2949,10 @@ function handlePauseAction(action) {
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
     render();
+    return;
+  }
+  if (action === "feedback") {
+    openPlaytestFeedbackFromRun(true);
     return;
   }
   if (action === "dev") {

@@ -218,6 +218,7 @@ function applyAstarothRevealedTargetDifferenceEcho(entry) {
 function applyPenalties() {
   const round = state.roundState;
   round.penaltiesApplied = true;
+  playtestNoteRoundPlayed();
   recalculateTarget();
   state.previousTarget = round.target;
   applyMoonCrossGuessShifts();
@@ -827,6 +828,7 @@ function resolveEliminatedBots(eliminated) {
     applyKillRuleHealing(bot);
 
     if (bot.isBoss) {
+      playtestRecordBossDefeated(bot);
       const previousPassiveLimit = passiveLimit();
       if (bot.countsAsBossProgress !== false) {
         state.bossKills += 1;

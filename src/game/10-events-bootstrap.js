@@ -341,6 +341,9 @@ function bindEvents() {
   const gameOverMenuButton = document.querySelector("#gameOverMenu");
   if (gameOverMenuButton) bindOn(gameOverMenuButton, "click", () => showMainMenu());
 
+  const playtestFeedbackButton = document.querySelector("#playtestFeedback");
+  if (playtestFeedbackButton) bindOn(playtestFeedbackButton, "click", () => openPlaytestFeedbackFromRun(false));
+
   const inspectButton = document.querySelector("#inspectGame");
   if (inspectButton) {
     bindOn(inspectButton, "click", () => {

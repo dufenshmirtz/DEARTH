@@ -25,6 +25,7 @@ const SOURCE_FILES = [
   "09-collection.js",
   "09-gifts.js",
   "09-satan-pact.js",
+  "09-playtest-feedback.js",
   "10-events-bootstrap.js",
 ];
 

@@ -3524,5 +3524,75 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
     assert.ok(html.includes("eliminated awaiting-ready"), "grey card, kept out of the KO watch");
     assert.ok(html.includes("ko-x"), "the X shows");
     assert.ok(!html.includes("death-badge"), "no KO notice yet");
+// ---------- Playtest feedback (PLAYTEST_BUILD) ----------
+// the same game with the playtest flag on
+function playtestGame() {
+  const storage = new Map();
+  const context = vm.createContext({
+    assert,
+    console,
+    URL,
+    URLSearchParams,
+    document: { addEventListener() {} },
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key)
+    }
+  });
+  const flagged = sources.replace("const PLAYTEST_BUILD = false;", "const PLAYTEST_BUILD = true;");
+  assert.notEqual(flagged, sources);
+  vm.runInContext(flagged, context);
+  return (code) => vm.runInContext(code, context);
+}
+
+test("playtest feedback is off by default: no button, no round counting", () => {
+  game()(`
+    ${BINDING_STUBS}
+    startGame();
+    assert.equal(PLAYTEST_BUILD, false);
+    assert.equal(playtestFeedbackAvailable(), false);
+    assert.equal(renderPlaytestFeedbackButton("end"), "");
+    assert.equal(renderPlaytestFeedbackButton("pause"), "");
+    playtestNoteRoundPlayed();
+    assert.equal(localStorage.getItem(PLAYTEST_TOTAL_ROUNDS_KEY), null);
+  `);
+});
+
+test("playtest feedback: BOSSES slain are recorded per run, and the form gets the run's data", () => {
+  playtestGame()(`
+    ${BINDING_STUBS}
+    startGame();
+    assert.deepEqual(Array.from(state.bossesDefeated), []);
+    playtestRecordBossDefeated({ isBoss: true, name: "Zilon" });
+    playtestRecordBossDefeated({ isBoss: false, name: "Damned" });
+    playtestRecordBossDefeated({ isBoss: true, name: "Pyros" });
+    assert.deepEqual(Array.from(state.bossesDefeated), ["Zilon", "Pyros"]);
+    recordPlayedSeal("p1");
+    recordPlayedSeal("p1");
+    recordPlayedSeal("p2");
+    const artifactId = Object.keys(ITEMS).find((id) => id.startsWith("a"));
+    recordPlayedArtifact(artifactId);
+    recordPlayedArtifact(artifactId);
+    state.round = 7;
+    playtestNoteRoundPlayed();
+    playtestNoteRoundPlayed();
+    const data = playtestRunData(playtestRunResult());
+    assert.equal(data.result, "Ήττα");
+    assert.equal(data.round, 7);
+    assert.deepEqual(Array.from(data.seals), [ITEMS.p1.name + " ×2", ITEMS.p2.name]);
+    assert.equal(data.artifactUses[ITEMS[artifactId].name], 2);
+    assert.equal(data.totalRounds, 2);
+    state.bossKills = UNIQUE_BOSS_KEYS.length;
+    assert.equal(playtestRunResult(), "Νίκη");
+    const url = new URL(buildFeedbackUrl(data));
+    assert.equal(url.searchParams.get("entry.1955652171"), "Playtest v0.1");
+    assert.equal(url.searchParams.get("entry.1289594716"), "7");
+    assert.equal(url.searchParams.get("entry.447387122"), "Zilon, Pyros");
+    assert.equal(url.searchParams.get("entry.420559722"), "2");
+    assert.ok(renderPlaytestFeedbackButton("pause").includes('data-pause-action="feedback"'));
+    startGame();
+    assert.deepEqual(Array.from(state.bossesDefeated), []);
+    assert.equal(playtestTotalRounds(), 2);
   `);
 });
