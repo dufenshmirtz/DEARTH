@@ -1698,10 +1698,10 @@ function renderTopbar() {
         <span class="stat-label">SIN${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
       </div>
-      <div class="dev-quick" aria-label="Test controls">
+      ${PLAYTEST_BUILD ? "" : `<div class="dev-quick" aria-label="Test controls">
         <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
         <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
-      </div>
+      </div>`}
     </section>
   `;
 }

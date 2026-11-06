@@ -7835,7 +7835,8 @@ function drawPassiveShopItem(eliteBoosted = false, forceElite = false) {
 }
 
 function playtestMoneyModeActive() {
-  return Boolean(state.playtestInfiniteMoney);
+  // the playtest build (demo.html) has no INF button, so a run saved with INF on in index.html stays normal
+  return !PLAYTEST_BUILD && Boolean(state.playtestInfiniteMoney);
 }
 
 function canSpendCredits(amount) {
@@ -14842,10 +14843,10 @@ function renderTopbar() {
         <span class="stat-label">SIN${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
       </div>
-      <div class="dev-quick" aria-label="Test controls">
+      ${PLAYTEST_BUILD ? "" : `<div class="dev-quick" aria-label="Test controls">
         <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
         <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
-      </div>
+      </div>`}
     </section>
   `;
 }
@@ -19808,7 +19809,8 @@ function satanDealButtonHtml() {
 }
 /* ---------- Playtest feedback: a "Give feedback" button that opens the Google Form with the run filled in ----------
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
-   demo.html (generated from index.html by build:game) turns it on; index.html leaves it off. */
+   demo.html (generated from index.html by build:game) turns it on; index.html leaves it off.
+   The playtest build also hides the SKIP / INF test buttons (09-rendering.js, playtestMoneyModeActive). */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 

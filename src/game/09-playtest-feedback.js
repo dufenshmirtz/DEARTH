@@ -1,6 +1,7 @@
 /* ---------- Playtest feedback: a "Give feedback" button that opens the Google Form with the run filled in ----------
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
-   demo.html (generated from index.html by build:game) turns it on; index.html leaves it off. */
+   demo.html (generated from index.html by build:game) turns it on; index.html leaves it off.
+   The playtest build also hides the SKIP / INF test buttons (09-rendering.js, playtestMoneyModeActive). */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 

@@ -433,7 +433,8 @@ function drawPassiveShopItem(eliteBoosted = false, forceElite = false) {
 }
 
 function playtestMoneyModeActive() {
-  return Boolean(state.playtestInfiniteMoney);
+  // the playtest build (demo.html) has no INF button, so a run saved with INF on in index.html stays normal
+  return !PLAYTEST_BUILD && Boolean(state.playtestInfiniteMoney);
 }
 
 function canSpendCredits(amount) {
