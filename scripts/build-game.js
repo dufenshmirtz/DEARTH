@@ -6,6 +6,10 @@ const path = require("path");
 const root = path.resolve(__dirname, "..");
 const sourceDir = path.join(root, "src", "game");
 const outputFile = path.join(root, "main.js");
+// demo.html: index.html with the playtest build on (PLAYTEST_BUILD, 09-playtest-feedback.js)
+const indexFile = path.join(root, "index.html");
+const demoFile = path.join(root, "demo.html");
+const PLAYTEST_FLAG_SCRIPT = "<script>window.DEARTH_PLAYTEST_BUILD = true;</script>";
 
 const SOURCE_FILES = [
   "00-audio-loudness.js",
@@ -33,9 +37,17 @@ function readGameBundle() {
   return SOURCE_FILES.map((file) => fs.readFileSync(path.join(sourceDir, file), "utf8")).join("");
 }
 
+function readDemoHtml() {
+  const index = fs.readFileSync(indexFile, "utf8");
+  const mainScript = '<script src="main.js"></script>';
+  if (!index.includes(mainScript)) throw new Error('index.html has no <script src="main.js"></script> for demo.html');
+  return index.replace(mainScript, `${PLAYTEST_FLAG_SCRIPT}\r\n    ${mainScript}`);
+}
+
 function writeGameBundle({ quiet = false } = {}) {
   const bundle = readGameBundle();
   fs.writeFileSync(outputFile, bundle);
+  fs.writeFileSync(demoFile, readDemoHtml());
   if (!quiet) {
     console.log(`Built ${path.relative(root, outputFile)} from ${path.relative(root, sourceDir)}`);
   }
@@ -47,6 +59,11 @@ function verifyGameBundle() {
   const actual = fs.existsSync(outputFile) ? fs.readFileSync(outputFile, "utf8") : "";
   if (actual !== expected) {
     console.error(`${path.relative(root, outputFile)} is stale. Run "pnpm run build:game".`);
+    return false;
+  }
+  const demo = fs.existsSync(demoFile) ? fs.readFileSync(demoFile, "utf8") : "";
+  if (demo !== readDemoHtml()) {
+    console.error(`${path.relative(root, demoFile)} is stale. Run "pnpm run build:game".`);
     return false;
   }
   return true;

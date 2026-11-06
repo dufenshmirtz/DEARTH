@@ -22024,8 +22024,9 @@ function satanDealButtonHtml() {
   return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
 }
 /* ---------- Playtest feedback: a "Δώσε feedback" button that opens the Google Form with the run filled in ----------
-   Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them. */
-const PLAYTEST_BUILD = false;
+   Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
+   demo.html (generated from index.html by build:game) turns it on; index.html leaves it off. */
+const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 
 const FEEDBACK_FORM_URL =
