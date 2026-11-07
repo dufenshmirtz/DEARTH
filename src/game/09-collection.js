@@ -86,7 +86,11 @@ const COLLECTION_SECTIONS = [
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the self-stacking SEALS, drawn as the seven Pentacles of Saturn (in pentacle order)
-  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p98", "p99", "p100", "p101", "p102", "p103", "p109"] },
+  // the Pentacles of the Moon: each strengthens one ARTIFACT and doubles its weight in the Devil's Offerings
+  { key: "artifact", title: "Artifact Seals", ids: ["p70", "p135", "p136", "p137", "p138", "p139"] },
+  // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
+  { key: "poison", title: "Poison Seals", ids: POISON_SEAL_IDS.slice() }
 ];
 
 /* ---- builds: the collection filters ----
@@ -100,6 +104,7 @@ const SEAL_BUILDS = [
   { key: "critical", label: "Critical" },
   { key: "personality", label: "Personality" },
   { key: "artifact", label: "Artifact" },
+  { key: "poison", label: "Poison" },
   { key: "general", label: "General" }
 ];
 
@@ -149,7 +154,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p70: ["artifact"], // Amy
+  p134: ["general"], // Amy (a random Player SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
   p73: ["general"], // Asmoday
@@ -215,7 +220,22 @@ const SEAL_BUILD_TAGS = {
   p101: ["general"], // Aggiel Hexagram
   p102: ["reveal"], // Zachriel Triangle
   p103: ["artifact"], // Cassiel Pentagram
-  p109: ["personality"] // Samael Triangle
+  p109: ["personality"], // Samael Triangle
+  // Artifact SEALS (Pentacles of the Moon)
+  p70: ["artifact"], // 1st: Sacrificial Dagger
+  p135: ["artifact", "bounty"], // 2nd: Funeral Coin spreads BOUNTY
+  p136: ["artifact", "memory"], // 3rd: Inverted Cross pushes by MEMORY
+  p137: ["artifact", "critical"], // 4th: Cursed Chalice adds CRITICAL damage
+  p138: ["artifact", "reveal"], // 5th: Mummified Lamb hits revealed DAMNED
+  p139: ["artifact", "personality"], // 6th: Vial of Blood makes STUBBORN
+  // Poison SEALS (Pentacles of Mars)
+  p140: ["poison"], // 1st: POISON by max HEALTH
+  p141: ["poison", "memory"], // 2nd: POISON by MEMORY
+  p142: ["poison", "critical"], // 3rd: CRITICAL poisons everyone, POISON spreads on death
+  p143: ["poison", "reveal"], // 4th: revealed DAMNED get POISON
+  p144: ["poison", "bounty"], // 5th: BOUNTY gains give POISON
+  p145: ["poison", "personality"], // 6th: STUBBORN DAMNED get POISON
+  p146: ["poison"] // 7th: the most POISONED take damage and spread it
 };
 
 function sealBuilds(id) {

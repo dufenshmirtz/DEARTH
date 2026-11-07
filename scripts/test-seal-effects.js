@@ -526,7 +526,7 @@ test("every collection SEAL has at least one known build tag", () => {
   game()(`
     const keys = new Set(SEAL_BUILDS.map(build => build.key));
     const ids = collectionSections().flatMap(section => section.ids);
-    assert.equal(ids.length, 105);
+    assert.equal(ids.length, 118);
     for (const id of ids) {
       assert.ok(Array.isArray(SEAL_BUILD_TAGS[id]) && SEAL_BUILD_TAGS[id].length, id + " has no build tag");
       for (const key of SEAL_BUILD_TAGS[id]) assert.ok(keys.has(key), id + " has unknown build " + key);
@@ -1466,4 +1466,516 @@ test("Vual: revealed DAMNED take 7 extra damage per hit (ELITE x1.5, rounded up)
   assert.ok(catalog.includes(run("ITEMS.p63.description")));
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).includes("7 extra damage"));
   assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).includes("11 extra damage"));
+});
+
+// ---- Artifact SEALS (Pentacles of the Moon) and the new Seal of Amy ----
+const ARTIFACT_TEST_STUBS = `
+  globalThis.render = () => {};
+  globalThis.playGameSfx = () => {};
+  globalThis.playSfx = () => {};
+  globalThis.playArtifactSfx = () => {};
+  globalThis.playSealPurchaseSfx = () => {};
+  globalThis.closeMobileOfferingsForTargetPick = () => {};
+`;
+
+test("1st Pentacle of the Moon keeps the old Seal of Amy Dagger effect; Seal of Amy stays the demon Amy's Goetic SEAL", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    assert.equal(ITEMS.p70.name, "1st Pentacle of the Moon");
+    assert.equal(ITEMS.p134.name, "Seal of Amy");
+    assert.equal(GOETIC_BOSS_SPECS.find((spec) => spec.key === "amy").passiveId, "p134");
+    assert.ok(GOETIC_BOSS_PASSIVE_IDS.includes("p134") && !GOETIC_BOSS_PASSIVE_IDS.includes("p70"));
+    fixture([["p70"]], [50, 50]);
+    assert.equal(sacrificialDaggerExtraDamage(), 10);
+    assert.ok(artifactDescription(ITEMS.a15).includes("1st Pentacle of the Moon"));
+    // a living Goetic BOSS Amy switches off the new Seal of Amy, not the Dagger pentacle
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    boss.goeticKey = "amy";
+    boss.goeticPassiveId = "p134";
+    boss.goeticSealName = "Seal of Amy";
+    assert.equal(isSealSuppressed("p70"), false);
+    assert.equal(isSealSuppressed("p134"), true);
+    // a saved Goetic BOSS Amy from before the change points at the new SEAL after loading
+    boss.goeticPassiveId = "p70";
+    normalizeLoadedArcadeRun();
+    assert.equal(boss.goeticPassiveId, "p134");
+    assert.equal(isSealSuppressed("p70"), false);
+  `);
+});
+
+test("every Artifact SEAL doubles its ARTIFACT in the Devil's Offerings and is in the collection, catalog and art", () => {
+  const run = game();
+  const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").replace(/\r\n/g, "\n");
+  run(`
+    fixture([], [50]);
+    const count = (id) => activeShopPool().filter((entry) => entry === id).length;
+    for (const [artifactId, sealId] of Object.entries(ARTIFACT_SEAL_BY_ARTIFACT)) {
+      state.player.passives = [];
+      assert.equal(count(artifactId), 1);
+      state.player.passives = [itemCopy(sealId)];
+      assert.equal(count(artifactId), 2, sealId);
+      assert.equal(activeShopPool().length, ACTIVE_IDS.length + 1);
+    }
+    assert.deepEqual(Array.from(collectionSections().find((section) => section.key === "artifact").ids), ["p70", "p135", "p136", "p137", "p138", "p139"]);
+  `);
+  for (const id of ["p70", "p134", "p135", "p136", "p137", "p138", "p139"]) {
+    const item = run(`ITEMS.${id}`);
+    assert.ok(catalog.includes(`${item.name} (${item.price} SIN)\n${item.description}`), id);
+    assert.ok(run(`splitEliteDescription(ITEMS.${id}.description).elite`).length, id);
+    assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 2 })`).length, id);
+    assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
+    assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
+    assert.ok(run(`collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`), id);
+  }
+});
+
+test("2nd Pentacle of the Moon: Funeral Coin spreads 6-16 BOUNTY among the DAMNED instead of paying you (ELITE +4)", () => {
+  for (const [stack, roll, expected] of [[1, 0, 6], [1, 0.999, 16], [2, 0, 10], [3, 0.999, 24]]) {
+    game()(`
+      ${ARTIFACT_TEST_STUBS}
+      fixture([["p135", ${stack}]], [50, 50, 50]);
+      state.stage = "active";
+      state.player.credits = 5;
+      const before = state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+      state.player.actives = [itemCopy("a10")];
+      Math.random = () => ${roll};
+      useActive(0);
+      assert.equal(state.player.credits, 5);
+      assert.equal(state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0) - before, ${expected});
+      assert.ok(state.roundState.triggeredPassiveIds.has("p135"));
+    `);
+  }
+  // without the SEAL it still pays 3-10 SIN
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([], [50, 50]);
+    state.stage = "active";
+    state.player.actives = [itemCopy("a10")];
+    Math.random = () => 0;
+    useActive(0);
+    assert.equal(state.player.credits, 3);
+  `);
+});
+
+test("3rd Pentacle of the Moon: Inverted Cross pushes the DAMNED's guess away from the final TARGET by its MEMORY (ELITE +3 MEMORY)", () => {
+  for (const [stack, guess, expected] of [[1, 60, 64], [1, 30, 26], [1, 98, 100], [2, 60, 67]]) {
+    game()(`
+      ${ARTIFACT_TEST_STUBS}
+      fixture([["p136", ${stack}]], [${guess}, 50, 50]);
+      state.round = 10;
+      const crossed = state.bots[0];
+      crossed.memory = initialMemoryEntries(4);
+      state.stage = "active";
+      state.roundState.playerEffectiveGuess = 50;
+      state.player.actives = [itemCopy("a9")];
+      useActive(0);
+      chooseBot(crossed.id);
+      assert.ok(state.roundState.removedBotIds.has(crossed.id));
+      assert.equal(crossed.memory.length, ${stack === 2 ? 7 : 4});
+      applyPenalties();
+      // its guess left the average, so the TARGET is 0.8 x 50 = 40 whatever it was pushed to
+      assert.equal(state.roundState.target, 40);
+      assert.equal(state.roundState.botEffectiveGuesses.get(crossed.id), ${expected});
+      assert.ok(state.roundState.triggeredPassiveIds.has("p136"));
+    `);
+  }
+});
+
+test("4th Pentacle of the Moon: Cursed Chalice adds +2% max HEALTH to your CRITICAL this round (ELITE +1% each level)", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p137"]], [50, 50]);
+    state.stage = "active";
+    state.player.actives = [itemCopy("a22")];
+    useActive(0);
+    assert.equal(state.roundState.artifactCriticalRangeBonus, 1);
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 120);
+    assert.equal(criticalSummaryForHitter({ key: "player", kind: "player" }), "12% max HEALTH");
+  `);
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p137", 3]], [50, 50]);
+    state.stage = "active";
+    state.player.actives = [itemCopy("a22"), itemCopy("a22")];
+    useActive(0);
+    useActive(0);
+    assert.equal(state.roundState.artifactCriticalRangeBonus, 2);
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 180);
+  `);
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([], [50, 50]);
+    state.stage = "active";
+    state.player.actives = [itemCopy("a22")];
+    useActive(0);
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 100);
+  `);
+});
+
+test("5th Pentacle of the Moon: Mummified Lamb hits a revealed DAMNED for 30% (BOSSES 15%), ELITE +5 damage and +3 BOUNTY", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p138"]], [50, 50, 50]);
+    state.stage = "active";
+    const revealed = state.bots.find((bot) => bot.revealedByPassive);
+    const hidden = state.bots.find((bot) => !bot.revealedByPassive);
+    state.player.actives = [itemCopy("a25"), itemCopy("a25")];
+    useActive(0);
+    chooseBot(revealed.id);
+    useActive(0);
+    chooseBot(hidden.id);
+    assert.equal(revealed.lastDamage, 300);
+    assert.equal(hidden.lastDamage, 0);
+    assert.equal(state.pendingNextRoundLambReveals.length, 2);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p138"));
+  `);
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p138", 3]], [50, 50, 50]);
+    state.stage = "active";
+    const boss = state.bots.find((bot) => bot.revealedByPassive);
+    boss.isBoss = true;
+    state.player.actives = [itemCopy("a25")];
+    useActive(0);
+    chooseBot(boss.id);
+    assert.equal(boss.lastDamage, 150 + 10);
+    assert.equal(state.pendingNextRoundLambReveals[0].sealBounty, 6);
+    const before = botRegularBounty(boss);
+    applyPendingNextRoundLambReveals();
+    assert.equal(botRegularBounty(boss) - before, 9);
+  `);
+});
+
+test("6th Pentacle of the Moon: Vial of Blood eliminates the first DAMNED; the second overheals by its HEALTH and turns STUBBORN (ELITE +5 BOUNTY)", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p139", 2]], [50, 50, 50]);
+    const [first, second] = state.bots;
+    first.hp = 700;
+    second.hp = 400;
+    setBotPersonality(second, "Analyst", "", { triggerAlterationDamage: false });
+    const bountyBefore = botRegularBounty(second);
+    const sinBefore = state.player.credits;
+    state.player.actives = [{ ...ITEMS.a11, uid: "vial-1" }];
+    state.pendingActive = { index: 0, uid: "vial-1", id: "a11", mode: "bot", step: "damage" };
+    resolveBloodVial(first);
+    assert.equal(first.eliminated, true);
+    assert.ok(state.player.credits > sinBefore, "the first DAMNED still pays its BOUNTY");
+    resolveBloodVial(second);
+    assert.equal(second.hp, 1100);
+    assert.equal(personalityType(second), "Stubborn");
+    assert.equal(botRegularBounty(second) - bountyBefore, 5);
+    assert.equal(state.pendingActive, null);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p139"));
+  `);
+  // the Vial ends at once when the first pick's death leaves no one to overheal
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([["p139"], ["p19"]], [50, 50, 50]);
+    const [first, second, third] = state.bots;
+    second.isBoss = true;
+    third.hp = 5; // Seal of Sabnock's 5 damage on the first death finishes it
+    state.player.actives = [{ ...ITEMS.a11, uid: "vial-1" }];
+    state.pendingActive = { index: 0, uid: "vial-1", id: "a11", mode: "bot", step: "damage" };
+    resolveBloodVial(first);
+    assert.equal(third.eliminated, true);
+    assert.equal(state.pendingActive, null);
+    assert.equal(state.player.actives.length, 0);
+  `);
+});
+
+test("Seal of Amy acts as a random Player SEAL each round as ELITE, ELITE Amy as ELITE +3, ELITE +2 Amy as ELITE +5", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    // Amy joins after the fixture's round start, so only the copy set here acts
+    fixture([], [50, 50, 50]);
+    const amy = itemCopy("p134");
+    state.player.passives = [amy];
+    amy.amyCopiedId = "p63"; // Seal of Vual
+    amy.amyCopiedRound = state.round;
+    assert.equal(passiveStack("p63"), 2);
+    const entry = orderedPassiveEffectEntries("p63")[0];
+    assert.equal(entry.stack, 2);
+    assert.equal(entry.sourceId, "p134");
+    amy.stack = 2;
+    assert.equal(passiveStack("p63"), 4);
+    amy.stack = 3;
+    assert.equal(passiveStack("p63"), 6);
+    amy.stack = 1;
+    // the copied effect works and is counted for Amy: Vual's 7 extra damage, x1.5 as ELITE
+    const revealed = state.bots.find((bot) => bot.revealedByPassive);
+    damageBot(revealed, 10, "test hit", "Test");
+    assert.equal(revealed.lastDamage, 10 + 11);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p134"));
+    assert.equal(state.sealStats.p134.damage, 11);
+    assert.ok(itemDescription(amy).includes("This round: ELITE Seal of Vual."));
+    // a living Goetic BOSS Vual switches the copy off
+    const boss = state.bots.find((bot) => !bot.revealedByPassive);
+    boss.isBoss = true;
+    boss.goeticPassiveId = "p63";
+    assert.equal(passiveStack("p63"), 0);
+    boss.isBoss = false;
+    boss.goeticPassiveId = null;
+    // the copy lasts only its round
+    state.round += 1;
+    assert.equal(passiveStack("p63"), 0);
+    // every round start rolls a new Player SEAL: never Amy, never a SEAL outside the 72 Goetic ones
+    let seed = 7;
+    Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const seen = new Set();
+    for (let index = 0; index < 60; index += 1) {
+      beginRound();
+      const copied = amyCopyThisRound(amy);
+      assert.ok(GOETIC_BOSS_PASSIVE_IDS.includes(copied) && copied !== "p134", copied);
+      seen.add(copied);
+    }
+    assert.ok(seen.size > 10);
+  `);
+  // bought in the middle of a round, it takes a Player SEAL at once
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([], [50, 50, 50]);
+    state.player.credits = 100;
+    state.shop = [{ item: itemCopy("p134"), sold: false }];
+    buyShopItem(0);
+    assert.ok(amyCopyThisRound(passiveEntry("p134")));
+  `);
+});
+
+// ---- Poison SEALS (Pentacles of Mars) ----
+// a round with no SEALS, then the given Poison SEALS and no POISON yet (the fixture's own round start stays clean)
+function poisonRound(passives, guesses = [50, 50, 50, 50, 50]) {
+  return `
+    fixture([], ${JSON.stringify(guesses)});
+    state.player.passives = ${passives}.map(([id, stack = 1]) => ({ ...ITEMS[id], stack }));
+    state.bots.forEach((bot) => { bot.poisonCounters = 0; bot.lastDamage = 0; });
+    globalThis.render = () => {};
+  `;
+}
+
+test("POISON deals 5 damage per stack at the end of every round, and ELITE 4th/5th/6th Pentacles of Mars raise it", () => {
+  for (const [passives, perStack] of [["[]", 5], ['[["p143", 2]]', 7], ['[["p143", 3], ["p144", 2], ["p145", 3]]', 12]]) {
+    game()(`
+      ${poisonRound(passives)}
+      state.roundState.revealedBotIds = new Set();
+      state.bots.forEach((bot) => { bot.revealedByPassive = false; setBotPersonality(bot, "Analyst", "", { triggerAlterationDamage: false }); });
+      state.bots[0].poisonCounters = 3;
+      applyEndOfRoundPassives();
+      assert.equal(poisonDamagePerStack(), ${perStack});
+      assert.equal(state.bots[0].lastDamage, 3 * ${perStack});
+      assert.equal(state.bots[1].lastDamage, 0);
+      assert.equal(state.bots[0].poisonCounters, 3, "POISON stays");
+      assert.equal(state.bots[0].poisonDamageTaken, 3 * ${perStack});
+      applyEndOfRoundPassives();
+      assert.equal(state.bots[0].poisonDamageTaken, 6 * ${perStack}, "the total keeps adding up");
+    `);
+  }
+});
+
+test("1st Pentacle of Mars: a random DAMNED gets 1 POISON per 80 max HEALTH (at least 1), ELITE -25% HEALTH needed", () => {
+  for (const [stack, maxHp, expected] of [[1, 1000, 12], [1, 40, 1], [2, 1000, 16], [3, 1000, 22]]) {
+    game()(`
+      ${poisonRound(`[["p140", ${stack}]]`)}
+      state.bots.forEach((bot) => { bot.hp = bot.maxHp = ${maxHp}; });
+      Math.random = () => 0;
+      applyPoisonStartOfRound();
+      assert.equal(state.bots[0].poisonCounters, ${expected});
+      assert.equal(state.bots.reduce((sum, bot) => sum + bot.poisonCounters, 0), ${expected});
+      assert.ok(state.roundState.triggeredPassiveIds.has("p140"));
+    `);
+  }
+});
+
+test("2nd Pentacle of Mars: a random DAMNED gets 1 POISON per 5 MEMORY, ELITE +2 POISON each level", () => {
+  for (const [stack, memory, expected] of [[1, 12, 2], [3, 12, 6], [1, 4, 0], [2, 0, 2]]) {
+    game()(`
+      ${poisonRound(`[["p141", ${stack}]]`)}
+      state.round = 20;
+      state.bots[0].memory = initialMemoryEntries(${memory});
+      Math.random = () => 0;
+      applyPoisonStartOfRound();
+      assert.equal(state.bots[0].poisonCounters, ${expected});
+      assert.equal(state.roundState.triggeredPassiveIds.has("p141"), ${expected > 0});
+    `);
+  }
+});
+
+test("3rd Pentacle of Mars: your CRITICAL gives every DAMNED POISON (ELITE +1); a POISONED death spreads half, BOSSES first", () => {
+  for (const [stack, expected] of [[1, 1], [3, 3]]) {
+    const run = game();
+    run(critRound(`[["p142", ${stack}]]`, "state.bots.forEach((bot) => { bot.poisonCounters = 0; });"));
+    assert.deepEqual(JSON.parse(run("JSON.stringify(activeBots().map((bot) => bot.poisonCounters))")), Array(5).fill(expected));
+  }
+  game()(`
+    ${poisonRound('[["p142"]]')}
+    const [dying, boss, other] = state.bots;
+    boss.isBoss = true;
+    dying.poisonCounters = 7;
+    dying.hp = 1;
+    damageBot(dying, 5, "test", "Test");
+    assert.equal(dying.eliminated, true);
+    assert.equal(boss.poisonCounters, 3);
+    assert.equal(other.poisonCounters, 0);
+    // with no BOSS alive, it spreads among every other DAMNED
+    boss.isBoss = false;
+    state.bots.forEach((bot) => { if (!bot.eliminated) bot.poisonCounters = 0; });
+    const second = state.bots[3];
+    second.poisonCounters = 5;
+    second.hp = 1;
+    damageBot(second, 5, "test", "Test");
+    assert.equal(activeBots().reduce((sum, bot) => sum + bot.poisonCounters, 0), 2);
+  `);
+});
+
+test("4th Pentacle of Mars: every DAMNED revealed at the start of the round gets 2 POISON", () => {
+  game()(`
+    ${poisonRound('[["p143"]]')}
+    state.bots.forEach((bot, index) => { bot.revealedByPassive = index < 2; });
+    applyPoisonStartOfRound();
+    assert.deepEqual(state.bots.map((bot) => bot.poisonCounters), [2, 2, 0, 0, 0]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p143"));
+  `);
+});
+
+test("5th Pentacle of Mars: a DAMNED that gains BOUNTY gets 1 POISON, losing BOUNTY gives none", () => {
+  game()(`
+    ${poisonRound('[["p144"]]')}
+    const [gainer, loser] = state.bots;
+    changeBotSin(gainer, 4, "", { triggerLossDamage: false });
+    changeBotSin(gainer, 2, "", { triggerLossDamage: false });
+    loser.reward = 5;
+    changeBotSin(loser, -3, "", { triggerLossDamage: false });
+    assert.equal(gainer.poisonCounters, 2);
+    assert.equal(loser.poisonCounters, 0);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p144"));
+  `);
+});
+
+test("6th Pentacle of Mars: STUBBORN DAMNED get 1 POISON at the end of the round, after POISON has dealt its damage", () => {
+  game()(`
+    ${poisonRound('[["p145"]]')}
+    state.bots.forEach((bot, index) => setBotPersonality(bot, index < 2 ? "Stubborn" : "Analyst", "", { triggerAlterationDamage: false }));
+    state.bots.forEach((bot) => { bot.revealedByPassive = false; bot.lastDamage = 0; });
+    applyEndOfRoundPassives();
+    assert.deepEqual(state.bots.map((bot) => bot.poisonCounters), [1, 1, 0, 0, 0]);
+    // new POISON starts hurting next round
+    assert.deepEqual(state.bots.map((bot) => bot.lastDamage), [0, 0, 0, 0, 0]);
+  `);
+});
+
+test("7th Pentacle of Mars: the two most POISONED take 15 (ELITE x1.5), lose 1 POISON and poison their neighbours", () => {
+  for (const [stack, damage] of [[1, 15], [2, 23]]) {
+    game()(`
+      ${poisonRound(`[["p146", ${stack}]]`)}
+      state.bots.forEach((bot) => { bot.revealedByPassive = false; setBotPersonality(bot, "Analyst", "", { triggerAlterationDamage: false }); });
+      state.bots[1].poisonCounters = 4;
+      state.bots[3].poisonCounters = 2;
+      state.bots[4].poisonCounters = 1;
+      applyEndOfRoundPassives();
+      // POISON first (20, 10, 5), then the SEAL hits bots 1 and 3
+      assert.deepEqual(state.bots.map((bot) => bot.lastDamage), [0, 20 + ${damage}, 0, 10 + ${damage}, 5]);
+      // bot 1 lost 1 and gave 1 to bots 0 and 2; bot 3 lost 1 and gave 1 to bots 2 and 4
+      assert.deepEqual(state.bots.map((bot) => bot.poisonCounters), [1, 3, 2, 1, 2]);
+    `);
+  }
+  game()(`
+    ${poisonRound('[["p146"]]')}
+    state.bots.forEach((bot) => { bot.revealedByPassive = false; setBotPersonality(bot, "Analyst", "", { triggerAlterationDamage: false }); });
+    applyEndOfRoundPassives();
+    assert.equal(state.bots.reduce((sum, bot) => sum + bot.poisonCounters, 0), 2);
+    assert.equal(state.bots.filter((bot) => bot.poisonCounters === 1).length, 2);
+    assert.ok(state.bots.every((bot) => bot.lastDamage === 0));
+  `);
+});
+
+test("the Poison SEALS are in the collection, catalog and art, and POISON shows as a skull beside max HEALTH", () => {
+  const run = game();
+  const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").replace(/\r\n/g, "\n");
+  run(`
+    assert.deepEqual(Array.from(collectionSections().find((section) => section.key === "poison").ids), POISON_SEAL_IDS);
+    assert.ok(SEAL_BUILDS.some((build) => build.key === "poison"));
+    ${poisonRound("[]")}
+    state.bots[0].poisonCounters = 3;
+    globalThis.performance = globalThis.performance || { now: () => 0 };
+    const poisoned = renderBot(state.bots[0], false);
+    assert.ok(poisoned.includes('class="poison-stack-label poison-label"') && poisoned.includes("poison-skull"));
+    // no number beside the skull: the stacks, the damage each round and the total taken are in its tooltip
+    const labelStart = poisoned.indexOf("poison-label");
+    const label = poisoned.slice(labelStart, poisoned.indexOf("</span>", labelStart));
+    assert.ok(label.trim().endsWith("</svg>"), label.slice(-40));
+    state.bots[0].poisonDamageTaken = 45;
+    assert.deepEqual(poisonTooltipText(state.bots[0]).split(String.fromCharCode(10)), ["3 POISON", "Takes 15 damage at the end of every round (5 per POISON).", "POISON damage taken so far: 45."]);
+    assert.ok(!renderBot(state.bots[1], false).includes("poison-label"));
+  `);
+  for (const id of ["p140", "p141", "p142", "p143", "p144", "p145", "p146"]) {
+    const item = run(`ITEMS.${id}`);
+    assert.ok(catalog.includes(`${item.name} (${item.price} SIN)\n${item.description}`), id);
+    assert.ok(run(`splitEliteDescription(ITEMS.${id}.description).elite`).length, id);
+    assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 3 })`).includes("POISON"), id);
+    assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
+    assert.ok(run(`sealBuilds("${id}").includes("poison") && collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`), id);
+  }
+});
+
+// ---- Pause > DEV: SEAL search and grant ----
+test("Dev SEAL search suggests SEALS named like what you type, best matches first", () => {
+  game()(`
+    fixture([], [50, 50]);
+    assert.equal(devSealSuggestions("bae")[0], "p16");
+    assert.equal(ITEMS[devSealSuggestions("Seal of Ba")[0]].name.startsWith("Seal of Ba"), true);
+    // a word inside the name
+    assert.ok(devSealSuggestions("moon").every((id) => ITEMS[id].name.includes("Moon")));
+    assert.equal(devSealSuggestions("pentacle of mars", 10).length, 7);
+    // a small typo still finds it
+    assert.ok(devSealSuggestions("astarot").includes("p84"));
+    assert.ok(devSealSuggestions("asmodai").some((id) => ITEMS[id].name === "Seal of Asmoday"));
+    assert.ok(devSealSuggestions("cassiels").some((id) => ITEMS[id].name.includes("Cassiel")));
+    // several words, each starting a word of the name, in any order
+    assert.equal(devSealSuggestions("7th mars")[0], "p146");
+    assert.equal(devSealSuggestions("mars 7")[0], "p146");
+    assert.ok(devSealSuggestions("pentacle marz", 10).includes("p146"));
+    assert.deepEqual(devSealSuggestions(""), []);
+    assert.deepEqual(devSealSuggestions("zzzzqqq"), []);
+    assert.ok(devSealSuggestions("e").length <= 6);
+    // an exact name, with or without "Seal of", or the only match, picks one SEAL
+    assert.equal(devResolveSealQuery("bael").id, "p16");
+    assert.equal(devResolveSealQuery("SEAL OF BAEL").id, "p16");
+    assert.equal(devResolveSealQuery("7th pentacle of mars").id, "p146");
+    assert.equal(devResolveSealQuery("pentacle").id, null);
+    assert.ok(devResolveSealQuery("pentacle").note.includes("Several"));
+    assert.equal(devResolveSealQuery("zzzzqqq").id, null);
+  `);
+});
+
+test("Dev SEAL grant gives the SEAL into an empty slot, upgrades one you have, and gives nothing when slots are full", () => {
+  game()(`
+    globalThis.playSealPurchaseSfx = () => {};
+    globalThis.render = () => {};
+    fixture([], [50, 50]);
+    state.player.passives = [];
+    assert.equal(passiveLimit(), 3);
+    assert.equal(devGrantSeal("p16").ok, true);
+    assert.deepEqual(state.player.passives.map((item) => [item.id, item.stack || 1]), [["p16", 1]]);
+    // already owned: upgraded once, no new slot used
+    const upgraded = devGrantSeal("p16");
+    assert.equal(upgraded.ok, true);
+    assert.ok(upgraded.note.includes("ELITE"));
+    assert.deepEqual(state.player.passives.map((item) => [item.id, item.stack]), [["p16", 2]]);
+    devGrantSeal("p140");
+    devGrantSeal("p70");
+    assert.equal(state.player.passives.length, 3);
+    // full: a new SEAL is refused, but owned ones can still be upgraded
+    const refused = devGrantSeal("p63");
+    assert.equal(refused.ok, false);
+    assert.equal(refused.note, "Your SEAL slots are full.");
+    assert.equal(state.player.passives.length, 3);
+    assert.equal(devGrantSeal("p140").ok, true);
+    assert.equal(passiveEntry("p140").stack, 2);
+    // SEALS that cannot be upgraded say so
+    state.player.passives = [itemCopy("p98")];
+    const kalha = devGrantSeal("p98");
+    assert.equal(kalha.ok, false);
+    assert.ok(kalha.note.includes("cannot be upgraded"));
+  `);
 });

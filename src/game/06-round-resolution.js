@@ -162,6 +162,7 @@ function applyPenalties() {
   round.penaltiesApplied = true;
   recalculateTarget();
   state.previousTarget = round.target;
+  applyMoonCrossGuessShifts();
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
@@ -271,6 +272,15 @@ function applyPenalties() {
   const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
   if (playerCritThisRound) {
+    // 3rd Pentacle of Mars: your CRITICAL gives every DAMNED POISON (ELITE +1 each level)
+    orderedPassiveEffectEntries("p142").forEach((entry) => {
+      const amount = 1 + passiveEntryEliteLevels(entry);
+      // (applyPenalties has its own activeBots list, so read the living DAMNED directly)
+      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount) > 0);
+      if (!poisoned.length) return;
+      markPassiveEntryTriggered(entry);
+      addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
+    });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
@@ -448,6 +458,29 @@ function applyPenalties() {
   addLog("Penalties applied. Advance when ready.");
 }
 
+// 3rd Pentacle of the Moon: every Inverted Cross target's guess is pushed away from the final TARGET by 1 per MEMORY
+// it has (once per Cross used on it). Its guess no longer counts for the average, so the TARGET does not move.
+function applyMoonCrossGuessShifts() {
+  const round = state.roundState;
+  const ids = Array.isArray(round?.moonCrossBotIds) ? round.moonCrossBotIds : [];
+  const entry = orderedPassiveEffectEntries("p136")[0];
+  if (!ids.length || !entry || !Number.isFinite(round.target)) return;
+  const name = ITEMS.p136.name;
+  ids.forEach((botId) => {
+    const bot = state.bots.find((candidate) => candidate.id === botId && candidate.hp > 0 && !candidate.eliminated);
+    const guess = bot ? round.botEffectiveGuesses.get(bot.id) : null;
+    const memory = bot?.memory?.length || 0;
+    if (!bot || !Number.isFinite(guess) || memory <= 0) return;
+    // away from the TARGET; a guess right on it goes toward the far end of the range
+    const direction = Math.sign(guess - round.target) || (round.target >= 50 ? -1 : 1);
+    const pushed = clamp(Math.ceil(guess + direction * memory), 0, 100);
+    if (pushed === guess) return;
+    round.botEffectiveGuesses.set(bot.id, pushed);
+    markPassiveEntryTriggered(entry);
+    addRoundEvent(`${name} pushed ${bot.name}'s guess from ${guess} to ${pushed}, away from the TARGET.`);
+  });
+}
+
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
   updateArcadeRecordsFromCurrentRun();
@@ -527,11 +560,23 @@ function playerCriticalFlatBonus() {
   return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
 }
 
+// 4th Pentacle of the Moon: % max HEALTH added to your CRITICAL by the Cursed Chalices used this round
+function criticalPercentBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
+}
+
+function criticalPercentBonusDamage(victim) {
+  const percent = criticalPercentBonus();
+  if (!percent) return 0;
+  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
+  return Math.ceil((maxHp * percent) / 100);
+}
+
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max HEALTH instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + playerCriticalFlatBonus();
+  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -594,8 +639,12 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max HEALTH";
   const flatBonus = playerCriticalFlatBonus();
-  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
-  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  const bonusPercent = criticalPercentBonus();
+  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  if (passiveStack("p7")) {
+    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  }
   return flatBonus > 0 ? `${percent}% max HEALTH + ${flatBonus} damage` : `${percent}% max HEALTH`;
 }
 
@@ -1064,7 +1113,19 @@ function applyEliminationPassives(bot) {
   if (bot?.sitriHost) ensureSitriHost();
   applySelfStackingRevealedDeath(bot);
   applySelfStackingStubbornDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117", "p142"]).forEach((entry) => {
+    // 3rd Pentacle of Mars: half the dead DAMNED's POISON (rounded down) spreads one at a time, BOSSES first
+    if (entry.id === "p142") {
+      const amount = Math.floor(botPoison(bot) / 2);
+      const others = activeBots().filter((other) => other.id !== bot.id && canPoisonBot(other));
+      if (amount <= 0 || !others.length) return;
+      const bosses = others.filter((other) => other.isBoss);
+      const pool = bosses.length ? bosses : others;
+      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1);
+      markPassiveEntryTriggered(entry);
+      addRoundEvent(`${ITEMS.p142.name} spread ${amount} of ${bot.name}'s POISON${bosses.length ? " to the BOSSES" : ""}.`);
+      return;
+    }
     if (entry.id === "p117") {
       if (!state.roundState?.criticalHitKeys?.has("player")) return;
       const bonus = passiveEntryScaledValue(entry, 2);
@@ -1233,8 +1294,59 @@ function applyEliminationPassives(bot) {
 // Seal of Furfur: [divisor, damage]; multiples of 7 hit twice as hard
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
+// every DAMNED with POISON takes poisonDamagePerStack() per stack (5, raised by ELITE 4th/5th/6th Pentacles of Mars)
+function applyPoisonDamage() {
+  const poisoned = activeBots().filter((bot) => canPoisonBot(bot) && botPoison(bot) > 0);
+  if (!poisoned.length) return;
+  const perStack = poisonDamagePerStack();
+  poisonDamageBonusEntries().forEach((part) => markPassiveEntryTriggered(part.entry));
+  poisoned.forEach((bot) => {
+    if (bot.hp <= 0 || bot.eliminated) return;
+    const stacks = botPoison(bot);
+    const damage = stacks * perStack;
+    const dealt = damageBot(bot, damage, `POISON dealt ${damage} damage to ${bot.name} (${stacks} x ${perStack}).`, "Poison");
+    bot.poisonDamageTaken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0)) + dealt;
+  });
+}
+
+// 7th Pentacle of Mars: the two DAMNED with the most POISON take 15 damage (ELITE x1.5), lose 1 POISON and give 1
+// POISON to each DAMNED beside them; with no POISON anywhere, two random DAMNED get 1 POISON instead
+function applyMarsSeventhPentacle(entry) {
+  const name = ITEMS.p146.name;
+  const living = activeBots().filter(canPoisonBot);
+  if (!living.length) return;
+  const poisoned = shuffled(living.filter((bot) => botPoison(bot) > 0)).sort((left, right) => botPoison(right) - botPoison(left));
+  markPassiveEntryTriggered(entry);
+  if (!poisoned.length) {
+    shuffled(living)
+      .slice(0, 2)
+      .forEach((bot) => addBotPoison(bot, 1));
+    addRoundEvent(`${name} found no POISON and gave ${Math.min(2, living.length)} random DAMNED 1 POISON.`);
+    return;
+  }
+  const damage = passiveEntryFlatDamage(entry, 15);
+  poisoned.slice(0, 2).forEach((bot) => {
+    damageBot(bot, damage, `${name} dealt ${damage} damage to ${bot.name}.`, name);
+    bot.poisonCounters = Math.max(0, botPoison(bot) - 1);
+    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1));
+  });
+}
+
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+    // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
+    if (entry.id === "p145") {
+      const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
+      if (!stubborn.length) return;
+      markPassiveEntryTriggered(entry);
+      stubborn.forEach((bot) => addBotPoison(bot, 1));
+      addRoundEvent(`${ITEMS.p145.name} gave ${stubborn.length} STUBBORN DAMNED 1 POISON.`);
+      return;
+    }
+    if (entry.id === "p146") {
+      applyMarsSeventhPentacle(entry);
+      return;
+    }
     // Seal of the Father, "20% strike": one random DAMNED, BOSSES included, takes 20% of its max HEALTH
     if (entry.id === "p131") {
       if (trinityFatherBlessing() !== "strike") return;
@@ -1517,6 +1629,8 @@ function applyEndOfRoundPassives() {
   if (!round) return;
   round.resolvingEndOfRoundPassives = true;
   try {
+    // POISON deals its damage first: POISON gained by the end-of-round SEALS starts hurting next round
+    applyPoisonDamage();
     applyQueuedEndOfRoundBotDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();

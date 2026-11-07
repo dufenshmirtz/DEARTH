@@ -35,6 +35,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/intro/intro-pencil-3.mp3": { m: -24.6, i: -24.6 },
   "assets/audio/intro/intro-pencil-4.mp3": { m: -24.9, i: -24.9 },
   "assets/audio/intro/intro-pencil-5.mp3": { m: -25.5, i: -25.5 },
+  "assets/audio/intro/intro-thunder.mp3": { m: -4.5, i: -12.2 },
   "assets/audio/music/hell-is-round-the-corner-placeholder.mp3": { m: -11.1, i: -15 },
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },

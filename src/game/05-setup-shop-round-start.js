@@ -137,6 +137,7 @@ function createFinalBoss(key) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
     eliminated: false,
@@ -296,6 +297,7 @@ function createBot(options = {}) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
     eliminated: false,
@@ -382,12 +384,17 @@ function sacrificialDaggerShopWeight(idOrItem = "p70") {
   return stack ? 2 : 1;
 }
 
+// every Artifact SEAL you hold makes its ARTIFACT appear twice as often in the Devil's Offerings
+function artifactSealShopWeight(artifactId) {
+  const sealId = ARTIFACT_SEAL_BY_ARTIFACT[artifactId];
+  return sealId && passiveStack(sealId) ? 2 : 1;
+}
+
 function activeShopPool() {
   const pool = ACTIVE_IDS.slice();
-  const daggerExtraCopies = Math.max(0, sacrificialDaggerShopWeight() - 1);
-  for (let copy = 0; copy < daggerExtraCopies; copy += 1) {
-    pool.push("a15");
-  }
+  ACTIVE_IDS.forEach((artifactId) => {
+    for (let copy = 1; copy < artifactSealShopWeight(artifactId); copy += 1) pool.push(artifactId);
+  });
   return pool;
 }
 
@@ -872,8 +879,12 @@ function beginRound() {
     aliveIdsAtStart: new Set(state.bots.filter((bot) => !bot.eliminated && bot.hp > 0).map((bot) => bot.id)),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
+    // 3rd Pentacle of the Moon: Inverted Cross targets whose guess is pushed away at READY (one entry per use)
+    moonCrossBotIds: [],
     roundEvents: []
   };
+  // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
+  rollAmyCopy();
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -921,6 +932,38 @@ function beginRound() {
   applyGuessReveals();
   ensureSitriHost();
   applyZilonBossBounty();
+  applyPoisonStartOfRound();
+}
+
+// Poison SEALS at the start of the round, in SEAL slot order (after the start-of-round reveals):
+// 1st Pentacle of Mars (POISON by max HEALTH), 2nd (POISON by MEMORY), 4th (revealed DAMNED get 2 POISON)
+function applyPoisonStartOfRound() {
+  if (!state.roundState) return;
+  orderedPassiveEffectEntries(["p140", "p141", "p143"]).forEach((entry) => {
+    const name = ITEMS[entry.id].name;
+    if (entry.id === "p143") {
+      const revealed = activeBots().filter((bot) => bot.revealedByPassive && canPoisonBot(bot));
+      if (!revealed.length) return;
+      markPassiveEntryTriggered(entry);
+      revealed.forEach((bot) => {
+        // Pyros's stacked reveals count once per stack, like every effect on revealed DAMNED
+        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)));
+        if (added) addRoundEvent(`${name} gave revealed ${bot.name} ${added} POISON.`);
+      });
+      return;
+    }
+    const targets = activeBots().filter(canPoisonBot);
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    const amount =
+      entry.id === "p140"
+        ? Math.max(1, Math.floor((target.maxHp || 0) / marsHealthPerPoison(entry)))
+        : Math.floor((target.memory?.length || 0) / 5) + 2 * passiveEntryEliteLevels(entry);
+    const added = addBotPoison(target, amount);
+    if (!added) return;
+    markPassiveEntryTriggered(entry);
+    addRoundEvent(`${name} gave ${target.name} ${added} POISON.`);
+  });
 }
 
 // Seal of Zilon: a share of every BOSS's BOSS BOUNTY (40%, ELITE +5% each level) becomes regular BOUNTY on that
@@ -1006,13 +1049,15 @@ function applyPendingNextRoundMarbasBonuses() {
   });
 }
 
-function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25")) {
+function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25"), sealBounty = 0) {
   if (!bot) return;
   state.pendingNextRoundLambReveals = state.pendingNextRoundLambReveals || [];
   state.pendingNextRoundLambReveals.push({
     botId: bot.id,
     botName: bot.name,
     bounty: 3,
+    // 5th Pentacle of the Moon ELITE: extra BOUNTY, counted for that SEAL
+    sealBounty: Math.max(0, Math.ceil(sealBounty || 0)),
     source
   });
   state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
@@ -1032,7 +1077,9 @@ function applyPendingNextRoundLambReveals() {
     revealBotGuess(bot, source, null, { allowBoss: true });
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
-    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained} BOUNTY for its next-round mark.`);
+    const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));
+    const sealResult = sealBounty ? changeBotSin(bot, sealBounty, "", { source: ITEMS.p138.name, triggerLossDamage: false }) : { gained: 0 };
+    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained + sealResult.gained} BOUNTY for its next-round mark.`);
   });
 }
 
@@ -1903,7 +1950,14 @@ function roundRevealEventMatchesSeal(id, event) {
   const text = normalizeGameText(event || "");
   const baseName = normalizeGameText(ITEMS[id]?.name || "");
   const displayName = normalizeGameText(roundRevealSealName(id));
-  return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
+  // Seal of Amy's step also shows what its copied SEAL did
+  const copiedId = id === AMY_SEAL_ID ? amyCopyThisRound() : null;
+  const copiedName = copiedId ? normalizeGameText(ITEMS[copiedId].name) : "";
+  return Boolean(
+    (baseName && text.includes(baseName)) ||
+      (displayName && text.includes(displayName)) ||
+      (copiedName && text.includes(copiedName))
+  );
 }
 
 // every SEAL that triggered this round and has not been animated yet, including ones whose
