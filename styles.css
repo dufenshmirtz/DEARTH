@@ -13372,3 +13372,18 @@ body.mobile-arcade #app .game-over-card .end-stat-guess strong {
 .collection-toast-sigil.collection-toast-demon {
   filter: none;
 }
+
+/* Nothing on screen is selectable (no blue highlight on double-click or Ctrl+A).
+ * Typing fields stay selectable; the PvP join link keeps its own user-select: all. */
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
+}

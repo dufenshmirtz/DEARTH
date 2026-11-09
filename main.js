@@ -21943,24 +21943,28 @@ function saveArcadeRunForNativeExit() {
   saveArcadeRun();
 }
 
-// Phone app and desktop (Electron) app: no text/image selection highlight (double-click
-// on the menu art turned it blue), no right-click menu, no dragging images out.
+// No text/image selection highlight anywhere (double-click or Ctrl+A turned the screen blue).
+// Typing fields and the PvP join link stay selectable. The phone and desktop (Electron) apps
+// also block the right-click menu and dragging images out; the browser keeps them for dev work.
+const SELECTABLE_TARGETS = "input, textarea, [contenteditable], .pvp-join-url";
+
 function nativeSelectionGuardsWanted() {
   return isNativeArcadeApp() || Boolean(desktopApp());
 }
 
-function blockNativeSelection(event) {
-  if (!nativeSelectionGuardsWanted()) return;
-  if (event.type === "selectstart") {
-    const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
-    if (target?.closest?.("input, textarea, [contenteditable]")) return; // typing fields stay selectable
-  }
+function blockSelection(event) {
+  const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
+  if (target?.closest?.(SELECTABLE_TARGETS)) return;
   event.preventDefault();
 }
 
+function blockNativeSelection(event) {
+  if (nativeSelectionGuardsWanted()) event.preventDefault();
+}
+
 function installNativeSelectionGuards() {
+  document.addEventListener("selectstart", blockSelection, { passive: false });
   if (!nativeSelectionGuardsWanted()) return;
-  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
   document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
   document.addEventListener("dragstart", blockNativeSelection, { passive: false });
 }
