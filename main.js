@@ -21943,12 +21943,23 @@ function saveArcadeRunForNativeExit() {
   saveArcadeRun();
 }
 
+// Phone app and desktop (Electron) app: no text/image selection highlight (double-click
+// on the menu art turned it blue), no right-click menu, no dragging images out.
+function nativeSelectionGuardsWanted() {
+  return isNativeArcadeApp() || Boolean(desktopApp());
+}
+
 function blockNativeSelection(event) {
-  if (isNativeArcadeApp()) event.preventDefault();
+  if (!nativeSelectionGuardsWanted()) return;
+  if (event.type === "selectstart") {
+    const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
+    if (target?.closest?.("input, textarea, [contenteditable]")) return; // typing fields stay selectable
+  }
+  event.preventDefault();
 }
 
 function installNativeSelectionGuards() {
-  if (!isNativeArcadeApp()) return;
+  if (!nativeSelectionGuardsWanted()) return;
   document.addEventListener("selectstart", blockNativeSelection, { passive: false });
   document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
   document.addEventListener("dragstart", blockNativeSelection, { passive: false });
