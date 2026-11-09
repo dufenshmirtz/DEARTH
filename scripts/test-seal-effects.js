@@ -2691,6 +2691,13 @@ test("KARMA unlocks: locked SEALS by section price, Goetic demons for 50, never 
     progress.karma = 1000;
     assert.equal(karmaUnlockDemon(ARCHANGEL_KEYS[0]), false);
     assert.ok(!collectionDemonInfoHtml(ARCHANGEL_KEYS[0], true).includes("data-collection-karma"));
+    // price tags in the grid (red when affordable), and the two KARMA sounds exist
+    progress.karma = 160;
+    const grid = renderCollectionScreen("menu");
+    assert.ok(grid.includes('collection-price can" data-karma-price="150"'));
+    assert.ok(grid.includes('collection-price" data-karma-price="666"'));
+    assert.ok(grid.includes('data-karma-price="' + KARMA_DEMON_PRICE + '"'));
+    assert.ok(GAME_SFX.karmaGain && GAME_SFX.karmaUnlock);
     // KARMA is kept with the collection
     saveCollectionProgress();
     assert.equal(defaultCollectionProgress().karma, 0);

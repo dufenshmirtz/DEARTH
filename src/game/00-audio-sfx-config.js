@@ -129,6 +129,10 @@ const GAME_SFX = {
   menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" },
   // SEAL collection: a SEAL unlocked for good; Satan opening the collection from the menu
   sealUnlock: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "item" },
+  // KARMA: gained (a rising rush, a boom and a dark bell; synthesised placeholder), and something unlocked
+  // with it in the Collection (the pact sound from the story)
+  karmaGain: { srcs: ["assets/audio/sfx/karma-gain.mp3"], tier: "accent" },
+  karmaUnlock: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
   menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
 };
 

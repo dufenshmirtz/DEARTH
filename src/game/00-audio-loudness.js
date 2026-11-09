@@ -52,6 +52,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/hit-mid-2.mp3": { m: -16.7, i: -19.6 },
   "assets/audio/sfx/hit-small-1.mp3": { m: -20.1, i: -20.1 },
   "assets/audio/sfx/hit-small-2.mp3": { m: -20.5, i: -20.5 },
+  "assets/audio/sfx/karma-gain.mp3": { m: -15, i: -19.1 },
   "assets/audio/sfx/ko.mp3": { m: -13.3, i: -19.3 },
   "assets/audio/sfx/memory-down.mp3": { m: -21, i: -22.7 },
   "assets/audio/sfx/memory-up.mp3": { m: -21, i: -24.5 },

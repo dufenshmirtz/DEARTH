@@ -52,6 +52,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/sfx/hit-mid-2.mp3": { m: -16.7, i: -19.6 },
   "assets/audio/sfx/hit-small-1.mp3": { m: -20.1, i: -20.1 },
   "assets/audio/sfx/hit-small-2.mp3": { m: -20.5, i: -20.5 },
+  "assets/audio/sfx/karma-gain.mp3": { m: -15, i: -19.1 },
   "assets/audio/sfx/ko.mp3": { m: -13.3, i: -19.3 },
   "assets/audio/sfx/memory-down.mp3": { m: -21, i: -22.7 },
   "assets/audio/sfx/memory-up.mp3": { m: -21, i: -24.5 },
@@ -201,6 +202,10 @@ const GAME_SFX = {
   menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" },
   // SEAL collection: a SEAL unlocked for good; Satan opening the collection from the menu
   sealUnlock: { srcs: ["assets/audio/sfx/seal-slam.mp3"], tier: "item" },
+  // KARMA: gained (a rising rush, a boom and a dark bell; synthesised placeholder), and something unlocked
+  // with it in the Collection (the pact sound from the story)
+  karmaGain: { srcs: ["assets/audio/sfx/karma-gain.mp3"], tier: "accent" },
+  karmaUnlock: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
   menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
 };
 
@@ -16122,7 +16127,7 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
-          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>Karma earned</span><strong>+${escapeHtml(String(state.collectionRun.karma))}</strong></div>` : ""}
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>Karma earned</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
@@ -18788,6 +18793,7 @@ function collectionDemonsHtml() {
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+        ${slain ? "" : collectionPriceTagHtml(KARMA_DEMON_PRICE)}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
@@ -18941,13 +18947,23 @@ function showNextCollectionToast() {
   const toast = document.createElement("div");
   toast.className = "collection-toast";
   toast.setAttribute("role", "status");
-  // a KARMA drop ({ karma, source }) or an unlocked SEAL (its id)
-  toast.innerHTML = id && typeof id === "object"
+  // a KARMA drop ({ kind: "karma" }), something unlocked with KARMA ({ kind: "unlock" }), or a SEAL whose
+  // achievement was met (its id)
+  const item = id && typeof id === "object" ? id : null;
+  const unlockedSpec = item?.kind === "unlock" && item.demon ? GOETIC_BOSS_BY_KEY[item.demon] : null;
+  toast.innerHTML = item?.kind === "karma"
     ? `
-    <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(id.karma))}</span>
+    <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">Karma</span>
-      <span class="collection-toast-name">${escapeHtml(id.source || "")}</span>
+      <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
+    </span>`
+    : item?.kind === "unlock"
+    ? `
+    <img class="collection-toast-sigil${unlockedSpec ? " collection-toast-demon" : ""}" src="${escapeAttr(unlockedSpec ? demonThumbPath(unlockedSpec) : sealSigilPath(item.id))}" alt="" />
+    <span class="collection-toast-text">
+      <span class="collection-toast-kicker">Unlocked with Karma</span>
+      <span class="collection-toast-name">${escapeHtml(unlockedSpec ? unlockedSpec.name : ITEMS[item.id]?.name || "Seal")}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
@@ -18956,7 +18972,7 @@ function showNextCollectionToast() {
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
-  playGameSfx("sealUnlock");
+  playGameSfx(item?.kind === "karma" ? "karmaGain" : item?.kind === "unlock" ? "karmaUnlock" : "sealUnlock");
   setTimeout(() => {
     toast.classList.add("leaving");
     setTimeout(() => {
@@ -19091,7 +19107,7 @@ function renderCollectionScreen(from) {
                 return `
                   <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
-                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
+                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>${collectionPriceTagHtml(karmaSealPrice(id))}` : ""}
                   </button>`;
               })
               .join("")}
@@ -19397,6 +19413,20 @@ const KARMA_SEAL_PRICE = 100;
 // by COLLECTION_SECTIONS key; every other locked SEAL (the Apocalypse Seals) costs KARMA_SEAL_PRICE
 const KARMA_SECTION_PRICES = { bosses: 150, archangel: 180, satan: 666, trinity: 333 };
 
+// KARMA's mark (the Spiral of Return, assets/ui/karma-mark.svg), drawn after a number like the SIN coin
+const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
+
+// the price under a locked SEAL or an undefeated demon in the Collection grid: red when you can pay it
+function collectionPriceTagHtml(price) {
+  if (!price) return "";
+  return `<span class="collection-price${karmaBalance() >= price ? " can" : ""}" data-karma-price="${price}">${formatNumber(price)}${KARMA_MARK}</span>`;
+}
+
+function refreshCollectionPriceTags(screen) {
+  const balance = karmaBalance();
+  screen?.querySelectorAll("[data-karma-price]").forEach((tag) => tag.classList.toggle("can", balance >= Number(tag.dataset.karmaPrice)));
+}
+
 function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
 }
@@ -19410,7 +19440,7 @@ function karmaGain(amount, source) {
   run.karma = (run.karma || 0) + gained;
   saveCollectionProgress();
   addLog(`${source}: +${gained} KARMA.`);
-  collectionToastQueue.push({ karma: gained, source });
+  collectionToastQueue.push({ kind: "karma", karma: gained, source });
   showNextCollectionToast();
   return gained;
 }
@@ -19467,17 +19497,17 @@ function collectionKarmaHtml(kind, key, price, pinned) {
   const balance = karmaBalance();
   const enough = balance >= price;
   const control = pinned
-    ? `<button type="button" class="collection-bind-button collection-karma-button" data-collection-karma="${escapeAttr(`${kind}:${key}`)}"${enough ? "" : " disabled"}>Unlock for ${formatNumber(price)} KARMA</button>`
+    ? `<button type="button" class="collection-bind-button collection-karma-button" data-collection-karma="${escapeAttr(`${kind}:${key}`)}"${enough ? "" : " disabled"}>Unlock for ${formatNumber(price)}${KARMA_MARK}</button>`
     : `<div class="collection-info-note">Click to unlock it for ${formatNumber(price)} KARMA.</div>`;
   return `
     <div class="collection-info-bind collection-info-karma">
-      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)} KARMA</strong>. You have ${formatNumber(balance)}.</div>
+      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)}${KARMA_MARK}</strong> KARMA. You have ${formatNumber(balance)}${KARMA_MARK}</div>
       ${control}
     </div>`;
 }
 
 function collectionKarmaLine() {
-  return `<span class="collection-karma-line">KARMA <strong>${formatNumber(karmaBalance())}</strong></span>`;
+  return `<span class="collection-karma-line">KARMA <strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</span>`;
 }
 
 // a KARMA button was clicked in the info box: arm it, then spend and show what was unlocked
@@ -19487,15 +19517,18 @@ function handleCollectionKarmaClick(button, screen) {
   if (!button.classList.contains("armed")) {
     button.classList.add("armed");
     const price = kind === "demon" ? KARMA_DEMON_PRICE : karmaSealPrice(key);
-    button.textContent = `Spend ${formatNumber(price)} KARMA?`;
+    button.innerHTML = `Spend ${formatNumber(price)}${KARMA_MARK}?`;
     return;
   }
   const done = kind === "demon" ? karmaUnlockDemon(key) : karmaUnlockSeal(key);
   if (!done) return;
-  playGameSfx(kind === "demon" ? "introEvil" : "sealUnlock");
+  // the "Unlocked" notification brings the sound
+  collectionToastQueue.push({ kind: "unlock", id: kind === "demon" ? "" : key, demon: kind === "demon" ? key : "" });
+  showNextCollectionToast();
   screen.querySelectorAll(".collection-karma-line").forEach((line) => {
     line.outerHTML = collectionKarmaLine();
   });
+  refreshCollectionPriceTags(screen);
   if (kind === "demon") {
     const body = screen.querySelector('[data-collection-panel="goetia"] .collection-body');
     if (body) body.innerHTML = collectionDemonsHtml();
@@ -19513,6 +19546,7 @@ function handleCollectionKarmaClick(button, screen) {
     seal.classList.add(collectionSealState(key));
     seal.setAttribute("aria-label", ITEMS[key]?.name || "SEAL");
     seal.querySelector(".collection-lock")?.remove();
+    seal.querySelector(".collection-price")?.remove();
     showCollectionInfo(seal, true);
   }
   const all = collectibleSealIds();

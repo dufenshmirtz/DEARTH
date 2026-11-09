@@ -13125,3 +13125,53 @@ body.mobile-arcade #app .game-over-card .end-stat-guess strong {
   font-size: 30px !important;
   color: #e0383d !important;
 }
+
+/* KARMA's mark (assets/ui/karma-mark.svg), after a number like the SIN coin; takes the text colour */
+.karma-mark {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.14em;
+  vertical-align: -0.14em;
+  background: currentColor;
+  -webkit-mask: url("assets/ui/karma-mark.svg") center / contain no-repeat;
+  mask: url("assets/ui/karma-mark.svg") center / contain no-repeat;
+  flex: 0 0 auto;
+}
+.collection-karma-line .karma-mark {
+  color: #e0383d;
+}
+/* price tags under locked SEALS and undefeated demons: red when you can pay */
+.collection-screen .collection-price {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  background: rgba(0, 0, 0, 0.88);
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: #6f6760 !important;
+  pointer-events: none;
+}
+.collection-screen .collection-price.can {
+  color: #e0383d !important;
+  text-shadow: 0 0 8px rgba(224, 56, 61, 0.6);
+}
+.collection-screen .collection-demon .collection-price {
+  position: static;
+  transform: none;
+  margin-top: 1px;
+  background: none;
+}
+.collection-toast-karma .karma-mark {
+  width: 0.8em;
+  height: 0.8em;
+}
+.collection-toast-sigil.collection-toast-demon {
+  filter: none;
+}
