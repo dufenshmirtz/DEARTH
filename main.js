@@ -35,6 +35,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/intro/intro-pencil-3.mp3": { m: -24.6, i: -24.6 },
   "assets/audio/intro/intro-pencil-4.mp3": { m: -24.9, i: -24.9 },
   "assets/audio/intro/intro-pencil-5.mp3": { m: -25.5, i: -25.5 },
+  "assets/audio/intro/intro-thunder.mp3": { m: -4.5, i: -12.2 },
   "assets/audio/music/hell-is-round-the-corner-placeholder.mp3": { m: -11.1, i: -15 },
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
@@ -197,6 +198,7 @@ const GAME_SFX = {
   },
   introBoot: { srcs: ["assets/audio/intro/intro-boot.mp3"], tier: "stinger" },
   introEvil: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
+  introThunder: { srcs: ["assets/audio/intro/intro-thunder.mp3"], tier: "stinger" }, // Jesus' "SILENCE" ({THUNDER} in the lines)
   introLaugh: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "big", rate: 0.84 },
   introBurn: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
   menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" },
@@ -831,10 +833,12 @@ const ITEMS = {
     description:
       "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
   },
+  // the Artifact SEALS (Pentacles of the Moon): each one strengthens one ARTIFACT and doubles its weight in the
+  // Devil's Offerings (ARTIFACT_SEAL_BY_ARTIFACT). The 1st kept the old Seal of Amy's id, so saves keep its effect.
   p70: {
     id: "p70",
     type: "passive",
-    name: "Seal of Amy",
+    name: "1st Pentacle of the Moon",
     price: 12,
     description:
       "Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up."
@@ -1121,6 +1125,113 @@ const ITEMS = {
     name: "Seal of the Holy Spirit",
     price: 33,
     description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 SOUL). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+  },
+  // Seal of Amy: the Goetic SEAL of the demon Amy (its old Sacrificial Dagger effect is now the 1st Pentacle of the Moon)
+  p134: {
+    id: "p134",
+    type: "passive",
+    name: "Seal of Amy",
+    price: 14,
+    description:
+      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+  },
+  p135: {
+    id: "p135",
+    type: "passive",
+    name: "2nd Pentacle of the Moon",
+    price: 12,
+    description:
+      "Funeral Coin no longer pays you SIN: it spreads 6 to 16 BOUNTY randomly among the DAMNED instead, and appears twice as often in Devil's Offerings. ELITE adds +4 BOUNTY to the spread each level."
+  },
+  p136: {
+    id: "p136",
+    type: "passive",
+    name: "3rd Pentacle of the Moon",
+    price: 12,
+    description:
+      "The DAMNED you pick with Inverted Cross also has its guess pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings. ELITE gives that DAMNED +3 MEMORY each level before it is pushed."
+  },
+  p137: {
+    id: "p137",
+    type: "passive",
+    name: "4th Pentacle of the Moon",
+    price: 12,
+    description:
+      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+  },
+  p138: {
+    id: "p138",
+    type: "passive",
+    name: "5th Pentacle of the Moon",
+    price: 12,
+    description:
+      "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level."
+  },
+  p139: {
+    id: "p139",
+    type: "passive",
+    name: "6th Pentacle of the Moon",
+    price: 12,
+    description:
+      "Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left and becomes STUBBORN instead of copying its PERSONALITY. Vial of Blood appears twice as often in Devil's Offerings. ELITE gives the second DAMNED +5 BOUNTY each level."
+  },
+  // the Poison SEALS (Pentacles of Mars): they give the DAMNED POISON (bot.poisonCounters), which deals
+  // POISON_DAMAGE_PER_STACK damage per stack at the end of every round, before the end-of-round SEALS act (applyPoisonDamage)
+  p140: {
+    id: "p140",
+    type: "passive",
+    name: "1st Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, a random DAMNED gets 1 POISON for every 80 max SOUL it has (at least 1). Each POISON deals 5 damage at the end of every round. ELITE lowers the SOUL needed by 25% each level."
+  },
+  p141: {
+    id: "p141",
+    type: "passive",
+    name: "2nd Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, a random DAMNED gets 1 POISON for every 5 MEMORY it has. Each POISON deals 5 damage at the end of every round. ELITE gives that DAMNED +2 POISON each level."
+  },
+  p142: {
+    id: "p142",
+    type: "passive",
+    name: "3rd Pentacle of Mars",
+    price: 12,
+    description:
+      "When you score a CRITICAL, every DAMNED gets 1 POISON. When a DAMNED with POISON is eliminated, half its POISON (rounded down) spreads randomly to the other DAMNED, BOSSES first. Each POISON deals 5 damage at the end of every round. ELITE adds +1 POISON to each DAMNED on your CRITICAL each level."
+  },
+  p143: {
+    id: "p143",
+    type: "passive",
+    name: "4th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, every revealed DAMNED gets 2 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +2 damage each level."
+  },
+  p144: {
+    id: "p144",
+    type: "passive",
+    name: "5th Pentacle of Mars",
+    price: 12,
+    description:
+      "Whenever a DAMNED gains BOUNTY, it gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level."
+  },
+  p145: {
+    id: "p145",
+    type: "passive",
+    name: "6th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the end of every round, every STUBBORN DAMNED gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level."
+  },
+  p146: {
+    id: "p146",
+    type: "passive",
+    name: "7th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the end of every round, the two DAMNED with the most POISON take 15 damage, lose 1 POISON, and give 1 POISON to each DAMNED beside them. If no DAMNED has POISON, two random DAMNED get 1 POISON instead. Each POISON deals 5 damage at the end of every round. ELITE: x1.5 damage each level."
   },
   p111: {
     id: "p111",
@@ -1540,7 +1651,20 @@ const PASSIVE_IDS = [
   "p130",
   "p131",
   "p132",
-  "p133"
+  "p133",
+  "p134",
+  "p135",
+  "p136",
+  "p137",
+  "p138",
+  "p139",
+  "p140",
+  "p141",
+  "p142",
+  "p143",
+  "p144",
+  "p145",
+  "p146"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1594,6 +1718,21 @@ const TRINITY_SEAL_ART = {
   "p132+p133": "trinity/son-spirit.png",
   "p131+p132+p133": "trinity/trinity.png"
 };
+// the Artifact SEALS (Pentacles of the Moon), by the ARTIFACT each one strengthens
+const ARTIFACT_SEAL_BY_ARTIFACT = {
+  a15: "p70", // 1st: Sacrificial Dagger
+  a10: "p135", // 2nd: Funeral Coin
+  a9: "p136", // 3rd: Inverted Cross
+  a22: "p137", // 4th: Cursed Chalice
+  a25: "p138", // 5th: Mummified Lamb
+  a11: "p139" // 6th: Vial of Blood
+};
+const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
+// Seal of Amy copies a random Player SEAL each round
+const AMY_SEAL_ID = "p134";
+// the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
+const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];
+const POISON_DAMAGE_PER_STACK = 5;
 // former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
 const SPECIAL_SEAL_IDS = new Set();
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
@@ -1717,7 +1856,22 @@ const SEAL_SIGILS = {
   p67: "024_Caim.png",
   p68: "067_Vapula.png",
   p69: "self-stacking/Cassiel-Hexagram.png",
-  p70: "006_Amy.png",
+  // Artifact SEALS: the Pentacles of the Moon
+  p70: "moon/Moon-Pentacle-01.png",
+  p135: "moon/Moon-Pentacle-02.png",
+  p136: "moon/Moon-Pentacle-03.png",
+  p137: "moon/Moon-Pentacle-04.png",
+  p138: "moon/Moon-Pentacle-05.png",
+  p139: "moon/Moon-Pentacle-06.png",
+  // Poison SEALS: the Pentacles of Mars
+  p140: "mars/Mars-Pentacle-01.png",
+  p141: "mars/Mars-Pentacle-02.png",
+  p142: "mars/Mars-Pentacle-03.png",
+  p143: "mars/Mars-Pentacle-04.png",
+  p144: "mars/Mars-Pentacle-05.png",
+  p145: "mars/Mars-Pentacle-06.png",
+  p146: "mars/Mars-Pentacle-07.png",
+  p134: "006_Amy.png",
   p71: "057_Sallos.png",
   p72: "031_Forcas.png",
   p73: "011_Asmodeus.png",
@@ -1843,7 +1997,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p65: "24-naberius.png",
   p67: "53-caim-camio.png",
   p68: "60-vapula-naphula.png",
-  p70: "58-amy-avnas.png",
+  p134: "58-amy-avnas.png",
   p71: "19-sallos.png",
   p72: "50-furcas.png",
   p73: "32-asmoday.png",
@@ -1930,7 +2084,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p108" },
   { key: "gremory", name: "Gremory", image: "56-gremory-gamori.png", passiveId: "p34" },
   { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p107" },
-  { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p70" },
+  { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p134" },
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
   { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },
@@ -3067,6 +3221,7 @@ function normalizeLoadedRoundState(round) {
   if (!Array.isArray(round.eliminationCreditRecords)) round.eliminationCreditRecords = [];
   if (!Array.isArray(round.eliminatedPersonalities)) round.eliminatedPersonalities = [];
   if (!Array.isArray(round.pendingEndOfRoundBotDamages)) round.pendingEndOfRoundBotDamages = [];
+  if (!Array.isArray(round.moonCrossBotIds)) round.moonCrossBotIds = [];
   if (!Array.isArray(round.roundEvents)) round.roundEvents = [];
   if (!round.selfStackingConditionCounts || typeof round.selfStackingConditionCounts !== "object") {
     round.selfStackingConditionCounts = {};
@@ -3139,6 +3294,14 @@ function normalizeLoadedArcadeRun() {
       bot.passiveKeys = randomBossPassiveKeys(1);
     }
     if (bot.buffPassiveKey && !PYROS_GIFT_PASSIVES[bot.buffPassiveKey]) bot.buffPassiveKey = null;
+    bot.poisonCounters = Number.isFinite(bot.poisonCounters) ? Math.max(0, Math.ceil(bot.poisonCounters)) : 0;
+    bot.poisonDamageTaken = Number.isFinite(bot.poisonDamageTaken) ? Math.max(0, Math.ceil(bot.poisonDamageTaken)) : 0;
+    // a Goetic BOSS suppresses its demon's current SEAL (Amy's moved from p70 to p134)
+    const goeticSpec = bot.goeticKey ? GOETIC_BOSS_BY_KEY[bot.goeticKey] : null;
+    if (goeticSpec?.passiveId && ITEMS[goeticSpec.passiveId]) {
+      bot.goeticPassiveId = goeticSpec.passiveId;
+      bot.goeticSealName = ITEMS[goeticSpec.passiveId].name;
+    }
     if (!Array.isArray(bot.memory)) bot.memory = [];
     if (!Array.isArray(bot.damageSources)) bot.damageSources = [];
     if (!Array.isArray(bot.healSources)) bot.healSources = [];
@@ -4279,10 +4442,120 @@ function mimicContributionFor(id) {
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
+// ---------- Seal of Amy: a random Player SEAL each round ----------
+// At the start of every round Amy rolls one Player (Goetic) SEAL and acts as it until the round ends, as an ELITE
+// SEAL two levels stronger per Amy ELITE level (Amy x1 copies at stack 2, ELITE Amy at stack 4, ELITE +2 at stack 6).
+// The roll is kept on Amy's item (amyCopiedId / amyCopiedRound) so a saved run keeps it.
+function amyItem() {
+  return passiveEntry(AMY_SEAL_ID);
+}
+
+function amyCopiedStack(item = amyItem()) {
+  return 2 * Math.max(1, Math.ceil(item?.stack || 1));
+}
+
+function amyCopyPool() {
+  return GOETIC_BOSS_PASSIVE_IDS.filter((id) => id !== AMY_SEAL_ID && ITEMS[id] && !isSealSuppressed(id));
+}
+
+// the Player SEAL Amy copies this round, or null
+function amyCopyThisRound(item = amyItem()) {
+  if (!item || item.amyCopiedRound !== state.round) return null;
+  const id = item.amyCopiedId;
+  return id && ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id) && id !== AMY_SEAL_ID ? id : null;
+}
+
+function rollAmyCopy() {
+  const item = amyItem();
+  if (!item) return null;
+  const pool = amyCopyPool();
+  item.amyCopiedId = pool.length ? randomFrom(pool) : null;
+  item.amyCopiedRound = state.round;
+  if (item.amyCopiedId && state.roundState && !isSealSuppressed(AMY_SEAL_ID)) {
+    addRoundEvent(`${ITEMS[AMY_SEAL_ID].name} took the power of ${passiveDisplayName({ ...ITEMS[item.amyCopiedId], stack: amyCopiedStack(item) })} for this round.`);
+  }
+  return item.amyCopiedId;
+}
+
+// the stacks Amy adds to a SEAL this round (0 when it is not the copied one, or either one is suppressed)
+function amyContributionFor(id) {
+  if (id === AMY_SEAL_ID || isSealSuppressed(AMY_SEAL_ID) || isSealSuppressed(id)) return 0;
+  const item = amyItem();
+  return item && amyCopyThisRound(item) === id ? amyCopiedStack(item) : 0;
+}
+
 function passiveStack(id) {
   if (REMOVED_PASSIVE_IDS.has(id)) return 0;
   if (isSealSuppressed(id)) return 0;
-  return directPassiveStack(id) + mimicContributionFor(id);
+  return directPassiveStack(id) + mimicContributionFor(id) + amyContributionFor(id);
+}
+
+// ---------- POISON (Poison SEALS, the Pentacles of Mars) ----------
+// A DAMNED's POISON stacks live on bot.poisonCounters. They stay until it dies (the 7th Pentacle removes one at a
+// time) and deal poisonDamagePerStack() damage each at the end of every round, even after the SEALS are sold.
+function botPoison(bot) {
+  return Math.max(0, Math.ceil(bot?.poisonCounters || 0));
+}
+
+function canPoisonBot(bot) {
+  return Boolean(bot && !bot.immortal && bot.hp > 0 && !bot.eliminated);
+}
+
+// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action)
+function addBotPoison(bot, amount) {
+  const added = Math.max(0, Math.ceil(amount || 0));
+  if (!added || !canPoisonBot(bot)) return 0;
+  bot.poisonCounters = botPoison(bot) + added;
+  return added;
+}
+
+function poisonSealEntry(id) {
+  return orderedPassiveEffectEntries(id)[0] || null;
+}
+
+// ELITE 4th (+2), 5th (+1) and 6th (+1) Pentacles of Mars raise every POISON's damage, per ELITE level
+function poisonDamageBonusEntries() {
+  return [
+    ["p143", 2],
+    ["p144", 1],
+    ["p145", 1]
+  ]
+    .map(([id, perLevel]) => {
+      const entry = poisonSealEntry(id);
+      const levels = entry ? passiveEntryEliteLevels(entry) : 0;
+      return { entry, bonus: levels * perLevel };
+    })
+    .filter((part) => part.entry && part.bonus > 0);
+}
+
+function poisonDamagePerStack() {
+  return POISON_DAMAGE_PER_STACK + poisonDamageBonusEntries().reduce((sum, part) => sum + part.bonus, 0);
+}
+
+// 1st Pentacle of Mars: max SOUL per POISON (80, ELITE -25% each level, never below 1)
+function marsHealthPerPoison(entry) {
+  return Math.max(1, Math.round(80 * Math.pow(0.75, entry ? passiveEntryEliteLevels(entry) : 0)));
+}
+
+// 5th Pentacle of Mars: a DAMNED that gains BOUNTY gets 1 POISON
+function applyBountyPoison(bot) {
+  const entry = poisonSealEntry("p144");
+  if (!entry || !state.roundState) return;
+  if (!addBotPoison(bot, 1)) return;
+  markPassiveEntryTriggered(entry);
+  addRoundEvent(`${ITEMS.p144.name} gave ${bot.name} 1 POISON for its BOUNTY.`);
+}
+
+// ---------- Artifact SEALS (Pentacles of the Moon) ----------
+// the active entry of the Artifact SEAL that strengthens this ARTIFACT, or null
+function artifactSealEntry(artifactId) {
+  const sealId = ARTIFACT_SEAL_BY_ARTIFACT[artifactId];
+  return sealId ? orderedPassiveEffectEntries(sealId)[0] || null : null;
+}
+
+function artifactSealLevels(artifactId) {
+  const entry = artifactSealEntry(artifactId);
+  return entry ? passiveEntryEliteLevels(entry) : 0;
 }
 
 function eliteLevels(idOrItem) {
@@ -4773,6 +5046,7 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
   }
   if (gained > 0) {
     applyBountyToMemoryMirror(bot, gained, options);
+    applyBountyPoison(bot);
   }
   checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
@@ -5020,6 +5294,28 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
+// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
+function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
+  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+}
+
+// 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
+function moonLambDamage(bot, entry = artifactSealEntry("a25")) {
+  if (!entry || !bot) return 0;
+  const percent = bot.isBoss ? 15 : 30;
+  return Math.ceil(((bot.maxHp || 0) * percent) / 100) + 5 * passiveEntryEliteLevels(entry);
+}
+
+function moonLambBountyBonus(entry = artifactSealEntry("a25")) {
+  return entry ? 3 * passiveEntryEliteLevels(entry) : 0;
+}
+
+// 2nd Pentacle of the Moon: Funeral Coin's BOUNTY spread (6-16, ELITE +4 each level)
+function moonCoinSpreadRange(entry = artifactSealEntry("a10")) {
+  const bonus = entry ? 4 * passiveEntryEliteLevels(entry) : 0;
+  return { min: 6 + bonus, max: 16 + bonus };
+}
+
 function sacrificialDaggerExtraDamage(idOrItem = "p70") {
   return flatDamageValue(idOrItem, 10);
 }
@@ -5143,6 +5439,20 @@ function orderedPassiveEntries() {
           sourceId: "p28",
           copied: true,
           copiedName: target.name,
+          index
+        };
+      }
+      // Seal of Amy acts as this round's copied Player SEAL (its triggers animate Amy)
+      if (item.id === AMY_SEAL_ID) {
+        const copiedId = amyCopyThisRound(item);
+        if (!copiedId || isSealSuppressed(copiedId)) return null;
+        return {
+          id: copiedId,
+          item,
+          stack: amyCopiedStack(item),
+          sourceId: AMY_SEAL_ID,
+          copied: true,
+          copiedName: ITEMS[copiedId].name,
           index
         };
       }
@@ -5403,11 +5713,25 @@ function artifactDescription(item) {
   if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the TARGET.`;
   if (item.id === "a7") return "Pick a non-boss DAMNED and swap your effective guess with theirs.";
   if (item.id === "a8") return `Pick a DAMNED; their guess counts ${artifactCount(5)} times for the TARGET average.`;
-  if (item.id === "a9") return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
+  if (item.id === "a9") {
+    const cross = artifactSealEntry("a9");
+    if (!cross) return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
+    const memory = 3 * passiveEntryEliteLevels(cross);
+    return `Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.${memory ? ` It gains ${memory} MEMORY, then` : " Its"} guess is pushed away from the final TARGET by 1 per MEMORY (${ITEMS.p136.name}).`;
+  }
   if (item.id === "a10") {
+    if (artifactSealEntry("a10")) {
+      const range = moonCoinSpreadRange();
+      return `Spread ${range.min} to ${range.max} BOUNTY randomly among the DAMNED (${ITEMS.p135.name}).`;
+    }
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
+    const vial = artifactSealEntry("a11");
+    if (vial) {
+      const bounty = 5 * passiveEntryEliteLevels(vial);
+      return `Pick two non-boss DAMNED. The first is eliminated. The second overheals by the SOUL the first had left and becomes STUBBORN${bounty ? `, and gains ${bounty} BOUNTY` : ""} (${ITEMS.p139.name}).`;
+    }
     return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-SOUL damage. The second overheals ${artifactPercentValue(30)}% max SOUL and copies the first's PERSONALITY.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
@@ -5417,7 +5741,7 @@ function artifactDescription(item) {
   if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
   if (item.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `Pick a target. Deal ${artifactPercentValue(20)}% max-SOUL damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-SOUL damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from ${ITEMS.p70.name}` : ""}.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
   if (item.id === "a18") {
@@ -5427,10 +5751,19 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    return "+1 CRITICAL range for the round.";
+    const percent = moonChaliceCriticalPercent();
+    return percent
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+      : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
-  if (item.id === "a25") return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+  if (item.id === "a25") {
+    const lamb = artifactSealEntry("a25");
+    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+    const levels = passiveEntryEliteLevels(lamb);
+    const flat = levels ? ` +${5 * levels}` : "";
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+  }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
   }
@@ -5467,7 +5800,47 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p133"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === AMY_SEAL_ID) return amySealDescription(item);
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  const eliteLevelCount = stack - 1;
+  // Poison SEALS (Pentacles of Mars)
+  const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
+  if (item.id === "p140") {
+    return `At the start of every round, a random DAMNED gets 1 POISON for every ${marsHealthPerPoison({ stack })} max SOUL it has (at least 1). ${poisonRule}`;
+  }
+  if (item.id === "p141") {
+    return `At the start of every round, a random DAMNED gets 1 POISON for every 5 MEMORY it has, plus ${2 * eliteLevelCount}. ${poisonRule}`;
+  }
+  if (item.id === "p142") {
+    return `When you score a CRITICAL, every DAMNED gets ${1 + eliteLevelCount} POISON. When a DAMNED with POISON is eliminated, half its POISON (rounded down) spreads randomly to the other DAMNED, BOSSES first. ${poisonRule}`;
+  }
+  if (item.id === "p143") {
+    return `At the start of every round, every revealed DAMNED gets 2 POISON, and every POISON deals +${2 * eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p144") {
+    return `Whenever a DAMNED gains BOUNTY, it gets 1 POISON, and every POISON deals +${eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p145") {
+    return `At the end of every round, every STUBBORN DAMNED gets 1 POISON, and every POISON deals +${eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p146") {
+    return `At the end of every round, the two DAMNED with the most POISON take ${passiveEntryFlatDamage({ stack }, 15)} damage, lose 1 POISON, and give 1 POISON to each DAMNED beside them. If no DAMNED has POISON, two random DAMNED get 1 POISON instead. ${poisonRule}`;
+  }
+  if (item.id === "p135") {
+    return `Funeral Coin no longer pays you SIN: it spreads ${6 + 4 * eliteLevelCount} to ${16 + 4 * eliteLevelCount} BOUNTY randomly among the DAMNED instead, and appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p136") {
+    return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p137") {
+    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p138") {
+    return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p139") {
+    return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
+  }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -5688,6 +6061,24 @@ function itemDescription(item) {
   return item.description;
 }
 
+// Seal of Amy's text: the base rule, then what it copies this round
+function amySealDescription(item) {
+  const stack = Math.max(1, item?.stack || 1);
+  const copiedStack = amyCopiedStack(item);
+  const copiedLabel = copiedStack === 2 ? "ELITE" : `ELITE +${copiedStack - 1}`;
+  const parts = splitEliteDescription(ITEMS[AMY_SEAL_ID].description);
+  const main =
+    stack <= 1
+      ? parts.main
+      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+  const copiedId = amyCopyThisRound(item);
+  const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
+  const copyText = copiedItem
+    ? `\nThis round: ${passiveDisplayName(copiedItem)}. ${descriptionWithoutElite(itemDescription(copiedItem))}`
+    : "";
+  return `${main}${copyText}${stack <= 1 && parts.elite ? ` ${parts.elite}` : ""}`;
+}
+
 function markPassiveTriggered(id) {
   if (!state.roundState || !passiveStack(id)) return;
   if (directPassiveStack(id)) {
@@ -5697,6 +6088,11 @@ function markPassiveTriggered(id) {
   if (mimicContributionFor(id)) {
     state.roundState.triggeredPassiveIds.add("p28");
     recordSealTrigger("p28");
+  }
+  // Seal of Amy acting as this round's copied SEAL
+  if (amyContributionFor(id)) {
+    state.roundState.triggeredPassiveIds.add(AMY_SEAL_ID);
+    recordSealTrigger(AMY_SEAL_ID);
   }
 }
 
@@ -6114,7 +6510,7 @@ function descriptionHtml(value) {
     return token;
   }), plainTargetText);
   let html = htmlWithLineBreaks(protectedText).replace(
-    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|SOUL|MEMORY|BOUNTY)\b/gi,
+    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|SOUL|MEMORY|BOUNTY|POISON)\b/gi,
     (keyword, _whole, offset, fullText) => {
       if (/^boss(?:es)?$/i.test(keyword) && fullText[offset - 1] === "-") return keyword.toLowerCase();
       return `<span class="tooltip-keyword">${keyword.toUpperCase()}</span>`;
@@ -6677,13 +7073,15 @@ function sourceTooltip(sources, kind = "damage") {
 function sealIdFromStatSource(source) {
   const sourceText = String(source || "").trim();
   if (!sourceText) return "";
-  return (
-    PASSIVE_IDS.find((id) => {
-      if (REMOVED_PASSIVE_IDS.has(id)) return false;
-      const name = ITEMS[id]?.name;
+  const id =
+    PASSIVE_IDS.find((candidate) => {
+      if (REMOVED_PASSIVE_IDS.has(candidate)) return false;
+      const name = ITEMS[candidate]?.name;
       return name && (sourceText === name || sourceText.startsWith(`${name} `));
-    }) || ""
-  );
+    }) || "";
+  // what Seal of Amy does as a SEAL you do not own is Amy's work (stats, discovery, its animation step)
+  if (id && typeof amyContributionFor === "function" && !directPassiveStack(id) && amyContributionFor(id)) return AMY_SEAL_ID;
+  return id;
 }
 
 function sealStatsFor(id) {
@@ -7891,6 +8289,7 @@ function createFinalBoss(key) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
     eliminated: false,
@@ -8068,6 +8467,7 @@ function createBot(options = {}) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
     eliminated: false,
@@ -8156,12 +8556,17 @@ function sacrificialDaggerShopWeight(idOrItem = "p70") {
   return stack ? 2 : 1;
 }
 
+// every Artifact SEAL you hold makes its ARTIFACT appear twice as often in the Devil's Offerings
+function artifactSealShopWeight(artifactId) {
+  const sealId = ARTIFACT_SEAL_BY_ARTIFACT[artifactId];
+  return sealId && passiveStack(sealId) ? 2 : 1;
+}
+
 function activeShopPool() {
   const pool = ACTIVE_IDS.slice();
-  const daggerExtraCopies = Math.max(0, sacrificialDaggerShopWeight() - 1);
-  for (let copy = 0; copy < daggerExtraCopies; copy += 1) {
-    pool.push("a15");
-  }
+  ACTIVE_IDS.forEach((artifactId) => {
+    for (let copy = 1; copy < artifactSealShopWeight(artifactId); copy += 1) pool.push(artifactId);
+  });
   return pool;
 }
 
@@ -8659,8 +9064,12 @@ function beginRound() {
     aliveIdsAtStart: new Set(state.bots.filter((bot) => !bot.eliminated && bot.hp > 0).map((bot) => bot.id)),
     penaltiesApplied: false,
     criticalHitKeys: new Set(),
+    // 3rd Pentacle of the Moon: Inverted Cross targets whose guess is pushed away at READY (one entry per use)
+    moonCrossBotIds: [],
     roundEvents: []
   };
+  // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
+  rollAmyCopy();
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;
@@ -8708,6 +9117,38 @@ function beginRound() {
   applyGuessReveals();
   ensureSitriHost();
   applyZilonBossBounty();
+  applyPoisonStartOfRound();
+}
+
+// Poison SEALS at the start of the round, in SEAL slot order (after the start-of-round reveals):
+// 1st Pentacle of Mars (POISON by max SOUL), 2nd (POISON by MEMORY), 4th (revealed DAMNED get 2 POISON)
+function applyPoisonStartOfRound() {
+  if (!state.roundState) return;
+  orderedPassiveEffectEntries(["p140", "p141", "p143"]).forEach((entry) => {
+    const name = ITEMS[entry.id].name;
+    if (entry.id === "p143") {
+      const revealed = activeBots().filter((bot) => bot.revealedByPassive && canPoisonBot(bot));
+      if (!revealed.length) return;
+      markPassiveEntryTriggered(entry);
+      revealed.forEach((bot) => {
+        // Pyros's stacked reveals count once per stack, like every effect on revealed DAMNED
+        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)));
+        if (added) addRoundEvent(`${name} gave revealed ${bot.name} ${added} POISON.`);
+      });
+      return;
+    }
+    const targets = activeBots().filter(canPoisonBot);
+    if (!targets.length) return;
+    const target = randomFrom(targets);
+    const amount =
+      entry.id === "p140"
+        ? Math.max(1, Math.floor((target.maxHp || 0) / marsHealthPerPoison(entry)))
+        : Math.floor((target.memory?.length || 0) / 5) + 2 * passiveEntryEliteLevels(entry);
+    const added = addBotPoison(target, amount);
+    if (!added) return;
+    markPassiveEntryTriggered(entry);
+    addRoundEvent(`${name} gave ${target.name} ${added} POISON.`);
+  });
 }
 
 // Seal of Zilon: a share of every BOSS's BOSS BOUNTY (40%, ELITE +5% each level) becomes regular BOUNTY on that
@@ -8793,13 +9234,15 @@ function applyPendingNextRoundMarbasBonuses() {
   });
 }
 
-function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25")) {
+function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25"), sealBounty = 0) {
   if (!bot) return;
   state.pendingNextRoundLambReveals = state.pendingNextRoundLambReveals || [];
   state.pendingNextRoundLambReveals.push({
     botId: bot.id,
     botName: bot.name,
     bounty: 3,
+    // 5th Pentacle of the Moon ELITE: extra BOUNTY, counted for that SEAL
+    sealBounty: Math.max(0, Math.ceil(sealBounty || 0)),
     source
   });
   state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
@@ -8819,7 +9262,9 @@ function applyPendingNextRoundLambReveals() {
     revealBotGuess(bot, source, null, { allowBoss: true });
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
-    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained} BOUNTY for its next-round mark.`);
+    const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));
+    const sealResult = sealBounty ? changeBotSin(bot, sealBounty, "", { source: ITEMS.p138.name, triggerLossDamage: false }) : { gained: 0 };
+    state.roundState.roundEvents.push(`${source} gave ${bot.name} +${result.gained + sealResult.gained} BOUNTY for its next-round mark.`);
   });
 }
 
@@ -9704,7 +10149,14 @@ function roundRevealEventMatchesSeal(id, event) {
   const text = normalizeGameText(event || "");
   const baseName = normalizeGameText(ITEMS[id]?.name || "");
   const displayName = normalizeGameText(roundRevealSealName(id));
-  return Boolean((baseName && text.includes(baseName)) || (displayName && text.includes(displayName)));
+  // Seal of Amy's step also shows what its copied SEAL did
+  const copiedId = id === AMY_SEAL_ID ? amyCopyThisRound() : null;
+  const copiedName = copiedId ? normalizeGameText(ITEMS[copiedId].name) : "";
+  return Boolean(
+    (baseName && text.includes(baseName)) ||
+      (displayName && text.includes(displayName)) ||
+      (copiedName && text.includes(copiedName))
+  );
 }
 
 // every SEAL that triggered this round and has not been animated yet, including ones whose
@@ -10176,6 +10628,7 @@ function applyPenalties() {
   round.penaltiesApplied = true;
   recalculateTarget();
   state.previousTarget = round.target;
+  applyMoonCrossGuessShifts();
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
@@ -10290,6 +10743,15 @@ function applyPenalties() {
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
+    // 3rd Pentacle of Mars: your CRITICAL gives every DAMNED POISON (ELITE +1 each level)
+    orderedPassiveEffectEntries("p142").forEach((entry) => {
+      const amount = 1 + passiveEntryEliteLevels(entry);
+      // (applyPenalties has its own activeBots list, so read the living DAMNED directly)
+      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount) > 0);
+      if (!poisoned.length) return;
+      markPassiveEntryTriggered(entry);
+      addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
+    });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
     if (passiveStack("p6")) markPassiveTriggered("p6");
     if (passiveStack("p7")) markPassiveTriggered("p7");
@@ -10473,6 +10935,29 @@ function applyPenalties() {
   addLog("Penalties applied. Advance when ready.");
 }
 
+// 3rd Pentacle of the Moon: every Inverted Cross target's guess is pushed away from the final TARGET by 1 per MEMORY
+// it has (once per Cross used on it). Its guess no longer counts for the average, so the TARGET does not move.
+function applyMoonCrossGuessShifts() {
+  const round = state.roundState;
+  const ids = Array.isArray(round?.moonCrossBotIds) ? round.moonCrossBotIds : [];
+  const entry = orderedPassiveEffectEntries("p136")[0];
+  if (!ids.length || !entry || !Number.isFinite(round.target)) return;
+  const name = ITEMS.p136.name;
+  ids.forEach((botId) => {
+    const bot = state.bots.find((candidate) => candidate.id === botId && candidate.hp > 0 && !candidate.eliminated);
+    const guess = bot ? round.botEffectiveGuesses.get(bot.id) : null;
+    const memory = bot?.memory?.length || 0;
+    if (!bot || !Number.isFinite(guess) || memory <= 0) return;
+    // away from the TARGET; a guess right on it goes toward the far end of the range
+    const direction = Math.sign(guess - round.target) || (round.target >= 50 ? -1 : 1);
+    const pushed = clamp(Math.ceil(guess + direction * memory), 0, 100);
+    if (pushed === guess) return;
+    round.botEffectiveGuesses.set(bot.id, pushed);
+    markPassiveEntryTriggered(entry);
+    addRoundEvent(`${name} pushed ${bot.name}'s guess from ${guess} to ${pushed}, away from the TARGET.`);
+  });
+}
+
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
   updateArcadeRecordsFromCurrentRun({ final: true });
@@ -10553,11 +11038,23 @@ function playerCriticalFlatBonus() {
   return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
 }
 
+// 4th Pentacle of the Moon: % max SOUL added to your CRITICAL by the Cursed Chalices used this round
+function criticalPercentBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
+}
+
+function criticalPercentBonusDamage(victim) {
+  const percent = criticalPercentBonus();
+  if (!percent) return 0;
+  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
+  return Math.ceil((maxHp * percent) / 100);
+}
+
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + playerCriticalFlatBonus();
+  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -10620,8 +11117,12 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
-  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
-  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  const bonusPercent = criticalPercentBonus();
+  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  if (passiveStack("p7")) {
+    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  }
   return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
 }
 
@@ -11190,7 +11691,19 @@ function applyEliminationPassives(bot) {
   if (bot?.sitriHost) ensureSitriHost();
   applySelfStackingRevealedDeath(bot);
   applySelfStackingStubbornDeath(bot);
-  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p9", "p11", "p19", "p30", "p32", "p33", "p34", "p38", "p42", "p53", "p87", "p88", "p108", "p117", "p142"]).forEach((entry) => {
+    // 3rd Pentacle of Mars: half the dead DAMNED's POISON (rounded down) spreads one at a time, BOSSES first
+    if (entry.id === "p142") {
+      const amount = Math.floor(botPoison(bot) / 2);
+      const others = activeBots().filter((other) => other.id !== bot.id && canPoisonBot(other));
+      if (amount <= 0 || !others.length) return;
+      const bosses = others.filter((other) => other.isBoss);
+      const pool = bosses.length ? bosses : others;
+      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1);
+      markPassiveEntryTriggered(entry);
+      addRoundEvent(`${ITEMS.p142.name} spread ${amount} of ${bot.name}'s POISON${bosses.length ? " to the BOSSES" : ""}.`);
+      return;
+    }
     if (entry.id === "p117") {
       if (!state.roundState?.criticalHitKeys?.has("player")) return;
       const bonus = passiveEntryScaledValue(entry, 2);
@@ -11359,8 +11872,59 @@ function applyEliminationPassives(bot) {
 // Seal of Furfur: [divisor, damage]; multiples of 7 hit twice as hard
 const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
+// every DAMNED with POISON takes poisonDamagePerStack() per stack (5, raised by ELITE 4th/5th/6th Pentacles of Mars)
+function applyPoisonDamage() {
+  const poisoned = activeBots().filter((bot) => canPoisonBot(bot) && botPoison(bot) > 0);
+  if (!poisoned.length) return;
+  const perStack = poisonDamagePerStack();
+  poisonDamageBonusEntries().forEach((part) => markPassiveEntryTriggered(part.entry));
+  poisoned.forEach((bot) => {
+    if (bot.hp <= 0 || bot.eliminated) return;
+    const stacks = botPoison(bot);
+    const damage = stacks * perStack;
+    const dealt = damageBot(bot, damage, `POISON dealt ${damage} damage to ${bot.name} (${stacks} x ${perStack}).`, "Poison");
+    bot.poisonDamageTaken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0)) + dealt;
+  });
+}
+
+// 7th Pentacle of Mars: the two DAMNED with the most POISON take 15 damage (ELITE x1.5), lose 1 POISON and give 1
+// POISON to each DAMNED beside them; with no POISON anywhere, two random DAMNED get 1 POISON instead
+function applyMarsSeventhPentacle(entry) {
+  const name = ITEMS.p146.name;
+  const living = activeBots().filter(canPoisonBot);
+  if (!living.length) return;
+  const poisoned = shuffled(living.filter((bot) => botPoison(bot) > 0)).sort((left, right) => botPoison(right) - botPoison(left));
+  markPassiveEntryTriggered(entry);
+  if (!poisoned.length) {
+    shuffled(living)
+      .slice(0, 2)
+      .forEach((bot) => addBotPoison(bot, 1));
+    addRoundEvent(`${name} found no POISON and gave ${Math.min(2, living.length)} random DAMNED 1 POISON.`);
+    return;
+  }
+  const damage = passiveEntryFlatDamage(entry, 15);
+  poisoned.slice(0, 2).forEach((bot) => {
+    damageBot(bot, damage, `${name} dealt ${damage} damage to ${bot.name}.`, name);
+    bot.poisonCounters = Math.max(0, botPoison(bot) - 1);
+    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1));
+  });
+}
+
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+    // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
+    if (entry.id === "p145") {
+      const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
+      if (!stubborn.length) return;
+      markPassiveEntryTriggered(entry);
+      stubborn.forEach((bot) => addBotPoison(bot, 1));
+      addRoundEvent(`${ITEMS.p145.name} gave ${stubborn.length} STUBBORN DAMNED 1 POISON.`);
+      return;
+    }
+    if (entry.id === "p146") {
+      applyMarsSeventhPentacle(entry);
+      return;
+    }
     // Seal of the Father, "20% strike": one random DAMNED, BOSSES included, takes 20% of its max SOUL
     if (entry.id === "p131") {
       if (trinityFatherBlessing() !== "strike") return;
@@ -11643,6 +12207,8 @@ function applyEndOfRoundPassives() {
   if (!round) return;
   round.resolvingEndOfRoundPassives = true;
   try {
+    // POISON deals its damage first: POISON gained by the end-of-round SEALS starts hurting next round
+    applyPoisonDamage();
     applyQueuedEndOfRoundBotDamage();
     applyPendingSelfStackingPentakillDamage();
     applyEndOfRoundPassiveDamageInOrder();
@@ -11955,6 +12521,121 @@ function rememberRound() {
   applyStubbornWitnessEndRoundGrowth();
 }
 
+// ---------- Dev: give yourself a SEAL by name (Pause > DEV) ----------
+// "Seal of Bael", "bael", "BAEL" and "seal bael" all name the same SEAL; apostrophes and punctuation are ignored
+function devSealSearchText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/['’`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/^seal( of)?( |$)/, "")
+    .trim();
+}
+
+function devSealEditDistance(left, right) {
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let previous = row[0];
+    row[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const kept = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (left[i - 1] === right[j - 1] ? 0 : 1));
+      previous = kept;
+    }
+  }
+  return row[right.length];
+}
+
+// how well a SEAL's name matches the search: 0 = starts with it, 1 = a word starts with it, 2 = contains it,
+// 3+ = close to it with a typo or two; null = no match
+function devSealMatchScore(id, query) {
+  const core = devSealSearchText(ITEMS[id]?.name);
+  if (!core || !query) return null;
+  if (core.startsWith(query)) return 0;
+  const words = core.split(" ");
+  if (words.some((word) => word.startsWith(query))) return 1;
+  if (core.includes(query)) return 2;
+  // several words typed: each one starts a word of the name, in any order ("7th mars")
+  const parts = query.split(" ").filter(Boolean);
+  if (parts.length > 1 && parts.every((part) => words.some((word) => word.startsWith(part)))) return 2;
+  if (query.length < 3) return null;
+  const allowedFor = (text) => (text.length <= 5 ? 1 : 2);
+  const candidates = [core.slice(0, query.length), ...words.map((word) => word.slice(0, query.length))];
+  const distance = Math.min(...candidates.map((candidate) => devSealEditDistance(query, candidate)));
+  if (distance <= allowedFor(query)) return 3 + distance;
+  if (parts.length < 2) return null;
+  // several words with small typos ("pentacle marz")
+  let typos = 0;
+  for (const part of parts) {
+    if (words.some((word) => word.startsWith(part))) continue;
+    if (part.length < 3) return null;
+    const best = Math.min(...words.map((word) => devSealEditDistance(part, word.slice(0, part.length))));
+    if (best > allowedFor(part)) return null;
+    typos += best;
+  }
+  return 3 + typos;
+}
+
+function devSealSearchPool() {
+  return collectibleSealIds().filter((id) => ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id));
+}
+
+// the SEALS whose names best match what was typed, best first
+function devSealSuggestions(text, limit = 6) {
+  const query = devSealSearchText(text);
+  if (!query) return [];
+  return devSealSearchPool()
+    .map((id) => ({ id, score: devSealMatchScore(id, query) }))
+    .filter((match) => match.score !== null)
+    .sort(
+      (left, right) =>
+        left.score - right.score ||
+        ITEMS[left.id].name.length - ITEMS[right.id].name.length ||
+        ITEMS[left.id].name.localeCompare(ITEMS[right.id].name)
+    )
+    .slice(0, limit)
+    .map((match) => match.id);
+}
+
+// the one SEAL the search names: an exact name, or the only match
+function devResolveSealQuery(text) {
+  const query = devSealSearchText(text);
+  if (!query) return { id: null, note: "Write a SEAL's name." };
+  const exact = devSealSearchPool().find((id) => devSealSearchText(ITEMS[id].name) === query);
+  if (exact) return { id: exact, note: "" };
+  const matches = devSealSuggestions(text, 50);
+  if (matches.length === 1) return { id: matches[0], note: "" };
+  return { id: null, note: matches.length ? "Several SEALS match: pick one from the list." : "No SEAL has that name." };
+}
+
+// give the SEAL if there is room for it, or upgrade it once if you already have it
+function devGrantSeal(id) {
+  const item = ITEMS[id];
+  if (!item || item.type !== "passive" || REMOVED_PASSIVE_IDS.has(id)) return { ok: false, note: "No SEAL has that name." };
+  const existing = passiveEntry(id);
+  let note;
+  if (existing) {
+    if (isNonUpgradableSeal(id)) return { ok: false, note: `${item.name} cannot be upgraded.` };
+    existing.stack = (existing.stack || 1) + 1;
+    note = `Upgraded: ${passiveDisplayName(existing)}.`;
+  } else {
+    if (!hasSealSlotRoomFor(item)) {
+      return { ok: false, note: SATAN_SEAL_IDS.has(id) ? `${item.name} needs 2 empty SEAL slots.` : "Your SEAL slots are full." };
+    }
+    state.player.passives.push(itemCopy(id));
+    refreshMimicTarget();
+    if (id === AMY_SEAL_ID && state.roundState && !state.roundState.penaltiesApplied) rollAmyCopy();
+    note = `Gave you ${item.name}.`;
+  }
+  syncShopSlotCount();
+  applyGuessReveals();
+  checkBalamMemoryBountyEliminations();
+  playSealPurchaseSfx();
+  addLog(`Testing: ${note}`);
+  return { ok: true, note };
+}
+
 function buyShopItem(slotIndex) {
   if (arcadeActionLocked()) return;
   pruneRemovedPassives();
@@ -12008,6 +12689,8 @@ function buyShopItem(slotIndex) {
       if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
+      // Seal of Amy bought mid-round takes its Player SEAL for the rest of this round
+      if (item.id === AMY_SEAL_ID && state.roundState && !state.roundState.penaltiesApplied) rollAmyCopy();
       addLog(`Bought ${item.name}.`);
     }
     recordPlayedSeal(item.id);
@@ -12248,6 +12931,47 @@ function addArtifactCriticalRangeBonus(amount, source) {
   return state.roundState.artifactCriticalRangeBonus;
 }
 
+// Funeral Coin: pays you 3-10 SIN, or with the 2nd Pentacle of the Moon spreads 6-16 BOUNTY among the DAMNED
+function resolveFuneralCoin(item) {
+  const entry = artifactSealEntry("a10");
+  if (!entry) {
+    const credits = randomInt(artifactValue(3), artifactValue(10));
+    const gained = gainCredits(credits, true, item.name);
+    return `${item.name} gained ${gained} SIN.`;
+  }
+  const name = ITEMS.p135.name;
+  const targets = activeBots().filter((bot) => !bot.immortal);
+  if (!targets.length) return `${item.name} found no DAMNED to carry its BOUNTY (${name}).`;
+  const range = moonCoinSpreadRange(entry);
+  const amount = randomInt(range.min, range.max);
+  const gains = new Map();
+  for (let index = 0; index < amount; index += 1) {
+    const target = randomFrom(targets);
+    gains.set(target.id, (gains.get(target.id) || 0) + 1);
+  }
+  let spread = 0;
+  gains.forEach((count, botId) => {
+    const bot = state.bots.find((candidate) => candidate.id === botId);
+    if (bot) spread += changeBotSin(bot, count, "", { source: name, triggerLossDamage: false }).gained;
+  });
+  markPassiveEntryTriggered(entry);
+  return `${item.name} spread ${spread} BOUNTY among the DAMNED (${name}).`;
+}
+
+// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon your CRITICAL also gains % max SOUL
+function resolveCursedChalice(item) {
+  const total = addArtifactCriticalRangeBonus(1, item.name);
+  let message = `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`;
+  const entry = artifactSealEntry("a22");
+  if (entry && state.roundState) {
+    const percent = moonChaliceCriticalPercent(entry);
+    state.roundState.artifactCriticalPercentBonus = criticalPercentBonus() + percent;
+    markPassiveEntryTriggered(entry);
+    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${criticalPercentBonus()}% max SOUL this round.`;
+  }
+  return message;
+}
+
 // Vial of Blood: the second DAMNED takes the first one's PERSONALITY (nothing else)
 function copyDamnedPersonality(bot, personality, source) {
   if (!bot || !personality) return false;
@@ -12312,9 +13036,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a10") {
-    const credits = randomInt(artifactValue(3), artifactValue(10));
-    const gained = gainCredits(credits, true, item.name);
-    recordCopiedArtifactResolution(copierName, item, `${item.name} gained ${gained} SIN.`);
+    recordCopiedArtifactResolution(copierName, item, resolveFuneralCoin(item));
     return;
   }
 
@@ -12346,8 +13068,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
   }
 
   if (item.id === "a22") {
-    const total = addArtifactCriticalRangeBonus(1, item.name);
-    recordCopiedArtifactResolution(copierName, item, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`);
+    recordCopiedArtifactResolution(copierName, item, resolveCursedChalice(item));
     return;
   }
 
@@ -12436,9 +13157,7 @@ function useActive(index) {
   }
 
   if (item.id === "a10") {
-    const credits = randomInt(artifactValue(3), artifactValue(10));
-    const gained = gainCredits(credits, true, item.name);
-    consumeActive(index, `${item.name} gained ${gained} SIN.`, item.uid);
+    consumeActive(index, resolveFuneralCoin(item), item.uid);
     return;
   }
 
@@ -12455,7 +13174,7 @@ function useActive(index) {
   if (item.id === "a11") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
     closeMobileOfferingsForTargetPick();
-    addLog("Pick a non-boss DAMNED to take 30% max-SOUL damage.");
+    addLog(artifactSealEntry("a11") ? "Pick a non-boss DAMNED to eliminate." : "Pick a non-boss DAMNED to take 30% max-SOUL damage.");
     render();
     return;
   }
@@ -12494,8 +13213,7 @@ function useActive(index) {
   }
 
   if (item.id === "a22") {
-    const total = addArtifactCriticalRangeBonus(1, item.name);
-    consumeActive(index, `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`, item.uid);
+    consumeActive(index, resolveCursedChalice(item), item.uid);
     return;
   }
 
@@ -12614,8 +13332,20 @@ function chooseBot(botId) {
 
   if (id === "a9") {
     round.removedBotIds.add(bot.id);
+    // 3rd Pentacle of the Moon: its guess is pushed away from the final TARGET at READY (ELITE: +3 MEMORY first)
+    const crossEntry = artifactSealEntry("a9");
+    let crossText = "";
+    if (crossEntry) {
+      const name = ITEMS.p136.name;
+      const extraMemory = 3 * passiveEntryEliteLevels(crossEntry);
+      const added = extraMemory > 0 ? addBotMemory(bot, extraMemory, "", { source: name }) : 0;
+      if (!Array.isArray(round.moonCrossBotIds)) round.moonCrossBotIds = [];
+      round.moonCrossBotIds.push(bot.id);
+      markPassiveEntryTriggered(crossEntry);
+      crossText = ` ${name}${added ? ` gave it +${added} MEMORY and` : ""} will push its guess away from the TARGET.`;
+    }
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} removed ${bot.name} from the average.`);
+    finishActiveResolution(index, `${itemName} removed ${bot.name} from the average.${crossText}`);
     return;
   }
 
@@ -12624,20 +13354,37 @@ function chooseBot(botId) {
     const baseDamage = Math.ceil(bot.maxHp * artifactPercent(sacrificialDaggerPercentForBot(bot)));
     const extraDamage = sacrificialDaggerExtraDamage("p70");
     const damage = baseDamage + extraDamage;
-    const amyText = extraDamage ? ` including ${extraDamage} from Seal of Amy` : "";
+    const pentacleText = extraDamage ? ` including ${extraDamage} from ${ITEMS.p70.name}` : "";
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} hit ${bot.name} for ${damage}${amyText}.`, uid, false);
-    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}${amyText}.`, itemName);
-    if (extraDamage > 0) recordSealStatFromSource("damage", extraDamage, ITEMS.p70?.name || "Seal of Amy");
+    finishActiveResolution(index, `${itemName} hit ${bot.name} for ${damage}${pentacleText}.`, uid, false);
+    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}${pentacleText}.`, itemName);
+    if (extraDamage > 0) recordSealStatFromSource("damage", extraDamage, ITEMS.p70.name);
     if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;
   }
 
   if (id === "a25") {
-    queueMummifiedLambNextRoundReveal(bot, itemName);
+    // 5th Pentacle of the Moon: a DAMNED revealed this round also takes 30% max SOUL (15% for BOSSES)
+    const lambEntry = artifactSealEntry("a25");
+    const sealBounty = moonLambBountyBonus(lambEntry);
+    const lambDamage = lambEntry && bot.revealedByPassive ? moonLambDamage(bot, lambEntry) : 0;
+    queueMummifiedLambNextRoundReveal(bot, itemName, sealBounty);
     applyTargetedItemSinGain(item, [bot]);
-    finishActiveResolution(index, `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +3 BOUNTY.`);
+    const uid = pending.uid;
+    finishActiveResolution(
+      index,
+      `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
+      uid,
+      false
+    );
+    if (lambEntry && (lambDamage > 0 || sealBounty > 0)) markPassiveEntryTriggered(lambEntry);
+    if (lambDamage > 0) {
+      const name = ITEMS.p138.name;
+      damageBot(bot, lambDamage, `${name} dealt ${lambDamage} damage to revealed ${bot.name}.`, name);
+    }
+    if (state.player.hp <= 0) finishGameOverRound();
+    render();
     return;
   }
 
@@ -12694,14 +13441,47 @@ function resolveBloodVial(bot) {
       render();
       return;
     }
-    const damage = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
-    damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
+    pending.copiedPersonality = personalityType(bot);
+    pending.copiedPersonalityName = bot.name;
+    // 6th Pentacle of the Moon: the first DAMNED is eliminated, and the second overheals by the SOUL it had left
+    const vialEntry = artifactSealEntry("a11");
+    if (vialEntry) {
+      const name = ITEMS.p139.name;
+      const hpLeft = Math.max(0, Math.ceil(bot.hp || 0));
+      markPassiveEntryTriggered(vialEntry);
+      bot.lastDamage = (bot.lastDamage || 0) + hpLeft;
+      recordBotDamageSource(bot, hpLeft, name);
+      bot.hp = 0;
+      bot.deathCause = "vial";
+      bot.deathNotice = "DRAINED";
+      addRoundEvent(`${name} eliminated ${bot.name} with ${itemName}.`);
+      resolveEliminatedBots([bot]);
+      pending.moonHeal = hpLeft;
+    } else {
+      const damage = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
+      damageBot(bot, damage, `${itemName} dealt ${damage} damage to ${bot.name}.`, itemName);
+    }
     applyTargetedItemSinGain(item, [bot]);
     pending.step = "heal";
     pending.damageBotId = bot.id;
-    pending.copiedPersonality = personalityType(bot);
-    pending.copiedPersonalityName = bot.name;
-    addLog("Now pick another non-boss DAMNED to overheal and receive the copied PERSONALITY.");
+    if (state.player.hp <= 0) {
+      finishGameOverRound();
+      render();
+      return;
+    }
+    // the first pick's death can take the others with it: with no one left to overheal, the Vial ends here
+    const healTargetsLeft = state.bots.filter(
+      (candidate) => candidate.id !== bot.id && candidate.hp > 0 && !candidate.eliminated && !candidate.isBoss
+    );
+    if (!healTargetsLeft.length) {
+      finishActiveResolution(pending.index, `${itemName} found no DAMNED left to overheal.`);
+      return;
+    }
+    addLog(
+      vialEntry
+        ? "Now pick another non-boss DAMNED to overheal and turn STUBBORN."
+        : "Now pick another non-boss DAMNED to overheal and receive the copied PERSONALITY."
+    );
     render();
     return;
   }
@@ -12715,6 +13495,20 @@ function resolveBloodVial(bot) {
     if (bot.isBoss) {
       addLog(`${itemName} cannot target BOSSES.`);
       render();
+      return;
+    }
+    if (Number.isFinite(pending.moonHeal)) {
+      const name = ITEMS.p139.name;
+      const healed = healBot(bot, pending.moonHeal, itemName, itemName, { allowOverheal: true });
+      const stubborn = setBotPersonality(bot, "Stubborn", name);
+      const vialEntry = orderedPassiveEffectEntries("p139")[0];
+      const bounty = vialEntry ? 5 * passiveEntryEliteLevels(vialEntry) : 0;
+      const bountyGained = bounty > 0 ? changeBotSin(bot, bounty, "", { source: name, triggerLossDamage: false }).gained : 0;
+      applyTargetedItemSinGain(item, [bot]);
+      finishActiveResolution(
+        pending.index,
+        `${itemName} overhealed ${bot.name} for ${healed}${stubborn ? " and made it STUBBORN" : ""}${bountyGained ? `, +${bountyGained} BOUNTY` : ""} (${name}).`
+      );
       return;
     }
     const healAmount = Math.ceil((bot.maxHp || 0) * artifactPercent(30));
@@ -14561,6 +15355,7 @@ function renderPauseMenu() {
         </div>
         ${state.mode === "arcade" ? renderPauseBoundPlate() : ""}
         ${state.pauseDevOpen && state.mode === "arcade" ? renderSelfStackingDevPanel() : ""}
+        ${state.pauseDevOpen && state.mode === "arcade" ? renderDevSealGrant() : ""}
       </section>
     </div>
   `;
@@ -14602,6 +15397,42 @@ function renderPauseBoundPlate() {
       </div>
     </div>
   `;
+}
+
+// Pause > DEV: write a SEAL's name (suggestions appear as you type), press the pentagram to get it or upgrade it
+const DEV_PENTAGRAM_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><path d="M50 9 L74.1 83.2 L11 37.3 L89 37.3 L25.9 83.2 Z"/></svg>`;
+
+function renderDevSealGrant() {
+  const query = state.devSealQuery || "";
+  return `
+    <div class="dev-seal-grant">
+      <div class="dev-seal-search-wrap">
+        <div class="dev-seal-search-row">
+          <input id="devSealSearch" class="dev-seal-search" type="text" placeholder="SEAL name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="SEAL name" aria-controls="devSealSuggestions" value="${escapeAttr(query)}" />
+          <button type="button" id="devSealGive" class="dev-seal-give" aria-label="Give or upgrade this SEAL" data-tooltip="Give this SEAL if you have an empty slot, or upgrade it once if you already have it">${DEV_PENTAGRAM_SVG}</button>
+        </div>
+        <div id="devSealSuggestions" class="dev-seal-suggestions" role="listbox"></div>
+      </div>
+      <div id="devSealNote" class="dev-seal-note ${state.devSealNoteOk ? "ok" : ""}" aria-live="polite">${escapeHtml(state.devSealNote || "")}</div>
+    </div>
+  `;
+}
+
+function renderDevSealSuggestions(query) {
+  const highlight = Number.isInteger(state.devSealHighlight) ? state.devSealHighlight : -1;
+  return devSealSuggestions(query)
+    .map((id, index) => {
+      const item = ITEMS[id];
+      const owned = passiveEntry(id);
+      const section = collectionSections().find((candidate) => candidate.ids.includes(id))?.title || "";
+      const status = owned
+        ? isNonUpgradableSeal(id)
+          ? "Owned · cannot upgrade"
+          : `Owned · upgrade to ${passiveDisplayName({ ...owned, stack: (owned.stack || 1) + 1 }).replace(` ${item.name}`, "")}`
+        : section;
+      return `<button type="button" class="dev-seal-suggestion ${index === highlight ? "highlighted" : ""}" role="option" data-dev-seal-pick="${escapeAttr(id)}"><img src="${escapeAttr(sealSigilPath(id))}" alt="" /><span class="dev-seal-suggestion-name">${escapeHtml(item.name)}</span><span class="dev-seal-suggestion-status">${escapeHtml(status)}</span></button>`;
+    })
+    .join("");
 }
 
 function renderSelfStackingDevPanel() {
@@ -15612,6 +16443,16 @@ function renderBots() {
   `;
 }
 
+// the POISON skull (traced from a hazard-sign skull) shown beside a poisoned DAMNED's max SOUL
+const POISON_SKULL_SVG = `<svg class="poison-skull" viewBox="0 0 84.9 100.0" aria-hidden="true"><path fill-rule="evenodd" d="M37.0 0.3Q36.7 0.7 35.0 0.7Q33.4 0.7 32.8 1.0Q32.2 1.3 31.5 1.3Q30.8 1.3 30.2 1.6Q29.6 2.0 28.9 2.0Q28.1 2.0 24.0 3.7Q19.9 5.4 16.9 7.4Q14.0 9.4 10.4 13.0Q6.7 16.6 5.0 19.4Q3.3 22.2 3.3 22.6Q3.3 23.0 2.6 24.3Q2.0 25.5 2.0 25.9Q2.0 26.3 1.6 26.9Q1.3 27.5 1.3 28.2Q1.3 28.9 1.0 29.5Q0.7 30.1 0.7 31.7Q0.7 33.4 0.3 33.7Q0.0 34.0 0.0 39.1Q0.0 44.1 0.3 44.4Q0.7 44.7 0.7 46.7Q0.7 48.7 1.0 49.3Q1.3 49.8 1.3 50.6Q1.3 51.3 1.6 51.9Q2.0 52.5 2.0 52.9Q2.0 53.3 4.6 58.5Q7.2 63.7 7.2 66.7Q7.2 69.7 6.9 70.3Q6.6 70.9 6.6 71.6Q6.6 72.4 6.2 72.9Q5.9 73.5 6.0 75.4Q6.1 77.3 7.1 78.3Q8.1 79.3 9.9 80.0Q11.7 80.8 14.1 80.8Q16.4 80.8 17.0 81.1Q17.6 81.4 20.8 81.5Q24.0 81.6 24.8 82.5Q25.7 83.4 25.7 85.4Q25.7 87.5 25.3 88.1Q25.0 88.7 25.0 89.4Q25.0 90.1 24.7 90.7Q24.3 91.3 24.3 92.7Q24.3 94.1 25.1 94.9Q25.8 95.7 27.3 96.5Q28.8 97.2 29.2 97.2Q29.6 97.2 30.2 97.5Q30.8 97.9 31.5 97.9Q32.2 97.9 32.8 98.2Q33.4 98.5 34.5 98.5Q35.5 98.5 36.1 98.8Q36.7 99.2 38.0 99.2Q39.3 99.2 39.6 99.5Q40.0 99.8 42.4 99.8Q44.7 99.8 45.1 99.5Q45.4 99.2 46.7 99.2Q48.0 99.2 48.6 98.8Q49.2 98.5 50.2 98.5Q51.3 98.5 51.9 98.2Q52.5 97.9 53.2 97.9Q53.9 97.9 54.5 97.5Q55.1 97.2 56.5 96.9Q57.9 96.5 59.4 95.1Q60.9 93.8 60.9 93.3Q60.9 92.9 60.6 92.5Q60.4 92.1 60.4 91.0Q60.4 90.0 60.0 89.4Q59.7 88.8 59.7 88.1Q59.7 87.3 59.4 86.8Q59.0 86.2 59.0 85.1Q59.0 84.0 59.9 82.8Q60.7 81.6 64.2 81.5Q67.8 81.4 68.3 81.1Q68.9 80.8 71.3 80.8Q73.7 80.8 74.9 80.1Q76.2 79.4 76.7 79.4Q77.3 79.3 78.0 78.6Q78.6 78.0 79.0 77.1Q79.4 76.3 79.4 75.6Q79.4 74.8 79.1 74.3Q78.8 73.7 78.8 72.9Q78.8 72.2 78.5 71.6Q78.1 71.1 78.1 70.3Q78.1 69.6 77.8 69.0Q77.5 68.4 77.5 66.7Q77.5 65.0 77.8 64.4Q78.1 63.8 78.1 63.4Q78.1 63.0 80.4 58.5Q82.7 53.9 82.7 53.5Q82.7 53.1 83.4 51.6Q84.0 50.0 84.0 49.0Q84.0 48.0 84.4 47.7Q84.7 47.4 84.7 39.1Q84.7 30.8 84.4 30.4Q84.0 30.1 84.0 29.4Q84.0 28.8 83.7 28.2Q83.4 27.6 83.4 26.9Q83.4 26.2 81.7 22.7Q79.9 19.2 78.6 17.3Q77.3 15.3 74.7 12.7Q72.0 10.0 69.7 8.4Q67.4 6.7 64.0 5.0Q60.5 3.3 60.1 3.3Q59.7 3.3 57.2 2.3Q54.6 1.3 53.5 1.3Q52.5 1.3 51.9 1.0Q51.3 0.7 50.0 0.7Q48.7 0.7 48.4 0.3Q48.0 0.0 42.7 0.0Q37.3 0.0 37.0 0.3Z M41.9 67.7Q42.8 67.6 43.3 68.1Q43.9 68.6 44.0 69.2Q44.1 69.7 45.1 71.9Q46.2 74.0 46.7 74.6Q47.2 75.2 47.3 75.7Q47.4 76.3 48.0 77.5Q48.7 78.8 48.7 79.4Q48.7 80.1 48.4 80.4Q48.2 80.8 42.4 80.8Q36.7 80.9 36.1 80.4Q35.5 79.9 35.4 79.4Q35.4 78.8 38.2 73.3Q41.1 67.8 41.9 67.7Z M49.8 51.7Q50.8 50.7 52.6 49.9Q54.4 49.2 57.2 49.2Q59.9 49.2 60.4 49.5Q61.0 49.8 61.8 49.8Q62.5 49.8 63.1 50.2Q63.7 50.5 64.1 50.5Q64.5 50.5 66.0 51.2Q67.4 52.0 69.2 53.7Q70.9 55.4 71.6 56.9Q72.4 58.4 72.4 60.8Q72.4 63.2 71.6 64.6Q70.9 66.1 70.5 66.5Q70.1 66.9 67.9 68.0Q65.8 69.1 62.7 69.1Q59.7 69.1 59.1 68.8Q58.6 68.4 57.2 68.1Q55.8 67.8 54.3 67.0Q52.8 66.3 51.1 64.6Q49.3 62.8 48.6 61.0Q47.9 59.2 47.9 56.8Q47.9 54.4 48.3 53.6Q48.7 52.8 49.8 51.7Z M36.0 52.5Q36.8 53.8 36.8 54.9Q36.8 55.9 37.0 56.2Q37.2 56.4 37.0 58.5Q36.8 60.5 36.1 62.0Q35.4 63.5 33.6 64.9Q31.9 66.3 29.8 67.4Q27.6 68.4 26.9 68.4Q26.2 68.4 25.6 68.8Q25.0 69.1 22.3 69.1Q19.6 69.1 17.8 68.3Q16.0 67.6 14.9 66.5Q13.8 65.5 13.1 64.0Q12.3 62.5 12.3 61.1Q12.3 59.7 12.7 59.1Q13.0 58.6 13.0 58.1Q13.0 57.7 14.0 56.1Q15.0 54.4 16.4 53.2Q17.9 52.0 20.1 50.9Q22.2 49.8 22.9 49.8Q23.7 49.8 24.3 49.5Q24.8 49.2 27.5 49.2Q30.3 49.2 32.7 50.2Q35.2 51.3 36.0 52.5Z"/></svg>`;
+
+function poisonTooltipText(bot) {
+  const stacks = botPoison(bot);
+  const perStack = poisonDamagePerStack();
+  const taken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0));
+  return `${stacks} POISON\nTakes ${stacks * perStack} damage at the end of every round (${perStack} per POISON).\nPOISON damage taken so far: ${taken}.`;
+}
+
 function renderBot(bot, pendingPick) {
   const round = state.roundState;
   const display = roundRevealBotDisplay(bot);
@@ -15697,9 +16538,11 @@ function renderBot(bot, pendingPick) {
     botLastMemoryDelta > 0
       ? `<div class="memory-badge ${botPops.memory.className}"${botPops.memory.style} ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
       : "";
+  // POISON: a small skull beside the max SOUL; hovering it shows the stacks, the damage each round and the total so far
+  const poisonStacks = botPoison(bot);
   const poisonStackBadge =
-    (bot.poisonCounters || 0) > 0
-      ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
+    poisonStacks > 0 && !isDown
+      ? `<span class="poison-stack-label poison-label" data-tooltip="${escapeAttr(poisonTooltipText(bot))}" aria-label="POISON ${poisonStacks}">${POISON_SKULL_SVG}</span>`
       : "";
   // Seal of Sitri's host: double SOUL until it dies
   const sitriHostBadge =
@@ -15881,9 +16724,17 @@ function renderPendingText() {
   if (state.pendingActive.id === "a14") return `${item.name} reduces the TARGET by ${artifactValue(10)}.`;
   if (state.pendingActive.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from Seal of Amy` : ""}.`;
+    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
   }
-  if (state.pendingActive.id === "a25") return `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+  if (state.pendingActive.id === "a25") {
+    const lamb = artifactSealEntry("a25");
+    return lamb
+      ? `${item.name}: pick DAMNED to reveal next round and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
+      : `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+  }
+  if (state.pendingActive.id === "a9" && artifactSealEntry("a9")) {
+    return `${item.name}: pick DAMNED to remove from the average and push away from the TARGET by its MEMORY.`;
+  }
   if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return `${item.name}: pick DAMNED to receive the drained BOUNTY.`;
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
@@ -15891,7 +16742,13 @@ function renderPendingText() {
     return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max SOUL.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
+    if (Number.isFinite(state.pendingActive.moonHeal)) {
+      return `${item.name}: pick a different non-boss DAMNED to overheal ${state.pendingActive.moonHeal} SOUL and turn STUBBORN.`;
+    }
     return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max SOUL and copy the first's PERSONALITY.`;
+  }
+  if (state.pendingActive.id === "a11" && artifactSealEntry("a11")) {
+    return `${item.name}: pick a non-boss DAMNED to eliminate.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }
@@ -16815,7 +17672,8 @@ function drawCloth(rig, t) {
    a click/tap anywhere continues; after the last part of a box the next click replaces it.
    The first word of every line is who speaks, which sets the colour: jesus = yellow, you = white,
    satan = red.
-   {SIN} draws the SIN icon. Edit the lines freely; the chunks are worked out from the punctuation. */
+   {SIN} draws the SIN icon; {THUNDER} plays the thunder clap the moment the text reaches it.
+   Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
 const INTRO_BLACK_MS = 5000; // silence before the bell
@@ -16825,7 +17683,7 @@ const INTRO_BOOT_REVEAL_MS = 1250; // the boot sound's power chord: the game swi
 const INTRO_BURN_MS = 1900; // offerings / ARTIFACTS / SEALS burning back into place
 
 const INTRO_JUDGEMENT_LINES = [
-  ["jesus", "You died on ______ after _______"],
+  ["jesus", "You died on the 11th of November 2022 at 03:48 after choking on a billiard ball while intoxicated."],
   ["jesus", "You are going to HELL."],
   ["you", "Huh, what, no??"],
   ["you", "This can't be true, wait what do you even mean there is an afterlife?"],
@@ -16836,15 +17694,16 @@ const INTRO_JUDGEMENT_LINES = [
   ["jesus", "There are no other afterlives you insolent fool. Only Heaven and Hell, and there are no other Gods but me. You had your chance to follow my truth, now you shall face my punishment."],
   ["you", "Hey hey I am sorry, I didn't mean it alright? Look I did make some mistakes, and I wasn't always the better person, but you can't forsake me like this!"],
   ["you", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
-  ["jesus", "SILENCE. My word is final. And during the Easter of 2023 you fasted only because you had gotten food poisoning from eating 10 day old pizza."],
+  ["jesus", "SILENCE{THUNDER}. My word is final. And during the Easter of 2018 you fasted only because you had gotten food poisoning from eating ten day old pizza."],
   ["you", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
-  ["you", "One year from now I'll have a big ass beard, I'll stop taking drugs, I'll stop having sex and... and go work at a church. I'll even diddle kids if that's what you want, most of your favorite children seem to do that nowadays anyway."],
+  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, voting conservative, being a good Samaritan, loving my neighbor, hating all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at heretics..."],
+  ["you", "..."],
+  ["you", "Jesus?"],
   ["you", "Hey please, talk to me!"],
   ["you", "Don't leave me hanging!"],
   ["you", "God answer me! Big man! Father! Big daddy!!!"],
-  ["jesus", "Shut. the. fuck. up. The next time you try to insult me or twist my word or whine, I'll make you wish you've never been created."],
-  ["you", "Okay got it whatever you want almighty, I just truly believe if you give me one last chance I'll make you proud, and maybe not face eternal torture."],
-  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, loving my neighbor, killing all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at muslims..."],
+  ["jesus", "Shut your sacrilegious fucking mouth. The next time you dare to insult me or whine before me I'll make you wish you've never been created."],
+  ["you", "Please I am sorry, I get it, whatever you want almighty. I just truly believe that if you give me one last chance I'll make you proud, and hopefully not face eternal torture."],
   ["jesus", "So you want your second chance that bad?"],
   ["you", "OH PLEASE, I will do literally anything and everything!"],
   ["jesus", "Listen here worm, I'll grant you your chance."],
@@ -16867,14 +17726,15 @@ const INTRO_PACT_LINES = [
   ["you", "Wait a second, red eyes, twisting horns, pointy tail! You're Satan! No way I am trusting you after what the holy trio said to me. He was angry enough before, if he finds out I've been dealing with the devil it's over for me."],
   ["satan", "No need to get defensive here you little flesh puppet! Me and Jesus are cool, I am sure he will turn the other cheek. It's not like he even cares what happens in here..."],
   ["you", "Wait what do you mean?"],
-  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive you are free to do so. I'll find some other scum in here soon enough."],
+  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive and kicking, you are free to do so. I'll find some other scum in here soon enough."],
   ["you", "No no, wait please! I need to get back. What's the deal?"],
   ["satan", "Okay listen here and listen well. You eliminate the other sinners and in exchange I'll give you the strength of my demons in the form of their SEALS. They will help you passively and the better you do the stronger you become."],
   ["satan", "Also I humbly accept rituals to my name, so I would recommend using occult ARTIFACTS right after all the guesses have been revealed, whenever need be."],
   ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
   ["satan", "Yea yea definitely, or whatever the other guy promised you."],
   ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["satan", "Great. And just beware, you are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya."],
+  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
@@ -17070,17 +17930,29 @@ function introPencilTick() {
 }
 
 /* ---- text: glyphs and punctuation chunks ---- */
+// marks that are not letters: {SIN} is drawn as the icon, the sound marks play when the typing reaches them
+const INTRO_SOUND_MARKS = { "{THUNDER}": "introThunder" };
+const INTRO_MARKS = ["{SIN}", ...Object.keys(INTRO_SOUND_MARKS)];
+
 function introGlyphs(text) {
   const glyphs = [];
   for (let i = 0; i < text.length; i += 1) {
-    if (text.startsWith("{SIN}", i)) {
-      glyphs.push("{SIN}");
-      i += 4;
+    const mark = INTRO_MARKS.find((candidate) => text.startsWith(candidate, i));
+    if (mark) {
+      glyphs.push(mark);
+      i += mark.length - 1;
     } else {
       glyphs.push(text[i]);
     }
   }
   return glyphs;
+}
+
+// plays the sound marks typed between two points (also when a click finishes the part at once)
+function introPlaySoundMarks(from, to) {
+  introState.glyphs.slice(from, to).forEach((glyph) => {
+    if (INTRO_SOUND_MARKS[glyph]) introPlaySfx(INTRO_SOUND_MARKS[glyph]);
+  });
 }
 
 const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
@@ -17102,6 +17974,7 @@ function introChunkEnds(glyphs) {
 }
 
 function introGlyphHtml(glyph) {
+  if (INTRO_SOUND_MARKS[glyph]) return "";
   return glyph === "{SIN}" ? SIN_MARK : escapeHtml(glyph);
 }
 
@@ -17120,10 +17993,10 @@ function introFitText() {
   const box = introState.box;
   const text = box?.querySelector(".intro-text");
   if (!text) return;
-  text.style.fontSize = "";
+  text.style.removeProperty("font-size");
   const max = parseFloat(getComputedStyle(text).fontSize) || 24;
   let size = max;
-  // "important": the box's font-size rules are !important and would win over a plain inline size
+  // "important": the stylesheet sets the box font size with !important, which a plain inline size cannot beat
   while (size > 9 && text.scrollHeight > text.clientHeight + 1) {
     size -= 1;
     text.style.setProperty("font-size", `${size}px`, "important");
@@ -17177,7 +18050,8 @@ function introTypeTo(end) {
     const glyph = introState.glyphs[introState.shown - 1];
     // spaces are skipped over at once and make no sound
     while (introState.shown < end && /\s/.test(glyph) && /\s/.test(introState.glyphs[introState.shown])) introState.shown += 1;
-    if (!/\s/.test(glyph)) introPencilTick();
+    if (INTRO_SOUND_MARKS[glyph]) introPlaySoundMarks(introState.shown - 1, introState.shown);
+    else if (!/\s/.test(glyph)) introPencilTick();
     introDrawText();
   };
   step();
@@ -17191,6 +18065,7 @@ function introAdvance() {
   introWakePencil();
   if (introState.typing) {
     // finish the current part at once
+    introPlaySoundMarks(introState.shown, introState.ends[introState.chunk]);
     introState.shown = introState.ends[introState.chunk];
     clearInterval(introState.typeTimer);
     introState.typeTimer = null;
@@ -17325,6 +18200,7 @@ function startIntroSequence(options = {}) {
   introState.phase = "black";
   introState.lines = INTRO_JUDGEMENT_LINES;
   introState.lineIndex = -1;
+  ensureGameSfx("introThunder");
   const layer = document.createElement("div");
   layer.className = "intro-layer";
   layer.innerHTML = `
@@ -18082,7 +18958,11 @@ const COLLECTION_SECTIONS = [
   // Father, Son and Holy Spirit: sold apart, they share one SEAL slot
   { key: "trinity", title: "Trinity Seals", ids: ["p131", "p132", "p133"] },
   // the seven Pentacles of Saturn (in pentacle order); they took the Archangel Seals' old chance effects
-  { key: "saturn", title: "Seals of Saturn", ids: ["p97", "p93", "p92", "p95", "p110", "p94", "p96"] }
+  { key: "saturn", title: "Seals of Saturn", ids: ["p97", "p93", "p92", "p95", "p110", "p94", "p96"] },
+  // the Pentacles of the Moon: each strengthens one ARTIFACT and doubles its weight in the Devil's Offerings
+  { key: "artifact", title: "Artifact Seals", ids: ["p70", "p135", "p136", "p137", "p138", "p139"] },
+  // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
+  { key: "poison", title: "Poison Seals", ids: POISON_SEAL_IDS.slice() }
 ];
 
 /* ---- builds: the collection filters ----
@@ -18096,6 +18976,7 @@ const SEAL_BUILDS = [
   { key: "critical", label: "Critical" },
   { key: "personality", label: "Personality" },
   { key: "artifact", label: "Artifact" },
+  { key: "poison", label: "Poison" },
   { key: "general", label: "General" }
 ];
 
@@ -18145,7 +19026,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p70: ["artifact"], // Amy
+  p134: ["general"], // Amy (a random Player SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
   p73: ["general"], // Asmoday
@@ -18211,7 +19092,22 @@ const SEAL_BUILD_TAGS = {
   p101: ["general"], // Raphael
   p102: ["reveal"], // Cassiel
   p103: ["artifact"], // Anael
-  p109: ["personality"] // Samael
+  p109: ["personality"], // Samael
+  // Artifact SEALS (Pentacles of the Moon)
+  p70: ["artifact"], // 1st: Sacrificial Dagger
+  p135: ["artifact", "bounty"], // 2nd: Funeral Coin spreads BOUNTY
+  p136: ["artifact", "memory"], // 3rd: Inverted Cross pushes by MEMORY
+  p137: ["artifact", "critical"], // 4th: Cursed Chalice adds CRITICAL damage
+  p138: ["artifact", "reveal"], // 5th: Mummified Lamb hits revealed DAMNED
+  p139: ["artifact", "personality"], // 6th: Vial of Blood makes STUBBORN
+  // Poison SEALS (Pentacles of Mars)
+  p140: ["poison"], // 1st: POISON by max SOUL
+  p141: ["poison", "memory"], // 2nd: POISON by MEMORY
+  p142: ["poison", "critical"], // 3rd: CRITICAL poisons everyone, POISON spreads on death
+  p143: ["poison", "reveal"], // 4th: revealed DAMNED get POISON
+  p144: ["poison", "bounty"], // 5th: BOUNTY gains give POISON
+  p145: ["poison", "personality"], // 6th: STUBBORN DAMNED get POISON
+  p146: ["poison"] // 7th: the most POISONED take damage and spread it
 };
 
 function sealBuilds(id) {
@@ -20647,6 +21543,143 @@ function bindPvpEvents() {
   if (restart) bindOn(restart, "click", restartPvpMode);
 }
 
+// Pause > DEV SEAL search: suggestions update in place while typing (no full render, so the box keeps focus).
+// The list floats over the menu like a search engine's, so the box never moves while typing.
+function refreshDevSealSuggestions() {
+  const list = document.querySelector("#devSealSuggestions");
+  const input = document.querySelector("#devSealSearch");
+  if (!list) return;
+  list.innerHTML = renderDevSealSuggestions(state.devSealQuery || "");
+  list.querySelectorAll("[data-dev-seal-pick]").forEach((button) => {
+    // keep the focus in the search box while picking
+    bindOn(button, "mousedown", (event) => event.preventDefault());
+    bindOn(button, "click", () => pickDevSealSuggestion(button.dataset.devSealPick));
+  });
+  const open = Boolean(input) && document.activeElement === input && !state.devSealListClosed && list.children.length > 0;
+  list.classList.toggle("open", open);
+  if (open) placeDevSealSuggestions(input, list);
+}
+
+// opens below the box when it fits, otherwise on the side with more room, never past the screen
+function placeDevSealSuggestions(input, list) {
+  const row = input.closest(".dev-seal-search-row") || input;
+  const rect = row.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const top = viewport ? viewport.offsetTop : 0;
+  const bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+  const below = bottom - rect.bottom - 12;
+  const above = rect.top - top - 12;
+  list.style.maxHeight = "none";
+  const needed = list.scrollHeight + 2;
+  const up = needed > below && above > below;
+  list.classList.toggle("above", up);
+  list.style.maxHeight = `${Math.max(64, Math.floor(up ? above : below))}px`;
+  list.querySelector(".highlighted")?.scrollIntoView({ block: "nearest" });
+}
+
+function setDevSealListClosed(closed) {
+  state.devSealListClosed = closed;
+  refreshDevSealSuggestions();
+}
+
+function setDevSealNote(note, ok = false) {
+  state.devSealNote = note;
+  state.devSealNoteOk = ok;
+  const element = document.querySelector("#devSealNote");
+  if (element) {
+    element.textContent = note;
+    element.classList.toggle("ok", ok);
+  }
+}
+
+// a suggestion fills the search box with that SEAL's name
+function pickDevSealSuggestion(id) {
+  const input = document.querySelector("#devSealSearch");
+  if (!ITEMS[id]) return;
+  state.devSealQuery = ITEMS[id].name;
+  state.devSealHighlight = -1;
+  state.devSealListClosed = true;
+  if (input) {
+    input.value = state.devSealQuery;
+    input.focus({ preventScroll: true });
+  }
+  setDevSealNote("");
+  refreshDevSealSuggestions();
+}
+
+// the pentagram: give the SEAL (empty slot) or upgrade it once (already owned)
+function useDevSealSearch() {
+  // what the box shows (it can hold a suggestion picked with the arrow keys)
+  const input = document.querySelector("#devSealSearch");
+  if (input) state.devSealQuery = input.value;
+  const resolved = devResolveSealQuery(state.devSealQuery || "");
+  if (!resolved.id) {
+    setDevSealNote(resolved.note);
+    // several matches: show them so one can be picked
+    setDevSealListClosed(!devSealSuggestions(state.devSealQuery || "").length);
+    return;
+  }
+  const result = devGrantSeal(resolved.id);
+  state.devSealQuery = ITEMS[resolved.id].name;
+  state.devSealHighlight = -1;
+  state.devSealListClosed = true;
+  state.devSealNote = result.note;
+  state.devSealNoteOk = result.ok;
+  render();
+}
+
+function bindDevSealSearch() {
+  const input = document.querySelector("#devSealSearch");
+  const give = document.querySelector("#devSealGive");
+  if (give) bindOn(give, "click", useDevSealSearch);
+  if (!input) return;
+  refreshDevSealSuggestions();
+  bindOn(input, "input", () => {
+    state.devSealQuery = input.value;
+    state.devSealHighlight = -1;
+    state.devSealListClosed = false;
+    setDevSealNote("");
+    refreshDevSealSuggestions();
+  });
+  bindOn(input, "focus", () => setDevSealListClosed(false));
+  // hide the list once the box is left (a moment later, so a tapped suggestion still counts)
+  bindOn(input, "blur", () => setTimeout(refreshDevSealSuggestions, 150));
+  bindOn(input, "keydown", (event) => {
+    const options = devSealSuggestions(state.devSealQuery || "");
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (!options.length) return;
+      event.preventDefault();
+      if (state.devSealListClosed) setDevSealListClosed(false);
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      const current = Number.isInteger(state.devSealHighlight) ? state.devSealHighlight : -1;
+      state.devSealHighlight = (current + step + options.length) % options.length;
+      // like a search engine, the highlighted suggestion's name goes into the box
+      const list = document.querySelector("#devSealSuggestions");
+      list?.querySelectorAll("[data-dev-seal-pick]").forEach((button, index) => button.classList.toggle("highlighted", index === state.devSealHighlight));
+      list?.querySelector(".highlighted")?.scrollIntoView({ block: "nearest" });
+      input.value = ITEMS[options[state.devSealHighlight]].name;
+      return;
+    }
+    if (event.key === "Tab" && options.length && devSealSearchText(input.value) !== devSealSearchText(ITEMS[options[0]].name)) {
+      event.preventDefault();
+      pickDevSealSuggestion(options[Math.max(0, state.devSealHighlight ?? 0)] || options[0]);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      state.devSealQuery = input.value;
+      useDevSealSearch();
+      return;
+    }
+    if (event.key === "Escape" && document.activeElement === input) {
+      // first Esc closes the suggestions and leaves the box; the next one closes Pause as usual
+      event.preventDefault();
+      setDevSealListClosed(true);
+      input.blur();
+    }
+  });
+}
+
 function bindEvents() {
   document.querySelectorAll("[data-menu-action]").forEach((button) => {
     bindOn(button, "click", () => handleMenuAction(button.dataset.menuAction));
@@ -20758,6 +21791,7 @@ function bindEvents() {
 
   bindPvpEvents();
   bindCollectionEvents();
+  bindDevSealSearch();
 
   const mainAction = document.querySelector("#mainAction");
   if (mainAction) {

@@ -616,10 +616,12 @@ const ITEMS = {
     description:
       "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. ELITE increases the SIN gained by +20% each level, rounded up."
   },
+  // the Artifact SEALS (Pentacles of the Moon): each one strengthens one ARTIFACT and doubles its weight in the
+  // Devil's Offerings (ARTIFACT_SEAL_BY_ARTIFACT). The 1st kept the old Seal of Amy's id, so saves keep its effect.
   p70: {
     id: "p70",
     type: "passive",
-    name: "Seal of Amy",
+    name: "1st Pentacle of the Moon",
     price: 12,
     description:
       "Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up."
@@ -906,6 +908,113 @@ const ITEMS = {
     name: "Seal of the Holy Spirit",
     price: 33,
     description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 SOUL). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+  },
+  // Seal of Amy: the Goetic SEAL of the demon Amy (its old Sacrificial Dagger effect is now the 1st Pentacle of the Moon)
+  p134: {
+    id: "p134",
+    type: "passive",
+    name: "Seal of Amy",
+    price: 14,
+    description:
+      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+  },
+  p135: {
+    id: "p135",
+    type: "passive",
+    name: "2nd Pentacle of the Moon",
+    price: 12,
+    description:
+      "Funeral Coin no longer pays you SIN: it spreads 6 to 16 BOUNTY randomly among the DAMNED instead, and appears twice as often in Devil's Offerings. ELITE adds +4 BOUNTY to the spread each level."
+  },
+  p136: {
+    id: "p136",
+    type: "passive",
+    name: "3rd Pentacle of the Moon",
+    price: 12,
+    description:
+      "The DAMNED you pick with Inverted Cross also has its guess pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings. ELITE gives that DAMNED +3 MEMORY each level before it is pushed."
+  },
+  p137: {
+    id: "p137",
+    type: "passive",
+    name: "4th Pentacle of the Moon",
+    price: 12,
+    description:
+      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+  },
+  p138: {
+    id: "p138",
+    type: "passive",
+    name: "5th Pentacle of the Moon",
+    price: 12,
+    description:
+      "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level."
+  },
+  p139: {
+    id: "p139",
+    type: "passive",
+    name: "6th Pentacle of the Moon",
+    price: 12,
+    description:
+      "Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left and becomes STUBBORN instead of copying its PERSONALITY. Vial of Blood appears twice as often in Devil's Offerings. ELITE gives the second DAMNED +5 BOUNTY each level."
+  },
+  // the Poison SEALS (Pentacles of Mars): they give the DAMNED POISON (bot.poisonCounters), which deals
+  // POISON_DAMAGE_PER_STACK damage per stack at the end of every round, before the end-of-round SEALS act (applyPoisonDamage)
+  p140: {
+    id: "p140",
+    type: "passive",
+    name: "1st Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, a random DAMNED gets 1 POISON for every 80 max SOUL it has (at least 1). Each POISON deals 5 damage at the end of every round. ELITE lowers the SOUL needed by 25% each level."
+  },
+  p141: {
+    id: "p141",
+    type: "passive",
+    name: "2nd Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, a random DAMNED gets 1 POISON for every 5 MEMORY it has. Each POISON deals 5 damage at the end of every round. ELITE gives that DAMNED +2 POISON each level."
+  },
+  p142: {
+    id: "p142",
+    type: "passive",
+    name: "3rd Pentacle of Mars",
+    price: 12,
+    description:
+      "When you score a CRITICAL, every DAMNED gets 1 POISON. When a DAMNED with POISON is eliminated, half its POISON (rounded down) spreads randomly to the other DAMNED, BOSSES first. Each POISON deals 5 damage at the end of every round. ELITE adds +1 POISON to each DAMNED on your CRITICAL each level."
+  },
+  p143: {
+    id: "p143",
+    type: "passive",
+    name: "4th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the start of every round, every revealed DAMNED gets 2 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +2 damage each level."
+  },
+  p144: {
+    id: "p144",
+    type: "passive",
+    name: "5th Pentacle of Mars",
+    price: 12,
+    description:
+      "Whenever a DAMNED gains BOUNTY, it gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level."
+  },
+  p145: {
+    id: "p145",
+    type: "passive",
+    name: "6th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the end of every round, every STUBBORN DAMNED gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level."
+  },
+  p146: {
+    id: "p146",
+    type: "passive",
+    name: "7th Pentacle of Mars",
+    price: 12,
+    description:
+      "At the end of every round, the two DAMNED with the most POISON take 15 damage, lose 1 POISON, and give 1 POISON to each DAMNED beside them. If no DAMNED has POISON, two random DAMNED get 1 POISON instead. Each POISON deals 5 damage at the end of every round. ELITE: x1.5 damage each level."
   },
   p111: {
     id: "p111",
@@ -1325,7 +1434,20 @@ const PASSIVE_IDS = [
   "p130",
   "p131",
   "p132",
-  "p133"
+  "p133",
+  "p134",
+  "p135",
+  "p136",
+  "p137",
+  "p138",
+  "p139",
+  "p140",
+  "p141",
+  "p142",
+  "p143",
+  "p144",
+  "p145",
+  "p146"
 ];
 const REMOVED_PASSIVE_IDS = new Set([
   "p3",
@@ -1379,6 +1501,21 @@ const TRINITY_SEAL_ART = {
   "p132+p133": "trinity/son-spirit.png",
   "p131+p132+p133": "trinity/trinity.png"
 };
+// the Artifact SEALS (Pentacles of the Moon), by the ARTIFACT each one strengthens
+const ARTIFACT_SEAL_BY_ARTIFACT = {
+  a15: "p70", // 1st: Sacrificial Dagger
+  a10: "p135", // 2nd: Funeral Coin
+  a9: "p136", // 3rd: Inverted Cross
+  a22: "p137", // 4th: Cursed Chalice
+  a25: "p138", // 5th: Mummified Lamb
+  a11: "p139" // 6th: Vial of Blood
+};
+const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
+// Seal of Amy copies a random Player SEAL each round
+const AMY_SEAL_ID = "p134";
+// the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
+const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];
+const POISON_DAMAGE_PER_STACK = 5;
 // former Goetic SEALS whose demons went to newer SEALS; drawn with the old self-stacking art for now
 const SPECIAL_SEAL_IDS = new Set();
 const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p103", "p109"]);
@@ -1502,7 +1639,22 @@ const SEAL_SIGILS = {
   p67: "024_Caim.png",
   p68: "067_Vapula.png",
   p69: "self-stacking/Cassiel-Hexagram.png",
-  p70: "006_Amy.png",
+  // Artifact SEALS: the Pentacles of the Moon
+  p70: "moon/Moon-Pentacle-01.png",
+  p135: "moon/Moon-Pentacle-02.png",
+  p136: "moon/Moon-Pentacle-03.png",
+  p137: "moon/Moon-Pentacle-04.png",
+  p138: "moon/Moon-Pentacle-05.png",
+  p139: "moon/Moon-Pentacle-06.png",
+  // Poison SEALS: the Pentacles of Mars
+  p140: "mars/Mars-Pentacle-01.png",
+  p141: "mars/Mars-Pentacle-02.png",
+  p142: "mars/Mars-Pentacle-03.png",
+  p143: "mars/Mars-Pentacle-04.png",
+  p144: "mars/Mars-Pentacle-05.png",
+  p145: "mars/Mars-Pentacle-06.png",
+  p146: "mars/Mars-Pentacle-07.png",
+  p134: "006_Amy.png",
   p71: "057_Sallos.png",
   p72: "031_Forcas.png",
   p73: "011_Asmodeus.png",
@@ -1628,7 +1780,7 @@ const GOETIC_BOSS_IMAGE_BY_PASSIVE_ID = {
   p65: "24-naberius.png",
   p67: "53-caim-camio.png",
   p68: "60-vapula-naphula.png",
-  p70: "58-amy-avnas.png",
+  p134: "58-amy-avnas.png",
   p71: "19-sallos.png",
   p72: "50-furcas.png",
   p73: "32-asmoday.png",
@@ -1715,7 +1867,7 @@ const GOETIC_BOSS_SPECS = [
   { key: "orobas", name: "Orobas", image: "55-orobas.png", passiveId: "p108" },
   { key: "gremory", name: "Gremory", image: "56-gremory-gamori.png", passiveId: "p34" },
   { key: "ose", name: "Ose", image: "57-ose.png", passiveId: "p107" },
-  { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p70" },
+  { key: "amy", name: "Amy", image: "58-amy-avnas.png", passiveId: "p134" },
   { key: "orias", name: "Orias", image: "59-orias.png", passiveId: "p6" },
   { key: "vapula", name: "Vapula", image: "60-vapula-naphula.png", passiveId: "p68" },
   { key: "zagan", name: "Zagan", image: "61-zagan.png", passiveId: "p106" },

@@ -1063,6 +1063,7 @@ function renderPauseMenu() {
         </div>
         ${state.mode === "arcade" ? renderPauseBoundPlate() : ""}
         ${state.pauseDevOpen && state.mode === "arcade" ? renderSelfStackingDevPanel() : ""}
+        ${state.pauseDevOpen && state.mode === "arcade" ? renderDevSealGrant() : ""}
       </section>
     </div>
   `;
@@ -1104,6 +1105,42 @@ function renderPauseBoundPlate() {
       </div>
     </div>
   `;
+}
+
+// Pause > DEV: write a SEAL's name (suggestions appear as you type), press the pentagram to get it or upgrade it
+const DEV_PENTAGRAM_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><path d="M50 9 L74.1 83.2 L11 37.3 L89 37.3 L25.9 83.2 Z"/></svg>`;
+
+function renderDevSealGrant() {
+  const query = state.devSealQuery || "";
+  return `
+    <div class="dev-seal-grant">
+      <div class="dev-seal-search-wrap">
+        <div class="dev-seal-search-row">
+          <input id="devSealSearch" class="dev-seal-search" type="text" placeholder="SEAL name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="SEAL name" aria-controls="devSealSuggestions" value="${escapeAttr(query)}" />
+          <button type="button" id="devSealGive" class="dev-seal-give" aria-label="Give or upgrade this SEAL" data-tooltip="Give this SEAL if you have an empty slot, or upgrade it once if you already have it">${DEV_PENTAGRAM_SVG}</button>
+        </div>
+        <div id="devSealSuggestions" class="dev-seal-suggestions" role="listbox"></div>
+      </div>
+      <div id="devSealNote" class="dev-seal-note ${state.devSealNoteOk ? "ok" : ""}" aria-live="polite">${escapeHtml(state.devSealNote || "")}</div>
+    </div>
+  `;
+}
+
+function renderDevSealSuggestions(query) {
+  const highlight = Number.isInteger(state.devSealHighlight) ? state.devSealHighlight : -1;
+  return devSealSuggestions(query)
+    .map((id, index) => {
+      const item = ITEMS[id];
+      const owned = passiveEntry(id);
+      const section = collectionSections().find((candidate) => candidate.ids.includes(id))?.title || "";
+      const status = owned
+        ? isNonUpgradableSeal(id)
+          ? "Owned · cannot upgrade"
+          : `Owned · upgrade to ${passiveDisplayName({ ...owned, stack: (owned.stack || 1) + 1 }).replace(` ${item.name}`, "")}`
+        : section;
+      return `<button type="button" class="dev-seal-suggestion ${index === highlight ? "highlighted" : ""}" role="option" data-dev-seal-pick="${escapeAttr(id)}"><img src="${escapeAttr(sealSigilPath(id))}" alt="" /><span class="dev-seal-suggestion-name">${escapeHtml(item.name)}</span><span class="dev-seal-suggestion-status">${escapeHtml(status)}</span></button>`;
+    })
+    .join("");
 }
 
 function renderSelfStackingDevPanel() {
@@ -2114,6 +2151,16 @@ function renderBots() {
   `;
 }
 
+// the POISON skull (traced from a hazard-sign skull) shown beside a poisoned DAMNED's max SOUL
+const POISON_SKULL_SVG = `<svg class="poison-skull" viewBox="0 0 84.9 100.0" aria-hidden="true"><path fill-rule="evenodd" d="M37.0 0.3Q36.7 0.7 35.0 0.7Q33.4 0.7 32.8 1.0Q32.2 1.3 31.5 1.3Q30.8 1.3 30.2 1.6Q29.6 2.0 28.9 2.0Q28.1 2.0 24.0 3.7Q19.9 5.4 16.9 7.4Q14.0 9.4 10.4 13.0Q6.7 16.6 5.0 19.4Q3.3 22.2 3.3 22.6Q3.3 23.0 2.6 24.3Q2.0 25.5 2.0 25.9Q2.0 26.3 1.6 26.9Q1.3 27.5 1.3 28.2Q1.3 28.9 1.0 29.5Q0.7 30.1 0.7 31.7Q0.7 33.4 0.3 33.7Q0.0 34.0 0.0 39.1Q0.0 44.1 0.3 44.4Q0.7 44.7 0.7 46.7Q0.7 48.7 1.0 49.3Q1.3 49.8 1.3 50.6Q1.3 51.3 1.6 51.9Q2.0 52.5 2.0 52.9Q2.0 53.3 4.6 58.5Q7.2 63.7 7.2 66.7Q7.2 69.7 6.9 70.3Q6.6 70.9 6.6 71.6Q6.6 72.4 6.2 72.9Q5.9 73.5 6.0 75.4Q6.1 77.3 7.1 78.3Q8.1 79.3 9.9 80.0Q11.7 80.8 14.1 80.8Q16.4 80.8 17.0 81.1Q17.6 81.4 20.8 81.5Q24.0 81.6 24.8 82.5Q25.7 83.4 25.7 85.4Q25.7 87.5 25.3 88.1Q25.0 88.7 25.0 89.4Q25.0 90.1 24.7 90.7Q24.3 91.3 24.3 92.7Q24.3 94.1 25.1 94.9Q25.8 95.7 27.3 96.5Q28.8 97.2 29.2 97.2Q29.6 97.2 30.2 97.5Q30.8 97.9 31.5 97.9Q32.2 97.9 32.8 98.2Q33.4 98.5 34.5 98.5Q35.5 98.5 36.1 98.8Q36.7 99.2 38.0 99.2Q39.3 99.2 39.6 99.5Q40.0 99.8 42.4 99.8Q44.7 99.8 45.1 99.5Q45.4 99.2 46.7 99.2Q48.0 99.2 48.6 98.8Q49.2 98.5 50.2 98.5Q51.3 98.5 51.9 98.2Q52.5 97.9 53.2 97.9Q53.9 97.9 54.5 97.5Q55.1 97.2 56.5 96.9Q57.9 96.5 59.4 95.1Q60.9 93.8 60.9 93.3Q60.9 92.9 60.6 92.5Q60.4 92.1 60.4 91.0Q60.4 90.0 60.0 89.4Q59.7 88.8 59.7 88.1Q59.7 87.3 59.4 86.8Q59.0 86.2 59.0 85.1Q59.0 84.0 59.9 82.8Q60.7 81.6 64.2 81.5Q67.8 81.4 68.3 81.1Q68.9 80.8 71.3 80.8Q73.7 80.8 74.9 80.1Q76.2 79.4 76.7 79.4Q77.3 79.3 78.0 78.6Q78.6 78.0 79.0 77.1Q79.4 76.3 79.4 75.6Q79.4 74.8 79.1 74.3Q78.8 73.7 78.8 72.9Q78.8 72.2 78.5 71.6Q78.1 71.1 78.1 70.3Q78.1 69.6 77.8 69.0Q77.5 68.4 77.5 66.7Q77.5 65.0 77.8 64.4Q78.1 63.8 78.1 63.4Q78.1 63.0 80.4 58.5Q82.7 53.9 82.7 53.5Q82.7 53.1 83.4 51.6Q84.0 50.0 84.0 49.0Q84.0 48.0 84.4 47.7Q84.7 47.4 84.7 39.1Q84.7 30.8 84.4 30.4Q84.0 30.1 84.0 29.4Q84.0 28.8 83.7 28.2Q83.4 27.6 83.4 26.9Q83.4 26.2 81.7 22.7Q79.9 19.2 78.6 17.3Q77.3 15.3 74.7 12.7Q72.0 10.0 69.7 8.4Q67.4 6.7 64.0 5.0Q60.5 3.3 60.1 3.3Q59.7 3.3 57.2 2.3Q54.6 1.3 53.5 1.3Q52.5 1.3 51.9 1.0Q51.3 0.7 50.0 0.7Q48.7 0.7 48.4 0.3Q48.0 0.0 42.7 0.0Q37.3 0.0 37.0 0.3Z M41.9 67.7Q42.8 67.6 43.3 68.1Q43.9 68.6 44.0 69.2Q44.1 69.7 45.1 71.9Q46.2 74.0 46.7 74.6Q47.2 75.2 47.3 75.7Q47.4 76.3 48.0 77.5Q48.7 78.8 48.7 79.4Q48.7 80.1 48.4 80.4Q48.2 80.8 42.4 80.8Q36.7 80.9 36.1 80.4Q35.5 79.9 35.4 79.4Q35.4 78.8 38.2 73.3Q41.1 67.8 41.9 67.7Z M49.8 51.7Q50.8 50.7 52.6 49.9Q54.4 49.2 57.2 49.2Q59.9 49.2 60.4 49.5Q61.0 49.8 61.8 49.8Q62.5 49.8 63.1 50.2Q63.7 50.5 64.1 50.5Q64.5 50.5 66.0 51.2Q67.4 52.0 69.2 53.7Q70.9 55.4 71.6 56.9Q72.4 58.4 72.4 60.8Q72.4 63.2 71.6 64.6Q70.9 66.1 70.5 66.5Q70.1 66.9 67.9 68.0Q65.8 69.1 62.7 69.1Q59.7 69.1 59.1 68.8Q58.6 68.4 57.2 68.1Q55.8 67.8 54.3 67.0Q52.8 66.3 51.1 64.6Q49.3 62.8 48.6 61.0Q47.9 59.2 47.9 56.8Q47.9 54.4 48.3 53.6Q48.7 52.8 49.8 51.7Z M36.0 52.5Q36.8 53.8 36.8 54.9Q36.8 55.9 37.0 56.2Q37.2 56.4 37.0 58.5Q36.8 60.5 36.1 62.0Q35.4 63.5 33.6 64.9Q31.9 66.3 29.8 67.4Q27.6 68.4 26.9 68.4Q26.2 68.4 25.6 68.8Q25.0 69.1 22.3 69.1Q19.6 69.1 17.8 68.3Q16.0 67.6 14.9 66.5Q13.8 65.5 13.1 64.0Q12.3 62.5 12.3 61.1Q12.3 59.7 12.7 59.1Q13.0 58.6 13.0 58.1Q13.0 57.7 14.0 56.1Q15.0 54.4 16.4 53.2Q17.9 52.0 20.1 50.9Q22.2 49.8 22.9 49.8Q23.7 49.8 24.3 49.5Q24.8 49.2 27.5 49.2Q30.3 49.2 32.7 50.2Q35.2 51.3 36.0 52.5Z"/></svg>`;
+
+function poisonTooltipText(bot) {
+  const stacks = botPoison(bot);
+  const perStack = poisonDamagePerStack();
+  const taken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0));
+  return `${stacks} POISON\nTakes ${stacks * perStack} damage at the end of every round (${perStack} per POISON).\nPOISON damage taken so far: ${taken}.`;
+}
+
 function renderBot(bot, pendingPick) {
   const round = state.roundState;
   const display = roundRevealBotDisplay(bot);
@@ -2199,9 +2246,11 @@ function renderBot(bot, pendingPick) {
     botLastMemoryDelta > 0
       ? `<div class="memory-badge ${botPops.memory.className}"${botPops.memory.style} ${memoryTooltip ? `data-tooltip="${escapeAttr(memoryTooltip)}"` : ""}>+${botLastMemoryDelta}</div>`
       : "";
+  // POISON: a small skull beside the max SOUL; hovering it shows the stacks, the damage each round and the total so far
+  const poisonStacks = botPoison(bot);
   const poisonStackBadge =
-    (bot.poisonCounters || 0) > 0
-      ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
+    poisonStacks > 0 && !isDown
+      ? `<span class="poison-stack-label poison-label" data-tooltip="${escapeAttr(poisonTooltipText(bot))}" aria-label="POISON ${poisonStacks}">${POISON_SKULL_SVG}</span>`
       : "";
   // Seal of Sitri's host: double SOUL until it dies
   const sitriHostBadge =
@@ -2383,9 +2432,17 @@ function renderPendingText() {
   if (state.pendingActive.id === "a14") return `${item.name} reduces the TARGET by ${artifactValue(10)}.`;
   if (state.pendingActive.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from Seal of Amy` : ""}.`;
+    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
   }
-  if (state.pendingActive.id === "a25") return `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+  if (state.pendingActive.id === "a25") {
+    const lamb = artifactSealEntry("a25");
+    return lamb
+      ? `${item.name}: pick DAMNED to reveal next round and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
+      : `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+  }
+  if (state.pendingActive.id === "a9" && artifactSealEntry("a9")) {
+    return `${item.name}: pick DAMNED to remove from the average and push away from the TARGET by its MEMORY.`;
+  }
   if (state.pendingActive.id === "a26" && state.pendingActive.step === "give") return `${item.name}: pick DAMNED to receive the drained BOUNTY.`;
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
@@ -2393,7 +2450,13 @@ function renderPendingText() {
     return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max SOUL.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
+    if (Number.isFinite(state.pendingActive.moonHeal)) {
+      return `${item.name}: pick a different non-boss DAMNED to overheal ${state.pendingActive.moonHeal} SOUL and turn STUBBORN.`;
+    }
     return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max SOUL and copy the first's PERSONALITY.`;
+  }
+  if (state.pendingActive.id === "a11" && artifactSealEntry("a11")) {
+    return `${item.name}: pick a non-boss DAMNED to eliminate.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }

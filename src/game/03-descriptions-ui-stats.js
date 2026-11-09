@@ -3,11 +3,25 @@ function artifactDescription(item) {
   if (item.id === "a6") return `During reveal, add ${artifactValue(20)} to the TARGET.`;
   if (item.id === "a7") return "Pick a non-boss DAMNED and swap your effective guess with theirs.";
   if (item.id === "a8") return `Pick a DAMNED; their guess counts ${artifactCount(5)} times for the TARGET average.`;
-  if (item.id === "a9") return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
+  if (item.id === "a9") {
+    const cross = artifactSealEntry("a9");
+    if (!cross) return "Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.";
+    const memory = 3 * passiveEntryEliteLevels(cross);
+    return `Pick a DAMNED; remove their guess from the TARGET average, though they still take damage.${memory ? ` It gains ${memory} MEMORY, then` : " Its"} guess is pushed away from the final TARGET by 1 per MEMORY (${ITEMS.p136.name}).`;
+  }
   if (item.id === "a10") {
+    if (artifactSealEntry("a10")) {
+      const range = moonCoinSpreadRange();
+      return `Spread ${range.min} to ${range.max} BOUNTY randomly among the DAMNED (${ITEMS.p135.name}).`;
+    }
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
+    const vial = artifactSealEntry("a11");
+    if (vial) {
+      const bounty = 5 * passiveEntryEliteLevels(vial);
+      return `Pick two non-boss DAMNED. The first is eliminated. The second overheals by the SOUL the first had left and becomes STUBBORN${bounty ? `, and gains ${bounty} BOUNTY` : ""} (${ITEMS.p139.name}).`;
+    }
     return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-SOUL damage. The second overheals ${artifactPercentValue(30)}% max SOUL and copies the first's PERSONALITY.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
@@ -17,7 +31,7 @@ function artifactDescription(item) {
   if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
   if (item.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `Pick a target. Deal ${artifactPercentValue(20)}% max-SOUL damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-SOUL damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from ${ITEMS.p70.name}` : ""}.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
   if (item.id === "a18") {
@@ -27,10 +41,19 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    return "+1 CRITICAL range for the round.";
+    const percent = moonChaliceCriticalPercent();
+    return percent
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+      : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
-  if (item.id === "a25") return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+  if (item.id === "a25") {
+    const lamb = artifactSealEntry("a25");
+    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+    const levels = passiveEntryEliteLevels(lamb);
+    const flat = levels ? ` +${5 * levels}` : "";
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+  }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
   }
@@ -67,7 +90,47 @@ function itemDescription(item) {
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p133"].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (item.id === AMY_SEAL_ID) return amySealDescription(item);
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  const eliteLevelCount = stack - 1;
+  // Poison SEALS (Pentacles of Mars)
+  const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
+  if (item.id === "p140") {
+    return `At the start of every round, a random DAMNED gets 1 POISON for every ${marsHealthPerPoison({ stack })} max SOUL it has (at least 1). ${poisonRule}`;
+  }
+  if (item.id === "p141") {
+    return `At the start of every round, a random DAMNED gets 1 POISON for every 5 MEMORY it has, plus ${2 * eliteLevelCount}. ${poisonRule}`;
+  }
+  if (item.id === "p142") {
+    return `When you score a CRITICAL, every DAMNED gets ${1 + eliteLevelCount} POISON. When a DAMNED with POISON is eliminated, half its POISON (rounded down) spreads randomly to the other DAMNED, BOSSES first. ${poisonRule}`;
+  }
+  if (item.id === "p143") {
+    return `At the start of every round, every revealed DAMNED gets 2 POISON, and every POISON deals +${2 * eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p144") {
+    return `Whenever a DAMNED gains BOUNTY, it gets 1 POISON, and every POISON deals +${eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p145") {
+    return `At the end of every round, every STUBBORN DAMNED gets 1 POISON, and every POISON deals +${eliteLevelCount} damage. ${poisonRule}`;
+  }
+  if (item.id === "p146") {
+    return `At the end of every round, the two DAMNED with the most POISON take ${passiveEntryFlatDamage({ stack }, 15)} damage, lose 1 POISON, and give 1 POISON to each DAMNED beside them. If no DAMNED has POISON, two random DAMNED get 1 POISON instead. ${poisonRule}`;
+  }
+  if (item.id === "p135") {
+    return `Funeral Coin no longer pays you SIN: it spreads ${6 + 4 * eliteLevelCount} to ${16 + 4 * eliteLevelCount} BOUNTY randomly among the DAMNED instead, and appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p136") {
+    return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p137") {
+    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p138") {
+    return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
+  }
+  if (item.id === "p139") {
+    return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
+  }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
@@ -288,6 +351,24 @@ function itemDescription(item) {
   return item.description;
 }
 
+// Seal of Amy's text: the base rule, then what it copies this round
+function amySealDescription(item) {
+  const stack = Math.max(1, item?.stack || 1);
+  const copiedStack = amyCopiedStack(item);
+  const copiedLabel = copiedStack === 2 ? "ELITE" : `ELITE +${copiedStack - 1}`;
+  const parts = splitEliteDescription(ITEMS[AMY_SEAL_ID].description);
+  const main =
+    stack <= 1
+      ? parts.main
+      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+  const copiedId = amyCopyThisRound(item);
+  const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
+  const copyText = copiedItem
+    ? `\nThis round: ${passiveDisplayName(copiedItem)}. ${descriptionWithoutElite(itemDescription(copiedItem))}`
+    : "";
+  return `${main}${copyText}${stack <= 1 && parts.elite ? ` ${parts.elite}` : ""}`;
+}
+
 function markPassiveTriggered(id) {
   if (!state.roundState || !passiveStack(id)) return;
   if (directPassiveStack(id)) {
@@ -297,6 +378,11 @@ function markPassiveTriggered(id) {
   if (mimicContributionFor(id)) {
     state.roundState.triggeredPassiveIds.add("p28");
     recordSealTrigger("p28");
+  }
+  // Seal of Amy acting as this round's copied SEAL
+  if (amyContributionFor(id)) {
+    state.roundState.triggeredPassiveIds.add(AMY_SEAL_ID);
+    recordSealTrigger(AMY_SEAL_ID);
   }
 }
 
@@ -714,7 +800,7 @@ function descriptionHtml(value) {
     return token;
   }), plainTargetText);
   let html = htmlWithLineBreaks(protectedText).replace(
-    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|SOUL|MEMORY|BOUNTY)\b/gi,
+    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|SOUL|MEMORY|BOUNTY|POISON)\b/gi,
     (keyword, _whole, offset, fullText) => {
       if (/^boss(?:es)?$/i.test(keyword) && fullText[offset - 1] === "-") return keyword.toLowerCase();
       return `<span class="tooltip-keyword">${keyword.toUpperCase()}</span>`;
@@ -1277,13 +1363,15 @@ function sourceTooltip(sources, kind = "damage") {
 function sealIdFromStatSource(source) {
   const sourceText = String(source || "").trim();
   if (!sourceText) return "";
-  return (
-    PASSIVE_IDS.find((id) => {
-      if (REMOVED_PASSIVE_IDS.has(id)) return false;
-      const name = ITEMS[id]?.name;
+  const id =
+    PASSIVE_IDS.find((candidate) => {
+      if (REMOVED_PASSIVE_IDS.has(candidate)) return false;
+      const name = ITEMS[candidate]?.name;
       return name && (sourceText === name || sourceText.startsWith(`${name} `));
-    }) || ""
-  );
+    }) || "";
+  // what Seal of Amy does as a SEAL you do not own is Amy's work (stats, discovery, its animation step)
+  if (id && typeof amyContributionFor === "function" && !directPassiveStack(id) && amyContributionFor(id)) return AMY_SEAL_ID;
+  return id;
 }
 
 function sealStatsFor(id) {

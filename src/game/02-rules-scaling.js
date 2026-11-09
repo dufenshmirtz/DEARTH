@@ -234,10 +234,120 @@ function mimicContributionFor(id) {
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
+// ---------- Seal of Amy: a random Player SEAL each round ----------
+// At the start of every round Amy rolls one Player (Goetic) SEAL and acts as it until the round ends, as an ELITE
+// SEAL two levels stronger per Amy ELITE level (Amy x1 copies at stack 2, ELITE Amy at stack 4, ELITE +2 at stack 6).
+// The roll is kept on Amy's item (amyCopiedId / amyCopiedRound) so a saved run keeps it.
+function amyItem() {
+  return passiveEntry(AMY_SEAL_ID);
+}
+
+function amyCopiedStack(item = amyItem()) {
+  return 2 * Math.max(1, Math.ceil(item?.stack || 1));
+}
+
+function amyCopyPool() {
+  return GOETIC_BOSS_PASSIVE_IDS.filter((id) => id !== AMY_SEAL_ID && ITEMS[id] && !isSealSuppressed(id));
+}
+
+// the Player SEAL Amy copies this round, or null
+function amyCopyThisRound(item = amyItem()) {
+  if (!item || item.amyCopiedRound !== state.round) return null;
+  const id = item.amyCopiedId;
+  return id && ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id) && id !== AMY_SEAL_ID ? id : null;
+}
+
+function rollAmyCopy() {
+  const item = amyItem();
+  if (!item) return null;
+  const pool = amyCopyPool();
+  item.amyCopiedId = pool.length ? randomFrom(pool) : null;
+  item.amyCopiedRound = state.round;
+  if (item.amyCopiedId && state.roundState && !isSealSuppressed(AMY_SEAL_ID)) {
+    addRoundEvent(`${ITEMS[AMY_SEAL_ID].name} took the power of ${passiveDisplayName({ ...ITEMS[item.amyCopiedId], stack: amyCopiedStack(item) })} for this round.`);
+  }
+  return item.amyCopiedId;
+}
+
+// the stacks Amy adds to a SEAL this round (0 when it is not the copied one, or either one is suppressed)
+function amyContributionFor(id) {
+  if (id === AMY_SEAL_ID || isSealSuppressed(AMY_SEAL_ID) || isSealSuppressed(id)) return 0;
+  const item = amyItem();
+  return item && amyCopyThisRound(item) === id ? amyCopiedStack(item) : 0;
+}
+
 function passiveStack(id) {
   if (REMOVED_PASSIVE_IDS.has(id)) return 0;
   if (isSealSuppressed(id)) return 0;
-  return directPassiveStack(id) + mimicContributionFor(id);
+  return directPassiveStack(id) + mimicContributionFor(id) + amyContributionFor(id);
+}
+
+// ---------- POISON (Poison SEALS, the Pentacles of Mars) ----------
+// A DAMNED's POISON stacks live on bot.poisonCounters. They stay until it dies (the 7th Pentacle removes one at a
+// time) and deal poisonDamagePerStack() damage each at the end of every round, even after the SEALS are sold.
+function botPoison(bot) {
+  return Math.max(0, Math.ceil(bot?.poisonCounters || 0));
+}
+
+function canPoisonBot(bot) {
+  return Boolean(bot && !bot.immortal && bot.hp > 0 && !bot.eliminated);
+}
+
+// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action)
+function addBotPoison(bot, amount) {
+  const added = Math.max(0, Math.ceil(amount || 0));
+  if (!added || !canPoisonBot(bot)) return 0;
+  bot.poisonCounters = botPoison(bot) + added;
+  return added;
+}
+
+function poisonSealEntry(id) {
+  return orderedPassiveEffectEntries(id)[0] || null;
+}
+
+// ELITE 4th (+2), 5th (+1) and 6th (+1) Pentacles of Mars raise every POISON's damage, per ELITE level
+function poisonDamageBonusEntries() {
+  return [
+    ["p143", 2],
+    ["p144", 1],
+    ["p145", 1]
+  ]
+    .map(([id, perLevel]) => {
+      const entry = poisonSealEntry(id);
+      const levels = entry ? passiveEntryEliteLevels(entry) : 0;
+      return { entry, bonus: levels * perLevel };
+    })
+    .filter((part) => part.entry && part.bonus > 0);
+}
+
+function poisonDamagePerStack() {
+  return POISON_DAMAGE_PER_STACK + poisonDamageBonusEntries().reduce((sum, part) => sum + part.bonus, 0);
+}
+
+// 1st Pentacle of Mars: max SOUL per POISON (80, ELITE -25% each level, never below 1)
+function marsHealthPerPoison(entry) {
+  return Math.max(1, Math.round(80 * Math.pow(0.75, entry ? passiveEntryEliteLevels(entry) : 0)));
+}
+
+// 5th Pentacle of Mars: a DAMNED that gains BOUNTY gets 1 POISON
+function applyBountyPoison(bot) {
+  const entry = poisonSealEntry("p144");
+  if (!entry || !state.roundState) return;
+  if (!addBotPoison(bot, 1)) return;
+  markPassiveEntryTriggered(entry);
+  addRoundEvent(`${ITEMS.p144.name} gave ${bot.name} 1 POISON for its BOUNTY.`);
+}
+
+// ---------- Artifact SEALS (Pentacles of the Moon) ----------
+// the active entry of the Artifact SEAL that strengthens this ARTIFACT, or null
+function artifactSealEntry(artifactId) {
+  const sealId = ARTIFACT_SEAL_BY_ARTIFACT[artifactId];
+  return sealId ? orderedPassiveEffectEntries(sealId)[0] || null : null;
+}
+
+function artifactSealLevels(artifactId) {
+  const entry = artifactSealEntry(artifactId);
+  return entry ? passiveEntryEliteLevels(entry) : 0;
 }
 
 function eliteLevels(idOrItem) {
@@ -728,6 +838,7 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
   }
   if (gained > 0) {
     applyBountyToMemoryMirror(bot, gained, options);
+    applyBountyPoison(bot);
   }
   checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
@@ -975,6 +1086,28 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
+// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
+function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
+  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+}
+
+// 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
+function moonLambDamage(bot, entry = artifactSealEntry("a25")) {
+  if (!entry || !bot) return 0;
+  const percent = bot.isBoss ? 15 : 30;
+  return Math.ceil(((bot.maxHp || 0) * percent) / 100) + 5 * passiveEntryEliteLevels(entry);
+}
+
+function moonLambBountyBonus(entry = artifactSealEntry("a25")) {
+  return entry ? 3 * passiveEntryEliteLevels(entry) : 0;
+}
+
+// 2nd Pentacle of the Moon: Funeral Coin's BOUNTY spread (6-16, ELITE +4 each level)
+function moonCoinSpreadRange(entry = artifactSealEntry("a10")) {
+  const bonus = entry ? 4 * passiveEntryEliteLevels(entry) : 0;
+  return { min: 6 + bonus, max: 16 + bonus };
+}
+
 function sacrificialDaggerExtraDamage(idOrItem = "p70") {
   return flatDamageValue(idOrItem, 10);
 }
@@ -1098,6 +1231,20 @@ function orderedPassiveEntries() {
           sourceId: "p28",
           copied: true,
           copiedName: target.name,
+          index
+        };
+      }
+      // Seal of Amy acts as this round's copied Player SEAL (its triggers animate Amy)
+      if (item.id === AMY_SEAL_ID) {
+        const copiedId = amyCopyThisRound(item);
+        if (!copiedId || isSealSuppressed(copiedId)) return null;
+        return {
+          id: copiedId,
+          item,
+          stack: amyCopiedStack(item),
+          sourceId: AMY_SEAL_ID,
+          copied: true,
+          copiedName: ITEMS[copiedId].name,
           index
         };
       }

@@ -682,6 +682,7 @@ function normalizeLoadedRoundState(round) {
   if (!Array.isArray(round.eliminationCreditRecords)) round.eliminationCreditRecords = [];
   if (!Array.isArray(round.eliminatedPersonalities)) round.eliminatedPersonalities = [];
   if (!Array.isArray(round.pendingEndOfRoundBotDamages)) round.pendingEndOfRoundBotDamages = [];
+  if (!Array.isArray(round.moonCrossBotIds)) round.moonCrossBotIds = [];
   if (!Array.isArray(round.roundEvents)) round.roundEvents = [];
   if (!round.selfStackingConditionCounts || typeof round.selfStackingConditionCounts !== "object") {
     round.selfStackingConditionCounts = {};
@@ -754,6 +755,14 @@ function normalizeLoadedArcadeRun() {
       bot.passiveKeys = randomBossPassiveKeys(1);
     }
     if (bot.buffPassiveKey && !PYROS_GIFT_PASSIVES[bot.buffPassiveKey]) bot.buffPassiveKey = null;
+    bot.poisonCounters = Number.isFinite(bot.poisonCounters) ? Math.max(0, Math.ceil(bot.poisonCounters)) : 0;
+    bot.poisonDamageTaken = Number.isFinite(bot.poisonDamageTaken) ? Math.max(0, Math.ceil(bot.poisonDamageTaken)) : 0;
+    // a Goetic BOSS suppresses its demon's current SEAL (Amy's moved from p70 to p134)
+    const goeticSpec = bot.goeticKey ? GOETIC_BOSS_BY_KEY[bot.goeticKey] : null;
+    if (goeticSpec?.passiveId && ITEMS[goeticSpec.passiveId]) {
+      bot.goeticPassiveId = goeticSpec.passiveId;
+      bot.goeticSealName = ITEMS[goeticSpec.passiveId].name;
+    }
     if (!Array.isArray(bot.memory)) bot.memory = [];
     if (!Array.isArray(bot.damageSources)) bot.damageSources = [];
     if (!Array.isArray(bot.healSources)) bot.healSources = [];

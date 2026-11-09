@@ -19,8 +19,8 @@ Once per ARTIFACT type each round, when you use two matching ARTIFACTS, deal 30 
 Seal of Amon (12 SIN)
 Reveal one extra DAMNED each round. Revealed DAMNED gain +2 BOUNTY and +2 MEMORY, and the gains stay even if they are not revealed next round. ELITE adds +1 BOUNTY to the reveal reward.
 
-Seal of Amy (12 SIN)
-Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up.
+Seal of Amy (14 SIN)
+At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level.
 
 Seal of Andras (13 SIN)
 Using an ARTIFACT on a DAMNED has a 50% chance to change their personality to STUBBORN. At end of round, BOSSES take 5 damage for every STUBBORN DAMNED. ELITE adds +10% chance and multiplies the BOSS damage by x1.5 each level, rounded up.
@@ -336,6 +336,53 @@ At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this roun
 
 Seventh Pentacle of Saturn (16 SIN)
 When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
+
+Artifact Seals
+
+Each Pentacle of the Moon strengthens one ARTIFACT and makes it appear twice as often in Devil's Offerings.
+
+1st Pentacle of the Moon (12 SIN)
+Sacrificial Dagger deals 10 extra flat damage and appears twice as often in Devil's Offerings. ELITE multiplies the flat damage by x1.5 each level, rounded up.
+
+2nd Pentacle of the Moon (12 SIN)
+Funeral Coin no longer pays you SIN: it spreads 6 to 16 BOUNTY randomly among the DAMNED instead, and appears twice as often in Devil's Offerings. ELITE adds +4 BOUNTY to the spread each level.
+
+3rd Pentacle of the Moon (12 SIN)
+The DAMNED you pick with Inverted Cross also has its guess pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings. ELITE gives that DAMNED +3 MEMORY each level before it is pushed.
+
+4th Pentacle of the Moon (12 SIN)
+Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level.
+
+5th Pentacle of the Moon (12 SIN)
+If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level.
+
+6th Pentacle of the Moon (12 SIN)
+Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left and becomes STUBBORN instead of copying its PERSONALITY. Vial of Blood appears twice as often in Devil's Offerings. ELITE gives the second DAMNED +5 BOUNTY each level.
+
+Poison Seals
+
+Each Pentacle of Mars gives the DAMNED POISON. Every POISON a DAMNED carries deals 5 damage to it at the end of every round, before the end-of-round SEALS act. POISON stays until the DAMNED dies, and shows as a small skull next to its max SOUL (hover it to see the stacks, the damage each round and the POISON damage taken so far).
+
+1st Pentacle of Mars (12 SIN)
+At the start of every round, a random DAMNED gets 1 POISON for every 80 max SOUL it has (at least 1). Each POISON deals 5 damage at the end of every round. ELITE lowers the SOUL needed by 25% each level.
+
+2nd Pentacle of Mars (12 SIN)
+At the start of every round, a random DAMNED gets 1 POISON for every 5 MEMORY it has. Each POISON deals 5 damage at the end of every round. ELITE gives that DAMNED +2 POISON each level.
+
+3rd Pentacle of Mars (12 SIN)
+When you score a CRITICAL, every DAMNED gets 1 POISON. When a DAMNED with POISON is eliminated, half its POISON (rounded down) spreads randomly to the other DAMNED, BOSSES first. Each POISON deals 5 damage at the end of every round. ELITE adds +1 POISON to each DAMNED on your CRITICAL each level.
+
+4th Pentacle of Mars (12 SIN)
+At the start of every round, every revealed DAMNED gets 2 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +2 damage each level.
+
+5th Pentacle of Mars (12 SIN)
+Whenever a DAMNED gains BOUNTY, it gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level.
+
+6th Pentacle of Mars (12 SIN)
+At the end of every round, every STUBBORN DAMNED gets 1 POISON. Each POISON deals 5 damage at the end of every round. ELITE makes every POISON deal +1 damage each level.
+
+7th Pentacle of Mars (12 SIN)
+At the end of every round, the two DAMNED with the most POISON take 15 damage, lose 1 POISON, and give 1 POISON to each DAMNED beside them. If no DAMNED has POISON, two random DAMNED get 1 POISON instead. Each POISON deals 5 damage at the end of every round. ELITE: x1.5 damage each level.
 
 Unlockable Seals
 

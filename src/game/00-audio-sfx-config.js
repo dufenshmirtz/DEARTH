@@ -124,6 +124,7 @@ const GAME_SFX = {
   },
   introBoot: { srcs: ["assets/audio/intro/intro-boot.mp3"], tier: "stinger" },
   introEvil: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
+  introThunder: { srcs: ["assets/audio/intro/intro-thunder.mp3"], tier: "stinger" }, // Jesus' "SILENCE" ({THUNDER} in the lines)
   introLaugh: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "big", rate: 0.84 },
   introBurn: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
   menuJesusFlash: { srcs: ["assets/audio/sfx/critical-bell.mp3"], tier: "accent" },

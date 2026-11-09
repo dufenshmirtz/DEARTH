@@ -178,6 +178,162 @@ button:disabled {
   opacity: 0.72;
 }
 
+/* Pause > DEV: SEAL search with suggestions and the pentagram button (gives or upgrades the SEAL) */
+#app .dev-seal-grant {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+#app .dev-seal-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#app .dev-seal-search {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(233, 227, 214, 0.45);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--bone, #e9e3d6);
+  font-family: var(--font-book);
+  font-size: 15px;
+  outline: none;
+  box-shadow: none;
+}
+
+#app .dev-seal-search::placeholder {
+  color: var(--ash, #8d877c);
+}
+
+#app .dev-seal-search:focus {
+  border-color: var(--bone, #e9e3d6);
+}
+
+#app .pause-card .dev-seal-give {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bone, #e9e3d6);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#app .pause-card .dev-seal-give svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+#app .pause-card .dev-seal-give:hover:not(:disabled),
+#app .pause-card .dev-seal-give:focus-visible {
+  color: var(--blood-bright, #dc2a2f) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+#app .dev-seal-search-wrap {
+  position: relative;
+}
+
+/* the suggestions float over the menu (below the box, or above it when there is more room there) */
+#app .dev-seal-suggestions {
+  position: absolute;
+  left: 0;
+  right: 42px;
+  top: calc(100% + 2px);
+  z-index: 20;
+  display: none;
+  gap: 2px;
+  padding: 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(233, 227, 214, 0.35);
+  background: rgba(6, 6, 7, 0.98);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8);
+}
+
+#app .dev-seal-suggestions.above {
+  top: auto;
+  bottom: calc(100% + 2px);
+}
+
+#app .dev-seal-suggestions.open {
+  display: grid;
+}
+
+#app .pause-card .dev-seal-suggestion {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 0;
+  padding: 4px 8px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--bone, #e9e3d6);
+  font-family: var(--font-book);
+  font-size: 14px;
+  text-align: left;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#app .pause-card .dev-seal-suggestion img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+#app .pause-card .dev-seal-suggestion-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#app .pause-card .dev-seal-suggestion-status {
+  color: var(--ash, #8d877c);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#app .pause-card .dev-seal-suggestion:hover:not(:disabled),
+#app .pause-card .dev-seal-suggestion.highlighted {
+  color: var(--blood-bright, #dc2a2f) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+#app .dev-seal-note {
+  min-height: 16px;
+  color: var(--ash, #8d877c);
+  font-family: var(--font-book);
+  font-size: 13px;
+}
+
+#app .dev-seal-note.ok {
+  color: var(--bone, #e9e3d6);
+}
+
 .arena::before {
   position: absolute;
   inset: 50px 100px 88px;
@@ -3421,6 +3577,20 @@ body.mobile-arcade .bot-card.boss:hover {
 
 .bot-card.boss .poison-stack-label {
   color: #d5b6ff !important;
+}
+
+/* POISON (Poison SEALS): a small dark grey-green skull beside the max HEALTH; hover it for the details */
+#app .bot-card .poison-label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  cursor: help;
+}
+
+#app .bot-card .poison-label .poison-skull {
+  width: 11px;
+  height: 13px;
+  fill: #50684d;
 }
 
 .bot-card.boss .bot-reward,

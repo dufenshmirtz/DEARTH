@@ -26,6 +26,143 @@ function bindPvpEvents() {
   if (restart) bindOn(restart, "click", restartPvpMode);
 }
 
+// Pause > DEV SEAL search: suggestions update in place while typing (no full render, so the box keeps focus).
+// The list floats over the menu like a search engine's, so the box never moves while typing.
+function refreshDevSealSuggestions() {
+  const list = document.querySelector("#devSealSuggestions");
+  const input = document.querySelector("#devSealSearch");
+  if (!list) return;
+  list.innerHTML = renderDevSealSuggestions(state.devSealQuery || "");
+  list.querySelectorAll("[data-dev-seal-pick]").forEach((button) => {
+    // keep the focus in the search box while picking
+    bindOn(button, "mousedown", (event) => event.preventDefault());
+    bindOn(button, "click", () => pickDevSealSuggestion(button.dataset.devSealPick));
+  });
+  const open = Boolean(input) && document.activeElement === input && !state.devSealListClosed && list.children.length > 0;
+  list.classList.toggle("open", open);
+  if (open) placeDevSealSuggestions(input, list);
+}
+
+// opens below the box when it fits, otherwise on the side with more room, never past the screen
+function placeDevSealSuggestions(input, list) {
+  const row = input.closest(".dev-seal-search-row") || input;
+  const rect = row.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const top = viewport ? viewport.offsetTop : 0;
+  const bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+  const below = bottom - rect.bottom - 12;
+  const above = rect.top - top - 12;
+  list.style.maxHeight = "none";
+  const needed = list.scrollHeight + 2;
+  const up = needed > below && above > below;
+  list.classList.toggle("above", up);
+  list.style.maxHeight = `${Math.max(64, Math.floor(up ? above : below))}px`;
+  list.querySelector(".highlighted")?.scrollIntoView({ block: "nearest" });
+}
+
+function setDevSealListClosed(closed) {
+  state.devSealListClosed = closed;
+  refreshDevSealSuggestions();
+}
+
+function setDevSealNote(note, ok = false) {
+  state.devSealNote = note;
+  state.devSealNoteOk = ok;
+  const element = document.querySelector("#devSealNote");
+  if (element) {
+    element.textContent = note;
+    element.classList.toggle("ok", ok);
+  }
+}
+
+// a suggestion fills the search box with that SEAL's name
+function pickDevSealSuggestion(id) {
+  const input = document.querySelector("#devSealSearch");
+  if (!ITEMS[id]) return;
+  state.devSealQuery = ITEMS[id].name;
+  state.devSealHighlight = -1;
+  state.devSealListClosed = true;
+  if (input) {
+    input.value = state.devSealQuery;
+    input.focus({ preventScroll: true });
+  }
+  setDevSealNote("");
+  refreshDevSealSuggestions();
+}
+
+// the pentagram: give the SEAL (empty slot) or upgrade it once (already owned)
+function useDevSealSearch() {
+  // what the box shows (it can hold a suggestion picked with the arrow keys)
+  const input = document.querySelector("#devSealSearch");
+  if (input) state.devSealQuery = input.value;
+  const resolved = devResolveSealQuery(state.devSealQuery || "");
+  if (!resolved.id) {
+    setDevSealNote(resolved.note);
+    // several matches: show them so one can be picked
+    setDevSealListClosed(!devSealSuggestions(state.devSealQuery || "").length);
+    return;
+  }
+  const result = devGrantSeal(resolved.id);
+  state.devSealQuery = ITEMS[resolved.id].name;
+  state.devSealHighlight = -1;
+  state.devSealListClosed = true;
+  state.devSealNote = result.note;
+  state.devSealNoteOk = result.ok;
+  render();
+}
+
+function bindDevSealSearch() {
+  const input = document.querySelector("#devSealSearch");
+  const give = document.querySelector("#devSealGive");
+  if (give) bindOn(give, "click", useDevSealSearch);
+  if (!input) return;
+  refreshDevSealSuggestions();
+  bindOn(input, "input", () => {
+    state.devSealQuery = input.value;
+    state.devSealHighlight = -1;
+    state.devSealListClosed = false;
+    setDevSealNote("");
+    refreshDevSealSuggestions();
+  });
+  bindOn(input, "focus", () => setDevSealListClosed(false));
+  // hide the list once the box is left (a moment later, so a tapped suggestion still counts)
+  bindOn(input, "blur", () => setTimeout(refreshDevSealSuggestions, 150));
+  bindOn(input, "keydown", (event) => {
+    const options = devSealSuggestions(state.devSealQuery || "");
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (!options.length) return;
+      event.preventDefault();
+      if (state.devSealListClosed) setDevSealListClosed(false);
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      const current = Number.isInteger(state.devSealHighlight) ? state.devSealHighlight : -1;
+      state.devSealHighlight = (current + step + options.length) % options.length;
+      // like a search engine, the highlighted suggestion's name goes into the box
+      const list = document.querySelector("#devSealSuggestions");
+      list?.querySelectorAll("[data-dev-seal-pick]").forEach((button, index) => button.classList.toggle("highlighted", index === state.devSealHighlight));
+      list?.querySelector(".highlighted")?.scrollIntoView({ block: "nearest" });
+      input.value = ITEMS[options[state.devSealHighlight]].name;
+      return;
+    }
+    if (event.key === "Tab" && options.length && devSealSearchText(input.value) !== devSealSearchText(ITEMS[options[0]].name)) {
+      event.preventDefault();
+      pickDevSealSuggestion(options[Math.max(0, state.devSealHighlight ?? 0)] || options[0]);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      state.devSealQuery = input.value;
+      useDevSealSearch();
+      return;
+    }
+    if (event.key === "Escape" && document.activeElement === input) {
+      // first Esc closes the suggestions and leaves the box; the next one closes Pause as usual
+      event.preventDefault();
+      setDevSealListClosed(true);
+      input.blur();
+    }
+  });
+}
+
 function bindEvents() {
   document.querySelectorAll("[data-menu-action]").forEach((button) => {
     bindOn(button, "click", () => handleMenuAction(button.dataset.menuAction));
@@ -137,6 +274,7 @@ function bindEvents() {
 
   bindPvpEvents();
   bindCollectionEvents();
+  bindDevSealSearch();
 
   const mainAction = document.querySelector("#mainAction");
   if (mainAction) {

@@ -11,7 +11,8 @@
    a click/tap anywhere continues; after the last part of a box the next click replaces it.
    The first word of every line is who speaks, which sets the colour: jesus = yellow, you = white,
    satan = red.
-   {SIN} draws the SIN icon. Edit the lines freely; the chunks are worked out from the punctuation. */
+   {SIN} draws the SIN icon; {THUNDER} plays the thunder clap the moment the text reaches it.
+   Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
 const INTRO_BLACK_MS = 5000; // silence before the bell
@@ -21,7 +22,7 @@ const INTRO_BOOT_REVEAL_MS = 1250; // the boot sound's power chord: the game swi
 const INTRO_BURN_MS = 1900; // offerings / ARTIFACTS / SEALS burning back into place
 
 const INTRO_JUDGEMENT_LINES = [
-  ["jesus", "You died on ______ after _______"],
+  ["jesus", "You died on the 11th of November 2022 at 03:48 after choking on a billiard ball while intoxicated."],
   ["jesus", "You are going to HELL."],
   ["you", "Huh, what, no??"],
   ["you", "This can't be true, wait what do you even mean there is an afterlife?"],
@@ -32,15 +33,16 @@ const INTRO_JUDGEMENT_LINES = [
   ["jesus", "There are no other afterlives you insolent fool. Only Heaven and Hell, and there are no other Gods but me. You had your chance to follow my truth, now you shall face my punishment."],
   ["you", "Hey hey I am sorry, I didn't mean it alright? Look I did make some mistakes, and I wasn't always the better person, but you can't forsake me like this!"],
   ["you", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
-  ["jesus", "SILENCE. My word is final. And during the Easter of 2023 you fasted only because you had gotten food poisoning from eating 10 day old pizza."],
+  ["jesus", "SILENCE{THUNDER}. My word is final. And during the Easter of 2018 you fasted only because you had gotten food poisoning from eating ten day old pizza."],
   ["you", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
-  ["you", "One year from now I'll have a big ass beard, I'll stop taking drugs, I'll stop having sex and... and go work at a church. I'll even diddle kids if that's what you want, most of your favorite children seem to do that nowadays anyway."],
+  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, voting conservative, being a good Samaritan, loving my neighbor, hating all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at heretics..."],
+  ["you", "..."],
+  ["you", "Jesus?"],
   ["you", "Hey please, talk to me!"],
   ["you", "Don't leave me hanging!"],
   ["you", "God answer me! Big man! Father! Big daddy!!!"],
-  ["jesus", "Shut. the. fuck. up. The next time you try to insult me or twist my word or whine, I'll make you wish you've never been created."],
-  ["you", "Okay got it whatever you want almighty, I just truly believe if you give me one last chance I'll make you proud, and maybe not face eternal torture."],
-  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, loving my neighbor, killing all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at muslims..."],
+  ["jesus", "Shut your sacrilegious fucking mouth. The next time you dare to insult me or whine before me I'll make you wish you've never been created."],
+  ["you", "Please I am sorry, I get it, whatever you want almighty. I just truly believe that if you give me one last chance I'll make you proud, and hopefully not face eternal torture."],
   ["jesus", "So you want your second chance that bad?"],
   ["you", "OH PLEASE, I will do literally anything and everything!"],
   ["jesus", "Listen here worm, I'll grant you your chance."],
@@ -63,14 +65,15 @@ const INTRO_PACT_LINES = [
   ["you", "Wait a second, red eyes, twisting horns, pointy tail! You're Satan! No way I am trusting you after what the holy trio said to me. He was angry enough before, if he finds out I've been dealing with the devil it's over for me."],
   ["satan", "No need to get defensive here you little flesh puppet! Me and Jesus are cool, I am sure he will turn the other cheek. It's not like he even cares what happens in here..."],
   ["you", "Wait what do you mean?"],
-  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive you are free to do so. I'll find some other scum in here soon enough."],
+  ["satan", "Anyways, if you would like to be torn away slowly from your mistakes in this \"game\", while toiling over all the immoral acts you happily committed while alive and kicking, you are free to do so. I'll find some other scum in here soon enough."],
   ["you", "No no, wait please! I need to get back. What's the deal?"],
   ["satan", "Okay listen here and listen well. You eliminate the other sinners and in exchange I'll give you the strength of my demons in the form of their SEALS. They will help you passively and the better you do the stronger you become."],
   ["satan", "Also I humbly accept rituals to my name, so I would recommend using occult ARTIFACTS right after all the guesses have been revealed, whenever need be."],
   ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
   ["satan", "Yea yea definitely, or whatever the other guy promised you."],
   ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["satan", "Great. And just beware, you are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya."],
+  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
@@ -266,17 +269,29 @@ function introPencilTick() {
 }
 
 /* ---- text: glyphs and punctuation chunks ---- */
+// marks that are not letters: {SIN} is drawn as the icon, the sound marks play when the typing reaches them
+const INTRO_SOUND_MARKS = { "{THUNDER}": "introThunder" };
+const INTRO_MARKS = ["{SIN}", ...Object.keys(INTRO_SOUND_MARKS)];
+
 function introGlyphs(text) {
   const glyphs = [];
   for (let i = 0; i < text.length; i += 1) {
-    if (text.startsWith("{SIN}", i)) {
-      glyphs.push("{SIN}");
-      i += 4;
+    const mark = INTRO_MARKS.find((candidate) => text.startsWith(candidate, i));
+    if (mark) {
+      glyphs.push(mark);
+      i += mark.length - 1;
     } else {
       glyphs.push(text[i]);
     }
   }
   return glyphs;
+}
+
+// plays the sound marks typed between two points (also when a click finishes the part at once)
+function introPlaySoundMarks(from, to) {
+  introState.glyphs.slice(from, to).forEach((glyph) => {
+    if (INTRO_SOUND_MARKS[glyph]) introPlaySfx(INTRO_SOUND_MARKS[glyph]);
+  });
 }
 
 const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
@@ -298,6 +313,7 @@ function introChunkEnds(glyphs) {
 }
 
 function introGlyphHtml(glyph) {
+  if (INTRO_SOUND_MARKS[glyph]) return "";
   return glyph === "{SIN}" ? SIN_MARK : escapeHtml(glyph);
 }
 
@@ -316,10 +332,10 @@ function introFitText() {
   const box = introState.box;
   const text = box?.querySelector(".intro-text");
   if (!text) return;
-  text.style.fontSize = "";
+  text.style.removeProperty("font-size");
   const max = parseFloat(getComputedStyle(text).fontSize) || 24;
   let size = max;
-  // "important": the box's font-size rules are !important and would win over a plain inline size
+  // "important": the stylesheet sets the box font size with !important, which a plain inline size cannot beat
   while (size > 9 && text.scrollHeight > text.clientHeight + 1) {
     size -= 1;
     text.style.setProperty("font-size", `${size}px`, "important");
@@ -373,7 +389,8 @@ function introTypeTo(end) {
     const glyph = introState.glyphs[introState.shown - 1];
     // spaces are skipped over at once and make no sound
     while (introState.shown < end && /\s/.test(glyph) && /\s/.test(introState.glyphs[introState.shown])) introState.shown += 1;
-    if (!/\s/.test(glyph)) introPencilTick();
+    if (INTRO_SOUND_MARKS[glyph]) introPlaySoundMarks(introState.shown - 1, introState.shown);
+    else if (!/\s/.test(glyph)) introPencilTick();
     introDrawText();
   };
   step();
@@ -387,6 +404,7 @@ function introAdvance() {
   introWakePencil();
   if (introState.typing) {
     // finish the current part at once
+    introPlaySoundMarks(introState.shown, introState.ends[introState.chunk]);
     introState.shown = introState.ends[introState.chunk];
     clearInterval(introState.typeTimer);
     introState.typeTimer = null;
@@ -521,6 +539,7 @@ function startIntroSequence(options = {}) {
   introState.phase = "black";
   introState.lines = INTRO_JUDGEMENT_LINES;
   introState.lineIndex = -1;
+  ensureGameSfx("introThunder");
   const layer = document.createElement("div");
   layer.className = "intro-layer";
   layer.innerHTML = `
