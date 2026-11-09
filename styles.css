@@ -13171,13 +13171,30 @@ body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
 #app .record-build-seal.elite .record-sigil {
   filter: var(--seal-trigger-filter, none);
 }
+/* the ELITE level under the sigil: Roman numeral only, in the SEAL tooltip title's font and colour */
 #app .record-build-seal em {
   position: absolute;
-  bottom: -8px;
+  bottom: -22px;
   font-style: normal;
   font-family: var(--font-display) !important;
-  font-size: 13px !important;
-  color: var(--blood-bright) !important;
+  font-size: 17px !important;
+  line-height: 1;
+  color: var(--bone) !important;
+}
+/* room under the row (and between wrapped rows) for the numerals */
+#app .record-build.has-elite {
+  row-gap: 26px;
+  padding-bottom: 20px;
+}
+body.mobile-arcade #app .record-build-seal em,
+body.native-arcade #app .record-build-seal em {
+  bottom: -15px;
+  font-size: 12px !important;
+}
+body.mobile-arcade #app .record-build.has-elite,
+body.native-arcade #app .record-build.has-elite {
+  row-gap: 16px;
+  padding-bottom: 12px;
 }
 #app .record-build-artifact {
   opacity: 0.85;

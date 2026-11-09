@@ -14774,7 +14774,7 @@ function renderRecordsMenu() {
     const build = Array.isArray(deepest.build) ? deepest.build.filter((entry) => ITEMS[entry?.id]) : [];
     const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
     const buildArt = build.length || artifacts.length
-      ? `<div class="record-build">${build
+      ? `<div class="record-build${build.some((entry) => entry.elite > 0) ? " has-elite" : ""}">${build
           .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
           .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
       : "";
