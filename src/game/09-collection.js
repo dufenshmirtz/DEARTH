@@ -491,7 +491,7 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null };
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0 };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
   else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
   return state.collectionRun;
@@ -541,6 +541,7 @@ function collectionNoteElimination(bot) {
     const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
       run.beaten = true;
+      run.beatenRound = state.round;
       collectionBump("gamesBeaten");
       collectionNoteSealWins();
       if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
@@ -917,6 +918,7 @@ const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.select
 // after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
 function collectionAfterRender() {
   if (!collectionCounts()) return;
+  recordsNoteSlots();
   const run = collectionRun();
   if (state.player.hp === 1) collectionFlag("oneHealth");
   collectionRaise("sinHeld", state.player.credits);

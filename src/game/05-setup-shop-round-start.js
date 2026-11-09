@@ -483,6 +483,9 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
   const gained = multiplied + sonBonus;
   state.player.credits += gained;
   if (gained > 0) {
+    // lifetime SIN earned (Records); money from sales does not count
+    const soldBase = normalizedEntries.filter((entry) => String(entry.source || "").startsWith("Sold ")).reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
+    recordSinEarned(gained - Math.ceil(soldBase * multiplier));
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));

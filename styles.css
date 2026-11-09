@@ -12785,3 +12785,314 @@ body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
   max-width: none;
   font-size: 14px;
 }
+
+/* ==========================================================================
+   Records: the Relic Wall (renderRecordsMenu). Every record is a framed plaque,
+   grouped in tabs; a record the last run broke glows red with NEW.
+   ========================================================================== */
+#app .main-menu-panel.menu-screen-records {
+  width: min(1000px, 94vw) !important;
+}
+#app .records-menu.relic-wall {
+  display: grid;
+  gap: 12px;
+  justify-items: stretch;
+  padding: 24px 30px 18px;
+}
+#app .relic-wall .records-title {
+  text-align: center;
+}
+#app .relic-wall > .secondary-menu-button {
+  justify-self: center;
+}
+#app .records-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 22px;
+  padding-bottom: 8px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") bottom center / 100% 8px no-repeat;
+}
+#app .records-tab {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.03em;
+  color: var(--ash) !important;
+  transition: color 120ms ease;
+}
+#app .records-tab:hover,
+#app .records-tab:focus-visible {
+  color: var(--blood-bright) !important;
+  outline: none;
+}
+#app .records-tab.active {
+  color: var(--bone) !important;
+}
+#app .records-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--blood-bright);
+}
+#app .records-tab-new {
+  position: absolute;
+  top: 2px;
+  right: -6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blood-bright);
+  box-shadow: 0 0 8px var(--blood-bright);
+}
+#app .records-wall {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(118px, auto);
+  align-content: start;
+  gap: 10px;
+  /* one height for every tab, so the tabs do not jump */
+  height: min(60vh, 520px);
+  overflow-y: auto;
+  padding: 6px 4px 8px;
+}
+#app .record-plaque {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 12px 10px;
+  text-align: center;
+  background: rgba(10, 6, 6, 0.85);
+  border: 14px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / 14px stretch;
+}
+#app .record-plaque-hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+#app .record-value {
+  font-family: var(--font-display) !important;
+  font-size: 28px !important;
+  font-weight: 400 !important;
+  line-height: 1.05;
+  color: var(--bone) !important;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+#app .record-plaque-hero .record-value {
+  font-size: 58px !important;
+  color: var(--blood-bright) !important;
+}
+#app .record-label {
+  font-family: var(--font-book) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+}
+#app .record-plaque-hero .record-label {
+  font-size: 15px !important;
+  color: var(--bone) !important;
+}
+#app .record-sub {
+  font-family: var(--font-book) !important;
+  font-size: 12px !important;
+  color: var(--ash) !important;
+  opacity: 0.8;
+  overflow-wrap: anywhere;
+}
+#app .record-plaque.is-empty .record-value {
+  color: var(--ash) !important;
+  opacity: 0.55;
+}
+#app .record-art {
+  display: grid;
+  place-items: center;
+  height: 34px;
+}
+#app .record-art .record-sigil,
+#app .record-art .record-artifact {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+#app .record-nemesis-art {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  margin-top: -12px;
+}
+#app .record-plaque.is-new {
+  background: rgba(60, 8, 10, 0.9);
+  box-shadow: 0 0 22px rgba(220, 42, 47, 0.45);
+}
+#app .record-plaque.is-new .record-value {
+  color: var(--blood-bright) !important;
+}
+#app .record-plaque.is-new .record-sigil {
+  filter: var(--seal-trigger-filter, none);
+}
+#app .record-new {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  padding: 0 5px;
+  font-family: var(--font-display) !important;
+  font-size: 13px !important;
+  line-height: 1.3;
+  color: #000 !important;
+  background: var(--blood-bright);
+  animation: stamp-in 600ms 200ms var(--ui-ease, ease-out) both;
+}
+/* Guess quality: the last 100 guesses as thin bars, CRITICALS in red */
+#app .record-guess-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  width: min(100%, 320px);
+  height: 46px;
+  margin: 6px 0 4px;
+  border-bottom: 1px solid rgba(233, 227, 214, 0.25);
+}
+#app .record-guess-strip i {
+  flex: 1 1 0;
+  min-width: 1px;
+  background: rgba(233, 227, 214, 0.55);
+}
+#app .record-guess-strip i.crit {
+  background: var(--blood-bright);
+}
+/* Best build: the SEALS with their ELITE level, then the ARTIFACTS */
+#app .record-build {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+#app .record-build-seal,
+#app .record-build-artifact {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+}
+#app .record-build-seal .record-sigil,
+#app .record-build-artifact .record-artifact {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+#app .record-build-seal.elite .record-sigil {
+  filter: var(--seal-trigger-filter, none);
+}
+#app .record-build-seal em {
+  position: absolute;
+  bottom: -8px;
+  font-style: normal;
+  font-family: var(--font-display) !important;
+  font-size: 13px !important;
+  color: var(--blood-bright) !important;
+}
+#app .record-build-artifact {
+  opacity: 0.85;
+}
+
+/* phone: landscape, little height */
+body.mobile-arcade #app .main-menu-panel.menu-screen-records,
+body.native-arcade #app .main-menu-panel.menu-screen-records {
+  width: min(900px, 96vw) !important;
+}
+body.mobile-arcade #app .records-menu.relic-wall,
+body.native-arcade #app .records-menu.relic-wall {
+  gap: 6px;
+  padding: 12px 18px 10px;
+}
+body.mobile-arcade #app .records-tab,
+body.native-arcade #app .records-tab {
+  font-size: 17px !important;
+}
+body.mobile-arcade #app .records-wall,
+body.native-arcade #app .records-wall {
+  grid-auto-rows: minmax(76px, auto);
+  gap: 6px;
+  height: 56vh;
+}
+body.mobile-arcade #app .record-plaque,
+body.native-arcade #app .record-plaque {
+  padding: 6px;
+  border-width: 10px;
+}
+body.mobile-arcade #app .record-value,
+body.native-arcade #app .record-value {
+  font-size: 20px !important;
+}
+body.mobile-arcade #app .record-plaque-hero .record-value,
+body.native-arcade #app .record-plaque-hero .record-value {
+  font-size: 34px !important;
+}
+body.mobile-arcade #app .record-build,
+body.native-arcade #app .record-build {
+  gap: 4px;
+  margin: 2px 0;
+}
+body.mobile-arcade #app .record-build-seal,
+body.native-arcade #app .record-build-seal,
+body.mobile-arcade #app .record-build-artifact,
+body.native-arcade #app .record-build-artifact {
+  width: 30px;
+  height: 30px;
+}
+body.mobile-arcade #app .record-build-seal .record-sigil,
+body.native-arcade #app .record-build-seal .record-sigil,
+body.mobile-arcade #app .record-build-artifact .record-artifact,
+body.native-arcade #app .record-build-artifact .record-artifact {
+  width: 28px;
+  height: 28px;
+}
+body.mobile-arcade #app .record-guess-strip,
+body.native-arcade #app .record-guess-strip {
+  height: 30px;
+}
+body.mobile-arcade #app .record-label,
+body.native-arcade #app .record-label,
+body.mobile-arcade #app .record-sub,
+body.native-arcade #app .record-sub {
+  font-size: 10px !important;
+}
+@media (max-width: 640px) {
+  #app .records-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app .record-new {
+    animation: none;
+  }
+}
+
+/* death card: this run's Guess quality */
+#app .game-over-card .end-stat-guess span {
+  color: var(--bone) !important;
+}
+#app .game-over-card .end-stat-guess strong {
+  font-size: 40px !important;
+  line-height: 1;
+  color: var(--blood-bright) !important;
+}
+body.mobile-arcade #app .game-over-card .end-stat-guess strong {
+  font-size: 26px !important;
+}

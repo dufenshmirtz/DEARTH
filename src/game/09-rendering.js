@@ -310,41 +310,228 @@ function renderSoundOptionsMenu() {
   `;
 }
 
-function recordValueText(record, { withName = false, prefix = "" } = {}) {
-  const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
-  if (value <= 0) return "None";
-  const label = withName && record?.name ? ` - ${record.name}` : "";
-  return `${prefix}${formatNumber(value)}${label}`;
+/* ---------- Records: the Relic Wall ----------
+   Every record is a framed plaque, grouped in tabs. Records the last run broke glow red with NEW until
+   the Records screen is left (recordsMarkSeen); their tab carries a red mark. Data: 02-run-records.js. */
+const RECORDS_TABS = [
+  { key: "guess", label: "Guess" },
+  { key: "descent", label: "Descent" },
+  { key: "slaughter", label: "Slaughter" },
+  { key: "seals", label: "Seals" },
+  { key: "sin", label: "SIN" }
+];
+
+// which tab shows each run record (for the NEW marks)
+const RECORD_TAB_OF_KEY = {
+  bestRunGuessQuality: "guess",
+  mostCriticals: "guess",
+  deepestDescent: "descent",
+  highestRoundReached: "descent",
+  fastestWin: "descent",
+  mostBossEliminations: "descent",
+  mostEliminations: "slaughter",
+  mostPentakills: "slaughter",
+  mostOverallDamage: "slaughter",
+  mostSingleRoundDamage: "slaughter",
+  mostOverallSealDamage: "seals",
+  mostRoundSealDamage: "seals",
+  highestEliteLevel: "seals"
+};
+
+function recordsTab() {
+  if (!RECORDS_TABS.some((tab) => tab.key === state.recordsTab)) {
+    const unseen = loadLifetimeRecords().unseen;
+    state.recordsTab = RECORDS_TABS.find((tab) => unseen.some((key) => RECORD_TAB_OF_KEY[key] === tab.key))?.key || "guess";
+  }
+  return state.recordsTab;
 }
 
-function renderRecordRow(label, value) {
+function renderRecordPlaque({ label, value, sub = "", art = "", size = "", isNew = false, empty = false, extra = "" }) {
+  const classes = ["record-plaque", size ? `record-plaque-${size}` : "", isNew ? "is-new" : "", empty ? "is-empty" : ""].filter(Boolean).join(" ");
   return `
-    <div class="record-row">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value)}</strong>
+    <div class="${classes}">
+      ${isNew ? `<span class="record-new">NEW</span>` : ""}
+      ${art ? `<div class="record-art">${art}</div>` : ""}
+      <strong class="record-value">${escapeHtml(String(value))}</strong>
+      ${extra}
+      <span class="record-label">${escapeHtml(label)}</span>
+      ${sub ? `<small class="record-sub">${escapeHtml(sub)}</small>` : ""}
     </div>
   `;
 }
 
+const recordCountText = (value, one, many) => `${formatNumber(value)} ${value === 1 ? one : many}`;
+
 function renderRecordsMenu() {
   const records = loadArcadeRecords();
-  const rows = [
-    renderRecordRow("Most Eliminations", recordValueText(records.mostEliminations)),
-    renderRecordRow("Most Boss Eliminations", recordValueText(records.mostBossEliminations)),
-    renderRecordRow("Most Overall Damage", recordValueText(records.mostOverallDamage)),
-    renderRecordRow("Most Single Round Damage", recordValueText(records.mostSingleRoundDamage)),
-    renderRecordRow("Highest Round Reached", recordValueText(records.highestRoundReached)),
-    renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
-    renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
-    renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
-    renderRecordRow("Highest Elite Level Bought", records.highestEliteLevel?.value > 0 ? `${eliteLevelText(records.highestEliteLevel.value)}${records.highestEliteLevel.name ? ` - ${records.highestEliteLevel.name}` : ""}` : "None"),
-    renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
-    renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
-  ].join("");
+  const lifetime = loadLifetimeRecords();
+  const progress = loadCollectionProgress();
+  const unseen = new Set(lifetime.unseen);
+  const tab = recordsTab();
+  const sigil = (id) => (id && ITEMS[id] ? renderSealSigil(id, "record-sigil") : "");
+  const lifetimePlaque = (label, value, sub, options = {}) =>
+    renderRecordPlaque({ label, value: value > 0 ? formatNumber(value) : "None", sub, empty: !(value > 0), ...options });
+  // a best-of-one-run record
+  const runPlaque = (key, label, sub = "in one run", options = {}) => {
+    const record = records[key] || emptyRecord();
+    const empty = !(record.value > 0);
+    return renderRecordPlaque({
+      label,
+      value: recordValueDisplay(key, record),
+      sub: !empty && record.name ? record.name : sub,
+      art: !empty && record.id ? sigil(record.id) : "",
+      isNew: unseen.has(key),
+      empty,
+      ...options
+    });
+  };
+
+  let plaques = "";
+  if (tab === "guess") {
+    const recent = lifetime.recentGuesses;
+    const recentQuality = guessQualityValue(recent.reduce((sum, score) => sum + score, 0), recent.length);
+    const allQuality = guessQualityValue(lifetime.guessSum, lifetime.guessRounds);
+    const best = records.bestRunGuessQuality;
+    const strip = recent.length
+      ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
+      : "";
+    plaques = [
+      renderRecordPlaque({
+        label: "Guess quality",
+        value: recentQuality ?? "--",
+        sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+        size: "hero",
+        empty: recentQuality === null,
+        extra: strip
+      }),
+      renderRecordPlaque({
+        label: "Guess quality",
+        value: allQuality ?? "--",
+        sub: lifetime.guessRounds ? `all time · ${recordCountText(lifetime.guessRounds, "guess", "guesses")}` : "all time",
+        empty: allQuality === null
+      }),
+      renderRecordPlaque({
+        label: "Best run Guess quality",
+        value: best.value > 0 ? formatNumber(best.value) : "None",
+        sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+        isNew: unseen.has("bestRunGuessQuality"),
+        empty: !(best.value > 0)
+      }),
+      lifetimePlaque("CRITICALS in a row", progress.best.critStreak || 0, "in one run"),
+      runPlaque("mostCriticals", "Most CRITICALS")
+    ].join("");
+  } else if (tab === "descent") {
+    const deepest = records.deepestDescent;
+    // the BOSS that claimed you most; the DAMNED only while no BOSS ever has
+    const deathCounts = Object.fromEntries(Object.entries(lifetime.deaths).map(([key, entry]) => [key, entry.count]));
+    const bossDeaths = Object.fromEntries(Object.entries(deathCounts).filter(([key]) => key !== "damned"));
+    const nemesis = topEntry(bossDeaths) || topEntry(deathCounts);
+    const nemesisEntry = nemesis ? lifetime.deaths[nemesis.key] : null;
+    plaques = [
+      renderRecordPlaque({
+        label: "Deepest descent",
+        value: deepest.value > 0 ? deepestDescentText(deepest) : "None",
+        sub: deepest.value > 0 ? `round ${formatNumber(deepest.round || 0)}` : "",
+        size: "hero",
+        isNew: unseen.has("deepestDescent"),
+        empty: !(deepest.value > 0)
+      }),
+      runPlaque("highestRoundReached", "Highest round"),
+      lifetimePlaque("Games beaten", progress.stats.gamesBeaten || 0, "all time"),
+      lifetimePlaque("Runs played", lifetime.runs, "all time"),
+      runPlaque("fastestWin", "Fastest win", "beat the 8 BOSSES"),
+      runPlaque("mostBossEliminations", "Most BOSS kills"),
+      lifetimePlaque("BOSSES at once", progress.best.bossesAtOnce || 0, "on the table"),
+      renderRecordPlaque({
+        label: "Nemesis",
+        value: nemesisEntry ? nemesisEntry.name : "None",
+        sub: nemesisEntry ? `claimed you ${recordCountText(nemesisEntry.count, "time", "times")}` : "who claims you most",
+        art: nemesisEntry?.image ? `<img class="record-nemesis-art" src="${escapeAttr(nemesisEntry.image)}" alt="" loading="lazy" />` : "",
+        empty: !nemesisEntry
+      })
+    ].join("");
+  } else if (tab === "slaughter") {
+    plaques = [
+      runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
+      runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostOverallDamage", "Most damage"),
+      runPlaque("mostSingleRoundDamage", "Damage in one round"),
+      lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
+      lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
+      lifetimePlaque("Yannis eliminated", progress.stats.yannisKills || 0, "all time"),
+      lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
+      lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
+    ].join("");
+  } else if (tab === "seals") {
+    const deepest = records.deepestDescent;
+    const build = Array.isArray(deepest.build) ? deepest.build.filter((entry) => ITEMS[entry?.id]) : [];
+    const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
+    const buildArt = build.length || artifacts.length
+      ? `<div class="record-build">${build
+          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
+          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
+      : "";
+    const known = (counts) => Object.fromEntries(Object.entries(counts).filter(([id]) => ITEMS[id]));
+    const topSeal = topEntry(known(lifetime.sealRuns));
+    const topArtifact = topEntry(known(lifetime.artifactUses));
+    const topBuild = topEntry(Object.fromEntries(Object.entries(lifetime.builds).map(([key, entry]) => [key, entry.runs])));
+    const buildLabel = (key) => SEAL_BUILDS.find((entry) => entry.key === key)?.label || key;
+    const topBuildDepth = topBuild ? lifetime.builds[topBuild.key].depth || 0 : 0;
+    plaques = [
+      renderRecordPlaque({
+        label: "Best build",
+        value: build.length || artifacts.length ? deepestDescentText(deepest) : "None",
+        sub: build.length || artifacts.length ? "what you held at your deepest descent" : "",
+        size: "hero",
+        extra: buildArt,
+        isNew: unseen.has("deepestDescent"),
+        empty: !(build.length || artifacts.length)
+      }),
+      renderRecordPlaque({
+        label: "Most played SEAL",
+        value: topSeal ? recordCountText(topSeal.value, "run", "runs") : "None",
+        sub: topSeal ? ITEMS[topSeal.key].name : "all time",
+        art: topSeal ? sigil(topSeal.key) : "",
+        empty: !topSeal
+      }),
+      renderRecordPlaque({
+        label: "Most played build",
+        value: topBuild ? buildLabel(topBuild.key) : "None",
+        sub: topBuild
+          ? `${recordCountText(topBuild.value, "run", "runs")} · deepest ${deepestDescentText({ depth: topBuildDepth, demons: Math.max(0, topBuildDepth - UNIQUE_BOSS_KEYS.length) })}`
+          : "all time",
+        empty: !topBuild
+      }),
+      renderRecordPlaque({
+        label: "Most played ARTIFACT",
+        value: topArtifact ? recordCountText(topArtifact.value, "use", "uses") : "None",
+        sub: topArtifact ? ITEMS[topArtifact.key].name : "all time",
+        art: topArtifact ? renderArtifactIcon(topArtifact.key, "record-artifact") : "",
+        empty: !topArtifact
+      }),
+      runPlaque("mostOverallSealDamage", "SEAL damage in one run"),
+      runPlaque("mostRoundSealDamage", "SEAL damage in one round"),
+      runPlaque("highestEliteLevel", "Highest ELITE")
+    ].join("");
+  } else {
+    plaques = [
+      lifetimePlaque("Most SIN held", progress.best.sinHeld || 0, "at once", { size: "hero" }),
+      lifetimePlaque("SIN spent in one round", progress.best.roundSpent || 0, "in the Devil's Offerings"),
+      lifetimePlaque("SIN earned", lifetime.sinEarned, "all time, sales not counted"),
+      lifetimePlaque("Pacts signed", lifetime.pacts, "with Satan")
+    ].join("");
+  }
+
+  const tabs = RECORDS_TABS.map((entry) => {
+    const active = entry.key === tab;
+    const hasNew = [...unseen].some((key) => RECORD_TAB_OF_KEY[key] === entry.key);
+    return `<button class="records-tab${active ? " active" : ""}" data-menu-action="records-tab:${entry.key}" aria-pressed="${active}">${escapeHtml(entry.label)}${hasNew ? `<i class="records-tab-new" aria-label="new record"></i>` : ""}</button>`;
+  }).join("");
   return `
-    <div class="records-menu">
+    <div class="records-menu relic-wall">
       <h2 class="records-title">Records</h2>
-      <div class="records-list">${rows}</div>
+      <nav class="records-tabs" aria-label="Record groups">${tabs}</nav>
+      <div class="records-wall records-wall-${escapeAttr(tab)}">${plaques}</div>
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
   `;
@@ -2434,6 +2621,7 @@ function renderOverlay() {
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
         <div class="end-stats">
+          <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
@@ -2460,10 +2648,8 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const format = (number) => (record.key === "highestEliteLevel" ? (number > 0 ? eliteLevelText(number) : "None") : formatNumber(number));
-      const value = format(record.value);
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
-      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
+      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>was ${escapeHtml(record.previousText)}</small></div>`;
     })
     .join("");
   return `
@@ -2511,6 +2697,13 @@ function confirmRunRemoval(slotId) {
 
 function handleMenuAction(action) {
   resumeSoundtrack();
+  if (String(action).startsWith("records-tab:")) {
+    state.recordsTab = String(action).slice("records-tab:".length);
+    render();
+    return;
+  }
+  // leaving the Records screen: its NEW marks are seen
+  if (state.menuScreen === "records" && action !== "records") recordsMarkSeen();
   if (action === "play") {
     // on the phone app there is no PvP, so Play skips the Arcade / PvP choice
     state.menuScreen = isNativeArcadeApp() ? "arcade-options" : "play";
@@ -2537,6 +2730,7 @@ function handleMenuAction(action) {
   }
   if (action === "records") {
     state.menuScreen = "records";
+    state.recordsTab = null;
     render();
     return;
   }

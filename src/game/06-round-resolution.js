@@ -326,6 +326,8 @@ function applyPenalties() {
 
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
+  // Guess quality: your final guess against the final TARGET (02-run-records.js)
+  recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
   // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
   const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
@@ -517,9 +519,10 @@ function applyPenalties() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
-  updateArcadeRecordsFromCurrentRun();
+  updateArcadeRecordsFromCurrentRun({ final: true });
   removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
+  recordRunEnded();
   state.inspectingGameOver = false;
   state.stage = "ended";
   state.pendingActive = null;

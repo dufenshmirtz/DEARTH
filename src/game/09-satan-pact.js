@@ -821,6 +821,7 @@ function satanPactSign() {
   satanPactReceive(offer.gain);
   pact.used = true;
   pact.outcome = "signed";
+  recordPactSigned();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);

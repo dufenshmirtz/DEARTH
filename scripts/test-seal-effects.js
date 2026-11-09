@@ -2447,3 +2447,161 @@ test("Satan's Pact: killing a DAMNED keeps its BOUNTY and takes your ARTIFACTS f
     assert.equal(state.player.hp, 0);
   `);
 });
+
+test("Guess quality: a CRITICAL scores 100, a miss 100 x 0.9 per step; the run, lifetime and last 100 averages", () => {
+  game()(`
+    assert.equal(guessQualityScore(0, true), 100);
+    assert.equal(guessQualityScore(2, true), 100); // a widened CRITICAL window still counts as a CRITICAL
+    assert.equal(guessQualityScore(0, false), 99); // never 100 without a CRITICAL
+    assert.equal(guessQualityScore(1, false), 90);
+    assert.equal(guessQualityScore(3, false), 73);
+    assert.equal(guessQualityScore(10, false), 35);
+    // the average is rounded down, so 100 only when every guess was a CRITICAL
+    assert.equal(guessQualityValue(100 * 9 + 99, 10), 99);
+    assert.equal(guessQualityValue(300, 3), 100);
+    assert.equal(guessQualityValue(0, 0), null);
+    // a resolved round records your final guess against the final TARGET (60 vs 50: 10 off)
+    fixture([], [10, 20, 30, 40, 50]);
+    applyPenalties();
+    const first = guessQualityScore(Math.abs(60 - state.roundState.target), false);
+    assert.ok(first < 100);
+    assert.equal(state.runStats.guessRounds, 1);
+    assert.equal(state.runStats.guessSum, first);
+    assert.equal(runGuessQuality(), first);
+    const lifetime = loadLifetimeRecords();
+    assert.equal(lifetime.guessRounds, 1);
+    assert.deepEqual([...lifetime.recentGuesses], [first]);
+    // a CRITICAL counts for Most CRITICALS too
+    recordRoundGuess(0, true);
+    assert.equal(state.runStats.criticals, 1);
+    assert.equal(runGuessQuality(), Math.floor((first + 100) / 2));
+    // only the last 100 guesses are kept for the recent number
+    for (let i = 0; i < 150; i += 1) recordRoundGuess(0, true);
+    assert.equal(lifetime.recentGuesses.length, 100);
+    assert.equal(guessQualityValue(lifetime.recentGuesses.reduce((a, b) => a + b, 0), lifetime.recentGuesses.length), 100);
+    assert.equal(lifetime.guessRounds, 152);
+    // PvP does not count
+    state.mode = "pvp";
+    recordRoundGuess(50, false);
+    assert.equal(lifetime.guessRounds, 152);
+  `);
+});
+
+test("Records: deepest descent keeps the build, fastest win is lowest, best run Guess quality needs a finished run of 10 guesses", () => {
+  game()(`
+    globalThis.window = globalThis; // the records are read back from localStorage
+    fixture([["p1", 3], ["p12"]], [10, 20, 30, 40, 50]);
+    state.player.actives = [{ ...ITEMS.a6 }];
+    state.round = 9;
+    collectionRun().uniqueKills = ["zilon", "dantre", "petros"];
+    // Petros counts once Pavlos is down too
+    assert.equal(deepestDescentDepth(), 2);
+    for (let i = 0; i < 12; i += 1) recordRoundGuess(1, false);
+    updateArcadeRecordsFromCurrentRun();
+    let records = loadArcadeRecords();
+    assert.equal(records.deepestDescent.depth, 2);
+    assert.equal(records.deepestDescent.round, 9);
+    assert.deepEqual(records.deepestDescent.build.map(entry => [entry.id, entry.elite]), [["p1", 2], ["p12", 0]]);
+    assert.deepEqual([...records.deepestDescent.artifacts], ["a6"]);
+    assert.equal(recordValueDisplay("deepestDescent", records.deepestDescent), "2 of 8 BOSSES");
+    // a run in progress does not set Best run Guess quality
+    assert.equal(records.bestRunGuessQuality.value, 0);
+    updateArcadeRecordsFromCurrentRun({ final: true });
+    records = loadArcadeRecords();
+    assert.equal(records.bestRunGuessQuality.value, 90);
+    assert.equal(records.bestRunGuessQuality.guesses, 12);
+    // the same depth later in the run moves the round on, the build stays the one you got there with
+    state.player.passives = [];
+    state.round = 10;
+    updateArcadeRecordsFromCurrentRun();
+    assert.equal(loadArcadeRecords().deepestDescent.round, 10);
+    // past the eighth BOSS, demons are the depth
+    collectionRun().uniqueKills = [...UNIQUE_BOSS_KEYS, "pavlos"];
+    state.goeticBossKills = 12;
+    updateArcadeRecordsFromCurrentRun();
+    assert.equal(recordValueDisplay("deepestDescent", loadArcadeRecords().deepestDescent), "Demon 12");
+    // fastest win: lower is better, 0 never counts
+    records = loadArcadeRecords();
+    updateRecordIfHigher(records, "fastestWin", { value: 40 });
+    updateRecordIfHigher(records, "fastestWin", { value: 55 });
+    updateRecordIfHigher(records, "fastestWin", { value: 0 });
+    assert.equal(records.fastestWin.value, 40);
+    updateRecordIfHigher(records, "fastestWin", { value: 31 });
+    assert.equal(records.fastestWin.value, 31);
+    assert.equal(recordValueDisplay("fastestWin", records.fastestWin), "Round 31");
+    // the eighth BOSS down sets the round of the win
+    resetCollectionRun();
+    collectionRun().uniqueKills = [...UNIQUE_BOSS_KEYS];
+    state.round = 44;
+    collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
+    assert.equal(state.collectionRun.beatenRound, 44);
+  `);
+});
+
+test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks, and every Records tab renders", () => {
+  game()(`
+    globalThis.window = globalThis; // the records are read back from localStorage
+    fixture([["p2", 2], ["p6"], ["p9"]], [10, 20, 30, 40, 50]);
+    // a SEAL counts once per run, however long it stays
+    recordsNoteSlots();
+    recordsNoteSlots();
+    const lifetime = loadLifetimeRecords();
+    assert.equal(lifetime.sealRuns.p2, 1);
+    state.runStats = defaultRunStats();
+    recordsNoteSlots();
+    assert.equal(lifetime.sealRuns.p2, 2);
+    // the build most SEALS share: Paimon and Orias are Critical, Marbas Bounty + Memory
+    assert.equal(runBuildKey(), "critical");
+    assert.equal(runBuildKey([{ ...ITEMS.p12 }]), "general");
+    assert.equal(runBuildKey([]), "");
+    // ARTIFACT uses, pacts, SIN earned (sales do not count)
+    recordPlayedArtifact("a6");
+    recordPlayedArtifact("a6");
+    assert.equal(lifetime.artifactUses.a6, 2);
+    recordPactSigned();
+    assert.equal(lifetime.pacts, 1);
+    gainCreditsFromSourceEntries([{ amount: 10, source: "BOUNTY" }, { amount: 4, source: "Sold Seal of Bael" }], false);
+    assert.equal(lifetime.sinEarned, 10);
+    // game over: a run, its build, who was on the table, the records it broke
+    state.recordsAtRunStart = loadArcadeRecords();
+    state.recordsAtRunStart.mostEliminations = { value: 3 };
+    state.eliminations = 7;
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    boss.uniqueKey = "padma";
+    boss.name = "Padma";
+    finishGameOverRound();
+    assert.equal(lifetime.runs, 1);
+    assert.equal(lifetime.builds.critical.runs, 1);
+    assert.equal(lifetime.deaths.padma.count, 1);
+    assert.ok(lifetime.unseen.includes("mostEliminations"));
+    // the death card shows the run's Guess quality and the broken record
+    const overlay = renderOverlay();
+    assert.ok(overlay.includes("Guess quality"));
+    assert.ok(overlay.includes("Most KOs"));
+    // the Records screen opens on the tab with something new, every tab renders
+    state.mode = "menu";
+    state.menuScreen = "records";
+    state.recordsTab = null;
+    let html = renderRecordsMenu();
+    assert.equal(state.recordsTab, "slaughter");
+    assert.ok(html.includes("record-new"));
+    for (const tab of RECORDS_TABS) {
+      state.recordsTab = tab.key;
+      html = renderRecordsMenu();
+      assert.ok(html.includes("records-wall-" + tab.key));
+    }
+    state.recordsTab = "descent";
+    assert.ok(renderRecordsMenu().includes("Padma"));
+    state.recordsTab = "seals";
+    html = renderRecordsMenu();
+    assert.ok(html.includes("Critical"));
+    assert.ok(html.includes(ITEMS.p2.name));
+    // leaving the screen clears the NEW marks
+    recordsMarkSeen();
+    assert.equal(lifetime.unseen.length, 0);
+    // what is saved reads back the same
+    lifetimeRecordsCache = null;
+    assert.equal(typeof loadLifetimeRecords().runs, "number");
+  `);
+});

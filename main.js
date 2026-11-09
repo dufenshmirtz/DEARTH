@@ -3502,6 +3502,25 @@ function installSoundtrack() {
 
 "use strict";
 
+/* ---------- Records ----------
+   Two stores, both shown on the Records screen (the Relic Wall, renderRecordsMenu in 09-rendering):
+   - best values of one run: localStorage ARCADE_RECORDS_STORAGE_KEY (defaultArcadeRecords), raised by
+     updateArcadeRecordsFromCurrentRun on every save and at game over;
+   - lifetime numbers: localStorage RECORDS_LIFETIME_STORAGE_KEY (defaultLifetimeRecords): Guess quality,
+     how often each SEAL / ARTIFACT / build was played, who killed you, SIN earned, pacts, runs.
+   Lifetime counters the Collection already keeps (games beaten, DAMNED / demons / Yannis eliminated,
+   CRITICALS in a row, most SIN held...) are read from there (loadCollectionProgress).
+
+   Guess quality: every resolved round scores your final guess against the final TARGET:
+   a CRITICAL scores 100, anything else 100 x GUESS_QUALITY_STEP ^ distance (at most 99).
+   The shown number is the average, rounded down, so 100 means every guess was a CRITICAL. */
+
+const RECORDS_LIFETIME_STORAGE_KEY = "dearthRecordsLifetimeV1";
+const GUESS_QUALITY_STEP = 0.9; // each step away from the TARGET keeps 90% of the score
+const GUESS_QUALITY_RECENT = 100; // "last 100 guesses"
+const GUESS_QUALITY_MIN_RUN_GUESSES = 10; // a run needs this many guesses to set Best run Guess quality
+const DEEPEST_DESCENT_ROUND_SPAN = 1000; // deepestDescent.value = depth x 1000 + round
+
 function emptyRecord(extra = {}) {
   return { value: 0, ...extra };
 }
@@ -3512,25 +3531,35 @@ function defaultRunStats() {
     currentRoundDamage: 0,
     singleRoundDamage: 0,
     pentakills: 0,
+    criticals: 0,
+    guessSum: 0,
+    guessRounds: 0,
     currentRoundSealDamage: {},
     maxSealRoundDamage: emptyRecord({ id: "", name: "" }),
     highestEliteLevel: emptyRecord({ id: "", name: "" }),
     sealPlays: {},
-    artifactPlays: {}
+    artifactPlays: {},
+    // SEALS that have been in a slot this run (each counts once per run for Most played SEAL)
+    sealsSeen: {}
   };
 }
 
 function normalizeRunStats(stats) {
   const base = defaultRunStats();
   const source = stats && typeof stats === "object" ? stats : {};
+  const count = (value) => Math.max(0, Math.floor(Number(value) || 0));
+  const object = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
   return {
     ...base,
     ...source,
     overallDamage: Math.max(0, Math.ceil(Number(source.overallDamage) || 0)),
     currentRoundDamage: Math.max(0, Math.ceil(Number(source.currentRoundDamage) || 0)),
     singleRoundDamage: Math.max(0, Math.ceil(Number(source.singleRoundDamage) || 0)),
-    pentakills: Math.max(0, Math.floor(Number(source.pentakills) || 0)),
-    currentRoundSealDamage: source.currentRoundSealDamage && typeof source.currentRoundSealDamage === "object" ? source.currentRoundSealDamage : {},
+    pentakills: count(source.pentakills),
+    criticals: count(source.criticals),
+    guessSum: count(source.guessSum),
+    guessRounds: count(source.guessRounds),
+    currentRoundSealDamage: object(source.currentRoundSealDamage),
     maxSealRoundDamage:
       source.maxSealRoundDamage && typeof source.maxSealRoundDamage === "object"
         ? { ...emptyRecord({ id: "", name: "" }), ...source.maxSealRoundDamage }
@@ -3539,8 +3568,9 @@ function normalizeRunStats(stats) {
       source.highestEliteLevel && typeof source.highestEliteLevel === "object"
         ? { ...emptyRecord({ id: "", name: "" }), ...source.highestEliteLevel }
         : base.highestEliteLevel,
-    sealPlays: source.sealPlays && typeof source.sealPlays === "object" ? source.sealPlays : {},
-    artifactPlays: source.artifactPlays && typeof source.artifactPlays === "object" ? source.artifactPlays : {}
+    sealPlays: object(source.sealPlays),
+    artifactPlays: object(source.artifactPlays),
+    sealsSeen: object(source.sealsSeen)
   };
 }
 
@@ -3549,21 +3579,28 @@ function ensureRunStats() {
   return state.runStats;
 }
 
+/* ---------- best values of one run ---------- */
 function defaultArcadeRecords() {
   return {
+    // how far a run went (deepestDescentDepth) and the build you had when you got there
+    deepestDescent: emptyRecord({ depth: 0, demons: 0, bosses: 0, round: 0, build: [], artifacts: [] }),
     mostEliminations: emptyRecord(),
     mostBossEliminations: emptyRecord(),
     mostOverallDamage: emptyRecord(),
     mostSingleRoundDamage: emptyRecord(),
     highestRoundReached: emptyRecord(),
     mostPentakills: emptyRecord(),
+    mostCriticals: emptyRecord(),
+    bestRunGuessQuality: emptyRecord({ guesses: 0 }),
+    // lower is better (RECORD_LOWER_IS_BETTER): the round the 8th BOSS fell
+    fastestWin: emptyRecord(),
     mostOverallSealDamage: emptyRecord({ id: "", name: "" }),
     mostRoundSealDamage: emptyRecord({ id: "", name: "" }),
-    highestEliteLevel: emptyRecord({ id: "", name: "" }),
-    mostPlayedSeal: emptyRecord({ id: "", name: "" }),
-    mostPlayedArtifact: emptyRecord({ id: "", name: "" })
+    highestEliteLevel: emptyRecord({ id: "", name: "" })
   };
 }
+
+const RECORD_LOWER_IS_BETTER = new Set(["fastestWin"]);
 
 function normalizeRecord(record, fallback) {
   const source = record && typeof record === "object" ? record : {};
@@ -3591,18 +3628,6 @@ function saveArcadeRecords(records) {
   } catch (error) {}
 }
 
-function bestCountEntry(counts, type) {
-  if (!counts || typeof counts !== "object") return emptyRecord({ id: "", name: "" });
-  return Object.entries(counts).reduce(
-    (best, [id, raw]) => {
-      const value = Math.max(0, Math.floor(Number(raw) || 0));
-      if (value <= best.value) return best;
-      return { value, id, name: ITEMS[id]?.name || id || type };
-    },
-    emptyRecord({ id: "", name: "" })
-  );
-}
-
 function bestOverallSealDamageEntry() {
   const stats = state.sealStats && typeof state.sealStats === "object" ? state.sealStats : {};
   return Object.entries(stats).reduce(
@@ -3615,35 +3640,80 @@ function bestOverallSealDamageEntry() {
   );
 }
 
+function recordBeats(key, value, current) {
+  if (value <= 0) return false;
+  if (RECORD_LOWER_IS_BETTER.has(key)) return current <= 0 || value < current;
+  return value > current;
+}
+
 function updateRecordIfHigher(records, key, candidate) {
   const current = records[key] || emptyRecord();
   const value = Math.max(0, Math.ceil(Number(candidate?.value) || 0));
-  if (value <= Math.max(0, Math.ceil(Number(current.value) || 0))) return;
+  if (!recordBeats(key, value, Math.max(0, Math.ceil(Number(current.value) || 0)))) return;
   records[key] = { ...current, ...candidate, value };
 }
 
-// what this run has reached for each record
-function currentRunRecordCandidates() {
+// the unique BOSSES beaten this run (Petros counts once both twins are down)
+function uniqueBossesBeatenThisRun() {
+  const kills = Array.isArray(state.collectionRun?.uniqueKills) ? state.collectionRun.uniqueKills : [];
+  return UNIQUE_BOSS_KEYS.filter((key) => (key === "petros" ? kills.includes("petros") && kills.includes("pavlos") : kills.includes(key))).length;
+}
+
+// depth: the unique BOSSES beaten (0-8), then +1 for every Goetic demon slain after them
+function deepestDescentDepth() {
+  return uniqueBossesBeatenThisRun() + Math.max(0, Math.floor(Number(state.goeticBossKills) || 0));
+}
+
+// the SEALS (with ELITE level) and ARTIFACTS held right now
+function currentBuildSnapshot() {
+  const build = (state.player?.passives || [])
+    .filter((item) => item?.id)
+    .map((item) => ({ id: item.id, elite: isSelfStackingSeal(item) ? 0 : Math.max(0, (item.stack || 1) - 1) }));
+  const artifacts = (state.player?.actives || []).filter((item) => item?.id).map((item) => item.id);
+  return { build, artifacts };
+}
+
+function runGuessQuality(stats = ensureRunStats()) {
+  return guessQualityValue(stats.guessSum, stats.guessRounds);
+}
+
+// what this run has reached for each record. Best run Guess quality only counts a finished run.
+function currentRunRecordCandidates({ final = Boolean(state.gameOver) } = {}) {
   const stats = ensureRunStats();
+  const depth = deepestDescentDepth();
+  const round = Math.max(0, Math.floor(Number(state.round) || 0));
+  const runQuality = runGuessQuality(stats);
   return {
+    deepestDescent: {
+      value: depth * DEEPEST_DESCENT_ROUND_SPAN + Math.min(round, DEEPEST_DESCENT_ROUND_SPAN - 1),
+      depth,
+      demons: Math.max(0, Math.floor(Number(state.goeticBossKills) || 0)),
+      bosses: uniqueBossesBeatenThisRun(),
+      round,
+      ...currentBuildSnapshot()
+    },
     mostEliminations: { value: state.eliminations || 0 },
     mostBossEliminations: { value: state.bossKills || 0 },
     mostOverallDamage: { value: stats.overallDamage || 0 },
     mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
-    highestRoundReached: { value: state.round || 0 },
+    highestRoundReached: { value: round },
     mostPentakills: { value: stats.pentakills || 0 },
+    mostCriticals: { value: stats.criticals || 0 },
+    bestRunGuessQuality:
+      final && stats.guessRounds >= GUESS_QUALITY_MIN_RUN_GUESSES && runQuality !== null
+        ? { value: runQuality, guesses: stats.guessRounds }
+        : { value: 0 },
+    fastestWin: { value: Math.max(0, Math.floor(Number(state.collectionRun?.beatenRound) || 0)) },
     mostOverallSealDamage: bestOverallSealDamageEntry(),
     mostRoundSealDamage: stats.maxSealRoundDamage || emptyRecord({ id: "", name: "" }),
-    highestEliteLevel: stats.highestEliteLevel || emptyRecord({ id: "", name: "" }),
-    mostPlayedSeal: bestCountEntry(stats.sealPlays, "SEAL"),
-    mostPlayedArtifact: bestCountEntry(stats.artifactPlays, "ARTIFACT")
+    highestEliteLevel: stats.highestEliteLevel || emptyRecord({ id: "", name: "" })
   };
 }
 
-function updateArcadeRecordsFromCurrentRun() {
+function updateArcadeRecordsFromCurrentRun(options = {}) {
   if (state.mode !== "arcade") return;
   const records = loadArcadeRecords();
-  Object.entries(currentRunRecordCandidates()).forEach(([key, candidate]) => updateRecordIfHigher(records, key, candidate));
+  Object.entries(currentRunRecordCandidates(options)).forEach(([key, candidate]) => updateRecordIfHigher(records, key, candidate));
   saveArcadeRecords(records);
 }
 
@@ -3655,7 +3725,11 @@ function snapshotRecordsAtRunStart() {
 
 // short names for the death card, in the order they are listed there
 const NEW_RECORD_LABELS = {
+  deepestDescent: "Deepest descent",
   highestRoundReached: "Highest round",
+  fastestWin: "Fastest win",
+  bestRunGuessQuality: "Guess quality",
+  mostCriticals: "Most CRITICALS",
   mostEliminations: "Most KOs",
   mostBossEliminations: "Most BOSS kills",
   mostOverallDamage: "Most damage dealt",
@@ -3666,17 +3740,46 @@ const NEW_RECORD_LABELS = {
   highestEliteLevel: "Highest ELITE level"
 };
 
-// records this run beat. A record that was still 0 before the run (a first run) does not count.
+// a record's value as the player reads it
+function recordValueDisplay(key, record) {
+  const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
+  if (value <= 0) return "None";
+  if (key === "deepestDescent") return deepestDescentText(record);
+  if (key === "highestEliteLevel") return eliteLevelText(value);
+  if (key === "fastestWin") return `Round ${formatNumber(value)}`;
+  return formatNumber(value);
+}
+
+// "5 of 8 BOSSES" until the main game is beaten, then "Demon 12" (the 12th demon slain)
+function deepestDescentText(record) {
+  const depth = Math.max(0, Math.floor(Number(record?.depth) || 0));
+  const demons = Math.max(0, Math.floor(Number(record?.demons) || 0));
+  if (demons > 0) return `Demon ${formatNumber(demons)}`;
+  return `${formatNumber(Math.min(depth, UNIQUE_BOSS_KEYS.length))} of ${UNIQUE_BOSS_KEYS.length} BOSSES`;
+}
+
+// records this run beat. A record that was still 0 before the run (a first run) does not count;
+// Deepest descent counts only when the run went deeper, not when it lasted longer at the same depth.
 function newRecordsThisRun() {
   if (state.mode !== "arcade") return [];
   const before = normalizeArcadeRecords(state.recordsAtRunStart || loadArcadeRecords());
   const reached = currentRunRecordCandidates();
   return Object.keys(NEW_RECORD_LABELS)
     .map((key) => {
-      const previous = Math.max(0, Math.ceil(Number(before[key]?.value) || 0));
+      const previousRecord = before[key] || emptyRecord();
+      const previous = Math.max(0, Math.ceil(Number(previousRecord.value) || 0));
       const value = Math.max(0, Math.ceil(Number(reached[key]?.value) || 0));
-      if (previous <= 0 || value <= previous) return null;
-      return { key, label: NEW_RECORD_LABELS[key], value, previous, name: reached[key]?.name || "" };
+      if (previous <= 0 || !recordBeats(key, value, previous)) return null;
+      if (key === "deepestDescent" && (reached[key].depth || 0) <= (previousRecord.depth || 0)) return null;
+      return {
+        key,
+        label: NEW_RECORD_LABELS[key],
+        value,
+        previous,
+        text: recordValueDisplay(key, reached[key]),
+        previousText: recordValueDisplay(key, previousRecord),
+        name: reached[key]?.name || ""
+      };
     })
     .filter(Boolean);
 }
@@ -3723,6 +3826,10 @@ function recordPlayedArtifact(id) {
   if (!id || state.mode !== "arcade") return;
   const stats = ensureRunStats();
   stats.artifactPlays[id] = (Number(stats.artifactPlays[id]) || 0) + 1;
+  if (!lifetimeRecordsCount()) return;
+  const lifetime = loadLifetimeRecords();
+  lifetime.artifactUses[id] = (lifetime.artifactUses[id] || 0) + 1;
+  saveLifetimeRecords();
 }
 
 function recordEliteLevelBought(id, stack) {
@@ -3732,6 +3839,204 @@ function recordEliteLevelBought(id, stack) {
   if (eliteLevel > (stats.highestEliteLevel?.value || 0)) {
     stats.highestEliteLevel = { value: eliteLevel, id, name: ITEMS[id]?.name || id };
   }
+}
+
+/* ---------- Guess quality ---------- */
+function guessQualityScore(distance, critical) {
+  if (critical) return 100;
+  const steps = Math.max(0, Math.ceil(Number(distance) || 0));
+  return Math.min(99, Math.round(100 * Math.pow(GUESS_QUALITY_STEP, steps)));
+}
+
+// the average score, rounded down (100 only when every guess was a CRITICAL); null with no guesses
+function guessQualityValue(sum, rounds) {
+  const count = Math.max(0, Math.floor(Number(rounds) || 0));
+  if (count <= 0) return null;
+  return Math.max(0, Math.min(100, Math.floor((Number(sum) || 0) / count)));
+}
+
+// once per resolved round (applyPenalties): your final guess against the final TARGET
+function recordRoundGuess(distance, critical) {
+  if (state.mode !== "arcade" || !Number.isFinite(Number(distance))) return;
+  const score = guessQualityScore(distance, critical);
+  const stats = ensureRunStats();
+  stats.guessSum += score;
+  stats.guessRounds += 1;
+  if (critical) stats.criticals += 1;
+  if (!lifetimeRecordsCount()) return;
+  const lifetime = loadLifetimeRecords();
+  lifetime.guessSum += score;
+  lifetime.guessRounds += 1;
+  lifetime.recentGuesses.push(score);
+  if (lifetime.recentGuesses.length > GUESS_QUALITY_RECENT) lifetime.recentGuesses.splice(0, lifetime.recentGuesses.length - GUESS_QUALITY_RECENT);
+  saveLifetimeRecords();
+}
+
+/* ---------- lifetime records ---------- */
+let lifetimeRecordsCache = null;
+
+function defaultLifetimeRecords() {
+  return {
+    version: 1,
+    guessSum: 0,
+    guessRounds: 0,
+    recentGuesses: [],
+    runs: 0,
+    sinEarned: 0,
+    pacts: 0,
+    // runs each SEAL was in a slot (once per run), uses of each ARTIFACT
+    sealRuns: {},
+    artifactUses: {},
+    // by build key (SEAL_BUILDS): { runs, depth } where depth is the deepest of those runs
+    builds: {},
+    // who was on the table when you fell: { key: { count, name, image } }
+    deaths: {},
+    // records broken in the last run that the Records screen has not shown yet
+    unseen: []
+  };
+}
+
+function loadLifetimeRecords() {
+  if (lifetimeRecordsCache) return lifetimeRecordsCache;
+  const records = defaultLifetimeRecords();
+  try {
+    const raw = window.localStorage?.getItem(RECORDS_LIFETIME_STORAGE_KEY);
+    const saved = raw ? JSON.parse(raw) : null;
+    if (saved && typeof saved === "object") {
+      const count = (value) => Math.max(0, Math.floor(Number(value) || 0));
+      ["guessSum", "guessRounds", "runs", "sinEarned", "pacts"].forEach((key) => { records[key] = count(saved[key]); });
+      if (Array.isArray(saved.recentGuesses)) {
+        records.recentGuesses = saved.recentGuesses.map((score) => Math.max(0, Math.min(100, count(score)))).slice(-GUESS_QUALITY_RECENT);
+      }
+      ["sealRuns", "artifactUses"].forEach((group) => {
+        const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
+        Object.entries(source).forEach(([id, value]) => { if (ITEMS[id] && count(value) > 0) records[group][id] = count(value); });
+      });
+      if (saved.builds && typeof saved.builds === "object") {
+        Object.entries(saved.builds).forEach(([key, value]) => {
+          if (value && typeof value === "object" && count(value.runs) > 0) records.builds[key] = { runs: count(value.runs), depth: count(value.depth) };
+        });
+      }
+      if (saved.deaths && typeof saved.deaths === "object") {
+        Object.entries(saved.deaths).forEach(([key, value]) => {
+          if (value && typeof value === "object" && count(value.count) > 0) {
+            records.deaths[key] = { count: count(value.count), name: String(value.name || key), image: typeof value.image === "string" ? value.image : "" };
+          }
+        });
+      }
+      if (Array.isArray(saved.unseen)) records.unseen = saved.unseen.filter((key) => typeof key === "string");
+    }
+  } catch (error) {}
+  lifetimeRecordsCache = records;
+  return records;
+}
+
+function saveLifetimeRecords() {
+  if (!lifetimeRecordsCache) return;
+  try {
+    window.localStorage?.setItem(RECORDS_LIFETIME_STORAGE_KEY, JSON.stringify(lifetimeRecordsCache));
+  } catch (error) {}
+}
+
+// same rule as the Collection: real arcade runs only (no PvP, no story tutorial, no infinite SIN)
+function lifetimeRecordsCount() {
+  return typeof collectionCounts === "function" ? collectionCounts() : state.mode === "arcade";
+}
+
+// after every render of a run: a SEAL that is new in a slot this run counts one run for it
+function recordsNoteSlots() {
+  if (state.mode !== "arcade" || !lifetimeRecordsCount()) return;
+  const stats = ensureRunStats();
+  let changed = false;
+  (state.player?.passives || []).forEach((item) => {
+    const id = item?.id;
+    if (!id || !ITEMS[id] || stats.sealsSeen[id]) return;
+    stats.sealsSeen[id] = true;
+    const lifetime = loadLifetimeRecords();
+    lifetime.sealRuns[id] = (lifetime.sealRuns[id] || 0) + 1;
+    changed = true;
+  });
+  if (changed) saveLifetimeRecords();
+}
+
+function recordSinEarned(amount) {
+  const gained = Math.max(0, Math.floor(Number(amount) || 0));
+  if (gained <= 0 || !lifetimeRecordsCount()) return;
+  loadLifetimeRecords().sinEarned += gained;
+  saveLifetimeRecords();
+}
+
+function recordPactSigned() {
+  if (!lifetimeRecordsCount()) return;
+  loadLifetimeRecords().pacts += 1;
+  saveLifetimeRecords();
+}
+
+// the build a run was played as: the build tag most SEALS in your slots share ("general" only when
+// nothing else is there); a tie goes to the build with more ELITE levels, then to SEAL_BUILDS order
+function runBuildKey(passives = state.player?.passives || []) {
+  const counts = {};
+  const elites = {};
+  passives.forEach((item) => {
+    if (!item?.id) return;
+    const tags = typeof sealBuilds === "function" ? sealBuilds(item.id) : ["general"];
+    tags.forEach((tag) => {
+      counts[tag] = (counts[tag] || 0) + 1;
+      elites[tag] = (elites[tag] || 0) + Math.max(0, (item.stack || 1) - 1);
+    });
+  });
+  const order = (typeof SEAL_BUILDS !== "undefined" ? SEAL_BUILDS : []).map((build) => build.key);
+  const candidates = Object.keys(counts).filter((key) => key !== "general");
+  if (!candidates.length) return counts.general ? "general" : "";
+  candidates.sort((a, b) => counts[b] - counts[a] || elites[b] - elites[a] || order.indexOf(a) - order.indexOf(b));
+  return candidates[0];
+}
+
+// who was on the table when you fell: the newest BOSS still standing, or the DAMNED
+function runNemesis() {
+  const bosses = (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0);
+  const boss = bosses.sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+  if (!boss) return { key: "damned", name: "The DAMNED", image: "" };
+  const key = boss.shadowOf ? "you" : boss.uniqueKey || boss.goeticKey || boss.archangelKey || boss.name || "boss";
+  return { key, name: boss.name || "A BOSS", image: typeof boss.image === "string" ? boss.image : "" };
+}
+
+// at game over, after the run's records are written
+function recordRunEnded() {
+  if (state.mode !== "arcade") return;
+  const broken = newRecordsThisRun().map((record) => record.key);
+  if (!lifetimeRecordsCount()) return;
+  const lifetime = loadLifetimeRecords();
+  lifetime.runs += 1;
+  const depth = deepestDescentDepth();
+  const build = runBuildKey();
+  if (build) {
+    const entry = lifetime.builds[build] || { runs: 0, depth: 0 };
+    entry.runs += 1;
+    entry.depth = Math.max(entry.depth || 0, depth);
+    lifetime.builds[build] = entry;
+  }
+  const nemesis = runNemesis();
+  const death = lifetime.deaths[nemesis.key] || { count: 0, name: nemesis.name, image: nemesis.image };
+  death.count += 1;
+  death.name = nemesis.name;
+  if (nemesis.image) death.image = nemesis.image;
+  lifetime.deaths[nemesis.key] = death;
+  lifetime.unseen = broken;
+  saveLifetimeRecords();
+}
+
+// the Records screen was left: its NEW marks are seen
+function recordsMarkSeen() {
+  const lifetime = loadLifetimeRecords();
+  if (!lifetime.unseen.length) return;
+  lifetime.unseen = [];
+  saveLifetimeRecords();
+}
+
+// the entry with the most of something ({ id: count }), or null
+function topEntry(counts) {
+  return Object.entries(counts || {}).reduce((best, [key, value]) => (value > (best?.value || 0) ? { key, value } : best), null);
 }
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -7913,6 +8218,9 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
   const gained = multiplied + sonBonus;
   state.player.credits += gained;
   if (gained > 0) {
+    // lifetime SIN earned (Records); money from sales does not count
+    const soldBase = normalizedEntries.filter((entry) => String(entry.source || "").startsWith("Sold ")).reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
+    recordSinEarned(gained - Math.ceil(soldBase * multiplier));
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
@@ -9967,6 +10275,8 @@ function applyPenalties() {
 
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
+  // Guess quality: your final guess against the final TARGET (02-run-records.js)
+  recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
   // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
   const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
@@ -10158,9 +10468,10 @@ function applyPenalties() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
-  updateArcadeRecordsFromCurrentRun();
+  updateArcadeRecordsFromCurrentRun({ final: true });
   removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
+  recordRunEnded();
   state.inspectingGameOver = false;
   state.stage = "ended";
   state.pendingActive = null;
@@ -13490,41 +13801,228 @@ function renderSoundOptionsMenu() {
   `;
 }
 
-function recordValueText(record, { withName = false, prefix = "" } = {}) {
-  const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
-  if (value <= 0) return "None";
-  const label = withName && record?.name ? ` - ${record.name}` : "";
-  return `${prefix}${formatNumber(value)}${label}`;
+/* ---------- Records: the Relic Wall ----------
+   Every record is a framed plaque, grouped in tabs. Records the last run broke glow red with NEW until
+   the Records screen is left (recordsMarkSeen); their tab carries a red mark. Data: 02-run-records.js. */
+const RECORDS_TABS = [
+  { key: "guess", label: "Guess" },
+  { key: "descent", label: "Descent" },
+  { key: "slaughter", label: "Slaughter" },
+  { key: "seals", label: "Seals" },
+  { key: "sin", label: "SIN" }
+];
+
+// which tab shows each run record (for the NEW marks)
+const RECORD_TAB_OF_KEY = {
+  bestRunGuessQuality: "guess",
+  mostCriticals: "guess",
+  deepestDescent: "descent",
+  highestRoundReached: "descent",
+  fastestWin: "descent",
+  mostBossEliminations: "descent",
+  mostEliminations: "slaughter",
+  mostPentakills: "slaughter",
+  mostOverallDamage: "slaughter",
+  mostSingleRoundDamage: "slaughter",
+  mostOverallSealDamage: "seals",
+  mostRoundSealDamage: "seals",
+  highestEliteLevel: "seals"
+};
+
+function recordsTab() {
+  if (!RECORDS_TABS.some((tab) => tab.key === state.recordsTab)) {
+    const unseen = loadLifetimeRecords().unseen;
+    state.recordsTab = RECORDS_TABS.find((tab) => unseen.some((key) => RECORD_TAB_OF_KEY[key] === tab.key))?.key || "guess";
+  }
+  return state.recordsTab;
 }
 
-function renderRecordRow(label, value) {
+function renderRecordPlaque({ label, value, sub = "", art = "", size = "", isNew = false, empty = false, extra = "" }) {
+  const classes = ["record-plaque", size ? `record-plaque-${size}` : "", isNew ? "is-new" : "", empty ? "is-empty" : ""].filter(Boolean).join(" ");
   return `
-    <div class="record-row">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value)}</strong>
+    <div class="${classes}">
+      ${isNew ? `<span class="record-new">NEW</span>` : ""}
+      ${art ? `<div class="record-art">${art}</div>` : ""}
+      <strong class="record-value">${escapeHtml(String(value))}</strong>
+      ${extra}
+      <span class="record-label">${escapeHtml(label)}</span>
+      ${sub ? `<small class="record-sub">${escapeHtml(sub)}</small>` : ""}
     </div>
   `;
 }
 
+const recordCountText = (value, one, many) => `${formatNumber(value)} ${value === 1 ? one : many}`;
+
 function renderRecordsMenu() {
   const records = loadArcadeRecords();
-  const rows = [
-    renderRecordRow("Most Eliminations", recordValueText(records.mostEliminations)),
-    renderRecordRow("Most Boss Eliminations", recordValueText(records.mostBossEliminations)),
-    renderRecordRow("Most Overall Damage", recordValueText(records.mostOverallDamage)),
-    renderRecordRow("Most Single Round Damage", recordValueText(records.mostSingleRoundDamage)),
-    renderRecordRow("Highest Round Reached", recordValueText(records.highestRoundReached)),
-    renderRecordRow("Most Pentakills In A Single Run", recordValueText(records.mostPentakills)),
-    renderRecordRow("Most Overall Damage By One Seal", recordValueText(records.mostOverallSealDamage, { withName: true })),
-    renderRecordRow("Most Damage By One Seal In A Round", recordValueText(records.mostRoundSealDamage, { withName: true })),
-    renderRecordRow("Highest Elite Level Bought", records.highestEliteLevel?.value > 0 ? `${eliteLevelText(records.highestEliteLevel.value)}${records.highestEliteLevel.name ? ` - ${records.highestEliteLevel.name}` : ""}` : "None"),
-    renderRecordRow("Most Played Seal", recordValueText(records.mostPlayedSeal, { withName: true })),
-    renderRecordRow("Most Played Artifact", recordValueText(records.mostPlayedArtifact, { withName: true }))
-  ].join("");
+  const lifetime = loadLifetimeRecords();
+  const progress = loadCollectionProgress();
+  const unseen = new Set(lifetime.unseen);
+  const tab = recordsTab();
+  const sigil = (id) => (id && ITEMS[id] ? renderSealSigil(id, "record-sigil") : "");
+  const lifetimePlaque = (label, value, sub, options = {}) =>
+    renderRecordPlaque({ label, value: value > 0 ? formatNumber(value) : "None", sub, empty: !(value > 0), ...options });
+  // a best-of-one-run record
+  const runPlaque = (key, label, sub = "in one run", options = {}) => {
+    const record = records[key] || emptyRecord();
+    const empty = !(record.value > 0);
+    return renderRecordPlaque({
+      label,
+      value: recordValueDisplay(key, record),
+      sub: !empty && record.name ? record.name : sub,
+      art: !empty && record.id ? sigil(record.id) : "",
+      isNew: unseen.has(key),
+      empty,
+      ...options
+    });
+  };
+
+  let plaques = "";
+  if (tab === "guess") {
+    const recent = lifetime.recentGuesses;
+    const recentQuality = guessQualityValue(recent.reduce((sum, score) => sum + score, 0), recent.length);
+    const allQuality = guessQualityValue(lifetime.guessSum, lifetime.guessRounds);
+    const best = records.bestRunGuessQuality;
+    const strip = recent.length
+      ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
+      : "";
+    plaques = [
+      renderRecordPlaque({
+        label: "Guess quality",
+        value: recentQuality ?? "--",
+        sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+        size: "hero",
+        empty: recentQuality === null,
+        extra: strip
+      }),
+      renderRecordPlaque({
+        label: "Guess quality",
+        value: allQuality ?? "--",
+        sub: lifetime.guessRounds ? `all time · ${recordCountText(lifetime.guessRounds, "guess", "guesses")}` : "all time",
+        empty: allQuality === null
+      }),
+      renderRecordPlaque({
+        label: "Best run Guess quality",
+        value: best.value > 0 ? formatNumber(best.value) : "None",
+        sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+        isNew: unseen.has("bestRunGuessQuality"),
+        empty: !(best.value > 0)
+      }),
+      lifetimePlaque("CRITICALS in a row", progress.best.critStreak || 0, "in one run"),
+      runPlaque("mostCriticals", "Most CRITICALS")
+    ].join("");
+  } else if (tab === "descent") {
+    const deepest = records.deepestDescent;
+    // the BOSS that claimed you most; the DAMNED only while no BOSS ever has
+    const deathCounts = Object.fromEntries(Object.entries(lifetime.deaths).map(([key, entry]) => [key, entry.count]));
+    const bossDeaths = Object.fromEntries(Object.entries(deathCounts).filter(([key]) => key !== "damned"));
+    const nemesis = topEntry(bossDeaths) || topEntry(deathCounts);
+    const nemesisEntry = nemesis ? lifetime.deaths[nemesis.key] : null;
+    plaques = [
+      renderRecordPlaque({
+        label: "Deepest descent",
+        value: deepest.value > 0 ? deepestDescentText(deepest) : "None",
+        sub: deepest.value > 0 ? `round ${formatNumber(deepest.round || 0)}` : "",
+        size: "hero",
+        isNew: unseen.has("deepestDescent"),
+        empty: !(deepest.value > 0)
+      }),
+      runPlaque("highestRoundReached", "Highest round"),
+      lifetimePlaque("Games beaten", progress.stats.gamesBeaten || 0, "all time"),
+      lifetimePlaque("Runs played", lifetime.runs, "all time"),
+      runPlaque("fastestWin", "Fastest win", "beat the 8 BOSSES"),
+      runPlaque("mostBossEliminations", "Most BOSS kills"),
+      lifetimePlaque("BOSSES at once", progress.best.bossesAtOnce || 0, "on the table"),
+      renderRecordPlaque({
+        label: "Nemesis",
+        value: nemesisEntry ? nemesisEntry.name : "None",
+        sub: nemesisEntry ? `claimed you ${recordCountText(nemesisEntry.count, "time", "times")}` : "who claims you most",
+        art: nemesisEntry?.image ? `<img class="record-nemesis-art" src="${escapeAttr(nemesisEntry.image)}" alt="" loading="lazy" />` : "",
+        empty: !nemesisEntry
+      })
+    ].join("");
+  } else if (tab === "slaughter") {
+    plaques = [
+      runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
+      runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostOverallDamage", "Most damage"),
+      runPlaque("mostSingleRoundDamage", "Damage in one round"),
+      lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
+      lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
+      lifetimePlaque("Yannis eliminated", progress.stats.yannisKills || 0, "all time"),
+      lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
+      lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
+    ].join("");
+  } else if (tab === "seals") {
+    const deepest = records.deepestDescent;
+    const build = Array.isArray(deepest.build) ? deepest.build.filter((entry) => ITEMS[entry?.id]) : [];
+    const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
+    const buildArt = build.length || artifacts.length
+      ? `<div class="record-build">${build
+          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
+          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
+      : "";
+    const known = (counts) => Object.fromEntries(Object.entries(counts).filter(([id]) => ITEMS[id]));
+    const topSeal = topEntry(known(lifetime.sealRuns));
+    const topArtifact = topEntry(known(lifetime.artifactUses));
+    const topBuild = topEntry(Object.fromEntries(Object.entries(lifetime.builds).map(([key, entry]) => [key, entry.runs])));
+    const buildLabel = (key) => SEAL_BUILDS.find((entry) => entry.key === key)?.label || key;
+    const topBuildDepth = topBuild ? lifetime.builds[topBuild.key].depth || 0 : 0;
+    plaques = [
+      renderRecordPlaque({
+        label: "Best build",
+        value: build.length || artifacts.length ? deepestDescentText(deepest) : "None",
+        sub: build.length || artifacts.length ? "what you held at your deepest descent" : "",
+        size: "hero",
+        extra: buildArt,
+        isNew: unseen.has("deepestDescent"),
+        empty: !(build.length || artifacts.length)
+      }),
+      renderRecordPlaque({
+        label: "Most played SEAL",
+        value: topSeal ? recordCountText(topSeal.value, "run", "runs") : "None",
+        sub: topSeal ? ITEMS[topSeal.key].name : "all time",
+        art: topSeal ? sigil(topSeal.key) : "",
+        empty: !topSeal
+      }),
+      renderRecordPlaque({
+        label: "Most played build",
+        value: topBuild ? buildLabel(topBuild.key) : "None",
+        sub: topBuild
+          ? `${recordCountText(topBuild.value, "run", "runs")} · deepest ${deepestDescentText({ depth: topBuildDepth, demons: Math.max(0, topBuildDepth - UNIQUE_BOSS_KEYS.length) })}`
+          : "all time",
+        empty: !topBuild
+      }),
+      renderRecordPlaque({
+        label: "Most played ARTIFACT",
+        value: topArtifact ? recordCountText(topArtifact.value, "use", "uses") : "None",
+        sub: topArtifact ? ITEMS[topArtifact.key].name : "all time",
+        art: topArtifact ? renderArtifactIcon(topArtifact.key, "record-artifact") : "",
+        empty: !topArtifact
+      }),
+      runPlaque("mostOverallSealDamage", "SEAL damage in one run"),
+      runPlaque("mostRoundSealDamage", "SEAL damage in one round"),
+      runPlaque("highestEliteLevel", "Highest ELITE")
+    ].join("");
+  } else {
+    plaques = [
+      lifetimePlaque("Most SIN held", progress.best.sinHeld || 0, "at once", { size: "hero" }),
+      lifetimePlaque("SIN spent in one round", progress.best.roundSpent || 0, "in the Devil's Offerings"),
+      lifetimePlaque("SIN earned", lifetime.sinEarned, "all time, sales not counted"),
+      lifetimePlaque("Pacts signed", lifetime.pacts, "with Satan")
+    ].join("");
+  }
+
+  const tabs = RECORDS_TABS.map((entry) => {
+    const active = entry.key === tab;
+    const hasNew = [...unseen].some((key) => RECORD_TAB_OF_KEY[key] === entry.key);
+    return `<button class="records-tab${active ? " active" : ""}" data-menu-action="records-tab:${entry.key}" aria-pressed="${active}">${escapeHtml(entry.label)}${hasNew ? `<i class="records-tab-new" aria-label="new record"></i>` : ""}</button>`;
+  }).join("");
   return `
-    <div class="records-menu">
+    <div class="records-menu relic-wall">
       <h2 class="records-title">Records</h2>
-      <div class="records-list">${rows}</div>
+      <nav class="records-tabs" aria-label="Record groups">${tabs}</nav>
+      <div class="records-wall records-wall-${escapeAttr(tab)}">${plaques}</div>
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
   `;
@@ -15614,6 +16112,7 @@ function renderOverlay() {
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
         <div class="end-stats">
+          <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
@@ -15640,10 +16139,8 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const format = (number) => (record.key === "highestEliteLevel" ? (number > 0 ? eliteLevelText(number) : "None") : formatNumber(number));
-      const value = format(record.value);
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
-      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(value)}</strong><small>was ${escapeHtml(format(record.previous))}</small></div>`;
+      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>was ${escapeHtml(record.previousText)}</small></div>`;
     })
     .join("");
   return `
@@ -15691,6 +16188,13 @@ function confirmRunRemoval(slotId) {
 
 function handleMenuAction(action) {
   resumeSoundtrack();
+  if (String(action).startsWith("records-tab:")) {
+    state.recordsTab = String(action).slice("records-tab:".length);
+    render();
+    return;
+  }
+  // leaving the Records screen: its NEW marks are seen
+  if (state.menuScreen === "records" && action !== "records") recordsMarkSeen();
   if (action === "play") {
     // on the phone app there is no PvP, so Play skips the Arcade / PvP choice
     state.menuScreen = isNativeArcadeApp() ? "arcade-options" : "play";
@@ -15717,6 +16221,7 @@ function handleMenuAction(action) {
   }
   if (action === "records") {
     state.menuScreen = "records";
+    state.recordsTab = null;
     render();
     return;
   }
@@ -17955,7 +18460,7 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null };
+  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0 };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
   else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
   return state.collectionRun;
@@ -18005,6 +18510,7 @@ function collectionNoteElimination(bot) {
     const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
       run.beaten = true;
+      run.beatenRound = state.round;
       collectionBump("gamesBeaten");
       collectionNoteSealWins();
       if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
@@ -18381,6 +18887,7 @@ const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.select
 // after every render of a run: moment checks, end-of-round streaks, then unlock what is earned
 function collectionAfterRender() {
   if (!collectionCounts()) return;
+  recordsNoteSlots();
   const run = collectionRun();
   if (state.player.hp === 1) collectionFlag("oneHealth");
   collectionRaise("sinHeld", state.player.credits);
@@ -19663,6 +20170,7 @@ function satanPactSign() {
   satanPactReceive(offer.gain);
   pact.used = true;
   pact.outcome = "signed";
+  recordPactSigned();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
