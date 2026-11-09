@@ -772,7 +772,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-SOUL to the penalty the other revealed DAMNED take each level."
+      "The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED. At end of round, each revealed DAMNED takes 8 damage for every adjacent revealed DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p62: {
     id: "p62",
@@ -1011,7 +1011,7 @@ const ITEMS = {
     type: "passive",
     name: "Fourth Pentacle of Saturn",
     price: 16,
-    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current SOUL. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance that every revealed DAMNED deals 10 damage to every other revealed DAMNED. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
@@ -5266,15 +5266,19 @@ function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-// the worst guess penalty is 10% max SOUL; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
+// Seal of Vepar: damage per adjacent revealed DAMNED at end of round (ELITE x1.5 per level, rounded up)
+function veparAdjacentDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 8);
+}
+
+// Fourth Pentacle of Saturn: what each revealed DAMNED deals to every other revealed DAMNED (ELITE raises the chance)
+const SATURN_FOURTH_DAMAGE = 10;
+
+// the worst guess penalty is 10% max SOUL
 const WORST_GUESS_PENALTY_PERCENT = 10;
 
 function worstGuessPenalty(maxHp, percent = WORST_GUESS_PENALTY_PERCENT) {
   return Math.max(1, Math.ceil((maxHp || 0) * (percent / 100)));
-}
-
-function veparPenaltyPercent(idOrItem) {
-  return WORST_GUESS_PENALTY_PERCENT + eliteLevels(idOrItem) * 2;
 }
 
 function paimonBaseSin(round = state.roundState) {
@@ -6025,7 +6029,7 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-SOUL.`;
+    return `The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED. At end of round, each revealed DAMNED takes ${veparAdjacentDamage(item)} damage for every adjacent revealed DAMNED.`;
   }
   if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
@@ -6130,7 +6134,7 @@ function itemDescription(item) {
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
   if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to multiply every DAMNED BOUNTY by x1.5.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current SOUL.`;
+  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance that every revealed DAMNED deals ${SATURN_FOURTH_DAMAGE} damage to every other revealed DAMNED.`;
   if (item.id === "p96") {
     return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
@@ -9935,8 +9939,32 @@ function revealBotGuess(bot, source = "", entry = null, options = {}) {
     orderedPassiveEffectEntries("p104").forEach((stubbornEntry) => {
       setBotPersonality(bot, "Stubborn", passiveName("p104", "Seal of Alloces"), { markEntry: stubbornEntry });
     });
+    applyVeparEdgeReveal(bot);
   }
   return !wasRevealed || stacked;
+}
+
+// the leftmost / rightmost living DAMNED at the table
+function isTableEdgeBot(bot) {
+  const living = activeBots();
+  if (!bot || !living.length) return false;
+  return living[0].id === bot.id || living[living.length - 1].id === bot.id;
+}
+
+// Seal of Vepar: the first time each round the leftmost or rightmost DAMNED is revealed (by anything),
+// reveal one more DAMNED. Once per round, so a reveal it makes on the other edge does not chain.
+function applyVeparEdgeReveal(bot) {
+  const round = state.roundState;
+  if (!round || !isTableEdgeBot(bot)) return;
+  orderedPassiveEffectEntries("p61").forEach((entry) => {
+    if (!round.veparEdgeReveals || typeof round.veparEdgeReveals !== "object") round.veparEdgeReveals = {};
+    const key = entry.sourceId || entry.id;
+    if (round.veparEdgeReveals[key]) return;
+    const candidates = activeBots().filter((candidate) => !candidate.revealedByPassive && canRevealBotGuess(candidate));
+    if (!candidates.length) return;
+    round.veparEdgeReveals[key] = true;
+    revealBotGuess(randomFrom(candidates), ITEMS.p61.name, entry);
+  });
 }
 
 function applyHighMemoryReveals() {
@@ -9963,11 +9991,13 @@ function applyGuessReveals() {
   );
   const desiredRevealCount = Math.min(revealableBots.length, MAX_REVEALED_DAMNED, 1 + extraReveals);
   const revealedCount = revealableBots.filter((bot) => bot.revealedByPassive).length;
-  const hiddenBots = shuffled(revealableBots.filter((bot) => !bot.revealedByPassive));
-  const newlyRevealed = hiddenBots.slice(0, Math.max(0, desiredRevealCount - revealedCount));
-  newlyRevealed.forEach((bot) => {
-    revealBotGuess(bot);
-  });
+  // one at a time: a reveal can set off another (Seal of Vepar), which must not take one of these slots
+  const missing = Math.max(0, desiredRevealCount - revealedCount);
+  for (let count = 0; count < missing; count += 1) {
+    const hiddenBots = revealableBots.filter((bot) => !bot.revealedByPassive && canRevealBotGuess(bot));
+    if (!hiddenBots.length) break;
+    revealBotGuess(randomFrom(hiddenBots));
+  }
   applyPyrosStartReveals(revealableBots);
   applyHighMemoryReveals();
   applyAmonRevealRewards(revealableBots.filter((bot) => bot.revealedByPassive), amonEntries);
@@ -9975,13 +10005,12 @@ function applyGuessReveals() {
 
 // SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
-// Vepar while you are below 50 SOUL, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
-// died last round, the Seal of Cassiel (p102) if any DAMNED died last round.
+// Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED died last round, the Seal of
+// Cassiel (p102) if any DAMNED died last round. (Seal of Vepar reveals from revealBotGuess, on an edge reveal.)
 function extraRevealEntries() {
-  return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
+  return orderedPassiveEffectEntries(["p59", "p64", "p65", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
     let active = false;
-    if (entry.id === "p61") active = (state.player?.hp || 0) < 50;
     if (entry.id === "p64") active = vineRevealRoll(entry);
     if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
     if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
@@ -10101,6 +10130,8 @@ function applyDevSealEntries(ids) {
 
   entries.forEach((entry) => {
     const source = ITEMS[entry.id]?.name || "Dev Seal";
+    // Fourth Pentacle of Saturn needs two revealed DAMNED to turn on each other; no roll (and no glow) without them
+    if (entry.id === "p95" && devSealTargetDamned().filter((bot) => bot.revealedByPassive).length < 2) return;
     if (Math.random() >= devSealEntryChance(entry)) return;
     markPassiveEntryTriggered(entry);
 
@@ -10142,18 +10173,17 @@ function applyDevSealEntries(ids) {
     }
 
     if (entry.id === "p95") {
+      // every revealed DAMNED hits every other revealed DAMNED: each takes 10 per other revealed DAMNED
+      // (once per its own reveal stack with the Seal of Pyros)
       const targets = devSealTargetDamned().filter((bot) => bot.revealedByPassive);
       let total = 0;
-      targets.forEach((bot) => {
-        // once per reveal stack (Seal of Pyros): each time it takes half of the SOUL it has left
-        let left = bot.hp;
-        for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
-          const damage = Math.ceil(left * 0.5);
-          left -= damage;
-          total += queueEndOfRoundBotDamage(bot, damage, `${source} burned ${bot.name} for ${damage} damage.`, source);
-        }
-      });
-      addRoundEvent(total > 0 ? `${source} queued ${total} total damage to revealed DAMNED.` : `${source} found no revealed DAMNED.`);
+      if (targets.length >= 2) {
+        targets.forEach((bot) => {
+          const damage = SATURN_FOURTH_DAMAGE * (targets.length - 1) * revealMultiplicity(bot);
+          total += queueEndOfRoundBotDamage(bot, damage, `${source} made the other revealed DAMNED deal ${damage} damage to ${bot.name}.`, source);
+        });
+      }
+      addRoundEvent(total > 0 ? `${source} turned the revealed DAMNED on each other for ${total} total damage.` : `${source} found fewer than two revealed DAMNED.`);
       return;
     }
 
@@ -10865,27 +10895,6 @@ function applyPenalties() {
         }
       });
       round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max SOUL.`);
-      // Seal of Vepar: when a revealed DAMNED takes the penalty, every revealed DAMNED takes it (once per reveal stack)
-      const veparEntries = orderedPassiveEffectEntries("p61");
-      if (veparEntries.length && worstGuessers.some((participant) => participant.kind !== "player" && participant.bot.revealedByPassive)) {
-        const worstIds = new Set(worstGuessers.filter((participant) => participant.kind !== "player").map((participant) => participant.bot.id));
-        veparEntries.forEach((entry) => {
-          const percent = veparPenaltyPercent(entry);
-          let hit = 0;
-          activeBots
-            .filter((bot) => bot.revealedByPassive)
-            .forEach((bot) => {
-              const times = revealMultiplicity(bot) - (worstIds.has(bot.id) ? 1 : 0);
-              if (times <= 0) return;
-              hit += 1;
-              addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, worstGuessPenalty(bot.maxHp, percent) * times, ITEMS.p61.name, targetDiffEntries);
-            });
-          if (hit) {
-            markPassiveEntryTriggered(entry);
-            round.roundEvents.push(`${ITEMS.p61.name} spread the worst guess penalty to every revealed DAMNED.`);
-          }
-        });
-      }
       if (blockedPlayerPenalty) round.roundEvents.push("Seal of Andras blocked your worst guess penalty damage.");
     }
   }
@@ -12070,7 +12079,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -12277,6 +12286,19 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const name = passiveName("p111", "Seal of Satan");
       damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
+      return;
+    }
+
+    // Seal of Vepar: each revealed DAMNED takes 8 per adjacent revealed DAMNED (once per its reveal stack)
+    if (entry.id === "p61") {
+      const perNeighbour = passiveEntryFlatDamage(entry, 8);
+      const damageFor = (bot) =>
+        adjacentLivingBots(bot).filter((neighbour) => neighbour.revealedByPassive).length * perNeighbour * revealMultiplicity(bot);
+      const targets = activeBots().filter((bot) => bot.revealedByPassive && damageFor(bot) > 0);
+      if (!targets.length) return;
+      markPassiveEntryTriggered(entry);
+      const name = ITEMS.p61.name;
+      damageBots(targets, damageFor, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for its revealed neighbours.`, name);
       return;
     }
 

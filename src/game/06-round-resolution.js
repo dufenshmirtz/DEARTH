@@ -300,27 +300,6 @@ function applyPenalties() {
         }
       });
       round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max SOUL.`);
-      // Seal of Vepar: when a revealed DAMNED takes the penalty, every revealed DAMNED takes it (once per reveal stack)
-      const veparEntries = orderedPassiveEffectEntries("p61");
-      if (veparEntries.length && worstGuessers.some((participant) => participant.kind !== "player" && participant.bot.revealedByPassive)) {
-        const worstIds = new Set(worstGuessers.filter((participant) => participant.kind !== "player").map((participant) => participant.bot.id));
-        veparEntries.forEach((entry) => {
-          const percent = veparPenaltyPercent(entry);
-          let hit = 0;
-          activeBots
-            .filter((bot) => bot.revealedByPassive)
-            .forEach((bot) => {
-              const times = revealMultiplicity(bot) - (worstIds.has(bot.id) ? 1 : 0);
-              if (times <= 0) return;
-              hit += 1;
-              addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, worstGuessPenalty(bot.maxHp, percent) * times, ITEMS.p61.name, targetDiffEntries);
-            });
-          if (hit) {
-            markPassiveEntryTriggered(entry);
-            round.roundEvents.push(`${ITEMS.p61.name} spread the worst guess penalty to every revealed DAMNED.`);
-          }
-        });
-      }
       if (blockedPlayerPenalty) round.roundEvents.push("Seal of Andras blocked your worst guess penalty damage.");
     }
   }
@@ -1505,7 +1484,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -1712,6 +1691,19 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const name = passiveName("p111", "Seal of Satan");
       damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
+      return;
+    }
+
+    // Seal of Vepar: each revealed DAMNED takes 8 per adjacent revealed DAMNED (once per its reveal stack)
+    if (entry.id === "p61") {
+      const perNeighbour = passiveEntryFlatDamage(entry, 8);
+      const damageFor = (bot) =>
+        adjacentLivingBots(bot).filter((neighbour) => neighbour.revealedByPassive).length * perNeighbour * revealMultiplicity(bot);
+      const targets = activeBots().filter((bot) => bot.revealedByPassive && damageFor(bot) > 0);
+      if (!targets.length) return;
+      markPassiveEntryTriggered(entry);
+      const name = ITEMS.p61.name;
+      damageBots(targets, damageFor, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for its revealed neighbours.`, name);
       return;
     }
 

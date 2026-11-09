@@ -1040,15 +1040,19 @@ function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-// the worst guess penalty is 10% max SOUL; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
+// Seal of Vepar: damage per adjacent revealed DAMNED at end of round (ELITE x1.5 per level, rounded up)
+function veparAdjacentDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 8);
+}
+
+// Fourth Pentacle of Saturn: what each revealed DAMNED deals to every other revealed DAMNED (ELITE raises the chance)
+const SATURN_FOURTH_DAMAGE = 10;
+
+// the worst guess penalty is 10% max SOUL
 const WORST_GUESS_PENALTY_PERCENT = 10;
 
 function worstGuessPenalty(maxHp, percent = WORST_GUESS_PENALTY_PERCENT) {
   return Math.max(1, Math.ceil((maxHp || 0) * (percent / 100)));
-}
-
-function veparPenaltyPercent(idOrItem) {
-  return WORST_GUESS_PENALTY_PERCENT + eliteLevels(idOrItem) * 2;
 }
 
 function paimonBaseSin(round = state.roundState) {

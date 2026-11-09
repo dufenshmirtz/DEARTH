@@ -555,7 +555,7 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-SOUL to the penalty the other revealed DAMNED take each level."
+      "The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED. At end of round, each revealed DAMNED takes 8 damage for every adjacent revealed DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p62: {
     id: "p62",
@@ -794,7 +794,7 @@ const ITEMS = {
     type: "passive",
     name: "Fourth Pentacle of Saturn",
     price: 16,
-    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current SOUL. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance that every revealed DAMNED deals 10 damage to every other revealed DAMNED. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",

@@ -46,7 +46,7 @@ function game() {
   return (code) => vm.runInContext(code, context);
 }
 
-// puts every conditional reveal SEAL in its "reveal" state: below 50 SOUL (Vepar), a winning 50% roll (Vine),
+// puts every conditional reveal SEAL in its "reveal" state: a winning 50% roll (Vine),
 // a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Seal of Cassiel (p102))
 const REVEAL_CONDITIONS_MET = `
   state.player.hp = 40;
@@ -56,7 +56,7 @@ const REVEAL_CONDITIONS_MET = `
 `;
 
 test("each reveal seal adds one reveal when its condition holds, independent of elite level, with a shared cap of four", () => {
-  for (const id of ["p59", "p61", "p64", "p65", "p102"]) {
+  for (const id of ["p59", "p64", "p65", "p102"]) {
     game()(`
       ${REVEAL_CONDITIONS_MET}
       fixture([["${id}", 4]], [10, 20, 30, 40, 50]);
@@ -106,7 +106,7 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
   const prefixes = {
-    p61: "While you are below 50 SOUL, reveal one extra DAMNED each round.",
+    p61: "The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED.",
     p64: "Each round, 50% chance to reveal one extra DAMNED.",
     p65: "If a revealed DAMNED died last round, reveal one extra DAMNED.",
     p102: "If a DAMNED died last round, reveal one extra DAMNED."
@@ -1212,25 +1212,36 @@ test("the worst guess penalty is 10% of max SOUL", () => {
   `);
 });
 
-test("Vepar spreads the worst guess penalty to every revealed DAMNED", () => {
+// clears the round's reveals (fixture's beginRound already revealed one) so a test places them itself
+const CLEAR_REVEALS = `
+  state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
+  state.roundState.veparEdgeReveals = {};
+`;
+
+test("Vepar: revealed DAMNED take 8 damage per adjacent revealed DAMNED at end of round (ELITE x1.5)", () => {
+  for (const [stack, per] of [[1, 8], [2, 12], [3, 18]]) {
+    game()(`
+      fixture([["p61", ${stack}]], [10, 20, 30, 40, 50]);
+      ${CLEAR_REVEALS}
+      state.roundState.veparEdgeReveals = { p61: true };
+      revealBotGuess(state.bots[0]);
+      revealBotGuess(state.bots[1]);
+      revealBotGuess(state.bots[2]);
+      revealBotGuess(state.bots[4]);
+      assert.equal(revealedDamnedCount(), 4);
+      applyEndOfRoundPassiveDamageInOrder();
+      assertDamage([${per}, ${per * 2}, ${per}, 0, 0]);
+      assert.equal(sealStatsFor("p61").triggers > 0, true);
+    `);
+  }
   game()(`
-    fixture([["p61"]], [60, 60, 60, 60, 0]);
-    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
-    revealBotGuess(state.bots[4], "Test");
-    revealBotGuess(state.bots[1], "Test");
-    state.roundState.targetModifier = 1;
-    state.roundState.playerEffectiveGuess = 60;
-    applyPenalties();
-    assertDamage([10, 110, 10, 10, 150]);
-  `);
-  game()(`
-    fixture([["p61"]], [60, 60, 60, 60, 0]);
-    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
-    revealBotGuess(state.bots[1], "Test");
-    state.roundState.targetModifier = 1;
-    state.roundState.playerEffectiveGuess = 60;
-    applyPenalties();
-    assertDamage([10, 10, 10, 10, 150]);
+    fixture([["p61"]], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    state.roundState.veparEdgeReveals = { p61: true };
+    revealBotGuess(state.bots[0]);
+    revealBotGuess(state.bots[2]);
+    applyEndOfRoundPassiveDamageInOrder();
+    assertDamage([0, 0, 0, 0, 0]);
   `);
 });
 
@@ -1563,18 +1574,69 @@ test("Amon always reveals one extra DAMNED", () => {
   `);
 });
 
-test("Vepar reveals one extra DAMNED only while you are below 50 SOUL", () => {
+test("Vepar reveals one more DAMNED the first time each round the leftmost or rightmost DAMNED is revealed", () => {
   game()(`
-    state.player.hp = 50;
     fixture([["p61"]], [10, 20, 30, 40, 50]);
-    assert.equal(revealedDamnedCount(), 1);
-    assert.ok(!state.roundState.triggeredPassiveIds.has("p61"));
+    ${CLEAR_REVEALS}
+    revealBotGuess(state.bots[2]);
+    assert.equal(revealedDamnedCount(), 1, "a middle DAMNED does not count");
+    Math.random = () => 0.99;
+    revealBotGuess(state.bots[0]);
+    assert.equal(revealedDamnedCount(), 3);
+    assert.equal(state.bots[4].revealedByPassive, true, "the extra reveal is one of the hidden DAMNED");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p61"));
+    revealBotGuess(state.bots[1]);
+    assert.equal(revealedDamnedCount(), 4, "once per round: the other edge does not chain");
   `);
   game()(`
-    state.player.hp = 49;
+    fixture([], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    revealBotGuess(state.bots[0]);
+    assert.equal(revealedDamnedCount(), 1);
+  `);
+  game()(`
     fixture([["p61"]], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    Math.random = () => 0;
+    applyGuessReveals();
+    assert.equal(revealedDamnedCount(), 2, "the round's own reveal on an edge brings one more");
+    applyGuessReveals();
     assert.equal(revealedDamnedCount(), 2);
-    assert.ok(state.roundState.triggeredPassiveIds.has("p61"));
+  `);
+});
+
+test("Fourth Pentacle of Saturn: on its roll every revealed DAMNED deals 10 damage to every other revealed DAMNED", () => {
+  game()(`
+    fixture([["p95"]], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    revealBotGuess(state.bots[0]);
+    revealBotGuess(state.bots[2]);
+    revealBotGuess(state.bots[3]);
+    Math.random = () => 0.29;
+    applyDevSealsAfterReady();
+    applyQueuedEndOfRoundBotDamage();
+    assertDamage([20, 0, 20, 20, 0]);
+  `);
+  game()(`
+    fixture([["p95"]], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    revealBotGuess(state.bots[0]);
+    revealBotGuess(state.bots[2]);
+    Math.random = () => 0.3;
+    applyDevSealsAfterReady();
+    applyQueuedEndOfRoundBotDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+  `);
+  game()(`
+    fixture([["p95", 3]], [10, 20, 30, 40, 50]);
+    ${CLEAR_REVEALS}
+    revealBotGuess(state.bots[1]);
+    Math.random = () => 0.3;
+    applyDevSealsAfterReady();
+    applyQueuedEndOfRoundBotDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    assert.ok(!state.roundState.triggeredPassiveIds.has("p95"), "no glow with a single revealed DAMNED");
+    assert.equal(devSealEntryChance({ id: "p95", stack: 3 }), 0.4);
   `);
 });
 

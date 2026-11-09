@@ -233,7 +233,7 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-SOUL.`;
+    return `The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED. At end of round, each revealed DAMNED takes ${veparAdjacentDamage(item)} damage for every adjacent revealed DAMNED.`;
   }
   if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
@@ -338,7 +338,7 @@ function itemDescription(item) {
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
   if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to multiply every DAMNED BOUNTY by x1.5.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current SOUL.`;
+  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance that every revealed DAMNED deals ${SATURN_FOURTH_DAMAGE} damage to every other revealed DAMNED.`;
   if (item.id === "p96") {
     return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
