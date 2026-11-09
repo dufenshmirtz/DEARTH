@@ -14618,7 +14618,7 @@ function renderSoundOptionsMenu() {
 }
 
 /* ---------- Records: the Relic Wall ----------
-   Every record is a framed plaque, grouped in tabs. Records the last run broke glow red with NEW until
+   Every record is a framed plaque, grouped in tabs. Records the last run broke carry a NEW tag until
    the Records screen is left (recordsMarkSeen); their tab carries a red mark. Data: 02-run-records.js. */
 const RECORDS_TABS = [
   { key: "guess", label: "Guess" },
@@ -17038,7 +17038,7 @@ function renderNewRecordsHtml() {
   const rows = broken
     .map((record) => {
       const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
-      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>was ${escapeHtml(record.previousText)}</small></div>`;
+      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>previous: ${escapeHtml(record.previousText)}</small></div>`;
     })
     .join("");
   return `
