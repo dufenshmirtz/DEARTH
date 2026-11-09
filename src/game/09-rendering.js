@@ -1798,7 +1798,7 @@ function watchMoments() {
     beat = Math.max(beat, 260);
     momentSfx("critical");
     momentSfx("criticalBell");
-    startMoment("critical", "Critical", "You named the TARGET");
+    startMoment("critical", "Critical");
     hitStop(80);
     screenShake(9, 420);
   } else if (now.anyCritical && !before.anyCritical) {
@@ -1849,7 +1849,7 @@ function watchMoments() {
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
 
   if (!before.pentakill && now.pentakill) {
-    startMoment("pentakill", "Pentakill", "+5 SOUL   +8 SIN");
+    startMoment("pentakill", "Pentakill");
     playPentakillSfx();
     hitStop(80);
     screenShake(10, 460);
@@ -1858,7 +1858,7 @@ function watchMoments() {
   if (!before.finals && now.finals) {
     momentSfx("finalBosses");
     if (now.sealed) momentSfx("shopSealed", 1500);
-    startMoment("finals", "Judgement", "Jesus and Satan take the table");
+    startMoment("finals", "Judgement");
     screenShake(5, 600);
   } else if (!now.finals) {
     // bosses that come together (Petros and Pavlos) arrive in one card
@@ -1869,7 +1869,7 @@ function watchMoments() {
       momentSfx("bossArrive");
       const names = arrived.map((boss) => boss.name);
       const title = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
-      startMoment("boss", title, names.length > 1 ? "take their seats at the table" : "takes a seat at the table");
+      startMoment("boss", title);
       screenShake(4, 500);
     }
   }
