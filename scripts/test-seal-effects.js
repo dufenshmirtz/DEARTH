@@ -2678,7 +2678,8 @@ test("KARMA unlocks: locked SEALS by section price, Goetic demons for 50, never 
     // the locked SEAL's box offers it, with the button only once clicked
     assert.ok(collectionInfoHtml("p76", true).includes("data-collection-karma"));
     assert.ok(!collectionInfoHtml("p76", false).includes("data-collection-karma"));
-    assert.ok(collectionInfoHtml("p76", false).includes("100 KARMA"));
+    assert.ok(collectionInfoHtml("p76", false).includes("unlock it for 100" + KARMA_MARK));
+    assert.ok(!collectionInfoHtml("p76", true).includes(" KARMA."));
     // demons
     const demon = GOETIC_BOSS_KEYS[5];
     assert.equal(karmaUnlockDemon(demon), false); // 50 > 20

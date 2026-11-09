@@ -18827,7 +18827,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
       <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run. KARMA cannot buy an Archangel.</div>`;
+      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run. It cannot be bought with ${KARMA_MARK}.</div>`;
   }
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
@@ -19498,10 +19498,10 @@ function collectionKarmaHtml(kind, key, price, pinned) {
   const enough = balance >= price;
   const control = pinned
     ? `<button type="button" class="collection-bind-button collection-karma-button" data-collection-karma="${escapeAttr(`${kind}:${key}`)}"${enough ? "" : " disabled"}>Unlock for ${formatNumber(price)}${KARMA_MARK}</button>`
-    : `<div class="collection-info-note">Click to unlock it for ${formatNumber(price)} KARMA.</div>`;
+    : `<div class="collection-info-note">Click to unlock it for ${formatNumber(price)}${KARMA_MARK}</div>`;
   return `
     <div class="collection-info-bind collection-info-karma">
-      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)}${KARMA_MARK}</strong> KARMA. You have ${formatNumber(balance)}${KARMA_MARK}</div>
+      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)}${KARMA_MARK}</strong>. You have ${formatNumber(balance)}${KARMA_MARK}</div>
       ${control}
     </div>`;
 }
