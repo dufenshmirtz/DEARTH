@@ -1143,20 +1143,20 @@ function renderCollectionScreen(from) {
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
         <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
+        <div class="collection-header-right">
+        ${collectionKarmaLine()}
         <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
-          ${collectionKarmaLine()}
         </div>
         <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
           <span><strong data-collection-count="slain">${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
-          ${collectionKarmaLine()}
         </div>
         <div class="collection-counts" data-collection-for="angels"${angels ? "" : " hidden"}>
           <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
-          ${collectionKarmaLine()}
+        </div>
         </div>
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
@@ -1530,7 +1530,8 @@ function collectionKarmaHtml(kind, key, price, pinned) {
 }
 
 function collectionKarmaLine() {
-  return `<span class="collection-karma-line">KARMA <strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</span>`;
+  // the big counter, top right of the Collection on every tab
+  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
 
 // a KARMA button was clicked in the info box: arm it, then spend and show what was unlocked
