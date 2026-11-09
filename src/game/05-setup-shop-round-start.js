@@ -1545,11 +1545,21 @@ function planBotGuess(bot) {
   return Math.ceil(clamp(clampFixedWillGuess(bot, guess), 0, 100));
 }
 
+// DRIFTER: hard to predict, but never trolling. It always guesses within DRIFTER_MAX_DRIFT of where it
+// aims (what it remembers of the TARGET and the table, or its anchor before it remembers anything), its
+// swings are small, and its wild guesses are a big drift instead of 0 or 100.
+const DRIFTER_MAX_DRIFT = 22;
+const DRIFTER_NOISE_SCALE = 1.2; // x its noise either way (was 2)
+const DRIFTER_SWING = [4, 10]; // the aggression swing (others 5-16)
+const DRIFTER_WILD_DRIFT = [14, DRIFTER_MAX_DRIFT]; // a wild guess: this far from its aim
+
 // one personality's guess (before the STUBBORN clamp and rounding)
 function planPersonaGuess(bot, persona) {
   const memory = bot.memory;
   const currentModifier = state.roundState?.targetModifier ?? currentTargetModifier();
+  const drifter = persona.type === "Drifter";
   let guess;
+  let aim = persona.anchor;
 
   if (!memory.length) {
     guess = persona.anchor + randomInt(-12, 12);
@@ -1567,8 +1577,10 @@ function planPersonaGuess(bot, persona) {
       guess = last.playerGuess * 0.52 + lastTarget * 0.48 + randomInt(-persona.noise, persona.noise);
     } else if (persona.type === "Stubborn") {
       guess = persona.anchor * 0.72 + lastTarget * 0.28 + randomInt(-persona.noise, persona.noise);
-    } else if (persona.type === "Drifter") {
-      guess = lastTarget * 0.56 + tablePull * 0.44 + randomInt(-persona.noise * 2, persona.noise * 2);
+    } else if (drifter) {
+      aim = lastTarget * 0.56 + tablePull * 0.44;
+      const spread = Math.round(persona.noise * DRIFTER_NOISE_SCALE);
+      guess = aim + randomInt(-spread, spread);
     } else if (persona.type === "Caller") {
       guess = last.botAverage * 0.62 + lastTarget * 0.38 + randomInt(-persona.noise, persona.noise);
     } else {
@@ -1580,13 +1592,16 @@ function planPersonaGuess(bot, persona) {
 
   if (Math.random() < persona.aggression * 0.62) {
     const direction = Math.random() < 0.5 ? -1 : 1;
-    guess += direction * randomInt(5, 16);
+    guess += direction * (drifter ? randomInt(DRIFTER_SWING[0], DRIFTER_SWING[1]) : randomInt(5, 16));
   }
 
   if (Math.random() < persona.aggression * 0.09) {
-    guess = randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
+    guess = drifter
+      ? aim + (Math.random() < 0.5 ? -1 : 1) * randomInt(DRIFTER_WILD_DRIFT[0], DRIFTER_WILD_DRIFT[1])
+      : randomFrom([0, 100, randomInt(8, 22), randomInt(78, 92), 50 + randomInt(-12, 12)]);
   }
 
+  if (drifter) guess = clamp(guess, aim - DRIFTER_MAX_DRIFT, aim + DRIFTER_MAX_DRIFT);
   return guess;
 }
 

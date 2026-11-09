@@ -3216,3 +3216,30 @@ test("Dev SEAL grant gives the SEAL into an empty slot, upgrades one you have, a
     assert.ok(kalha.note.includes("cannot be upgraded"));
   `);
 });
+
+test("DRIFTER: hard to predict but never trolling: always within 22 of where it aims, wild guesses drift instead of 0 or 100", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const drifter = BOT_ARCHETYPES.find((entry) => entry.type === "Drifter");
+    const persona = { type: "Drifter", anchor: drifter.anchor, aggression: drifter.aggression, noise: drifter.noise };
+    // last round's TARGET was 44 and the table matched it
+    const bot = { memory: [{ target: 44, tableAverage: 44 / 0.8, playerGuess: 44, botAverage: 55 }] };
+    state.roundState.targetModifier = 0.8;
+    const realRandom = Math.random;
+    // every roll lands: the swing and the wild guess both fire
+    Math.random = () => 0;
+    const wild = planPersonaGuess(bot, persona);
+    assert.ok(wild >= 44 - DRIFTER_MAX_DRIFT && wild <= 44 + DRIFTER_MAX_DRIFT, String(wild));
+    assert.ok(wild > 5);
+    Math.random = realRandom;
+    let farthest = 0;
+    for (let i = 0; i < 3000; i += 1) farthest = Math.max(farthest, Math.abs(planPersonaGuess(bot, persona) - 44));
+    assert.ok(farthest <= DRIFTER_MAX_DRIFT, String(farthest));
+    // before it remembers anything it stays around its anchor
+    const fresh = { memory: [] };
+    for (let i = 0; i < 1000; i += 1) {
+      const guess = planPersonaGuess(fresh, persona);
+      assert.ok(Math.abs(guess - drifter.anchor) <= DRIFTER_MAX_DRIFT);
+    }
+  `);
+});
