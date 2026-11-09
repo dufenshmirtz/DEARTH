@@ -8452,6 +8452,53 @@ function skipArcadeProgression() {
   }
 }
 
+// SEALS that act when a DAMNED arrives between rounds (Seere, Vassago) would mark the round that just ended,
+// and beginRound's fresh round state would wipe that mark: collect them here, carry them into the new round
+// and play their trigger animation as the new round begins (startArrivalSealAnimation)
+let pendingArrivalSealIds = [];
+let arrivalSealIdsToAnimate = new Set();
+function captureArrivalSealTriggers(spawn) {
+  const round = state.roundState;
+  if (!round) return spawn();
+  const previous = round.triggeredPassiveIds;
+  const arrival = new Set();
+  round.triggeredPassiveIds = arrival;
+  try {
+    return spawn();
+  } finally {
+    round.triggeredPassiveIds = previous;
+    arrival.forEach((id) => previous?.add(id));
+    pendingArrivalSealIds.push(...arrival);
+  }
+}
+
+function carryArrivalSealTriggers() {
+  const ids = pendingArrivalSealIds;
+  pendingArrivalSealIds = [];
+  arrivalSealIdsToAnimate = new Set();
+  if (!state.roundState) return;
+  ids.forEach((id) => {
+    state.roundState.triggeredPassiveIds.add(id);
+    arrivalSealIdsToAnimate.add(id);
+  });
+  // Seal of Seere's +6 BOUNTY shows as a badge on the new DAMNED at Seere's step (Vassago's MEMORY already has one)
+  state.bots.forEach((bot) => {
+    const bonus = bot.arrivalBountyBonus || 0;
+    delete bot.arrivalBountyBonus;
+    if (!bonus || bot.eliminated) return;
+    recordBotSinSource(bot, bonus, ITEMS.p23.name);
+    bot.lastSinDelta = (bot.lastSinDelta || 0) + bonus;
+  });
+}
+
+// the arrival SEALS animate as soon as the new DAMNED are on the table; every other SEAL still waits for READY
+function startArrivalSealAnimation() {
+  const ids = arrivalSealIdsToAnimate;
+  arrivalSealIdsToAnimate = new Set();
+  if (!ids.size || !state.roundState) return false;
+  return startRoundRevealAnimation(captureRoundRevealSnapshot(), { onlyIds: ids });
+}
+
 function createBot(options = {}) {
   const isBoss = Boolean(options.boss);
   const bossSpec = options.bossSpec || null;
@@ -8559,6 +8606,7 @@ function createBot(options = {}) {
   if (isBoss && bot.countsAsBossSpawn !== false) satanPactApplyBossDebt(bot);
   if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
   seedNewBotMemoryFromVassago(bot);
+  if (loadedSpawnBonus) bot.arrivalBountyBonus = loadedSpawnBonus;
   if (isBoss && bot.countsAsBossSpawn !== false) state.bossSpawnCount += 1;
   return bot;
 }
@@ -9173,6 +9221,8 @@ function beginRound() {
     // over and is removed for damage at the end of this round; without Threon there is no excess to keep
     if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
+  // after the reset above, so Seere's BOUNTY badge is not cleared
+  carryArrivalSealTriggers();
 
   syncBipolarBots();
   enforceTwinTemperPersonalities();
@@ -12541,12 +12591,13 @@ function advanceAfterSummary() {
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
   state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
-  replacePendingEliminations();
+  captureArrivalSealTriggers(replacePendingEliminations);
   state.rerollBaseCost = 1;
   // Seal of the Son's free rerolls (given at READY) last until the end of the next round
   if (state.round > (state.freeRerollsUntilRound || 0)) state.freeRerolls = 0;
   rerollShop();
   beginRound();
+  startArrivalSealAnimation();
   render();
 }
 

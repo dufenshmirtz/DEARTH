@@ -3289,3 +3289,40 @@ test("Third Pentacle of Saturn has a 15% base chance (ELITE +5%), the other Seal
     assert.ok(itemDescription({ ...ITEMS.p92, stack: 1 }).includes("15%"));
   `);
 });
+
+test("Seere and Vassago play their trigger animation as soon as the DAMNED they acted on arrives", () => {
+  game()(`
+    fixture([["p23"], ["p1"]], [10, 20, 30, 40, 50]);
+    render = () => {};
+    playGameSfx = () => {};
+    setTimeout = () => 0;
+    clearTimeout = () => {};
+    state.round = 5;
+    state.stage = "summary";
+    const fallen = state.bots[2];
+    fallen.eliminated = true;
+    fallen.hp = 0;
+    Math.random = () => 0.01;
+    advanceAfterSummary();
+    const arrived = state.bots[2];
+    assert.notEqual(arrived.id, fallen.id);
+    assert.ok(arrived.reward >= 7, "Seere gave +6 BOUNTY");
+    assert.ok(arrived.memory.length > 0, "Vassago gave MEMORY");
+    assert.equal(state.stage, "guess");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p23"), "Seere is marked in the new round");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p1"), "Vassago is marked in the new round");
+    assert.equal(sealStatsFor("p23").triggers, 1, "counted once");
+    // the animation starts right away, with only the two arrival SEALS, and they do not play again at READY
+    assert.ok(roundRevealAnimationActive());
+    assert.deepEqual(state.roundRevealAnimation.sequence.map((step) => step.id).sort(), ["p1", "p23"]);
+    assert.ok(state.roundState.animatedPassiveIds.has("p23") && state.roundState.animatedPassiveIds.has("p1"));
+    assert.equal(arrived.lastSinDelta, 6, "Seere's +6 shows as a BOUNTY badge");
+    finishRoundRevealAnimation();
+    // nothing carries over into the round after that
+    state.stage = "summary";
+    Math.random = () => 0.99;
+    advanceAfterSummary();
+    assert.ok(!state.roundState.triggeredPassiveIds.has("p23"));
+    assert.ok(!roundRevealAnimationActive(), "no animation when nobody new arrived");
+  `);
+});
