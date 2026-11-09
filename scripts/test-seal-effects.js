@@ -2566,6 +2566,11 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
     state.recordsAtRunStart = loadArcadeRecords();
     state.recordsAtRunStart.mostEliminations = { value: 3 };
     state.eliminations = 7;
+    // the most KOs in one round
+    recordRunRoundEliminations(2);
+    recordRunRoundEliminations(4);
+    recordRunRoundEliminations(1);
+    assert.equal(state.runStats.roundKOs, 4);
     const boss = state.bots[0];
     boss.isBoss = true;
     boss.uniqueKey = "padma";
@@ -2584,7 +2589,7 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
     state.menuScreen = "records";
     state.recordsTab = null;
     let html = renderRecordsMenu();
-    assert.equal(state.recordsTab, "slaughter");
+    assert.equal(state.recordsTab, "eliminations");
     assert.ok(html.includes("record-new"));
     for (const tab of RECORDS_TABS) {
       state.recordsTab = tab.key;

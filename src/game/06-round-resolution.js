@@ -830,6 +830,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;

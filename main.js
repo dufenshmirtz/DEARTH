@@ -3699,6 +3699,8 @@ function defaultRunStats() {
     currentRoundDamage: 0,
     singleRoundDamage: 0,
     pentakills: 0,
+    // the most DAMNED knocked out in one round
+    roundKOs: 0,
     criticals: 0,
     guessSum: 0,
     guessRounds: 0,
@@ -3724,6 +3726,7 @@ function normalizeRunStats(stats) {
     currentRoundDamage: Math.max(0, Math.ceil(Number(source.currentRoundDamage) || 0)),
     singleRoundDamage: Math.max(0, Math.ceil(Number(source.singleRoundDamage) || 0)),
     pentakills: count(source.pentakills),
+    roundKOs: count(source.roundKOs),
     criticals: count(source.criticals),
     guessSum: count(source.guessSum),
     guessRounds: count(source.guessRounds),
@@ -3758,6 +3761,7 @@ function defaultArcadeRecords() {
     mostSingleRoundDamage: emptyRecord(),
     highestRoundReached: emptyRecord(),
     mostPentakills: emptyRecord(),
+    mostRoundEliminations: emptyRecord(),
     mostCriticals: emptyRecord(),
     bestRunGuessQuality: emptyRecord({ guesses: 0 }),
     // lower is better (RECORD_LOWER_IS_BETTER): the round the 8th BOSS fell
@@ -3866,6 +3870,7 @@ function currentRunRecordCandidates({ final = Boolean(state.gameOver) } = {}) {
     mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
     highestRoundReached: { value: round },
     mostPentakills: { value: stats.pentakills || 0 },
+    mostRoundEliminations: { value: stats.roundKOs || 0 },
     mostCriticals: { value: stats.criticals || 0 },
     bestRunGuessQuality:
       final && stats.guessRounds >= GUESS_QUALITY_MIN_RUN_GUESSES && runQuality !== null
@@ -3903,6 +3908,7 @@ const NEW_RECORD_LABELS = {
   mostOverallDamage: "Most damage dealt",
   mostSingleRoundDamage: "Most damage in one round",
   mostPentakills: "Most PENTAKILLS",
+  mostRoundEliminations: "Most KOs in one round",
   mostOverallSealDamage: "Most damage by one SEAL",
   mostRoundSealDamage: "Most SEAL damage in one round",
   highestEliteLevel: "Highest ELITE level"
@@ -3976,6 +3982,13 @@ function recordRunSealDamage(id, amount) {
   if (next > (stats.maxSealRoundDamage?.value || 0)) {
     stats.maxSealRoundDamage = { value: next, id, name: ITEMS[id]?.name || id };
   }
+}
+
+// after every KO: the most KOs in one round
+function recordRunRoundEliminations(count) {
+  if (state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.roundKOs = Math.max(stats.roundKOs || 0, Math.floor(Number(count) || 0));
 }
 
 function recordRunPentakill() {
@@ -11253,6 +11266,7 @@ function resolveEliminatedBots(eliminated) {
     collectionNoteElimination(bot);
     state.killsSinceBossSpawn += 1;
     state.roundState.eliminationsThisRound += 1;
+    recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
     bot.eliminated = true;
@@ -14623,7 +14637,7 @@ function renderSoundOptionsMenu() {
 const RECORDS_TABS = [
   { key: "guess", label: "Guess" },
   { key: "descent", label: "Descent" },
-  { key: "slaughter", label: "Slaughter" },
+  { key: "eliminations", label: "Eliminations" },
   { key: "seals", label: "Seals" },
   { key: "sin", label: "SIN" }
 ];
@@ -14636,10 +14650,11 @@ const RECORD_TAB_OF_KEY = {
   highestRoundReached: "descent",
   fastestWin: "descent",
   mostBossEliminations: "descent",
-  mostEliminations: "slaughter",
-  mostPentakills: "slaughter",
-  mostOverallDamage: "slaughter",
-  mostSingleRoundDamage: "slaughter",
+  mostEliminations: "eliminations",
+  mostPentakills: "eliminations",
+  mostRoundEliminations: "eliminations",
+  mostOverallDamage: "eliminations",
+  mostSingleRoundDamage: "eliminations",
   mostOverallSealDamage: "seals",
   mostRoundSealDamage: "seals",
   highestEliteLevel: "seals"
@@ -14757,15 +14772,15 @@ function renderRecordsMenu() {
         empty: !nemesisEntry
       })
     ].join("");
-  } else if (tab === "slaughter") {
+  } else if (tab === "eliminations") {
     plaques = [
       runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
       runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostRoundEliminations", "KOs in one round"),
       runPlaque("mostOverallDamage", "Most damage"),
       runPlaque("mostSingleRoundDamage", "Damage in one round"),
       lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
       lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
-      lifetimePlaque("Yannis eliminated", progress.stats.yannisKills || 0, "all time"),
       lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
       lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
     ].join("");

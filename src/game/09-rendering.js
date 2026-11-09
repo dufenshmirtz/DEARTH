@@ -316,7 +316,7 @@ function renderSoundOptionsMenu() {
 const RECORDS_TABS = [
   { key: "guess", label: "Guess" },
   { key: "descent", label: "Descent" },
-  { key: "slaughter", label: "Slaughter" },
+  { key: "eliminations", label: "Eliminations" },
   { key: "seals", label: "Seals" },
   { key: "sin", label: "SIN" }
 ];
@@ -329,10 +329,11 @@ const RECORD_TAB_OF_KEY = {
   highestRoundReached: "descent",
   fastestWin: "descent",
   mostBossEliminations: "descent",
-  mostEliminations: "slaughter",
-  mostPentakills: "slaughter",
-  mostOverallDamage: "slaughter",
-  mostSingleRoundDamage: "slaughter",
+  mostEliminations: "eliminations",
+  mostPentakills: "eliminations",
+  mostRoundEliminations: "eliminations",
+  mostOverallDamage: "eliminations",
+  mostSingleRoundDamage: "eliminations",
   mostOverallSealDamage: "seals",
   mostRoundSealDamage: "seals",
   highestEliteLevel: "seals"
@@ -450,15 +451,15 @@ function renderRecordsMenu() {
         empty: !nemesisEntry
       })
     ].join("");
-  } else if (tab === "slaughter") {
+  } else if (tab === "eliminations") {
     plaques = [
       runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
       runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostRoundEliminations", "KOs in one round"),
       runPlaque("mostOverallDamage", "Most damage"),
       runPlaque("mostSingleRoundDamage", "Damage in one round"),
       lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
       lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
-      lifetimePlaque("Yannis eliminated", progress.stats.yannisKills || 0, "all time"),
       lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
       lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
     ].join("");

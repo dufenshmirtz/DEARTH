@@ -29,6 +29,8 @@ function defaultRunStats() {
     currentRoundDamage: 0,
     singleRoundDamage: 0,
     pentakills: 0,
+    // the most DAMNED knocked out in one round
+    roundKOs: 0,
     criticals: 0,
     guessSum: 0,
     guessRounds: 0,
@@ -54,6 +56,7 @@ function normalizeRunStats(stats) {
     currentRoundDamage: Math.max(0, Math.ceil(Number(source.currentRoundDamage) || 0)),
     singleRoundDamage: Math.max(0, Math.ceil(Number(source.singleRoundDamage) || 0)),
     pentakills: count(source.pentakills),
+    roundKOs: count(source.roundKOs),
     criticals: count(source.criticals),
     guessSum: count(source.guessSum),
     guessRounds: count(source.guessRounds),
@@ -88,6 +91,7 @@ function defaultArcadeRecords() {
     mostSingleRoundDamage: emptyRecord(),
     highestRoundReached: emptyRecord(),
     mostPentakills: emptyRecord(),
+    mostRoundEliminations: emptyRecord(),
     mostCriticals: emptyRecord(),
     bestRunGuessQuality: emptyRecord({ guesses: 0 }),
     // lower is better (RECORD_LOWER_IS_BETTER): the round the 8th BOSS fell
@@ -196,6 +200,7 @@ function currentRunRecordCandidates({ final = Boolean(state.gameOver) } = {}) {
     mostSingleRoundDamage: { value: stats.singleRoundDamage || 0 },
     highestRoundReached: { value: round },
     mostPentakills: { value: stats.pentakills || 0 },
+    mostRoundEliminations: { value: stats.roundKOs || 0 },
     mostCriticals: { value: stats.criticals || 0 },
     bestRunGuessQuality:
       final && stats.guessRounds >= GUESS_QUALITY_MIN_RUN_GUESSES && runQuality !== null
@@ -233,6 +238,7 @@ const NEW_RECORD_LABELS = {
   mostOverallDamage: "Most damage dealt",
   mostSingleRoundDamage: "Most damage in one round",
   mostPentakills: "Most PENTAKILLS",
+  mostRoundEliminations: "Most KOs in one round",
   mostOverallSealDamage: "Most damage by one SEAL",
   mostRoundSealDamage: "Most SEAL damage in one round",
   highestEliteLevel: "Highest ELITE level"
@@ -306,6 +312,13 @@ function recordRunSealDamage(id, amount) {
   if (next > (stats.maxSealRoundDamage?.value || 0)) {
     stats.maxSealRoundDamage = { value: next, id, name: ITEMS[id]?.name || id };
   }
+}
+
+// after every KO: the most KOs in one round
+function recordRunRoundEliminations(count) {
+  if (state.mode !== "arcade") return;
+  const stats = ensureRunStats();
+  stats.roundKOs = Math.max(stats.roundKOs || 0, Math.floor(Number(count) || 0));
 }
 
 function recordRunPentakill() {
