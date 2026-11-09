@@ -366,11 +366,11 @@ test("new damage resolves at round end with each seal attributed in the animatio
   `);
 });
 
-test("each boss gets a fresh random 8-12 kill interval, unaffected by round changes", () => {
+test("each boss gets a fresh random 8-10 kill interval, unaffected by round changes", () => {
   game()(`
     fixture([], [50]);
     state.uniqueBossQueue = ["zilon", "dantre", "pyros", "threon", "kalha"];
-    const rolls = [0, 0.2, 0.4, 0.6, 0.8, 0.4];
+    const rolls = [0, 0.4, 0.7, 0.99, 0.5, 0.4];
     let rollIndex = 0;
     Math.random = () => rolls[rollIndex++];
     resetBossKillInterval();
@@ -388,7 +388,7 @@ test("each boss gets a fresh random 8-12 kill interval, unaffected by round chan
       assert.ok(nextBossSpecIfNeeded()?.uniqueKey);
       assert.equal(state.killsSinceBossSpawn, 0);
     }
-    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 9, 10, 11, 12]));
+    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 9, 10, 10, 9]));
     assert.equal(rollIndex, 6);
   `);
 });
@@ -458,7 +458,7 @@ test("a pentakill queues only one boss and keeps remaining kills toward the next
     state.bots.forEach(bot => { bot.hp = 0; });
     resolveEliminatedBots(state.bots);
     assert.equal(state.bots.filter(bot => bot.pendingReplacementSpec).length, 1);
-    assert.equal(state.nextBossKillInterval, 12);
+    assert.equal(state.nextBossKillInterval, 10);
     assert.equal(state.killsSinceBossSpawn, 4);
     replacePendingEliminations();
     assert.equal(state.bots.filter(bot => bot.isBoss).length, 1);
@@ -505,10 +505,10 @@ test("saved runs keep the selected boss interval and old saves migrate without l
     assert.equal(state.killsSinceBossSpawn, 6);
     delete state.nextBossKillInterval;
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 12);
+    assert.equal(state.nextBossKillInterval, 10);
     assert.equal(state.killsSinceBossSpawn, 6);
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 12);
+    assert.equal(state.nextBossKillInterval, 10);
   `);
 });
 
@@ -542,7 +542,7 @@ test("after the 8 unique bosses, bosses come every 4-8 KOs; KOs already counted 
     fixture([], [50]);
     state.bossKills = 7;
     resetBossKillInterval();
-    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 12);
+    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 10);
     state.killsSinceBossSpawn = 5;
     state.bossKills = 8;
     const seen = new Set();
