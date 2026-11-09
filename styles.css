@@ -13096,3 +13096,32 @@ body.native-arcade #app .record-sub {
 body.mobile-arcade #app .game-over-card .end-stat-guess strong {
   font-size: 26px !important;
 }
+
+/* KARMA (09-collection.js): the balance in the Collection header, the unlock button in a locked SEAL's or demon's box */
+.collection-karma-line {
+  color: #e0383d !important;
+  letter-spacing: 0.06em;
+}
+.collection-karma-line strong {
+  color: #ece6d8 !important;
+}
+.collection-screen .collection-karma-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.collection-screen .collection-karma-button.armed {
+  color: #dc2a2f !important;
+}
+.collection-info-karma strong {
+  color: #e0383d !important;
+  font-weight: 400;
+}
+.collection-toast-karma {
+  position: relative;
+  width: 46px;
+  display: grid;
+  place-items: center;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 30px !important;
+  color: #e0383d !important;
+}

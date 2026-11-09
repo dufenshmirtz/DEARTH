@@ -52,6 +52,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - Audio: balance loudness for any SFX change (see the audio rule above).
 
 ## Game rules in brief
+- **KARMA** is the currency kept between runs (`progress.karma` in the collection storage; KARMA section at the end of `09-collection.js`, all numbers at its top). Earned in real arcade runs: +8 for beating the game; the nth main BOSS beaten drops 1 at n x 5% (Petros + Pavlos roll once); Goetic demons 50%; Archangels 100%. Spent in the Collection (click a locked SEAL or an undefeated demon, click Unlock twice): demons 50, locked SEALS 100, Boss Seals 150, Archangel Seals 180, Seal of Satan 666, Trinity 333; Archangel BOSSES can't be bought. Death card shows the run's KARMA; drops show a toast.
 - Player-facing name for HP is **SOUL** (was HEALTH, renamed Nov 2026): write SOUL / max SOUL in every text; code identifiers (`hp`, `maxHp`, `...Health...`) stay. `normalizeGameText` also turns a stray "health" into SOUL for old texts kept in saved runs.
 - Each round the player + 5 DAMNED guess 0–100. TARGET = ceil(weighted average × modifier + offset); modifier 0.8 by default (final bosses 0.666, unique bosses override).
 - Damage = |guess − TARGET|; worst guess 10% max HP; CRITICAL (exact TARGET, window widened by seals) hits everyone else for 10% max HP.

@@ -2605,3 +2605,94 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
     assert.equal(typeof loadLifetimeRecords().runs, "number");
   `);
 });
+
+test("KARMA drops: the nth main BOSS at n x 5% (the twins roll once), +8 for beating the game, demons 50%, Archangels always", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    assert.equal(karmaBalance(), 0);
+    // 1st main BOSS: 5%
+    Math.random = () => 0.049;
+    collectionNoteElimination({ isBoss: true, uniqueKey: "zilon", name: "Zilon" });
+    assert.equal(karmaBalance(), 1);
+    // 2nd: 10%, a 0.11 roll misses
+    Math.random = () => 0.11;
+    collectionNoteElimination({ isBoss: true, uniqueKey: "dantre", name: "Dantre" });
+    assert.equal(karmaBalance(), 1);
+    // the twins are one BOSS: Petros alone does not roll, Pavlos makes it the 3rd (15%)
+    Math.random = () => 0.14;
+    collectionNoteElimination({ isBoss: true, uniqueKey: "petros", name: "Petros" });
+    assert.equal(karmaBalance(), 1);
+    assert.equal(collectionRun().karmaRolled, 2);
+    collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
+    assert.equal(karmaBalance(), 2);
+    assert.equal(collectionRun().karmaRolled, 3);
+    // the rest; the 8th BOSS beats the game: +8, then its own 40% roll
+    Math.random = () => 0.99;
+    for (const key of ["pyros", "threon", "kalha", "serafim"]) collectionNoteElimination({ isBoss: true, uniqueKey: key, name: key });
+    assert.equal(karmaBalance(), 2);
+    Math.random = () => 0.39;
+    collectionNoteElimination({ isBoss: true, uniqueKey: "padma", name: "Padma" });
+    assert.equal(karmaBalance(), 2 + 8 + 1);
+    assert.equal(collectionRun().karma, 11);
+    // demons 50%, YOU in a demon's place too; Archangels always
+    Math.random = () => 0.49;
+    collectionNoteElimination({ isBoss: true, goeticKey: GOETIC_BOSS_KEYS[0], name: "Demon" });
+    assert.equal(karmaBalance(), 12);
+    Math.random = () => 0.5;
+    collectionNoteElimination({ isBoss: true, shadowOf: GOETIC_BOSS_KEYS[1], name: "YOU" });
+    assert.equal(karmaBalance(), 12);
+    Math.random = () => 0.999;
+    collectionNoteElimination({ isBoss: true, archangelKey: ARCHANGEL_KEYS[0], name: "Michael" });
+    assert.equal(karmaBalance(), 13);
+    // DAMNED drop nothing, PvP counts nothing
+    Math.random = () => 0;
+    collectionNoteElimination({ name: "Yannis" });
+    assert.equal(karmaBalance(), 13);
+    state.mode = "pvp";
+    collectionNoteElimination({ isBoss: true, goeticKey: GOETIC_BOSS_KEYS[2], name: "Demon" });
+    assert.equal(karmaBalance(), 13);
+    state.mode = "arcade";
+    // the death card shows what the run earned
+    assert.ok(renderOverlay() === renderOverlay());
+    state.gameOver = true;
+    assert.ok(renderOverlay().includes("+13"));
+  `);
+});
+
+test("KARMA unlocks: locked SEALS by section price, Goetic demons for 50, never Archangels", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    assert.equal(karmaSealPrice("p74"), 100); // Apocalypse
+    assert.equal(karmaSealPrice("p121"), 150); // Boss Seals
+    assert.equal(karmaSealPrice("p98"), 180); // Archangel Seals
+    assert.equal(karmaSealPrice("p111"), 666); // Seal of Satan
+    assert.equal(karmaSealPrice("p2"), 0); // not locked: nothing to buy
+    const progress = loadCollectionProgress();
+    progress.karma = 120;
+    assert.equal(isSealLocked("p121"), true);
+    assert.equal(karmaUnlockSeal("p121"), false); // 150 > 120
+    assert.equal(karmaUnlockSeal("p74"), true);
+    assert.equal(isSealLocked("p74"), false);
+    assert.equal(karmaBalance(), 20);
+    assert.equal(karmaUnlockSeal("p74"), false); // already open
+    // the locked SEAL's box offers it, with the button only once clicked
+    assert.ok(collectionInfoHtml("p76", true).includes("data-collection-karma"));
+    assert.ok(!collectionInfoHtml("p76", false).includes("data-collection-karma"));
+    assert.ok(collectionInfoHtml("p76", false).includes("100 KARMA"));
+    // demons
+    const demon = GOETIC_BOSS_KEYS[5];
+    assert.equal(karmaUnlockDemon(demon), false); // 50 > 20
+    progress.karma = 60;
+    assert.ok(collectionDemonInfoHtml(demon, true).includes("data-collection-karma"));
+    assert.equal(karmaUnlockDemon(demon), true);
+    assert.equal(isDemonSlain(demon), true);
+    assert.equal(karmaBalance(), 10);
+    // Archangels cannot be bought
+    progress.karma = 1000;
+    assert.equal(karmaUnlockDemon(ARCHANGEL_KEYS[0]), false);
+    assert.ok(!collectionDemonInfoHtml(ARCHANGEL_KEYS[0], true).includes("data-collection-karma"));
+    // KARMA is kept with the collection
+    saveCollectionProgress();
+    assert.equal(defaultCollectionProgress().karma, 0);
+  `);
+});

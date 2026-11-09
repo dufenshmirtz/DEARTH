@@ -2629,6 +2629,7 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>Karma earned</span><strong>+${escapeHtml(String(state.collectionRun.karma))}</strong></div>` : ""}
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
