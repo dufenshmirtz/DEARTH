@@ -14036,8 +14036,47 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="settings">Settings</button>
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
         </div>
+        ${state.mode === "arcade" ? renderPauseBoundPlate() : ""}
         ${state.pauseDevOpen && state.mode === "arcade" ? renderSelfStackingDevPanel() : ""}
       </section>
+    </div>
+  `;
+}
+
+// who is bound for this run (Collection): a demon or an Archangel, or the sinner from the story when none is.
+// Uses state.boundDemon, so it shows the binding the run started with even if the Collection changed since.
+function pauseBoundInfo() {
+  const key = state.mode === "arcade" ? state.boundDemon : null;
+  const demon = key ? GOETIC_BOSS_BY_KEY[key] : null;
+  const archangel = key && !demon ? ARCHANGEL_BY_KEY[key] : null;
+  if (demon) {
+    return { bound: true, name: demon.name, art: demonThumbPath(demon), sealId: demon.passiveId,
+      note: "Its SEAL is free in Devil's Offerings. YOU comes in its place." };
+  }
+  if (archangel) {
+    return { bound: true, name: archangel.name, art: archangelThumbPath(archangel), sealId: archangel.sealId,
+      note: "You started with its SEAL. YOU comes in its place." };
+  }
+  return { bound: false, name: "The Sinner", art: "assets/ui/intro/intro-sinner.webp", sealId: null,
+    note: "Nothing bound. Bind a defeated demon in the Collection." };
+}
+
+function renderPauseBoundPlate() {
+  const info = pauseBoundInfo();
+  const sigil = info.sealId
+    ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(passiveName(info.sealId))}">${renderSealSigil(info.sealId)}</span>`
+    : "";
+  return `
+    <div class="pause-bound ${info.bound ? "is-bound" : "is-unbound"}" data-tooltip="${escapeAttr(info.note)}">
+      <div class="pause-bound-divider"></div>
+      <div class="pause-bound-row">
+        <img class="pause-bound-art" src="${escapeAttr(info.art)}" alt="" draggable="false" />
+        <div class="pause-bound-text">
+          <div class="pause-bound-label">${info.bound ? "Bound" : "Unbound"}</div>
+          <div class="pause-bound-name">${escapeHtml(info.name)}${sigil}</div>
+          <div class="pause-bound-note">${escapeHtml(info.note)}</div>
+        </div>
+      </div>
     </div>
   `;
 }

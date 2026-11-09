@@ -393,6 +393,30 @@ test("each boss gets a fresh random 8-10 kill interval, unaffected by round chan
   `);
 });
 
+test("the Pause menu shows who is bound for the run, or the sinner when nobody is", () => {
+  game()(`
+    fixture([], [50]);
+    state.mode = "arcade";
+    state.pauseOpen = true;
+    state.pauseScreen = "main";
+    state.boundDemon = null;
+    let html = renderPauseMenu();
+    assert.ok(html.includes("pause-bound is-unbound"));
+    assert.ok(html.includes("The Sinner"));
+    state.boundDemon = "bael";
+    html = renderPauseMenu();
+    assert.ok(html.includes("pause-bound is-bound"));
+    assert.ok(html.includes(">Bael<") || html.includes("Bael<span"));
+    assert.ok(html.includes(sealSigilPath(GOETIC_BOSS_BY_KEY.bael.passiveId)));
+    state.boundDemon = "michael";
+    html = renderPauseMenu();
+    assert.ok(html.includes("Michael"));
+    assert.ok(html.includes(sealSigilPath(ARCHANGEL_BY_KEY.michael.sealId)));
+    state.mode = "pvp";
+    assert.ok(!renderPauseMenu().includes("pause-bound"));
+  `);
+});
+
 test("the living DAMNED never share art: a fresh DAMNED takes an image none of the others wears", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);

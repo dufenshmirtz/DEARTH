@@ -9667,6 +9667,118 @@ body.native-arcade #app .pause-scene .pause-overlay {
   }
 }
 
+/* Pause: who is bound for this run (renderPauseBoundPlate), red when bound, bone for the sinner */
+#app .pause-card .pause-bound {
+  margin-top: 20px;
+  text-align: left;
+}
+
+#app .pause-card .pause-bound-divider {
+  height: 22px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / contain no-repeat;
+  opacity: 0.85;
+}
+
+#app .pause-card .pause-bound.is-bound .pause-bound-divider {
+  background-image: url("assets/occult-ui-border-kit/assets/divider-horizontal-a-red.png");
+}
+
+#app .pause-card .pause-bound-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#app .pause-card .pause-bound-art {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+#app .pause-card .pause-bound-label {
+  font-family: "Razor Keen", var(--font-book) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash) !important;
+}
+
+#app .pause-card .pause-bound.is-bound .pause-bound-label {
+  color: var(--blood-bright) !important;
+}
+
+#app .pause-card .pause-bound-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Razor Keen", var(--font-book) !important;
+  font-size: 26px !important;
+  line-height: 1.1;
+  color: var(--bone) !important;
+}
+
+#app .pause-card .pause-bound-sigil {
+  display: inline-flex;
+}
+
+#app .pause-card .pause-bound-sigil .seal-sigil {
+  width: 26px;
+  height: 26px;
+  opacity: 0.9;
+}
+
+#app .pause-card .pause-bound-note {
+  margin-top: 4px;
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  line-height: 1.3;
+  color: var(--ash) !important;
+}
+
+/* short screens (phones in landscape): one slim row, the note moves to the tooltip */
+@media (max-height: 560px) {
+  #app .pause-card .pause-bound {
+    margin-top: 10px;
+  }
+
+  #app .pause-card .pause-bound-divider {
+    height: 12px;
+  }
+
+  #app .pause-card .pause-bound-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  #app .pause-card .pause-bound-art {
+    width: 44px;
+    height: 44px;
+  }
+
+  #app .pause-card .pause-bound-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #app .pause-card .pause-bound-name {
+    font-size: 20px !important;
+  }
+
+  #app .pause-card .pause-bound-sigil .seal-sigil {
+    width: 20px;
+    height: 20px;
+  }
+
+  #app .pause-card .pause-bound-note {
+    display: none;
+  }
+}
+
 /* ==========================================================================
    SEAL collection (09-collection.js)
    ========================================================================== */
