@@ -430,6 +430,17 @@ function blockNativeSelection(event) {
   if (nativeSelectionGuardsWanted()) event.preventDefault();
 }
 
+// Tab does nothing anywhere: no jumping between buttons and no focus outline on them.
+function installTabBlock() {
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Tab") event.preventDefault();
+    },
+    { capture: true }
+  );
+}
+
 function installNativeSelectionGuards() {
   document.addEventListener("selectstart", blockSelection, { passive: false });
   if (!nativeSelectionGuardsWanted()) return;
@@ -481,6 +492,7 @@ installArcadeEnterShortcut();
 installPauseEscapeShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
+installTabBlock();
 updateFullscreenLayoutClass();
 if (!resumeNativeArcadeOnForeground()) {
   if (pvpShouldAutoStartFromHash()) {

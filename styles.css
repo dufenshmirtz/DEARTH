@@ -13398,3 +13398,9 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   box-sizing: border-box;
   min-height: 114px;
 }
+
+/* No focus outline on anything (Tab is blocked too, see installTabBlock). */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}
