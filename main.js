@@ -19120,8 +19120,6 @@ function renderCollectionScreen(from) {
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
         <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
-        <div class="collection-header-right">
-        ${collectionKarmaLine()}
         <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
@@ -19134,12 +19132,12 @@ function renderCollectionScreen(from) {
           <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
-        </div>
       </header>
       <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
         ${collectionFiltersHtml(all)}
         <div class="collection-legend">
           ${collectionSearchHtml("seals")}
+          ${collectionKarmaLine()}
           <span class="legend discovered" aria-hidden="true">discovered</span>
           <span class="legend undiscovered" aria-hidden="true">undiscovered</span>
           <span class="legend locked" aria-hidden="true">locked</span>
@@ -19149,6 +19147,7 @@ function renderCollectionScreen(from) {
       <div class="collection-panel" data-collection-panel="goetia"${goetia ? "" : " hidden"}>
         <div class="collection-legend">
           ${collectionSearchHtml("goetia")}
+          ${collectionKarmaLine()}
           <span class="legend slain" aria-hidden="true">defeated</span>
           <span class="legend unslain" aria-hidden="true">not defeated</span>
           ${devButton()}
@@ -19158,6 +19157,7 @@ function renderCollectionScreen(from) {
       <div class="collection-panel" data-collection-panel="angels"${angels ? "" : " hidden"}>
         <div class="collection-legend">
           ${collectionSearchHtml("angels")}
+          ${collectionKarmaLine()}
           <span class="legend slain" aria-hidden="true">defeated</span>
           <span class="legend unslain" aria-hidden="true">not defeated</span>
           ${devButton()}
@@ -19413,7 +19413,7 @@ const KARMA_SEAL_PRICE = 100;
 // by COLLECTION_SECTIONS key; every other locked SEAL (the Apocalypse Seals) costs KARMA_SEAL_PRICE
 const KARMA_SECTION_PRICES = { bosses: 150, archangel: 180, satan: 666, trinity: 333 };
 
-// KARMA's mark (the Spiral of Return, assets/ui/karma-mark.svg), drawn after a number like the SIN coin
+// KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
 const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
 
 // the price under a locked SEAL or an undefeated demon in the Collection grid: red when you can pay it
@@ -19507,7 +19507,7 @@ function collectionKarmaHtml(kind, key, price, pinned) {
 }
 
 function collectionKarmaLine() {
-  // the big counter, top right of the Collection on every tab
+  // the big counter at the right end of the search row, on every tab
   return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
 
