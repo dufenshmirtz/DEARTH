@@ -8,7 +8,7 @@
     "start": "node server.js",
     "build:game": "node scripts/build-game.js",
     "audio:levels": "node scripts/measure-audio.js && node scripts/build-game.js",
-    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js && node --check scripts/build-desktop.js && node --check desktop/main.cjs",
+    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js && node --check scripts/build-desktop.js && node --check desktop/main.cjs && node --check desktop/preload.cjs",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "pnpm run mobile:build && cap sync",
     "mobile:android": "pnpm run mobile:build && cap sync android",
@@ -38,6 +38,7 @@
     },
     "files": [
       "desktop/main.cjs",
+      "desktop/preload.cjs",
       "desktop-www/**/*",
       "!**/node_modules/**/*"
     ],

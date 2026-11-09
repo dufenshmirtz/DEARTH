@@ -308,10 +308,16 @@ window.addEventListener("blur", () => {
 window.addEventListener("focus", () => {
   if (muteWhenInBackground()) resumeGameAudioAfterForeground();
 });
-document.addEventListener("fullscreenchange", () => {
+function refreshFullscreenSettingLabels() {
   document.querySelectorAll('[data-setting-value="fullscreen"]').forEach((label) => {
-    label.textContent = document.fullscreenElement ? "Fullscreen" : "Windowed";
+    label.textContent = isGameFullscreen() ? "Fullscreen" : "Windowed";
   });
+}
+document.addEventListener("fullscreenchange", refreshFullscreenSettingLabels);
+// Desktop app: F11, Alt+Enter and Settings > Display > Window all change the Electron window.
+desktopApp()?.onFullscreenChange?.(() => {
+  refreshFullscreenSettingLabels();
+  updateFullscreenLayoutClass();
 });
 
 loadSoundSettings();

@@ -13537,17 +13537,35 @@ const SETTING_CHOICES = {
   fullscreen: {
     label: "Window",
     values: () => [0, 1],
-    get: () => (document.fullscreenElement ? 1 : 0),
+    get: () => (isGameFullscreen() ? 1 : 0),
     set: (value) => setFullscreen(Boolean(value)),
     text: (value) => (value ? "Fullscreen" : "Windowed")
   }
 };
 
+// The desktop (Electron) app exposes window.dearthDesktop (desktop/preload.cjs): its window is
+// fullscreen at the Windows level, which the browser Fullscreen API cannot leave.
+function desktopApp() {
+  return typeof window !== "undefined" && window.dearthDesktop ? window.dearthDesktop : null;
+}
+
+function isGameFullscreen() {
+  const desktop = desktopApp();
+  if (desktop) return Boolean(desktop.isFullscreen());
+  return Boolean(document.fullscreenElement);
+}
+
 function fullscreenSupported() {
+  if (desktopApp()) return true;
   return !isNativeArcadeApp() && Boolean(document.documentElement?.requestFullscreen);
 }
 
 function setFullscreen(on) {
+  const desktop = desktopApp();
+  if (desktop) {
+    desktop.setFullscreen(Boolean(on));
+    return;
+  }
   try {
     if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch?.(() => {});
     else if (!on && document.fullscreenElement) document.exitFullscreen?.()?.catch?.(() => {});
@@ -20106,10 +20124,16 @@ window.addEventListener("blur", () => {
 window.addEventListener("focus", () => {
   if (muteWhenInBackground()) resumeGameAudioAfterForeground();
 });
-document.addEventListener("fullscreenchange", () => {
+function refreshFullscreenSettingLabels() {
   document.querySelectorAll('[data-setting-value="fullscreen"]').forEach((label) => {
-    label.textContent = document.fullscreenElement ? "Fullscreen" : "Windowed";
+    label.textContent = isGameFullscreen() ? "Fullscreen" : "Windowed";
   });
+}
+document.addEventListener("fullscreenchange", refreshFullscreenSettingLabels);
+// Desktop app: F11, Alt+Enter and Settings > Display > Window all change the Electron window.
+desktopApp()?.onFullscreenChange?.(() => {
+  refreshFullscreenSettingLabels();
+  updateFullscreenLayoutClass();
 });
 
 loadSoundSettings();

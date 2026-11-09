@@ -1,4 +1,5 @@
-const { app, BrowserWindow, protocol, net, Menu } = require('electron');
+const { app, BrowserWindow, protocol, net, Menu, ipcMain } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
@@ -14,20 +15,56 @@ protocol.registerSchemesAsPrivileged([
 // Let music start without a click.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
+// Fullscreen or windowed is remembered between launches (Settings > Display > Window, F11, Alt+Enter).
+// Stored in the app's data folder (%APPDATA%\DEARTH on Windows).
+function windowSettingsFile() {
+  return path.join(app.getPath('userData'), 'window-settings.json');
+}
+
+function loadWindowSettings() {
+  try {
+    return JSON.parse(fs.readFileSync(windowSettingsFile(), 'utf8')) || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveWindowSettings(settings) {
+  try {
+    fs.writeFileSync(windowSettingsFile(), JSON.stringify(settings));
+  } catch (error) {}
+}
+
 function createWindow() {
+  const startFullscreen = loadWindowSettings().fullscreen !== false;
   const win = new BrowserWindow({
     width: 1600,
     height: 900,
-    fullscreen: true,
+    fullscreen: startFullscreen,
     show: false,
     title: 'DEARTH',
     backgroundColor: '#000000',
     autoHideMenuBar: true,
-    webPreferences: { backgroundThrottling: false, contextIsolation: true, nodeIntegration: false }
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      backgroundThrottling: false,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
   });
 
   win.removeMenu();
   win.once('ready-to-show', () => win.show()); // no white flash on startup
+  if (!startFullscreen) win.center();
+
+  // Tell the game when fullscreen changes, so Settings > Display shows the right value, and remember it.
+  const reportFullscreen = () => {
+    const on = win.isFullScreen();
+    saveWindowSettings({ ...loadWindowSettings(), fullscreen: on });
+    if (!win.webContents.isDestroyed()) win.webContents.send('dearth:fullscreen-changed', on);
+  };
+  win.on('enter-full-screen', reportFullscreen);
+  win.on('leave-full-screen', reportFullscreen);
 
   // F11 or Alt+Enter toggles fullscreen.
   win.webContents.on('before-input-event', (event, input) => {
@@ -40,6 +77,16 @@ function createWindow() {
 
   win.loadURL('app://dearth/index.html');
 }
+
+// Settings > Display > Window in the game.
+ipcMain.on('dearth:is-fullscreen', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  event.returnValue = Boolean(win && win.isFullScreen());
+});
+ipcMain.on('dearth:set-fullscreen', (event, on) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && win.isFullScreen() !== Boolean(on)) win.setFullScreen(Boolean(on));
+});
 
 app.whenReady().then(() => {
   protocol.handle('app', (request) => {
