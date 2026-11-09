@@ -298,7 +298,7 @@ function applyPenalties() {
           addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, participant.bot, worstGuessPenalty(participant.bot.maxHp), "Worst guess penalty", targetDiffEntries);
         }
       });
-      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max HEALTH.`);
+      round.roundEvents.push(`${worstGuessers.map((participant) => participant.name).join(", ")} had the worst guess and took ${WORST_GUESS_PENALTY_PERCENT}% max SOUL.`);
       // Seal of Vepar: when a revealed DAMNED takes the penalty, every revealed DAMNED takes it (once per reveal stack)
       const veparEntries = orderedPassiveEffectEntries("p61");
       if (veparEntries.length && worstGuessers.some((participant) => participant.kind !== "player" && participant.bot.revealedByPassive)) {
@@ -362,7 +362,7 @@ function applyPenalties() {
     state.exactGuessCritCharged = false;
     round.exactGuessCritBoost = true;
     markPassiveTriggered("p119");
-    round.roundEvents.push(`${ITEMS.p119.name} made your CRITICAL deal 20% max HEALTH.`);
+    round.roundEvents.push(`${ITEMS.p119.name} made your CRITICAL deal 20% max SOUL.`);
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
@@ -423,7 +423,7 @@ function applyPenalties() {
   const targetBotDamageSources = new Map();
   const reactionBotDamages = new Map();
   const reactionBotDamageSources = new Map();
-  // Seal of the Father, "% TARGET damage": a DAMNED's TARGET difference is taken as % of its max HEALTH
+  // Seal of the Father, "% TARGET damage": a DAMNED's TARGET difference is taken as % of its max SOUL
   const fatherPercent = trinityFatherBlessing() === "percent";
   let fatherPercentHits = 0;
   state.bots
@@ -440,7 +440,7 @@ function applyPenalties() {
     });
   if (fatherPercentHits) {
     markPassiveEntryTriggered(trinityEntry("p131"));
-    round.roundEvents.push(`${ITEMS.p131.name} turned every DAMNED's TARGET difference into % of max HEALTH.`);
+    round.roundEvents.push(`${ITEMS.p131.name} turned every DAMNED's TARGET difference into % of max SOUL.`);
   }
   applyZeparAdjacentTargetDifferenceDamage(targetBotDamages, targetBotDamageSources);
 
@@ -599,7 +599,7 @@ function playerCriticalFlatBonus() {
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
-  // Seal of Eligos: a charged CRITICAL deals 20% max HEALTH instead of 10% (another 10% on top)
+  // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
   return base + eligos + playerCriticalFlatBonus();
 }
@@ -611,7 +611,7 @@ function botRoundsAlive(bot) {
   return Math.max(1, state.round - bot.spawnRound + 1);
 }
 
-// Seal of Sitri: the non-boss DAMNED with the most MEMORY becomes its host with double HEALTH.
+// Seal of Sitri: the non-boss DAMNED with the most MEMORY becomes its host with double SOUL.
 // A new host is only chosen once the current one is gone.
 function sitriHost() {
   return state.bots.find((bot) => bot.sitriHost && !bot.eliminated && bot.hp > 0) || null;
@@ -627,7 +627,7 @@ function ensureSitriHost() {
   host.maxHp = Math.ceil((host.maxHp || 0) * 2);
   host.hp = Math.min(host.maxHp, Math.ceil((host.hp || 0) * 2));
   entries.forEach((entry) => markPassiveEntryTriggered(entry));
-  state.roundState?.roundEvents.push(`${ITEMS.p120.name} chose ${host.name} as its host: double HEALTH.`);
+  state.roundState?.roundEvents.push(`${ITEMS.p120.name} chose ${host.name} as its host: double SOUL.`);
   return host;
 }
 
@@ -662,11 +662,11 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max HEALTH";
+  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
   const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
-  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max HEALTH` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
-  return flatBonus > 0 ? `${percent}% max HEALTH + ${flatBonus} damage` : `${percent}% max HEALTH`;
+  if (passiveStack("p7")) return state.roundState?.exactGuessCritBoost ? `${pressureSpikeDamage("p7") + flatBonus} damage + 10% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
+  return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
 }
 
 function findCriticalHits() {
@@ -1002,7 +1002,7 @@ function applyKillRuleHealing(bot) {
   const source = bot?.isBoss ? "BOSS kill" : "DAMNED kill";
   const healed = healPlayer(heal, null, source);
   state.roundState.roundEvents.push(
-    healed > 0 ? `${source} healed you for ${healed}.` : `${source} tried to heal you, but no health was recovered.`
+    healed > 0 ? `${source} healed you for ${healed}.` : `${source} tried to heal you, but no SOUL was recovered.`
   );
 }
 
@@ -1405,7 +1405,7 @@ const FURFUR_DIVISOR_DAMAGE = [[2, 2], [3, 3], [5, 5], [7, 14]];
 
 function applyEndOfRoundPassiveDamageInOrder() {
   orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131"]).forEach((entry) => {
-    // Seal of the Father, "20% strike": one random DAMNED, BOSSES included, takes 20% of its max HEALTH
+    // Seal of the Father, "20% strike": one random DAMNED, BOSSES included, takes 20% of its max SOUL
     if (entry.id === "p131") {
       if (trinityFatherBlessing() !== "strike") return;
       const targets = trinityTargets().filter((bot) => Number.isFinite(bot.maxHp));
@@ -1693,10 +1693,10 @@ function applyEndOfRoundPassives() {
     applySitriHostMemory();
     // Seal of Threon: after the end-of-round MEMORY gains, so their excess is counted this round too
     applyMemoryOverflowDamage();
-    // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 HEALTH"
+    // Seal of the Holy Spirit, with all three Trinity SEALS: "heal 3 SOUL"
     if (round.trinity?.spiritHealed && trinityEntry("p133")) {
       const healed = healPlayer(3, null, ITEMS.p133.name);
-      round.roundEvents.push(healed ? `${ITEMS.p133.name} healed you for ${healed}.` : `${ITEMS.p133.name} found you at full HEALTH.`);
+      round.roundEvents.push(healed ? `${ITEMS.p133.name} healed you for ${healed}.` : `${ITEMS.p133.name} found you at full SOUL.`);
     }
 
     const relicStacks = passiveStack("p18");

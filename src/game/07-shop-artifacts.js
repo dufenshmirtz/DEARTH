@@ -449,7 +449,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     recordCopiedArtifactResolution(
       copierName,
       item,
-      `${item.name} armed: DAMNED take matching max-HEALTH percentage damage when you take damage this round.`
+      `${item.name} armed: DAMNED take matching max-SOUL percentage damage when you take damage this round.`
     );
     return;
   }
@@ -564,7 +564,7 @@ function useActive(index) {
   if (item.id === "a11") {
     state.pendingActive = { index, uid: item.uid, id: item.id, mode: "bot", step: "damage", damageBotId: null };
     closeMobileOfferingsForTargetPick();
-    addLog("Pick a non-boss DAMNED to take 30% max-HEALTH damage.");
+    addLog("Pick a non-boss DAMNED to take 30% max-SOUL damage.");
     render();
     return;
   }
@@ -596,7 +596,7 @@ function useActive(index) {
     state.roundState.painEcho = true;
     consumeActive(
       index,
-      `${item.name} armed: DAMNED take matching max-HEALTH percentage damage when you take damage this round.`,
+      `${item.name} armed: DAMNED take matching max-SOUL percentage damage when you take damage this round.`,
       item.uid
     );
     return;

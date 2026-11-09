@@ -1260,7 +1260,7 @@ function renderPvpSlot(participant, slot) {
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}
-          <div class="bot-health-heading"><span>HEALTH ${participant.hp}/${participant.maxHp}</span></div>
+          <div class="bot-health-heading"><span>SOUL ${participant.hp}/${participant.maxHp}</span></div>
           <div class="health-bar">
             <div class="health-fill" style="width: ${hpPercent}%"></div>
           </div>
@@ -1547,7 +1547,7 @@ function trinityBlessingLine(id) {
     return `This round: ${TRINITY_SON_BLESSINGS[trinity.son].label}${rerolls}.`;
   }
   if (id === "p133" && trinity.spirit) {
-    const outcome = trinity.spirit === "trinity" && trinity.spiritHealed ? { label: "Heal 3 HEALTH" } : trinitySpiritOutcomeInfo(trinity.spirit);
+    const outcome = trinity.spirit === "trinity" && trinity.spiritHealed ? { label: "Heal 3 SOUL" } : trinitySpiritOutcomeInfo(trinity.spirit);
     return `This round: ${outcome?.label || ""}.`;
   }
   return "";
@@ -1794,7 +1794,7 @@ function watchMoments() {
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
 
   if (!before.pentakill && now.pentakill) {
-    startMoment("pentakill", "Pentakill", "+5 HEALTH   +8 SIN");
+    startMoment("pentakill", "Pentakill", "+5 SOUL   +8 SIN");
     playPentakillSfx();
     hitStop(80);
     screenShake(10, 460);
@@ -1907,7 +1907,7 @@ function renderTopbar() {
         ${playerDamageBadge}
         ${playerHealBadge}
         <div class="health-row">
-          <span class="stat-label">Health</span>
+          <span class="stat-label">Soul</span>
           <strong>${playerDisplay.hp}/${maxHp}</strong>
         </div>
         <div class="health-bar">
@@ -2103,7 +2103,7 @@ function renderBot(bot, pendingPick) {
   const effective = round?.botEffectiveGuesses.get(bot.id);
   const displayHp = display?.hp ?? bot.hp;
   const displayMaxHp = display?.maxHp ?? bot.maxHp;
-  // fell before READY: HEALTH reads 0, the KO (X, sound, notice) comes after READY
+  // fell before READY: SOUL reads 0, the KO (X, sound, notice) comes after READY
   const deathAwaitsReady = !display && botDeathAwaitsReady(bot);
   const isDown = display ? display.eliminated : (bot.eliminated || bot.hp <= 0) && !deathAwaitsReady;
   const revealed = Number.isFinite(effective)
@@ -2185,10 +2185,10 @@ function renderBot(bot, pendingPick) {
     (bot.poisonCounters || 0) > 0
       ? `<span class="poison-stack-label ${damageBadge ? "has-damage-badge" : ""}">Poison ${bot.poisonCounters}</span>`
       : "";
-  // Seal of Sitri's host: double HEALTH until it dies
+  // Seal of Sitri's host: double SOUL until it dies
   const sitriHostBadge =
     bot.sitriHost && !isDown
-      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double HEALTH, gains MEMORY every round.`)}">Host x2</span>`
+      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double SOUL, gains MEMORY every round.`)}">Host x2</span>`
       : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
   const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
@@ -2197,7 +2197,7 @@ function renderBot(bot, pendingPick) {
   const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
-  const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `HEALTH ${displayHp}/${displayMaxHp}`;
+  const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `SOUL ${displayHp}/${displayMaxHp}`;
   const healthPercent = bot.immortal ? 100 : clamp((displayHp / safeDisplayMaxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
@@ -2372,10 +2372,10 @@ function renderPendingText() {
   if (state.pendingActive.id === "a26") return `${item.name}: pick DAMNED to drain up to ${artifactValue(5)} BOUNTY.`;
   if (state.pendingActive.id === "a28") {
     const value = artifactValue(6);
-    return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max HEALTH.`;
+    return `${item.name}: pick a DAMNED to gain +${value} MEMORY, +${value} SIN, and heal ${artifactPercentValue(6)}% max SOUL.`;
   }
   if (state.pendingActive.id === "a11" && state.pendingActive.step === "heal") {
-    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max HEALTH and copy the first's PERSONALITY.`;
+    return `${item.name}: pick a different non-boss DAMNED to overheal ${artifactPercentValue(30)}% max SOUL and copy the first's PERSONALITY.`;
   }
   return `${item.name}: pick a DAMNED card to resolve it.`;
 }

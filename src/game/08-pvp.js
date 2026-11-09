@@ -425,7 +425,7 @@ function pvpDamageParticipant(participant, amount, reason, source = undefined) {
   }
   if (reason) {
     state.pvp.activeResults.push(reason);
-    if (saved > 0) state.pvp.activeResults.push(`Dark Talisman saved ${participant.name} ${saved} health.`);
+    if (saved > 0) state.pvp.activeResults.push(`Dark Talisman saved ${participant.name} ${saved} SOUL.`);
   }
   if (participant.hp <= 0) {
     participant.eliminated = true;
@@ -580,7 +580,7 @@ function pvpResolveActives() {
     pvp.winner = alive[0]?.name || tiebreakWinner?.name || "No one";
     pvpAddLog(
       tiebreakWinner
-        ? `${pvp.winner} wins PvP by lowest starting health (${tiebreakWinner.roundStartHp}).`
+        ? `${pvp.winner} wins PvP by lowest starting SOUL (${tiebreakWinner.roundStartHp}).`
         : `${pvp.winner} wins PvP.`
     );
   } else {

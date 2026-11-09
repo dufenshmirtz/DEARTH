@@ -46,7 +46,7 @@ function game() {
   return (code) => vm.runInContext(code, context);
 }
 
-// puts every conditional reveal SEAL in its "reveal" state: below 50 HEALTH (Vepar), a winning 50% roll (Vine),
+// puts every conditional reveal SEAL in its "reveal" state: below 50 SOUL (Vepar), a winning 50% roll (Vine),
 // a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Seal of Cassiel (p102))
 const REVEAL_CONDITIONS_MET = `
   state.player.hp = 40;
@@ -106,7 +106,7 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
   const prefixes = {
-    p61: "While you are below 50 HEALTH, reveal one extra DAMNED each round.",
+    p61: "While you are below 50 SOUL, reveal one extra DAMNED each round.",
     p64: "Each round, 50% chance to reveal one extra DAMNED.",
     p65: "If a revealed DAMNED died last round, reveal one extra DAMNED.",
     p102: "If a DAMNED died last round, reveal one extra DAMNED."
@@ -912,12 +912,12 @@ test("Eligos: an exact guess at reveal charges the next CRITICAL to 20%, ELITE p
   charged(critRound(`[["p119"]]`, "state.exactGuessCritCharged = true;"));
   const before = JSON.parse(plain("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
   const after = JSON.parse(charged("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
-  // max HEALTH 1000: the CRITICAL goes from 100 to 200
+  // max SOUL 1000: the CRITICAL goes from 100 to 200
   assert.deepEqual(after.map((value, index) => value - before[index]), [100, 100, 100, 100, 100]);
   assert.equal(charged("state.exactGuessCritCharged"), false);
 });
 
-test("Sitri: the most-MEMORY DAMNED gets double HEALTH, gains MEMORY, and only a death passes it on", () => {
+test("Sitri: the most-MEMORY DAMNED gets double SOUL, gains MEMORY, and only a death passes it on", () => {
   game()(`
     fixture([["p120"]], [50, 50, 50]);
     // the round start already picked a host among equals; start over with MEMORY that decides it
@@ -1199,8 +1199,8 @@ test("Valac eliminates a lone non-BOSS survivor after 4 eliminations and pays +2
   `);
 });
 
-// ---- worst guess penalty is 10% max HEALTH; new Vepar ----
-test("the worst guess penalty is 10% of max HEALTH", () => {
+// ---- worst guess penalty is 10% max SOUL; new Vepar ----
+test("the worst guess penalty is 10% of max SOUL", () => {
   game()(`
     fixture([], [60, 60, 60, 60, 0]);
     state.roundState.targetModifier = 1;
@@ -1293,7 +1293,7 @@ test("Trinity SEALS cost 33, cannot be ELITE, have art for every set, and are in
   `);
 });
 
-test("Father: % TARGET difference uses max HEALTH, BOSSES included", () => {
+test("Father: % TARGET difference uses max SOUL, BOSSES included", () => {
   const damage = (blessing) => {
     const run = game();
     run(`
@@ -1309,7 +1309,7 @@ test("Father: % TARGET difference uses max HEALTH, BOSSES included", () => {
   };
   const flat = damage(null);
   const percent = damage("percent");
-  // differences 13, 3, 7: flat damage becomes 13%, 3%, 7% of 1000 max HEALTH
+  // differences 13, 3, 7: flat damage becomes 13%, 3%, 7% of 1000 max SOUL
   assert.deepEqual(percent.map((value, index) => value - flat[index]), [117, 27, 63]);
 });
 
@@ -1511,7 +1511,7 @@ test("Son's free rerolls from READY last until the end of the next round", () =>
   `);
 });
 
-test("Goetic BOSS HEALTH growth speeds up with depth and leaves the main game alone", () => {
+test("Goetic BOSS SOUL growth speeds up with depth and leaves the main game alone", () => {
   game()(`
     state.mode = "arcade";
     for (const spawned of [0, 4, 8]) {
@@ -1563,7 +1563,7 @@ test("Amon always reveals one extra DAMNED", () => {
   `);
 });
 
-test("Vepar reveals one extra DAMNED only while you are below 50 HEALTH", () => {
+test("Vepar reveals one extra DAMNED only while you are below 50 SOUL", () => {
   game()(`
     state.player.hp = 50;
     fixture([["p61"]], [10, 20, 30, 40, 50]);
@@ -2071,7 +2071,7 @@ test("an Archangel BOSS: its own art and ability only, and the TARGET modifier c
     assert.equal(angel.image, ARCHANGEL_BOSS_IMAGE_ROOT + "/04-michael.png");
     assert.equal(angel.goeticKey, null);
     assert.deepEqual([...angel.passiveKeys], []);
-    // 1.5x the HEALTH of a Goetic BOSS arriving at the same point; YOU in its place has the plain amount
+    // 1.5x the SOUL of a Goetic BOSS arriving at the same point; YOU in its place has the plain amount
     state.bossSpawnCount = 20;
     const plain = (80 + bossHealthBonus()) * bossHealthScaleFactor();
     const demon = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
@@ -2232,10 +2232,10 @@ test("Satan's Pact reads what you typed: typos, counts, numbers and kinds of req
   `);
 });
 
-test("Satan's Pact: 1 ARTIFACT costs HEALTH, 3x its price in SIN, or a use cap, among the ones you can pay", () => {
+test("Satan's Pact: 1 ARTIFACT costs SOUL, 3x its price in SIN, or a use cap, among the ones you can pay", () => {
   game()(`
     ${PACT_SETUP}
-    // low on HEALTH and SIN: only the use cap is left
+    // low on SOUL and SIN: only the use cap is left
     state.player.hp = 2;
     state.player.credits = 0;
     const offer = satanPactArtifactOffer("a14", 1);
@@ -2243,7 +2243,7 @@ test("Satan's Pact: 1 ARTIFACT costs HEALTH, 3x its price in SIN, or a use cap, 
     assert.equal(offer.price[0].type, "useCap");
     assert.equal(offer.price[0].cap, 1);
     assert.equal(offer.price[0].from, 3);
-    // plenty of both: the HEALTH option is half the Devil's Offerings price, at least 2
+    // plenty of both: the SOUL option is half the Devil's Offerings price, at least 2
     state.player.hp = 80;
     state.player.credits = 100;
     const unit = shopPrice({ ...ITEMS.a14 });
@@ -2259,7 +2259,7 @@ test("Satan's Pact: 1 ARTIFACT costs HEALTH, 3x its price in SIN, or a use cap, 
   `);
 });
 
-test("Satan's Pact: 2 to 4 copies close the Offerings or cost HEALTH, never more than fit", () => {
+test("Satan's Pact: 2 to 4 copies close the Offerings or cost SOUL, never more than fit", () => {
   game()(`
     ${PACT_SETUP}
     const many = satanPactArtifactOffer("a14", 9);
@@ -2318,7 +2318,7 @@ test("Satan's Pact: refusals and gibberish keep the chance; a turned-down SEAL l
   `);
 });
 
-test("Satan's Pact: a new Goetic SEAL takes a random SEAL of yours, HEALTH and 20% of your SIN", () => {
+test("Satan's Pact: a new Goetic SEAL takes a random SEAL of yours, SOUL and 20% of your SIN", () => {
   game()(`
     ${PACT_SETUP}
     state.bossKills = 6;
@@ -2360,7 +2360,7 @@ test("Satan's Pact: ELITE on the SEAL you asked for, or the other one it lands o
   `);
 });
 
-test("Satan's Pact: heal up to 5, SIN at a BOSS debt (and HEALTH past 20), never a HEALTH price that kills", () => {
+test("Satan's Pact: heal up to 5, SIN at a BOSS debt (and SOUL past 20), never a SOUL price that kills", () => {
   game()(`
     ${PACT_SETUP}
     const heal = satanPactHealOffer(40);

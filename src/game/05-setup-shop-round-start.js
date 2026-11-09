@@ -61,7 +61,7 @@ function applySerafimEntrySteal(bot) {
   const hpGain = stolen * 2;
   bot.maxHp += hpGain;
   bot.hp += hpGain;
-  addLog(`${bot.name} stole ${stolen} SIN and gained ${hpGain} health.`);
+  addLog(`${bot.name} stole ${stolen} SIN and gained ${hpGain} SOUL.`);
 }
 
 function applySerafimRoundSteal() {
@@ -334,7 +334,7 @@ function createBot(options = {}) {
     revealedByPassive: false,
     fresh: true
   };
-  // Satan's Pact debt: this BOSS comes with more HEALTH (and maybe no BOSS BOUNTY)
+  // Satan's Pact debt: this BOSS comes with more SOUL (and maybe no BOSS BOUNTY)
   if (isBoss && bot.countsAsBossSpawn !== false) satanPactApplyBossDebt(bot);
   if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
   seedNewBotMemoryFromVassago(bot);
@@ -1131,8 +1131,8 @@ function applyStartOfRoundPassives() {
    Each one casts one of its effects at random when you press READY, like any other SEAL, and its trigger
    animation shows it. The roll is kept in state.roundState.trinity for the rest of the round. */
 const TRINITY_FATHER_BLESSINGS = {
-  percent: { label: "Every DAMNED takes its TARGET difference as % of max HEALTH", short: "% TARGET damage" },
-  strike: { label: "A random DAMNED takes 20% max-HEALTH damage at end of round", short: "20% strike" },
+  percent: { label: "Every DAMNED takes its TARGET difference as % of max SOUL", short: "% TARGET damage" },
+  strike: { label: "A random DAMNED takes 20% max-SOUL damage at end of round", short: "20% strike" },
   double: { label: "You deal double damage this round", short: "Double damage" }
 };
 const TRINITY_SON_BLESSINGS = {
@@ -1318,7 +1318,7 @@ function applyTrinitySpiritOutcome(key) {
   if (key === "trinity") {
     const missing = missingTrinitySealIds();
     if (!missing.length) {
-      // with all three Trinity SEALS it heals 3 HEALTH instead, at end of round (after the round's damage)
+      // with all three Trinity SEALS it heals 3 SOUL instead, at end of round (after the round's damage)
       round.trinity.spiritHealed = true;
       return;
     }
@@ -1631,7 +1631,7 @@ function applyGuessReveals() {
 
 // SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
-// Vepar while you are below 50 HEALTH, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
+// Vepar while you are below 50 SOUL, Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED
 // died last round, the Seal of Cassiel (p102) if any DAMNED died last round.
 function extraRevealEntries() {
   return orderedPassiveEffectEntries(["p59", "p61", "p64", "p65", "p102"]).filter((entry) => {
@@ -1801,7 +1801,7 @@ function applyDevSealEntries(ids) {
       const targets = devSealTargetDamned().filter((bot) => bot.revealedByPassive);
       let total = 0;
       targets.forEach((bot) => {
-        // once per reveal stack (Seal of Pyros): each time it takes half of the HEALTH it has left
+        // once per reveal stack (Seal of Pyros): each time it takes half of the SOUL it has left
         let left = bot.hp;
         for (let stack = 0; stack < revealMultiplicity(bot); stack += 1) {
           const damage = Math.ceil(left * 0.5);
@@ -1887,7 +1887,7 @@ function cloneRoundRevealSources(sources) {
   return (sources || []).map((entry) => ({ ...entry }));
 }
 
-// a DAMNED that fell this round before READY: its HEALTH shows 0, but the KO waits for READY
+// a DAMNED that fell this round before READY: its SOUL shows 0, but the KO waits for READY
 function botDeathAwaitsReady(bot) {
   const round = state.roundState;
   return Boolean(
@@ -1981,7 +1981,7 @@ function buildRoundRevealSequence(beforeSnapshot, onlyIds = null) {
     }));
 }
 
-// a SEAL that acted before the snapshot is already counted in the snapshot's HEALTH and SIN;
+// a SEAL that acted before the snapshot is already counted in the snapshot's SOUL and SIN;
 // put those amounts back so its step shows them happening, like any other SEAL
 function rebaseRoundRevealSnapshot(beforeSnapshot, sequence) {
   if (!beforeSnapshot || !sequence.length) return;
@@ -2115,7 +2115,7 @@ function applyEligosExactGuess() {
     const eliteSin = 5 * passiveEntryEliteLevels(entry);
     if (eliteSin > 0) gainCredits(eliteSin, true, ITEMS.p119.name);
   });
-  round.roundEvents.push(`${ITEMS.p119.name}: your guess was exactly the TARGET. Your next CRITICAL deals 20% max HEALTH.`);
+  round.roundEvents.push(`${ITEMS.p119.name}: your guess was exactly the TARGET. Your next CRITICAL deals 20% max SOUL.`);
   return true;
 }
 

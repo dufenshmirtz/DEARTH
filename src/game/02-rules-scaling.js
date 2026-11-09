@@ -865,7 +865,7 @@ function gaapDamage(idOrItem) {
   return flatDamageValue(idOrItem, 5);
 }
 
-// the worst guess penalty is 10% max HEALTH; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
+// the worst guess penalty is 10% max SOUL; Seal of Vepar's copies for the other revealed DAMNED grow with ELITE
 const WORST_GUESS_PENALTY_PERCENT = 10;
 
 function worstGuessPenalty(maxHp, percent = WORST_GUESS_PENALTY_PERCENT) {

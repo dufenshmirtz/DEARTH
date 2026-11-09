@@ -19,10 +19,10 @@ const COLLECTION_OLD_STORAGE_KEYS = ["dearthCollectionV1"]; // discovered SEALS 
 const SEAL_UNLOCKS = {
   // Apocalypse Seals
   p74: { best: "roundSpent", goal: 160, text: "Spend 160 SIN in one round." },
-  p75: { flag: "oneHealth", text: "Have exactly 1 HEALTH." },
+  p75: { flag: "oneHealth", text: "Have exactly 1 SOUL." },
   p76: { best: "critStreak", goal: 8, text: "Score 8 CRITICAL hits in a row." },
-  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max HEALTH." },
-  p78: { flag: "fullHealthKill", text: "Be at 100 HEALTH and eliminate a DAMNED." },
+  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max SOUL." },
+  p78: { flag: "fullHealthKill", text: "Be at 100 SOUL and eliminate a DAMNED." },
   p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
   p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
   // Boss Seals (the Pentacles of Saturn p92-p97 and p110 are open from the start)
@@ -63,9 +63,9 @@ const COLLECTION_BEST_LABELS = {
 };
 
 const COLLECTION_FLAG_LABELS = {
-  oneHealth: "had exactly 1 HEALTH",
-  fullHealthBossKill: "one-shot a full-HEALTH BOSS",
-  fullHealthKill: "eliminated at 100 HEALTH",
+  oneHealth: "had exactly 1 SOUL",
+  fullHealthBossKill: "one-shot a full-SOUL BOSS",
+  fullHealthKill: "eliminated at 100 SOUL",
   beatNoArtifacts: "beat the game with no ARTIFACTS",
   dantrePentakill: "PENTAKILL with Dantre active",
   zilonBuyouts: "3 buyouts with Zilon active",
@@ -510,7 +510,7 @@ function collectionBossPresent(key, aliveOnly = false) {
 function collectionBeginRound() {
   if (state.mode !== "arcade") return;
   collectionRun().roundSpent = 0;
-  // BOSSES at full HEALTH when the round starts: knocking one out this round counts as a one-shot
+  // BOSSES at full SOUL when the round starts: knocking one out this round counts as a one-shot
   (state.bots || []).forEach((bot) => {
     if (bot?.isBoss) bot.fullHealthAtRoundStart = !bot.immortal && bot.hp >= bot.maxHp;
   });

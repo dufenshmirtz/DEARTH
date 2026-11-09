@@ -22,7 +22,7 @@ const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
 const HP_EXPONENTIAL_RATE = 1.2;
-// After the main game each Goetic BOSS multiplies BOSS HEALTH by 1 + RATE + RATE_STEP x depth
+// After the main game each Goetic BOSS multiplies BOSS SOUL by 1 + RATE + RATE_STEP x depth
 // (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
 // +18% per BOSS at demon 10, +28% at demon 20, +48% at demon 40
 const ENDLESS_BOSS_HP_RATE = 0.08;
@@ -324,7 +324,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Furfur",
     price: 10,
-    description: "For every 2 SIN you spend in a round, deal 1 damage to the highest-HEALTH DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "For every 2 SIN you spend in a round, deal 1 damage to the highest-SOUL DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p30: {
     id: "p30",
@@ -359,7 +359,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gremory",
     price: 16,
-    description: "Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%."
+    description: "Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-SOUL enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%."
   },
   p35: {
     id: "p35",
@@ -479,7 +479,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Marax",
     price: 11,
-    description: "Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, its BOUNTY increases by 4. ELITE increases the BOUNTY gain by +20% each level, rounded up."
+    description: "Once each round per DAMNED, when that DAMNED has taken more than 30% max-SOUL damage, its BOUNTY increases by 4. ELITE increases the BOUNTY gain by +20% each level, rounded up."
   },
   p52: {
     id: "p52",
@@ -523,7 +523,7 @@ const ITEMS = {
     name: "Seal of Balam",
     price: 14,
     description:
-      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
+      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
   p58: {
     id: "p58",
@@ -555,14 +555,14 @@ const ITEMS = {
     name: "Seal of Vepar",
     price: 13,
     description:
-      "While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level."
+      "While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-SOUL to the penalty the other revealed DAMNED take each level."
   },
   p62: {
     id: "p62",
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "The first time each full-HEALTH DAMNED takes damage in a round, it takes 10 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "The first time each full-SOUL DAMNED takes damage in a round, it takes 10 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
   },
   p63: {
     id: "p63",
@@ -792,7 +792,7 @@ const ITEMS = {
     type: "passive",
     name: "Fourth Pentacle of Saturn",
     price: 16,
-    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%."
+    description: "When you press READY, 30% chance for revealed DAMNED to lose 50% current SOUL. ELITE adds +5% chance, capped at 80%."
   },
   p96: {
     id: "p96",
@@ -891,7 +891,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Father",
     price: 33,
-    description: "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+    description: "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max SOUL instead of flat damage; or a random DAMNED takes 20% max-SOUL damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p132: {
     id: "p132",
@@ -905,7 +905,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of the Holy Spirit",
     price: 33,
-    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
+    description: "When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 SOUL). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded."
   },
   p111: {
     id: "p111",
@@ -1017,7 +1017,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Buer",
     price: 12,
-    description: "Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Once per DAMNED per round, when it takes more than 20% of its max SOUL as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p115: {
     id: "p115",
@@ -1052,21 +1052,21 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Eligos",
     price: 14,
-    description: "If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens."
+    description: "If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%. ELITE gains +5 SIN each level whenever this happens."
   },
   p120: {
     id: "p120",
     type: "passive",
     name: "Seal of Sitri",
     price: 13,
-    description: "The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level."
+    description: "The non-boss DAMNED with the most MEMORY gets double SOUL and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level."
   },
   a28: {
     id: "a28",
     type: "active",
     name: "Engraved Skull",
     price: 3,
-    description: "Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH."
+    description: "Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max SOUL."
   },
   a14: {
     id: "a14",
@@ -1080,7 +1080,7 @@ const ITEMS = {
     type: "active",
     name: "Sacrificial Dagger",
     price: 3,
-    description: "Pick a DAMNED. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES."
+    description: "Pick a DAMNED. Deal 20% max-SOUL damage to non-boss DAMNED, or 10% to BOSSES."
   },
   a6: {
     id: "a6",
@@ -1122,7 +1122,7 @@ const ITEMS = {
     type: "active",
     name: "Vial of Blood",
     price: 2,
-    description: "Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY."
+    description: "Pick two non-boss DAMNED. The first takes 30% max-SOUL damage. The second overheals 30% max SOUL and copies the first's PERSONALITY."
   },
   a12: {
     id: "a12",
@@ -1164,7 +1164,7 @@ const ITEMS = {
     type: "active",
     name: "Voodoo Doll",
     price: 3,
-    description: "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took."
+    description: "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took."
   },
   a22: {
     id: "a22",
@@ -1761,7 +1761,7 @@ const ARCHANGEL_BOSS_SPECS = [
 const ARCHANGEL_BY_KEY = Object.fromEntries(ARCHANGEL_BOSS_SPECS.map((spec) => [spec.key, spec]));
 const ARCHANGEL_KEYS = ARCHANGEL_BOSS_SPECS.map((spec) => spec.key);
 const ARCHANGEL_SPAWN_WEIGHT = 0.5; // compared with one Goetic demon
-const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the HEALTH a Goetic BOSS would have at the same point
+const ARCHANGEL_HEALTH_FACTOR = 1.5; // x the SOUL a Goetic BOSS would have at the same point
 const ARCHANGEL_TARGET_MODIFIERS = [0.8, 1, 1.2, 1];
 const GOETIC_BOSS_PASSIVE_IDS = PASSIVE_IDS.filter((id) => GOETIC_BOSS_IMAGE_BY_PASSIVE_ID[id] && !REMOVED_PASSIVE_IDS.has(id));
 // BOSS abilities are named after sins; the keys stay the old ones so saved runs keep working
@@ -1811,7 +1811,7 @@ const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHA
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
     name: "Seal of Bathin",
-    description: "This Pyros Gift heals 5 HEALTH at the end of every round."
+    description: "This Pyros Gift heals 5 SOUL at the end of every round."
   },
   fumes: {
     name: "Seal of Amon",
@@ -1835,7 +1835,7 @@ const PYROS_GIFT_PASSIVES = {
   },
   lamb: {
     name: "Seal of Sallos",
-    description: "When this Pyros Gift dies, all other DAMNED gain 10 HEALTH."
+    description: "When this Pyros Gift dies, all other DAMNED gain 10 SOUL."
   }
 };
 const PYROS_GIFT_KEYS = Object.keys(PYROS_GIFT_PASSIVES);
@@ -1965,7 +1965,7 @@ const UNIQUE_BOSS_SPECS = {
     image: "assets/bots/new-red-bosses-5/Serafeim-vibrant-v2.png",
     modifierOverride: 0.7,
     descriptions: [
-      "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as HEALTH.",
+      "When Serafim enters play, you lose half your SIN; Serafim adds the stolen SIN to his BOSS bounty and gains twice that amount as SOUL.",
       "Each round, you lose up to 2 SIN and Serafim adds the stolen SIN to his BOSS bounty.",
       "The TARGET modifier becomes 0.7 while Serafim is alive."
     ]
@@ -1976,8 +1976,8 @@ const UNIQUE_BOSS_SPECS = {
     image: "assets/bots/new-red-bosses-5/Padma-vibrant.png",
     modifierOverride: 0.6,
     descriptions: [
-      "While Padma is alive, non-boss healing cannot restore your HEALTH.",
-      "At the start of every round, Padma heals non-boss DAMNED for 10% max HEALTH and herself for 5% max HEALTH.",
+      "While Padma is alive, non-boss healing cannot restore your SOUL.",
+      "At the start of every round, Padma heals non-boss DAMNED for 10% max SOUL and herself for 5% max SOUL.",
       "The TARGET modifier becomes 0.6 while Padma is alive."
     ]
   },
@@ -1988,7 +1988,7 @@ const UNIQUE_BOSS_SPECS = {
     statFactor: 0.5,
     bossBountyFactor: 0.5,
     descriptions: [
-      "Petros enters with Pavlos. Each twin has half BOSS HEALTH and half BOSS SIN.",
+      "Petros enters with Pavlos. Each twin has half BOSS SOUL and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
       "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
@@ -2002,7 +2002,7 @@ const UNIQUE_BOSS_SPECS = {
     countsAsBossProgress: false,
     countsAsBossSpawn: false,
     descriptions: [
-      "Pavlos enters with Petros. Each twin has half BOSS HEALTH and half BOSS SIN.",
+      "Pavlos enters with Petros. Each twin has half BOSS SOUL and half BOSS SIN.",
       "Each twin borrows one other special BOSS ability.",
       "While either twin is alive, the TARGET modifier alternates each round between 0.9 and 1.1, starting at 0.9."
     ]
@@ -2019,7 +2019,7 @@ const FINAL_BOSS_SPECS = {
     image: FINAL_BOSS_JESUS_SRC,
     color: "#d64f45",
     descriptions: [
-      "Jesus has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
+      "Jesus has infinite SOUL. Damage dealt to him is counted without reducing SOUL.",
       "Jesus's guess counts three times when calculating the TARGET average.",
       "When the TARGET is odd, Jesus deals 1 damage to you. When it is 33, he deals 10."
     ]
@@ -2030,7 +2030,7 @@ const FINAL_BOSS_SPECS = {
     image: FINAL_BOSS_SATAN_SRC,
     color: "#d64f45",
     descriptions: [
-      "Satan has infinite HEALTH. Damage dealt to him is counted without reducing HP.",
+      "Satan has infinite SOUL. Damage dealt to him is counted without reducing SOUL.",
       "The Devil disables Devil's Offerings while Satan is alive.",
       "When the TARGET is even, Satan deals 1 damage to you. When it is 66, he deals 6."
     ]

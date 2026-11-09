@@ -107,6 +107,8 @@ function escapeHtml(value) {
 
 function normalizeGameText(value) {
   return String(value ?? "")
+    // HEALTH is called SOUL (old texts kept in saved runs still say HEALTH)
+    .replace(/\bhealth\b/gi, "SOUL")
     .replace(/\bnon-bosses\b/gi, "non-boss DAMNED")
     .replace(/\bnon-boss\b/gi, "non-boss")
     .replace(/\bsinners\b/gi, "DAMNED")
@@ -221,7 +223,7 @@ function mergeSourceEntries(sources) {
 function sourceTooltip(sources, kind = "damage") {
   const sign = kind === "heal" ? "+" : "-";
   return mergeSourceEntries(sources)
-    .map((entry) => normalizeGameText(`${sign}${entry.amount} health from ${entry.source}`))
+    .map((entry) => normalizeGameText(`${sign}${entry.amount} SOUL from ${entry.source}`))
     .join("\n");
 }
 
@@ -347,7 +349,7 @@ function renderHeader() {
       <p class="muted">${escapeHtml(controllerState.player?.name || "Phone controller")}</p>
       <div class="stat-row">
         <div class="stat"><span>Previous</span><strong>${host?.previousTarget ?? "?"}</strong></div>
-        <div class="stat health-stat">${damageBadge}<span>HEALTH</span><strong>${player ? player.hp : "-"}</strong></div>
+        <div class="stat health-stat">${damageBadge}<span>SOUL</span><strong>${player ? player.hp : "-"}</strong></div>
         <div class="stat"><span>Modifier</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
         <div class="stat"><span>TARGET</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
         <div class="stat guess-stat"><span>Your Guess</span><strong>${guess ?? "-"}</strong></div>

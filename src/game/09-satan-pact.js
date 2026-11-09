@@ -1,6 +1,6 @@
 /* ---------- Satan's Pact: one deal with the Devil per run ----------
    The DEAL button under Pause (it pulses slowly to red until you open the deal once in the run, and
-   fast while you are under 25% HEALTH). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
+   fast while you are under 25% SOUL). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
    what you want; he names his price; YES signs, NO throws the chance away for the rest of the run.
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
    SEAL, the deal stays locked until your next BOSS kill.
@@ -11,23 +11,23 @@
    Each key holds a list of lines said one after another.
 
    The rules and prices (decided Nov 2026, see the "Satan's Pact Prices" page):
-   - 1 ARTIFACT: HEALTH = 0.5 x its Devil's Offerings price (at least 2), or 3 x that price in SIN, or
+   - 1 ARTIFACT: SOUL = 0.5 x its Devil's Offerings price (at least 2), or 3 x that price in SIN, or
      only 1 ARTIFACT use a round for 3 rounds; one of the three at random among the ones you can pay.
-   - 2 to 4 copies: Devil's Offerings closed for (copies) rounds, or HEALTH = 0.5 x all their prices.
+   - 2 to 4 copies: Devil's Offerings closed for (copies) rounds, or SOUL = 0.5 x all their prices.
    - ELITE (every SEAL slot open): the SEAL you name weighs 4, every other SEAL you own weighs 1. If it
-     lands on yours: next BOSS +50% HEALTH, or lose a random SEAL. If it lands on another: next BOSS +30%.
+     lands on yours: next BOSS +50% SOUL, or lose a random SEAL. If it lands on another: next BOSS +30%.
    - Goetic SEAL (every SEAL slot open): 50% he says yes (80% if you have slain that demon), never while
-     its BOSS lives. Price: a random SEAL of yours + HEALTH = the SEAL's price + 20% of your SIN; if the
-     HEALTH would kill you, +50% damage taken for 3 rounds instead of the HEALTH.
-   - Heal up to 5: next BOSS +10% HEALTH per HEALTH asked.
-   - N SIN: next BOSS +2N% HEALTH and no BOSS BOUNTY; above 20, 1 HEALTH per 3 SIN over.
+     its BOSS lives. Price: a random SEAL of yours + SOUL = the SEAL's price + 20% of your SIN; if the
+     SOUL would kill you, +50% damage taken for 3 rounds instead of the SOUL.
+   - Heal up to 5: next BOSS +10% SOUL per SOUL asked.
+   - N SIN: next BOSS +2N% SOUL and no BOSS BOUNTY; above 20, 1 SOUL per 3 SIN over.
    - Kill a non-boss DAMNED: no ARTIFACTS for a round, and Satan keeps its BOUNTY.
    - +1 / +2 ARTIFACT uses this round: then only 1 use a round for 2 (or 5) rounds (0 with Seal of Orobas).
-   - Cheat death: back with 1 HEALTH once; when it happens he takes a random SEAL, half your SIN, or the
-     next BOSS comes with +50% HEALTH.
+   - Cheat death: back with 1 SOUL once; when it happens he takes a random SEAL, half your SIN, or the
+     next BOSS comes with +50% SOUL.
    - Seal of Satan: only with every SEAL slot open and empty. Free.
    Every number is x0.8 to x1.25 (most often near x1). 4+ SEALS sharing a build with the SEAL asked
-   for (ELITE / SEAL) make the price x1.5. A HEALTH price never takes you below 1 HEALTH.
+   for (ELITE / SEAL) make the price x1.5. A SOUL price never takes you below 1 SOUL.
    "This round" means the current round during guess / ARTIFACTS, the next round from the results on. */
 
 const SATAN_DEAL_LINES = {
@@ -82,9 +82,9 @@ const SATAN_DEAL_LINES = {
     ["satan", "If you want it on {OTHER}, it's {PRICE}."]
   ],
   seal: [["satan", "{DEMON} agrees to serve you. For that, I take {PRICE}."]],
-  heal: [["satan", "A little blood transfusion? {N} HEALTH, and in return {PRICE}."]],
+  heal: [["satan", "A little blood transfusion? {N} SOUL, and in return {PRICE}."]],
   healTooMuch: [
-    ["satan", "{ASKED} HEALTH? HAHAHA! You must be out of your mind."],
+    ["satan", "{ASKED} SOUL? HAHAHA! You must be out of your mind."],
     ["satan", "I'll give you {N}, and you'll thank me for it. In return, {PRICE}."]
   ],
   sin: [["satan", "{N} SIN{SIN}, coming right up. In return, {PRICE}."]],
@@ -109,12 +109,12 @@ const SATAN_DEAL_LINES = {
 
 // how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name)
 const SATAN_DEAL_PRICE_TEXT = {
-  hp: "{N} of your HEALTH",
+  hp: "{N} of your SOUL",
   sin: "{N} SIN{SIN}",
   useCap: "only one ARTIFACT a round for the next {M} rounds",
   useCapZero: "no ARTIFACTS at all for the next {M} rounds",
   shopClosed: "my Offerings closed to you for {M} rounds",
-  bossHealth: "the next BOSS walks in with {N}% more HEALTH",
+  bossHealth: "the next BOSS walks in with {N}% more SOUL",
   bossBounty: "its BOSS BOUNTY goes to me",
   loseSeal: "your {SEAL}",
   damageTaken: "{N}% more pain for {M} rounds",
@@ -129,9 +129,9 @@ const SATAN_DEAL_BUTTONS = { yes: "Yes", no: "No", ask: "Ask", leave: "Leave" };
 /* ---- numbers ---- */
 const SATAN_DEAL_ROLL_MIN = 0.8;
 const SATAN_DEAL_ROLL_MAX = 1.25;
-const SATAN_DEAL_LOW_HP = 0.25; // under this share of max HEALTH the DEAL button pulses fast
+const SATAN_DEAL_LOW_HP = 0.25; // under this share of max SOUL the DEAL button pulses fast
 const SATAN_DEAL_PULSE_MS = 6000; // one slow fade to red and back (keep equal to the pact-calling animation in styles.css)
-const SATAN_DEAL_PULSE_FAST_MS = 1600; // the same under 25% HEALTH (.pact-urgent in styles.css)
+const SATAN_DEAL_PULSE_FAST_MS = 1600; // the same under 25% SOUL (.pact-urgent in styles.css)
 const SATAN_DEAL_BUILD_STACK = 4; // this many SEALS sharing a build with the SEAL asked for...
 const SATAN_DEAL_BUILD_FACTOR = 1.5; // ...make the price this much higher
 const SATAN_DEAL_SEAL_ACCEPT = 0.5;
@@ -177,7 +177,7 @@ function satanPactCanOpenNow() {
   return satanPactAvailable() && !introActive() && !roundRevealAnimationActive() && !state.pendingActive && state.player.hp > 0;
 }
 
-// DEAL pulses slowly until you open it once in the run; under 25% HEALTH it pulses fast
+// DEAL pulses slowly until you open it once in the run; under 25% SOUL it pulses fast
 function satanPactPulseActive() {
   const pact = satanPact();
   return satanPactAvailable() && !pact.opened && !introActive() && state.player.hp > 0;
@@ -226,7 +226,7 @@ function satanPactDamageTakenMultiplier() {
   return 1 + curse.pct / 100;
 }
 
-// a new BOSS pays the debt: more HEALTH, and maybe no BOSS BOUNTY (both of a pair, Petros and Pavlos)
+// a new BOSS pays the debt: more SOUL, and maybe no BOSS BOUNTY (both of a pair, Petros and Pavlos)
 function satanPactApplyBossDebt(bot) {
   const pact = state.pact;
   const debt = pact?.bossDebt;
@@ -244,14 +244,14 @@ function satanPactApplyBossDebt(bot) {
   } else {
     pact.bossDebt = null;
   }
-  addLog(`${SATAN_DEAL_SOURCE}: ${bot.name} came with ${debt.healthPct}% more HEALTH${debt.zeroBounty ? " and no BOSS BOUNTY" : ""}.`);
+  addLog(`${SATAN_DEAL_SOURCE}: ${bot.name} came with ${debt.healthPct}% more SOUL${debt.zeroBounty ? " and no BOSS BOUNTY" : ""}.`);
 }
 
 function satanPactCheatDeathArmed() {
   return Boolean(state.pact?.cheatDeath && state.mode === "arcade");
 }
 
-// a blow that would kill you: back with 1 HEALTH, and Satan collects (returns the new HEALTH)
+// a blow that would kill you: back with 1 SOUL, and Satan collects (returns the new SOUL)
 function satanPactCheatDeath() {
   const pact = satanPact();
   pact.cheatDeath = false;
@@ -274,9 +274,9 @@ function satanPactCheatDeath() {
   } else {
     const pct = Math.round(50 * satanPactRoll());
     pact.bossDebt = { healthPct: pct, zeroBounty: false, pairGroupId: null };
-    taken = `a debt: the next BOSS comes with ${pct}% more HEALTH`;
+    taken = `a debt: the next BOSS comes with ${pct}% more SOUL`;
   }
-  const message = `Satan dragged you back from death with 1 HEALTH and took ${taken}.`;
+  const message = `Satan dragged you back from death with 1 SOUL and took ${taken}.`;
   if (state.roundState) addRoundEvent(message);
   addLog(message);
   return 1;
@@ -431,7 +431,7 @@ function satanPactParse(text) {
   }
   if (sealMatch) return { intent: "seal", id: sealMatch.id };
   if (/\b(use|uses|action|actions)\b/.test(normalized)) return { intent: "uses", n: number || 1 };
-  if (/\b(heal|healing|health|hp|cure|life|patch)\b/.test(normalized)) return { intent: "heal", n: number };
+  if (/\b(heal|healing|health|soul|hp|cure|life|patch)\b/.test(normalized)) return { intent: "heal", n: number };
   if (/\b(sin|sins|money|cash|gold|coins|riches|wealth)\b/.test(normalized)) return { intent: "sin", n: number };
   return { intent: "gibberish" };
 }
@@ -605,7 +605,7 @@ function satanPactHealOffer(asked) {
   const n = Math.min(askedN, SATAN_DEAL_MAX_HEAL);
   const price = [{ type: "bossHealth", pct: Math.max(1, Math.round(10 * n * satanPactRoll())) }];
   const lines = askedN > SATAN_DEAL_MAX_HEAL ? SATAN_DEAL_LINES.healTooMuch : SATAN_DEAL_LINES.heal;
-  return { gain: { type: "heal", n }, price, lines, vars: { N: n, ASKED: askedN }, request: `${n} HEALTH` };
+  return { gain: { type: "heal", n }, price, lines, vars: { N: n, ASKED: askedN }, request: `${n} SOUL` };
 }
 
 function satanPactSinOffer(asked) {

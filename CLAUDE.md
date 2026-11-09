@@ -52,6 +52,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - Audio: balance loudness for any SFX change (see the audio rule above).
 
 ## Game rules in brief
+- Player-facing name for HP is **SOUL** (was HEALTH, renamed Nov 2026): write SOUL / max SOUL in every text; code identifiers (`hp`, `maxHp`, `...Health...`) stay. `normalizeGameText` also turns a stray "health" into SOUL for old texts kept in saved runs.
 - Each round the player + 5 DAMNED guess 0–100. TARGET = ceil(weighted average × modifier + offset); modifier 0.8 by default (final bosses 0.666, unique bosses override).
 - Damage = |guess − TARGET|; worst guess 10% max HP; CRITICAL (exact TARGET, window widened by seals) hits everyone else for 10% max HP.
 - Stages: guess → active (≤2 ARTIFACTS) → reveal/resolution → summary → Devil's Offerings shop.

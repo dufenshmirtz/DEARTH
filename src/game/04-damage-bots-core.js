@@ -81,7 +81,7 @@ function recordBotRoundDamage(bot, amount) {
     orderedPassiveEffectEntries("p114").forEach((entry) => {
       markPassiveEntryTriggered(entry);
       const gained = gainCredits(passiveEntryScaledValue(entry, 2), true, ITEMS.p114.name);
-      round.roundEvents.push(`${ITEMS.p114.name} paid ${gained} SIN after ${bot.name} took more than 20% max-HEALTH damage.`);
+      round.roundEvents.push(`${ITEMS.p114.name} paid ${gained} SIN after ${bot.name} took more than 20% max-SOUL damage.`);
     });
   }
   const maraxThreshold = Math.max(0, (bot.maxHp || 0) * 0.3);
@@ -363,7 +363,7 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
     return 0;
   }
   let nextHp = state.player.hp - damage;
-  // Satan's Pact "cheat death": back with 1 HEALTH, and he collects
+  // Satan's Pact "cheat death": back with 1 SOUL, and he collects
   if (nextHp <= 0 && satanPactCheatDeathArmed()) nextHp = satanPactCheatDeath();
   state.player.hp = Math.max(introPlayerHpFloor(), nextHp);
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
@@ -416,7 +416,7 @@ function applyPainEchoDamage(playerDamage, pendingBotDamages = null, pendingBotS
       const echoDamage = Math.ceil((bot.maxHp || 0) * percent);
       addPendingBotDamage(pendingBotDamages, pendingBotSources, bot, echoDamage, source);
     });
-    round.roundEvents.push(`${source} adds ${percentLabel} max-HEALTH damage to every DAMNED.`);
+    round.roundEvents.push(`${source} adds ${percentLabel} max-SOUL damage to every DAMNED.`);
     return;
   }
   targets.forEach((bot) => {

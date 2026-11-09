@@ -12223,7 +12223,7 @@ body.native-ios.native-arcade #app .arena:not(.pvp-arena) .topbar > .dev-quick {
   bottom: calc(var(--native-seal-row-height) - 20px + env(safe-area-inset-bottom)) !important;
 }
 
-/* DAMNED cards a bit taller on the phone (Android and iPhone), with room under the HEALTH bar */
+/* DAMNED cards a bit taller on the phone (Android and iPhone), with room under the SOUL bar */
 body.native-arcade {
   --native-seal-row-height: clamp(92px, calc(27vh - 8px), 116px);
 }
@@ -12618,7 +12618,7 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
 
 /* ---------- Satan's Pact (09-satan-pact.js) ---------- */
 /* the DEAL button sits under Pause (same frame and hover). Until the deal is opened once in the
-   run it pulses slowly to blood red, fast under 25% HEALTH. The buttons' colours are !important, so the pulse runs through a
+   run it pulses slowly to blood red, fast under 25% SOUL. The buttons' colours are !important, so the pulse runs through a
    registered colour property. */
 @property --pact-call {
   syntax: "<color>";
@@ -12636,7 +12636,7 @@ body.mobile-arcade #app .bot-card .boss-stolen-tag {
   animation: pact-calling 6s ease-in-out infinite;
 }
 
-/* under 25% HEALTH the same pulse, fast */
+/* under 25% SOUL the same pulse, fast */
 .deal-button.pact-calling.pact-urgent {
   animation-duration: 1.6s;
 }

@@ -8,7 +8,7 @@ function artifactDescription(item) {
     return `Gain ${artifactValue(3)} to ${artifactValue(10)} SIN.`;
   }
   if (item.id === "a11") {
-    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-HEALTH damage. The second overheals ${artifactPercentValue(30)}% max HEALTH and copies the first's PERSONALITY.`;
+    return `Pick two non-boss DAMNED. The first takes ${artifactPercentValue(30)}% max-SOUL damage. The second overheals ${artifactPercentValue(30)}% max SOUL and copies the first's PERSONALITY.`;
   }
   if (item.id === "a12") return `You take ${artifactPercentValue(50)}% less damage this round, including CRITICAL damage. Multiple uses stack multiplicatively.`;
   if (item.id === "a13") {
@@ -17,14 +17,14 @@ function artifactDescription(item) {
   if (item.id === "a14") return `During reveal, reduce the TARGET by ${artifactValue(10)}. The TARGET can go below zero.`;
   if (item.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `Pick a target. Deal ${artifactPercentValue(20)}% max-HEALTH damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
+    return `Pick a target. Deal ${artifactPercentValue(20)}% max-SOUL damage to non-boss DAMNED, or ${artifactPercentValue(sacrificialDaggerBossPercent())}% to BOSSES${extra ? `, plus ${extra} flat damage from Seal of Amy` : ""}.`;
   }
   if (item.id === "a16") return `Gain a random ${artifactValue(3)} to ${artifactValue(9)} SIN.`;
   if (item.id === "a18") {
     return `Instantly copy the effect of the last non-Crystal ARTIFACT you used. Last: ${lastUsedArtifactName()}.`;
   }
   if (item.id === "a21") {
-    return "This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.";
+    return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
     return "+1 CRITICAL range for the round.";
@@ -36,7 +36,7 @@ function artifactDescription(item) {
   }
   if (item.id === "a28") {
     const value = artifactValue(6);
-    return `Pick a DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max HEALTH.`;
+    return `Pick a DAMNED. It gains ${value} MEMORY, ${value} SIN, and heals ${artifactPercentValue(6)}% max SOUL.`;
   }
   return normalizeGameText((item.description || "").replace(/^One use\.\s*/i, ""));
 }
@@ -65,7 +65,7 @@ function itemDescription(item) {
     const levels = Math.max(0, stack - 1);
     const elite = levels ? ` Gain ${5 * levels} SIN whenever this happens.` : "";
     const charged = state.exactGuessCritCharged ? " Charged: your next CRITICAL deals 20%." : "";
-    return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%.${elite}${charged}`;
+    return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p71", "p102", "p75", "p93", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p133"].includes(item.id) ? ITEMS[item.id].description : item.description;
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
@@ -116,13 +116,13 @@ function itemDescription(item) {
   if (item.id === "p126") return `Gain +${baseEditionBonus(item)} ARTIFACT ${baseEditionBonus(item) === 1 ? "use" : "uses"} per round and +${baseEditionBonus(item)} ARTIFACT inventory ${baseEditionBonus(item) === 1 ? "slot" : "slots"}.`;
   if (item.id === "p26") return `Using two matching ARTIFACTS in a round deals ${twinDetonatorDamage(item)} damage to all DAMNED.`;
   if (item.id === "p27") return `Every ARTIFACT triggers one outcome: gain ${reactiveWarrantySin(item)} SIN, deal ${reactiveWarrantyDamage(item)} damage to a random DAMNED, or refund its purchase cost.`;
-  if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-HEALTH DAMNED.`;
+  if (item.id === "p29") return `For every 2 SIN spent this round, deal ${furfurDamage(item)} damage to the highest-SOUL DAMNED.`;
   if (item.id === "p30") return `Every DAMNED elimination deals ${andrealphusDamage(item)} damage to the DAMNED on its left and right.`;
   if (item.id === "p31") return `At end of round, two random DAMNED take ${flatDamagePower(item)}x their BOUNTY as damage.`;
   if (item.id === "p32") return `Every DAMNED death gives each other living DAMNED +${Math.ceil(passivePower(item))} to +${Math.ceil(2 * passivePower(item))} BOUNTY.`;
   if (item.id === "p33") return `Every DAMNED elimination makes all other DAMNED take ${flatDamagePower(item)}x that DAMNED's BOUNTY as damage.`;
   if (item.id === "p34") {
-    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-HEALTH enemy and give it +${scaledPassiveValueForItem(item, 1)} BOUNTY.`;
+    return `When a DAMNED with 6 or more BOUNTY dies, deal ${flatDamageValue(item, 10)} damage to the highest-SOUL enemy and give it +${scaledPassiveValueForItem(item, 1)} BOUNTY.`;
   }
   if (item.id === "p35") return `At end of round, the two highest BOUNTY DAMNED gain +${stack} BOUNTY.`;
   if (item.id === "p36") return "Removed.";
@@ -141,7 +141,7 @@ function itemDescription(item) {
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
   if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
   if (item.id === "p50") return `At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take ${agaresDamagePerSin(item)} damage per BOUNTY gained from this SEAL.`;
-  if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-HEALTH damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
+  if (item.id === "p51") return `Once each round per DAMNED, when that DAMNED has taken more than 30% max-SOUL damage, it gains +${scaledPassiveValueForItem(item, 4)} BOUNTY.`;
   if (item.id === "p52") {
     return `At end of round, DAMNED take ${flatDamageValue(item, 3)} damage per MEMORY. BOSSES take ${flatDamageValue(item, 1)} damage per MEMORY instead.`;
   }
@@ -158,7 +158,7 @@ function itemDescription(item) {
   }
   if (item.id === "p57") {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
-    return `If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. ${multiplier}x its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
+    return `If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. ${multiplier}x its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
   }
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;
@@ -170,9 +170,9 @@ function itemDescription(item) {
     return `Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal ${gaapDamage(item)} damage to every DAMNED.`;
   }
   if (item.id === "p61") {
-    return `While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-HEALTH.`;
+    return `While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. The other revealed DAMNED take ${veparPenaltyPercent(item)}% max-SOUL.`;
   }
-  if (item.id === "p62") return `The first time each full-HEALTH DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
+  if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
     return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
   }
@@ -197,9 +197,9 @@ function itemDescription(item) {
   if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
   if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
   if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
-  if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double HEALTH and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
+  if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double SOUL and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
   if (item.id === "p113") return `At end of round, each DAMNED independently has a 30% chance to take ${flatDamageValue(item, 5)} damage and a separate 10% chance to take ${flatDamageValue(item, 10)} damage.`;
-  if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
+  if (item.id === "p114") return `Once per DAMNED per round, when it takes more than 20% of its max SOUL as damage, gain ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p115") return `At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes ${flatDamageValue(item, 4)} damage and gives you ${scaledPassiveValueForItem(item, 2)} SIN.`;
   if (item.id === "p70") {
     return `Sacrificial Dagger deals ${sacrificialDaggerExtraDamage(item)} extra flat damage and appears ${sacrificialDaggerShopWeight(item)}x as often in Devil's Offerings.`;
@@ -275,7 +275,7 @@ function itemDescription(item) {
   if (item.id === "p92") return `At reveal, ${devSealChanceText(item)} chance to change the TARGET to your guess.`;
   if (item.id === "p93") return `When you press READY, ${devSealChanceText(item)} chance to multiply every DAMNED BOUNTY by x1.5.`;
   if (item.id === "p94") return `At reveal, ${devSealChanceText(item)} chance to give 5 random temporary ARTIFACTS usable only this round.`;
-  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current HEALTH.`;
+  if (item.id === "p95") return `When you press READY, ${devSealChanceText(item)} chance for revealed DAMNED to lose 50% current SOUL.`;
   if (item.id === "p96") {
     return `When you press READY, ${devSealChanceText(item)} chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round.`;
   }
@@ -356,14 +356,14 @@ function bossPassiveEffectDescription(key) {
   if (!BOSS_PASSIVES[key]) return "";
   if (key === "sinStealing") return "At the start of each round, removes 20% of your total SIN plus 5 more SIN. The stolen SIN vanishes.";
   if (key === "soullessness") return `When this BOSS is defeated, it does not heal you and instead deals ${damage} damage.`;
-  if (key === "soulStealing") return "While this BOSS ability is alive, you cannot recover HEALTH.";
+  if (key === "soulStealing") return "While this BOSS ability is alive, you cannot recover SOUL.";
   if (key === "deathRoll") return "If the TARGET is a multiple of 3, you take 3 damage. If it is a multiple of 5, you take 5 damage. If it is a multiple of 7, you take 7 damage.";
   if (key === "rerollToll") return `Every time you reroll Devil's Offerings, you take ${damage} damage.`;
   if (key === "offeringToll") return `Every time you buy an ARTIFACT or SEAL, you take ${damage} damage.`;
   if (key === "avenging") return `If 2 or more DAMNED are eliminated in the same round, you take ${damage} damage.`;
   if (key === "corruption") return "When you submit a guess, 33% chance to shift it by +10 or -10.";
   if (key === "punishment") return `If you eliminate no DAMNED in a round, you take ${damage} damage.`;
-  if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max HEALTH.";
+  if (key === "lifeSteal") return "Whenever you take damage, this BOSS heals that amount as percent max SOUL.";
   if (key === SHADOW_BOSS_PASSIVE_KEY) return "While this BOSS lives, you take double TARGET damage. It guesses the way you did in your last rounds.";
   return "";
 }
@@ -678,6 +678,8 @@ function escapeAttr(value) {
 
 function normalizeGameText(value) {
   return String(value)
+    // HEALTH is called SOUL (old texts kept in saved runs still say HEALTH)
+    .replace(/\bhealth\b/gi, "SOUL")
     .replace(/\bnon-bosses\b/gi, "non-boss DAMNED")
     .replace(/\bnon-boss\b/gi, "non-boss")
     .replace(/\bsinners\b/gi, "DAMNED")
@@ -712,7 +714,7 @@ function descriptionHtml(value) {
     return token;
   }), plainTargetText);
   let html = htmlWithLineBreaks(protectedText).replace(
-    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|HEALTH|MEMORY|BOUNTY)\b/gi,
+    /\b(SIN|DAMNED|ARTIFACTS?|SEALS?|BOSSES|BOSS|ELITE|CRITICAL|TARGET|KOS?|KO|SOUL|MEMORY|BOUNTY)\b/gi,
     (keyword, _whole, offset, fullText) => {
       if (/^boss(?:es)?$/i.test(keyword) && fullText[offset - 1] === "-") return keyword.toLowerCase();
       return `<span class="tooltip-keyword">${keyword.toUpperCase()}</span>`;
@@ -1258,15 +1260,15 @@ function sourceTooltip(sources, kind = "damage") {
     const bonusEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "bonus"));
     const savedEntries = mergeSourceEntries((sources || []).filter((entry) => entry.kind === "saved"));
     return [
-      ...damageEntries.map((entry) => `-${entry.amount} health from ${entry.source}`),
-      ...flatBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (flat bonus)`),
-      ...multiplierBonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (multiplier)`),
-      ...bonusEntries.map((entry) => `-${entry.amount} health from ${entry.source} (bonus)`),
-      ...savedEntries.map((entry) => `+${entry.amount} health saved from ${entry.source}`)
+      ...damageEntries.map((entry) => `-${entry.amount} SOUL from ${entry.source}`),
+      ...flatBonusEntries.map((entry) => `-${entry.amount} SOUL from ${entry.source} (flat bonus)`),
+      ...multiplierBonusEntries.map((entry) => `-${entry.amount} SOUL from ${entry.source} (multiplier)`),
+      ...bonusEntries.map((entry) => `-${entry.amount} SOUL from ${entry.source} (bonus)`),
+      ...savedEntries.map((entry) => `+${entry.amount} SOUL saved from ${entry.source}`)
     ].join("\n");
   }
   const sign = kind === "damage" ? "-" : "+";
-  const unit = kind === "credits" ? "SIN" : kind === "memory" ? "memory" : "health";
+  const unit = kind === "credits" ? "SIN" : kind === "memory" ? "memory" : "SOUL";
   return mergeSourceEntries(sources)
     .map((entry) => `${sign}${entry.amount} ${unit} from ${entry.source}`)
     .join("\n");

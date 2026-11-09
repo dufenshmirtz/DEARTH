@@ -41,7 +41,7 @@ Seal of Bael (10 SIN)
 If a DAMNED's guess is less than 5 away from their previous guess, they take 10 damage. If it is exactly the same, they take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Balam (14 SIN)
-If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max HEALTH becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up.
+If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up.
 
 Seal of Barbatos (12 SIN)
 Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
@@ -65,7 +65,7 @@ Seal of Botis (12 SIN)
 At end of round, each DAMNED whose guess is within +/-5 of the TARGET takes 4 damage and gives you 2 SIN. ELITE multiplies the damage by x1.5 and increases the SIN gained by +20% each level, rounded up.
 
 Seal of Buer (12 SIN)
-Once per DAMNED per round, when it takes more than 20% of its max HEALTH as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up.
+Once per DAMNED per round, when it takes more than 20% of its max SOUL as damage, gain 2 SIN. ELITE increases the SIN gained by +20% each level, rounded up.
 
 Seal of Bune (14 SIN)
 If two or more DAMNED are eliminated in a round, gain 8 SIN. If two or more with the same personality were eliminated, gain 16 SIN. ELITE increases the payout by +20%.
@@ -86,7 +86,7 @@ Seal of Decarabia (12 SIN)
 At end of round, DAMNED take 3 damage per MEMORY. BOSSES take 1 damage per MEMORY instead. ELITE multiplies both per-MEMORY damage values by x1.5 each level, rounded up.
 
 Seal of Eligos (14 SIN)
-If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-HEALTH damage instead of 10%. ELITE gains +5 SIN each level whenever this happens.
+If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%. ELITE gains +5 SIN each level whenever this happens.
 
 Seal of Focalor (14 SIN)
 At end of round, deal half the total BOUNTY of living DAMNED to every enemy. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -110,7 +110,7 @@ Seal of Glasya-Labolas (12 SIN)
 When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Gremory (16 SIN)
-Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-HEALTH enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.
+Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-SOUL enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.
 
 Seal of Gusion (14 SIN)
 BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -188,7 +188,7 @@ Seal of Shax (11 SIN)
 In a round where you hit CRITICAL, every DAMNED that dies gives you 2 extra SIN. ELITE increases the SIN by +20% each level, rounded up.
 
 Seal of Sitri (13 SIN)
-The non-boss DAMNED with the most MEMORY gets double HEALTH and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level.
+The non-boss DAMNED with the most MEMORY gets double SOUL and +1 MEMORY at the end of every round. Only when it dies does another DAMNED take its place. ELITE adds +1 MEMORY each round per level.
 
 Seal of Stolas (13 SIN)
 When a DAMNED with 3 or less MEMORY dies, gain SIN equal to its MEMORY. If it had more than 3 MEMORY, split its MEMORY between the DAMNED on its left and right; with only one side, only half is transferred and the rest is lost. ELITE increases only the low-MEMORY SIN payout by +20%.
@@ -206,7 +206,7 @@ Seal of Vassago (13 SIN)
 New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Vepar (13 SIN)
-While you are below 50 HEALTH, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-HEALTH to the penalty the other revealed DAMNED take each level.
+While you are below 50 SOUL, reveal one extra DAMNED each round. If a revealed DAMNED takes the worst guess penalty, all revealed DAMNED take it. ELITE adds +2% max-SOUL to the penalty the other revealed DAMNED take each level.
 
 Seal of Vine (10 SIN)
 Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay double BOUNTY SIN when eliminated. ELITE raises the payout multiplier by +20%.
@@ -304,10 +304,10 @@ Trinity Seals
 The three Trinity SEALS are sold apart and each works alone; every one you own shares a single SEAL slot, called the Seal of God once it holds two or three.
 
 Seal of the Father (33 SIN)
-When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max HEALTH instead of flat damage; or a random DAMNED takes 20% max-HEALTH damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
+When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max SOUL instead of flat damage; or a random DAMNED takes 20% max-SOUL damage at end of round; or you deal double damage. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
 Seal of the Holy Spirit (33 SIN)
-When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 HEALTH). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
+When you press READY, one of ten is cast at random: +5 MEMORY to every DAMNED; double 2 random BOUNTIES; reveal 4 DAMNED guesses next round; 3 copies of one ARTIFACT; your guess is CRITICAL; 4 DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a 50% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal 3 SOUL). Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
 
 Seal of the Son (33 SIN)
 When you press READY, one of three is cast at random: double SIN from every source this round; or +8 SIN; or 4 free rerolls until the end of next round. Shares one SEAL slot with the other Trinity SEALS (together, the Seal of God). Cannot be upgraded.
@@ -326,7 +326,7 @@ Third Pentacle of Saturn (16 SIN)
 At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%.
 
 Fourth Pentacle of Saturn (16 SIN)
-When you press READY, 30% chance for revealed DAMNED to lose 50% current HEALTH. ELITE adds +5% chance, capped at 80%.
+When you press READY, 30% chance for revealed DAMNED to lose 50% current SOUL. ELITE adds +5% chance, capped at 80%.
 
 Fifth Pentacle of Saturn (16 SIN)
 When you press READY, 30% chance to remove all MEMORY and BOUNTY from all DAMNED, then each DAMNED takes damage equal to the total removed MEMORY and BOUNTY. ELITE adds +5% chance, capped at 80%.
@@ -342,10 +342,10 @@ Unlockable Seals
 These SEALS start locked and never appear in the Devil's Offerings until their achievement is met once; then they stay unlocked forever. The list lives in SEAL_UNLOCKS (src/game/09-collection.js).
 
 Seal of the White Horse: Spend 160 SIN in one round.
-Seal of the Red Horse: Have exactly 1 HEALTH.
+Seal of the Red Horse: Have exactly 1 SOUL.
 Seal of the Black Horse: Score 8 CRITICAL hits in a row.
-Seal of the Pale Horse: Eliminate a BOSS that was at max HEALTH.
-Seal of the Souls of Martyrs: Be at 100 HEALTH and eliminate a DAMNED.
+Seal of the Pale Horse: Eliminate a BOSS that was at max SOUL.
+Seal of the Souls of Martyrs: Be at 100 SOUL and eliminate a DAMNED.
 Seal of Creation Uncreated: Beat the game without using a single ARTIFACT (defeat the 8 BOSSES).
 Seal of Silence in Heaven: Score 3 PENTAKILLS in a row.
 Seal of Zilon: Buy out three entire Devil's Offerings while Zilon is active.
@@ -385,7 +385,7 @@ Demonic Idol (5 SIN)
 Pick a non-boss DAMNED and swap your effective guess with theirs.
 
 Engraved Skull (3 SIN)
-Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max HEALTH.
+Pick a DAMNED. It gains 6 MEMORY, 6 SIN, and heals 6% max SOUL.
 
 Funeral Coin (3 SIN)
 Gain 3 to 10 SIN.
@@ -400,13 +400,13 @@ Mummified Lamb (2 SIN)
 Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.
 
 Sacrificial Dagger (3 SIN)
-Pick a DAMNED. Deal 20% max-HEALTH damage to non-boss DAMNED, or 10% to BOSSES.
+Pick a DAMNED. Deal 20% max-SOUL damage to non-boss DAMNED, or 10% to BOSSES.
 
 Satanic Bible (2 SIN)
 Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
 
 Vial of Blood (2 SIN)
-Pick two non-boss DAMNED. The first takes 30% max-HEALTH damage. The second overheals 30% max HEALTH and copies the first's PERSONALITY.
+Pick two non-boss DAMNED. The first takes 30% max-SOUL damage. The second overheals 30% max SOUL and copies the first's PERSONALITY.
 
 Voodoo Doll (3 SIN)
-This round, whenever you take damage, each DAMNED takes max-HEALTH damage equal to the same percent of your max HEALTH that you took.
+This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.
