@@ -13387,3 +13387,14 @@ textarea,
   user-select: text;
   -webkit-user-select: text;
 }
+
+/* Top bar (desktop): a panel that needs more room (a long TARGET Calc line) grows on its own;
+ * Soul, Round / KOs and SIN keep their normal height instead of stretching with it. */
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar {
+  align-items: start !important;
+}
+
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar > .stat-card {
+  box-sizing: border-box;
+  min-height: 114px;
+}
