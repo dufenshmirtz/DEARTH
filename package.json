@@ -8,12 +8,14 @@
     "start": "node server.js",
     "build:game": "node scripts/build-game.js",
     "audio:levels": "node scripts/measure-audio.js && node scripts/build-game.js",
-    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js",
+    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js && node --check scripts/build-desktop.js && node --check desktop/main.cjs",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "pnpm run mobile:build && cap sync",
     "mobile:android": "pnpm run mobile:build && cap sync android",
     "mobile:ios": "pnpm run mobile:build && cap sync ios",
-    "desktop": "electron desktop/main.cjs"
+    "desktop": "electron desktop/main.cjs",
+    "desktop:build": "node scripts/build-desktop.js",
+    "desktop:dist": "node scripts/build-desktop.js && electron-builder --win"
   },
   "engines": {
     "node": ">=18"
@@ -26,5 +28,41 @@
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
     "electron": "^45.2.3"
+  },
+  "build": {
+    "appId": "com.aenao.dearth",
+    "productName": "DEARTH",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/main.cjs",
+      "desktop-www/**/*",
+      "!**/node_modules/**/*"
+    ],
+    "extraMetadata": {
+      "main": "desktop/main.cjs"
+    },
+    "asar": false,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "desktop/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "DEARTH",
+      "installerIcon": "desktop/icon.ico",
+      "uninstallerIcon": "desktop/icon.ico",
+      "artifactName": "DEARTH-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "DEARTH-Portable-${version}.${ext}"
+    }
   }
 }

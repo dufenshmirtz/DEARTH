@@ -2,9 +2,9 @@ const { app, BrowserWindow, protocol, net, Menu } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-// For now the game is served straight from the repo root (index.html, main.js, styles.css, assets).
-// Step 4 will switch this to a built desktop-www folder.
-const ROOT = path.join(__dirname, '..');
+// The installed app serves the built desktop-www folder (pnpm run desktop:dist).
+// `pnpm run desktop` serves the repo root directly, so no build step is needed while testing.
+const ROOT = app.isPackaged ? path.join(__dirname, '..', 'desktop-www') : path.join(__dirname, '..');
 
 // Serve the game from app://dearth/ instead of file:// so absolute paths and fetch() keep working.
 protocol.registerSchemesAsPrivileged([

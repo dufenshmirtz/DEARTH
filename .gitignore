@@ -18,6 +18,7 @@ Thumbs.db
 dist/
 build/
 native-www/
+desktop-www/
 coverage/
 
 # Claude deliverables (local only)
