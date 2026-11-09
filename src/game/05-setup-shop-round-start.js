@@ -234,6 +234,31 @@ function skipArcadeProgression() {
   }
 }
 
+// SEALS that act when a DAMNED arrives between rounds (Seere, Vassago) would mark the round that just ended,
+// and beginRound's fresh round state would wipe that mark: collect them here and carry them into the new round
+let pendingArrivalSealIds = [];
+function captureArrivalSealTriggers(spawn) {
+  const round = state.roundState;
+  if (!round) return spawn();
+  const previous = round.triggeredPassiveIds;
+  const arrival = new Set();
+  round.triggeredPassiveIds = arrival;
+  try {
+    return spawn();
+  } finally {
+    round.triggeredPassiveIds = previous;
+    arrival.forEach((id) => previous?.add(id));
+    pendingArrivalSealIds.push(...arrival);
+  }
+}
+
+function carryArrivalSealTriggers() {
+  const ids = pendingArrivalSealIds;
+  pendingArrivalSealIds = [];
+  if (!state.roundState) return;
+  ids.forEach((id) => state.roundState.triggeredPassiveIds.add(id));
+}
+
 function createBot(options = {}) {
   const isBoss = Boolean(options.boss);
   const bossSpec = options.bossSpec || null;
@@ -930,6 +955,7 @@ function beginRound() {
   };
   // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
   rollAmyCopy();
+  carryArrivalSealTriggers();
 
   state.bots.forEach((bot) => {
     if (bot.eliminated) return;

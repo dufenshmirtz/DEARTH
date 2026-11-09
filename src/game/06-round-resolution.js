@@ -2038,7 +2038,7 @@ function advanceAfterSummary() {
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
   state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
-  replacePendingEliminations();
+  captureArrivalSealTriggers(replacePendingEliminations);
   state.rerollBaseCost = 1;
   // Seal of the Son's free rerolls (given at READY) last until the end of the next round
   if (state.round > (state.freeRerollsUntilRound || 0)) state.freeRerolls = 0;

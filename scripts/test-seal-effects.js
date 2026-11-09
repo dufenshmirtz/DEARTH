@@ -3216,3 +3216,30 @@ test("Dev SEAL grant gives the SEAL into an empty slot, upgrades one you have, a
     assert.ok(kalha.note.includes("cannot be upgraded"));
   `);
 });
+
+test("Seere and Vassago acting on a DAMNED that arrives between rounds still light up in the new round", () => {
+  game()(`
+    fixture([["p23"], ["p1"]], [10, 20, 30, 40, 50]);
+    render = () => {};
+    state.round = 5;
+    state.stage = "summary";
+    const fallen = state.bots[2];
+    fallen.eliminated = true;
+    fallen.hp = 0;
+    Math.random = () => 0.01;
+    advanceAfterSummary();
+    const arrived = state.bots[2];
+    assert.notEqual(arrived.id, fallen.id);
+    assert.ok(arrived.reward >= 7, "Seere gave +6 BOUNTY");
+    assert.ok(arrived.memory.length > 0, "Vassago gave MEMORY");
+    assert.equal(state.stage, "guess");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p23"), "Seere is marked in the new round");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p1"), "Vassago is marked in the new round");
+    assert.equal(sealStatsFor("p23").triggers, 1, "counted once");
+    // nothing carries over into the round after that
+    state.stage = "summary";
+    Math.random = () => 0.99;
+    advanceAfterSummary();
+    assert.ok(!state.roundState.triggeredPassiveIds.has("p23"));
+  `);
+});
