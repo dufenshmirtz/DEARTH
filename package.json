@@ -12,7 +12,8 @@
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "pnpm run mobile:build && cap sync",
     "mobile:android": "pnpm run mobile:build && cap sync android",
-    "mobile:ios": "pnpm run mobile:build && cap sync ios"
+    "mobile:ios": "pnpm run mobile:build && cap sync ios",
+    "desktop": "electron desktop/main.cjs"
   },
   "engines": {
     "node": ">=18"
