@@ -990,7 +990,7 @@ const ITEMS = {
     type: "passive",
     name: "Third Pentacle of Saturn",
     price: 16,
-    description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
+    description: "At reveal, 15% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
@@ -3295,6 +3295,11 @@ function normalizeLoadedArcadeRun() {
     }
     if (bot.buffPassiveKey && !PYROS_GIFT_PASSIVES[bot.buffPassiveKey]) bot.buffPassiveKey = null;
     bot.poisonCounters = Number.isFinite(bot.poisonCounters) ? Math.max(0, Math.ceil(bot.poisonCounters)) : 0;
+    bot.poisonSources = Object.fromEntries(
+      Object.entries(bot.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {}).filter(
+        ([id, count]) => PASSIVE_IDS.includes(id) && Number.isFinite(count) && count > 0
+      )
+    );
     bot.poisonDamageTaken = Number.isFinite(bot.poisonDamageTaken) ? Math.max(0, Math.ceil(bot.poisonDamageTaken)) : 0;
     // a Goetic BOSS suppresses its demon's current SEAL (Amy's moved from p70 to p134)
     const goeticSpec = bot.goeticKey ? GOETIC_BOSS_BY_KEY[bot.goeticKey] : null;
@@ -4501,12 +4506,76 @@ function canPoisonBot(bot) {
   return Boolean(bot && !bot.immortal && bot.hp > 0 && !bot.eliminated);
 }
 
-// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action)
-function addBotPoison(bot, amount) {
+// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action). sealId is the SEAL
+// that gave it: bot.poisonSources counts each SEAL's stacks, so the damage POISON deals can be credited
+// to the SEAL that gave it (shown with Shift on the SEAL: "POISON damage dealt").
+function addBotPoison(bot, amount, sealId = null) {
   const added = Math.max(0, Math.ceil(amount || 0));
   if (!added || !canPoisonBot(bot)) return 0;
   bot.poisonCounters = botPoison(bot) + added;
+  const creditId = poisonCreditSealId(sealId);
+  if (creditId) {
+    if (!bot.poisonSources || typeof bot.poisonSources !== "object") bot.poisonSources = {};
+    bot.poisonSources[creditId] = (bot.poisonSources[creditId] || 0) + added;
+  }
   return added;
+}
+
+// Seal of Amy copying a Poison SEAL you do not own: its POISON is Amy's work (like every other SEAL stat)
+function poisonCreditSealId(sealId) {
+  if (!sealId) return null;
+  if (typeof amyContributionFor === "function" && !directPassiveStack(sealId) && amyContributionFor(sealId)) return AMY_SEAL_ID;
+  return sealId;
+}
+
+// take POISON away (7th Pentacle of Mars), from the SEAL that gave the most first
+function removeBotPoison(bot, amount) {
+  let left = Math.min(botPoison(bot), Math.max(0, Math.ceil(amount || 0)));
+  bot.poisonCounters = botPoison(bot) - left;
+  const sources = bot.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {};
+  // POISON nobody is credited for (given before tracking existed) goes first
+  const tracked = Object.values(sources).reduce((sum, count) => sum + count, 0);
+  left -= Math.max(0, Math.min(left, bot.poisonCounters + left - tracked));
+  while (left > 0) {
+    const top = Object.keys(sources).sort((a, b) => sources[b] - sources[a])[0];
+    if (!top) break;
+    sources[top] -= 1;
+    if (sources[top] <= 0) delete sources[top];
+    left -= 1;
+  }
+}
+
+// how many of a DAMNED's POISON stacks each SEAL gave: [[sealId, stacks], ...] (never more than it has)
+function botPoisonShares(bot) {
+  const sources = bot?.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {};
+  const stacks = botPoison(bot);
+  const entries = Object.entries(sources).filter(([, count]) => count > 0);
+  const tracked = entries.reduce((sum, [, count]) => sum + count, 0);
+  if (tracked <= stacks) return entries;
+  return entries.map(([id, count]) => [id, (count * stacks) / tracked]);
+}
+
+// split the damage a DAMNED's POISON dealt between the SEALS that gave it, by their share of its stacks
+function creditPoisonDamage(bot, dealt, stacks) {
+  const total = Math.max(0, Math.ceil(dealt || 0));
+  if (!total || !stacks) return;
+  const parts = botPoisonShares(bot).map(([id, count]) => {
+    const exact = (total * count) / stacks;
+    return { id, value: Math.floor(exact), rest: exact - Math.floor(exact) };
+  });
+  // hand out what rounding left over (only up to the tracked share), biggest remainder first
+  const trackedExact = parts.reduce((sum, part) => sum + part.value + part.rest, 0);
+  let leftover = Math.round(trackedExact) - parts.reduce((sum, part) => sum + part.value, 0);
+  [...parts].sort((a, b) => b.rest - a.rest).forEach((part) => {
+    if (leftover <= 0) return;
+    part.value += 1;
+    leftover -= 1;
+  });
+  parts.forEach((part) => {
+    if (part.value <= 0) return;
+    const stats = sealStatsFor(part.id);
+    if (stats) stats.poisonDamage = (stats.poisonDamage || 0) + part.value;
+  });
 }
 
 function poisonSealEntry(id) {
@@ -4541,7 +4610,7 @@ function marsHealthPerPoison(entry) {
 function applyBountyPoison(bot) {
   const entry = poisonSealEntry("p144");
   if (!entry || !state.roundState) return;
-  if (!addBotPoison(bot, 1)) return;
+  if (!addBotPoison(bot, 1, entry.id)) return;
   markPassiveEntryTriggered(entry);
   addRoundEvent(`${ITEMS.p144.name} gave ${bot.name} 1 POISON for its BOUNTY.`);
 }
@@ -5801,7 +5870,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6654,15 +6723,21 @@ function devTemporaryActiveCopy(id) {
   return copy;
 }
 
+// Seals of Saturn: 30% base chance (Third Pentacle 15%), ELITE +5% each level, capped at 80%
+function devSealBaseChance(id) {
+  return id === "p92" ? 0.15 : 0.3;
+}
+
 function devSealChance(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   const stack = typeof idOrItem === "string" ? simpleStackCount(idOrItem) : idOrItem?.stack || 0;
   if (!stack) return 0;
-  return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
+  return Math.min(0.8, devSealBaseChance(id) + Math.max(0, stack - 1) * 0.05);
 }
 
 function devSealEntryChance(entry) {
   if (!entry?.stack) return 0;
-  return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
+  return Math.min(0.8, devSealBaseChance(entry.id) + Math.max(0, entry.stack - 1) * 0.05);
 }
 
 function isSelfStackingSeal(idOrItem) {
@@ -7096,6 +7171,7 @@ function sealStatsFor(id) {
     bounty: 0,
     bountyRemoved: 0,
     personality: 0,
+    poisonDamage: 0,
     triggers: 0
   };
   state.sealStats[id] = stats;
@@ -7132,6 +7208,7 @@ function sealContributionParts(stats, { includeTriggers = false } = {}) {
   const parts = [];
   if (!stats) return parts;
   if (stats.damage > 0) parts.push(`${stats.damage} damage dealt`);
+  if (stats.poisonDamage > 0) parts.push(`${stats.poisonDamage} POISON damage dealt`);
   if (stats.healing > 0) parts.push(`${stats.healing} healing done`);
   if (stats.saved > 0) parts.push(`${stats.saved} damage negated`);
   if (stats.credits > 0) parts.push(`${stats.credits} SIN gained`);
@@ -8289,6 +8366,7 @@ function createFinalBoss(key) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonSources: {},
     poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
@@ -8372,6 +8450,53 @@ function skipArcadeProgression() {
   } else {
     skipToFirstGoeticBoss();
   }
+}
+
+// SEALS that act when a DAMNED arrives between rounds (Seere, Vassago) would mark the round that just ended,
+// and beginRound's fresh round state would wipe that mark: collect them here, carry them into the new round
+// and play their trigger animation as the new round begins (startArrivalSealAnimation)
+let pendingArrivalSealIds = [];
+let arrivalSealIdsToAnimate = new Set();
+function captureArrivalSealTriggers(spawn) {
+  const round = state.roundState;
+  if (!round) return spawn();
+  const previous = round.triggeredPassiveIds;
+  const arrival = new Set();
+  round.triggeredPassiveIds = arrival;
+  try {
+    return spawn();
+  } finally {
+    round.triggeredPassiveIds = previous;
+    arrival.forEach((id) => previous?.add(id));
+    pendingArrivalSealIds.push(...arrival);
+  }
+}
+
+function carryArrivalSealTriggers() {
+  const ids = pendingArrivalSealIds;
+  pendingArrivalSealIds = [];
+  arrivalSealIdsToAnimate = new Set();
+  if (!state.roundState) return;
+  ids.forEach((id) => {
+    state.roundState.triggeredPassiveIds.add(id);
+    arrivalSealIdsToAnimate.add(id);
+  });
+  // Seal of Seere's +6 BOUNTY shows as a badge on the new DAMNED at Seere's step (Vassago's MEMORY already has one)
+  state.bots.forEach((bot) => {
+    const bonus = bot.arrivalBountyBonus || 0;
+    delete bot.arrivalBountyBonus;
+    if (!bonus || bot.eliminated) return;
+    recordBotSinSource(bot, bonus, ITEMS.p23.name);
+    bot.lastSinDelta = (bot.lastSinDelta || 0) + bonus;
+  });
+}
+
+// the arrival SEALS animate as soon as the new DAMNED are on the table; every other SEAL still waits for READY
+function startArrivalSealAnimation() {
+  const ids = arrivalSealIdsToAnimate;
+  arrivalSealIdsToAnimate = new Set();
+  if (!ids.size || !state.roundState) return false;
+  return startRoundRevealAnimation(captureRoundRevealSnapshot(), { onlyIds: ids });
 }
 
 function createBot(options = {}) {
@@ -8467,6 +8592,7 @@ function createBot(options = {}) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonSources: {},
     poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
@@ -8480,6 +8606,7 @@ function createBot(options = {}) {
   if (isBoss && bot.countsAsBossSpawn !== false) satanPactApplyBossDebt(bot);
   if (isBoss && botHasUniquePower(bot, "serafim")) applySerafimEntrySteal(bot);
   seedNewBotMemoryFromVassago(bot);
+  if (loadedSpawnBonus) bot.arrivalBountyBonus = loadedSpawnBonus;
   if (isBoss && bot.countsAsBossSpawn !== false) state.bossSpawnCount += 1;
   return bot;
 }
@@ -9094,6 +9221,8 @@ function beginRound() {
     // over and is removed for damage at the end of this round; without Threon there is no excess to keep
     if (!orderedPassiveEffectEntries("p127").length) bot.memoryOverflow = 0;
   });
+  // after the reset above, so Seere's BOUNTY badge is not cleared
+  carryArrivalSealTriggers();
 
   syncBipolarBots();
   enforceTwinTemperPersonalities();
@@ -9132,7 +9261,7 @@ function applyPoisonStartOfRound() {
       markPassiveEntryTriggered(entry);
       revealed.forEach((bot) => {
         // Pyros's stacked reveals count once per stack, like every effect on revealed DAMNED
-        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)));
+        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)), entry.id);
         if (added) addRoundEvent(`${name} gave revealed ${bot.name} ${added} POISON.`);
       });
       return;
@@ -9144,7 +9273,7 @@ function applyPoisonStartOfRound() {
       entry.id === "p140"
         ? Math.max(1, Math.floor((target.maxHp || 0) / marsHealthPerPoison(entry)))
         : Math.floor((target.memory?.length || 0) / 5) + 2 * passiveEntryEliteLevels(entry);
-    const added = addBotPoison(target, amount);
+    const added = addBotPoison(target, amount, entry.id);
     if (!added) return;
     markPassiveEntryTriggered(entry);
     addRoundEvent(`${name} gave ${target.name} ${added} POISON.`);
@@ -10762,7 +10891,7 @@ function applyPenalties() {
     orderedPassiveEffectEntries("p142").forEach((entry) => {
       const amount = 1 + passiveEntryEliteLevels(entry);
       // (applyPenalties has its own activeBots list, so read the living DAMNED directly)
-      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount) > 0);
+      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount, entry.id) > 0);
       if (!poisoned.length) return;
       markPassiveEntryTriggered(entry);
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
@@ -11714,7 +11843,7 @@ function applyEliminationPassives(bot) {
       if (amount <= 0 || !others.length) return;
       const bosses = others.filter((other) => other.isBoss);
       const pool = bosses.length ? bosses : others;
-      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1);
+      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1, entry.id);
       markPassiveEntryTriggered(entry);
       addRoundEvent(`${ITEMS.p142.name} spread ${amount} of ${bot.name}'s POISON${bosses.length ? " to the BOSSES" : ""}.`);
       return;
@@ -11899,6 +12028,7 @@ function applyPoisonDamage() {
     const damage = stacks * perStack;
     const dealt = damageBot(bot, damage, `POISON dealt ${damage} damage to ${bot.name} (${stacks} x ${perStack}).`, "Poison");
     bot.poisonDamageTaken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0)) + dealt;
+    creditPoisonDamage(bot, dealt, stacks);
   });
 }
 
@@ -11913,15 +12043,15 @@ function applyMarsSeventhPentacle(entry) {
   if (!poisoned.length) {
     shuffled(living)
       .slice(0, 2)
-      .forEach((bot) => addBotPoison(bot, 1));
+      .forEach((bot) => addBotPoison(bot, 1, entry.id));
     addRoundEvent(`${name} found no POISON and gave ${Math.min(2, living.length)} random DAMNED 1 POISON.`);
     return;
   }
   const damage = passiveEntryFlatDamage(entry, 15);
   poisoned.slice(0, 2).forEach((bot) => {
     damageBot(bot, damage, `${name} dealt ${damage} damage to ${bot.name}.`, name);
-    bot.poisonCounters = Math.max(0, botPoison(bot) - 1);
-    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1));
+    removeBotPoison(bot, 1);
+    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1, entry.id));
   });
 }
 
@@ -11932,7 +12062,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
       if (!stubborn.length) return;
       markPassiveEntryTriggered(entry);
-      stubborn.forEach((bot) => addBotPoison(bot, 1));
+      stubborn.forEach((bot) => addBotPoison(bot, 1, entry.id));
       addRoundEvent(`${ITEMS.p145.name} gave ${stubborn.length} STUBBORN DAMNED 1 POISON.`);
       return;
     }
@@ -12461,12 +12591,13 @@ function advanceAfterSummary() {
   state.previousRoundEliminationsForMartyrs = state.roundState?.eliminationsThisRound || 0;
   state.previousRoundRevealedEliminations = state.roundState?.revealedEliminationsThisRound || 0;
   state.round += 1;
-  replacePendingEliminations();
+  captureArrivalSealTriggers(replacePendingEliminations);
   state.rerollBaseCost = 1;
   // Seal of the Son's free rerolls (given at READY) last until the end of the next round
   if (state.round > (state.freeRerollsUntilRound || 0)) state.freeRerolls = 0;
   rerollShop();
   beginRound();
+  startArrivalSealAnimation();
   render();
 }
 
@@ -16325,10 +16456,12 @@ function renderTargetPanel() {
   const modifier = round ? formatModifier(round.targetModifier) : formatModifier(BASE_TARGET_MODIFIER);
   const offset = round ? (held ? held.offset : round.targetOffset) : 0;
   const calcAverage = `<span class="target-calc-average">${escapeHtml(avg)}</span>`;
+  // Third Pentacle of Saturn leaves a fractional offset (32.620000000000005): show one decimal at most
+  const offsetText = String(Math.round(Math.abs(offset) * 10) / 10);
   const calculation =
     round && round.target !== null
-      ? `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)} = ${target}`
-      : `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)}`;
+      ? `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${offsetText} = ${target}`
+      : `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${offsetText}`;
 
   // One box: TARGET on top, the number beneath it, Previous / Modifier (and the calc) on the right
   return `
@@ -21943,13 +22076,39 @@ function saveArcadeRunForNativeExit() {
   saveArcadeRun();
 }
 
+// No text/image selection highlight anywhere (double-click or Ctrl+A turned the screen blue).
+// Typing fields and the PvP join link stay selectable. The phone and desktop (Electron) apps
+// also block the right-click menu and dragging images out; the browser keeps them for dev work.
+const SELECTABLE_TARGETS = "input, textarea, [contenteditable], .pvp-join-url";
+
+function nativeSelectionGuardsWanted() {
+  return isNativeArcadeApp() || Boolean(desktopApp());
+}
+
+function blockSelection(event) {
+  const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
+  if (target?.closest?.(SELECTABLE_TARGETS)) return;
+  event.preventDefault();
+}
+
 function blockNativeSelection(event) {
-  if (isNativeArcadeApp()) event.preventDefault();
+  if (nativeSelectionGuardsWanted()) event.preventDefault();
+}
+
+// Tab does nothing anywhere: no jumping between buttons and no focus outline on them.
+function installTabBlock() {
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Tab") event.preventDefault();
+    },
+    { capture: true }
+  );
 }
 
 function installNativeSelectionGuards() {
-  if (!isNativeArcadeApp()) return;
-  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
+  document.addEventListener("selectstart", blockSelection, { passive: false });
+  if (!nativeSelectionGuardsWanted()) return;
   document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
   document.addEventListener("dragstart", blockNativeSelection, { passive: false });
 }
@@ -21998,6 +22157,7 @@ installArcadeEnterShortcut();
 installPauseEscapeShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
+installTabBlock();
 updateFullscreenLayoutClass();
 if (!resumeNativeArcadeOnForeground()) {
   if (pvpShouldAutoStartFromHash()) {

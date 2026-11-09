@@ -756,6 +756,11 @@ function normalizeLoadedArcadeRun() {
     }
     if (bot.buffPassiveKey && !PYROS_GIFT_PASSIVES[bot.buffPassiveKey]) bot.buffPassiveKey = null;
     bot.poisonCounters = Number.isFinite(bot.poisonCounters) ? Math.max(0, Math.ceil(bot.poisonCounters)) : 0;
+    bot.poisonSources = Object.fromEntries(
+      Object.entries(bot.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {}).filter(
+        ([id, count]) => PASSIVE_IDS.includes(id) && Number.isFinite(count) && count > 0
+      )
+    );
     bot.poisonDamageTaken = Number.isFinite(bot.poisonDamageTaken) ? Math.max(0, Math.ceil(bot.poisonDamageTaken)) : 0;
     // a Goetic BOSS suppresses its demon's current SEAL (Amy's moved from p70 to p134)
     const goeticSpec = bot.goeticKey ? GOETIC_BOSS_BY_KEY[bot.goeticKey] : null;

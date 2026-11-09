@@ -13389,3 +13389,35 @@ body.mobile-arcade #app .game-over-card .end-stat-guess strong {
 .collection-toast-sigil.collection-toast-demon {
   filter: none;
 }
+
+/* Nothing on screen is selectable (no blue highlight on double-click or Ctrl+A).
+ * Typing fields stay selectable; the PvP join link keeps its own user-select: all. */
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Top bar (desktop): a panel that needs more room (a long TARGET Calc line) grows on its own;
+ * Soul, Round / KOs and SIN keep their normal height instead of stretching with it. */
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar {
+  align-items: start !important;
+}
+
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar > .stat-card {
+  box-sizing: border-box;
+  min-height: 114px;
+}
+
+/* No focus outline on anything (Tab is blocked too, see installTabBlock). */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}

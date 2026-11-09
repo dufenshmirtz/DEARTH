@@ -773,7 +773,7 @@ const ITEMS = {
     type: "passive",
     name: "Third Pentacle of Saturn",
     price: 16,
-    description: "At reveal, 30% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
+    description: "At reveal, 15% chance to change the TARGET to your guess. ELITE adds +5% chance, capped at 80%."
   },
   p93: {
     id: "p93",
