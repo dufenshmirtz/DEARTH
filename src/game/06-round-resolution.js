@@ -2044,6 +2044,7 @@ function advanceAfterSummary() {
   if (state.round > (state.freeRerollsUntilRound || 0)) state.freeRerolls = 0;
   rerollShop();
   beginRound();
+  startArrivalSealAnimation();
   render();
 }
 
