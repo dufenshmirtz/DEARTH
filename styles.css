@@ -13153,13 +13153,30 @@ body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
   height: 42px;
   object-fit: contain;
 }
+/* the ELITE level under the sigil: Roman numeral only, in the SEAL tooltip title's font and colour */
 #app .record-build-seal em {
   position: absolute;
-  bottom: -8px;
+  bottom: -22px;
   font-style: normal;
   font-family: var(--font-display) !important;
-  font-size: 13px !important;
-  color: var(--blood-bright) !important;
+  font-size: 17px !important;
+  line-height: 1;
+  color: var(--bone) !important;
+}
+/* room under the row (and between wrapped rows) for the numerals */
+#app .record-build.has-elite {
+  row-gap: 26px;
+  padding-bottom: 20px;
+}
+body.mobile-arcade #app .record-build-seal em,
+body.native-arcade #app .record-build-seal em {
+  bottom: -15px;
+  font-size: 12px !important;
+}
+body.mobile-arcade #app .record-build.has-elite,
+body.native-arcade #app .record-build.has-elite {
+  row-gap: 16px;
+  padding-bottom: 12px;
 }
 #app .record-build-artifact {
   opacity: 0.85;
@@ -13353,4 +13370,36 @@ body.mobile-arcade #app .game-over-card .end-stat-guess strong {
 }
 .collection-toast-sigil.collection-toast-demon {
   filter: none;
+}
+
+/* Nothing on screen is selectable (no blue highlight on double-click or Ctrl+A).
+ * Typing fields stay selectable; the PvP join link keeps its own user-select: all. */
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Top bar (desktop): a panel that needs more room (a long TARGET Calc line) grows on its own;
+ * Soul, Round / KOs and SIN keep their normal height instead of stretching with it. */
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar {
+  align-items: start !important;
+}
+
+body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar > .stat-card {
+  box-sizing: border-box;
+  min-height: 114px;
+}
+
+/* No focus outline on anything (Tab is blocked too, see installTabBlock). */
+*:focus,
+*:focus-visible {
+  outline: none !important;
 }

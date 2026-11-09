@@ -91,7 +91,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -944,15 +944,21 @@ function devTemporaryActiveCopy(id) {
   return copy;
 }
 
+// Seals of Saturn: 30% base chance (Third Pentacle 15%), ELITE +5% each level, capped at 80%
+function devSealBaseChance(id) {
+  return id === "p92" ? 0.15 : 0.3;
+}
+
 function devSealChance(idOrItem) {
+  const id = typeof idOrItem === "string" ? idOrItem : idOrItem?.id;
   const stack = typeof idOrItem === "string" ? simpleStackCount(idOrItem) : idOrItem?.stack || 0;
   if (!stack) return 0;
-  return Math.min(0.8, 0.3 + Math.max(0, stack - 1) * 0.05);
+  return Math.min(0.8, devSealBaseChance(id) + Math.max(0, stack - 1) * 0.05);
 }
 
 function devSealEntryChance(entry) {
   if (!entry?.stack) return 0;
-  return Math.min(0.8, 0.3 + Math.max(0, entry.stack - 1) * 0.05);
+  return Math.min(0.8, devSealBaseChance(entry.id) + Math.max(0, entry.stack - 1) * 0.05);
 }
 
 function isSelfStackingSeal(idOrItem) {
@@ -1386,6 +1392,7 @@ function sealStatsFor(id) {
     bounty: 0,
     bountyRemoved: 0,
     personality: 0,
+    poisonDamage: 0,
     triggers: 0
   };
   state.sealStats[id] = stats;
@@ -1422,6 +1429,7 @@ function sealContributionParts(stats, { includeTriggers = false } = {}) {
   const parts = [];
   if (!stats) return parts;
   if (stats.damage > 0) parts.push(`${stats.damage} damage dealt`);
+  if (stats.poisonDamage > 0) parts.push(`${stats.poisonDamage} POISON damage dealt`);
   if (stats.healing > 0) parts.push(`${stats.healing} healing done`);
   if (stats.saved > 0) parts.push(`${stats.saved} damage negated`);
   if (stats.credits > 0) parts.push(`${stats.credits} SIN gained`);

@@ -468,7 +468,7 @@ function renderRecordsMenu() {
     const build = Array.isArray(deepest.build) ? deepest.build.filter((entry) => ITEMS[entry?.id]) : [];
     const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
     const buildArt = build.length || artifacts.length
-      ? `<div class="record-build">${build
+      ? `<div class="record-build${build.some((entry) => entry.elite > 0) ? " has-elite" : ""}">${build
           .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
           .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
       : "";
@@ -2019,10 +2019,12 @@ function renderTargetPanel() {
   const modifier = round ? formatModifier(round.targetModifier) : formatModifier(BASE_TARGET_MODIFIER);
   const offset = round ? (held ? held.offset : round.targetOffset) : 0;
   const calcAverage = `<span class="target-calc-average">${escapeHtml(avg)}</span>`;
+  // Third Pentacle of Saturn leaves a fractional offset (32.620000000000005): show one decimal at most
+  const offsetText = String(Math.round(Math.abs(offset) * 10) / 10);
   const calculation =
     round && round.target !== null
-      ? `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)} = ${target}`
-      : `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${Math.abs(offset)}`;
+      ? `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${offsetText} = ${target}`
+      : `${calcAverage} x ${modifier} ${offset >= 0 ? "+" : "-"} ${offsetText}`;
 
   // One box: TARGET on top, the number beneath it, Previous / Modifier (and the calc) on the right
   return `

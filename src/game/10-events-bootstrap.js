@@ -411,13 +411,39 @@ function saveArcadeRunForNativeExit() {
   saveArcadeRun();
 }
 
+// No text/image selection highlight anywhere (double-click or Ctrl+A turned the screen blue).
+// Typing fields and the PvP join link stay selectable. The phone and desktop (Electron) apps
+// also block the right-click menu and dragging images out; the browser keeps them for dev work.
+const SELECTABLE_TARGETS = "input, textarea, [contenteditable], .pvp-join-url";
+
+function nativeSelectionGuardsWanted() {
+  return isNativeArcadeApp() || Boolean(desktopApp());
+}
+
+function blockSelection(event) {
+  const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
+  if (target?.closest?.(SELECTABLE_TARGETS)) return;
+  event.preventDefault();
+}
+
 function blockNativeSelection(event) {
-  if (isNativeArcadeApp()) event.preventDefault();
+  if (nativeSelectionGuardsWanted()) event.preventDefault();
+}
+
+// Tab does nothing anywhere: no jumping between buttons and no focus outline on them.
+function installTabBlock() {
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Tab") event.preventDefault();
+    },
+    { capture: true }
+  );
 }
 
 function installNativeSelectionGuards() {
-  if (!isNativeArcadeApp()) return;
-  document.addEventListener("selectstart", blockNativeSelection, { passive: false });
+  document.addEventListener("selectstart", blockSelection, { passive: false });
+  if (!nativeSelectionGuardsWanted()) return;
   document.addEventListener("contextmenu", blockNativeSelection, { passive: false });
   document.addEventListener("dragstart", blockNativeSelection, { passive: false });
 }
@@ -466,6 +492,7 @@ installArcadeEnterShortcut();
 installPauseEscapeShortcut();
 installShiftTooltipMore();
 installNativeSelectionGuards();
+installTabBlock();
 updateFullscreenLayoutClass();
 if (!resumeNativeArcadeOnForeground()) {
   if (pvpShouldAutoStartFromHash()) {
