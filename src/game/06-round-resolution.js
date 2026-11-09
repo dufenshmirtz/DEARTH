@@ -339,7 +339,7 @@ function applyPenalties() {
     orderedPassiveEffectEntries("p142").forEach((entry) => {
       const amount = 1 + passiveEntryEliteLevels(entry);
       // (applyPenalties has its own activeBots list, so read the living DAMNED directly)
-      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount) > 0);
+      const poisoned = state.bots.filter((bot) => addBotPoison(bot, amount, entry.id) > 0);
       if (!poisoned.length) return;
       markPassiveEntryTriggered(entry);
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
@@ -1291,7 +1291,7 @@ function applyEliminationPassives(bot) {
       if (amount <= 0 || !others.length) return;
       const bosses = others.filter((other) => other.isBoss);
       const pool = bosses.length ? bosses : others;
-      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1);
+      for (let index = 0; index < amount; index += 1) addBotPoison(randomFrom(pool), 1, entry.id);
       markPassiveEntryTriggered(entry);
       addRoundEvent(`${ITEMS.p142.name} spread ${amount} of ${bot.name}'s POISON${bosses.length ? " to the BOSSES" : ""}.`);
       return;
@@ -1476,6 +1476,7 @@ function applyPoisonDamage() {
     const damage = stacks * perStack;
     const dealt = damageBot(bot, damage, `POISON dealt ${damage} damage to ${bot.name} (${stacks} x ${perStack}).`, "Poison");
     bot.poisonDamageTaken = Math.max(0, Math.ceil(bot.poisonDamageTaken || 0)) + dealt;
+    creditPoisonDamage(bot, dealt, stacks);
   });
 }
 
@@ -1490,15 +1491,15 @@ function applyMarsSeventhPentacle(entry) {
   if (!poisoned.length) {
     shuffled(living)
       .slice(0, 2)
-      .forEach((bot) => addBotPoison(bot, 1));
+      .forEach((bot) => addBotPoison(bot, 1, entry.id));
     addRoundEvent(`${name} found no POISON and gave ${Math.min(2, living.length)} random DAMNED 1 POISON.`);
     return;
   }
   const damage = passiveEntryFlatDamage(entry, 15);
   poisoned.slice(0, 2).forEach((bot) => {
     damageBot(bot, damage, `${name} dealt ${damage} damage to ${bot.name}.`, name);
-    bot.poisonCounters = Math.max(0, botPoison(bot) - 1);
-    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1));
+    removeBotPoison(bot, 1);
+    adjacentLivingBots(bot).forEach((neighbour) => addBotPoison(neighbour, 1, entry.id));
   });
 }
 
@@ -1509,7 +1510,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
       if (!stubborn.length) return;
       markPassiveEntryTriggered(entry);
-      stubborn.forEach((bot) => addBotPoison(bot, 1));
+      stubborn.forEach((bot) => addBotPoison(bot, 1, entry.id));
       addRoundEvent(`${ITEMS.p145.name} gave ${stubborn.length} STUBBORN DAMNED 1 POISON.`);
       return;
     }

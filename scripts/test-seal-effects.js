@@ -3243,3 +3243,49 @@ test("DRIFTER: hard to predict but never trolling: always within 22 of where it 
     }
   `);
 });
+
+test("POISON damage is credited to the SEAL that gave the POISON, by its share of the stacks (Shift on the SEAL)", () => {
+  game()(`
+    ${poisonRound('[["p140"], ["p141"]]')}
+    state.roundState.revealedBotIds = new Set();
+    state.bots.forEach((bot) => { bot.revealedByPassive = false; setBotPersonality(bot, "Analyst", "", { triggerAlterationDamage: false }); });
+    addBotPoison(state.bots[0], 3, "p140");
+    addBotPoison(state.bots[0], 1, "p141");
+    state.bots[1].poisonCounters = 2; // POISON from an old save: nobody is credited for it
+    applyEndOfRoundPassives();
+    assert.equal(state.bots[0].lastDamage, 20);
+    assert.equal(state.sealStats.p140.poisonDamage, 15);
+    assert.equal(state.sealStats.p141.poisonDamage, 5);
+    assert.ok(sealContributionDetails({ id: "p140" }).includes("15 POISON damage dealt"));
+    assert.ok(sealContributionDetails({ id: "p141" }).includes("5 POISON damage dealt"));
+    applyEndOfRoundPassives();
+    assert.equal(state.sealStats.p140.poisonDamage, 30, "it keeps adding up over the run");
+  `);
+});
+
+test("removing POISON takes the uncredited stacks first, then from the SEAL that gave the most", () => {
+  game()(`
+    ${poisonRound('[["p140"], ["p141"]]')}
+    const bot = state.bots[0];
+    bot.poisonCounters = 1; // one uncredited stack
+    addBotPoison(bot, 3, "p140");
+    addBotPoison(bot, 2, "p141");
+    removeBotPoison(bot, 1);
+    assert.equal(bot.poisonCounters, 5);
+    assert.equal(JSON.stringify(bot.poisonSources), JSON.stringify({ p140: 3, p141: 2 }));
+    removeBotPoison(bot, 1);
+    assert.equal(bot.poisonCounters, 4);
+    assert.equal(JSON.stringify(bot.poisonSources), JSON.stringify({ p140: 2, p141: 2 }), "the biggest pile loses one");
+  `);
+});
+
+test("Third Pentacle of Saturn has a 15% base chance (ELITE +5%), the other Seals of Saturn keep 30%", () => {
+  game()(`
+    assert.equal(devSealChance({ id: "p92", stack: 1 }), 0.15);
+    assert.equal(Math.round(devSealChance({ id: "p92", stack: 3 }) * 100), 25);
+    assert.equal(devSealEntryChance({ id: "p92", stack: 1 }), 0.15);
+    assert.equal(devSealChance({ id: "p93", stack: 1 }), 0.3);
+    assert.equal(devSealEntryChance({ id: "p94", stack: 1 }), 0.3);
+    assert.ok(itemDescription({ ...ITEMS.p92, stack: 1 }).includes("15%"));
+  `);
+});

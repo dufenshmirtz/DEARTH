@@ -293,12 +293,76 @@ function canPoisonBot(bot) {
   return Boolean(bot && !bot.immortal && bot.hp > 0 && !bot.eliminated);
 }
 
-// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action)
-function addBotPoison(bot, amount) {
+// give a DAMNED POISON (the caller marks its SEAL as triggered, once per action). sealId is the SEAL
+// that gave it: bot.poisonSources counts each SEAL's stacks, so the damage POISON deals can be credited
+// to the SEAL that gave it (shown with Shift on the SEAL: "POISON damage dealt").
+function addBotPoison(bot, amount, sealId = null) {
   const added = Math.max(0, Math.ceil(amount || 0));
   if (!added || !canPoisonBot(bot)) return 0;
   bot.poisonCounters = botPoison(bot) + added;
+  const creditId = poisonCreditSealId(sealId);
+  if (creditId) {
+    if (!bot.poisonSources || typeof bot.poisonSources !== "object") bot.poisonSources = {};
+    bot.poisonSources[creditId] = (bot.poisonSources[creditId] || 0) + added;
+  }
   return added;
+}
+
+// Seal of Amy copying a Poison SEAL you do not own: its POISON is Amy's work (like every other SEAL stat)
+function poisonCreditSealId(sealId) {
+  if (!sealId) return null;
+  if (typeof amyContributionFor === "function" && !directPassiveStack(sealId) && amyContributionFor(sealId)) return AMY_SEAL_ID;
+  return sealId;
+}
+
+// take POISON away (7th Pentacle of Mars), from the SEAL that gave the most first
+function removeBotPoison(bot, amount) {
+  let left = Math.min(botPoison(bot), Math.max(0, Math.ceil(amount || 0)));
+  bot.poisonCounters = botPoison(bot) - left;
+  const sources = bot.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {};
+  // POISON nobody is credited for (given before tracking existed) goes first
+  const tracked = Object.values(sources).reduce((sum, count) => sum + count, 0);
+  left -= Math.max(0, Math.min(left, bot.poisonCounters + left - tracked));
+  while (left > 0) {
+    const top = Object.keys(sources).sort((a, b) => sources[b] - sources[a])[0];
+    if (!top) break;
+    sources[top] -= 1;
+    if (sources[top] <= 0) delete sources[top];
+    left -= 1;
+  }
+}
+
+// how many of a DAMNED's POISON stacks each SEAL gave: [[sealId, stacks], ...] (never more than it has)
+function botPoisonShares(bot) {
+  const sources = bot?.poisonSources && typeof bot.poisonSources === "object" ? bot.poisonSources : {};
+  const stacks = botPoison(bot);
+  const entries = Object.entries(sources).filter(([, count]) => count > 0);
+  const tracked = entries.reduce((sum, [, count]) => sum + count, 0);
+  if (tracked <= stacks) return entries;
+  return entries.map(([id, count]) => [id, (count * stacks) / tracked]);
+}
+
+// split the damage a DAMNED's POISON dealt between the SEALS that gave it, by their share of its stacks
+function creditPoisonDamage(bot, dealt, stacks) {
+  const total = Math.max(0, Math.ceil(dealt || 0));
+  if (!total || !stacks) return;
+  const parts = botPoisonShares(bot).map(([id, count]) => {
+    const exact = (total * count) / stacks;
+    return { id, value: Math.floor(exact), rest: exact - Math.floor(exact) };
+  });
+  // hand out what rounding left over (only up to the tracked share), biggest remainder first
+  const trackedExact = parts.reduce((sum, part) => sum + part.value + part.rest, 0);
+  let leftover = Math.round(trackedExact) - parts.reduce((sum, part) => sum + part.value, 0);
+  [...parts].sort((a, b) => b.rest - a.rest).forEach((part) => {
+    if (leftover <= 0) return;
+    part.value += 1;
+    leftover -= 1;
+  });
+  parts.forEach((part) => {
+    if (part.value <= 0) return;
+    const stats = sealStatsFor(part.id);
+    if (stats) stats.poisonDamage = (stats.poisonDamage || 0) + part.value;
+  });
 }
 
 function poisonSealEntry(id) {
@@ -333,7 +397,7 @@ function marsHealthPerPoison(entry) {
 function applyBountyPoison(bot) {
   const entry = poisonSealEntry("p144");
   if (!entry || !state.roundState) return;
-  if (!addBotPoison(bot, 1)) return;
+  if (!addBotPoison(bot, 1, entry.id)) return;
   markPassiveEntryTriggered(entry);
   addRoundEvent(`${ITEMS.p144.name} gave ${bot.name} 1 POISON for its BOUNTY.`);
 }

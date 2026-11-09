@@ -149,6 +149,7 @@ function createFinalBoss(key) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonSources: {},
     poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
@@ -327,6 +328,7 @@ function createBot(options = {}) {
     sinSources: [],
     memorySources: [],
     poisonCounters: 0,
+    poisonSources: {},
     poisonDamageTaken: 0,
     deathCause: null,
     deathNotice: null,
@@ -992,7 +994,7 @@ function applyPoisonStartOfRound() {
       markPassiveEntryTriggered(entry);
       revealed.forEach((bot) => {
         // Pyros's stacked reveals count once per stack, like every effect on revealed DAMNED
-        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)));
+        const added = addBotPoison(bot, 2 * Math.max(1, revealMultiplicity(bot)), entry.id);
         if (added) addRoundEvent(`${name} gave revealed ${bot.name} ${added} POISON.`);
       });
       return;
@@ -1004,7 +1006,7 @@ function applyPoisonStartOfRound() {
       entry.id === "p140"
         ? Math.max(1, Math.floor((target.maxHp || 0) / marsHealthPerPoison(entry)))
         : Math.floor((target.memory?.length || 0) / 5) + 2 * passiveEntryEliteLevels(entry);
-    const added = addBotPoison(target, amount);
+    const added = addBotPoison(target, amount, entry.id);
     if (!added) return;
     markPassiveEntryTriggered(entry);
     addRoundEvent(`${name} gave ${target.name} ${added} POISON.`);
