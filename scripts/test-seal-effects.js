@@ -2611,56 +2611,56 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
   `);
 });
 
-test("KARMA drops: the nth main BOSS at n x 5% (the twins roll once), +8 for beating the game, demons 50%, Archangels always", () => {
+test("KARMA drops: the nth main BOSS at n x 10% (the twins roll once), +8 for beating the game, demons 90%, Archangels 3 always", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     assert.equal(karmaBalance(), 0);
-    // 1st main BOSS: 5%
-    Math.random = () => 0.049;
+    // 1st main BOSS: 10%
+    Math.random = () => 0.099;
     collectionNoteElimination({ isBoss: true, uniqueKey: "zilon", name: "Zilon" });
     assert.equal(karmaBalance(), 1);
-    // 2nd: 10%, a 0.11 roll misses
-    Math.random = () => 0.11;
+    // 2nd: 20%, a 0.21 roll misses
+    Math.random = () => 0.21;
     collectionNoteElimination({ isBoss: true, uniqueKey: "dantre", name: "Dantre" });
     assert.equal(karmaBalance(), 1);
-    // the twins are one BOSS: Petros alone does not roll, Pavlos makes it the 3rd (15%)
-    Math.random = () => 0.14;
+    // the twins are one BOSS: Petros alone does not roll, Pavlos makes it the 3rd (30%)
+    Math.random = () => 0.29;
     collectionNoteElimination({ isBoss: true, uniqueKey: "petros", name: "Petros" });
     assert.equal(karmaBalance(), 1);
     assert.equal(collectionRun().karmaRolled, 2);
     collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
     assert.equal(karmaBalance(), 2);
     assert.equal(collectionRun().karmaRolled, 3);
-    // the rest; the 8th BOSS beats the game: +8, then its own 40% roll
+    // the rest; the 8th BOSS beats the game: +8, then its own 80% roll
     Math.random = () => 0.99;
     for (const key of ["pyros", "threon", "kalha", "serafim"]) collectionNoteElimination({ isBoss: true, uniqueKey: key, name: key });
     assert.equal(karmaBalance(), 2);
-    Math.random = () => 0.39;
+    Math.random = () => 0.79;
     collectionNoteElimination({ isBoss: true, uniqueKey: "padma", name: "Padma" });
     assert.equal(karmaBalance(), 2 + 8 + 1);
     assert.equal(collectionRun().karma, 11);
-    // demons 50%, YOU in a demon's place too; Archangels always
-    Math.random = () => 0.49;
+    // demons 90%, YOU in a demon's place too; Archangels 3, always
+    Math.random = () => 0.89;
     collectionNoteElimination({ isBoss: true, goeticKey: GOETIC_BOSS_KEYS[0], name: "Demon" });
     assert.equal(karmaBalance(), 12);
-    Math.random = () => 0.5;
+    Math.random = () => 0.9;
     collectionNoteElimination({ isBoss: true, shadowOf: GOETIC_BOSS_KEYS[1], name: "YOU" });
     assert.equal(karmaBalance(), 12);
     Math.random = () => 0.999;
     collectionNoteElimination({ isBoss: true, archangelKey: ARCHANGEL_KEYS[0], name: "Michael" });
-    assert.equal(karmaBalance(), 13);
+    assert.equal(karmaBalance(), 15);
     // DAMNED drop nothing, PvP counts nothing
     Math.random = () => 0;
     collectionNoteElimination({ name: "Yannis" });
-    assert.equal(karmaBalance(), 13);
+    assert.equal(karmaBalance(), 15);
     state.mode = "pvp";
     collectionNoteElimination({ isBoss: true, goeticKey: GOETIC_BOSS_KEYS[2], name: "Demon" });
-    assert.equal(karmaBalance(), 13);
+    assert.equal(karmaBalance(), 15);
     state.mode = "arcade";
     // the death card shows what the run earned
     assert.ok(renderOverlay() === renderOverlay());
     state.gameOver = true;
-    assert.ok(renderOverlay().includes("+13"));
+    assert.ok(renderOverlay().includes("+15"));
   `);
 });
 

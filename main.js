@@ -20343,15 +20343,16 @@ function openCollectionFromMenu() {
      the nth main BOSS beaten in a run (n = 1..8)    1 KARMA at n x KARMA_MAIN_BOSS_STEP (Petros and Pavlos
                                                      are one BOSS: it rolls when both are down)
      a Goetic demon (or YOU in its place)            1 KARMA at KARMA_GOETIC_CHANCE
-     an Archangel (or YOU in its place)              1 KARMA at KARMA_ARCHANGEL_CHANCE
+     an Archangel (or YOU in its place)              KARMA_ARCHANGEL_AMOUNT at KARMA_ARCHANGEL_CHANCE
    Spent in the Collection, on things not yet earned the normal way:
      a locked SEAL      KARMA_SEAL_PRICE, or its section's price in KARMA_SECTION_PRICES
      a Goetic demon     KARMA_DEMON_PRICE (counts as defeated: it can be bound)
      Archangels cannot be bought. */
 const KARMA_GAME_BEATEN = 8;
-const KARMA_MAIN_BOSS_STEP = 0.05;
-const KARMA_GOETIC_CHANCE = 0.5;
+const KARMA_MAIN_BOSS_STEP = 0.1;
+const KARMA_GOETIC_CHANCE = 0.9;
 const KARMA_ARCHANGEL_CHANCE = 1;
+const KARMA_ARCHANGEL_AMOUNT = 3;
 const KARMA_DEMON_PRICE = 50;
 const KARMA_SEAL_PRICE = 100;
 // by COLLECTION_SECTIONS key; every other locked SEAL (the Apocalypse Seals) costs KARMA_SEAL_PRICE
@@ -20389,9 +20390,9 @@ function karmaGain(amount, source) {
   return gained;
 }
 
-function karmaRoll(chance, source) {
+function karmaRoll(chance, source, amount = 1) {
   if (!collectionCounts() || !(chance > 0)) return 0;
-  return Math.random() < chance ? karmaGain(1, source) : 0;
+  return Math.random() < chance ? karmaGain(amount, source) : 0;
 }
 
 // a BOSS fell (from collectionNoteElimination, real runs only)
@@ -20406,7 +20407,7 @@ function collectionNoteKarmaDrop(bot) {
     return;
   }
   const angel = bot.archangelKey || (bot.shadowOf && ARCHANGEL_BY_KEY[bot.shadowOf]);
-  if (angel) karmaRoll(KARMA_ARCHANGEL_CHANCE, bot.name || "Archangel");
+  if (angel) karmaRoll(KARMA_ARCHANGEL_CHANCE, bot.name || "Archangel", KARMA_ARCHANGEL_AMOUNT);
   else if (bot.goeticKey || bot.shadowOf) karmaRoll(KARMA_GOETIC_CHANCE, bot.name || "Demon");
 }
 
