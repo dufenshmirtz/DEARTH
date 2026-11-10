@@ -20653,8 +20653,8 @@ function giftHeatStyle(kindKey) {
 }
 const GIFT_REFUND_SHARE = 0.5;
 const GIFT_RARE_ODDS = 5; // odds under this show in red
-// ms: a face-down card rises out of the gift, holds (one extra pulse per rarity step), then turns over
-const GIFT_OPEN_TIMING = { rise: 750, hold: 350, beat: 380, flip: 440 };
+// ms: the gift's own card turns face down, travels to the centre, holds (one extra pulse per rarity step), then turns over
+const GIFT_OPEN_TIMING = { turn: 440, move: 560, hold: 300, beat: 380, flip: 440 };
 
 // rarer gifts hold longer: Ars Goetia and Planetary none, up to 3 extra pulses for Trinity and Satan
 function giftOpenBeats(kindKey) {
@@ -20820,79 +20820,125 @@ function renderGiftsScreen() {
     </div>`;
 }
 
-/* ---- opening: a face-down card with a cross rises out of the gift and turns over ----
-   Red from the start for rare drops (the cross and the card's halo take the kind's heat),
-   and rarer drops hold longer before the turn. Lives outside the render cycle (data-morph-keep)
-   so renders never restart it. */
+/* ---- opening: the gift's card turns face down (a cross on its back), travels to the centre,
+   holds, and turns over to show the drop ----
+   Red from the start for rare drops (the cross and the frame take the kind's heat), and rarer
+   drops hold longer. The moving card is position: fixed and placed in px from the clicked card
+   to a hidden slot in the centre. Lives outside the render cycle (data-morph-keep). */
 let giftOpening = null;
 
 const GIFT_CARD_CROSS = '<svg class="gift-back-cross" viewBox="0 0 60 90" aria-hidden="true"><g filter="url(#giftRough)" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M30 8v74M12 30h36"/></g></svg>';
+
+function placeGiftCard(card, rect) {
+  if (!card || !rect) return;
+  card.style.left = `${rect.left}px`;
+  card.style.top = `${rect.top}px`;
+  card.style.width = `${rect.width}px`;
+  card.style.height = `${rect.height}px`;
+}
 
 function startGiftOpening(packKey) {
   if (giftOpening) return;
   const screen = document.querySelector(".gifts-screen");
   const result = openGift(packKey);
-  if (result.error) return;
+  if (result.error) {
+    screen?.querySelectorAll(".gift-opening").forEach((leftover) => leftover.remove());
+    return;
+  }
   const pack = giftPack(packKey);
   const kind = giftKind(result.kind);
   const beats = giftOpenBeats(result.kind);
+  const source = screen?.querySelector(`.gift-card[data-gift-open="${pack.key}"]`);
+  const again = Boolean(screen?.querySelector(".gift-opening"));
   const overlay = document.createElement("div");
-  overlay.className = "gift-opening phase-rise";
+  overlay.className = `gift-opening${again ? " again" : ""}`;
   overlay.setAttribute("style", `${giftHeatStyle(result.kind)}; --beats: ${beats}; --beat: ${GIFT_OPEN_TIMING.beat}ms`);
   overlay.setAttribute("data-morph-keep", "");
   overlay.setAttribute("role", "status");
   overlay.innerHTML = `
-    <div class="gift-opening-vessel">${giftVesselSvg(pack.key)}</div>
     <div class="gift-flip">
-      <div class="gift-flip-card">
-        <div class="gift-face gift-back">${GIFT_CARD_CROSS}</div>
-        <div class="gift-face gift-front">
-          <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
-          <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
-          <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
-          <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
-        </div>
-      </div>
+      <div class="gift-flip-slot"></div>
       <div class="gift-reveal-actions">
         <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
         <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
       </div>
+    </div>
+    <div class="gift-flip-card">
+      <div class="gift-face gift-shop-face"></div>
+      <div class="gift-face gift-back">${GIFT_CARD_CROSS}</div>
+      <div class="gift-face gift-front">
+        <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
+        <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
+        <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
+        <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+      </div>
     </div>`;
+  // Again: the new opening takes over from the old one without fading the screen in again
+  screen?.querySelectorAll(".gift-opening").forEach((old) => old.remove());
   (screen || document.body).appendChild(overlay);
   screen?.querySelectorAll(".collection-karma-line").forEach((line) => { line.outerHTML = collectionKarmaLine(); });
-  giftOpening = { overlay, pack: pack.key, timers: [] };
+  const card = overlay.querySelector(".gift-flip-card");
+  const slot = overlay.querySelector(".gift-flip-slot");
+  const toCentre = () => placeGiftCard(card, slot.getBoundingClientRect());
+  const onResize = () => { if (!overlay.classList.contains("phase-turn")) toCentre(); };
+  window.addEventListener("resize", onResize);
+  giftOpening = { overlay, pack: pack.key, timers: [], source, onResize };
   const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const set = (phase) => {
+    overlay.classList.remove("phase-turn", "phase-move", "phase-hold", "phase-flip", "phase-reveal");
+    overlay.classList.add(phase);
+  };
   const reveal = () => {
-    overlay.classList.remove("phase-rise", "phase-hold", "phase-flip");
-    overlay.classList.add("phase-reveal");
+    set("phase-reveal");
     playGameSfx(result.duplicate ? "sell" : "karmaUnlock");
   };
-  if (reduced) reveal();
-  else {
+  const at = (ms, fn) => giftOpening.timers.push(setTimeout(fn, ms));
+  const hold = GIFT_OPEN_TIMING.hold + beats * GIFT_OPEN_TIMING.beat;
+  if (reduced) {
+    toCentre();
+    reveal();
+  } else if (source) {
+    // the card you clicked turns over where it stands, then travels to the centre
+    const clone = source.cloneNode(true);
+    clone.removeAttribute("data-gift-open");
+    clone.setAttribute("tabindex", "-1");
+    clone.setAttribute("aria-hidden", "true");
+    overlay.querySelector(".gift-shop-face").appendChild(clone);
+    placeGiftCard(card, source.getBoundingClientRect());
+    source.classList.add("gift-card-away");
+    set("phase-turn");
     playGameSfx("introBurn");
-    const hold = GIFT_OPEN_TIMING.hold + beats * GIFT_OPEN_TIMING.beat;
-    const at = (ms, fn) => giftOpening.timers.push(setTimeout(fn, ms));
-    at(GIFT_OPEN_TIMING.rise, () => overlay.classList.replace("phase-rise", "phase-hold"));
-    at(GIFT_OPEN_TIMING.rise + hold, () => overlay.classList.replace("phase-hold", "phase-flip"));
-    at(GIFT_OPEN_TIMING.rise + hold + GIFT_OPEN_TIMING.flip, reveal);
+    at(GIFT_OPEN_TIMING.turn, () => { set("phase-move"); toCentre(); });
+    at(GIFT_OPEN_TIMING.turn + GIFT_OPEN_TIMING.move, () => set("phase-hold"));
+    at(GIFT_OPEN_TIMING.turn + GIFT_OPEN_TIMING.move + hold, () => set("phase-flip"));
+    at(GIFT_OPEN_TIMING.turn + GIFT_OPEN_TIMING.move + hold + GIFT_OPEN_TIMING.flip, reveal);
+  } else {
+    toCentre();
+    set("phase-hold");
+    playGameSfx("introBurn");
+    at(hold, () => set("phase-flip"));
+    at(hold + GIFT_OPEN_TIMING.flip, reveal);
   }
   overlay.addEventListener("click", (event) => {
     event.stopPropagation();
     if (!overlay.classList.contains("phase-reveal")) return;
     if (event.target.closest("[data-gift-again]")) {
-      const again = giftOpening?.pack;
-      endGiftOpening(false);
-      if (again) startGiftOpening(again);
+      const next = giftOpening?.pack;
+      endGiftOpening(false, true);
+      if (next) startGiftOpening(next);
       return;
     }
     if (event.target.closest("[data-gift-continue]")) endGiftOpening(true);
   });
 }
 
-function endGiftOpening(rerender) {
+// keepOverlay: Again leaves the dark overlay up until the next opening replaces it
+function endGiftOpening(rerender, keepOverlay = false) {
   if (!giftOpening) return;
   giftOpening.timers.forEach(clearTimeout);
-  giftOpening.overlay.remove();
+  window.removeEventListener("resize", giftOpening.onResize);
+  giftOpening.source?.classList.remove("gift-card-away");
+  if (!keepOverlay) giftOpening.overlay.remove();
   giftOpening = null;
   if (rerender) refreshGiftsScreen();
 }

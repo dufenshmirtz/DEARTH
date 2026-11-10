@@ -13617,61 +13617,67 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 }
 .gifts-screen .gift-opening {
   --card-w: clamp(190px, 36vh, 330px);
+  --frame-w: 14px;
   position: absolute;
   inset: 0;
   z-index: 5;
   display: grid;
   place-items: center;
-  /* the cards sit right behind the opening: keep them faint; rare gifts glow red behind it (--heat, set per gift) */
+}
+/* the shade over the shop fades in on its own layer, so the card you clicked never fades with it.
+   It keeps the shop faint; rare gifts glow red behind the card (--heat, set per gift) */
+.gifts-screen .gift-opening::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background:
     radial-gradient(circle at 50% 45%, rgba(var(--heat-rgb, 233, 227, 214), calc(var(--heat, 0) * 0.24)), rgba(0, 0, 0, 0) 55%),
     rgba(0, 0, 0, 0.93);
   animation: collection-in 0.3s ease-out both;
-}
-/* 1. rise: the gift shakes and fades while a face-down card rises out of it */
-.gifts-screen .gift-opening-vessel {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(var(--card-w) * 0.6);
-  transform: translate(-50%, -50%);
-  color: #ece6d8;
-  opacity: 0;
   pointer-events: none;
 }
-.gifts-screen .gift-opening-vessel .gift-vessel {
-  width: 100%;
-  height: auto;
-}
-.gifts-screen .gift-opening.phase-rise .gift-opening-vessel {
-  animation: gift-vessel-out 0.75s ease-in both;
-}
-@keyframes gift-vessel-out {
-  0% { opacity: 1; transform: translate(-50%, -50%); filter: none; }
-  15% { transform: translate(calc(-50% - 3px), -50%) rotate(-2deg); }
-  30% { transform: translate(calc(-50% + 3px), -50%) rotate(2deg); filter: drop-shadow(0 0 10px rgb(var(--heat-rgb, 233, 227, 214))); }
-  45% { opacity: 1; transform: translate(-50%, -50%); }
-  100% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); filter: blur(4px) drop-shadow(0 0 18px rgb(var(--heat-rgb, 233, 227, 214))); }
+.gifts-screen .gift-opening.again::before {
+  animation: none;
 }
 .gifts-screen .gift-flip {
   position: relative;
+}
+/* the centre the card travels to (invisible), with Again / Continue under it */
+.gifts-screen .gift-flip {
   display: grid;
   justify-items: center;
   gap: clamp(10px, 2.2vh, 22px);
 }
-.gifts-screen .gift-flip-card {
-  position: relative;
+.gifts-screen .gift-flip-slot {
   width: var(--card-w);
   aspect-ratio: 2 / 3;
 }
-.gifts-screen .gift-opening.phase-rise .gift-flip-card {
-  animation: gift-card-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+/* the moving card: placed in px by startGiftOpening (from the clicked card, then to the slot) */
+.gifts-screen .gift-flip-card {
+  position: fixed;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  aspect-ratio: auto;
 }
-@keyframes gift-card-rise {
-  0%, 25% { opacity: 0; transform: translateY(18%) scale(0.55); }
-  100% { opacity: 1; transform: none; }
+/* the clicked card stays hidden in the shop while its copy is out */
+.gifts-screen .gift-card.gift-card-away {
+  visibility: hidden;
 }
-/* 2. hold: one pulse per rarity step (--beats: 0 for a demon, 3 for the Seal of Satan) */
+/* 1. turn: the shop card turns over where it stands (edge-on, faces swap, back) */
+.gifts-screen .gift-opening.phase-turn .gift-flip-card {
+  animation: gift-card-turn 0.44s ease-in-out both;
+}
+/* 2. move: it travels to the centre and takes the centre card's size */
+.gifts-screen .gift-opening.phase-move .gift-flip-card {
+  transition:
+    left 0.56s cubic-bezier(0.5, 0, 0.2, 1),
+    top 0.56s cubic-bezier(0.5, 0, 0.2, 1),
+    width 0.56s cubic-bezier(0.5, 0, 0.2, 1),
+    height 0.56s cubic-bezier(0.5, 0, 0.2, 1);
+}
+/* 3. hold: one pulse per rarity step (--beats: 0 for a demon, 3 for the Seal of Satan) */
 .gifts-screen .gift-opening.phase-hold .gift-flip-card {
   animation: gift-card-pulse var(--beat, 380ms) ease-in-out both;
   animation-iteration-count: var(--beats, 0);
@@ -13681,7 +13687,7 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   40% { transform: scale(1.035) rotate(-0.8deg); }
   70% { transform: scale(1.02) rotate(0.8deg); }
 }
-/* 3. turn: edge-on, the faces swap while it is invisible, then back */
+/* 4. flip: turns over again to show the drop */
 .gifts-screen .gift-opening.phase-flip .gift-flip-card {
   animation: gift-card-turn 0.44s ease-in-out both;
 }
@@ -13700,22 +13706,47 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   justify-content: center;
   gap: calc(var(--card-w) * 0.035);
   padding: 4%;
-  border: var(--frame-w, 14px) solid transparent;
-  /* solid inside the frame only (padding-box), so nothing shows through and no square pokes out */
-  background: #050404;
-  background-clip: padding-box;
+  /* the frame with its inside filled to the frame's own inner line (rounded, rough): no square fill */
+  border: var(--frame-w) solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-filled.png") 64 fill / var(--frame-w) stretch;
   text-align: center;
+  opacity: 0;
 }
-/* the frame is its own layer so only its lines glow (drop-shadow follows the lines, no box) */
+/* the frame's lines again on their own layer, so only the lines glow (drop-shadow follows them) */
 .gifts-screen .gift-face::after {
   content: "";
   position: absolute;
-  inset: calc(var(--frame-w, 14px) * -1);
-  border: var(--frame-w, 14px) solid transparent;
-  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / var(--frame-w, 14px) stretch;
+  inset: calc(var(--frame-w) * -1);
+  border: var(--frame-w) solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / var(--frame-w) stretch;
   filter: drop-shadow(0 0 calc(4px + var(--heat, 0) * 10px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.3 + var(--heat, 0) * 0.6)));
   pointer-events: none;
 }
+/* the shop card's own face: a copy of the card you clicked, as it looks in the shop */
+.gifts-screen .gift-shop-face {
+  padding: 0;
+  border: 0;
+  border-image: none;
+}
+.gifts-screen .gift-shop-face::after {
+  content: none;
+}
+.gifts-screen .gift-shop-face > button.gift-card {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: none;
+}
+/* which face shows: the back by default; the shop face only at the start of the turn; the front from the flip */
+.gifts-screen .gift-back { opacity: 1; }
+.gifts-screen .gift-opening.phase-turn .gift-shop-face { animation: gift-face-out 0.44s linear both; }
+.gifts-screen .gift-opening.phase-turn .gift-back { animation: gift-face-in 0.44s linear both; }
+.gifts-screen .gift-opening.phase-flip .gift-back { animation: gift-face-out 0.44s linear both; }
+.gifts-screen .gift-opening.phase-flip .gift-front { animation: gift-face-in 0.44s linear both; }
+@keyframes gift-face-out { 0%, 45% { opacity: 1; } 45.1%, 100% { opacity: 0; } }
+@keyframes gift-face-in { 0%, 45% { opacity: 0; } 45.1%, 100% { opacity: 1; } }
+.gifts-screen .gift-opening.phase-reveal .gift-back { opacity: 0; }
+.gifts-screen .gift-opening.phase-reveal .gift-front { opacity: 1; }
 /* red from the start for rare drops: the cross and the frame take the kind's heat */
 .gifts-screen .gift-back-cross {
   width: 34%;
@@ -13734,15 +13765,6 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 @keyframes gift-back-glow {
   50% { filter: drop-shadow(0 0 calc(8px + var(--heat, 0) * 22px) rgb(var(--heat-rgb, 233, 227, 214))); }
 }
-.gifts-screen .gift-front {
-  opacity: 0;
-}
-.gifts-screen .gift-opening.phase-flip .gift-back { animation: gift-face-out 0.44s linear both; }
-.gifts-screen .gift-opening.phase-flip .gift-front { animation: gift-face-in 0.44s linear both; }
-@keyframes gift-face-out { 0%, 45% { opacity: 1; } 45.1%, 100% { opacity: 0; } }
-@keyframes gift-face-in { 0%, 45% { opacity: 0; } 45.1%, 100% { opacity: 1; } }
-.gifts-screen .gift-opening.phase-reveal .gift-back { opacity: 0; }
-.gifts-screen .gift-opening.phase-reveal .gift-front { opacity: 1; }
 .gifts-screen .gift-reveal-kind {
   font-family: var(--font-book) !important;
   font-size: clamp(9px, calc(var(--card-w) * 0.042), 14px) !important;
@@ -13854,11 +13876,9 @@ body.native-arcade .gifts-screen .gift-card-open::after {
 body.mobile-arcade .gifts-screen .gift-opening,
 body.native-arcade .gifts-screen .gift-opening {
   --card-w: 42vh;
-}
-body.mobile-arcade .gifts-screen .gift-face,
-body.native-arcade .gifts-screen .gift-face {
   --frame-w: 9px;
 }
+
 body.mobile-arcade .gifts-screen .gifts-karma,
 body.native-arcade .gifts-screen .gifts-karma {
   display: flex;
@@ -13872,5 +13892,7 @@ body.native-arcade .gifts-screen .gifts-dev {
 }
 @media (prefers-reduced-motion: reduce) {
   .gifts-screen .gift-opening *,
+  .gifts-screen .gift-opening *::after,
+  .gifts-screen .gift-opening::before,
   .gifts-screen .gift-opening { animation: none !important; transition: none !important; }
 }
