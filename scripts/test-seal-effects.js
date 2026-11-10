@@ -2819,7 +2819,12 @@ test("Jesus' Gifts screen: Jesus on the left, three cards with price and odds, a
     assert.equal((html.match(/class="gift-odds-row/g) || []).length, 21);
     for (const name of ["Myrrh", "Frankincense", "Gold"]) assert.ok(html.includes(name), name);
     assert.ok(html.includes("Seal of Satan") && html.includes("0.666%") && html.includes("2.001%"));
-    assert.ok(html.includes("Already yours: 22") && html.includes("Already yours: 44") && html.includes("Already yours: 83"));
+    assert.ok(!html.includes("Already yours"));
+    // the rarer the gift, the redder its opening: white for a demon, full red for the Seal of Satan
+    assert.ok(giftHeatStyle("goetia").includes("--heat-rgb: 233, 227, 214"));
+    assert.ok(giftHeatStyle("satan").includes("--heat-rgb: 220, 42, 47"));
+    assert.deepEqual(GIFT_KINDS.map((kind) => kind.heat), [...GIFT_KINDS.map((kind) => kind.heat)].sort((a, b) => a - b));
+    assert.ok(renderOptionsMenu().includes('data-menu-action="gifts">Shop<'));
     // 50 pays for Myrrh only: the other two cards say how much is missing
     assert.equal((html.match(/gift-card gift-\\w+ cant/g) || []).length, 2);
     assert.ok(html.includes("You need 38") && html.includes("You need 116"));

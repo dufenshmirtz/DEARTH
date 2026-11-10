@@ -13577,12 +13577,6 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   color: #ece6d8 !important;
 }
 .gifts-screen .gift-odds-row.rare b { color: #dc2a2f !important; }
-.gifts-screen .gift-odds-note {
-  font-family: var(--font-book) !important;
-  font-size: clamp(10px, 1.4vh, 12px) !important;
-  color: #8d877c !important;
-  text-align: center;
-}
 .gifts-screen .gift-card-open {
   position: relative;
   margin-top: clamp(4px, 1.6vh, 16px);
@@ -13626,8 +13620,10 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   z-index: 5;
   display: grid;
   place-items: center;
-  /* the cards sit right behind the reveal: keep them faint */
-  background: rgba(0, 0, 0, 0.93);
+  /* the cards sit right behind the reveal: keep them faint; rare gifts glow red behind it (--heat, set per gift) */
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--heat-rgb, 233, 227, 214), calc(var(--heat, 0) * 0.24)), rgba(0, 0, 0, 0) 55%),
+    rgba(0, 0, 0, 0.93);
   animation: collection-in 0.3s ease-out both;
 }
 .gifts-screen .gift-opening-vessel {
@@ -13650,19 +13646,19 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 @keyframes gift-burn {
   0% { filter: none; transform: translate(-50%, -50%); }
   20% { transform: translate(calc(-50% - 2px), -50%); }
-  40% { filter: drop-shadow(0 0 8px #dc2a2f); transform: translate(calc(-50% + 2px), calc(-50% - 1px)); }
+  40% { filter: drop-shadow(0 0 8px rgb(var(--heat-rgb, 220, 42, 47))); transform: translate(calc(-50% + 2px), calc(-50% - 1px)); }
   60% { transform: translate(calc(-50% - 1px), -50%); }
-  100% { filter: drop-shadow(0 0 26px #dc2a2f) brightness(1.6); transform: translate(-50%, -50%); }
+  100% { filter: drop-shadow(0 0 26px rgb(var(--heat-rgb, 220, 42, 47))) brightness(1.6); transform: translate(-50%, -50%); }
 }
 .gifts-screen .gift-opening.phase-smoke .gift-opening-vessel,
 .gifts-screen .gift-opening.phase-reveal .gift-opening-vessel {
   opacity: 0;
-  filter: blur(8px) drop-shadow(0 0 26px #dc2a2f);
+  filter: blur(8px) drop-shadow(0 0 26px rgb(var(--heat-rgb, 220, 42, 47)));
 }
 .gifts-screen .gift-smoke {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(190, 183, 172, 0.5), rgba(120, 114, 105, 0) 66%);
+  background: radial-gradient(circle, rgba(var(--heat-rgb, 190, 183, 172), calc(0.5 + var(--heat, 0) * 0.15)), rgba(var(--heat-rgb, 120, 114, 105), 0) 66%);
   filter: blur(14px);
   opacity: 0;
   transform: scale(0.3);
@@ -13711,12 +13707,13 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   width: clamp(120px, 24vh, 230px);
   height: clamp(120px, 24vh, 230px);
   object-fit: contain;
-  filter: drop-shadow(0 0 16px rgba(233, 227, 214, 0.45));
+  filter: drop-shadow(0 0 calc(16px + var(--heat, 0) * 18px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.45 + var(--heat, 0) * 0.45)));
 }
 .gifts-screen .gift-reveal-name {
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
   font-size: clamp(26px, 5vh, 46px) !important;
   line-height: 1;
+  color: rgb(var(--heat-text-rgb, 236, 230, 216)) !important;
 }
 .gifts-screen .gift-reveal-status {
   display: inline-flex;
@@ -13789,10 +13786,6 @@ body.native-arcade .gifts-screen .gift-odds-row {
 body.mobile-arcade .gifts-screen .gift-odds-row b,
 body.native-arcade .gifts-screen .gift-odds-row b {
   font-size: 11px !important;
-}
-body.mobile-arcade .gifts-screen .gift-odds-note,
-body.native-arcade .gifts-screen .gift-odds-note {
-  font-size: 9px !important;
 }
 body.mobile-arcade .gifts-screen .gift-card-open,
 body.native-arcade .gifts-screen .gift-card-open {

@@ -14753,7 +14753,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
-      <button class="menu-button" data-menu-action="gifts">Jesus' Gifts</button>
+      <button class="menu-button" data-menu-action="gifts">Shop</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -20632,15 +20632,25 @@ const GIFT_PACKS = [
   { key: "frankincense", name: "Frankincense", price: 88, odds: { goetia: 36, planet: 35, archangel: 15, boss: 8, apocalypse: 4.001, trinity: 1.333, satan: 0.666 } },
   { key: "gold", name: "Gold", price: 166, odds: { goetia: 5, planet: 40, archangel: 25, boss: 18, apocalypse: 10, trinity: 1.333, satan: 0.666 } }
 ];
+// heat: how red the opening burns for this kind, 0 (white smoke) to 1 (blood red): the rarer, the redder
 const GIFT_KINDS = [
-  { key: "goetia", label: "Ars Goetia demon" },
-  { key: "planet", label: "Planetary Seal", sections: ["saturn", "artifact", "poison"] },
-  { key: "archangel", label: "Archangel Seal", sections: ["archangel"] },
-  { key: "boss", label: "Boss Seal", sections: ["bosses"] },
-  { key: "apocalypse", label: "Apocalypse Seal", sections: ["apocalypse"] },
-  { key: "trinity", label: "Trinity Seal", sections: ["trinity"] },
-  { key: "satan", label: "Seal of Satan", sections: ["satan"] }
+  { key: "goetia", label: "Ars Goetia demon", heat: 0 },
+  { key: "planet", label: "Planetary Seal", sections: ["saturn", "artifact", "poison"], heat: 0.12 },
+  { key: "archangel", label: "Archangel Seal", sections: ["archangel"], heat: 0.3 },
+  { key: "boss", label: "Boss Seal", sections: ["bosses"], heat: 0.5 },
+  { key: "apocalypse", label: "Apocalypse Seal", sections: ["apocalypse"], heat: 0.7 },
+  { key: "trinity", label: "Trinity Seal", sections: ["trinity"], heat: 0.85 },
+  { key: "satan", label: "Seal of Satan", sections: ["satan"], heat: 1 }
 ];
+const GIFT_HEAT_COLD = [233, 227, 214]; // bone white
+const GIFT_HEAT_HOT = [220, 42, 47]; // the game's red
+
+// the opening's colours for a kind: CSS custom properties, "r, g, b" so rgba() can use them
+function giftHeatStyle(kindKey) {
+  const heat = Math.max(0, Math.min(1, Number(giftKind(kindKey)?.heat) || 0));
+  const mix = (amount) => GIFT_HEAT_COLD.map((cold, i) => Math.round(cold + (GIFT_HEAT_HOT[i] - cold) * amount)).join(", ");
+  return `--heat: ${heat}; --heat-rgb: ${mix(heat)}; --heat-text-rgb: ${mix(Math.max(0, (heat - 0.4) / 0.6))}`;
+}
 const GIFT_REFUND_SHARE = 0.5;
 const GIFT_RARE_ODDS = 5; // odds under this show in red
 const GIFT_OPEN_TIMING = { burn: 900, smoke: 1000 }; // ms: the vessel burns, then the smoke thickens before the reveal
@@ -20775,7 +20785,7 @@ function giftOddsHtml(pack) {
     const text = Number.isInteger(odds) ? String(odds) : String(+odds.toFixed(3));
     return `<span class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(kind.label)}</span><b>${text}%</b></span>`;
   }).join("");
-  return `<span class="gift-odds">${rows}</span><span class="gift-odds-note">Already yours: ${formatNumber(giftRefund(pack))}${KARMA_MARK} back</span>`;
+  return `<span class="gift-odds">${rows}</span>`;
 }
 
 // three framed cards beside Jesus: the gift, its price and all its odds in view; click a card to open it
@@ -20817,6 +20827,7 @@ function startGiftOpening(packKey) {
   const kind = giftKind(result.kind);
   const overlay = document.createElement("div");
   overlay.className = "gift-opening phase-burn";
+  overlay.setAttribute("style", giftHeatStyle(result.kind));
   overlay.setAttribute("data-morph-keep", "");
   overlay.setAttribute("role", "status");
   overlay.innerHTML = `

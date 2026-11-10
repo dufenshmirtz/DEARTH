@@ -277,7 +277,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
-      <button class="menu-button" data-menu-action="gifts">Jesus' Gifts</button>
+      <button class="menu-button" data-menu-action="gifts">Shop</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
