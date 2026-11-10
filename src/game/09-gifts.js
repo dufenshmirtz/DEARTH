@@ -6,7 +6,7 @@
      a kind is drawn by the odds, then one item of that kind at random. Ars Goetia: any of the 72 demons
      (it then counts as defeated in the Collection and can be bound); the other kinds are SEALS by
      Collection section (GIFT_KINDS).
-   Already yours (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
+   Owned (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
    The Planetary Seals, the Trinity and Anael are locked from the start and only gifts unlock them
    (GIFT_ONLY_SEAL_IDS in 09-collection.js); the other locked SEALS can also still be earned by their
    achievement. Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
@@ -189,7 +189,7 @@ function renderGiftsScreen() {
         <span class="gift-name">${escapeHtml(pack.name)}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
         ${giftOddsHtml(pack)}
-        <span class="gift-card-open">${can ? "Open" : `You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more`}</span>
+        ${can ? "" : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
       </button>`;
   }).join("");
   return `
@@ -253,7 +253,7 @@ function startGiftOpening(packKey) {
         <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
         <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
         <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
-        <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+        <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Owned · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
       </div>
     </div>`;
   // Again: the new opening takes over from the old one without fading the screen in again

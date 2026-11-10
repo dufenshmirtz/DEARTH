@@ -13487,6 +13487,8 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* every card's content starts at the top, so names and odds line up across the row */
+  justify-content: flex-start;
   gap: clamp(2px, 0.8vh, 8px);
   overflow: hidden;
   color: #ece6d8 !important;
@@ -13578,39 +13580,15 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   color: #ece6d8 !important;
 }
 .gifts-screen .gift-odds-row.rare b { color: #dc2a2f !important; }
+/* no Open button: clicking the card opens it. A card you can't pay for says how much is missing */
 .gifts-screen .gift-card-open {
-  position: relative;
   margin-top: clamp(4px, 1.6vh, 16px);
-  padding: 4px 22px;
-  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: clamp(16px, 2.6vh, 22px) !important;
-  line-height: 1.1;
-  color: #ece6d8 !important;
-}
-.gifts-screen .gift-card-open::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border: 12px solid transparent;
-  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
-}
-.gifts-screen .gift-card:hover:not(.cant) .gift-card-open,
-.gifts-screen .gift-card:focus-visible .gift-card-open {
-  color: #dc2a2f !important;
-}
-.gifts-screen .gift-card:hover:not(.cant) .gift-card-open::after,
-.gifts-screen .gift-card:focus-visible .gift-card-open::after {
-  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
-}
-.gifts-screen .gift-card.cant .gift-card-open {
-  padding: 4px 0;
   font-family: var(--font-book) !important;
   font-size: clamp(10px, 1.5vh, 13px) !important;
+  line-height: 1.2;
   color: #8d877c !important;
 }
-.gifts-screen .gift-card.cant .gift-card-open::after { display: none; }
-.gifts-screen .gift-card.cant .gift-card-open .karma-mark { color: #8d877c; }
+.gifts-screen .gift-card-open .karma-mark { color: #8d877c; }
 .gifts-screen .gifts-dev {
   display: block;
   margin: 6px 0 0 auto;
@@ -13865,13 +13843,8 @@ body.native-arcade .gifts-screen .gift-odds-row b {
 }
 body.mobile-arcade .gifts-screen .gift-card-open,
 body.native-arcade .gifts-screen .gift-card-open {
-  font-size: 14px !important;
-  padding: 2px 16px;
-}
-body.mobile-arcade .gifts-screen .gift-card-open::after,
-body.native-arcade .gifts-screen .gift-card-open::after {
-  border-width: 8px;
-  border-image-width: 8px 16px;
+  margin-top: 3px;
+  font-size: 10px !important;
 }
 body.mobile-arcade .gifts-screen .gift-opening,
 body.native-arcade .gifts-screen .gift-opening {

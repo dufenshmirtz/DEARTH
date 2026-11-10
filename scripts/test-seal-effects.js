@@ -2820,6 +2820,9 @@ test("Jesus' Gifts screen: Jesus on the left, three cards with price and odds, a
     for (const name of ["Myrrh", "Frankincense", "Gold"]) assert.ok(html.includes(name), name);
     assert.ok(html.includes("Seal of Satan") && html.includes("0.666%") && html.includes("2.001%"));
     assert.ok(!html.includes("Already yours"));
+    // no Open button: clicking the card opens it; only a card you cannot pay for has a line under its odds
+    assert.equal((html.match(/class="gift-card-open"/g) || []).length, 2);
+    assert.ok(!html.includes(">Open<"));
     // the rarer the gift, the redder its opening: white for a demon, full red for the Seal of Satan
     assert.ok(giftHeatStyle("goetia").includes("--heat-rgb: 233, 227, 214"));
     assert.ok(giftHeatStyle("satan").includes("--heat-rgb: 220, 42, 47"));
