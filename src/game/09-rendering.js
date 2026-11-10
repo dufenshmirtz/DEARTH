@@ -169,6 +169,7 @@ function renderMenuApp() {
     ${renderMobileMenuSettingsOverlay()}
     ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
     ${state.menuCollectionOpen ? renderCollectionScreen("menu") : ""}
+    ${state.menuGiftsOpen ? renderGiftsScreen() : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
@@ -276,6 +277,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
+      <button class="menu-button" data-menu-action="gifts">Jesus' Gifts</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -2801,6 +2803,13 @@ function handleMenuAction(action) {
     if (menuFigureTrigger.busy || collectionOpen()) return;
     if (document.querySelector(".menu-fig-satan")) triggerMenuSatan();
     else openCollectionFromMenu();
+    return;
+  }
+  if (action === "gifts") {
+    // the same way in as clicking Jesus: his eye flashes and the Gifts open
+    if (menuFigureTrigger.busy || giftsOpen()) return;
+    if (document.querySelector(".menu-fig-jesus")) triggerMenuJesus();
+    else openGiftsFromMenu();
     return;
   }
   if (action === "options") {

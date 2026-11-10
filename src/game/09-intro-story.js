@@ -1113,8 +1113,8 @@ function introFinish() {
 }
 
 /* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
-   Clicking Jesus replays the story (triggerMenuJesus), clicking Satan opens the SEAL collection
-   (openCollectionFromMenu in 09-collection.js). */
+   Clicking Jesus opens his Gifts (openGiftsFromMenu in 09-gifts.js), clicking Satan opens the SEAL collection
+   (openCollectionFromMenu in 09-collection.js), clicking the ΝΤΕΡΘ logo replays the story (triggerMenuStory). */
 // Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
 const MENU_FIGURE_HIT = {
   jesus: [
@@ -1135,8 +1135,8 @@ const menuFigureTrigger = { bound: false, busy: false };
 
 // which menu figure (if any) is under the pointer
 function menuFigureAt(clientX, clientY, target) {
-  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen()) return null;
-  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, button, input, a")) return null;
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen() || giftsOpen()) return null;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, .gifts-screen, button, input, a")) return null;
   for (const name of Object.keys(MENU_FIGURE_HIT)) {
     const fig = document.querySelector(`.menu-fig-${name}`);
     if (!fig) continue;
@@ -1151,6 +1151,16 @@ function menuFigureAt(clientX, clientY, target) {
   return null;
 }
 
+// the ΝΤΕΡΘ logo under the pointer (it replays the story)
+function menuLogoAt(clientX, clientY, target) {
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen() || giftsOpen()) return false;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, .gifts-screen, button, input, a")) return false;
+  const logo = document.querySelector(".menu-logo");
+  if (!logo) return false;
+  const rect = logo.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
 function setMenuFigureLit(name) {
   for (const fig of Object.keys(MENU_FIGURE_HIT)) {
     document.querySelector(`.menu-fig-${fig}`)?.classList.toggle("eyes-lit", fig === name);
@@ -1163,7 +1173,9 @@ function bindMenuFigureTriggers() {
   menuFigureTrigger.bound = true;
   document.addEventListener("pointermove", (event) => {
     if (state.mode !== "menu" || menuFigureTrigger.busy) return;
-    setMenuFigureLit(menuFigureAt(event.clientX, event.clientY, event.target));
+    const figure = menuFigureAt(event.clientX, event.clientY, event.target);
+    setMenuFigureLit(figure);
+    document.querySelector(".main-menu")?.classList.toggle("logo-hover", !figure && menuLogoAt(event.clientX, event.clientY, event.target));
   });
   document.addEventListener("pointerdown", (event) => {
     const name = menuFigureAt(event.clientX, event.clientY, event.target);
@@ -1171,7 +1183,13 @@ function bindMenuFigureTriggers() {
   });
   document.addEventListener("click", (event) => {
     const name = menuFigureAt(event.clientX, event.clientY, event.target);
-    if (!name) return;
+    if (!name) {
+      if (menuLogoAt(event.clientX, event.clientY, event.target)) {
+        event.preventDefault();
+        triggerMenuStory();
+      }
+      return;
+    }
     event.preventDefault();
     if (name === "jesus") triggerMenuJesus();
     else triggerMenuSatan();
@@ -1198,13 +1216,37 @@ function triggerMenuJesus() {
   flash.style.setProperty("--flash-y", `${Math.round(ey)}px`);
   document.body.appendChild(flash);
   setTimeout(() => {
-    startIntroSequence({ fromMenu: true });
-    // keep the flash above the black story layer while it fades
+    openGiftsFromMenu();
+    // keep the flash above the Gifts while it fades
     document.body.appendChild(flash);
     flash.classList.add("fading");
     setTimeout(() => flash.remove(), 1400);
     fig.classList.remove("eyes-flare");
     setMenuFigureLit(null);
+    menuFigureTrigger.busy = false;
+  }, 520);
+}
+
+// the ΝΤΕΡΘ logo replays the story: a white flash out of the logo, then the story
+function triggerMenuStory() {
+  const logo = document.querySelector(".menu-logo");
+  if (!logo || menuFigureTrigger.busy) return;
+  menuFigureTrigger.busy = true;
+  document.querySelector(".main-menu")?.classList.remove("logo-hover");
+  playGameSfx("menuJesusFlash");
+  if (soundtrackAudio) duckMusic(1200);
+  const rect = logo.getBoundingClientRect();
+  const flash = document.createElement("div");
+  flash.className = "menu-jesus-flash";
+  flash.style.setProperty("--flash-x", `${Math.round(rect.left + rect.width / 2)}px`);
+  flash.style.setProperty("--flash-y", `${Math.round(rect.top + rect.height / 2)}px`);
+  document.body.appendChild(flash);
+  setTimeout(() => {
+    startIntroSequence({ fromMenu: true });
+    // keep the flash above the black story layer while it fades
+    document.body.appendChild(flash);
+    flash.classList.add("fading");
+    setTimeout(() => flash.remove(), 1400);
     menuFigureTrigger.busy = false;
   }, 520);
 }

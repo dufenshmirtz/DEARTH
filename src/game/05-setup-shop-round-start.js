@@ -435,7 +435,7 @@ function rerollShop() {
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
   // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
-  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id));
+  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
   state.trinityShopSealsNextShop = [];
   trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
   if (trinityOffers.length) addLog(`${ITEMS.p133.name} brought ${trinityOffers.map((id) => ITEMS[id].name).join(" and ")} to the offerings.`);

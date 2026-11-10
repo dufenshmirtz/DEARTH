@@ -495,6 +495,7 @@ function arcadeRunSaveSnapshot() {
   snapshot.pauseOpen = false;
   snapshot.pauseScreen = "main";
   snapshot.menuCollectionOpen = false;
+  snapshot.menuGiftsOpen = false;
   snapshot.pauseDevOpen = false;
   snapshot.mobileOfferingsOpen = false;
   return snapshot;

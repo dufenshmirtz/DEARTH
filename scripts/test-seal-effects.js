@@ -1290,7 +1290,7 @@ test("Trinity SEALS cost 33, cannot be ELITE, have art for every set, and are in
     assert.ok(run(`isNonUpgradableSeal("${id}")`));
     assert.ok(catalog.includes(`${item.name} (33 SIN)\n${item.description}`), item.name);
     assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
-    assert.ok(run(`collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`));
+    assert.ok(run(`collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`)); // only Jesus' Gifts unlock it
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))));
   }
   for (const file of Object.values(run("TRINITY_SEAL_ART"))) {
@@ -1413,7 +1413,7 @@ test("Holy Spirit: each of its ten effects does what it says", () => {
     assert.equal(state.trinityEliteNextShop, false);
   `);
   // the 50% hits: only ONE of the two missing Trinity SEALS is offered, picked at random
-  outcome("trinity", `Math.random = () => 0.1;`, `
+  outcome("trinity", `Math.random = () => 0.1; COLLECTION_SECTIONS.find((section) => section.key === "trinity").ids.forEach((id) => loadCollectionProgress().unlocked.push(id));`, `
     assert.deepEqual(state.trinityShopSealsNextShop, ["p131"]);
     rerollShop();
     assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131"]);
@@ -2726,49 +2726,104 @@ test("KARMA drops: the nth main BOSS at n x 10% (the twins roll once), +8 for be
   `);
 });
 
-test("KARMA unlocks: locked SEALS by section price, Goetic demons for 50, never Archangels", () => {
+test("Jesus' Gifts: three packs whose odds match the table, Trinity/Planetary/Anael only from gifts", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
-    assert.equal(karmaSealPrice("p74"), 100); // Apocalypse
-    assert.equal(karmaSealPrice("p121"), 150); // Boss Seals
-    assert.equal(karmaSealPrice("p98"), 180); // Archangel Seals
-    assert.equal(karmaSealPrice("p111"), 666); // Seal of Satan
-    assert.equal(karmaSealPrice("p2"), 0); // not locked: nothing to buy
+    assert.deepEqual(GIFT_PACKS.map((pack) => [pack.key, pack.price]), [["myrrh", 44], ["frankincense", 88], ["gold", 166]]);
+    const sum = (pack) => Object.values(pack.odds).reduce((total, odds) => total + odds, 0);
+    assert.ok(Math.abs(sum(giftPack("myrrh")) - 100) < 0.01);
+    assert.ok(Math.abs(sum(giftPack("frankincense")) - 100) < 0.01);
+    assert.ok(Math.abs(sum(giftPack("gold")) - 100) < 0.01);
+    assert.deepEqual(GIFT_PACKS.map((pack) => [pack.odds.trinity, pack.odds.satan]), [[1.333, 0.666], [1.333, 0.666], [1.333, 0.666]]);
+    assert.deepEqual(GIFT_PACKS.map(giftRefund), [22, 44, 83]);
+    // every kind has something to give, and the Ars Goetia are the 72
+    GIFT_KINDS.forEach((kind) => assert.ok(giftKindItems(kind.key).length, kind.key));
+    assert.equal(giftKindItems("goetia").length, 72);
+    assert.ok(giftKindItems("archangel").includes("p103"));
+    // gift-only SEALS: locked, no achievement opens them
+    for (const id of ["p103", ...giftKindItems("planet"), ...giftKindItems("trinity")]) {
+      assert.equal(isSealLocked(id), true, id);
+      assert.equal(SEAL_UNLOCKS[id].gift, true, id);
+      assert.equal(sealUnlockMet(id), false, id);
+    }
+    // the other locked SEALS keep their achievement and say a gift can bring them too
+    assert.ok(!SEAL_UNLOCKS.p74.gift);
+    assert.ok(collectionInfoHtml("p74").includes("Or find it in one of Jesus' Gifts."));
+    assert.ok(!collectionInfoHtml("p103").includes("Or find it in one of Jesus' Gifts."));
+    // no more buying with KARMA in the Collection
+    loadCollectionProgress().karma = 999;
+    assert.ok(!renderCollectionScreen("menu").includes("data-collection-karma"));
+    assert.ok(!renderCollectionScreen("menu").includes("data-karma-price"));
+  `);
+});
+
+test("Jesus' Gifts: opening a pack spends KARMA, unlocks what it rolls, and refunds half on a duplicate", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    globalThis.window = globalThis;
     const progress = loadCollectionProgress();
-    progress.karma = 120;
-    assert.equal(isSealLocked("p121"), true);
-    assert.equal(karmaUnlockSeal("p121"), false); // 150 > 120
-    assert.equal(karmaUnlockSeal("p74"), true);
-    assert.equal(isSealLocked("p74"), false);
-    assert.equal(karmaBalance(), 20);
-    assert.equal(karmaUnlockSeal("p74"), false); // already open
-    // the locked SEAL's box offers it, with the button only once clicked
-    assert.ok(collectionInfoHtml("p76", true).includes("data-collection-karma"));
-    assert.ok(!collectionInfoHtml("p76", false).includes("data-collection-karma"));
-    assert.ok(collectionInfoHtml("p76", false).includes("unlock it for 100" + KARMA_MARK));
-    assert.ok(!collectionInfoHtml("p76", true).includes(" KARMA."));
-    // demons
-    const demon = GOETIC_BOSS_KEYS[5];
-    assert.equal(karmaUnlockDemon(demon), false); // 50 > 20
-    progress.karma = 60;
-    assert.ok(collectionDemonInfoHtml(demon, true).includes("data-collection-karma"));
-    assert.equal(karmaUnlockDemon(demon), true);
-    assert.equal(isDemonSlain(demon), true);
-    assert.equal(karmaBalance(), 10);
-    // Archangels cannot be bought
-    progress.karma = 1000;
-    assert.equal(karmaUnlockDemon(ARCHANGEL_KEYS[0]), false);
-    assert.ok(!collectionDemonInfoHtml(ARCHANGEL_KEYS[0], true).includes("data-collection-karma"));
-    // price tags in the grid (red when affordable), and the two KARMA sounds exist
-    progress.karma = 160;
-    const grid = renderCollectionScreen("menu");
-    assert.ok(grid.includes('collection-price can" data-karma-price="150"'));
-    assert.ok(grid.includes('collection-price" data-karma-price="666"'));
-    assert.ok(grid.includes('data-karma-price="' + KARMA_DEMON_PRICE + '"'));
-    assert.ok(GAME_SFX.karmaGain && GAME_SFX.karmaUnlock);
-    // KARMA is kept with the collection
+    const randoms = (...values) => { Math.random = () => values.length ? values.shift() : 0; };
+    progress.karma = 40;
+    assert.deepEqual(openGift("myrrh"), { error: "karma" });
+    assert.equal(karmaBalance(), 40);
+    // Myrrh: the first 57 of 100 are Ars Goetia; the item roll picks the demon
+    progress.karma = 100;
+    randoms(0, 0);
+    const demon = openGift("myrrh");
+    assert.equal(demon.kind, "goetia");
+    assert.equal(demon.item, GOETIC_BOSS_KEYS[0]);
+    assert.equal(demon.duplicate, false);
+    assert.equal(isDemonSlain(GOETIC_BOSS_KEYS[0]), true);
+    assert.equal(karmaBalance(), 56);
+    // the same demon again: half of 44 back
+    randoms(0, 0);
+    const again = openGift("myrrh");
+    assert.equal(again.duplicate, true);
+    assert.equal(again.refund, 22);
+    assert.equal(karmaBalance(), 56 - 44 + 22);
+    // Gold: Goetia 5, Planetary 40, so 0.2 of the total lands on a Planetary SEAL
+    progress.karma = 400;
+    randoms(0.2, 0);
+    const seal = openGift("gold");
+    assert.equal(seal.kind, "planet");
+    assert.equal(seal.item, giftKindItems("planet")[0]);
+    assert.equal(isSealLocked(seal.item), false);
+    assert.equal(karmaBalance(), 400 - 166);
+    // the very top of the roll is the Seal of Satan
+    randoms(0.99999, 0);
+    const satan = openGift("gold");
+    assert.equal(satan.kind, "satan");
+    assert.equal(isSealLocked("p111"), false);
+    // a SEAL that was never locked is a duplicate too: half of 166 back
+    progress.unlocked = progress.unlocked.filter((id) => id !== "p111");
+    assert.equal(giftAlreadyOwned("planet", "p2"), true);
+    // it persists with the collection
     saveCollectionProgress();
-    assert.equal(defaultCollectionProgress().karma, 0);
+    const saved = JSON.parse(localStorage.getItem("dearthCollectionV2"));
+    assert.equal(saved.karma, karmaBalance());
+    assert.ok(saved.unlocked.includes(seal.item));
+  `);
+});
+
+test("Jesus' Gifts screen: Jesus on the left, the three vessels on a table, odds, and the menu wiring", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    loadCollectionProgress().karma = 50;
+    state.menuGiftsOpen = true;
+    state.giftsSelected = "frankincense";
+    const html = renderGiftsScreen();
+    assert.ok(html.includes('class="gifts-jesus"'));
+    assert.ok(html.includes("Jesus' Gifts"));
+    assert.equal((html.match(/data-gift-pick=/g) || []).length, 3);
+    for (const name of ["Myrrh", "Frankincense", "Gold"]) assert.ok(html.includes(name), name);
+    assert.ok(html.includes("Seal of Satan") && html.includes("0.666%"));
+    assert.ok(html.includes("Already yours: 44"));
+    // 50 is short of Frankincense's 88
+    assert.ok(html.includes("gifts-short"));
+    assert.ok(renderMenuApp().includes("gifts-screen"));
+    state.menuGiftsOpen = false;
+    assert.ok(!renderMenuApp().includes("gifts-screen"));
+    assert.ok(GAME_SFX.karmaGain && GAME_SFX.karmaUnlock && GAME_SFX.introBurn);
   `);
 });
 
@@ -2830,7 +2885,8 @@ test("every Artifact SEAL doubles its ARTIFACT in the Devil's Offerings and is i
     assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 2 })`).length, id);
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
     assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
-    assert.ok(run(`collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`), id);
+    // the Moon's SEALS only come from Jesus' Gifts; the Seal of Amy is a Goetic SEAL, always open
+    assert.ok(run(id === "p134" ? `collectibleSealIds().includes("${id}") && !isSealLocked("${id}")` : `collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`), id);
   }
 });
 
@@ -3218,7 +3274,7 @@ test("the Poison SEALS are in the collection, catalog and art, and POISON shows 
     assert.ok(run(`splitEliteDescription(ITEMS.${id}.description).elite`).length, id);
     assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 3 })`).includes("POISON"), id);
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
-    assert.ok(run(`sealBuilds("${id}").includes("poison") && collectibleSealIds().includes("${id}") && !isSealLocked("${id}")`), id);
+    assert.ok(run(`sealBuilds("${id}").includes("poison") && collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`), id); // only Jesus' Gifts unlock it
   }
 });
 

@@ -2434,6 +2434,8 @@ const state = {
   pauseOpen: false,
   pauseScreen: "main",
   menuCollectionOpen: false,
+  menuGiftsOpen: false,
+  giftsSelected: "myrrh",
   pauseDevOpen: false,
   devUnlockAllSeals: false,
   collectionRun: null,
@@ -3034,6 +3036,7 @@ function arcadeRunSaveSnapshot() {
   snapshot.pauseOpen = false;
   snapshot.pauseScreen = "main";
   snapshot.menuCollectionOpen = false;
+  snapshot.menuGiftsOpen = false;
   snapshot.pauseDevOpen = false;
   snapshot.mobileOfferingsOpen = false;
   return snapshot;
@@ -8669,7 +8672,7 @@ function rerollShop() {
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
   // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
-  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id));
+  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
   state.trinityShopSealsNextShop = [];
   trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
   if (trinityOffers.length) addLog(`${ITEMS.p133.name} brought ${trinityOffers.map((id) => ITEMS[id].name).join(" and ")} to the offerings.`);
@@ -14643,6 +14646,7 @@ function renderMenuApp() {
     ${renderMobileMenuSettingsOverlay()}
     ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
     ${state.menuCollectionOpen ? renderCollectionScreen("menu") : ""}
+    ${state.menuGiftsOpen ? renderGiftsScreen() : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
@@ -14750,6 +14754,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="sound-options">Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
+      <button class="menu-button" data-menu-action="gifts">Jesus' Gifts</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -17277,6 +17282,13 @@ function handleMenuAction(action) {
     else openCollectionFromMenu();
     return;
   }
+  if (action === "gifts") {
+    // the same way in as clicking Jesus: his eye flashes and the Gifts open
+    if (menuFigureTrigger.busy || giftsOpen()) return;
+    if (document.querySelector(".menu-fig-jesus")) triggerMenuJesus();
+    else openGiftsFromMenu();
+    return;
+  }
   if (action === "options") {
     state.menuScreen = "options";
     render();
@@ -18959,8 +18971,8 @@ function introFinish() {
 }
 
 /* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
-   Clicking Jesus replays the story (triggerMenuJesus), clicking Satan opens the SEAL collection
-   (openCollectionFromMenu in 09-collection.js). */
+   Clicking Jesus opens his Gifts (openGiftsFromMenu in 09-gifts.js), clicking Satan opens the SEAL collection
+   (openCollectionFromMenu in 09-collection.js), clicking the ΝΤΕΡΘ logo replays the story (triggerMenuStory). */
 // Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
 const MENU_FIGURE_HIT = {
   jesus: [
@@ -18981,8 +18993,8 @@ const menuFigureTrigger = { bound: false, busy: false };
 
 // which menu figure (if any) is under the pointer
 function menuFigureAt(clientX, clientY, target) {
-  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen()) return null;
-  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, button, input, a")) return null;
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen() || giftsOpen()) return null;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, .gifts-screen, button, input, a")) return null;
   for (const name of Object.keys(MENU_FIGURE_HIT)) {
     const fig = document.querySelector(`.menu-fig-${name}`);
     if (!fig) continue;
@@ -18997,6 +19009,16 @@ function menuFigureAt(clientX, clientY, target) {
   return null;
 }
 
+// the ΝΤΕΡΘ logo under the pointer (it replays the story)
+function menuLogoAt(clientX, clientY, target) {
+  if (state.mode !== "menu" || introActive() || menuFigureTrigger.busy || collectionOpen() || giftsOpen()) return false;
+  if (target?.closest?.(".main-menu-panel, .menu-version, .collection-screen, .gifts-screen, button, input, a")) return false;
+  const logo = document.querySelector(".menu-logo");
+  if (!logo) return false;
+  const rect = logo.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
 function setMenuFigureLit(name) {
   for (const fig of Object.keys(MENU_FIGURE_HIT)) {
     document.querySelector(`.menu-fig-${fig}`)?.classList.toggle("eyes-lit", fig === name);
@@ -19009,7 +19031,9 @@ function bindMenuFigureTriggers() {
   menuFigureTrigger.bound = true;
   document.addEventListener("pointermove", (event) => {
     if (state.mode !== "menu" || menuFigureTrigger.busy) return;
-    setMenuFigureLit(menuFigureAt(event.clientX, event.clientY, event.target));
+    const figure = menuFigureAt(event.clientX, event.clientY, event.target);
+    setMenuFigureLit(figure);
+    document.querySelector(".main-menu")?.classList.toggle("logo-hover", !figure && menuLogoAt(event.clientX, event.clientY, event.target));
   });
   document.addEventListener("pointerdown", (event) => {
     const name = menuFigureAt(event.clientX, event.clientY, event.target);
@@ -19017,7 +19041,13 @@ function bindMenuFigureTriggers() {
   });
   document.addEventListener("click", (event) => {
     const name = menuFigureAt(event.clientX, event.clientY, event.target);
-    if (!name) return;
+    if (!name) {
+      if (menuLogoAt(event.clientX, event.clientY, event.target)) {
+        event.preventDefault();
+        triggerMenuStory();
+      }
+      return;
+    }
     event.preventDefault();
     if (name === "jesus") triggerMenuJesus();
     else triggerMenuSatan();
@@ -19044,13 +19074,37 @@ function triggerMenuJesus() {
   flash.style.setProperty("--flash-y", `${Math.round(ey)}px`);
   document.body.appendChild(flash);
   setTimeout(() => {
-    startIntroSequence({ fromMenu: true });
-    // keep the flash above the black story layer while it fades
+    openGiftsFromMenu();
+    // keep the flash above the Gifts while it fades
     document.body.appendChild(flash);
     flash.classList.add("fading");
     setTimeout(() => flash.remove(), 1400);
     fig.classList.remove("eyes-flare");
     setMenuFigureLit(null);
+    menuFigureTrigger.busy = false;
+  }, 520);
+}
+
+// the ΝΤΕΡΘ logo replays the story: a white flash out of the logo, then the story
+function triggerMenuStory() {
+  const logo = document.querySelector(".menu-logo");
+  if (!logo || menuFigureTrigger.busy) return;
+  menuFigureTrigger.busy = true;
+  document.querySelector(".main-menu")?.classList.remove("logo-hover");
+  playGameSfx("menuJesusFlash");
+  if (soundtrackAudio) duckMusic(1200);
+  const rect = logo.getBoundingClientRect();
+  const flash = document.createElement("div");
+  flash.className = "menu-jesus-flash";
+  flash.style.setProperty("--flash-x", `${Math.round(rect.left + rect.width / 2)}px`);
+  flash.style.setProperty("--flash-y", `${Math.round(rect.top + rect.height / 2)}px`);
+  document.body.appendChild(flash);
+  setTimeout(() => {
+    startIntroSequence({ fromMenu: true });
+    // keep the flash above the black story layer while it fades
+    document.body.appendChild(flash);
+    flash.classList.add("fading");
+    setTimeout(() => flash.remove(), 1400);
     menuFigureTrigger.busy = false;
   }, 520);
 }
@@ -19149,6 +19203,16 @@ const COLLECTION_SECTIONS = [
   // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
   { key: "poison", title: "Seals of Mars", ids: POISON_SEAL_IDS.slice() }
 ];
+
+// SEALS only Jesus' Gifts unlock (no achievement): the Planetary Seals (Saturn, Moon, Mars), the Trinity and
+// the Archangel Seal of Anael. They start locked like every SEAL in SEAL_UNLOCKS.
+const GIFT_ONLY_SEAL_IDS = [
+  ...COLLECTION_SECTIONS.filter((section) => ["saturn", "artifact", "poison", "trinity"].includes(section.key)).flatMap((section) => section.ids),
+  "p103"
+];
+GIFT_ONLY_SEAL_IDS.forEach((id) => {
+  if (!SEAL_UNLOCKS[id]) SEAL_UNLOCKS[id] = { gift: true, text: "Only one of Jesus' Gifts unlocks it." };
+});
 
 /* ---- builds: the collection filters ----
    Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
@@ -19892,7 +19956,6 @@ function collectionDemonsHtml() {
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
-        ${slain ? "" : collectionPriceTagHtml(KARMA_DEMON_PRICE)}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
@@ -19926,7 +19989,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
       <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run. It cannot be bought with ${KARMA_MARK}.</div>`;
+      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run.</div>`;
   }
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
@@ -19948,8 +20011,7 @@ function collectionDemonInfoHtml(key, pinned = false) {
       <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run.</div>
-      ${collectionKarmaHtml("demon", key, KARMA_DEMON_PRICE, pinned)}`;
+      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
@@ -20046,23 +20108,14 @@ function showNextCollectionToast() {
   const toast = document.createElement("div");
   toast.className = "collection-toast";
   toast.setAttribute("role", "status");
-  // a KARMA drop ({ kind: "karma" }), something unlocked with KARMA ({ kind: "unlock" }), or a SEAL whose
-  // achievement was met (its id)
+  // a KARMA drop ({ kind: "karma" }) or a SEAL whose achievement was met (its id)
   const item = id && typeof id === "object" ? id : null;
-  const unlockedSpec = item?.kind === "unlock" && item.demon ? GOETIC_BOSS_BY_KEY[item.demon] : null;
   toast.innerHTML = item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">Karma</span>
       <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
-    </span>`
-    : item?.kind === "unlock"
-    ? `
-    <img class="collection-toast-sigil${unlockedSpec ? " collection-toast-demon" : ""}" src="${escapeAttr(unlockedSpec ? demonThumbPath(unlockedSpec) : sealSigilPath(item.id))}" alt="" />
-    <span class="collection-toast-text">
-      <span class="collection-toast-kicker">Unlocked with Karma</span>
-      <span class="collection-toast-name">${escapeHtml(unlockedSpec ? unlockedSpec.name : ITEMS[item.id]?.name || "Seal")}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
@@ -20071,7 +20124,7 @@ function showNextCollectionToast() {
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
-  playGameSfx(item?.kind === "karma" ? "karmaGain" : item?.kind === "unlock" ? "karmaUnlock" : "sealUnlock");
+  playGameSfx(item?.kind === "karma" ? "karmaGain" : "sealUnlock");
   setTimeout(() => {
     toast.classList.add("leaving");
     setTimeout(() => {
@@ -20114,7 +20167,7 @@ function collectionInfoHtml(id, pinned = false) {
       ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}
-      ${karmaSealPrice(id) ? collectionKarmaHtml("seal", id, karmaSealPrice(id), pinned) : ""}`;
+      ${rule.gift ? "" : `<div class="collection-info-note">Or find it in one of Jesus' Gifts.</div>`}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
   // hold Shift for the ELITE rule and the SEAL's records, like an equipped SEAL's tooltip
@@ -20206,7 +20259,7 @@ function renderCollectionScreen(from) {
                 return `
                   <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
-                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>${collectionPriceTagHtml(karmaSealPrice(id))}` : ""}
+                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
               })
               .join("")}
@@ -20278,8 +20331,6 @@ function showCollectionInfo(button, pinned) {
   info.className = `collection-info visible ${demon ? (isBossEntryDefeated(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
   // a clicked, defeated demon's box holds the Bind button
   if (demon && pinned && isBossEntryDefeated(demon)) info.classList.add("interactive");
-  // a clicked locked SEAL or undefeated demon holds the KARMA unlock button
-  if (pinned && (demon ? GOETIC_BOSS_BY_KEY[demon] && !isDemonSlain(demon) : collectionSealState(id) === "locked" && karmaSealPrice(id))) info.classList.add("interactive");
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
@@ -20419,11 +20470,6 @@ function bindCollectionEvents() {
     bindOn(info, "click", (event) => {
       if (!info.classList.contains("interactive")) return;
       event.stopPropagation();
-      const karma = event.target.closest?.("[data-collection-karma]");
-      if (karma) {
-        handleCollectionKarmaClick(karma, screen);
-        return;
-      }
       const bind = event.target.closest?.("[data-collection-bind]");
       if (!bind) return;
       toggleBoundDemon(bind.dataset.collectionBind);
@@ -20499,33 +20545,15 @@ function openCollectionFromMenu() {
                                                      are one BOSS: it rolls when both are down)
      a Goetic demon (or YOU in its place)            1 KARMA at KARMA_GOETIC_CHANCE
      an Archangel (or YOU in its place)              KARMA_ARCHANGEL_AMOUNT at KARMA_ARCHANGEL_CHANCE
-   Spent in the Collection, on things not yet earned the normal way:
-     a locked SEAL      KARMA_SEAL_PRICE, or its section's price in KARMA_SECTION_PRICES
-     a Goetic demon     KARMA_DEMON_PRICE (counts as defeated: it can be bound)
-     Archangels cannot be bought. */
+   Spent on Jesus' Gifts (09-gifts.js). */
 const KARMA_GAME_BEATEN = 8;
 const KARMA_MAIN_BOSS_STEP = 0.1;
 const KARMA_GOETIC_CHANCE = 0.9;
 const KARMA_ARCHANGEL_CHANCE = 1;
 const KARMA_ARCHANGEL_AMOUNT = 3;
-const KARMA_DEMON_PRICE = 50;
-const KARMA_SEAL_PRICE = 100;
-// by COLLECTION_SECTIONS key; every other locked SEAL (the Apocalypse Seals) costs KARMA_SEAL_PRICE
-const KARMA_SECTION_PRICES = { bosses: 150, archangel: 180, satan: 666, trinity: 333 };
 
 // KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
 const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
-
-// the price under a locked SEAL or an undefeated demon in the Collection grid: red when you can pay it
-function collectionPriceTagHtml(price) {
-  if (!price) return "";
-  return `<span class="collection-price${karmaBalance() >= price ? " can" : ""}" data-karma-price="${price}">${formatNumber(price)}${KARMA_MARK}</span>`;
-}
-
-function refreshCollectionPriceTags(screen) {
-  const balance = karmaBalance();
-  screen?.querySelectorAll("[data-karma-price]").forEach((tag) => tag.classList.toggle("can", balance >= Number(tag.dataset.karmaPrice)));
-}
 
 function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
@@ -20566,94 +20594,272 @@ function collectionNoteKarmaDrop(bot) {
   else if (bot.goeticKey || bot.shadowOf) karmaRoll(KARMA_GOETIC_CHANCE, bot.name || "Demon");
 }
 
-function karmaSealPrice(id) {
-  if (!SEAL_UNLOCKS[id]) return 0;
-  const section = COLLECTION_SECTIONS.find((entry) => (entry.ids || []).includes(id));
-  return KARMA_SECTION_PRICES[section?.key] || KARMA_SEAL_PRICE;
-}
-
-function karmaUnlockSeal(id) {
-  const price = karmaSealPrice(id);
-  if (!price || !isSealLocked(id) || karmaBalance() < price) return false;
-  const progress = loadCollectionProgress();
-  progress.karma = karmaBalance() - price;
-  if (!progress.unlocked.includes(id)) progress.unlocked.push(id);
-  saveCollectionProgress();
-  return true;
-}
-
-function karmaUnlockDemon(key) {
-  if (!GOETIC_BOSS_BY_KEY[key] || isDemonSlain(key) || karmaBalance() < KARMA_DEMON_PRICE) return false;
-  const progress = loadCollectionProgress();
-  progress.karma = karmaBalance() - KARMA_DEMON_PRICE;
-  if (!progress.slain.includes(key)) progress.slain.push(key);
-  saveCollectionProgress();
-  return true;
-}
-
-// the unlock part of a locked SEAL's or a demon's box; the button only in a clicked (pinned) box.
-// The first click arms it, the second spends.
-function collectionKarmaHtml(kind, key, price, pinned) {
-  const balance = karmaBalance();
-  const enough = balance >= price;
-  const control = pinned
-    ? `<button type="button" class="collection-bind-button collection-karma-button" data-collection-karma="${escapeAttr(`${kind}:${key}`)}"${enough ? "" : " disabled"}>Unlock for ${formatNumber(price)}${KARMA_MARK}</button>`
-    : `<div class="collection-info-note">Click to unlock it for ${formatNumber(price)}${KARMA_MARK}</div>`;
-  return `
-    <div class="collection-info-bind collection-info-karma">
-      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)}${KARMA_MARK}</strong>. You have ${formatNumber(balance)}${KARMA_MARK}</div>
-      ${control}
-    </div>`;
-}
-
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
   return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
+"use strict";
 
-// a KARMA button was clicked in the info box: arm it, then spend and show what was unlocked
-function handleCollectionKarmaClick(button, screen) {
-  if (!button || button.disabled) return;
-  const [kind, key] = String(button.dataset.collectionKarma || "").split(":");
-  if (!button.classList.contains("armed")) {
-    button.classList.add("armed");
-    const price = kind === "demon" ? KARMA_DEMON_PRICE : karmaSealPrice(key);
-    button.innerHTML = `Spend ${formatNumber(price)}${KARMA_MARK}?`;
-    return;
-  }
-  const done = kind === "demon" ? karmaUnlockDemon(key) : karmaUnlockSeal(key);
-  if (!done) return;
-  // the "Unlocked" notification brings the sound
-  collectionToastQueue.push({ kind: "unlock", id: kind === "demon" ? "" : key, demon: kind === "demon" ? key : "" });
-  showNextCollectionToast();
-  screen.querySelectorAll(".collection-karma-line").forEach((line) => {
-    line.outerHTML = collectionKarmaLine();
-  });
-  refreshCollectionPriceTags(screen);
-  if (kind === "demon") {
-    const body = screen.querySelector('[data-collection-panel="goetia"] .collection-body');
-    if (body) body.innerHTML = collectionDemonsHtml();
-    const count = screen.querySelector('[data-collection-for="goetia"] strong:not(.collection-karma-line strong)');
-    if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((demon) => isDemonSlain(demon)).length);
-    applyCollectionVisibility(screen);
-    bindCollectionEvents();
-    const cell = screen.querySelector(`[data-collection-demon="${key}"]`);
-    if (cell) showCollectionInfo(cell, true);
-    return;
-  }
-  const seal = screen.querySelector(`[data-collection-seal="${key}"]`);
-  if (seal) {
-    seal.classList.remove("locked");
-    seal.classList.add(collectionSealState(key));
-    seal.setAttribute("aria-label", ITEMS[key]?.name || "SEAL");
-    seal.querySelector(".collection-lock")?.remove();
-    seal.querySelector(".collection-price")?.remove();
-    showCollectionInfo(seal, true);
-  }
-  const all = collectibleSealIds();
-  const unlocked = screen.querySelectorAll('[data-collection-for="seals"] > span:not(.collection-karma-line) strong')[1];
-  if (unlocked) unlocked.textContent = String(all.filter((id) => isSealUnlocked(id)).length);
+/* ---------- Jesus' Gifts: KARMA packs ----------
+   Main menu: click Jesus (or Options > Jesus' Gifts). Three gifts, each opens into one unlockable by its
+   own odds (GIFT_PACKS, in %; a pack's odds are weights, so they need not add up to exactly 100):
+     a kind is drawn by the odds, then one item of that kind at random. Ars Goetia: any of the 72 demons
+     (it then counts as defeated in the Collection and can be bound); the other kinds are SEALS by
+     Collection section (GIFT_KINDS).
+   Already yours (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
+   The Planetary Seals, the Trinity and Anael are locked from the start and only gifts unlock them
+   (GIFT_ONLY_SEAL_IDS in 09-collection.js); the other locked SEALS can also still be earned by their
+   achievement. Opening: the vessel catches fire, burns to smoke, the sigil forms in the smoke. */
+const GIFT_PACKS = [
+  { key: "myrrh", name: "Myrrh", price: 44, odds: { goetia: 57, planet: 25, archangel: 10, boss: 4, apocalypse: 2.001, trinity: 1.333, satan: 0.666 } },
+  { key: "frankincense", name: "Frankincense", price: 88, odds: { goetia: 36, planet: 35, archangel: 15, boss: 8, apocalypse: 4.001, trinity: 1.333, satan: 0.666 } },
+  { key: "gold", name: "Gold", price: 166, odds: { goetia: 5, planet: 40, archangel: 25, boss: 18, apocalypse: 10, trinity: 1.333, satan: 0.666 } }
+];
+const GIFT_KINDS = [
+  { key: "goetia", label: "Ars Goetia demon" },
+  { key: "planet", label: "Planetary Seal", sections: ["saturn", "artifact", "poison"] },
+  { key: "archangel", label: "Archangel Seal", sections: ["archangel"] },
+  { key: "boss", label: "Boss Seal", sections: ["bosses"] },
+  { key: "apocalypse", label: "Apocalypse Seal", sections: ["apocalypse"] },
+  { key: "trinity", label: "Trinity Seal", sections: ["trinity"] },
+  { key: "satan", label: "Seal of Satan", sections: ["satan"] }
+];
+const GIFT_REFUND_SHARE = 0.5;
+const GIFT_RARE_ODDS = 5; // odds under this show in red
+const GIFT_OPEN_TIMING = { burn: 900, smoke: 1000 }; // ms: the vessel burns, then the smoke thickens before the reveal
+
+function giftPack(key) {
+  return GIFT_PACKS.find((pack) => pack.key === key) || null;
 }
+
+function giftKind(key) {
+  return GIFT_KINDS.find((kind) => kind.key === key) || null;
+}
+
+// what one kind can give: demon keys, or SEAL ids
+function giftKindItems(kindKey) {
+  if (kindKey === "goetia") return GOETIC_BOSS_KEYS.slice();
+  const kind = giftKind(kindKey);
+  if (!kind) return [];
+  return COLLECTION_SECTIONS.filter((section) => kind.sections.includes(section.key))
+    .flatMap((section) => section.ids || [])
+    .filter((id) => ITEMS[id] && !REMOVED_PASSIVE_IDS.has(id));
+}
+
+function giftRefund(pack) {
+  return Math.floor((pack?.price || 0) * GIFT_REFUND_SHARE);
+}
+
+// a kind by the pack's odds, then one of its items
+function rollGift(pack) {
+  const entries = GIFT_KINDS.map((kind) => [kind.key, Math.max(0, Number(pack.odds[kind.key]) || 0)]).filter(([key, weight]) => weight > 0 && giftKindItems(key).length);
+  const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+  let roll = Math.random() * total;
+  let kindKey = entries[entries.length - 1][0];
+  for (const [key, weight] of entries) {
+    if (roll < weight) { kindKey = key; break; }
+    roll -= weight;
+  }
+  const items = giftKindItems(kindKey);
+  const item = items[Math.min(items.length - 1, Math.floor(Math.random() * items.length))];
+  return { kind: kindKey, item };
+}
+
+function giftAlreadyOwned(kindKey, item) {
+  const progress = loadCollectionProgress();
+  if (kindKey === "goetia") return progress.slain.includes(item);
+  return !SEAL_UNLOCKS[item] || progress.unlocked.includes(item);
+}
+
+// buy and open a gift: pays, draws, unlocks or refunds. Returns what came out, or { error }.
+function openGift(packKey) {
+  const pack = giftPack(packKey);
+  if (!pack) return { error: "unknown" };
+  if (karmaBalance() < pack.price) return { error: "karma" };
+  const progress = loadCollectionProgress();
+  progress.karma = karmaBalance() - pack.price;
+  const { kind, item } = rollGift(pack);
+  const duplicate = giftAlreadyOwned(kind, item);
+  const refund = duplicate ? giftRefund(pack) : 0;
+  if (duplicate) progress.karma += refund;
+  else if (kind === "goetia") progress.slain.push(item);
+  else progress.unlocked.push(item);
+  saveCollectionProgress();
+  const spec = kind === "goetia" ? GOETIC_BOSS_BY_KEY[item] : null;
+  return {
+    pack: pack.key,
+    kind,
+    item,
+    duplicate,
+    refund,
+    name: spec ? spec.name : ITEMS[item]?.name || item,
+    image: spec ? demonThumbPath(spec) : sealSigilPath(item)
+  };
+}
+
+/* ---- the screen ---- */
+function giftsOpen() {
+  return state.mode === "menu" && Boolean(state.menuGiftsOpen);
+}
+
+function openGiftsFromMenu() {
+  if (state.mode !== "menu") return;
+  state.menuGiftsOpen = true;
+  if (!giftPack(state.giftsSelected)) state.giftsSelected = "myrrh";
+  render();
+}
+
+function closeGifts() {
+  state.menuGiftsOpen = false;
+  render();
+}
+
+// the three vessels the Magi carried, in the game's hand-drawn white line
+const GIFT_VESSEL_PATHS = {
+  myrrh: ["M42 14h16M44 14v12M56 14v12M44 26c-14 6-17 24-15 44 2 20 10 32 21 32s19-12 21-32c2-20-1-38-15-44", ["M33 52h34M31 70h38", 1.6], ["M50 104v7M47 112c2 2 4 2 6 0", 1.8]],
+  frankincense: [["M50 2v14M50 16L30 50M50 16l20 34", 1.6], "M30 50c0-15 40-15 40 0zM26 54h48c0 18-11 28-24 28S26 72 26 54zM42 82l-5 12h26l-5-12", ["M44 44c-7-7 7-11 0-19M57 42c7-7-7-11 0-19", 1.6], ["M38 47h2M48 45h2M58 47h2", 3]],
+  gold: ["M14 62h72v40H14zM14 62c0-22 72-22 72 0", "M50 38v18M43 46h14", ["M45 78h10v12H45zM14 72h72", 1.8], ["M20 108a5 3 0 1 0 10 0a5 3 0 1 0-10 0M78 106a5 3 0 1 0 10 0a5 3 0 1 0-10 0M84 100a4 2.5 0 1 0 8 0a4 2.5 0 1 0-8 0", 1.6]]
+};
+
+function giftVesselSvg(key) {
+  const paths = (GIFT_VESSEL_PATHS[key] || [])
+    .map((entry) => {
+      const [d, width] = Array.isArray(entry) ? entry : [entry, 2.6];
+      return `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    })
+    .join("");
+  return `<svg class="gift-vessel" viewBox="0 -4 100 120" aria-hidden="true"><g filter="url(#giftRough)">${paths}</g></svg>`;
+}
+
+function giftKindIcon(kindKey) {
+  if (kindKey === "goetia") return demonThumbPath(GOETIC_BOSS_SPECS[0]);
+  return sealSigilPath(giftKindItems(kindKey)[0]);
+}
+
+function giftOddsHtml(pack) {
+  const rows = GIFT_KINDS.map((kind) => {
+    const odds = Number(pack.odds[kind.key]) || 0;
+    const text = Number.isInteger(odds) ? String(odds) : String(+odds.toFixed(3));
+    return `<div class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(kind.label)}</span><b>${text}%</b></div>`;
+  }).join("");
+  return `<div class="gift-odds-title">${escapeHtml(pack.name)}</div>${rows}<div class="gift-odds-note">Already yours: ${formatNumber(giftRefund(pack))}${KARMA_MARK} back</div>`;
+}
+
+function renderGiftsScreen() {
+  const selected = giftPack(state.giftsSelected) || GIFT_PACKS[0];
+  const balance = karmaBalance();
+  const gifts = GIFT_PACKS.map((pack) => {
+    const can = balance >= pack.price;
+    return `
+      <button type="button" class="gift-pick gift-${pack.key}${pack.key === selected.key ? " selected" : ""}" data-gift-pick="${pack.key}" aria-pressed="${pack.key === selected.key}">
+        ${giftVesselSvg(pack.key)}
+        <span class="gift-name">${escapeHtml(pack.name)}</span>
+        <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
+      </button>`;
+  }).join("");
+  const canOpen = balance >= selected.price;
+  return `
+    <div class="gifts-screen" role="dialog" aria-label="Jesus' Gifts">
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="giftRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter></defs></svg>
+      <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
+      <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
+      <h1 class="gifts-title">Jesus' Gifts</h1>
+      <div class="gifts-karma">${collectionKarmaLine()}</div>
+      <div class="gifts-table">
+        <div class="gifts-row">${gifts}</div>
+        <div class="gifts-divider"></div>
+      </div>
+      <div class="gifts-odds">${giftOddsHtml(selected)}</div>
+      <button type="button" class="collection-bind-button gifts-open" data-gift-open${canOpen ? "" : " disabled"}>Open · ${formatNumber(selected.price)}${KARMA_MARK}</button>
+      ${canOpen ? "" : `<div class="gifts-short">You need ${formatNumber(selected.price - balance)}${KARMA_MARK} more</div>`}
+    </div>`;
+}
+
+/* ---- opening: burn, smoke, the sigil in the smoke ----
+   Lives outside the render cycle (data-morph-keep) so renders never restart it. */
+let giftOpening = null;
+
+function startGiftOpening(packKey) {
+  if (giftOpening) return;
+  const screen = document.querySelector(".gifts-screen");
+  const result = openGift(packKey);
+  if (result.error) return;
+  const pack = giftPack(packKey);
+  const kind = giftKind(result.kind);
+  const overlay = document.createElement("div");
+  overlay.className = "gift-opening phase-burn";
+  overlay.setAttribute("data-morph-keep", "");
+  overlay.setAttribute("role", "status");
+  overlay.innerHTML = `
+    <div class="gift-opening-vessel">${giftVesselSvg(pack.key)}</div>
+    <div class="gift-smoke s1"></div><div class="gift-smoke s2"></div><div class="gift-smoke s3"></div><div class="gift-smoke s4"></div>
+    <div class="gift-reveal">
+      <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
+      <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
+      <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
+      <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+      <div class="gift-reveal-actions">
+        <button type="button" class="collection-bind-button" data-gift-again${karmaBalance() >= pack.price ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
+        <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
+      </div>
+    </div>`;
+  (screen || document.body).appendChild(overlay);
+  screen?.querySelectorAll(".collection-karma-line").forEach((line) => { line.outerHTML = collectionKarmaLine(); });
+  giftOpening = { overlay, pack: pack.key, timers: [] };
+  playGameSfx("introBurn");
+  giftOpening.timers.push(setTimeout(() => overlay.classList.replace("phase-burn", "phase-smoke"), GIFT_OPEN_TIMING.burn));
+  giftOpening.timers.push(setTimeout(() => {
+    overlay.classList.replace("phase-smoke", "phase-reveal");
+    playGameSfx(result.duplicate ? "sell" : "karmaUnlock");
+  }, GIFT_OPEN_TIMING.burn + GIFT_OPEN_TIMING.smoke));
+  overlay.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (!overlay.classList.contains("phase-reveal")) return;
+    if (event.target.closest("[data-gift-again]")) {
+      const again = giftOpening?.pack;
+      endGiftOpening(false);
+      if (again) startGiftOpening(again);
+      return;
+    }
+    if (event.target.closest("[data-gift-continue]")) endGiftOpening(true);
+  });
+}
+
+function endGiftOpening(rerender) {
+  if (!giftOpening) return;
+  giftOpening.timers.forEach(clearTimeout);
+  giftOpening.overlay.remove();
+  giftOpening = null;
+  if (rerender) render();
+}
+
+function bindGiftsEvents() {
+  document.querySelectorAll("[data-gifts-back]").forEach((button) => bindOn(button, "click", () => closeGifts()));
+  document.querySelectorAll("[data-gift-pick]").forEach((button) => {
+    bindOn(button, "click", () => {
+      if (giftOpening) return;
+      state.giftsSelected = button.dataset.giftPick;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-gift-open]").forEach((button) => {
+    bindOn(button, "click", () => {
+      if (button.disabled || giftOpening) return;
+      startGiftOpening(state.giftsSelected || "myrrh");
+    });
+  });
+}
+
+// Esc: leaves the opening, then the screen
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !giftsOpen()) return;
+  event.preventDefault();
+  if (giftOpening) {
+    if (giftOpening.overlay.classList.contains("phase-reveal")) endGiftOpening(true);
+    return;
+  }
+  closeGifts();
+});
 /* ---------- Satan's Pact: one deal with the Devil per run ----------
    The DEAL button under Pause (it pulses slowly to red until you open the deal once in the run, and
    fast while you are under 25% SOUL). Satan walks in like in the story (same box over the SEAL slots, same typing). You type
@@ -21977,6 +22183,7 @@ function bindEvents() {
 
   bindPvpEvents();
   bindCollectionEvents();
+  bindGiftsEvents();
   bindDevSealSearch();
 
   const mainAction = document.querySelector("#mainAction");

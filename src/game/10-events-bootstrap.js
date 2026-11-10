@@ -274,6 +274,7 @@ function bindEvents() {
 
   bindPvpEvents();
   bindCollectionEvents();
+  bindGiftsEvents();
   bindDevSealSearch();
 
   const mainAction = document.querySelector("#mainAction");

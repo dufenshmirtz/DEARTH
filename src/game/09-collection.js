@@ -94,6 +94,16 @@ const COLLECTION_SECTIONS = [
   { key: "poison", title: "Seals of Mars", ids: POISON_SEAL_IDS.slice() }
 ];
 
+// SEALS only Jesus' Gifts unlock (no achievement): the Planetary Seals (Saturn, Moon, Mars), the Trinity and
+// the Archangel Seal of Anael. They start locked like every SEAL in SEAL_UNLOCKS.
+const GIFT_ONLY_SEAL_IDS = [
+  ...COLLECTION_SECTIONS.filter((section) => ["saturn", "artifact", "poison", "trinity"].includes(section.key)).flatMap((section) => section.ids),
+  "p103"
+];
+GIFT_ONLY_SEAL_IDS.forEach((id) => {
+  if (!SEAL_UNLOCKS[id]) SEAL_UNLOCKS[id] = { gift: true, text: "Only one of Jesus' Gifts unlocks it." };
+});
+
 /* ---- builds: the collection filters ----
    Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
    BOUNTY means the SEAL works with the BOUNTY the DAMNED carry (gives it, reads it, spends it). SEALS
@@ -836,7 +846,6 @@ function collectionDemonsHtml() {
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
-        ${slain ? "" : collectionPriceTagHtml(KARMA_DEMON_PRICE)}
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
@@ -870,7 +879,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
       <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run. It cannot be bought with ${KARMA_MARK}.</div>`;
+      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run.</div>`;
   }
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
@@ -892,8 +901,7 @@ function collectionDemonInfoHtml(key, pinned = false) {
       <div class="collection-info-status unslain">Not defeated</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run.</div>
-      ${collectionKarmaHtml("demon", key, KARMA_DEMON_PRICE, pinned)}`;
+      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
@@ -990,23 +998,14 @@ function showNextCollectionToast() {
   const toast = document.createElement("div");
   toast.className = "collection-toast";
   toast.setAttribute("role", "status");
-  // a KARMA drop ({ kind: "karma" }), something unlocked with KARMA ({ kind: "unlock" }), or a SEAL whose
-  // achievement was met (its id)
+  // a KARMA drop ({ kind: "karma" }) or a SEAL whose achievement was met (its id)
   const item = id && typeof id === "object" ? id : null;
-  const unlockedSpec = item?.kind === "unlock" && item.demon ? GOETIC_BOSS_BY_KEY[item.demon] : null;
   toast.innerHTML = item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">Karma</span>
       <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
-    </span>`
-    : item?.kind === "unlock"
-    ? `
-    <img class="collection-toast-sigil${unlockedSpec ? " collection-toast-demon" : ""}" src="${escapeAttr(unlockedSpec ? demonThumbPath(unlockedSpec) : sealSigilPath(item.id))}" alt="" />
-    <span class="collection-toast-text">
-      <span class="collection-toast-kicker">Unlocked with Karma</span>
-      <span class="collection-toast-name">${escapeHtml(unlockedSpec ? unlockedSpec.name : ITEMS[item.id]?.name || "Seal")}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
@@ -1015,7 +1014,7 @@ function showNextCollectionToast() {
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
-  playGameSfx(item?.kind === "karma" ? "karmaGain" : item?.kind === "unlock" ? "karmaUnlock" : "sealUnlock");
+  playGameSfx(item?.kind === "karma" ? "karmaGain" : "sealUnlock");
   setTimeout(() => {
     toast.classList.add("leaving");
     setTimeout(() => {
@@ -1058,7 +1057,7 @@ function collectionInfoHtml(id, pinned = false) {
       ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}
-      ${karmaSealPrice(id) ? collectionKarmaHtml("seal", id, karmaSealPrice(id), pinned) : ""}`;
+      ${rule.gift ? "" : `<div class="collection-info-note">Or find it in one of Jesus' Gifts.</div>`}`;
   }
   const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
   // hold Shift for the ELITE rule and the SEAL's records, like an equipped SEAL's tooltip
@@ -1150,7 +1149,7 @@ function renderCollectionScreen(from) {
                 return `
                   <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
-                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>${collectionPriceTagHtml(karmaSealPrice(id))}` : ""}
+                    ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
               })
               .join("")}
@@ -1222,8 +1221,6 @@ function showCollectionInfo(button, pinned) {
   info.className = `collection-info visible ${demon ? (isBossEntryDefeated(demon) ? "slain" : "unslain") : collectionSealState(id)}`;
   // a clicked, defeated demon's box holds the Bind button
   if (demon && pinned && isBossEntryDefeated(demon)) info.classList.add("interactive");
-  // a clicked locked SEAL or undefeated demon holds the KARMA unlock button
-  if (pinned && (demon ? GOETIC_BOSS_BY_KEY[demon] && !isDemonSlain(demon) : collectionSealState(id) === "locked" && karmaSealPrice(id))) info.classList.add("interactive");
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   if (pinned) button.classList.add("selected");
   collectionInfoAnchor = button;
@@ -1363,11 +1360,6 @@ function bindCollectionEvents() {
     bindOn(info, "click", (event) => {
       if (!info.classList.contains("interactive")) return;
       event.stopPropagation();
-      const karma = event.target.closest?.("[data-collection-karma]");
-      if (karma) {
-        handleCollectionKarmaClick(karma, screen);
-        return;
-      }
       const bind = event.target.closest?.("[data-collection-bind]");
       if (!bind) return;
       toggleBoundDemon(bind.dataset.collectionBind);
@@ -1443,33 +1435,15 @@ function openCollectionFromMenu() {
                                                      are one BOSS: it rolls when both are down)
      a Goetic demon (or YOU in its place)            1 KARMA at KARMA_GOETIC_CHANCE
      an Archangel (or YOU in its place)              KARMA_ARCHANGEL_AMOUNT at KARMA_ARCHANGEL_CHANCE
-   Spent in the Collection, on things not yet earned the normal way:
-     a locked SEAL      KARMA_SEAL_PRICE, or its section's price in KARMA_SECTION_PRICES
-     a Goetic demon     KARMA_DEMON_PRICE (counts as defeated: it can be bound)
-     Archangels cannot be bought. */
+   Spent on Jesus' Gifts (09-gifts.js). */
 const KARMA_GAME_BEATEN = 8;
 const KARMA_MAIN_BOSS_STEP = 0.1;
 const KARMA_GOETIC_CHANCE = 0.9;
 const KARMA_ARCHANGEL_CHANCE = 1;
 const KARMA_ARCHANGEL_AMOUNT = 3;
-const KARMA_DEMON_PRICE = 50;
-const KARMA_SEAL_PRICE = 100;
-// by COLLECTION_SECTIONS key; every other locked SEAL (the Apocalypse Seals) costs KARMA_SEAL_PRICE
-const KARMA_SECTION_PRICES = { bosses: 150, archangel: 180, satan: 666, trinity: 333 };
 
 // KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
 const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
-
-// the price under a locked SEAL or an undefeated demon in the Collection grid: red when you can pay it
-function collectionPriceTagHtml(price) {
-  if (!price) return "";
-  return `<span class="collection-price${karmaBalance() >= price ? " can" : ""}" data-karma-price="${price}">${formatNumber(price)}${KARMA_MARK}</span>`;
-}
-
-function refreshCollectionPriceTags(screen) {
-  const balance = karmaBalance();
-  screen?.querySelectorAll("[data-karma-price]").forEach((tag) => tag.classList.toggle("can", balance >= Number(tag.dataset.karmaPrice)));
-}
 
 function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
@@ -1510,91 +1484,7 @@ function collectionNoteKarmaDrop(bot) {
   else if (bot.goeticKey || bot.shadowOf) karmaRoll(KARMA_GOETIC_CHANCE, bot.name || "Demon");
 }
 
-function karmaSealPrice(id) {
-  if (!SEAL_UNLOCKS[id]) return 0;
-  const section = COLLECTION_SECTIONS.find((entry) => (entry.ids || []).includes(id));
-  return KARMA_SECTION_PRICES[section?.key] || KARMA_SEAL_PRICE;
-}
-
-function karmaUnlockSeal(id) {
-  const price = karmaSealPrice(id);
-  if (!price || !isSealLocked(id) || karmaBalance() < price) return false;
-  const progress = loadCollectionProgress();
-  progress.karma = karmaBalance() - price;
-  if (!progress.unlocked.includes(id)) progress.unlocked.push(id);
-  saveCollectionProgress();
-  return true;
-}
-
-function karmaUnlockDemon(key) {
-  if (!GOETIC_BOSS_BY_KEY[key] || isDemonSlain(key) || karmaBalance() < KARMA_DEMON_PRICE) return false;
-  const progress = loadCollectionProgress();
-  progress.karma = karmaBalance() - KARMA_DEMON_PRICE;
-  if (!progress.slain.includes(key)) progress.slain.push(key);
-  saveCollectionProgress();
-  return true;
-}
-
-// the unlock part of a locked SEAL's or a demon's box; the button only in a clicked (pinned) box.
-// The first click arms it, the second spends.
-function collectionKarmaHtml(kind, key, price, pinned) {
-  const balance = karmaBalance();
-  const enough = balance >= price;
-  const control = pinned
-    ? `<button type="button" class="collection-bind-button collection-karma-button" data-collection-karma="${escapeAttr(`${kind}:${key}`)}"${enough ? "" : " disabled"}>Unlock for ${formatNumber(price)}${KARMA_MARK}</button>`
-    : `<div class="collection-info-note">Click to unlock it for ${formatNumber(price)}${KARMA_MARK}</div>`;
-  return `
-    <div class="collection-info-bind collection-info-karma">
-      <div class="collection-info-text">Or unlock it now for <strong>${formatNumber(price)}${KARMA_MARK}</strong>. You have ${formatNumber(balance)}${KARMA_MARK}</div>
-      ${control}
-    </div>`;
-}
-
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
   return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
-}
-
-// a KARMA button was clicked in the info box: arm it, then spend and show what was unlocked
-function handleCollectionKarmaClick(button, screen) {
-  if (!button || button.disabled) return;
-  const [kind, key] = String(button.dataset.collectionKarma || "").split(":");
-  if (!button.classList.contains("armed")) {
-    button.classList.add("armed");
-    const price = kind === "demon" ? KARMA_DEMON_PRICE : karmaSealPrice(key);
-    button.innerHTML = `Spend ${formatNumber(price)}${KARMA_MARK}?`;
-    return;
-  }
-  const done = kind === "demon" ? karmaUnlockDemon(key) : karmaUnlockSeal(key);
-  if (!done) return;
-  // the "Unlocked" notification brings the sound
-  collectionToastQueue.push({ kind: "unlock", id: kind === "demon" ? "" : key, demon: kind === "demon" ? key : "" });
-  showNextCollectionToast();
-  screen.querySelectorAll(".collection-karma-line").forEach((line) => {
-    line.outerHTML = collectionKarmaLine();
-  });
-  refreshCollectionPriceTags(screen);
-  if (kind === "demon") {
-    const body = screen.querySelector('[data-collection-panel="goetia"] .collection-body');
-    if (body) body.innerHTML = collectionDemonsHtml();
-    const count = screen.querySelector('[data-collection-for="goetia"] strong:not(.collection-karma-line strong)');
-    if (count) count.textContent = String(GOETIC_BOSS_KEYS.filter((demon) => isDemonSlain(demon)).length);
-    applyCollectionVisibility(screen);
-    bindCollectionEvents();
-    const cell = screen.querySelector(`[data-collection-demon="${key}"]`);
-    if (cell) showCollectionInfo(cell, true);
-    return;
-  }
-  const seal = screen.querySelector(`[data-collection-seal="${key}"]`);
-  if (seal) {
-    seal.classList.remove("locked");
-    seal.classList.add(collectionSealState(key));
-    seal.setAttribute("aria-label", ITEMS[key]?.name || "SEAL");
-    seal.querySelector(".collection-lock")?.remove();
-    seal.querySelector(".collection-price")?.remove();
-    showCollectionInfo(seal, true);
-  }
-  const all = collectibleSealIds();
-  const unlocked = screen.querySelectorAll('[data-collection-for="seals"] > span:not(.collection-karma-line) strong')[1];
-  if (unlocked) unlocked.textContent = String(all.filter((id) => isSealUnlocked(id)).length);
 }

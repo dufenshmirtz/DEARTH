@@ -10000,7 +10000,7 @@ body.native-arcade #app .pause-scene .pause-overlay {
   font-weight: 400;
 }
 
-.collection-screen .collection-back {
+:is(.collection-screen, .gifts-screen) .collection-back {
   justify-self: start;
   min-height: 0 !important;
   padding: 6px 18px !important;
@@ -10011,7 +10011,7 @@ body.native-arcade #app .pause-scene .pause-overlay {
   position: relative;
 }
 
-.collection-screen .collection-back::after {
+:is(.collection-screen, .gifts-screen) .collection-back::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -10020,13 +10020,13 @@ body.native-arcade #app .pause-scene .pause-overlay {
   border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
 }
 
-.collection-screen .collection-back:hover:not(:disabled) {
+:is(.collection-screen, .gifts-screen) .collection-back:hover:not(:disabled) {
   transform: none !important;
   background: transparent !important;
   color: #dc2a2f !important;
 }
 
-.collection-screen .collection-back:hover:not(:disabled)::after {
+:is(.collection-screen, .gifts-screen) .collection-back:hover:not(:disabled)::after {
   filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
 }
 
@@ -10716,7 +10716,7 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 6px no-repeat;
 }
 
-.collection-screen .collection-bind-button {
+:is(.collection-screen, .gifts-screen) .collection-bind-button {
   position: relative;
   display: block;
   min-height: 0 !important;
@@ -10731,7 +10731,7 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   cursor: pointer;
 }
 
-.collection-screen .collection-bind-button::after {
+:is(.collection-screen, .gifts-screen) .collection-bind-button::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -10740,16 +10740,16 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
 }
 
-.collection-screen .collection-bind-button:hover:not(:disabled),
-.collection-screen .collection-bind-button:focus-visible {
+:is(.collection-screen, .gifts-screen) .collection-bind-button:hover:not(:disabled),
+:is(.collection-screen, .gifts-screen) .collection-bind-button:focus-visible {
   transform: none !important;
   background: transparent !important;
   outline: none;
   color: #dc2a2f !important;
 }
 
-.collection-screen .collection-bind-button:hover:not(:disabled)::after,
-.collection-screen .collection-bind-button:focus-visible::after {
+:is(.collection-screen, .gifts-screen) .collection-bind-button:hover:not(:disabled)::after,
+:is(.collection-screen, .gifts-screen) .collection-bind-button:focus-visible::after {
   filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
 }
 
@@ -10758,7 +10758,7 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   .collection-screen .collection-filter { font-size: 16px !important; padding: 0 9px 6px !important; }
   .collection-legend { padding-bottom: 6px; font-size: 12px !important; }
   .collection-section-title { margin: 4px 0 6px; }
-  .collection-screen .collection-back { font-size: 16px !important; padding: 4px 14px !important; }
+  :is(.collection-screen, .gifts-screen) .collection-back { font-size: 16px !important; padding: 4px 14px !important; }
   .collection-screen .collection-tab { font-size: 24px !important; padding-bottom: 9px !important; }
   .collection-screen { --demon-cell: 80px; }
   .collection-demon-grid { gap: 10px 6px; }
@@ -13402,4 +13402,395 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 *:focus,
 *:focus-visible {
   outline: none !important;
+}
+
+/* ==========================================================================
+   Jesus' Gifts (09-gifts.js): Jesus on the left, the three vessels on an offering
+   table, the chosen one's odds, Open. Opening: burn, smoke, the sigil in the smoke.
+   ========================================================================== */
+.main-menu.logo-hover {
+  cursor: pointer;
+}
+.gifts-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 30005;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.985);
+  color: #ece6d8;
+  animation: collection-in 0.35s ease-out both;
+}
+.gifts-screen .gifts-jesus {
+  position: absolute;
+  left: -9vh;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.gifts-screen .gifts-back {
+  position: absolute;
+  top: clamp(10px, 2.4vh, 22px);
+  left: clamp(14px, 3vw, 40px);
+  z-index: 3;
+}
+.gifts-screen .gifts-title {
+  position: absolute;
+  top: clamp(8px, 3vh, 30px);
+  left: 30%;
+  right: 3%;
+  margin: 0;
+  text-align: center;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(34px, 6.4vh, 64px) !important;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+.gifts-screen .gifts-karma {
+  position: absolute;
+  top: clamp(14px, 4vh, 40px);
+  right: clamp(14px, 4vw, 60px);
+}
+.gifts-screen .gifts-karma .collection-karma-line {
+  position: static;
+  transform: none;
+}
+/* the offering table: three vessels standing on one line, names and prices under it */
+.gifts-screen .gifts-table {
+  position: absolute;
+  left: 30%;
+  right: 3%;
+  top: 15vh;
+}
+.gifts-screen .gifts-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+}
+.gifts-screen button.gift-pick,
+.gifts-screen button.gift-pick:hover:not(:disabled) {
+  appearance: none;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: #ece6d8 !important;
+  cursor: pointer;
+}
+.gifts-screen .gift-vessel {
+  width: var(--vessel-w, 110px);
+  height: auto;
+  overflow: visible;
+  color: #ece6d8;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.gifts-screen .gift-myrrh { --vessel-w: clamp(64px, 14vh, 130px); }
+.gifts-screen .gift-frankincense { --vessel-w: clamp(78px, 17vh, 160px); }
+.gifts-screen .gift-gold { --vessel-w: clamp(92px, 20vh, 190px); }
+.gifts-screen .gift-pick:hover .gift-vessel,
+.gifts-screen .gift-pick:focus-visible .gift-vessel {
+  transform: translateY(-4px);
+}
+.gifts-screen .gift-pick.selected .gift-vessel {
+  filter: drop-shadow(0 0 14px rgba(233, 227, 214, 0.6));
+}
+.gifts-screen .gift-pick:focus-visible {
+  outline: none;
+}
+.gifts-screen .gift-name {
+  margin-top: 26px;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(18px, 3.4vh, 32px) !important;
+  line-height: 1;
+  color: #ece6d8 !important;
+  transition: color 0.15s ease;
+}
+.gifts-screen .gift-pick:hover .gift-name,
+.gifts-screen .gift-pick.selected .gift-name {
+  color: #dc2a2f !important;
+}
+.gifts-screen .gift-price {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(16px, 2.8vh, 26px) !important;
+  color: #ece6d8 !important;
+}
+.gifts-screen .gift-price .karma-mark { color: #e0383d; }
+.gifts-screen .gift-price.cant { color: #6f6760 !important; }
+.gifts-screen .gift-price.cant .karma-mark { color: #6f6760; }
+.gifts-screen .gifts-divider {
+  height: 10px;
+  margin-top: -66px;
+  margin-bottom: 56px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* the chosen gift's odds, and Open */
+.gifts-screen .gifts-odds {
+  position: absolute;
+  right: clamp(14px, 4vw, 60px);
+  bottom: clamp(12px, 4vh, 40px);
+  width: min(330px, 30vw);
+  padding: 10px 16px;
+  background: rgba(5, 4, 4, 0.92);
+  border: 16px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / 16px stretch;
+  display: grid;
+  gap: 4px;
+}
+.gifts-screen .gift-odds-title {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 22px !important;
+  text-align: center;
+}
+.gifts-screen .gift-odds-row {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  color: #cfc8b9 !important;
+}
+.gifts-screen .gift-odds-row img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.gifts-screen .gift-odds-row b {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 400;
+  font-size: 17px !important;
+  color: #ece6d8 !important;
+}
+.gifts-screen .gift-odds-row.rare b { color: #dc2a2f !important; }
+.gifts-screen .gift-odds-note {
+  margin-top: 4px;
+  font-family: var(--font-book) !important;
+  font-size: 12px !important;
+  color: #8d877c !important;
+  text-align: center;
+}
+.gifts-screen .gifts-open {
+  position: absolute;
+  left: 30%;
+  right: calc(min(330px, 30vw) + clamp(14px, 4vw, 60px));
+  bottom: clamp(30px, 8vh, 80px);
+  margin: 0 auto !important;
+  width: max-content;
+  font-size: clamp(20px, 3.4vh, 30px) !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 2px;
+}
+.gifts-screen .gifts-open:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.gifts-screen .gifts-short {
+  position: absolute;
+  left: 30%;
+  right: calc(min(330px, 30vw) + clamp(14px, 4vw, 60px));
+  bottom: clamp(8px, 3vh, 34px);
+  text-align: center;
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  color: #8d877c !important;
+}
+
+/* opening: the vessel catches fire, burns to smoke, the sigil forms in the smoke */
+.gifts-screen .gift-opening {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.82);
+  animation: collection-in 0.3s ease-out both;
+}
+.gifts-screen .gift-opening-vessel {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: clamp(130px, 26vh, 260px);
+  transform: translate(-50%, -50%);
+  color: #ece6d8;
+  transition: opacity 0.8s ease, filter 0.8s ease;
+}
+.gifts-screen .gift-opening-vessel .gift-vessel {
+  width: 100%;
+  transition: none;
+}
+.gifts-screen .gift-opening.phase-burn .gift-opening-vessel {
+  animation: gift-burn 0.9s ease-in both;
+}
+@keyframes gift-burn {
+  0% { filter: none; transform: translate(-50%, -50%); }
+  20% { transform: translate(calc(-50% - 2px), -50%); }
+  40% { filter: drop-shadow(0 0 8px #dc2a2f); transform: translate(calc(-50% + 2px), calc(-50% - 1px)); }
+  60% { transform: translate(calc(-50% - 1px), -50%); }
+  100% { filter: drop-shadow(0 0 26px #dc2a2f) brightness(1.6); transform: translate(-50%, -50%); }
+}
+.gifts-screen .gift-opening.phase-smoke .gift-opening-vessel,
+.gifts-screen .gift-opening.phase-reveal .gift-opening-vessel {
+  opacity: 0;
+  filter: blur(8px) drop-shadow(0 0 26px #dc2a2f);
+}
+.gifts-screen .gift-smoke {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(190, 183, 172, 0.5), rgba(120, 114, 105, 0) 66%);
+  filter: blur(14px);
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 1s ease, transform 1.5s ease;
+  pointer-events: none;
+}
+.gifts-screen .gift-smoke.s1 { left: 34%; top: 18%; width: 34vh; height: 34vh; }
+.gifts-screen .gift-smoke.s2 { left: 46%; top: 26%; width: 40vh; height: 40vh; transition-delay: 0.15s; }
+.gifts-screen .gift-smoke.s3 { left: 38%; top: 38%; width: 30vh; height: 30vh; transition-delay: 0.3s; }
+.gifts-screen .gift-smoke.s4 { left: 50%; top: 10%; width: 26vh; height: 26vh; transition-delay: 0.45s; }
+.gifts-screen .gift-opening.phase-smoke .gift-smoke,
+.gifts-screen .gift-opening.phase-reveal .gift-smoke {
+  opacity: 1;
+  transform: scale(1);
+}
+.gifts-screen .gift-opening.phase-reveal .gift-smoke {
+  opacity: 0.45;
+}
+.gifts-screen .gift-reveal {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.92);
+  filter: blur(6px);
+  transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease;
+  pointer-events: none;
+}
+.gifts-screen .gift-opening.phase-reveal .gift-reveal {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+}
+.gifts-screen .gift-reveal-kind {
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8d877c !important;
+}
+.gifts-screen .gift-reveal-art {
+  width: clamp(120px, 24vh, 230px);
+  height: clamp(120px, 24vh, 230px);
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(233, 227, 214, 0.45));
+}
+.gifts-screen .gift-reveal-name {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(26px, 5vh, 46px) !important;
+  line-height: 1;
+}
+.gifts-screen .gift-reveal-status {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(18px, 3vh, 26px) !important;
+  color: #dc2a2f !important;
+}
+.gifts-screen .gift-reveal-status.dup {
+  color: #ece6d8 !important;
+}
+.gifts-screen .gift-reveal-status.dup .karma-mark {
+  color: #e0383d;
+}
+.gifts-screen .gift-reveal-actions {
+  display: flex;
+  gap: 18px;
+  margin-top: 6px;
+}
+.gifts-screen .gift-reveal-actions .collection-bind-button {
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+.gifts-screen .gift-reveal-actions .collection-bind-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* phone: landscape, little height */
+body.mobile-arcade .gifts-screen .gifts-table,
+body.native-arcade .gifts-screen .gifts-table {
+  top: 18vh;
+  /* the odds sit in their own column on the right, beside the table */
+  left: 27%;
+  right: calc(min(300px, 32vw) + 18px);
+}
+body.mobile-arcade .gifts-screen .gifts-odds,
+body.native-arcade .gifts-screen .gifts-odds {
+  top: 15vh;
+  bottom: auto;
+  right: 10px;
+  width: min(300px, 32vw);
+}
+body.mobile-arcade .gifts-screen :is(.gifts-open, .gifts-short),
+body.native-arcade .gifts-screen :is(.gifts-open, .gifts-short) {
+  left: 27%;
+  right: calc(min(300px, 32vw) + 18px);
+}
+body.mobile-arcade .gifts-screen .gift-name,
+body.native-arcade .gifts-screen .gift-name {
+  margin-top: 18px;
+}
+body.mobile-arcade .gifts-screen .gifts-divider,
+body.native-arcade .gifts-screen .gifts-divider {
+  margin-top: -46px;
+  margin-bottom: 36px;
+}
+body.mobile-arcade .gifts-screen .gifts-odds,
+body.native-arcade .gifts-screen .gifts-odds {
+  padding: 4px 10px;
+  gap: 1px;
+}
+body.mobile-arcade .gifts-screen .gift-odds-row,
+body.native-arcade .gifts-screen .gift-odds-row {
+  font-size: 11px !important;
+  grid-template-columns: 18px 1fr auto;
+}
+body.mobile-arcade .gifts-screen .gift-odds-row img,
+body.native-arcade .gifts-screen .gift-odds-row img {
+  width: 16px;
+  height: 16px;
+}
+body.mobile-arcade .gifts-screen .gift-odds-row b,
+body.native-arcade .gifts-screen .gift-odds-row b {
+  font-size: 13px !important;
+}
+body.mobile-arcade .gifts-screen .gift-odds-title,
+body.native-arcade .gifts-screen .gift-odds-title {
+  display: none;
+}
+body.mobile-arcade .gifts-screen .gift-odds-note,
+body.native-arcade .gifts-screen .gift-odds-note {
+  font-size: 11px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gifts-screen .gift-opening.phase-burn .gift-opening-vessel { animation: none; }
+  .gifts-screen .gift-smoke,
+  .gifts-screen .gift-reveal,
+  .gifts-screen .gift-opening-vessel { transition: none; }
 }
