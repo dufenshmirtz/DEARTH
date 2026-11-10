@@ -10680,7 +10680,7 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
 }
 
 /* testing only: DEV unlock all in the Ars Goetia legend row */
-.collection-screen .collection-dev-button {
+:is(.collection-screen, .gifts-screen) .collection-dev-button {
   min-height: 0 !important;
   padding: 0 8px !important;
   border: 1px dashed #5d5850 !important;
@@ -10693,12 +10693,12 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   cursor: pointer;
 }
 
-.collection-screen .collection-dev-button.active {
+:is(.collection-screen, .gifts-screen) .collection-dev-button.active {
   border-color: rgba(220, 42, 47, 0.7) !important;
   color: #e0383d !important;
 }
 
-.collection-screen .collection-dev-button:hover:not(:disabled) {
+:is(.collection-screen, .gifts-screen) .collection-dev-button:hover:not(:disabled) {
   transform: none !important;
   background: transparent !important;
   border-color: #dc2a2f !important;
@@ -13420,6 +13420,9 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   color: #ece6d8;
   animation: collection-in 0.35s ease-out both;
 }
+.gifts-screen.settled {
+  animation: none;
+}
 .gifts-screen .gifts-jesus {
   position: absolute;
   left: -9vh;
@@ -13456,65 +13459,78 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   position: static;
   transform: none;
 }
-/* the offering table: three vessels standing on one line, names and prices under it */
-.gifts-screen .gifts-table {
+/* three framed cards: the gift, its price and all its odds in view; click a card to open it */
+.gifts-screen .gifts-cards {
   position: absolute;
   left: 30%;
   right: 3%;
-  top: 15vh;
+  top: clamp(70px, 14vh, 130px);
+  max-height: calc(100% - clamp(70px, 14vh, 130px) - clamp(14px, 5vh, 50px));
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(10px, 1.6vw, 26px);
 }
-.gifts-screen .gifts-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-}
-.gifts-screen button.gift-pick,
-.gifts-screen button.gift-pick:hover:not(:disabled) {
+.gifts-screen button.gift-card,
+.gifts-screen button.gift-card:hover:not(:disabled) {
   appearance: none;
+  position: relative;
   min-height: 0 !important;
   margin: 0;
-  padding: 0;
-  border: 0 !important;
+  padding: clamp(4px, 1.2vh, 14px) clamp(6px, 0.8vw, 14px) !important;
+  border: 16px solid transparent !important;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / 16px stretch !important;
   border-radius: 0 !important;
-  background: transparent !important;
+  background: rgba(5, 4, 4, 0.92) !important;
   box-shadow: none !important;
   transform: none !important;
-  display: grid;
-  justify-items: center;
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 0.8vh, 8px);
+  overflow: hidden;
   color: #ece6d8 !important;
+  text-align: left;
   cursor: pointer;
+  transition: filter 0.2s ease;
+}
+.gifts-screen button.gift-card:hover:not(.cant),
+.gifts-screen button.gift-card:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 14px rgba(233, 227, 214, 0.22));
+}
+.gifts-screen button.gift-card.cant { cursor: default; }
+.gifts-screen .gift-card-art {
+  flex: none;
+  height: clamp(44px, 19vh, 180px);
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 .gifts-screen .gift-vessel {
-  width: var(--vessel-w, 110px);
-  height: auto;
+  height: 100%;
+  width: auto;
   overflow: visible;
   color: #ece6d8;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
-.gifts-screen .gift-myrrh { --vessel-w: clamp(64px, 14vh, 130px); }
-.gifts-screen .gift-frankincense { --vessel-w: clamp(78px, 17vh, 160px); }
-.gifts-screen .gift-gold { --vessel-w: clamp(92px, 20vh, 190px); }
-.gifts-screen .gift-pick:hover .gift-vessel,
-.gifts-screen .gift-pick:focus-visible .gift-vessel {
+.gifts-screen .gift-myrrh .gift-card-art .gift-vessel { height: 74%; }
+.gifts-screen .gift-frankincense .gift-card-art .gift-vessel { height: 87%; }
+.gifts-screen .gift-card:hover:not(.cant) .gift-vessel,
+.gifts-screen .gift-card:focus-visible .gift-vessel {
   transform: translateY(-4px);
-}
-.gifts-screen .gift-pick.selected .gift-vessel {
   filter: drop-shadow(0 0 14px rgba(233, 227, 214, 0.6));
 }
-.gifts-screen .gift-pick:focus-visible {
-  outline: none;
-}
 .gifts-screen .gift-name {
-  margin-top: 26px;
+  margin-top: 4px;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
   font-size: clamp(18px, 3.4vh, 32px) !important;
   line-height: 1;
   color: #ece6d8 !important;
   transition: color 0.15s ease;
 }
-.gifts-screen .gift-pick:hover .gift-name,
-.gifts-screen .gift-pick.selected .gift-name {
+.gifts-screen .gift-card:hover:not(.cant) .gift-name,
+.gifts-screen .gift-card:focus-visible .gift-name {
   color: #dc2a2f !important;
 }
 .gifts-screen .gift-price {
@@ -13522,99 +13538,96 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   align-items: center;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
   font-size: clamp(16px, 2.8vh, 26px) !important;
+  line-height: 1;
   color: #ece6d8 !important;
 }
 .gifts-screen .gift-price .karma-mark { color: #e0383d; }
 .gifts-screen .gift-price.cant { color: #6f6760 !important; }
 .gifts-screen .gift-price.cant .karma-mark { color: #6f6760; }
-.gifts-screen .gifts-divider {
-  height: 10px;
-  margin-top: -66px;
-  margin-bottom: 56px;
-  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") center / 100% 100% no-repeat;
-  pointer-events: none;
-}
-/* the chosen gift's odds, and Open */
-.gifts-screen .gifts-odds {
-  position: absolute;
-  right: clamp(14px, 4vw, 60px);
-  bottom: clamp(12px, 4vh, 40px);
-  width: min(330px, 30vw);
-  padding: 10px 16px;
-  background: rgba(5, 4, 4, 0.92);
-  border: 16px solid transparent;
-  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / 16px stretch;
+.gifts-screen .gift-odds {
+  width: 100%;
+  margin-top: clamp(2px, 1vh, 10px);
   display: grid;
-  gap: 4px;
-}
-.gifts-screen .gift-odds-title {
-  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 22px !important;
-  text-align: center;
+  gap: clamp(1px, 0.5vh, 5px);
 }
 .gifts-screen .gift-odds-row {
   display: grid;
-  grid-template-columns: 26px 1fr auto;
-  gap: 8px;
+  grid-template-columns: clamp(16px, 2.6vh, 24px) minmax(0, 1fr) auto;
+  gap: 6px;
   align-items: center;
   font-family: var(--font-book) !important;
-  font-size: 14px !important;
+  font-size: clamp(11px, 1.6vh, 14px) !important;
+  line-height: 1.15;
   color: #cfc8b9 !important;
 }
+.gifts-screen .gift-odds-row > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .gifts-screen .gift-odds-row img {
-  width: 24px;
-  height: 24px;
+  width: 100%;
+  aspect-ratio: 1;
   object-fit: contain;
 }
 .gifts-screen .gift-odds-row b {
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
   font-weight: 400;
-  font-size: 17px !important;
+  font-size: clamp(13px, 1.9vh, 17px) !important;
   color: #ece6d8 !important;
 }
 .gifts-screen .gift-odds-row.rare b { color: #dc2a2f !important; }
 .gifts-screen .gift-odds-note {
-  margin-top: 4px;
   font-family: var(--font-book) !important;
-  font-size: 12px !important;
+  font-size: clamp(10px, 1.4vh, 12px) !important;
   color: #8d877c !important;
   text-align: center;
 }
-.gifts-screen .gifts-open {
-  position: absolute;
-  left: 30%;
-  right: calc(min(330px, 30vw) + clamp(14px, 4vw, 60px));
-  bottom: clamp(30px, 8vh, 80px);
-  margin: 0 auto !important;
-  width: max-content;
-  font-size: clamp(20px, 3.4vh, 30px) !important;
-  display: inline-flex !important;
-  align-items: center;
-  gap: 2px;
+.gifts-screen .gift-card-open {
+  position: relative;
+  margin-top: clamp(4px, 1.6vh, 16px);
+  padding: 4px 22px;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(16px, 2.6vh, 22px) !important;
+  line-height: 1.1;
+  color: #ece6d8 !important;
 }
-.gifts-screen .gifts-open:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.gifts-screen .gifts-short {
+.gifts-screen .gift-card-open::after {
+  content: "";
   position: absolute;
-  left: 30%;
-  right: calc(min(330px, 30vw) + clamp(14px, 4vw, 60px));
-  bottom: clamp(8px, 3vh, 34px);
-  text-align: center;
+  inset: 0;
+  pointer-events: none;
+  border: 12px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 12px 24px stretch;
+}
+.gifts-screen .gift-card:hover:not(.cant) .gift-card-open,
+.gifts-screen .gift-card:focus-visible .gift-card-open {
+  color: #dc2a2f !important;
+}
+.gifts-screen .gift-card:hover:not(.cant) .gift-card-open::after,
+.gifts-screen .gift-card:focus-visible .gift-card-open::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+.gifts-screen .gift-card.cant .gift-card-open {
+  padding: 4px 0;
   font-family: var(--font-book) !important;
-  font-size: 14px !important;
+  font-size: clamp(10px, 1.5vh, 13px) !important;
   color: #8d877c !important;
 }
-
-/* opening: the vessel catches fire, burns to smoke, the sigil forms in the smoke */
+.gifts-screen .gift-card.cant .gift-card-open::after { display: none; }
+.gifts-screen .gift-card.cant .gift-card-open .karma-mark { color: #8d877c; }
+.gifts-screen .gifts-dev {
+  display: block;
+  margin: 6px 0 0 auto;
+}
 .gifts-screen .gift-opening {
   position: absolute;
   inset: 0;
   z-index: 5;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.82);
+  /* the cards sit right behind the reveal: keep them faint */
+  background: rgba(0, 0, 0, 0.93);
   animation: collection-in 0.3s ease-out both;
 }
 .gifts-screen .gift-opening-vessel {
@@ -13628,6 +13641,7 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 }
 .gifts-screen .gift-opening-vessel .gift-vessel {
   width: 100%;
+  height: auto;
   transition: none;
 }
 .gifts-screen .gift-opening.phase-burn .gift-opening-vessel {
@@ -13733,60 +13747,73 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 }
 
 /* phone: landscape, little height */
-body.mobile-arcade .gifts-screen .gifts-table,
-body.native-arcade .gifts-screen .gifts-table {
-  top: 18vh;
-  /* the odds sit in their own column on the right, beside the table */
+body.mobile-arcade .gifts-screen .gifts-cards,
+body.native-arcade .gifts-screen .gifts-cards {
   left: 27%;
-  right: calc(min(300px, 32vw) + 18px);
-}
-body.mobile-arcade .gifts-screen .gifts-odds,
-body.native-arcade .gifts-screen .gifts-odds {
-  top: 15vh;
-  bottom: auto;
   right: 10px;
-  width: min(300px, 32vw);
+  top: clamp(52px, 15vh, 80px);
+  max-height: calc(100% - clamp(52px, 15vh, 80px) - 8px);
+  gap: 8px;
 }
-body.mobile-arcade .gifts-screen :is(.gifts-open, .gifts-short),
-body.native-arcade .gifts-screen :is(.gifts-open, .gifts-short) {
-  left: 27%;
-  right: calc(min(300px, 32vw) + 18px);
+body.mobile-arcade .gifts-screen button.gift-card,
+body.native-arcade .gifts-screen button.gift-card {
+  border-width: 10px !important;
+  border-image-width: 10px !important;
+  padding: 2px 4px !important;
+  gap: 1px;
+}
+body.mobile-arcade .gifts-screen .gift-card-art,
+body.native-arcade .gifts-screen .gift-card-art {
+  height: 13vh;
 }
 body.mobile-arcade .gifts-screen .gift-name,
 body.native-arcade .gifts-screen .gift-name {
-  margin-top: 18px;
+  margin-top: 2px;
+  font-size: 16px !important;
 }
-body.mobile-arcade .gifts-screen .gifts-divider,
-body.native-arcade .gifts-screen .gifts-divider {
-  margin-top: -46px;
-  margin-bottom: 36px;
+body.mobile-arcade .gifts-screen .gift-price,
+body.native-arcade .gifts-screen .gift-price {
+  font-size: 14px !important;
 }
-body.mobile-arcade .gifts-screen .gifts-odds,
-body.native-arcade .gifts-screen .gifts-odds {
-  padding: 4px 10px;
-  gap: 1px;
+body.mobile-arcade .gifts-screen .gift-odds,
+body.native-arcade .gifts-screen .gift-odds {
+  margin-top: 2px;
+  gap: 0;
 }
 body.mobile-arcade .gifts-screen .gift-odds-row,
 body.native-arcade .gifts-screen .gift-odds-row {
-  font-size: 11px !important;
-  grid-template-columns: 18px 1fr auto;
-}
-body.mobile-arcade .gifts-screen .gift-odds-row img,
-body.native-arcade .gifts-screen .gift-odds-row img {
-  width: 16px;
-  height: 16px;
+  grid-template-columns: 13px minmax(0, 1fr) auto;
+  gap: 4px;
+  font-size: 10px !important;
 }
 body.mobile-arcade .gifts-screen .gift-odds-row b,
 body.native-arcade .gifts-screen .gift-odds-row b {
-  font-size: 13px !important;
-}
-body.mobile-arcade .gifts-screen .gift-odds-title,
-body.native-arcade .gifts-screen .gift-odds-title {
-  display: none;
+  font-size: 11px !important;
 }
 body.mobile-arcade .gifts-screen .gift-odds-note,
 body.native-arcade .gifts-screen .gift-odds-note {
-  font-size: 11px !important;
+  font-size: 9px !important;
+}
+body.mobile-arcade .gifts-screen .gift-card-open,
+body.native-arcade .gifts-screen .gift-card-open {
+  font-size: 14px !important;
+  padding: 2px 16px;
+}
+body.mobile-arcade .gifts-screen .gift-card-open::after,
+body.native-arcade .gifts-screen .gift-card-open::after {
+  border-width: 8px;
+  border-image-width: 8px 16px;
+}
+body.mobile-arcade .gifts-screen .gifts-karma,
+body.native-arcade .gifts-screen .gifts-karma {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.mobile-arcade .gifts-screen .gifts-dev,
+body.native-arcade .gifts-screen .gifts-dev {
+  order: -1;
+  margin: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .gifts-screen .gift-opening.phase-burn .gift-opening-vessel { animation: none; }

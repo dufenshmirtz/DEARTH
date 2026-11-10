@@ -2218,7 +2218,6 @@ const state = {
   pauseScreen: "main",
   menuCollectionOpen: false,
   menuGiftsOpen: false,
-  giftsSelected: "myrrh",
   pauseDevOpen: false,
   devUnlockAllSeals: false,
   collectionRun: null,

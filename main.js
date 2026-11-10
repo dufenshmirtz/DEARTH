@@ -2435,7 +2435,6 @@ const state = {
   pauseScreen: "main",
   menuCollectionOpen: false,
   menuGiftsOpen: false,
-  giftsSelected: "myrrh",
   pauseDevOpen: false,
   devUnlockAllSeals: false,
   collectionRun: null,
@@ -19501,6 +19500,8 @@ function defaultCollectionProgress() {
     boundDemon: null,
     // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
     devAllDemons: false,
+    // testing only (DEV button on Jesus' Gifts): KARMA never runs out while it is on
+    devInfiniteKarma: false,
     // KARMA, the currency kept between runs (see the KARMA section at the end of this file)
     karma: 0,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
@@ -19522,6 +19523,7 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       progress.devAllDemons = saved.devAllDemons === true;
+      progress.devInfiniteKarma = saved.devInfiniteKarma === true;
       if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
       if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
@@ -20559,6 +20561,21 @@ function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
 }
 
+// DEV (testing): infinite KARMA; gifts cost nothing and the real balance is kept for when it is off
+function karmaInfinite() {
+  return loadCollectionProgress().devInfiniteKarma === true;
+}
+
+function karmaCanPay(price) {
+  return karmaInfinite() || karmaBalance() >= price;
+}
+
+function toggleDevInfiniteKarma() {
+  const progress = loadCollectionProgress();
+  progress.devInfiniteKarma = !progress.devInfiniteKarma;
+  saveCollectionProgress();
+}
+
 function karmaGain(amount, source) {
   const gained = Math.max(0, Math.floor(Number(amount) || 0));
   if (!gained || !collectionCounts()) return 0;
@@ -20596,7 +20613,7 @@ function collectionNoteKarmaDrop(bot) {
 
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
-  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
+  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent on Jesus' Gifts"><span class="collection-karma-word">Karma</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
 "use strict";
 
@@ -20675,13 +20692,15 @@ function giftAlreadyOwned(kindKey, item) {
 function openGift(packKey) {
   const pack = giftPack(packKey);
   if (!pack) return { error: "unknown" };
-  if (karmaBalance() < pack.price) return { error: "karma" };
+  if (!karmaCanPay(pack.price)) return { error: "karma" };
   const progress = loadCollectionProgress();
-  progress.karma = karmaBalance() - pack.price;
+  // DEV infinite KARMA: free, and the real balance is left alone
+  const free = karmaInfinite();
+  if (!free) progress.karma = karmaBalance() - pack.price;
   const { kind, item } = rollGift(pack);
   const duplicate = giftAlreadyOwned(kind, item);
   const refund = duplicate ? giftRefund(pack) : 0;
-  if (duplicate) progress.karma += refund;
+  if (duplicate && !free) progress.karma += refund;
   else if (kind === "goetia") progress.slain.push(item);
   else progress.unlocked.push(item);
   saveCollectionProgress();
@@ -20705,8 +20724,22 @@ function giftsOpen() {
 function openGiftsFromMenu() {
   if (state.mode !== "menu") return;
   state.menuGiftsOpen = true;
-  if (!giftPack(state.giftsSelected)) state.giftsSelected = "myrrh";
   render();
+}
+
+// redraw just the Gifts screen: a full menu render rebuilds the page and would fade the screen in again
+function refreshGiftsScreen() {
+  const screen = document.querySelector(".gifts-screen");
+  if (!screen || !giftsOpen()) {
+    render();
+    return;
+  }
+  const holder = document.createElement("div");
+  holder.innerHTML = renderGiftsScreen().trim();
+  const next = holder.firstElementChild;
+  next.classList.add("settled");
+  screen.replaceWith(next);
+  bindGiftsEvents();
 }
 
 function closeGifts() {
@@ -20740,38 +20773,34 @@ function giftOddsHtml(pack) {
   const rows = GIFT_KINDS.map((kind) => {
     const odds = Number(pack.odds[kind.key]) || 0;
     const text = Number.isInteger(odds) ? String(odds) : String(+odds.toFixed(3));
-    return `<div class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(kind.label)}</span><b>${text}%</b></div>`;
+    return `<span class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(kind.label)}</span><b>${text}%</b></span>`;
   }).join("");
-  return `<div class="gift-odds-title">${escapeHtml(pack.name)}</div>${rows}<div class="gift-odds-note">Already yours: ${formatNumber(giftRefund(pack))}${KARMA_MARK} back</div>`;
+  return `<span class="gift-odds">${rows}</span><span class="gift-odds-note">Already yours: ${formatNumber(giftRefund(pack))}${KARMA_MARK} back</span>`;
 }
 
+// three framed cards beside Jesus: the gift, its price and all its odds in view; click a card to open it
 function renderGiftsScreen() {
-  const selected = giftPack(state.giftsSelected) || GIFT_PACKS[0];
   const balance = karmaBalance();
-  const gifts = GIFT_PACKS.map((pack) => {
-    const can = balance >= pack.price;
+  const infinite = karmaInfinite();
+  const cards = GIFT_PACKS.map((pack) => {
+    const can = karmaCanPay(pack.price);
     return `
-      <button type="button" class="gift-pick gift-${pack.key}${pack.key === selected.key ? " selected" : ""}" data-gift-pick="${pack.key}" aria-pressed="${pack.key === selected.key}">
-        ${giftVesselSvg(pack.key)}
+      <button type="button" class="gift-card gift-${pack.key}${can ? "" : " cant"}" data-gift-open="${pack.key}" aria-label="Open ${escapeAttr(pack.name)} for ${pack.price} KARMA"${can ? "" : ' aria-disabled="true"'}>
+        <span class="gift-card-art">${giftVesselSvg(pack.key)}</span>
         <span class="gift-name">${escapeHtml(pack.name)}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
+        ${giftOddsHtml(pack)}
+        <span class="gift-card-open">${can ? "Open" : `You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more`}</span>
       </button>`;
   }).join("");
-  const canOpen = balance >= selected.price;
   return `
     <div class="gifts-screen" role="dialog" aria-label="Jesus' Gifts">
       <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="giftRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter></defs></svg>
       <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
       <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
       <h1 class="gifts-title">Jesus' Gifts</h1>
-      <div class="gifts-karma">${collectionKarmaLine()}</div>
-      <div class="gifts-table">
-        <div class="gifts-row">${gifts}</div>
-        <div class="gifts-divider"></div>
-      </div>
-      <div class="gifts-odds">${giftOddsHtml(selected)}</div>
-      <button type="button" class="collection-bind-button gifts-open" data-gift-open${canOpen ? "" : " disabled"}>Open · ${formatNumber(selected.price)}${KARMA_MARK}</button>
-      ${canOpen ? "" : `<div class="gifts-short">You need ${formatNumber(selected.price - balance)}${KARMA_MARK} more</div>`}
+      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
+      <div class="gifts-cards">${cards}</div>
     </div>`;
 }
 
@@ -20799,7 +20828,7 @@ function startGiftOpening(packKey) {
       <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
       <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
       <div class="gift-reveal-actions">
-        <button type="button" class="collection-bind-button" data-gift-again${karmaBalance() >= pack.price ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
+        <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
         <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
       </div>
     </div>`;
@@ -20830,22 +20859,22 @@ function endGiftOpening(rerender) {
   giftOpening.timers.forEach(clearTimeout);
   giftOpening.overlay.remove();
   giftOpening = null;
-  if (rerender) render();
+  if (rerender) refreshGiftsScreen();
 }
 
 function bindGiftsEvents() {
   document.querySelectorAll("[data-gifts-back]").forEach((button) => bindOn(button, "click", () => closeGifts()));
-  document.querySelectorAll("[data-gift-pick]").forEach((button) => {
-    bindOn(button, "click", () => {
-      if (giftOpening) return;
-      state.giftsSelected = button.dataset.giftPick;
-      render();
-    });
-  });
   document.querySelectorAll("[data-gift-open]").forEach((button) => {
     bindOn(button, "click", () => {
-      if (button.disabled || giftOpening) return;
-      startGiftOpening(state.giftsSelected || "myrrh");
+      if (giftOpening || !karmaCanPay(giftPack(button.dataset.giftOpen)?.price ?? Infinity)) return;
+      startGiftOpening(button.dataset.giftOpen);
+    });
+  });
+  document.querySelectorAll("[data-gifts-dev-karma]").forEach((button) => {
+    bindOn(button, "click", () => {
+      if (giftOpening) return;
+      toggleDevInfiniteKarma();
+      refreshGiftsScreen();
     });
   });
 }

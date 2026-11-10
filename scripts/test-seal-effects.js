@@ -2805,25 +2805,54 @@ test("Jesus' Gifts: opening a pack spends KARMA, unlocks what it rolls, and refu
   `);
 });
 
-test("Jesus' Gifts screen: Jesus on the left, the three vessels on a table, odds, and the menu wiring", () => {
+test("Jesus' Gifts screen: Jesus on the left, three cards with price and odds, and the menu wiring", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     loadCollectionProgress().karma = 50;
     state.menuGiftsOpen = true;
-    state.giftsSelected = "frankincense";
     const html = renderGiftsScreen();
     assert.ok(html.includes('class="gifts-jesus"'));
     assert.ok(html.includes("Jesus' Gifts"));
-    assert.equal((html.match(/data-gift-pick=/g) || []).length, 3);
+    // a card per gift, each one opens itself and shows all its odds
+    assert.equal((html.match(/class="gift-card /g) || []).length, 3);
+    assert.equal((html.match(/data-gift-open="/g) || []).length, 3);
+    assert.equal((html.match(/class="gift-odds-row/g) || []).length, 21);
     for (const name of ["Myrrh", "Frankincense", "Gold"]) assert.ok(html.includes(name), name);
-    assert.ok(html.includes("Seal of Satan") && html.includes("0.666%"));
-    assert.ok(html.includes("Already yours: 44"));
-    // 50 is short of Frankincense's 88
-    assert.ok(html.includes("gifts-short"));
+    assert.ok(html.includes("Seal of Satan") && html.includes("0.666%") && html.includes("2.001%"));
+    assert.ok(html.includes("Already yours: 22") && html.includes("Already yours: 44") && html.includes("Already yours: 83"));
+    // 50 pays for Myrrh only: the other two cards say how much is missing
+    assert.equal((html.match(/gift-card gift-\\w+ cant/g) || []).length, 2);
+    assert.ok(html.includes("You need 38") && html.includes("You need 116"));
     assert.ok(renderMenuApp().includes("gifts-screen"));
     state.menuGiftsOpen = false;
     assert.ok(!renderMenuApp().includes("gifts-screen"));
     assert.ok(GAME_SFX.karmaGain && GAME_SFX.karmaUnlock && GAME_SFX.introBurn);
+  `);
+});
+
+test("DEV infinite KARMA: every gift can be opened for free, the real balance stays, and it is saved", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    globalThis.window = globalThis;
+    const progress = loadCollectionProgress();
+    progress.karma = 5;
+    assert.ok(renderGiftsScreen().includes("data-gifts-dev-karma"));
+    assert.equal(karmaCanPay(166), false);
+    toggleDevInfiniteKarma();
+    assert.equal(karmaInfinite(), true);
+    assert.equal(karmaCanPay(166), true);
+    assert.ok(collectionKarmaLine().includes("∞"));
+    assert.ok(!renderGiftsScreen().includes(" cant"));
+    Math.random = () => 0;
+    const first = openGift("gold");
+    assert.ok(!first.error);
+    const again = openGift("gold"); // the same demon: a duplicate, still nothing added or taken
+    assert.equal(again.duplicate, true);
+    assert.equal(karmaBalance(), 5);
+    assert.equal(JSON.parse(localStorage.getItem("dearthCollectionV2")).devInfiniteKarma, true);
+    toggleDevInfiniteKarma();
+    assert.equal(karmaCanPay(166), false);
+    assert.ok(collectionKarmaLine().includes(">5<"));
   `);
 });
 

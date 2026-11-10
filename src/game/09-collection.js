@@ -391,6 +391,8 @@ function defaultCollectionProgress() {
     boundDemon: null,
     // testing only (DEV button in the Ars Goetia): every demon counts as defeated while it is on
     devAllDemons: false,
+    // testing only (DEV button on Jesus' Gifts): KARMA never runs out while it is on
+    devInfiniteKarma: false,
     // KARMA, the currency kept between runs (see the KARMA section at the end of this file)
     karma: 0,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
@@ -412,6 +414,7 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.discovered)) progress.discovered = saved.discovered.filter((id) => typeof id === "string");
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       progress.devAllDemons = saved.devAllDemons === true;
+      progress.devInfiniteKarma = saved.devInfiniteKarma === true;
       if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
       if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
@@ -1449,6 +1452,21 @@ function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
 }
 
+// DEV (testing): infinite KARMA; gifts cost nothing and the real balance is kept for when it is off
+function karmaInfinite() {
+  return loadCollectionProgress().devInfiniteKarma === true;
+}
+
+function karmaCanPay(price) {
+  return karmaInfinite() || karmaBalance() >= price;
+}
+
+function toggleDevInfiniteKarma() {
+  const progress = loadCollectionProgress();
+  progress.devInfiniteKarma = !progress.devInfiniteKarma;
+  saveCollectionProgress();
+}
+
 function karmaGain(amount, source) {
   const gained = Math.max(0, Math.floor(Number(amount) || 0));
   if (!gained || !collectionCounts()) return 0;
@@ -1486,5 +1504,5 @@ function collectionNoteKarmaDrop(bot) {
 
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
-  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent here to unlock what you have not earned yet"><span class="collection-karma-word">Karma</span><strong>${formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
+  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent on Jesus' Gifts"><span class="collection-karma-word">Karma</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
