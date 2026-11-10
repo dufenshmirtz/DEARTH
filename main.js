@@ -15513,8 +15513,9 @@ function renderPauseMenu() {
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
           <button class="primary-button" data-pause-action="menu">Main Menu</button>
+          ${state.mode === "arcade" && isNativeArcadeApp() ? renderPauseBoundPlate("in-actions") : ""}
         </div>
-        ${state.mode === "arcade" ? renderPauseBoundPlate() : ""}
+        ${state.mode === "arcade" && !isNativeArcadeApp() ? renderPauseBoundPlate() : ""}
         ${state.pauseDevOpen && state.mode === "arcade" ? renderSelfStackingDevPanel() : ""}
         ${state.pauseDevOpen && state.mode === "arcade" ? renderDevSealGrant() : ""}
       </section>
@@ -15540,13 +15541,14 @@ function pauseBoundInfo() {
     note: "Nothing bound. Bind a defeated demon in the Collection." };
 }
 
-function renderPauseBoundPlate() {
+// placement "in-actions" (native app): the empty grid cell under Settings, beside Main Menu, centred
+function renderPauseBoundPlate(placement = "") {
   const info = pauseBoundInfo();
   const sigil = info.sealId
     ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(passiveName(info.sealId))}">${renderSealSigil(info.sealId)}</span>`
     : "";
   return `
-    <div class="pause-bound ${info.bound ? "is-bound" : "is-unbound"}" data-tooltip="${escapeAttr(info.note)}">
+    <div class="pause-bound ${info.bound ? "is-bound" : "is-unbound"} ${placement}" data-tooltip="${escapeAttr(info.note)}">
       <div class="pause-bound-divider"></div>
       <div class="pause-bound-row">
         <img class="pause-bound-art" src="${escapeAttr(info.art)}" alt="" draggable="false" />
