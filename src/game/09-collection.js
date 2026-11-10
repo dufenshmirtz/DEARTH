@@ -89,9 +89,9 @@ const COLLECTION_SECTIONS = [
   // the seven Pentacles of Saturn (in pentacle order); they took the Archangel Seals' old chance effects
   { key: "saturn", title: "Seals of Saturn", ids: ["p97", "p93", "p92", "p95", "p110", "p94", "p96"] },
   // the Pentacles of the Moon: each strengthens one ARTIFACT and doubles its weight in the Devil's Offerings
-  { key: "artifact", title: "Artifact Seals", ids: ["p70", "p135", "p136", "p137", "p138", "p139"] },
+  { key: "artifact", title: "Seals of Moon", ids: ["p70", "p135", "p136", "p137", "p138", "p139"] },
   // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
-  { key: "poison", title: "Poison Seals", ids: POISON_SEAL_IDS.slice() }
+  { key: "poison", title: "Seals of Mars", ids: POISON_SEAL_IDS.slice() }
 ];
 
 /* ---- builds: the collection filters ----

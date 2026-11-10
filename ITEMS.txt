@@ -337,7 +337,7 @@ At reveal, 30% chance to give 5 random temporary ARTIFACTS usable only this roun
 Seventh Pentacle of Saturn (16 SIN)
 When you press READY, 30% chance to make every personality STUBBORN. DAMNED already STUBBORN take 25% extra damage this round. ELITE adds +5% chance, capped at 80%.
 
-Artifact Seals
+Seals of Moon
 
 Each Pentacle of the Moon strengthens one ARTIFACT and makes it appear twice as often in Devil's Offerings.
 
@@ -359,7 +359,7 @@ If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes
 6th Pentacle of the Moon (12 SIN)
 Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left and becomes STUBBORN instead of copying its PERSONALITY. Vial of Blood appears twice as often in Devil's Offerings. ELITE gives the second DAMNED +5 BOUNTY each level.
 
-Poison Seals
+Seals of Mars
 
 Each Pentacle of Mars gives the DAMNED POISON. Every POISON a DAMNED carries deals 5 damage to it at the end of every round, before the end-of-round SEALS act. POISON stays until the DAMNED dies, and shows as a small skull next to its max SOUL (hover it to see the stacks, the damage each round and the POISON damage taken so far).
 
