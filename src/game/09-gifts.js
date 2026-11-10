@@ -9,13 +9,13 @@
    Already yours (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
    The Planetary Seals, the Trinity and Anael are locked from the start and only gifts unlock them
    (GIFT_ONLY_SEAL_IDS in 09-collection.js); the other locked SEALS can also still be earned by their
-   achievement. Opening: the vessel catches fire, burns to smoke, the sigil forms in the smoke. */
+   achievement. Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
 const GIFT_PACKS = [
   { key: "myrrh", name: "Myrrh", price: 44, odds: { goetia: 57, planet: 25, archangel: 10, boss: 4, apocalypse: 2.001, trinity: 1.333, satan: 0.666 } },
   { key: "frankincense", name: "Frankincense", price: 88, odds: { goetia: 36, planet: 35, archangel: 15, boss: 8, apocalypse: 4.001, trinity: 1.333, satan: 0.666 } },
   { key: "gold", name: "Gold", price: 166, odds: { goetia: 5, planet: 40, archangel: 25, boss: 18, apocalypse: 10, trinity: 1.333, satan: 0.666 } }
 ];
-// heat: how red the opening burns for this kind, 0 (white smoke) to 1 (blood red): the rarer, the redder
+// heat: how red the opening is for this kind, 0 (bone white) to 1 (blood red): the rarer, the redder
 const GIFT_KINDS = [
   { key: "goetia", label: "Ars Goetia demon", heat: 0 },
   { key: "planet", label: "Planetary Seal", sections: ["saturn", "artifact", "poison"], heat: 0.12 },
@@ -36,7 +36,13 @@ function giftHeatStyle(kindKey) {
 }
 const GIFT_REFUND_SHARE = 0.5;
 const GIFT_RARE_ODDS = 5; // odds under this show in red
-const GIFT_OPEN_TIMING = { burn: 900, smoke: 1000 }; // ms: the vessel burns, then the smoke thickens before the reveal
+// ms: a face-down card rises out of the gift, holds (one extra pulse per rarity step), then turns over
+const GIFT_OPEN_TIMING = { rise: 750, hold: 350, beat: 380, flip: 440 };
+
+// rarer gifts hold longer: Ars Goetia and Planetary none, up to 3 extra pulses for Trinity and Satan
+function giftOpenBeats(kindKey) {
+  return Math.round(Math.max(0, Math.min(1, Number(giftKind(kindKey)?.heat) || 0)) * 3);
+}
 
 function giftPack(key) {
   return GIFT_PACKS.find((pack) => pack.key === key) || null;
@@ -197,9 +203,13 @@ function renderGiftsScreen() {
     </div>`;
 }
 
-/* ---- opening: burn, smoke, the sigil in the smoke ----
-   Lives outside the render cycle (data-morph-keep) so renders never restart it. */
+/* ---- opening: a face-down card with a cross rises out of the gift and turns over ----
+   Red from the start for rare drops (the cross and the card's halo take the kind's heat),
+   and rarer drops hold longer before the turn. Lives outside the render cycle (data-morph-keep)
+   so renders never restart it. */
 let giftOpening = null;
+
+const GIFT_CARD_CROSS = '<svg class="gift-back-cross" viewBox="0 0 60 90" aria-hidden="true"><g filter="url(#giftRough)" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M30 8v74M12 30h36"/></g></svg>';
 
 function startGiftOpening(packKey) {
   if (giftOpening) return;
@@ -208,19 +218,24 @@ function startGiftOpening(packKey) {
   if (result.error) return;
   const pack = giftPack(packKey);
   const kind = giftKind(result.kind);
+  const beats = giftOpenBeats(result.kind);
   const overlay = document.createElement("div");
-  overlay.className = "gift-opening phase-burn";
-  overlay.setAttribute("style", giftHeatStyle(result.kind));
+  overlay.className = "gift-opening phase-rise";
+  overlay.setAttribute("style", `${giftHeatStyle(result.kind)}; --beats: ${beats}; --beat: ${GIFT_OPEN_TIMING.beat}ms`);
   overlay.setAttribute("data-morph-keep", "");
   overlay.setAttribute("role", "status");
   overlay.innerHTML = `
     <div class="gift-opening-vessel">${giftVesselSvg(pack.key)}</div>
-    <div class="gift-smoke s1"></div><div class="gift-smoke s2"></div><div class="gift-smoke s3"></div><div class="gift-smoke s4"></div>
-    <div class="gift-reveal">
-      <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
-      <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
-      <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
-      <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+    <div class="gift-flip">
+      <div class="gift-flip-card">
+        <div class="gift-face gift-back">${GIFT_CARD_CROSS}</div>
+        <div class="gift-face gift-front">
+          <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
+          <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
+          <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
+          <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Already yours · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+        </div>
+      </div>
       <div class="gift-reveal-actions">
         <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
         <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
@@ -229,12 +244,21 @@ function startGiftOpening(packKey) {
   (screen || document.body).appendChild(overlay);
   screen?.querySelectorAll(".collection-karma-line").forEach((line) => { line.outerHTML = collectionKarmaLine(); });
   giftOpening = { overlay, pack: pack.key, timers: [] };
-  playGameSfx("introBurn");
-  giftOpening.timers.push(setTimeout(() => overlay.classList.replace("phase-burn", "phase-smoke"), GIFT_OPEN_TIMING.burn));
-  giftOpening.timers.push(setTimeout(() => {
-    overlay.classList.replace("phase-smoke", "phase-reveal");
+  const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const reveal = () => {
+    overlay.classList.remove("phase-rise", "phase-hold", "phase-flip");
+    overlay.classList.add("phase-reveal");
     playGameSfx(result.duplicate ? "sell" : "karmaUnlock");
-  }, GIFT_OPEN_TIMING.burn + GIFT_OPEN_TIMING.smoke));
+  };
+  if (reduced) reveal();
+  else {
+    playGameSfx("introBurn");
+    const hold = GIFT_OPEN_TIMING.hold + beats * GIFT_OPEN_TIMING.beat;
+    const at = (ms, fn) => giftOpening.timers.push(setTimeout(fn, ms));
+    at(GIFT_OPEN_TIMING.rise, () => overlay.classList.replace("phase-rise", "phase-hold"));
+    at(GIFT_OPEN_TIMING.rise + hold, () => overlay.classList.replace("phase-hold", "phase-flip"));
+    at(GIFT_OPEN_TIMING.rise + hold + GIFT_OPEN_TIMING.flip, reveal);
+  }
   overlay.addEventListener("click", (event) => {
     event.stopPropagation();
     if (!overlay.classList.contains("phase-reveal")) return;

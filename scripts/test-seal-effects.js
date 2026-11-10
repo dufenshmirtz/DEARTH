@@ -2824,6 +2824,8 @@ test("Jesus' Gifts screen: Jesus on the left, three cards with price and odds, a
     assert.ok(giftHeatStyle("goetia").includes("--heat-rgb: 233, 227, 214"));
     assert.ok(giftHeatStyle("satan").includes("--heat-rgb: 220, 42, 47"));
     assert.deepEqual(GIFT_KINDS.map((kind) => kind.heat), [...GIFT_KINDS.map((kind) => kind.heat)].sort((a, b) => a - b));
+    // rarer drops hold longer before the card turns: no extra pulse for a demon, three for the Seal of Satan
+    assert.deepEqual(GIFT_KINDS.map((kind) => giftOpenBeats(kind.key)), [0, 0, 1, 2, 2, 3, 3]);
     assert.ok(renderOptionsMenu().includes('data-menu-action="gifts">Shop<'));
     // 50 pays for Myrrh only: the other two cards say how much is missing
     assert.equal((html.match(/gift-card gift-\\w+ cant/g) || []).length, 2);

@@ -13480,7 +13480,8 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   border: 16px solid transparent !important;
   border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / 16px stretch !important;
   border-radius: 0 !important;
-  background: rgba(5, 4, 4, 0.92) !important;
+  /* no fill: a square fill pokes out of the rough frame, and the hover glow would outline it */
+  background: transparent !important;
   box-shadow: none !important;
   transform: none !important;
   display: flex;
@@ -13615,111 +13616,158 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
   margin: 6px 0 0 auto;
 }
 .gifts-screen .gift-opening {
+  --card-w: clamp(190px, 36vh, 330px);
   position: absolute;
   inset: 0;
   z-index: 5;
   display: grid;
   place-items: center;
-  /* the cards sit right behind the reveal: keep them faint; rare gifts glow red behind it (--heat, set per gift) */
+  /* the cards sit right behind the opening: keep them faint; rare gifts glow red behind it (--heat, set per gift) */
   background:
     radial-gradient(circle at 50% 45%, rgba(var(--heat-rgb, 233, 227, 214), calc(var(--heat, 0) * 0.24)), rgba(0, 0, 0, 0) 55%),
     rgba(0, 0, 0, 0.93);
   animation: collection-in 0.3s ease-out both;
 }
+/* 1. rise: the gift shakes and fades while a face-down card rises out of it */
 .gifts-screen .gift-opening-vessel {
   position: absolute;
   left: 50%;
-  top: 46%;
-  width: clamp(130px, 26vh, 260px);
+  top: 50%;
+  width: calc(var(--card-w) * 0.6);
   transform: translate(-50%, -50%);
   color: #ece6d8;
-  transition: opacity 0.8s ease, filter 0.8s ease;
+  opacity: 0;
+  pointer-events: none;
 }
 .gifts-screen .gift-opening-vessel .gift-vessel {
   width: 100%;
   height: auto;
-  transition: none;
 }
-.gifts-screen .gift-opening.phase-burn .gift-opening-vessel {
-  animation: gift-burn 0.9s ease-in both;
+.gifts-screen .gift-opening.phase-rise .gift-opening-vessel {
+  animation: gift-vessel-out 0.75s ease-in both;
 }
-@keyframes gift-burn {
-  0% { filter: none; transform: translate(-50%, -50%); }
-  20% { transform: translate(calc(-50% - 2px), -50%); }
-  40% { filter: drop-shadow(0 0 8px rgb(var(--heat-rgb, 220, 42, 47))); transform: translate(calc(-50% + 2px), calc(-50% - 1px)); }
-  60% { transform: translate(calc(-50% - 1px), -50%); }
-  100% { filter: drop-shadow(0 0 26px rgb(var(--heat-rgb, 220, 42, 47))) brightness(1.6); transform: translate(-50%, -50%); }
+@keyframes gift-vessel-out {
+  0% { opacity: 1; transform: translate(-50%, -50%); filter: none; }
+  15% { transform: translate(calc(-50% - 3px), -50%) rotate(-2deg); }
+  30% { transform: translate(calc(-50% + 3px), -50%) rotate(2deg); filter: drop-shadow(0 0 10px rgb(var(--heat-rgb, 233, 227, 214))); }
+  45% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); filter: blur(4px) drop-shadow(0 0 18px rgb(var(--heat-rgb, 233, 227, 214))); }
 }
-.gifts-screen .gift-opening.phase-smoke .gift-opening-vessel,
-.gifts-screen .gift-opening.phase-reveal .gift-opening-vessel {
-  opacity: 0;
-  filter: blur(8px) drop-shadow(0 0 26px rgb(var(--heat-rgb, 220, 42, 47)));
-}
-.gifts-screen .gift-smoke {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--heat-rgb, 190, 183, 172), calc(0.5 + var(--heat, 0) * 0.15)), rgba(var(--heat-rgb, 120, 114, 105), 0) 66%);
-  filter: blur(14px);
-  opacity: 0;
-  transform: scale(0.3);
-  transition: opacity 1s ease, transform 1.5s ease;
-  pointer-events: none;
-}
-.gifts-screen .gift-smoke.s1 { left: 34%; top: 18%; width: 34vh; height: 34vh; }
-.gifts-screen .gift-smoke.s2 { left: 46%; top: 26%; width: 40vh; height: 40vh; transition-delay: 0.15s; }
-.gifts-screen .gift-smoke.s3 { left: 38%; top: 38%; width: 30vh; height: 30vh; transition-delay: 0.3s; }
-.gifts-screen .gift-smoke.s4 { left: 50%; top: 10%; width: 26vh; height: 26vh; transition-delay: 0.45s; }
-.gifts-screen .gift-opening.phase-smoke .gift-smoke,
-.gifts-screen .gift-opening.phase-reveal .gift-smoke {
-  opacity: 1;
-  transform: scale(1);
-}
-.gifts-screen .gift-opening.phase-reveal .gift-smoke {
-  opacity: 0.45;
-}
-.gifts-screen .gift-reveal {
+.gifts-screen .gift-flip {
   position: relative;
-  z-index: 2;
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: clamp(10px, 2.2vh, 22px);
+}
+.gifts-screen .gift-flip-card {
+  position: relative;
+  width: var(--card-w);
+  aspect-ratio: 2 / 3;
+}
+.gifts-screen .gift-opening.phase-rise .gift-flip-card {
+  animation: gift-card-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes gift-card-rise {
+  0%, 25% { opacity: 0; transform: translateY(18%) scale(0.55); }
+  100% { opacity: 1; transform: none; }
+}
+/* 2. hold: one pulse per rarity step (--beats: 0 for a demon, 3 for the Seal of Satan) */
+.gifts-screen .gift-opening.phase-hold .gift-flip-card {
+  animation: gift-card-pulse var(--beat, 380ms) ease-in-out both;
+  animation-iteration-count: var(--beats, 0);
+}
+@keyframes gift-card-pulse {
+  0%, 100% { transform: none; }
+  40% { transform: scale(1.035) rotate(-0.8deg); }
+  70% { transform: scale(1.02) rotate(0.8deg); }
+}
+/* 3. turn: edge-on, the faces swap while it is invisible, then back */
+.gifts-screen .gift-opening.phase-flip .gift-flip-card {
+  animation: gift-card-turn 0.44s ease-in-out both;
+}
+@keyframes gift-card-turn {
+  0% { transform: perspective(1200px) rotateY(0); }
+  45% { transform: perspective(1200px) rotateY(90deg) scale(1.05); }
+  45.1% { transform: perspective(1200px) rotateY(-90deg) scale(1.05); }
+  100% { transform: perspective(1200px) rotateY(0); }
+}
+.gifts-screen .gift-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--card-w) * 0.035);
+  padding: 4%;
+  border: var(--frame-w, 14px) solid transparent;
+  /* solid inside the frame only (padding-box), so nothing shows through and no square pokes out */
+  background: #050404;
+  background-clip: padding-box;
   text-align: center;
-  opacity: 0;
-  transform: scale(0.92);
-  filter: blur(6px);
-  transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease;
+}
+/* the frame is its own layer so only its lines glow (drop-shadow follows the lines, no box) */
+.gifts-screen .gift-face::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--frame-w, 14px) * -1);
+  border: var(--frame-w, 14px) solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic.png") 64 / var(--frame-w, 14px) stretch;
+  filter: drop-shadow(0 0 calc(4px + var(--heat, 0) * 10px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.3 + var(--heat, 0) * 0.6)));
   pointer-events: none;
 }
-.gifts-screen .gift-opening.phase-reveal .gift-reveal {
-  opacity: 1;
-  transform: none;
-  filter: none;
-  pointer-events: auto;
+/* red from the start for rare drops: the cross and the frame take the kind's heat */
+.gifts-screen .gift-back-cross {
+  width: 34%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 calc(4px + var(--heat, 0) * 10px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.35 + var(--heat, 0) * 0.6)));
 }
+.gifts-screen .gift-back-cross path {
+  stroke: rgb(var(--heat-rgb, 233, 227, 214)) !important;
+}
+.gifts-screen .gift-opening.phase-hold .gift-back-cross,
+.gifts-screen .gift-opening.phase-hold .gift-back::after {
+  animation: gift-back-glow var(--beat, 380ms) ease-in-out both;
+  animation-iteration-count: var(--beats, 0);
+}
+@keyframes gift-back-glow {
+  50% { filter: drop-shadow(0 0 calc(8px + var(--heat, 0) * 22px) rgb(var(--heat-rgb, 233, 227, 214))); }
+}
+.gifts-screen .gift-front {
+  opacity: 0;
+}
+.gifts-screen .gift-opening.phase-flip .gift-back { animation: gift-face-out 0.44s linear both; }
+.gifts-screen .gift-opening.phase-flip .gift-front { animation: gift-face-in 0.44s linear both; }
+@keyframes gift-face-out { 0%, 45% { opacity: 1; } 45.1%, 100% { opacity: 0; } }
+@keyframes gift-face-in { 0%, 45% { opacity: 0; } 45.1%, 100% { opacity: 1; } }
+.gifts-screen .gift-opening.phase-reveal .gift-back { opacity: 0; }
+.gifts-screen .gift-opening.phase-reveal .gift-front { opacity: 1; }
 .gifts-screen .gift-reveal-kind {
   font-family: var(--font-book) !important;
-  font-size: 14px !important;
-  letter-spacing: 0.16em;
+  font-size: clamp(9px, calc(var(--card-w) * 0.042), 14px) !important;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #8d877c !important;
 }
 .gifts-screen .gift-reveal-art {
-  width: clamp(120px, 24vh, 230px);
-  height: clamp(120px, 24vh, 230px);
+  width: 62%;
+  aspect-ratio: 1;
+  height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 calc(16px + var(--heat, 0) * 18px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.45 + var(--heat, 0) * 0.45)));
+  filter: drop-shadow(0 0 calc(6px + var(--heat, 0) * 14px) rgba(var(--heat-rgb, 233, 227, 214), calc(0.4 + var(--heat, 0) * 0.5)));
 }
 .gifts-screen .gift-reveal-name {
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: clamp(26px, 5vh, 46px) !important;
-  line-height: 1;
+  font-size: calc(var(--card-w) * 0.1) !important;
+  line-height: 1.05;
   color: rgb(var(--heat-text-rgb, 236, 230, 216)) !important;
 }
 .gifts-screen .gift-reveal-status {
   display: inline-flex;
   align-items: center;
   font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: clamp(18px, 3vh, 26px) !important;
+  font-size: calc(var(--card-w) * 0.07) !important;
   color: #dc2a2f !important;
 }
 .gifts-screen .gift-reveal-status.dup {
@@ -13731,7 +13779,13 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 .gifts-screen .gift-reveal-actions {
   display: flex;
   gap: 18px;
-  margin-top: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.gifts-screen .gift-opening.phase-reveal .gift-reveal-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 .gifts-screen .gift-reveal-actions .collection-bind-button {
   margin: 0 !important;
@@ -13797,6 +13851,14 @@ body.native-arcade .gifts-screen .gift-card-open::after {
   border-width: 8px;
   border-image-width: 8px 16px;
 }
+body.mobile-arcade .gifts-screen .gift-opening,
+body.native-arcade .gifts-screen .gift-opening {
+  --card-w: 42vh;
+}
+body.mobile-arcade .gifts-screen .gift-face,
+body.native-arcade .gifts-screen .gift-face {
+  --frame-w: 9px;
+}
 body.mobile-arcade .gifts-screen .gifts-karma,
 body.native-arcade .gifts-screen .gifts-karma {
   display: flex;
@@ -13809,8 +13871,6 @@ body.native-arcade .gifts-screen .gifts-dev {
   margin: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .gifts-screen .gift-opening.phase-burn .gift-opening-vessel { animation: none; }
-  .gifts-screen .gift-smoke,
-  .gifts-screen .gift-reveal,
-  .gifts-screen .gift-opening-vessel { transition: none; }
+  .gifts-screen .gift-opening *,
+  .gifts-screen .gift-opening { animation: none !important; transition: none !important; }
 }
