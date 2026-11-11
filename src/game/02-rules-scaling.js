@@ -1033,7 +1033,7 @@ function criticalCalipersWindow(idOrItem) {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+  return flatDamageValue(idOrItem, 15);
 }
 
 function gaapDamage(idOrItem) {

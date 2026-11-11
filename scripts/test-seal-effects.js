@@ -845,11 +845,29 @@ function critRound(passives, extra = "") {
   `;
 }
 
-test("Beleth: your CRITICAL hits the 2 DAMNED with the best guesses for 10 extra", () => {
+test("Glasya-Labolas: your CRITICAL deals 15 damage to everyone else (ELITE x1.5, rounded up)", () => {
+  game()(`
+    assert.equal(pressureSpikeDamage({ id: "p7", stack: 1 }), 15);
+    assert.equal(pressureSpikeDamage({ id: "p7", stack: 2 }), 23);
+    assert.ok(ITEMS.p7.description.includes("deals 15 damage to everyone else"));
+    assert.ok(itemDescription({ ...ITEMS.p7, stack: 2 }).includes("deals 23 damage to everyone else"));
+  `);
+  const damage = (stack) => {
+    const run = game();
+    run(critRound(`[["p7", ${stack}]]`));
+    return JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
+  };
+  // every DAMNED takes 8 more from ELITE I than from the base SEAL (23 - 15)
+  const base = damage(1);
+  const elite = damage(2);
+  assert.deepEqual(elite.map((value, index) => value - base[index]), base.map(() => 8));
+});
+
+test("Beleth: your CRITICAL hits the 2 DAMNED with the best guesses for 22 extra", () => {
   const base = game();
   base(critRound("[]"));
   const without = JSON.parse(base("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));
-  for (const [stack, extra] of [[1, 10], [2, 15]]) {
+  for (const [stack, extra] of [[1, 22], [2, 33]]) {
     const run = game();
     run(critRound(`[["p116", ${stack}]]`));
     const withSeal = JSON.parse(run("JSON.stringify(state.bots.map(bot => bot.lastDamage))"));

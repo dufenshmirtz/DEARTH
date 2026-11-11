@@ -169,7 +169,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 15 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -1140,7 +1140,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 22 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p117: {
     id: "p117",

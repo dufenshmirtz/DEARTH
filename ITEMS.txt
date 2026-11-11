@@ -50,7 +50,7 @@ Seal of Bathin (11 SIN)
 Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Beleth (12 SIN)
-When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up.
+When you hit CRITICAL, the 2 DAMNED with the best guesses take 22 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Belial (11 SIN)
 At end of round, for every 10 SIN you have, deal 2 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -107,7 +107,7 @@ Seal of Gaap (14 SIN)
 Whenever you use an ARTIFACT, 50% chance to create a copy of it in your inventory and deal 5 damage to every DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Glasya-Labolas (12 SIN)
-When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
+When you hit CRITICAL, it deals 15 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Gremory (16 SIN)
 Whenever a DAMNED with 6 or more BOUNTY dies, deal 10 damage to the highest-SOUL enemy and give it +1 BOUNTY. ELITE multiplies the damage by x1.5 and increases the BOUNTY gain by +20%.

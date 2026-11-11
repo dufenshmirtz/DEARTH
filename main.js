@@ -386,7 +386,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 15 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -1357,7 +1357,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 22 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p117: {
     id: "p117",
@@ -5261,7 +5261,7 @@ function criticalCalipersWindow(idOrItem) {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+  return flatDamageValue(idOrItem, 15);
 }
 
 function gaapDamage(idOrItem) {
@@ -5889,7 +5889,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p7", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6055,7 +6055,7 @@ function itemDescription(item) {
     return `At the start of every round, reveal ${reveals === 1 ? "one DAMNED" : `${reveals} DAMNED`}, even ones that are already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack.`;
   }
   if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
-  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 22)} extra damage.`;
   if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
   if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
   if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double SOUL and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
@@ -11274,7 +11274,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
       .sort((left, right) => Math.abs(left.guess - round.target) - Math.abs(right.guess - round.target) || left.seat - right.seat)
       .slice(0, 2)
       .map((row) => row.bot);
-    const damage = passiveEntryFlatDamage(entry, 10);
+    const damage = passiveEntryFlatDamage(entry, 22);
     if (!ranked.length || damage <= 0) return;
     markPassiveEntryTriggered(entry);
     ranked.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, ITEMS.p116.name, true));
