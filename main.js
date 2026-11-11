@@ -20757,8 +20757,11 @@ function refreshGiftsScreen() {
   holder.innerHTML = renderGiftsScreen().trim();
   const next = holder.firstElementChild;
   next.classList.add("settled");
+  // the element under the mouse is replaced and never fires mouseleave: drop its tooltip, bind the new ones
+  hideFloatingTooltip();
   screen.replaceWith(next);
   bindGiftsEvents();
+  bindFloatingTooltips(next);
 }
 
 function closeGifts() {
@@ -22337,30 +22340,7 @@ function bindEvents() {
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
 
-  const floatingTooltip = document.querySelector("#floatingTooltip");
-  if (floatingTooltip) {
-    document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
-      bindOn(element, "mouseenter", (event) => {
-        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
-        floatingTooltipOwner = element;
-        if (element.dataset.tooltipHtml) {
-          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
-        } else {
-          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
-        }
-        floatingTooltip.classList.add("visible");
-        positionFloatingTooltip(event, floatingTooltip);
-      });
-      bindOn(element, "mousemove", (event) => {
-        positionFloatingTooltip(event, floatingTooltip);
-      });
-      bindOn(element, "mouseleave", () => {
-        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
-        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
-        hideFloatingTooltip();
-      });
-    });
-  }
+  bindFloatingTooltips();
 
   document.querySelectorAll("[data-pick-bot]").forEach((button) => {
     bindOn(button, "click", () => chooseBot(Number(button.dataset.pickBot)));
@@ -22380,6 +22360,35 @@ function bindEvents() {
     bindOn(inspectButton, "click", () => {
       state.inspectingGameOver = true;
       render();
+    });
+  }
+}
+
+// hover tooltips (data-tooltip / data-tooltip-html) for everything under root; also used by screens that
+// redraw themselves without a full render (Jesus' Gifts)
+function bindFloatingTooltips(root = document) {
+  const floatingTooltip = document.querySelector("#floatingTooltip");
+  if (floatingTooltip) {
+    root.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
+      bindOn(element, "mouseenter", (event) => {
+        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
+        floatingTooltipOwner = element;
+        if (element.dataset.tooltipHtml) {
+          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
+        } else {
+          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
+        }
+        floatingTooltip.classList.add("visible");
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mousemove", (event) => {
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mouseleave", () => {
+        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
+        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
+        hideFloatingTooltip();
+      });
     });
   }
 }
