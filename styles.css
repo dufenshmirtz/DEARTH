@@ -9951,6 +9951,52 @@ body.native-arcade #app .pause-scene .pause-overlay {
   }
 }
 
+/* native app: the plate sits in the empty cell under Settings, beside Main Menu, centred (no divider, no note) */
+#app .pause-card .pause-actions .pause-bound.in-actions {
+  margin: 0;
+  align-self: center;
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-divider,
+#app .pause-card .pause-bound.in-actions .pause-bound-note {
+  display: none;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-row {
+  grid-template-columns: 38px minmax(0, auto);
+  gap: 8px;
+  margin-top: 0;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-art {
+  width: 38px;
+  height: 38px;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-text {
+  display: block;
+  min-width: 0;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-label {
+  font-size: 11px !important;
+  line-height: 1;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-name {
+  gap: 8px;
+  font-size: 17px !important;
+  white-space: nowrap;
+}
+
+#app .pause-card .pause-bound.in-actions .pause-bound-sigil .seal-sigil {
+  width: 18px;
+  height: 18px;
+}
+
 /* ==========================================================================
    SEAL collection (09-collection.js)
    ========================================================================== */
