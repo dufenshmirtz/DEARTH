@@ -1101,10 +1101,14 @@ function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-function vapulaMemoryExtraDamage(idOrItem, memoryCount) {
-  if (memoryCount > 12) return flatDamageValue(idOrItem, 15);
-  if (memoryCount >= 8) return flatDamageValue(idOrItem, 10);
-  return 0;
+// Seal of Vapula: end-of-round damage to every DAMNED with more than 8 MEMORY
+function vapulaMemoryDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+// Seal of Vassago: what a non-boss DAMNED deals to every other DAMNED the first time it goes above 6 MEMORY
+function vassagoBurstDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
 }
 
 function decarabiaMemoryExtraDamage(idOrItem, bot) {
@@ -1413,7 +1417,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p46", "p62", "p63"]).forEach((entry) => {
       if (entry.id === "p46" && botSin(bot) >= 6) {
         applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
         return;
@@ -1427,14 +1431,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p63" && bot.revealedByPassive) {
         applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
-        return;
-      }
-
-      if (entry.id === "p68") {
-        if (state.roundState?.vapulaTriggeredBotIds?.has(bot.id)) return;
-        if (applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry)) {
-          state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
-        }
         return;
       }
     });

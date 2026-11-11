@@ -344,7 +344,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vassago",
     price: 13,
-    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description:
+      "New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals 10 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p2: {
     id: "p2",
@@ -823,7 +824,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
@@ -3207,7 +3208,6 @@ function normalizeLoadedRoundState(round) {
     "bossRevealPunishedKeys",
     "bossAbilityNullifiedBotIds",
     "belethTriggeredBotIds",
-    "vapulaTriggeredBotIds",
     "kalhaSuppressedPassiveIds",
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
@@ -5329,10 +5329,14 @@ function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-function vapulaMemoryExtraDamage(idOrItem, memoryCount) {
-  if (memoryCount > 12) return flatDamageValue(idOrItem, 15);
-  if (memoryCount >= 8) return flatDamageValue(idOrItem, 10);
-  return 0;
+// Seal of Vapula: end-of-round damage to every DAMNED with more than 8 MEMORY
+function vapulaMemoryDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+// Seal of Vassago: what a non-boss DAMNED deals to every other DAMNED the first time it goes above 6 MEMORY
+function vassagoBurstDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
 }
 
 function decarabiaMemoryExtraDamage(idOrItem, bot) {
@@ -5641,7 +5645,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p46", "p62", "p63"]).forEach((entry) => {
       if (entry.id === "p46" && botSin(bot) >= 6) {
         applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
         return;
@@ -5655,14 +5659,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p63" && bot.revealedByPassive) {
         applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
-        return;
-      }
-
-      if (entry.id === "p68") {
-        if (state.roundState?.vapulaTriggeredBotIds?.has(bot.id)) return;
-        if (applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry)) {
-          state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
-        }
         return;
       }
     });
@@ -5889,7 +5885,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p68", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5931,7 +5927,9 @@ function itemDescription(item) {
   }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
-  if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
+  if (item.id === "p1") {
+    return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
+  }
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
   }
@@ -6044,7 +6042,7 @@ function itemDescription(item) {
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
+    return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
@@ -9186,7 +9184,6 @@ function beginRound() {
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),
     belethTriggeredBotIds: new Set(),
-    vapulaTriggeredBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),
@@ -12081,7 +12078,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p68", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -12163,16 +12160,28 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Vassago: each non-boss DAMNED goes off once, the first end of round it is above 6 MEMORY
     if (entry.id === "p1") {
-      const targets = activeBots().filter((bot) => bot.memory.length > 0);
-      if (!targets.length) return;
+      const bursting = activeBots().filter((bot) => !bot.isBoss && !bot.vassagoBurst && (bot.memory?.length || 0) > 6);
+      if (!bursting.length) return;
+      const name = ITEMS.p1.name;
+      const damage = vassagoBurstDamage(entry);
       markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, bot.memory.length),
-        (bot, damage) => `Seal of Vassago dealt ${damage} damage to ${bot.name}.`,
-        "Seal of Vassago"
-      );
+      bursting.forEach((source) => {
+        source.vassagoBurst = true;
+        const others = activeBots().filter((bot) => bot.id !== source.id);
+        damageBots(others, damage, (bot, dealt) => `${name}: ${source.name} passed 6 MEMORY and dealt ${dealt} damage to ${bot.name}.`, name);
+      });
+      return;
+    }
+
+    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    if (entry.id === "p68") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      if (!targets.length) return;
+      const name = ITEMS.p68.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
 

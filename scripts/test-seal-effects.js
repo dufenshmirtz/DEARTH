@@ -3492,3 +3492,55 @@ test("Seere and Vassago play their trigger animation as soon as the DAMNED they 
     assert.ok(!roundRevealAnimationActive(), "no animation when nobody new arrived");
   `);
 });
+
+test("Seal of Vapula deals 10 damage at end of round to every DAMNED with more than 8 MEMORY", () => {
+  game()(`
+    fixture([["p68"]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    [8, 9, 12, 0, 15].forEach((count, index) => { state.bots[index].memory = initialMemoryEntries(count); });
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 0, 10]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p68"));
+  `);
+  game()(`
+    fixture([["p68", 3]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    state.bots.forEach(bot => { bot.memory = initialMemoryEntries(9); });
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [23, 23, 23, 23, 23]);
+  `);
+});
+
+test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every other DAMNED, only the first time", () => {
+  game()(`
+    fixture([["p1"]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    [6, 7, 3, 0, 2].forEach((count, index) => { state.bots[index].memory = initialMemoryEntries(count); });
+    let before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [10, 0, 10, 10, 10]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p1"));
+    // the same DAMNED does not go off again; a second one passing 6 does
+    addBotMemory(state.bots[0], 1, "", { source: "test" });
+    assert.equal(state.bots[0].memory.length, 7);
+    before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 10, 10]);
+    before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 0, 0, 0, 0]);
+  `);
+  game()(`
+    // BOSSES never go off, but take the damage; ELITE II = 15
+    fixture([["p1", 2]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    state.bots[0].isBoss = true;
+    state.bots[0].memory = initialMemoryEntries(12);
+    state.bots[1].memory = initialMemoryEntries(8);
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [15, 0, 15, 15, 15]);
+  `);
+});

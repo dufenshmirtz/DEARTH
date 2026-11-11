@@ -1484,7 +1484,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p68", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -1566,16 +1566,28 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Vassago: each non-boss DAMNED goes off once, the first end of round it is above 6 MEMORY
     if (entry.id === "p1") {
-      const targets = activeBots().filter((bot) => bot.memory.length > 0);
-      if (!targets.length) return;
+      const bursting = activeBots().filter((bot) => !bot.isBoss && !bot.vassagoBurst && (bot.memory?.length || 0) > 6);
+      if (!bursting.length) return;
+      const name = ITEMS.p1.name;
+      const damage = vassagoBurstDamage(entry);
       markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, bot.memory.length),
-        (bot, damage) => `Seal of Vassago dealt ${damage} damage to ${bot.name}.`,
-        "Seal of Vassago"
-      );
+      bursting.forEach((source) => {
+        source.vassagoBurst = true;
+        const others = activeBots().filter((bot) => bot.id !== source.id);
+        damageBots(others, damage, (bot, dealt) => `${name}: ${source.name} passed 6 MEMORY and dealt ${dealt} damage to ${bot.name}.`, name);
+      });
+      return;
+    }
+
+    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    if (entry.id === "p68") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      if (!targets.length) return;
+      const name = ITEMS.p68.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
 

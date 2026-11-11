@@ -127,7 +127,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vassago",
     price: 13,
-    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description:
+      "New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals 10 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p2: {
     id: "p2",
@@ -606,7 +607,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
