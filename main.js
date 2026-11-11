@@ -1133,7 +1133,7 @@ const ITEMS = {
     name: "Seal of Amy",
     price: 14,
     description:
-      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+      "At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
   },
   p135: {
     id: "p135",
@@ -1728,7 +1728,7 @@ const ARTIFACT_SEAL_BY_ARTIFACT = {
   a11: "p139" // 6th: Vial of Blood
 };
 const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
-// Seal of Amy copies a random Player SEAL each round
+// Seal of Amy copies a random Goetic SEAL each round
 const AMY_SEAL_ID = "p134";
 // the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
 const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];
@@ -4462,7 +4462,7 @@ function mimicContributionFor(id) {
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
-// ---------- Seal of Amy: a random Player SEAL each round ----------
+// ---------- Seal of Amy: a random Goetic SEAL each round ----------
 // At the start of every round Amy rolls one Player (Goetic) SEAL and acts as it until the round ends, as an ELITE
 // SEAL two levels stronger per Amy ELITE level (Amy x1 copies at stack 2, ELITE Amy at stack 4, ELITE +2 at stack 6).
 // The roll is kept on Amy's item (amyCopiedId / amyCopiedRound) so a saved run keeps it.
@@ -4478,7 +4478,7 @@ function amyCopyPool() {
   return GOETIC_BOSS_PASSIVE_IDS.filter((id) => id !== AMY_SEAL_ID && ITEMS[id] && !isSealSuppressed(id));
 }
 
-// the Player SEAL Amy copies this round, or null
+// the Goetic SEAL Amy copies this round, or null
 function amyCopyThisRound(item = amyItem()) {
   if (!item || item.amyCopiedRound !== state.round) return null;
   const id = item.amyCopiedId;
@@ -5530,7 +5530,7 @@ function orderedPassiveEntries() {
           index
         };
       }
-      // Seal of Amy acts as this round's copied Player SEAL (its triggers animate Amy)
+      // Seal of Amy acts as this round's copied Goetic SEAL (its triggers animate Amy)
       if (item.id === AMY_SEAL_ID) {
         const copiedId = amyCopyThisRound(item);
         if (!copiedId || isSealSuppressed(copiedId)) return null;
@@ -6158,7 +6158,7 @@ function amySealDescription(item) {
   const main =
     stack <= 1
       ? parts.main
-      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+      : `At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ${copiedLabel} SEAL until the round ends.`;
   const copiedId = amyCopyThisRound(item);
   const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
   const copyText = copiedItem
@@ -9214,7 +9214,7 @@ function beginRound() {
     moonCrossBotIds: [],
     roundEvents: []
   };
-  // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
+  // Seal of Amy picks this round's Goetic SEAL before any start-of-round SEAL acts
   rollAmyCopy();
 
   state.bots.forEach((bot) => {
@@ -12873,7 +12873,7 @@ function buyShopItem(slotIndex) {
       if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
-      // Seal of Amy bought mid-round takes its Player SEAL for the rest of this round
+      // Seal of Amy bought mid-round takes its Goetic SEAL for the rest of this round
       if (item.id === AMY_SEAL_ID && state.roundState && !state.roundState.penaltiesApplied) rollAmyCopy();
       addLog(`Bought ${item.name}.`);
     }
@@ -19277,7 +19277,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p134: ["general"], // Amy (a random Player SEAL each round)
+  p134: ["general"], // Amy (a random Goetic SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
   p73: ["general"], // Asmoday

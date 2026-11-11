@@ -916,7 +916,7 @@ const ITEMS = {
     name: "Seal of Amy",
     price: 14,
     description:
-      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+      "At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
   },
   p135: {
     id: "p135",
@@ -1511,7 +1511,7 @@ const ARTIFACT_SEAL_BY_ARTIFACT = {
   a11: "p139" // 6th: Vial of Blood
 };
 const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
-// Seal of Amy copies a random Player SEAL each round
+// Seal of Amy copies a random Goetic SEAL each round
 const AMY_SEAL_ID = "p134";
 // the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
 const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];

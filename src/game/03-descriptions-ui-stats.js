@@ -360,7 +360,7 @@ function amySealDescription(item) {
   const main =
     stack <= 1
       ? parts.main
-      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+      : `At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ${copiedLabel} SEAL until the round ends.`;
   const copiedId = amyCopyThisRound(item);
   const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
   const copyText = copiedItem

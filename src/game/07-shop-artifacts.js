@@ -232,7 +232,7 @@ function buyShopItem(slotIndex) {
       if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
-      // Seal of Amy bought mid-round takes its Player SEAL for the rest of this round
+      // Seal of Amy bought mid-round takes its Goetic SEAL for the rest of this round
       if (item.id === AMY_SEAL_ID && state.roundState && !state.roundState.penaltiesApplied) rollAmyCopy();
       addLog(`Bought ${item.name}.`);
     }
