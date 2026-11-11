@@ -662,7 +662,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description:
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -5313,8 +5314,9 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
+// Seal of Barbatos: damage to each DAMNED that shares its guess
 function barbatosDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 5);
+  return flatDamageValue(idOrItem, 20);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -5645,12 +5647,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63"]).forEach((entry) => {
-      if (entry.id === "p46" && botSin(bot) >= 6) {
-        applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
-        return;
-      }
-
+    orderedPassiveEffectEntries(["p62", "p63"]).forEach((entry) => {
       if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
         applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
         state.roundState?.belethTriggeredBotIds?.add(bot.id);
@@ -5885,7 +5882,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p68", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p46", "p68", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5995,7 +5992,9 @@ function itemDescription(item) {
   if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
-  if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
+  if (item.id === "p46") {
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you also takes ${barbatosDamage(item)} damage, and its CRITICAL can't hurt you this round.`;
+  }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
   if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
@@ -10788,6 +10787,39 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
+// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
+  const shielded = new Set();
+  const entries = orderedPassiveEffectEntries("p46");
+  const round = state.roundState;
+  if (!round || !entries.length) return shielded;
+  const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
+  const counts = new Map();
+  activeBotList.forEach((bot) => {
+    const guess = guessOf(bot);
+    if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
+  });
+  const playerGuess = round.playerEffectiveGuess;
+  const hit = activeBotList.filter((bot) => {
+    const guess = guessOf(bot);
+    if (!Number.isFinite(guess)) return false;
+    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
+    if (matchesYou) shielded.add(bot.id);
+    return counts.get(guess) >= 2 || matchesYou;
+  });
+  if (!hit.length) return shielded;
+  const name = ITEMS.p46.name;
+  entries.forEach((entry) => {
+    const damage = barbatosDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+  });
+  round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
+  return shielded;
+}
+
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
   const round = state.roundState;
   if (!round) return;
@@ -10898,6 +10930,7 @@ function applyPenalties() {
     }
   }
 
+  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
@@ -10949,6 +10982,7 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
+  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -10957,6 +10991,10 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
+        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
+          barbatosBlockedCritical = true;
+          return;
+        }
         if (hitter.kind === "bot" && passiveStack("p128")) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
@@ -10976,6 +11014,7 @@ function applyPenalties() {
       }
     });
   });
+  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
   if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
@@ -19288,7 +19327,7 @@ const SEAL_BUILD_TAGS = {
   p42: ["memory"], // Stolas
   p44: ["bounty"], // Andromalius
   p45: ["general"], // Crocell (double SIN payout only)
-  p46: ["bounty"], // Barbatos
+  p46: ["reveal", "critical"], // Barbatos
   p47: ["bounty"], // Ronove
   p48: ["bounty"], // Cimejes
   p49: ["bounty", "artifact"], // Phenex

@@ -445,7 +445,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description:
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",

@@ -1085,8 +1085,9 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
+// Seal of Barbatos: damage to each DAMNED that shares its guess
 function barbatosDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 5);
+  return flatDamageValue(idOrItem, 20);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -1417,12 +1418,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63"]).forEach((entry) => {
-      if (entry.id === "p46" && botSin(bot) >= 6) {
-        applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
-        return;
-      }
-
+    orderedPassiveEffectEntries(["p62", "p63"]).forEach((entry) => {
       if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
         applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
         state.roundState?.belethTriggeredBotIds?.add(bot.id);
