@@ -14781,7 +14781,7 @@ function renderMobileMenuSettingsOverlay() {
 function renderSoundOptionsMenu() {
   if (isMobileArcadeView()) return "";
   return `
-    <div class="options-menu">
+    <div class="options-menu menu-settings-card">
       ${renderSettingsPanel("menu")}
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
@@ -17465,6 +17465,25 @@ const MENU_BG_SPIN_MS = 240000;
 const menuBackdropState = { startedAt: 0, resizeBound: false, glitchStarted: false, node: null };
 // fixed dark doorway behind the buttons (art pixels): matches .menu-door in styles.css
 const MENU_DOOR = { cx: 696 + 283 / 2, top: 476, solidTop: 55, solidBottom: 388 };
+// Options and its Settings widen the doorway (.menu-door.door-wide in styles.css): it grows around
+// the top of its solid part, so the buttons are centred lower by the extra height
+const MENU_DOOR_WIDE_SCREENS = ["options", "sound"];
+const MENU_DOOR_WIDE_SCALE_Y = 1.14;
+
+function menuDoorIsWide() {
+  return MENU_DOOR_WIDE_SCREENS.includes(state.menuScreen || "main");
+}
+
+// the backdrop node is moved into every re-rendered menu, which drops CSS transitions; it keeps its
+// classes, so flush the old look first and then switch, and the doorway animates between screens
+function updateMenuDoorWidth() {
+  const door = document.querySelector(".menu-door");
+  if (!door) return;
+  const wide = menuDoorIsWide();
+  if (door.classList.contains("door-wide") === wide) return;
+  void getComputedStyle(door).transform;
+  door.classList.toggle("door-wide", wide);
+}
 
 function menuReducedMotion() {
   return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -17524,6 +17543,7 @@ function initMenuBackdrop() {
   const crown = document.querySelector(".menu-fig .fig-crown-shimmer");
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
+  updateMenuDoorWidth();
   initMenuFigures(menuReducedMotion());
   bindMenuFigureTriggers();
   if (!menuBackdropState.resizeBound) {
@@ -17565,7 +17585,8 @@ function layoutMenuBackdrop() {
   const menu = document.querySelector(".main-menu");
   if (panel && menu) {
     const doorX = ox + MENU_DOOR.cx * s;
-    const doorMid = oy + (MENU_DOOR.top + (MENU_DOOR.solidTop + MENU_DOOR.solidBottom) / 2) * s;
+    const solidHeight = (MENU_DOOR.solidBottom - MENU_DOOR.solidTop) * (menuDoorIsWide() ? MENU_DOOR_WIDE_SCALE_Y : 1);
+    const doorMid = oy + (MENU_DOOR.top + MENU_DOOR.solidTop + solidHeight / 2) * s;
     const h = panel.offsetHeight;
     const top = Math.max(8, Math.min(doorMid - h / 2, vh - h - 12));
     panel.classList.add("door-anchored");

@@ -5311,6 +5311,19 @@ body.native-arcade .main-menu {
   top: 476px;
   width: 283px;
   height: 452px;
+  transform-origin: 50% 12%;
+  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+/* Options and Settings: the doorway opens wider (scale Y matches MENU_DOOR_WIDE_SCALE_Y in 09-rendering.js) */
+.menu-door.door-wide {
+  transform: scale(1.7, 1.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-door {
+    transition: none;
+  }
 }
 
 .menu-door,
@@ -13913,3 +13926,39 @@ body.native-arcade .gifts-screen .gifts-dev {
   .gifts-screen .gift-opening::before,
   .gifts-screen .gift-opening { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Main menu > Options > Settings: the settings sit on a framed dark card ---------- */
+#app .options-menu.menu-settings-card {
+  position: relative;
+  box-sizing: border-box;
+  width: min(640px, 94vw);
+  padding: 26px 34px 22px;
+  background: rgba(2, 2, 3, 0.94);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+}
+
+#app .options-menu.menu-settings-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 30px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 30px stretch;
+  opacity: 0.92;
+}
+
+#app .options-menu.menu-settings-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app .options-menu.menu-settings-card .settings-panel {
+  width: 100%;
+}
+
+#app .main-menu-panel.menu-screen-sound {
+  width: min(640px, 94vw);
+}
+
