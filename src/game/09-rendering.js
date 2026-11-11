@@ -1768,8 +1768,8 @@ function readMomentSnapshot() {
     anyCritical: Boolean(round?.criticalHitKeys?.size),
     bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name, twinOrder: bot.uniqueKey === "pavlos" ? 1 : 0 })),
     finals: Boolean(state.finalBossPhase),
-    downIds: Array.from(document.querySelectorAll(".bot-card.eliminated")).map((card) => card.dataset.botId),
-    downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated")).map((card) => card.dataset.botId),
+    downIds: Array.from(document.querySelectorAll(".bot-card.eliminated:not(.awaiting-ready)")).map((card) => card.dataset.botId),
+    downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated:not(.awaiting-ready)")).map((card) => card.dataset.botId),
     hp: Number(shown.hp) || 0,
     credits: Number(shown.credits) || 0,
     pentakill: Boolean(round?.pentakillPopup) && !revealing,
@@ -2175,9 +2175,10 @@ function renderBot(bot, pendingPick) {
   const effective = round?.botEffectiveGuesses.get(bot.id);
   const displayHp = display?.hp ?? bot.hp;
   const displayMaxHp = display?.maxHp ?? bot.maxHp;
-  // fell before READY: SOUL reads 0, the KO (X, sound, notice) comes after READY
+  // fell before READY: the card shows it dead at once (grey, X); the KO sound, notice and BOUNTY SIN come after READY
+  // (class "awaiting-ready" keeps it out of the KO watch in readMomentSnapshot until then)
   const deathAwaitsReady = !display && botDeathAwaitsReady(bot);
-  const isDown = display ? display.eliminated : (bot.eliminated || bot.hp <= 0) && !deathAwaitsReady;
+  const isDown = display ? display.eliminated : bot.eliminated || bot.hp <= 0;
   const revealed = Number.isFinite(effective)
     ? formatNumber(effective)
     : state.stage !== "guess"
@@ -2203,7 +2204,7 @@ function renderBot(bot, pendingPick) {
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
   const diffMarkedClass = bot.diffMarkedByPlayer && !isDown ? "diff-marked" : "";
-  const downClass = isDown ? "eliminated" : "";
+  const downClass = isDown ? (deathAwaitsReady ? "eliminated awaiting-ready" : "eliminated") : "";
   const deathCauseClass = bot.deathCause && isDown ? `death-${bot.deathCause}` : "";
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
@@ -2265,7 +2266,7 @@ function renderBot(bot, pendingPick) {
       ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double SOUL, gains MEMORY every round.`)}">Host x2</span>`
       : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
-  const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
+  const deathBadge = isDown && !deathAwaitsReady && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
   const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;

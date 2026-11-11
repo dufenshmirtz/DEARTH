@@ -85,7 +85,7 @@ No open-source license; all rights reserved. Third-party asset audit pending bef
 7. Check it on screen (shop, SEAL slot tooltip, collection) and, for anything that changes balance, run a few simulated runs.
 
 ## Timing and visuals rules
-- SEAL visuals (glow, colour) and DAMNED death animations play only after READY, even if their condition was met earlier; HEALTH may already read 0. Exception: Dantre and Serafeim act at reveal (`DEV_SEALS_AT_REVEAL`).
+- SEAL visuals (glow, colour) and DAMNED KOs (sound, KO notice, BOUNTY SIN) play only after READY, even if their condition was met earlier. A DAMNED that falls before READY is shown dead at once (grey card with the X, class `awaiting-ready`, kept out of the KO watch in `readMomentSnapshot`); its slot stays empty until the round ends. Exception: Dantre and Serafeim act at reveal (`DEV_SEALS_AT_REVEAL`).
 - Animation speed x1/x2/x4 (Settings > Gameplay): timed code uses `gameMs(ms)`; CSS animations whose names match `SPEED_SCALED_ANIMATIONS` are sped up automatically.
 - Settings live in `renderSettingsPanel` (`09-rendering.js`, tabs Audio/Display/Gameplay) and are stored with the sound settings (`01-persistence-audio.js`). Display options add body classes (`reduce-flashes`, `text-large`); respect `reduce-flashes` in new flashy CSS.
 

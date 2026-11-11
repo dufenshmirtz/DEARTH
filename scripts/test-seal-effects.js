@@ -3492,3 +3492,19 @@ test("Seere and Vassago play their trigger animation as soon as the DAMNED they 
     assert.ok(!roundRevealAnimationActive(), "no animation when nobody new arrived");
   `);
 });
+
+test("a DAMNED that falls before READY shows dead at once; its KO notice waits for READY", () => {
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([], [50, 50, 50]);
+    const bot = state.bots[0];
+    bot.deathNotice = "";
+    damageBot(bot, bot.hp + 50, "test kill", "Test");
+    assert.equal(botDeathAwaitsReady(bot), true);
+    globalThis.performance = globalThis.performance || { now: () => 0 };
+    const html = renderBot(bot, false);
+    assert.ok(html.includes("eliminated awaiting-ready"), "grey card, kept out of the KO watch");
+    assert.ok(html.includes("ko-x"), "the X shows");
+    assert.ok(!html.includes("death-badge"), "no KO notice yet");
+  `);
+});
