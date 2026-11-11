@@ -13513,12 +13513,10 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 .gifts-screen .gift-vessel {
   height: 100%;
   width: auto;
-  overflow: visible;
-  color: #ece6d8;
+  max-width: 100%;
+  object-fit: contain;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
-.gifts-screen .gift-myrrh .gift-card-art .gift-vessel { height: 74%; }
-.gifts-screen .gift-frankincense .gift-card-art .gift-vessel { height: 87%; }
 .gifts-screen .gift-card:hover:not(.cant) .gift-vessel,
 .gifts-screen .gift-card:focus-visible .gift-vessel {
   transform: translateY(-4px);

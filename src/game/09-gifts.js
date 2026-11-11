@@ -146,21 +146,10 @@ function closeGifts() {
   render();
 }
 
-// the three vessels the Magi carried, in the game's hand-drawn white line
-const GIFT_VESSEL_PATHS = {
-  myrrh: ["M42 14h16M44 14v12M56 14v12M44 26c-14 6-17 24-15 44 2 20 10 32 21 32s19-12 21-32c2-20-1-38-15-44", ["M33 52h34M31 70h38", 1.6], ["M50 104v7M47 112c2 2 4 2 6 0", 1.8]],
-  frankincense: [["M50 2v14M50 16L30 50M50 16l20 34", 1.6], "M30 50c0-15 40-15 40 0zM26 54h48c0 18-11 28-24 28S26 72 26 54zM42 82l-5 12h26l-5-12", ["M44 44c-7-7 7-11 0-19M57 42c7-7-7-11 0-19", 1.6], ["M38 47h2M48 45h2M58 47h2", 3]],
-  gold: ["M14 62h72v40H14zM14 62c0-22 72-22 72 0", "M50 38v18M43 46h14", ["M45 78h10v12H45zM14 72h72", 1.8], ["M20 108a5 3 0 1 0 10 0a5 3 0 1 0-10 0M78 106a5 3 0 1 0 10 0a5 3 0 1 0-10 0M84 100a4 2.5 0 1 0 8 0a4 2.5 0 1 0-8 0", 1.6]]
-};
-
+// the three gifts the Magi carried, ink drawings with red accents (assets/ui/gifts/, 640px, one shared crop
+// so they sit at the same scale on the cards)
 function giftVesselSvg(key) {
-  const paths = (GIFT_VESSEL_PATHS[key] || [])
-    .map((entry) => {
-      const [d, width] = Array.isArray(entry) ? entry : [entry, 2.6];
-      return `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    })
-    .join("");
-  return `<svg class="gift-vessel" viewBox="0 -4 100 120" aria-hidden="true"><g filter="url(#giftRough)">${paths}</g></svg>`;
+  return `<img class="gift-vessel" src="assets/ui/gifts/${escapeAttr(key)}.png" alt="" draggable="false" />`;
 }
 
 function giftKindIcon(kindKey) {
