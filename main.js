@@ -380,7 +380,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Orias",
     price: 13,
-    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+    description: "If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level."
   },
   p7: {
     id: "p7",
@@ -2511,6 +2511,7 @@ const state = {
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
+  playerCritLastRound: false,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   previousRoundRevealedEliminations: 0,
@@ -3257,6 +3258,7 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  if (typeof state.playerCritLastRound !== "boolean") state.playerCritLastRound = false;
   if (!Number.isFinite(state.freeRerolls)) state.freeRerolls = 0;
   if (!Number.isFinite(state.freeRerollsUntilRound)) state.freeRerollsUntilRound = 0;
   if (!Number.isFinite(state.trinityRevealsNextRound)) state.trinityRevealsNextRound = 0;
@@ -5195,11 +5197,17 @@ function applyTargetedItemSinGain(item, targets) {
   });
 }
 
+// Seal of Orias: its CRITICAL range only works in a round that follows one where you did not hit CRITICAL
+function oriasRangeReady() {
+  return state.roundState?.oriasReady !== false;
+}
+
 function critWindowDetails(idOrItem) {
+  const window = oriasRangeReady() ? criticalCalipersWindow(idOrItem) : 0;
   return {
-    guaranteed: criticalCalipersWindow(idOrItem),
+    guaranteed: window,
     chance: 0,
-    text: `+/-${criticalCalipersWindow(idOrItem)}`
+    text: `+/-${window}`
   };
 }
 
@@ -5257,8 +5265,7 @@ function spiteCircuitDamage(playerDamage) {
 }
 
 function criticalCalipersWindow(idOrItem) {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? stack + 1 : 0;
+  return simpleStackCount(idOrItem);
 }
 
 function pressureSpikeDamage(idOrItem) {
@@ -5887,7 +5894,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5940,7 +5947,7 @@ function itemDescription(item) {
     return `If your final effective guess is 0, 50, or 100, deal ${edgeGambitDamage(item)} damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage.`;
   }
   if (item.id === "p5") return `Whenever you take damage, all DAMNED take ${flatDamagePower(item)}x that damage as extra damage.`;
-  if (item.id === "p6") return `Your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer.`;
+  if (item.id === "p6") return `If you did not hit CRITICAL last round, your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer. Hitting CRITICAL turns this off for the next round.`;
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
   if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
@@ -9108,6 +9115,7 @@ function startGame(options = {}) {
   state.trinityEliteNextShop = false;
   state.trinityShopSealsNextShop = [];
   state.critMomentumBonus = 0;
+  state.playerCritLastRound = false;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
   state.previousRoundRevealedEliminations = 0;
@@ -9137,6 +9145,7 @@ function beginRound() {
   const paleHorseDamageBoostActive = Boolean(state.paleHorseBoostArmed);
   state.paleHorseBoostArmed = false;
   state.roundState = {
+    oriasReady: !state.playerCritLastRound,
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
     playerCorruption: null,
@@ -10942,6 +10951,8 @@ function applyPenalties() {
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Orias reads this at the next round start
+  state.playerCritLastRound = playerCritThisRound;
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
@@ -10955,7 +10966,10 @@ function applyPenalties() {
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
     });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
-    if (passiveStack("p6")) markPassiveTriggered("p6");
+    if (passiveStack("p6") && oriasRangeReady()) {
+      markPassiveTriggered("p6");
+      round.roundEvents.push(`${ITEMS.p6.name} goes quiet next round because you hit CRITICAL.`);
+    }
     if (passiveStack("p7")) markPassiveTriggered("p7");
     const paleHorseEntries = orderedPassiveEffectEntries("p77");
     if (paleHorseEntries.length) {

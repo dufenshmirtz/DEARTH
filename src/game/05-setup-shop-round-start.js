@@ -870,6 +870,7 @@ function startGame(options = {}) {
   state.trinityEliteNextShop = false;
   state.trinityShopSealsNextShop = [];
   state.critMomentumBonus = 0;
+  state.playerCritLastRound = false;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
   state.previousRoundRevealedEliminations = 0;
@@ -899,6 +900,7 @@ function beginRound() {
   const paleHorseDamageBoostActive = Boolean(state.paleHorseBoostArmed);
   state.paleHorseBoostArmed = false;
   state.roundState = {
+    oriasReady: !state.playerCritLastRound,
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
     playerCorruption: null,

@@ -163,7 +163,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Orias",
     price: 13,
-    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+    description: "If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level."
   },
   p7: {
     id: "p7",
@@ -2294,6 +2294,7 @@ const state = {
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
+  playerCritLastRound: false,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   previousRoundRevealedEliminations: 0,

@@ -3615,6 +3615,30 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
 });
 
+test("Seal of Orias: +1 CRITICAL range (+1 per ELITE level) only after a round without your CRITICAL", () => {
+  game()(`
+    fixture([["p6"]], [10, 20, 30, 40, 50]);
+    assert.equal(getParticipants()[0].window, 1);
+    // you hit CRITICAL: Orias goes quiet next round
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 31;
+    applyPenalties();
+    assert.equal(state.roundState.criticalHitKeys.has("player"), true);
+    assert.equal(state.playerCritLastRound, true);
+    beginRound();
+    assert.equal(getParticipants()[0].window, 0);
+    // a round with no CRITICAL of yours turns it back on
+    state.playerCritLastRound = false;
+    beginRound();
+    assert.equal(getParticipants()[0].window, 1);
+  `);
+  game()(`
+    fixture([["p6", 3]], [10, 20, 30, 40, 50]);
+    assert.equal(getParticipants()[0].window, 3);
+    assert.equal(itemDescription({ ...ITEMS.p6, description: "Old Orias text", stack: 1 }), ITEMS.p6.description);
+  `);
+});
+
 test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots, doubled by a marked reroll", () => {
   game()(`
     state.player.passives = [];

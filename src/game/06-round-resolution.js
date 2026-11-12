@@ -344,6 +344,8 @@ function applyPenalties() {
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Orias reads this at the next round start
+  state.playerCritLastRound = playerCritThisRound;
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
@@ -357,7 +359,10 @@ function applyPenalties() {
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
     });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
-    if (passiveStack("p6")) markPassiveTriggered("p6");
+    if (passiveStack("p6") && oriasRangeReady()) {
+      markPassiveTriggered("p6");
+      round.roundEvents.push(`${ITEMS.p6.name} goes quiet next round because you hit CRITICAL.`);
+    }
     if (passiveStack("p7")) markPassiveTriggered("p7");
     const paleHorseEntries = orderedPassiveEffectEntries("p77");
     if (paleHorseEntries.length) {

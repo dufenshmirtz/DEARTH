@@ -149,7 +149,7 @@ Seal of Naberius (10 SIN)
 If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Orias (13 SIN)
-Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level.
+If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level.
 
 Seal of Orobas (14 SIN)
 When a STUBBORN DAMNED dies, all BOSSES take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up.

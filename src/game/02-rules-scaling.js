@@ -966,11 +966,17 @@ function applyTargetedItemSinGain(item, targets) {
   });
 }
 
+// Seal of Orias: its CRITICAL range only works in a round that follows one where you did not hit CRITICAL
+function oriasRangeReady() {
+  return state.roundState?.oriasReady !== false;
+}
+
 function critWindowDetails(idOrItem) {
+  const window = oriasRangeReady() ? criticalCalipersWindow(idOrItem) : 0;
   return {
-    guaranteed: criticalCalipersWindow(idOrItem),
+    guaranteed: window,
     chance: 0,
-    text: `+/-${criticalCalipersWindow(idOrItem)}`
+    text: `+/-${window}`
   };
 }
 
@@ -1028,8 +1034,7 @@ function spiteCircuitDamage(playerDamage) {
 }
 
 function criticalCalipersWindow(idOrItem) {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? stack + 1 : 0;
+  return simpleStackCount(idOrItem);
 }
 
 function pressureSpikeDamage(idOrItem) {
