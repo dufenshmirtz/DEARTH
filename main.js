@@ -917,7 +917,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Silence in Heaven",
     price: 20,
-    description: "DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier."
+    description: "If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x1.5 damage from all sources for the rest of that round. ELITE adds +0.2 to the multiplier."
   },
   p81: {
     id: "p81",
@@ -5668,7 +5668,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       applyMultiplier(1.25, ITEMS.p96?.name || "Seal of Padma", null);
     }
 
-    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79", "p80"]).forEach((entry) => {
       if (entry.id === "p74") {
         if (botSin(bot) >= 10) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p74?.name, entry);
         return;
@@ -5709,6 +5709,12 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p79" && (state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0) > 0) {
         applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p79?.name, entry);
+        return;
+      }
+
+      // Seal of Silence in Heaven: once 2 DAMNED have fallen this round, every hit on the rest of them is x1.5
+      if (entry.id === "p80" && (state.roundState?.eliminationsThisRound || 0) >= 2) {
+        applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name, entry);
       }
     });
   }
@@ -5886,7 +5892,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6086,7 +6092,7 @@ function itemDescription(item) {
   }
   if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
   if (item.id === "p80") {
-    return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage if they have more than 10 TARGET-difference damage. Worst guess damage counts as TARGET-difference damage.`;
+    return `If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources for the rest of that round.`;
   }
   if (item.id === "p81") return "If a DAMNED has more than 16 MEMORY, their guess is revealed.";
   if (item.id === "p82") {
@@ -7442,7 +7448,8 @@ function applyQueuedEndOfRoundBotDamage() {
   return total;
 }
 
-function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
+// TARGET-difference-only multipliers (none at the moment; Seal of Silence in Heaven used to live here)
+function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = []) {
   const baseDamage = Math.max(0, Math.ceil(amount));
   if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
   let exactDamage = baseDamage;
@@ -7458,12 +7465,6 @@ function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = or
     modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
-
-  targetDiffEntries.forEach((entry) => {
-    if (entry.id === "p80" && baseDamage > 10) {
-      applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
-    }
-  });
 
   return { damage: roundedDamage, baseDamage, modifierEntries };
 }
@@ -10901,7 +10902,7 @@ function applyPenalties() {
     queuedPlayerHeals.push({ amount: heal, reason, source });
   };
   const activeBots = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
-  const targetDiffEntries = orderedPassiveEffectEntries("p80");
+  const targetDiffEntries = [];
   round.edgeGambitStacks = [0, 50, 100].includes(round.playerEffectiveGuess) ? passiveStack("p4") : 0;
   if (round.edgeGambitStacks) {
     markPassiveTriggered("p4");

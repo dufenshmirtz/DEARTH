@@ -235,7 +235,7 @@ Seal of the Red Horse (20 SIN)
 Each round, every revealed DAMNED has a 50% chance to take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.
 
 Seal of Silence in Heaven (20 SIN)
-DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier.
+If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x1.5 damage from all sources for the rest of that round. ELITE adds +0.2 to the multiplier.
 
 Seal of the Souls of Martyrs (20 SIN)
 DAMNED with the STUBBORN personality take x1.5 damage from all sources. ELITE adds +0.2 to the multiplier.

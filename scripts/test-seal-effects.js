@@ -3644,6 +3644,43 @@ test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 
   `);
 });
 
+test("Seal of Silence in Heaven: after 2 eliminations in a round the rest take x1.5 damage", () => {
+  game()(`
+    fixture([["p80"]], [10, 20, 30, 40, 50]);
+    const bot = state.bots[0];
+    state.roundState.eliminationsThisRound = 1;
+    assert.equal(scaledBotDamageDetails(bot, 20).damage, 20);
+    // big TARGET-difference damage alone no longer triggers it
+    assert.equal(targetDifferenceDamageDetailsForBot(bot, 30).damage, 30);
+    state.roundState.eliminationsThisRound = 2;
+    assert.equal(scaledBotDamageDetails(bot, 20).damage, 30);
+    assert.equal(scaledBotDamageDetails(bot, 15).damage, 23);
+    // a new round starts clean
+    beginRound();
+    assert.equal(scaledBotDamageDetails(bot, 20).damage, 20);
+  `);
+  game()(`
+    fixture([["p80", 2]], [10, 20, 30, 40, 50]);
+    state.roundState.eliminationsThisRound = 3;
+    assert.equal(scaledBotDamageDetails(state.bots[0], 10).damage, 17);
+    assert.ok(itemDescription({ ...ITEMS.p80, stack: 2 }).includes("x1.70"));
+    assert.equal(itemDescription({ ...ITEMS.p80, stack: 1, description: "old text" }), ITEMS.p80.description);
+  `);
+  // eliminations caused by the TARGET make the end-of-round hits on the survivors x1.5
+  game()(`
+    fixture([["p80"]], [10, 20, 30, 40, 50]);
+    state.bots[0].hp = 5;
+    state.bots[1].hp = 5;
+    damageBot(state.bots[0], 10, "test");
+    damageBot(state.bots[1], 10, "test");
+    resolveEliminatedBots([state.bots[0], state.bots[1]]);
+    assert.equal(state.roundState.eliminationsThisRound, 2);
+    const before = state.bots[2].hp;
+    damageBot(state.bots[2], 10, "test");
+    assert.equal(before - state.bots[2].hp, 15);
+  `);
+});
+
 test("Main-game BOSSES come every 8-12 eliminations, endless BOSSES still every 4-8", () => {
   game()(`
     state.bossKills = 0;

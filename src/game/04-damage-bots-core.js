@@ -181,7 +181,8 @@ function applyQueuedEndOfRoundBotDamage() {
   return total;
 }
 
-function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
+// TARGET-difference-only multipliers (none at the moment; Seal of Silence in Heaven used to live here)
+function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = []) {
   const baseDamage = Math.max(0, Math.ceil(amount));
   if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
   let exactDamage = baseDamage;
@@ -197,12 +198,6 @@ function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = or
     modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
-
-  targetDiffEntries.forEach((entry) => {
-    if (entry.id === "p80" && baseDamage > 10) {
-      applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
-    }
-  });
 
   return { damage: roundedDamage, baseDamage, modifierEntries };
 }

@@ -275,7 +275,7 @@ function applyPenalties() {
     queuedPlayerHeals.push({ amount: heal, reason, source });
   };
   const activeBots = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
-  const targetDiffEntries = orderedPassiveEffectEntries("p80");
+  const targetDiffEntries = [];
   round.edgeGambitStacks = [0, 50, 100].includes(round.playerEffectiveGuess) ? passiveStack("p4") : 0;
   if (round.edgeGambitStacks) {
     markPassiveTriggered("p4");

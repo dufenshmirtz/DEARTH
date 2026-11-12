@@ -700,7 +700,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Silence in Heaven",
     price: 20,
-    description: "DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier."
+    description: "If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x1.5 damage from all sources for the rest of that round. ELITE adds +0.2 to the multiplier."
   },
   p81: {
     id: "p81",
