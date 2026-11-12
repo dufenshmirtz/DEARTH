@@ -2710,6 +2710,7 @@ function renderOverlay() {
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
+        <div class="end-body">
         <div class="end-stats">
           <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
@@ -2723,6 +2724,7 @@ function renderOverlay() {
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
+        </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
@@ -2746,7 +2748,7 @@ function renderNewRecordsHtml() {
   return `
     <div class="new-records">
       <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
-      ${rows}
+      <div class="new-records-list">${rows}</div>
     </div>
   `;
 }
