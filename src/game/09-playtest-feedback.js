@@ -2,7 +2,7 @@
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
    demo.html (generated from index.html by build:game) turns it on; index.html leaves it off.
    The playtest build also hides the SKIP / INF test buttons (09-rendering.js, playtestMoneyModeActive), DEV / Unlock
-   under Pause, the Collection's DEV button (and ignores those flags left on by index.html), PvP (pvpAvailable); Quit stays on the menu but does nothing. */
+   under Pause (and its SEAL grant), the Collection's and Jesus' Gifts' DEV buttons (and ignores those flags left on by index.html), PvP (pvpAvailable); Quit stays on the menu but does nothing. */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 

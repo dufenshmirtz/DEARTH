@@ -20588,7 +20588,8 @@ function karmaBalance() {
 
 // DEV (testing): infinite KARMA; gifts cost nothing and the real balance is kept for when it is off
 function karmaInfinite() {
-  return loadCollectionProgress().devInfiniteKarma === true;
+  // the playtest build (demo.html) has no DEV button, so a flag left on in index.html counts as off
+  return !PLAYTEST_BUILD && loadCollectionProgress().devInfiniteKarma === true;
 }
 
 function karmaCanPay(price) {
@@ -20596,6 +20597,7 @@ function karmaCanPay(price) {
 }
 
 function toggleDevInfiniteKarma() {
+  if (PLAYTEST_BUILD) return;
   const progress = loadCollectionProgress();
   progress.devInfiniteKarma = !progress.devInfiniteKarma;
   saveCollectionProgress();
@@ -20832,7 +20834,7 @@ function renderGiftsScreen() {
       <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
       <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
       <h1 class="gifts-title">Jesus' Gifts</h1>
-      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
+      <div class="gifts-karma">${collectionKarmaLine()}${PLAYTEST_BUILD ? "" : `<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button>`}</div>
       <div class="gifts-cards">${cards}</div>
     </div>`;
 }
@@ -22038,7 +22040,7 @@ function satanDealButtonHtml() {
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
    demo.html (generated from index.html by build:game) turns it on; index.html leaves it off.
    The playtest build also hides the SKIP / INF test buttons (09-rendering.js, playtestMoneyModeActive), DEV / Unlock
-   under Pause, the Collection's DEV button (and ignores those flags left on by index.html), PvP (pvpAvailable); Quit stays on the menu but does nothing. */
+   under Pause (and its SEAL grant), the Collection's and Jesus' Gifts' DEV buttons (and ignores those flags left on by index.html), PvP (pvpAvailable); Quit stays on the menu but does nothing. */
 const PLAYTEST_BUILD = typeof window !== "undefined" && window.DEARTH_PLAYTEST_BUILD === true;
 const PLAYTEST_BUILD_LABEL = "Playtest v0.1";
 

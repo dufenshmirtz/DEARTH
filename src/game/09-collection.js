@@ -1455,7 +1455,8 @@ function karmaBalance() {
 
 // DEV (testing): infinite KARMA; gifts cost nothing and the real balance is kept for when it is off
 function karmaInfinite() {
-  return loadCollectionProgress().devInfiniteKarma === true;
+  // the playtest build (demo.html) has no DEV button, so a flag left on in index.html counts as off
+  return !PLAYTEST_BUILD && loadCollectionProgress().devInfiniteKarma === true;
 }
 
 function karmaCanPay(price) {
@@ -1463,6 +1464,7 @@ function karmaCanPay(price) {
 }
 
 function toggleDevInfiniteKarma() {
+  if (PLAYTEST_BUILD) return;
   const progress = loadCollectionProgress();
   progress.devInfiniteKarma = !progress.devInfiniteKarma;
   saveCollectionProgress();

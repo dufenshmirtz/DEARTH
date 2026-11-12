@@ -190,7 +190,7 @@ function renderGiftsScreen() {
       <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
       <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
       <h1 class="gifts-title">Jesus' Gifts</h1>
-      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
+      <div class="gifts-karma">${collectionKarmaLine()}${PLAYTEST_BUILD ? "" : `<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button>`}</div>
       <div class="gifts-cards">${cards}</div>
     </div>`;
 }

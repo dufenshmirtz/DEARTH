@@ -3524,6 +3524,9 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
     assert.ok(html.includes("eliminated awaiting-ready"), "grey card, kept out of the KO watch");
     assert.ok(html.includes("ko-x"), "the X shows");
     assert.ok(!html.includes("death-badge"), "no KO notice yet");
+  `);
+});
+
 // ---------- Playtest feedback (PLAYTEST_BUILD) ----------
 // the same game with the playtest flag on
 function playtestGame() {
@@ -3620,15 +3623,17 @@ test("the playtest build hides DEV / Unlock, the Collection DEV button and PvP, 
     state.devUnlockAllSeals = true;
     loadCollectionProgress().devAllDemons = true;
     shown.devDemons = isDemonSlain(GOETIC_BOSS_KEYS[0]);
+    loadCollectionProgress().devInfiniteKarma = true;
+    shown.devKarma = karmaInfinite();
     shown;
   `;
   const setup = `${BINDING_STUBS} startGame(); state.mode = "arcade";`;
   const normal = game();
   normal(setup);
-  assert.deepEqual({ ...normal(check) }, { dev: true, unlock: true, feedback: false, quit: true, pvp: true, pvpAvailable: true, devDemons: true });
+  assert.deepEqual({ ...normal(check) }, { dev: true, unlock: true, feedback: false, quit: true, pvp: true, pvpAvailable: true, devDemons: true, devKarma: true });
   const demo = playtestGame();
   demo(setup);
-  assert.deepEqual({ ...demo(check) }, { dev: false, unlock: false, feedback: true, quit: true, pvp: false, pvpAvailable: false, devDemons: false });
+  assert.deepEqual({ ...demo(check) }, { dev: false, unlock: false, feedback: true, quit: true, pvp: false, pvpAvailable: false, devDemons: false, devKarma: false });
   demo(`
     handlePauseAction("dev");
     assert.equal(state.pauseDevOpen, false);
