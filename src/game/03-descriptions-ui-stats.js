@@ -291,7 +291,7 @@ function itemDescription(item) {
   }
   if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
   if (item.id === "p80") {
-    return `If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources for the rest of that round.`;
+    return `If 2 or more DAMNED are eliminated in a round, at the end of the round the DAMNED still standing take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} of all the damage they took that round.`;
   }
   if (item.id === "p81") return "If a DAMNED has more than 16 MEMORY, their guess is revealed.";
   if (item.id === "p82") {

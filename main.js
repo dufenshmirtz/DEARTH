@@ -917,7 +917,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Silence in Heaven",
     price: 20,
-    description: "If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x1.5 damage from all sources for the rest of that round. ELITE adds +0.2 to the multiplier."
+    description: "If 2 or more DAMNED are eliminated in a round, at the end of the round the DAMNED still standing take x1.5 of all the damage they took that round. ELITE adds +0.2 to the multiplier."
   },
   p81: {
     id: "p81",
@@ -5668,7 +5668,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       applyMultiplier(1.25, ITEMS.p96?.name || "Seal of Padma", null);
     }
 
-    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79", "p80"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
       if (entry.id === "p74") {
         if (botSin(bot) >= 10) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p74?.name, entry);
         return;
@@ -5709,12 +5709,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p79" && (state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0) > 0) {
         applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p79?.name, entry);
-        return;
-      }
-
-      // Seal of Silence in Heaven: once 2 DAMNED have fallen this round, every hit on the rest of them is x1.5
-      if (entry.id === "p80" && (state.roundState?.eliminationsThisRound || 0) >= 2) {
-        applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name, entry);
       }
     });
   }
@@ -6092,7 +6086,7 @@ function itemDescription(item) {
   }
   if (item.id === "p79") return `DAMNED take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources if an ARTIFACT was used on them this round.`;
   if (item.id === "p80") {
-    return `If 2 or more DAMNED are eliminated in a round, the DAMNED still standing take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} damage from all sources for the rest of that round.`;
+    return `If 2 or more DAMNED are eliminated in a round, at the end of the round the DAMNED still standing take x${specialSealBaseMultiplier(item, 1.5).toFixed(2)} of all the damage they took that round.`;
   }
   if (item.id === "p81") return "If a DAMNED has more than 16 MEMORY, their guess is revealed.";
   if (item.id === "p82") {
@@ -11161,6 +11155,8 @@ function applyPenalties() {
 
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
+  // Seal of Silence in Heaven: the very last damage of the round, so it multiplies everything taken this round
+  applySilenceInHeaven();
   clearTemporaryBotSinBonuses();
 
   if (state.player.hp <= 0) {
@@ -12465,6 +12461,33 @@ function applyEndOfRoundPassiveDamageInOrder() {
       damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} ${type} damage to ${bot.name}.`, name);
     }
   });
+}
+
+// Seal of Silence in Heaven: with 2+ eliminations this round, every DAMNED still standing takes the multiplier
+// on the whole damage it took this round (bot.lastDamage). The extra skips the other multipliers so nothing counts twice.
+function applySilenceInHeaven() {
+  const round = state.roundState;
+  if (!round || (round.eliminationsThisRound || 0) < 2) return 0;
+  let total = 0;
+  orderedPassiveEffectEntries("p80").forEach((entry) => {
+    const multiplier = specialSealBaseMultiplier(entry, 1.5);
+    const name = ITEMS.p80.name;
+    const botDamages = new Map();
+    const botDamageSources = new Map();
+    activeBots().forEach((bot) => {
+      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      const extra = Math.ceil(taken * multiplier) - taken;
+      if (extra <= 0) return;
+      botDamages.set(bot.id, extra);
+      botDamageSources.set(bot.id, [{ amount: extra, source: name, kind: "multiplier-bonus" }]);
+      total += extra;
+    });
+    if (!botDamages.size) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${name}: ${round.eliminationsThisRound} DAMNED fell, so the rest took x${multiplier.toFixed(2)} of this round's damage.`);
+    applyPendingBotDamageBatch(botDamages, botDamageSources, state.bots);
+  });
+  return total;
 }
 
 function applyEndOfRoundPassives() {

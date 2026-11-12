@@ -3644,41 +3644,50 @@ test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 
   `);
 });
 
-test("Seal of Silence in Heaven: after 2 eliminations in a round the rest take x1.5 damage", () => {
+test("Seal of Silence in Heaven: after 2 eliminations in a round the rest take x1.5 of the round's whole damage, last", () => {
   game()(`
     fixture([["p80"]], [10, 20, 30, 40, 50]);
-    const bot = state.bots[0];
-    state.roundState.eliminationsThisRound = 1;
-    assert.equal(scaledBotDamageDetails(bot, 20).damage, 20);
-    // big TARGET-difference damage alone no longer triggers it
-    assert.equal(targetDifferenceDamageDetailsForBot(bot, 30).damage, 30);
+    const bot = state.bots[2];
+    // per hit it does nothing (it is applied last, on the whole round)
     state.roundState.eliminationsThisRound = 2;
-    assert.equal(scaledBotDamageDetails(bot, 20).damage, 30);
-    assert.equal(scaledBotDamageDetails(bot, 15).damage, 23);
-    // a new round starts clean
-    beginRound();
     assert.equal(scaledBotDamageDetails(bot, 20).damage, 20);
+    assert.equal(targetDifferenceDamageDetailsForBot(bot, 30).damage, 30);
+    // one elimination: no extra
+    state.bots.forEach(b => { b.lastDamage = 0; });
+    state.roundState.eliminationsThisRound = 1;
+    bot.lastDamage = 21;
+    assert.equal(applySilenceInHeaven(), 0);
+    // two: x1.5 of everything taken this round, rounded up
+    state.roundState.eliminationsThisRound = 2;
+    const before = bot.hp;
+    applySilenceInHeaven();
+    assert.equal(before - bot.hp, 11);
+    assert.equal(bot.lastDamage, 32);
   `);
   game()(`
     fixture([["p80", 2]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.lastDamage = 0; });
     state.roundState.eliminationsThisRound = 3;
-    assert.equal(scaledBotDamageDetails(state.bots[0], 10).damage, 17);
+    state.bots[0].lastDamage = 10;
+    applySilenceInHeaven();
+    assert.equal(state.bots[0].lastDamage, 17);
     assert.ok(itemDescription({ ...ITEMS.p80, stack: 2 }).includes("x1.70"));
     assert.equal(itemDescription({ ...ITEMS.p80, stack: 1, description: "old text" }), ITEMS.p80.description);
   `);
-  // eliminations caused by the TARGET make the end-of-round hits on the survivors x1.5
-  game()(`
-    fixture([["p80"]], [10, 20, 30, 40, 50]);
-    state.bots[0].hp = 5;
-    state.bots[1].hp = 5;
-    damageBot(state.bots[0], 10, "test");
-    damageBot(state.bots[1], 10, "test");
-    resolveEliminatedBots([state.bots[0], state.bots[1]]);
+  // a full round (applyPenalties runs the end-of-round too): the TARGET kills two, POISON hits a survivor, then the seal multiplies all of it
+  const survivorDamage = (passives) => game()(`
+    fixture(${passives}, [90, 90, 50, 50, 50]);
+    state.roundState.playerEffectiveGuess = 50;
+    state.bots[0].hp = 3;
+    state.bots[1].hp = 3;
+    state.bots[2].poisonCounters = 2;
+    applyPenalties();
     assert.equal(state.roundState.eliminationsThisRound, 2);
-    const before = state.bots[2].hp;
-    damageBot(state.bots[2], 10, "test");
-    assert.equal(before - state.bots[2].hp, 15);
+    state.bots[2].lastDamage;
   `);
+  const plain = survivorDamage("[]");
+  assert.ok(plain > 10);
+  assert.equal(survivorDamage('[["p80"]]'), Math.ceil(plain * 1.5));
 });
 
 test("Main-game BOSSES come every 8-12 eliminations, endless BOSSES still every 4-8", () => {

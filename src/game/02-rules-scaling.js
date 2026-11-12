@@ -1435,7 +1435,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
       applyMultiplier(1.25, ITEMS.p96?.name || "Seal of Padma", null);
     }
 
-    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79", "p80"]).forEach((entry) => {
+    orderedPassiveEffectEntries(["p74", "p75", "p76", "p77", "p78", "p79"]).forEach((entry) => {
       if (entry.id === "p74") {
         if (botSin(bot) >= 10) applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p74?.name, entry);
         return;
@@ -1476,12 +1476,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p79" && (state.roundState?.artifactTargetCountsByBotId?.get(bot.id) || 0) > 0) {
         applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p79?.name, entry);
-        return;
-      }
-
-      // Seal of Silence in Heaven: once 2 DAMNED have fallen this round, every hit on the rest of them is x1.5
-      if (entry.id === "p80" && (state.roundState?.eliminationsThisRound || 0) >= 2) {
-        applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name, entry);
       }
     });
   }
