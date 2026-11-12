@@ -10818,7 +10818,6 @@ function applyAstarothRevealedTargetDifferenceEcho(entry) {
 function applyPenalties() {
   const round = state.roundState;
   round.penaltiesApplied = true;
-  playtestNoteRoundPlayed();
   recalculateTarget();
   state.previousTarget = round.target;
   applyMoonCrossGuessShifts();
@@ -22054,8 +22053,7 @@ const FEEDBACK_FIELDS = {
   round:       "entry.1289594716",  // Γύρος που έφτασε το run
   seals:       "entry.324056541",   // Seals bought
   artifacts:   "entry.1858571614",  // Artifacts bought and used
-  bosses:      "entry.447387122",   // Bosses Defeated
-  totalRounds: "entry.420559722"    // Total rounds/runs
+  bosses:      "entry.447387122"    // Bosses Defeated
 };
 
 const FEEDBACK_RESULT = {
@@ -22088,7 +22086,6 @@ function getPlaytestTesterId() {
 //   seals:        ["Satan", "Agares", ...]
 //   artifactUses: { "Artifact name": timesUsed, ... }
 //   bosses:       ["Threon", "Padma", ...]
-//   totalRounds:  number (rounds across all runs on this device)
 // }
 function buildFeedbackUrl(runData) {
   const {
@@ -22096,8 +22093,7 @@ function buildFeedbackUrl(runData) {
     round = "",
     seals = [],
     artifactUses = {},
-    bosses = [],
-    totalRounds = ""
+    bosses = []
   } = runData || {};
 
   const artifacts = Object.entries(artifactUses)
@@ -22115,7 +22111,6 @@ function buildFeedbackUrl(runData) {
   params.set(FEEDBACK_FIELDS.seals, orNone(seals.join(", ")));
   params.set(FEEDBACK_FIELDS.artifacts, orNone(artifacts));
   params.set(FEEDBACK_FIELDS.bosses, orNone(bosses.join(", ")));
-  params.set(FEEDBACK_FIELDS.totalRounds, String(totalRounds));
 
   return FEEDBACK_FORM_URL + "?" + params.toString();
 }
@@ -22125,27 +22120,9 @@ function openPlaytestFeedback(runData) {
 }
 
 /* ---------- Playtest hooks: counters, the run's data for the form, the button ---------- */
-const PLAYTEST_TOTAL_ROUNDS_KEY = "dearthPlaytestTotalRoundsV1";
-
 // PC/browser only: the native app never shows the button
 function playtestFeedbackAvailable() {
   return PLAYTEST_BUILD === true && !isNativeArcadeApp();
-}
-
-function playtestTotalRounds() {
-  try {
-    return Math.max(0, Math.floor(Number(localStorage.getItem(PLAYTEST_TOTAL_ROUNDS_KEY)) || 0));
-  } catch (e) {
-    return 0;
-  }
-}
-
-// one more round played on this device (called once per round at READY, the death round included)
-function playtestNoteRoundPlayed() {
-  if (!playtestFeedbackAvailable() || state.mode !== "arcade") return;
-  try {
-    localStorage.setItem(PLAYTEST_TOTAL_ROUNDS_KEY, String(playtestTotalRounds() + 1));
-  } catch (e) {}
 }
 
 // recording only: the names of the BOSSES slain this run (reset in startGame)
@@ -22177,8 +22154,7 @@ function playtestRunData(result) {
     round: state.round,
     seals,
     artifactUses,
-    bosses: Array.isArray(state.bossesDefeated) ? state.bossesDefeated.slice() : [],
-    totalRounds: playtestTotalRounds()
+    bosses: Array.isArray(state.bossesDefeated) ? state.bossesDefeated.slice() : []
   };
 }
 

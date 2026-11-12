@@ -218,7 +218,6 @@ function applyAstarothRevealedTargetDifferenceEcho(entry) {
 function applyPenalties() {
   const round = state.roundState;
   round.penaltiesApplied = true;
-  playtestNoteRoundPlayed();
   recalculateTarget();
   state.previousTarget = round.target;
   applyMoonCrossGuessShifts();

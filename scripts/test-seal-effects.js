@@ -3549,7 +3549,7 @@ function playtestGame() {
   return (code) => vm.runInContext(code, context);
 }
 
-test("playtest feedback is off by default: no button, no round counting", () => {
+test("playtest feedback is off by default: no button", () => {
   game()(`
     ${BINDING_STUBS}
     startGame();
@@ -3557,8 +3557,6 @@ test("playtest feedback is off by default: no button, no round counting", () => 
     assert.equal(playtestFeedbackAvailable(), false);
     assert.equal(renderPlaytestFeedbackButton("end"), "");
     assert.equal(renderPlaytestFeedbackButton("pause"), "");
-    playtestNoteRoundPlayed();
-    assert.equal(localStorage.getItem(PLAYTEST_TOTAL_ROUNDS_KEY), null);
   `);
 });
 
@@ -3578,21 +3576,19 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
     recordPlayedArtifact(artifactId);
     recordPlayedArtifact(artifactId);
     state.round = 7;
-    playtestNoteRoundPlayed();
-    playtestNoteRoundPlayed();
     const data = playtestRunData(playtestRunResult());
     assert.equal(data.result, "Ήττα");
     assert.equal(data.round, 7);
     assert.deepEqual(Array.from(data.seals), [ITEMS.p1.name + " ×2", ITEMS.p2.name]);
     assert.equal(data.artifactUses[ITEMS[artifactId].name], 2);
-    assert.equal(data.totalRounds, 2);
+    assert.equal("totalRounds" in data, false);
     state.bossKills = UNIQUE_BOSS_KEYS.length;
     assert.equal(playtestRunResult(), "Νίκη");
     const url = new URL(buildFeedbackUrl(data));
     assert.equal(url.searchParams.get("entry.1955652171"), "Playtest v0.1");
     assert.equal(url.searchParams.get("entry.1289594716"), "7");
     assert.equal(url.searchParams.get("entry.447387122"), "Zilon, Pyros");
-    assert.equal(url.searchParams.get("entry.420559722"), "2");
+    assert.equal(url.searchParams.has("entry.420559722"), false);
     assert.ok(renderPlaytestFeedbackButton("pause").includes('data-pause-action="feedback"'));
     const empty = new URL(buildFeedbackUrl({ result: "Ήττα", round: 1 }));
     assert.equal(empty.searchParams.get("entry.324056541"), "Κανένα");
@@ -3600,7 +3596,6 @@ test("playtest feedback: BOSSES slain are recorded per run, and the form gets th
     assert.equal(empty.searchParams.get("entry.447387122"), "Κανένα");
     startGame();
     assert.deepEqual(Array.from(state.bossesDefeated), []);
-    assert.equal(playtestTotalRounds(), 2);
     // no SKIP / INF in the playtest build, and INF left on from a saved run does nothing
     state.playtestInfiniteMoney = true;
     assert.equal(playtestMoneyModeActive(), false);
