@@ -251,9 +251,9 @@ const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
-// KOs between BOSSES: 8-10 during the main game (the 8 unique BOSSES), 4-8 after it
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
-const BOSS_KILL_INTERVAL_MAX = 10;
+const BOSS_KILL_INTERVAL_MAX = 12;
 const ENDLESS_BOSS_KILL_INTERVAL_MIN = 4;
 const ENDLESS_BOSS_KILL_INTERVAL_MAX = 8;
 const PVP_SLOT_COUNT = 5;

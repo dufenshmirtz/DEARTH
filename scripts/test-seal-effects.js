@@ -366,7 +366,7 @@ test("new damage resolves at round end with each seal attributed in the animatio
   `);
 });
 
-test("each boss gets a fresh random 8-10 kill interval, unaffected by round changes", () => {
+test("each boss gets a fresh random 8-12 kill interval, unaffected by round changes", () => {
   game()(`
     fixture([], [50]);
     state.uniqueBossQueue = ["zilon", "dantre", "pyros", "threon", "kalha"];
@@ -388,7 +388,7 @@ test("each boss gets a fresh random 8-10 kill interval, unaffected by round chan
       assert.ok(nextBossSpecIfNeeded()?.uniqueKey);
       assert.equal(state.killsSinceBossSpawn, 0);
     }
-    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 9, 10, 10, 9]));
+    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 10, 11, 12, 10]));
     assert.equal(rollIndex, 6);
   `);
 });
@@ -482,7 +482,7 @@ test("a pentakill queues only one boss and keeps remaining kills toward the next
     state.bots.forEach(bot => { bot.hp = 0; });
     resolveEliminatedBots(state.bots);
     assert.equal(state.bots.filter(bot => bot.pendingReplacementSpec).length, 1);
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
     assert.equal(state.killsSinceBossSpawn, 4);
     replacePendingEliminations();
     assert.equal(state.bots.filter(bot => bot.isBoss).length, 1);
@@ -529,10 +529,10 @@ test("saved runs keep the selected boss interval and old saves migrate without l
     assert.equal(state.killsSinceBossSpawn, 6);
     delete state.nextBossKillInterval;
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
     assert.equal(state.killsSinceBossSpawn, 6);
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
   `);
 });
 
@@ -566,7 +566,7 @@ test("after the 8 unique bosses, bosses come every 4-8 KOs; KOs already counted 
     fixture([], [50]);
     state.bossKills = 7;
     resetBossKillInterval();
-    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 10);
+    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 12);
     state.killsSinceBossSpawn = 5;
     state.bossKills = 8;
     const seen = new Set();
@@ -3590,5 +3590,17 @@ test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots,
     assert.equal(sealSlotsFull(), true);
     assert.equal(eliteShopChance(), 0.08);
     assert.equal(eliteShopChance(1), 0.16);
+  `);
+});
+
+test("Main-game BOSSES come every 8-12 eliminations, endless BOSSES still every 4-8", () => {
+  game()(`
+    state.bossKills = 0;
+    assert.equal(allSpecialBossesKilled(), false);
+    assert.deepEqual([...bossKillIntervalRange()], [8, 12]);
+    const seen = new Set();
+    for (let i = 0; i < 400; i += 1) { rollBossKillInterval(); seen.add(state.nextBossKillInterval); }
+    assert.deepEqual([...seen].sort((a, b) => a - b), [8, 9, 10, 11, 12]);
+    assert.deepEqual([ENDLESS_BOSS_KILL_INTERVAL_MIN, ENDLESS_BOSS_KILL_INTERVAL_MAX], [4, 8]);
   `);
 });
