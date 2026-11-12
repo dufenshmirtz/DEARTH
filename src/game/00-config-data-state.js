@@ -69,6 +69,8 @@ if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
+// Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
+const SATANIC_BIBLE_ROLLS = 5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -163,7 +165,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Orias",
     price: 13,
-    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+    description: "If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level."
   },
   p7: {
     id: "p7",
@@ -446,7 +448,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -698,7 +700,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Silence in Heaven",
     price: 20,
-    description: "DAMNED take x1.5 damage if they have more than 10 TARGET-difference damage. Worst guess penalty counts as TARGET-difference damage. ELITE adds +0.2 to the multiplier."
+    description: "If 2 or more DAMNED are eliminated in a round, at the end of the round the DAMNED still standing take x1.5 of all the damage they took that round. ELITE adds +0.2 to the multiplier."
   },
   p81: {
     id: "p81",
@@ -873,7 +875,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 16,
-    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p129: {
     id: "p129",
@@ -1289,7 +1291,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll."
+    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
   },
   a25: {
     id: "a25",
@@ -2280,6 +2282,8 @@ const state = {
   finalBossPhase: false,
   finalBossQueued: false,
   bossQueued: false,
+  // Satanic Bible: rolls left for each cast still active (old saves kept a count in eliteBoostedNextReroll)
+  eliteBoostRolls: [],
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
@@ -2295,6 +2299,7 @@ const state = {
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
+  playerCritLastRound: false,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   previousRoundRevealedEliminations: 0,

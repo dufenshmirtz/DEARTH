@@ -11692,6 +11692,64 @@ body #app .floating-tooltip .tooltip-stolen .tooltip-stolen-title {
   text-align: right;
 }
 
+/* The death card never runs off the screen: it stops as far from the bottom as it starts from the top,
+   and the records list scrolls (the title, stats and buttons stay put). */
+#app .overlay.game-over-overlay {
+  padding: 40px 24px !important;
+}
+#app .game-over-card {
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
+}
+#app .game-over-card > * {
+  flex: 0 0 auto;
+}
+/* the stats and the records: the stats keep their size, the records take what is left */
+#app .game-over-card .end-body {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+#app .game-over-card .end-body > .end-stats {
+  flex: 0 0 auto;
+}
+#app .game-over-card .new-records {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+#app .game-over-card .new-records-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 0 6px 4px 0;
+}
+/* phone: too short for the stats and a records list side by side, so the stats and records
+   scroll together between the title and the buttons */
+body.mobile-arcade #app .overlay.game-over-overlay {
+  padding: 10px 16px !important;
+}
+body.mobile-arcade #app .game-over-card {
+  max-height: calc(100vh - 20px);
+  max-height: calc(100dvh - 20px);
+}
+body.mobile-arcade #app .game-over-card .end-body {
+  display: block;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+body.mobile-arcade #app .game-over-card .new-records-list {
+  overflow: visible;
+}
+
 /* phone: the card has little height, so the records run as one wrapped line */
 body.mobile-arcade #app .game-over-card .new-records {
   width: 100%;
@@ -11706,6 +11764,18 @@ body.mobile-arcade #app .game-over-card .new-records {
 body.mobile-arcade #app .game-over-card .new-records-title {
   font-size: 11px !important;
   letter-spacing: 0.12em;
+}
+body.mobile-arcade #app .game-over-card .new-records {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+body.mobile-arcade #app .game-over-card .new-records-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 12px;
+  padding-right: 0;
 }
 body.mobile-arcade #app .game-over-card .new-record-row {
   display: inline-flex;
@@ -13967,3 +14037,8 @@ body.native-arcade .gifts-screen .gifts-dev {
   width: min(640px, 94vw);
 }
 
+/* Satanic Bible active: the ELITE chance reads in bone white while its rolls last (hover shows them) */
+#app .elite-chance-label.elite-chance-boosted {
+  color: var(--bone) !important;
+  cursor: help;
+}

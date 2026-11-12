@@ -2503,12 +2503,13 @@ function renderShop() {
   const locked = shopDisabledBySatan();
   const actionsLocked = arcadeActionLocked();
   const eliteChance = Math.round(eliteShopChance() * 100);
+  const bibleBoosts = activeEliteBoostCount() ? `${activeName("a23")}: ${eliteBoostSummary()}` : "";
   return `
     <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
       <div class="panel-header">
         <div class="shop-title-wrap">
           <div class="panel-title">Devil's Offerings</div>
-          <div class="elite-chance-label">${eliteChance}% ELITE</div>
+          <div class="elite-chance-label ${bibleBoosts ? "elite-chance-boosted" : ""}" ${bibleBoosts ? `title="${bibleBoosts}"` : ""}>${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
           <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
@@ -2711,6 +2712,7 @@ function renderOverlay() {
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
+        <div class="end-body">
         <div class="end-stats">
           <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
@@ -2720,10 +2722,11 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
-          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>Karma earned</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned"}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
+        </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
@@ -2748,7 +2751,7 @@ function renderNewRecordsHtml() {
   return `
     <div class="new-records">
       <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
-      ${rows}
+      <div class="new-records-list">${rows}</div>
     </div>
   `;
 }

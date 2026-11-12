@@ -199,7 +199,7 @@ test("Eligos uses native crit ranges, never mirrors, and pays per DAMNED critica
   `);
 });
 
-test("Eligos pays once per critical in real resolution and preserves its protection", () => {
+test("Dantre pays once per DAMNED critical in real resolution; without your own CRITICAL theirs still hurt you", () => {
   game()(`
     fixture([["p128"]], [50, 50, 40, 50]);
     state.roundState.targetModifier = 1;
@@ -207,7 +207,7 @@ test("Eligos pays once per critical in real resolution and preserves its protect
     assert.equal(state.roundState.target, 50);
     assert.equal(state.roundState.criticalHitKeys.has("player"), false);
     assert.equal(state.player.credits, 3);
-    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+    assert.equal(state.playerDamageSources.filter(source => source.source.startsWith("CRITICAL from")).length, 3);
     assert.equal(state.stage, "summary");
   `);
 });
@@ -1150,13 +1150,28 @@ test("Threon: excess from Bathin when the round is recorded carries over and is 
   `);
 });
 
-test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as your CRITICAL", () => {
+test("Dantre: when you hit CRITICAL, other CRITICALS can't hurt you; a DAMNED's CRITICAL no longer counts as yours", () => {
+  // you hit CRITICAL alongside three DAMNED: no CRITICAL damage to you, 1 SIN per DAMNED CRITICAL
   game()(`
-    fixture([["p128"]], [50, 50, 40, 50]);
+    fixture([["p128"]], [50, 50, 40, 60]);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 50;
+    applyPenalties();
+    assert.equal(state.roundState.criticalHitKeys.has("player"), true);
+    assert.equal(state.roundState.target, 50);
+    assert.equal(state.player.credits >= 2, true);
+    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+  `);
+  // a DAMNED's CRITICAL deals its own 10% max SOUL and doesn't trigger your CRITICAL SEALS
+  game()(`
+    fixture([["p128"], ["p77"]], [50, 40, 40, 60]);
     state.roundState.targetModifier = 1;
     applyPenalties();
-    assert.equal(state.player.credits > 0, true);
-    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+    assert.equal(state.roundState.criticalHitKeys.size, 1);
+    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), true);
+    assert.equal(state.roundState.criticalHitKeys.has("player"), false);
+    assert.equal(state.paleHorseBoostArmed || false, false);
+    assert.equal(criticalDamageForVictim({ kind: "bot", key: "x" }, { kind: "bot", bot: state.bots[1] }), 100);
   `);
 });
 
@@ -1434,11 +1449,14 @@ test("Holy Spirit: each of its ten effects does what it says", () => {
   outcome("trinity", `Math.random = () => 0.1; COLLECTION_SECTIONS.find((section) => section.key === "trinity").ids.forEach((id) => loadCollectionProgress().unlocked.push(id));`, `
     assert.deepEqual(state.trinityShopSealsNextShop, ["p131"]);
     rerollShop();
-    assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131"]);
-    assert.equal(state.shop.length, 4);
+    // it takes the SEAL slot at the top of the offerings, no 4th slot
+    assert.equal(state.shop[0].item.id, "p131");
+    assert.equal(state.shop.filter(slot => slot.bonus).length, 0);
+    assert.equal(state.shop.length, 3);
     syncShopSlotCount();
-    assert.equal(state.shop.length, 4);
-    assert.ok(renderShopSlot(state.shop[3], 3).includes("TRINITY SEAL"));
+    assert.equal(state.shop.length, 3);
+    assert.equal(state.shop[0].item.id, "p131");
+    assert.ok(renderShopSlot(state.shop[0], 0).includes("TRINITY SEAL"));
   `);
   outcome("trinity", `const rolls = [0.1, 0.9]; Math.random = () => rolls.shift() ?? 0.5;`, `
     assert.deepEqual(state.trinityShopSealsNextShop, ["p132"]);
@@ -2691,6 +2709,35 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
   `);
 });
 
+test("KARMA: Honorable Death gives +1 when you die after defeating 4 or more BOSSES, once per run", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bossKills = 3;
+    finishGameOverRound();
+    assert.equal(karmaBalance(), 0);
+    assert.ok(!collectionRun().honorableDeath);
+  `);
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bossKills = 4;
+    finishGameOverRound();
+    assert.equal(karmaBalance(), 1);
+    assert.equal(collectionRun().karma, 1);
+    assert.equal(collectionRun().honorableDeath, true);
+    // never twice in one run
+    assert.equal(collectionNoteHonorableDeath(), 0);
+    assert.equal(karmaBalance(), 1);
+  `);
+  game()(`
+    // PvP and other non-counting runs never pay it
+    fixture([], [10, 20, 30, 40, 50]);
+    state.mode = "pvp";
+    state.bossKills = 9;
+    assert.equal(collectionNoteHonorableDeath(), 0);
+    assert.equal(karmaBalance(), 0);
+  `);
+});
+
 test("KARMA drops: the nth main BOSS at n x 10% (the twins roll once), +8 for beating the game, demons 90%, Archangels 3 always", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
@@ -3563,13 +3610,14 @@ test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every
   `);
 });
 
-test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes it too and its CRITICAL can't hurt you", () => {
+test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes 25 instead", () => {
   const damageWith = (passives, guesses, playerGuess, extra = "") => {
     const run = game();
     run(`
       fixture(${passives}, ${JSON.stringify(guesses)});
       state.roundState.targetModifier = 1;
       state.roundState.playerEffectiveGuess = ${playerGuess};
+      state.bots.forEach((bot) => { bot.revealedByPassive = false; }); // the round start may reveal a random DAMNED
       ${extra}
       state.player.hp = state.player.maxHp = 100;
       applyPenalties();
@@ -3581,23 +3629,52 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   let guesses = [10, 10, 30, 30, 55];
   assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 70), damageWith("[]", guesses, 70)), [20, 20, 20, 20, 0]);
   assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 70), damageWith("[]", guesses, 70)), [30, 30, 30, 30, 0]);
+  // a pair of DAMNED on your guess: 25 each, not 20 + 25
+  guesses = [10, 10, 30, 55, 80];
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10), damageWith("[]", guesses, 10)), [25, 25, 0, 0, 0]);
   // TARGET 60: you and the first DAMNED both hit CRITICAL with 60
   guesses = [60, 50, 40, 70, 80];
   const plain = damageWith("[]", guesses, 60);
   const sealed = damageWith(`[["p46"]]`, guesses, 60);
   assert.equal(plain.crits, 2);
   assert.ok(plain.player > 0, "without Barbatos the DAMNED's CRITICAL hurts you");
-  assert.equal(sealed.player, 0);
-  assert.deepEqual(diff(sealed, plain), [20, 0, 0, 0, 0]);
+  assert.equal(sealed.player, plain.player, "Barbatos no longer blocks the hidden DAMNED's CRITICAL");
+  assert.deepEqual(diff(sealed, plain), [25, 0, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [38, 0, 0, 0, 0]);
   // a revealed DAMNED on your guess: no damage from Barbatos and its CRITICAL still hits you
   const revealed = damageWith(`[["p46"]]`, guesses, 60, "state.bots[0].revealedByPassive = true;");
   assert.equal(revealed.player, plain.player);
   assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
 });
 
+test("Seal of Orias: +1 CRITICAL range (+1 per ELITE level) only after a round without your CRITICAL", () => {
+  game()(`
+    fixture([["p6"]], [10, 20, 30, 40, 50]);
+    assert.equal(getParticipants()[0].window, 1);
+    // you hit CRITICAL: Orias goes quiet next round
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 31;
+    applyPenalties();
+    assert.equal(state.roundState.criticalHitKeys.has("player"), true);
+    assert.equal(state.playerCritLastRound, true);
+    beginRound();
+    assert.equal(getParticipants()[0].window, 0);
+    // a round with no CRITICAL of yours turns it back on
+    state.playerCritLastRound = false;
+    beginRound();
+    assert.equal(getParticipants()[0].window, 1);
+  `);
+  game()(`
+    fixture([["p6", 3]], [10, 20, 30, 40, 50]);
+    assert.equal(getParticipants()[0].window, 3);
+    assert.equal(itemDescription({ ...ITEMS.p6, description: "Old Orias text", stack: 1 }), ITEMS.p6.description);
+  `);
+});
+
 test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots, doubled by a marked reroll", () => {
   game()(`
     state.player.passives = [];
+    state.eliteBoostRolls = [];
     state.eliteBoostedNextReroll = 0;
     assert.equal(eliteShopChance(), 0);
     state.player.passives.push(itemCopy("p1"));
@@ -3609,6 +3686,84 @@ test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots,
     assert.equal(eliteShopChance(), 0.08);
     assert.equal(eliteShopChance(1), 0.16);
   `);
+});
+
+test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 Devil's Offerings rolls", () => {
+  game()(`
+    state.player.passives = [itemCopy("p1")];
+    state.eliteBoostRolls = [];
+    state.eliteBoostedNextReroll = 0;
+    assert.equal(eliteShopChance(), 0.04);
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.08);
+    rerollShop();
+    rerollShop();
+    // a second cast stacks: x4 while both last
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.16);
+    assert.deepEqual(state.eliteBoostRolls.slice(), [3, 5]);
+    rerollShop();
+    rerollShop();
+    rerollShop();
+    // the first cast is spent after its 5 rolls; the second still has 2
+    assert.deepEqual(state.eliteBoostRolls.slice(), [2]);
+    assert.equal(eliteShopChance(), 0.08);
+    rerollShop();
+    rerollShop();
+    assert.deepEqual(state.eliteBoostRolls.slice(), []);
+    assert.equal(eliteShopChance(), 0.04);
+    // old saves: a marked reroll lasts one roll
+    state.eliteBoostedNextReroll = 2;
+    assert.equal(eliteShopChance(), 0.16);
+    rerollShop();
+    assert.equal(eliteShopChance(), 0.04);
+  `);
+});
+
+test("Seal of Silence in Heaven: after 2 eliminations in a round the rest take x1.5 of the round's whole damage, last", () => {
+  game()(`
+    fixture([["p80"]], [10, 20, 30, 40, 50]);
+    const bot = state.bots[2];
+    // per hit it does nothing (it is applied last, on the whole round)
+    state.roundState.eliminationsThisRound = 2;
+    assert.equal(scaledBotDamageDetails(bot, 20).damage, 20);
+    assert.equal(targetDifferenceDamageDetailsForBot(bot, 30).damage, 30);
+    // one elimination: no extra
+    state.bots.forEach(b => { b.lastDamage = 0; });
+    state.roundState.eliminationsThisRound = 1;
+    bot.lastDamage = 21;
+    assert.equal(applySilenceInHeaven(), 0);
+    // two: x1.5 of everything taken this round, rounded up
+    state.roundState.eliminationsThisRound = 2;
+    const before = bot.hp;
+    applySilenceInHeaven();
+    assert.equal(before - bot.hp, 11);
+    assert.equal(bot.lastDamage, 32);
+  `);
+  game()(`
+    fixture([["p80", 2]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.lastDamage = 0; });
+    state.roundState.eliminationsThisRound = 3;
+    state.bots[0].lastDamage = 10;
+    applySilenceInHeaven();
+    assert.equal(state.bots[0].lastDamage, 17);
+    assert.ok(itemDescription({ ...ITEMS.p80, stack: 2 }).includes("x1.70"));
+    assert.equal(itemDescription({ ...ITEMS.p80, stack: 1, description: "old text" }), ITEMS.p80.description);
+  `);
+  // a full round (applyPenalties runs the end-of-round too): the TARGET kills two, POISON hits a survivor, then the seal multiplies all of it
+  const survivorDamage = (passives) => game()(`
+    fixture(${passives}, [90, 90, 50, 50, 50]);
+    state.roundState.playerEffectiveGuess = 50;
+    state.bots[0].hp = 3;
+    state.bots[1].hp = 3;
+    state.bots[2].poisonCounters = 2;
+    applyPenalties();
+    assert.equal(state.roundState.eliminationsThisRound, 2);
+    state.bots[2].lastDamage;
+  `);
+  const plain = survivorDamage("[]");
+  assert.ok(plain > 10);
+  assert.equal(survivorDamage('[["p80"]]'), Math.ceil(plain * 1.5));
 });
 
 test("Main-game BOSSES come every 8-12 eliminations, endless BOSSES still every 4-8", () => {

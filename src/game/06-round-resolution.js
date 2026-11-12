@@ -195,12 +195,11 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
 }
 
 // Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+// revealed and matches your guess takes the bigger damage instead (never both).
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
-  const shielded = new Set();
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
-  if (!round || !entries.length) return shielded;
+  if (!round || !entries.length) return;
   const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
   const counts = new Map();
   activeBotList.forEach((bot) => {
@@ -208,23 +207,25 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
+  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
-    if (matchesYou) shielded.add(bot.id);
-    return counts.get(guess) >= 2 || matchesYou;
+    return counts.get(guess) >= 2 || matchesYou(bot);
   });
-  if (!hit.length) return shielded;
+  if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
-    const damage = barbatosDamage(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+    let triggered = false;
+    hit.forEach((bot) => {
+      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      if (damage <= 0) return;
+      triggered = true;
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
+    });
+    if (triggered) markPassiveEntryTriggered(entry);
   });
   round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
-  return shielded;
 }
 
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
@@ -275,7 +276,7 @@ function applyPenalties() {
     queuedPlayerHeals.push({ amount: heal, reason, source });
   };
   const activeBots = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
-  const targetDiffEntries = orderedPassiveEffectEntries("p80");
+  const targetDiffEntries = [];
   round.edgeGambitStacks = [0, 50, 100].includes(round.playerEffectiveGuess) ? passiveStack("p4") : 0;
   if (round.edgeGambitStacks) {
     markPassiveTriggered("p4");
@@ -337,14 +338,14 @@ function applyPenalties() {
     }
   }
 
-  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
+  applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
-  // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
-  const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
-  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
+  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Orias reads this at the next round start
+  state.playerCritLastRound = playerCritThisRound;
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
@@ -358,7 +359,10 @@ function applyPenalties() {
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
     });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
-    if (passiveStack("p6")) markPassiveTriggered("p6");
+    if (passiveStack("p6") && oriasRangeReady()) {
+      markPassiveTriggered("p6");
+      round.roundEvents.push(`${ITEMS.p6.name} goes quiet next round because you hit CRITICAL.`);
+    }
     if (passiveStack("p7")) markPassiveTriggered("p7");
     const paleHorseEntries = orderedPassiveEffectEntries("p77");
     if (paleHorseEntries.length) {
@@ -389,7 +393,6 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
-  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -398,11 +401,8 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
-          barbatosBlockedCritical = true;
-          return;
-        }
-        if (hitter.kind === "bot" && passiveStack("p128")) {
+        // Seal of Dantre: when you hit CRITICAL, the other CRITICALS can't hurt you
+        if (hitter.kind === "bot" && passiveStack("p128") && playerCritThisRound) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
           return;
@@ -421,8 +421,7 @@ function applyPenalties() {
       }
     });
   });
-  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
-  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked the other CRITICALS because you hit CRITICAL too.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -534,6 +533,8 @@ function applyPenalties() {
 
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
+  // Seal of Silence in Heaven: the very last damage of the round, so it multiplies everything taken this round
+  applySilenceInHeaven();
   clearTemporaryBotSinBonuses();
 
   if (state.player.hp <= 0) {
@@ -571,6 +572,7 @@ function applyMoonCrossGuessShifts() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
+  collectionNoteHonorableDeath();
   updateArcadeRecordsFromCurrentRun({ final: true });
   removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
@@ -632,8 +634,7 @@ function getParticipants() {
 }
 
 function criticalDamageForVictim(hitter, victim) {
-  // Seal of Dantre: a DAMNED's CRITICAL deals your CRITICAL damage (with every bonus your SEALS give it)
-  if (hitter.key === "player" || (hitter.kind === "bot" && passiveStack("p128"))) {
+  if (hitter.key === "player") {
     return playerCriticalDamageTotal(victim);
   }
   return maxHealthCriticalDamageForVictim(victim);
@@ -726,7 +727,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max SOUL";
+  if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
   const bonusPercent = criticalPercentBonus();
   const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
@@ -1839,6 +1840,33 @@ function applyEndOfRoundPassiveDamageInOrder() {
       damageBots(targets, damage, (bot, dealt) => `${name} dealt ${dealt} ${type} damage to ${bot.name}.`, name);
     }
   });
+}
+
+// Seal of Silence in Heaven: with 2+ eliminations this round, every DAMNED still standing takes the multiplier
+// on the whole damage it took this round (bot.lastDamage). The extra skips the other multipliers so nothing counts twice.
+function applySilenceInHeaven() {
+  const round = state.roundState;
+  if (!round || (round.eliminationsThisRound || 0) < 2) return 0;
+  let total = 0;
+  orderedPassiveEffectEntries("p80").forEach((entry) => {
+    const multiplier = specialSealBaseMultiplier(entry, 1.5);
+    const name = ITEMS.p80.name;
+    const botDamages = new Map();
+    const botDamageSources = new Map();
+    activeBots().forEach((bot) => {
+      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      const extra = Math.ceil(taken * multiplier) - taken;
+      if (extra <= 0) return;
+      botDamages.set(bot.id, extra);
+      botDamageSources.set(bot.id, [{ amount: extra, source: name, kind: "multiplier-bonus" }]);
+      total += extra;
+    });
+    if (!botDamages.size) return;
+    markPassiveEntryTriggered(entry);
+    round.roundEvents.push(`${name}: ${round.eliminationsThisRound} DAMNED fell, so the rest took x${multiplier.toFixed(2)} of this round's damage.`);
+    applyPendingBotDamageBatch(botDamages, botDamageSources, state.bots);
+  });
+  return total;
 }
 
 function applyEndOfRoundPassives() {

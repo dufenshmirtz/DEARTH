@@ -181,7 +181,8 @@ function applyQueuedEndOfRoundBotDamage() {
   return total;
 }
 
-function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = orderedPassiveEffectEntries("p80")) {
+// TARGET-difference-only multipliers (none at the moment; Seal of Silence in Heaven used to live here)
+function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = []) {
   const baseDamage = Math.max(0, Math.ceil(amount));
   if (!bot || baseDamage <= 0) return { damage: 0, baseDamage: 0, modifierEntries: [] };
   let exactDamage = baseDamage;
@@ -197,12 +198,6 @@ function targetDifferenceDamageDetailsForBot(bot, amount, targetDiffEntries = or
     modifierEntries.push({ amount: extra, source, kind: "multiplier-bonus" });
     markPassiveEntryTriggered(entry);
   };
-
-  targetDiffEntries.forEach((entry) => {
-    if (entry.id === "p80" && baseDamage > 10) {
-      applyMultiplier(specialSealBaseMultiplier(entry, 1.5), ITEMS.p80?.name || "Seal of Silence in Heaven", entry);
-    }
-  });
 
   return { damage: roundedDamage, baseDamage, modifierEntries };
 }
@@ -541,11 +536,39 @@ function eliteRerollBoostCount(value = state.eliteBoostedNextReroll) {
   return Math.max(0, Math.ceil(Number(value)));
 }
 
-function addEliteRerollBoost() {
-  state.eliteBoostedNextReroll = eliteRerollBoostCount() + 1;
+// Satanic Bible: one entry per cast, holding the Devil's Offerings rolls it still lasts
+function eliteBoostRolls() {
+  if (!Array.isArray(state.eliteBoostRolls)) state.eliteBoostRolls = [];
+  // old saves: each marked reroll was a cast lasting one roll
+  const legacy = eliteRerollBoostCount(state.eliteBoostedNextReroll);
+  for (let cast = 0; cast < legacy; cast += 1) state.eliteBoostRolls.push(1);
+  state.eliteBoostedNextReroll = 0;
+  state.eliteBoostRolls = state.eliteBoostRolls.map((rolls) => Math.ceil(Number(rolls))).filter((rolls) => Number.isFinite(rolls) && rolls > 0);
+  return state.eliteBoostRolls;
 }
 
-function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
+function activeEliteBoostCount() {
+  return eliteBoostRolls().length;
+}
+
+function addEliteRerollBoost() {
+  eliteBoostRolls().push(SATANIC_BIBLE_ROLLS);
+}
+
+// every Devil's Offerings roll uses up one roll of every active cast
+function spendEliteBoostRoll() {
+  state.eliteBoostRolls = eliteBoostRolls().map((rolls) => rolls - 1).filter((rolls) => rolls > 0);
+}
+
+function eliteBoostSummary() {
+  return eliteBoostRolls()
+    .slice()
+    .sort((a, b) => b - a)
+    .map((rolls) => `x2 for ${rolls} more roll${rolls === 1 ? "" : "s"}`)
+    .join(", ");
+}
+
+function eliteShopChance(eliteBoosted = activeEliteBoostCount()) {
   if (ownedSealSlotCount() <= 0) return 0;
   let multiplier = 1;
   multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
