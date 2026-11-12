@@ -450,7 +450,7 @@ Sacrificial Dagger (3 SIN)
 Pick a DAMNED. Deal 20% max-SOUL damage to non-boss DAMNED, or 10% to BOSSES.
 
 Satanic Bible (2 SIN)
-Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll.
+Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls (rerolls and new offerings). Every cast doubles it again and counts its own 5 rolls.
 
 Vial of Blood (2 SIN)
 Pick two non-boss DAMNED. The first takes 30% max-SOUL damage. The second overheals 30% max SOUL and copies the first's PERSONALITY.

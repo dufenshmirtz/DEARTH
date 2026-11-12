@@ -426,13 +426,13 @@ function rerollShop() {
     state.shop = [];
     return;
   }
-  const eliteBoosted = eliteRerollBoostCount();
-  state.eliteBoostedNextReroll = 0;
+  const eliteBoosted = activeEliteBoostCount();
   // Seal of the Holy Spirit: "ELITE offer" makes this SEAL an ELITE upgrade when you own one that can take it
   const forceElite = Boolean(state.trinityEliteNextShop);
   state.trinityEliteNextShop = false;
   state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
-  if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  if (eliteBoosted) addLog(`${activeName("a23")} raised this Seal roll's ELITE chance to ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  spendEliteBoostRoll();
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
   // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
   const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
@@ -862,6 +862,7 @@ function startGame(options = {}) {
   state.finalBossQueued = false;
   state.bossQueued = false;
   resetBossKillInterval();
+  state.eliteBoostRolls = [];
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.freeRerolls = 0;

@@ -573,7 +573,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     recordCopiedArtifactResolution(
       copierName,
       item,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`
+      `${item.name} doubled the Seal slot's ELITE chance for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. It is now ${Math.round(eliteShopChance() * 100)}%.`
     );
     return;
   }
@@ -685,7 +685,7 @@ function useActive(index) {
     addEliteRerollBoost();
     consumeActive(
       index,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`,
+      `${item.name} doubled the Seal slot's ELITE chance for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. It is now ${Math.round(eliteShopChance() * 100)}%.`,
       item.uid
     );
     return;

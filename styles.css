@@ -13962,3 +13962,8 @@ body.native-arcade .gifts-screen .gifts-dev {
   width: min(640px, 94vw);
 }
 
+/* Satanic Bible active: the ELITE chance reads in bone white while its rolls last (hover shows them) */
+#app .elite-chance-label.elite-chance-boosted {
+  color: var(--bone) !important;
+  cursor: help;
+}

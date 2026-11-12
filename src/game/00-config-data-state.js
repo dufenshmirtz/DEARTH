@@ -69,6 +69,8 @@ if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
+// Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
+const SATANIC_BIBLE_ROLLS = 5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -1289,7 +1291,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll."
+    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
   },
   a25: {
     id: "a25",
@@ -2279,6 +2281,8 @@ const state = {
   finalBossPhase: false,
   finalBossQueued: false,
   bossQueued: false,
+  // Satanic Bible: rolls left for each cast still active (old saves kept a count in eliteBoostedNextReroll)
+  eliteBoostRolls: [],
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,

@@ -2502,12 +2502,13 @@ function renderShop() {
   const locked = shopDisabledBySatan();
   const actionsLocked = arcadeActionLocked();
   const eliteChance = Math.round(eliteShopChance() * 100);
+  const bibleBoosts = activeEliteBoostCount() ? `${activeName("a23")}: ${eliteBoostSummary()}` : "";
   return `
     <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
       <div class="panel-header">
         <div class="shop-title-wrap">
           <div class="panel-title">Devil's Offerings</div>
-          <div class="elite-chance-label">${eliteChance}% ELITE</div>
+          <div class="elite-chance-label ${bibleBoosts ? "elite-chance-boosted" : ""}" ${bibleBoosts ? `title="${bibleBoosts}"` : ""}>${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
           <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>

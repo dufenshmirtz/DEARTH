@@ -46,7 +46,7 @@ function artifactDescription(item) {
       ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
-  if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
+  if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
     if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";

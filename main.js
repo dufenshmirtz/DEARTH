@@ -286,6 +286,8 @@ if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
+// Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
+const SATANIC_BIBLE_ROLLS = 5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -1506,7 +1508,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot on the next Devil's Offerings reroll."
+    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
   },
   a25: {
     id: "a25",
@@ -2496,6 +2498,8 @@ const state = {
   finalBossPhase: false,
   finalBossQueued: false,
   bossQueued: false,
+  // Satanic Bible: rolls left for each cast still active (old saves kept a count in eliteBoostedNextReroll)
+  eliteBoostRolls: [],
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
@@ -5837,7 +5841,7 @@ function artifactDescription(item) {
       ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
-  if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
+  if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
     if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
@@ -7798,11 +7802,39 @@ function eliteRerollBoostCount(value = state.eliteBoostedNextReroll) {
   return Math.max(0, Math.ceil(Number(value)));
 }
 
-function addEliteRerollBoost() {
-  state.eliteBoostedNextReroll = eliteRerollBoostCount() + 1;
+// Satanic Bible: one entry per cast, holding the Devil's Offerings rolls it still lasts
+function eliteBoostRolls() {
+  if (!Array.isArray(state.eliteBoostRolls)) state.eliteBoostRolls = [];
+  // old saves: each marked reroll was a cast lasting one roll
+  const legacy = eliteRerollBoostCount(state.eliteBoostedNextReroll);
+  for (let cast = 0; cast < legacy; cast += 1) state.eliteBoostRolls.push(1);
+  state.eliteBoostedNextReroll = 0;
+  state.eliteBoostRolls = state.eliteBoostRolls.map((rolls) => Math.ceil(Number(rolls))).filter((rolls) => Number.isFinite(rolls) && rolls > 0);
+  return state.eliteBoostRolls;
 }
 
-function eliteShopChance(eliteBoosted = state.eliteBoostedNextReroll) {
+function activeEliteBoostCount() {
+  return eliteBoostRolls().length;
+}
+
+function addEliteRerollBoost() {
+  eliteBoostRolls().push(SATANIC_BIBLE_ROLLS);
+}
+
+// every Devil's Offerings roll uses up one roll of every active cast
+function spendEliteBoostRoll() {
+  state.eliteBoostRolls = eliteBoostRolls().map((rolls) => rolls - 1).filter((rolls) => rolls > 0);
+}
+
+function eliteBoostSummary() {
+  return eliteBoostRolls()
+    .slice()
+    .sort((a, b) => b - a)
+    .map((rolls) => `x2 for ${rolls} more roll${rolls === 1 ? "" : "s"}`)
+    .join(", ");
+}
+
+function eliteShopChance(eliteBoosted = activeEliteBoostCount()) {
   if (ownedSealSlotCount() <= 0) return 0;
   let multiplier = 1;
   multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
@@ -8659,13 +8691,13 @@ function rerollShop() {
     state.shop = [];
     return;
   }
-  const eliteBoosted = eliteRerollBoostCount();
-  state.eliteBoostedNextReroll = 0;
+  const eliteBoosted = activeEliteBoostCount();
   // Seal of the Holy Spirit: "ELITE offer" makes this SEAL an ELITE upgrade when you own one that can take it
   const forceElite = Boolean(state.trinityEliteNextShop);
   state.trinityEliteNextShop = false;
   state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
-  if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  if (eliteBoosted) addLog(`${activeName("a23")} raised this Seal roll's ELITE chance to ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
+  spendEliteBoostRoll();
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
   // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
   const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
@@ -9095,6 +9127,7 @@ function startGame(options = {}) {
   state.finalBossQueued = false;
   state.bossQueued = false;
   resetBossKillInterval();
+  state.eliteBoostRolls = [];
   state.eliteBoostedNextReroll = 0;
   state.paleHorseBoostArmed = false;
   state.freeRerolls = 0;
@@ -13262,7 +13295,7 @@ function beginCopiedArtifactEffect(sourceItem, copierName) {
     recordCopiedArtifactResolution(
       copierName,
       item,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`
+      `${item.name} doubled the Seal slot's ELITE chance for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. It is now ${Math.round(eliteShopChance() * 100)}%.`
     );
     return;
   }
@@ -13374,7 +13407,7 @@ function useActive(index) {
     addEliteRerollBoost();
     consumeActive(
       index,
-      `${item.name} marked the next reroll. The Seal slot's ELITE chance is ${Math.round(eliteShopChance() * 100)}%.`,
+      `${item.name} doubled the Seal slot's ELITE chance for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. It is now ${Math.round(eliteShopChance() * 100)}%.`,
       item.uid
     );
     return;
@@ -17026,12 +17059,13 @@ function renderShop() {
   const locked = shopDisabledBySatan();
   const actionsLocked = arcadeActionLocked();
   const eliteChance = Math.round(eliteShopChance() * 100);
+  const bibleBoosts = activeEliteBoostCount() ? `${activeName("a23")}: ${eliteBoostSummary()}` : "";
   return `
     <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
       <div class="panel-header">
         <div class="shop-title-wrap">
           <div class="panel-title">Devil's Offerings</div>
-          <div class="elite-chance-label">${eliteChance}% ELITE</div>
+          <div class="elite-chance-label ${bibleBoosts ? "elite-chance-boosted" : ""}" ${bibleBoosts ? `title="${bibleBoosts}"` : ""}>${eliteChance}% ELITE</div>
         </div>
         <div class="reroll-control">
           <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>

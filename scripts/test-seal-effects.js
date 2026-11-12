@@ -3598,6 +3598,7 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
 test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots, doubled by a marked reroll", () => {
   game()(`
     state.player.passives = [];
+    state.eliteBoostRolls = [];
     state.eliteBoostedNextReroll = 0;
     assert.equal(eliteShopChance(), 0);
     state.player.passives.push(itemCopy("p1"));
@@ -3608,6 +3609,38 @@ test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots,
     assert.equal(sealSlotsFull(), true);
     assert.equal(eliteShopChance(), 0.08);
     assert.equal(eliteShopChance(1), 0.16);
+  `);
+});
+
+test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 Devil's Offerings rolls", () => {
+  game()(`
+    state.player.passives = [itemCopy("p1")];
+    state.eliteBoostRolls = [];
+    state.eliteBoostedNextReroll = 0;
+    assert.equal(eliteShopChance(), 0.04);
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.08);
+    rerollShop();
+    rerollShop();
+    // a second cast stacks: x4 while both last
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.16);
+    assert.deepEqual(state.eliteBoostRolls.slice(), [3, 5]);
+    rerollShop();
+    rerollShop();
+    rerollShop();
+    // the first cast is spent after its 5 rolls; the second still has 2
+    assert.deepEqual(state.eliteBoostRolls.slice(), [2]);
+    assert.equal(eliteShopChance(), 0.08);
+    rerollShop();
+    rerollShop();
+    assert.deepEqual(state.eliteBoostRolls.slice(), []);
+    assert.equal(eliteShopChance(), 0.04);
+    // old saves: a marked reroll lasts one roll
+    state.eliteBoostedNextReroll = 2;
+    assert.equal(eliteShopChance(), 0.16);
+    rerollShop();
+    assert.equal(eliteShopChance(), 0.04);
   `);
 });
 
