@@ -202,7 +202,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you also takes ${barbatosDamage(item)} damage, and its CRITICAL can't hurt you this round.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;

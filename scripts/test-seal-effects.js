@@ -3563,13 +3563,14 @@ test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every
   `);
 });
 
-test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes it too and its CRITICAL can't hurt you", () => {
+test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes 25 instead", () => {
   const damageWith = (passives, guesses, playerGuess, extra = "") => {
     const run = game();
     run(`
       fixture(${passives}, ${JSON.stringify(guesses)});
       state.roundState.targetModifier = 1;
       state.roundState.playerEffectiveGuess = ${playerGuess};
+      state.bots.forEach((bot) => { bot.revealedByPassive = false; }); // the round start may reveal a random DAMNED
       ${extra}
       state.player.hp = state.player.maxHp = 100;
       applyPenalties();
@@ -3581,14 +3582,18 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   let guesses = [10, 10, 30, 30, 55];
   assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 70), damageWith("[]", guesses, 70)), [20, 20, 20, 20, 0]);
   assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 70), damageWith("[]", guesses, 70)), [30, 30, 30, 30, 0]);
+  // a pair of DAMNED on your guess: 25 each, not 20 + 25
+  guesses = [10, 10, 30, 55, 80];
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10), damageWith("[]", guesses, 10)), [25, 25, 0, 0, 0]);
   // TARGET 60: you and the first DAMNED both hit CRITICAL with 60
   guesses = [60, 50, 40, 70, 80];
   const plain = damageWith("[]", guesses, 60);
   const sealed = damageWith(`[["p46"]]`, guesses, 60);
   assert.equal(plain.crits, 2);
   assert.ok(plain.player > 0, "without Barbatos the DAMNED's CRITICAL hurts you");
-  assert.equal(sealed.player, 0);
-  assert.deepEqual(diff(sealed, plain), [20, 0, 0, 0, 0]);
+  assert.equal(sealed.player, plain.player, "Barbatos no longer blocks the hidden DAMNED's CRITICAL");
+  assert.deepEqual(diff(sealed, plain), [25, 0, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [38, 0, 0, 0, 0]);
   // a revealed DAMNED on your guess: no damage from Barbatos and its CRITICAL still hits you
   const revealed = damageWith(`[["p46"]]`, guesses, 60, "state.bots[0].revealedByPassive = true;");
   assert.equal(revealed.player, plain.player);

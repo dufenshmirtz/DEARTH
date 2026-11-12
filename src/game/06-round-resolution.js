@@ -195,12 +195,11 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
 }
 
 // Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+// revealed and matches your guess takes the bigger damage instead (never both).
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
-  const shielded = new Set();
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
-  if (!round || !entries.length) return shielded;
+  if (!round || !entries.length) return;
   const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
   const counts = new Map();
   activeBotList.forEach((bot) => {
@@ -208,23 +207,25 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
+  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
-    if (matchesYou) shielded.add(bot.id);
-    return counts.get(guess) >= 2 || matchesYou;
+    return counts.get(guess) >= 2 || matchesYou(bot);
   });
-  if (!hit.length) return shielded;
+  if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
-    const damage = barbatosDamage(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+    let triggered = false;
+    hit.forEach((bot) => {
+      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      if (damage <= 0) return;
+      triggered = true;
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
+    });
+    if (triggered) markPassiveEntryTriggered(entry);
   });
   round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
-  return shielded;
 }
 
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
@@ -337,7 +338,7 @@ function applyPenalties() {
     }
   }
 
-  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
+  applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
@@ -389,7 +390,6 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
-  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -398,10 +398,6 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
-          barbatosBlockedCritical = true;
-          return;
-        }
         if (hitter.kind === "bot" && passiveStack("p128")) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
@@ -421,7 +417,6 @@ function applyPenalties() {
       }
     });
   });
-  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
   if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);

@@ -147,7 +147,7 @@ const SEAL_BUILD_TAGS = {
   p42: ["memory"], // Stolas
   p44: ["bounty"], // Andromalius
   p45: ["general"], // Crocell (double SIN payout only)
-  p46: ["reveal", "critical"], // Barbatos
+  p46: ["reveal"], // Barbatos
   p47: ["bounty"], // Ronove
   p48: ["bounty"], // Cimejes
   p49: ["bounty", "artifact"], // Phenex

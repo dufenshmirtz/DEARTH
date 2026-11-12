@@ -1090,6 +1090,11 @@ function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 20);
 }
 
+// Seal of Barbatos: a hidden DAMNED on your guess takes this instead
+function barbatosYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 25);
+}
+
 function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }

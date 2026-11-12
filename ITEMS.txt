@@ -44,7 +44,7 @@ Seal of Balam (14 SIN)
 If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up.
 
 Seal of Barbatos (12 SIN)
-When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up.
+When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Bathin (11 SIN)
 Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
