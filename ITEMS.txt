@@ -44,7 +44,7 @@ Seal of Balam (14 SIN)
 If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up.
 
 Seal of Barbatos (12 SIN)
-Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up.
+When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Bathin (11 SIN)
 Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal 3 damage to that DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
@@ -200,10 +200,10 @@ Seal of Valefor (12 SIN)
 When a DAMNED dies, gain a random ARTIFACT with 0 sell value if you have room. ELITE gives +1 random ARTIFACT each level.
 
 Seal of Vapula (13 SIN)
-Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up.
+At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Vassago (13 SIN)
-New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up.
+New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals 10 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Vepar (13 SIN)
 The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED. At end of round, each revealed DAMNED takes 8 damage for every adjacent revealed DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up.

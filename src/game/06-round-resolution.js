@@ -194,6 +194,39 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
+// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
+  const shielded = new Set();
+  const entries = orderedPassiveEffectEntries("p46");
+  const round = state.roundState;
+  if (!round || !entries.length) return shielded;
+  const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
+  const counts = new Map();
+  activeBotList.forEach((bot) => {
+    const guess = guessOf(bot);
+    if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
+  });
+  const playerGuess = round.playerEffectiveGuess;
+  const hit = activeBotList.filter((bot) => {
+    const guess = guessOf(bot);
+    if (!Number.isFinite(guess)) return false;
+    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
+    if (matchesYou) shielded.add(bot.id);
+    return counts.get(guess) >= 2 || matchesYou;
+  });
+  if (!hit.length) return shielded;
+  const name = ITEMS.p46.name;
+  entries.forEach((entry) => {
+    const damage = barbatosDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+  });
+  round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
+  return shielded;
+}
+
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
   const round = state.roundState;
   if (!round) return;
@@ -304,6 +337,7 @@ function applyPenalties() {
     }
   }
 
+  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
@@ -355,6 +389,7 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
+  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -363,6 +398,10 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
+        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
+          barbatosBlockedCritical = true;
+          return;
+        }
         if (hitter.kind === "bot" && passiveStack("p128")) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
@@ -382,6 +421,7 @@ function applyPenalties() {
       }
     });
   });
+  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
   if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
@@ -1485,7 +1525,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p68", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -1567,16 +1607,28 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Vassago: each non-boss DAMNED goes off once, the first end of round it is above 6 MEMORY
     if (entry.id === "p1") {
-      const targets = activeBots().filter((bot) => bot.memory.length > 0);
-      if (!targets.length) return;
+      const bursting = activeBots().filter((bot) => !bot.isBoss && !bot.vassagoBurst && (bot.memory?.length || 0) > 6);
+      if (!bursting.length) return;
+      const name = ITEMS.p1.name;
+      const damage = vassagoBurstDamage(entry);
       markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, bot.memory.length),
-        (bot, damage) => `Seal of Vassago dealt ${damage} damage to ${bot.name}.`,
-        "Seal of Vassago"
-      );
+      bursting.forEach((source) => {
+        source.vassagoBurst = true;
+        const others = activeBots().filter((bot) => bot.id !== source.id);
+        damageBots(others, damage, (bot, dealt) => `${name}: ${source.name} passed 6 MEMORY and dealt ${dealt} damage to ${bot.name}.`, name);
+      });
+      return;
+    }
+
+    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    if (entry.id === "p68") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      if (!targets.length) return;
+      const name = ITEMS.p68.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
 

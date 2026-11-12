@@ -952,7 +952,6 @@ function beginRound() {
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),
     belethTriggeredBotIds: new Set(),
-    vapulaTriggeredBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),

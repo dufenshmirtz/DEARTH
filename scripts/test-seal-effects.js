@@ -366,7 +366,7 @@ test("new damage resolves at round end with each seal attributed in the animatio
   `);
 });
 
-test("each boss gets a fresh random 8-10 kill interval, unaffected by round changes", () => {
+test("each boss gets a fresh random 8-12 kill interval, unaffected by round changes", () => {
   game()(`
     fixture([], [50]);
     state.uniqueBossQueue = ["zilon", "dantre", "pyros", "threon", "kalha"];
@@ -388,7 +388,7 @@ test("each boss gets a fresh random 8-10 kill interval, unaffected by round chan
       assert.ok(nextBossSpecIfNeeded()?.uniqueKey);
       assert.equal(state.killsSinceBossSpawn, 0);
     }
-    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 9, 10, 10, 9]));
+    assert.equal(JSON.stringify(intervals), JSON.stringify([8, 10, 11, 12, 10]));
     assert.equal(rollIndex, 6);
   `);
 });
@@ -482,7 +482,7 @@ test("a pentakill queues only one boss and keeps remaining kills toward the next
     state.bots.forEach(bot => { bot.hp = 0; });
     resolveEliminatedBots(state.bots);
     assert.equal(state.bots.filter(bot => bot.pendingReplacementSpec).length, 1);
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
     assert.equal(state.killsSinceBossSpawn, 4);
     replacePendingEliminations();
     assert.equal(state.bots.filter(bot => bot.isBoss).length, 1);
@@ -529,10 +529,10 @@ test("saved runs keep the selected boss interval and old saves migrate without l
     assert.equal(state.killsSinceBossSpawn, 6);
     delete state.nextBossKillInterval;
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
     assert.equal(state.killsSinceBossSpawn, 6);
     normalizeLoadedArcadeRun();
-    assert.equal(state.nextBossKillInterval, 10);
+    assert.equal(state.nextBossKillInterval, 12);
   `);
 });
 
@@ -566,7 +566,7 @@ test("after the 8 unique bosses, bosses come every 4-8 KOs; KOs already counted 
     fixture([], [50]);
     state.bossKills = 7;
     resetBossKillInterval();
-    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 10);
+    assert.ok(state.nextBossKillInterval >= 8 && state.nextBossKillInterval <= 12);
     state.killsSinceBossSpawn = 5;
     state.bossKills = 8;
     const seen = new Set();
@@ -3508,6 +3508,118 @@ test("Seere and Vassago play their trigger animation as soon as the DAMNED they 
     advanceAfterSummary();
     assert.ok(!state.roundState.triggeredPassiveIds.has("p23"));
     assert.ok(!roundRevealAnimationActive(), "no animation when nobody new arrived");
+  `);
+});
+
+test("Seal of Vapula deals 10 damage at end of round to every DAMNED with more than 8 MEMORY", () => {
+  game()(`
+    fixture([["p68"]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    [8, 9, 12, 0, 15].forEach((count, index) => { state.bots[index].memory = initialMemoryEntries(count); });
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 0, 10]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p68"));
+  `);
+  game()(`
+    fixture([["p68", 3]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    state.bots.forEach(bot => { bot.memory = initialMemoryEntries(9); });
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [23, 23, 23, 23, 23]);
+  `);
+});
+
+test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every other DAMNED, only the first time", () => {
+  game()(`
+    fixture([["p1"]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    [6, 7, 3, 0, 2].forEach((count, index) => { state.bots[index].memory = initialMemoryEntries(count); });
+    let before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [10, 0, 10, 10, 10]);
+    assert.ok(state.roundState.triggeredPassiveIds.has("p1"));
+    // the same DAMNED does not go off again; a second one passing 6 does
+    addBotMemory(state.bots[0], 1, "", { source: "test" });
+    assert.equal(state.bots[0].memory.length, 7);
+    before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 10, 10]);
+    before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 0, 0, 0, 0]);
+  `);
+  game()(`
+    // BOSSES never go off, but take the damage; ELITE II = 15
+    fixture([["p1", 2]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    state.bots[0].isBoss = true;
+    state.bots[0].memory = initialMemoryEntries(12);
+    state.bots[1].memory = initialMemoryEntries(8);
+    const before = state.bots.map(bot => bot.hp);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [15, 0, 15, 15, 15]);
+  `);
+});
+
+test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes it too and its CRITICAL can't hurt you", () => {
+  const damageWith = (passives, guesses, playerGuess, extra = "") => {
+    const run = game();
+    run(`
+      fixture(${passives}, ${JSON.stringify(guesses)});
+      state.roundState.targetModifier = 1;
+      state.roundState.playerEffectiveGuess = ${playerGuess};
+      ${extra}
+      state.player.hp = state.player.maxHp = 100;
+      applyPenalties();
+    `);
+    return JSON.parse(run("JSON.stringify({ bots: state.bots.map(bot => bot.lastDamage || 0), player: 100 - state.player.hp, crits: [...state.roundState.criticalHitKeys].length })"));
+  };
+  const diff = (a, b) => a.bots.map((value, index) => value - b.bots[index]);
+  // two pairs of matching DAMNED guesses
+  let guesses = [10, 10, 30, 30, 55];
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 70), damageWith("[]", guesses, 70)), [20, 20, 20, 20, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 70), damageWith("[]", guesses, 70)), [30, 30, 30, 30, 0]);
+  // TARGET 60: you and the first DAMNED both hit CRITICAL with 60
+  guesses = [60, 50, 40, 70, 80];
+  const plain = damageWith("[]", guesses, 60);
+  const sealed = damageWith(`[["p46"]]`, guesses, 60);
+  assert.equal(plain.crits, 2);
+  assert.ok(plain.player > 0, "without Barbatos the DAMNED's CRITICAL hurts you");
+  assert.equal(sealed.player, 0);
+  assert.deepEqual(diff(sealed, plain), [20, 0, 0, 0, 0]);
+  // a revealed DAMNED on your guess: no damage from Barbatos and its CRITICAL still hits you
+  const revealed = damageWith(`[["p46"]]`, guesses, 60, "state.bots[0].revealedByPassive = true;");
+  assert.equal(revealed.player, plain.player);
+  assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
+});
+
+test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots, doubled by a marked reroll", () => {
+  game()(`
+    state.player.passives = [];
+    state.eliteBoostedNextReroll = 0;
+    assert.equal(eliteShopChance(), 0);
+    state.player.passives.push(itemCopy("p1"));
+    assert.equal(sealSlotsFull(), false);
+    assert.equal(eliteShopChance(), 0.04);
+    assert.equal(eliteShopChance(1), 0.08);
+    for (let i = 2; ownedSealSlotCount() < passiveLimit(); i += 1) state.player.passives.push(itemCopy("p" + i));
+    assert.equal(sealSlotsFull(), true);
+    assert.equal(eliteShopChance(), 0.08);
+    assert.equal(eliteShopChance(1), 0.16);
+  `);
+});
+
+test("Main-game BOSSES come every 8-12 eliminations, endless BOSSES still every 4-8", () => {
+  game()(`
+    state.bossKills = 0;
+    assert.equal(allSpecialBossesKilled(), false);
+    assert.deepEqual([...bossKillIntervalRange()], [8, 12]);
+    const seen = new Set();
+    for (let i = 0; i < 400; i += 1) { rollBossKillInterval(); seen.add(state.nextBossKillInterval); }
+    assert.deepEqual([...seen].sort((a, b) => a - b), [8, 9, 10, 11, 12]);
+    assert.deepEqual([ENDLESS_BOSS_KILL_INTERVAL_MIN, ENDLESS_BOSS_KILL_INTERVAL_MAX], [4, 8]);
   `);
 });
 

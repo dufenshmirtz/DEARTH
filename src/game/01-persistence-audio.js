@@ -667,7 +667,6 @@ function normalizeLoadedRoundState(round) {
     "bossRevealPunishedKeys",
     "bossAbilityNullifiedBotIds",
     "belethTriggeredBotIds",
-    "vapulaTriggeredBotIds",
     "kalhaSuppressedPassiveIds",
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",

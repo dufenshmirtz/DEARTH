@@ -34,9 +34,9 @@ const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
-// KOs between BOSSES: 8-10 during the main game (the 8 unique BOSSES), 4-8 after it
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
-const BOSS_KILL_INTERVAL_MAX = 10;
+const BOSS_KILL_INTERVAL_MAX = 12;
 const ENDLESS_BOSS_KILL_INTERVAL_MIN = 4;
 const ENDLESS_BOSS_KILL_INTERVAL_MAX = 8;
 const PVP_SLOT_COUNT = 5;
@@ -68,7 +68,7 @@ const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() ==
 if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
-const SHOP_ELITE_CHANCE = 0.08;
+const SHOP_ELITE_CHANCE = 0.04;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -127,7 +127,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vassago",
     price: 13,
-    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description:
+      "New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals 10 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p2: {
     id: "p2",
@@ -444,7 +445,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description:
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -606,7 +608,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",

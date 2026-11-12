@@ -251,9 +251,9 @@ const SIN_PRICE_PRESSURE_INTERVAL = 150;
 const SATAN_TIGHTWAD_SIN = 1500;
 const ACTIVE_USES_PER_ROUND = 2;
 const UNIQUE_BOSS_INTERVAL = 8;
-// KOs between BOSSES: 8-10 during the main game (the 8 unique BOSSES), 4-8 after it
+// KOs between BOSSES: 8-12 during the main game (the 8 unique BOSSES), 4-8 after it
 const BOSS_KILL_INTERVAL_MIN = 8;
-const BOSS_KILL_INTERVAL_MAX = 10;
+const BOSS_KILL_INTERVAL_MAX = 12;
 const ENDLESS_BOSS_KILL_INTERVAL_MIN = 4;
 const ENDLESS_BOSS_KILL_INTERVAL_MAX = 8;
 const PVP_SLOT_COUNT = 5;
@@ -285,7 +285,7 @@ const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() ==
 if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
-const SHOP_ELITE_CHANCE = 0.08;
+const SHOP_ELITE_CHANCE = 0.04;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -344,7 +344,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vassago",
     price: 13,
-    description: "New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes 1 damage per MEMORY. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description:
+      "New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals 10 damage to every other DAMNED. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p2: {
     id: "p2",
@@ -661,7 +662,8 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Barbatos",
     price: 12,
-    description: "Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes 5 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description:
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -823,7 +825,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "Once per round per DAMNED, when a DAMNED with 8 or more MEMORY takes damage, it takes 10 extra damage. With more than 12 MEMORY, it takes 15 extra damage. ELITE multiplies both damage values by x1.5 each level, rounded up."
+      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
@@ -3208,7 +3210,6 @@ function normalizeLoadedRoundState(round) {
     "bossRevealPunishedKeys",
     "bossAbilityNullifiedBotIds",
     "belethTriggeredBotIds",
-    "vapulaTriggeredBotIds",
     "kalhaSuppressedPassiveIds",
     "devTemporaryActiveUids",
     "padmaVulnerableBotIds",
@@ -5314,8 +5315,9 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
+// Seal of Barbatos: damage to each DAMNED that shares its guess
 function barbatosDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 5);
+  return flatDamageValue(idOrItem, 20);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -5330,10 +5332,14 @@ function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-function vapulaMemoryExtraDamage(idOrItem, memoryCount) {
-  if (memoryCount > 12) return flatDamageValue(idOrItem, 15);
-  if (memoryCount >= 8) return flatDamageValue(idOrItem, 10);
-  return 0;
+// Seal of Vapula: end-of-round damage to every DAMNED with more than 8 MEMORY
+function vapulaMemoryDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
+}
+
+// Seal of Vassago: what a non-boss DAMNED deals to every other DAMNED the first time it goes above 6 MEMORY
+function vassagoBurstDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 10);
 }
 
 function decarabiaMemoryExtraDamage(idOrItem, bot) {
@@ -5642,12 +5648,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p46", "p62", "p63", "p68"]).forEach((entry) => {
-      if (entry.id === "p46" && botSin(bot) >= 6) {
-        applyFlatBonus(barbatosDamage(entry), ITEMS.p46?.name || "Seal of Barbatos", entry);
-        return;
-      }
-
+    orderedPassiveEffectEntries(["p62", "p63"]).forEach((entry) => {
       if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
         applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
         state.roundState?.belethTriggeredBotIds?.add(bot.id);
@@ -5656,14 +5657,6 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
 
       if (entry.id === "p63" && bot.revealedByPassive) {
         applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
-        return;
-      }
-
-      if (entry.id === "p68") {
-        if (state.roundState?.vapulaTriggeredBotIds?.has(bot.id)) return;
-        if (applyFlatBonus(vapulaMemoryExtraDamage(entry, bot.memory?.length || 0), ITEMS.p68?.name || "Seal of Vapula", entry)) {
-          state.roundState?.vapulaTriggeredBotIds?.add(bot.id);
-        }
         return;
       }
     });
@@ -5890,7 +5883,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p7", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5932,7 +5925,9 @@ function itemDescription(item) {
   }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
-  if (item.id === "p1") return `New non-boss DAMNED arrive with 3 MEMORY. At end of round, each DAMNED takes ${flatDamageValue(item, 1)} damage per MEMORY.`;
+  if (item.id === "p1") {
+    return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
+  }
   if (item.id === "p2") {
     return `Close guesses pay SIN: ${doubledStackValue(item, 1)} at +/-5, adding ${doubledStackValue(item, 1)} per step closer through ${doubledStackValue(item, 5)} at +/-1. On exact TARGET, gain ${doubledStackValue(item, 10)} SIN.`;
   }
@@ -5998,7 +5993,9 @@ function itemDescription(item) {
   if (item.id === "p43") return `Whenever a DAMNED loses SIN, it takes ${flatDamageValue(item, 20)} damage. At end of round, all DAMNED lose 1 SIN.`;
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
-  if (item.id === "p46") return `Whenever a DAMNED with 6 or more BOUNTY takes damage, it takes ${barbatosDamage(item)} extra damage.`;
+  if (item.id === "p46") {
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you also takes ${barbatosDamage(item)} damage, and its CRITICAL can't hurt you this round.`;
+  }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
   if (item.id === "p49") return `Using an ARTIFACT that targets DAMNED gives each target +${scaledPassiveValueForItem(item, 3)} BOUNTY.`;
@@ -6045,7 +6042,7 @@ function itemDescription(item) {
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `Once per round per DAMNED, a DAMNED with 8 or more MEMORY takes ${vapulaMemoryExtraDamage(item, 8)} extra damage the first time it takes damage. With more than 12 MEMORY, it takes ${vapulaMemoryExtraDamage(item, 13)} extra damage.`;
+    return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
@@ -9189,7 +9186,6 @@ function beginRound() {
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),
     belethTriggeredBotIds: new Set(),
-    vapulaTriggeredBotIds: new Set(),
     wiretapExtraCount: null,
     wiretapStack: 0,
     kalhaSuppressedPassiveIds: new Set(),
@@ -10794,6 +10790,39 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
+// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
+  const shielded = new Set();
+  const entries = orderedPassiveEffectEntries("p46");
+  const round = state.roundState;
+  if (!round || !entries.length) return shielded;
+  const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
+  const counts = new Map();
+  activeBotList.forEach((bot) => {
+    const guess = guessOf(bot);
+    if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
+  });
+  const playerGuess = round.playerEffectiveGuess;
+  const hit = activeBotList.filter((bot) => {
+    const guess = guessOf(bot);
+    if (!Number.isFinite(guess)) return false;
+    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
+    if (matchesYou) shielded.add(bot.id);
+    return counts.get(guess) >= 2 || matchesYou;
+  });
+  if (!hit.length) return shielded;
+  const name = ITEMS.p46.name;
+  entries.forEach((entry) => {
+    const damage = barbatosDamage(entry);
+    if (damage <= 0) return;
+    markPassiveEntryTriggered(entry);
+    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+  });
+  round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
+  return shielded;
+}
+
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
   const round = state.roundState;
   if (!round) return;
@@ -10904,6 +10933,7 @@ function applyPenalties() {
     }
   }
 
+  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
@@ -10955,6 +10985,7 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
+  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -10963,6 +10994,10 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
+        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
+          barbatosBlockedCritical = true;
+          return;
+        }
         if (hitter.kind === "bot" && passiveStack("p128")) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
@@ -10982,6 +11017,7 @@ function applyPenalties() {
       }
     });
   });
+  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
   if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
@@ -12085,7 +12121,7 @@ function applyMarsSeventhPentacle(entry) {
 }
 
 function applyEndOfRoundPassiveDamageInOrder() {
-  orderedPassiveEffectEntries(["p1", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
+  orderedPassiveEffectEntries(["p1", "p68", "p12", "p17", "p52", "p21", "p31", "p40", "p56", "p111", "p61", "p65", "p84", "p85", "p89", "p105", "p106", "p112", "p113", "p115", "p118", "p129", "p131", "p145", "p146"]).forEach((entry) => {
     // 6th Pentacle of Mars: every STUBBORN DAMNED gets 1 POISON
     if (entry.id === "p145") {
       const stubborn = activeBots().filter((bot) => canPoisonBot(bot) && hasPersonality(bot, "Stubborn"));
@@ -12167,16 +12203,28 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Vassago: each non-boss DAMNED goes off once, the first end of round it is above 6 MEMORY
     if (entry.id === "p1") {
-      const targets = activeBots().filter((bot) => bot.memory.length > 0);
-      if (!targets.length) return;
+      const bursting = activeBots().filter((bot) => !bot.isBoss && !bot.vassagoBurst && (bot.memory?.length || 0) > 6);
+      if (!bursting.length) return;
+      const name = ITEMS.p1.name;
+      const damage = vassagoBurstDamage(entry);
       markPassiveEntryTriggered(entry);
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, bot.memory.length),
-        (bot, damage) => `Seal of Vassago dealt ${damage} damage to ${bot.name}.`,
-        "Seal of Vassago"
-      );
+      bursting.forEach((source) => {
+        source.vassagoBurst = true;
+        const others = activeBots().filter((bot) => bot.id !== source.id);
+        damageBots(others, damage, (bot, dealt) => `${name}: ${source.name} passed 6 MEMORY and dealt ${dealt} damage to ${bot.name}.`, name);
+      });
+      return;
+    }
+
+    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    if (entry.id === "p68") {
+      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      if (!targets.length) return;
+      const name = ITEMS.p68.name;
+      markPassiveEntryTriggered(entry);
+      damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
 
@@ -14790,7 +14838,7 @@ function renderMobileMenuSettingsOverlay() {
 function renderSoundOptionsMenu() {
   if (isMobileArcadeView()) return "";
   return `
-    <div class="options-menu">
+    <div class="options-menu menu-settings-card">
       ${renderSettingsPanel("menu")}
       <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
     </div>
@@ -17486,6 +17534,25 @@ const MENU_BG_SPIN_MS = 240000;
 const menuBackdropState = { startedAt: 0, resizeBound: false, glitchStarted: false, node: null };
 // fixed dark doorway behind the buttons (art pixels): matches .menu-door in styles.css
 const MENU_DOOR = { cx: 696 + 283 / 2, top: 476, solidTop: 55, solidBottom: 388 };
+// Options and its Settings widen the doorway (.menu-door.door-wide in styles.css): it grows around
+// the top of its solid part, so the buttons are centred lower by the extra height
+const MENU_DOOR_WIDE_SCREENS = ["options", "sound"];
+const MENU_DOOR_WIDE_SCALE_Y = 1.14;
+
+function menuDoorIsWide() {
+  return MENU_DOOR_WIDE_SCREENS.includes(state.menuScreen || "main");
+}
+
+// the backdrop node is moved into every re-rendered menu, which drops CSS transitions; it keeps its
+// classes, so flush the old look first and then switch, and the doorway animates between screens
+function updateMenuDoorWidth() {
+  const door = document.querySelector(".menu-door");
+  if (!door) return;
+  const wide = menuDoorIsWide();
+  if (door.classList.contains("door-wide") === wide) return;
+  void getComputedStyle(door).transform;
+  door.classList.toggle("door-wide", wide);
+}
 
 function menuReducedMotion() {
   return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -17545,6 +17612,7 @@ function initMenuBackdrop() {
   const crown = document.querySelector(".menu-fig .fig-crown-shimmer");
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
+  updateMenuDoorWidth();
   initMenuFigures(menuReducedMotion());
   bindMenuFigureTriggers();
   if (!menuBackdropState.resizeBound) {
@@ -17586,7 +17654,8 @@ function layoutMenuBackdrop() {
   const menu = document.querySelector(".main-menu");
   if (panel && menu) {
     const doorX = ox + MENU_DOOR.cx * s;
-    const doorMid = oy + (MENU_DOOR.top + (MENU_DOOR.solidTop + MENU_DOOR.solidBottom) / 2) * s;
+    const solidHeight = (MENU_DOOR.solidBottom - MENU_DOOR.solidTop) * (menuDoorIsWide() ? MENU_DOOR_WIDE_SCALE_Y : 1);
+    const doorMid = oy + (MENU_DOOR.top + MENU_DOOR.solidTop + solidHeight / 2) * s;
     const h = panel.offsetHeight;
     const top = Math.max(8, Math.min(doorMid - h / 2, vh - h - 12));
     panel.classList.add("door-anchored");
@@ -19279,7 +19348,7 @@ const SEAL_BUILD_TAGS = {
   p42: ["memory"], // Stolas
   p44: ["bounty"], // Andromalius
   p45: ["general"], // Crocell (double SIN payout only)
-  p46: ["bounty"], // Barbatos
+  p46: ["reveal", "critical"], // Barbatos
   p47: ["bounty"], // Ronove
   p48: ["bounty"], // Cimejes
   p49: ["bounty", "artifact"], // Phenex
