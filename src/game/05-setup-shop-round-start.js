@@ -434,11 +434,15 @@ function rerollShop() {
   state.shop = [drawPassiveShopItem(eliteBoosted, forceElite), drawActiveShopItem(), drawActiveShopItem()];
   if (eliteBoosted) addLog(`${activeName("a23")} marked this Seal reroll. ELITE chance is ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
-  // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
-  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
+  // Seal of the Holy Spirit: "Trinity" puts one missing Trinity SEAL in the SEAL slot (no extra slot)
+  const trinityOffer = (state.trinityShopSealsNextShop || []).find((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
   state.trinityShopSealsNextShop = [];
-  trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
-  if (trinityOffers.length) addLog(`${ITEMS.p133.name} brought ${trinityOffers.map((id) => ITEMS[id].name).join(" and ")} to the offerings.`);
+  if (trinityOffer) {
+    state.shop[0] = { item: itemCopy(trinityOffer), sold: false };
+    // an ELITE offer queued at the same time waits for the next SEAL offer instead of being lost
+    if (forceElite) state.trinityEliteNextShop = true;
+    addLog(`${ITEMS.p133.name} brought ${ITEMS[trinityOffer].name} to the offerings.`);
+  }
   syncShopSlotCount();
 }
 

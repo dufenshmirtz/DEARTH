@@ -1449,11 +1449,14 @@ test("Holy Spirit: each of its ten effects does what it says", () => {
   outcome("trinity", `Math.random = () => 0.1; COLLECTION_SECTIONS.find((section) => section.key === "trinity").ids.forEach((id) => loadCollectionProgress().unlocked.push(id));`, `
     assert.deepEqual(state.trinityShopSealsNextShop, ["p131"]);
     rerollShop();
-    assert.deepEqual(state.shop.filter(slot => slot.bonus).map(slot => slot.item.id), ["p131"]);
-    assert.equal(state.shop.length, 4);
+    // it takes the SEAL slot at the top of the offerings, no 4th slot
+    assert.equal(state.shop[0].item.id, "p131");
+    assert.equal(state.shop.filter(slot => slot.bonus).length, 0);
+    assert.equal(state.shop.length, 3);
     syncShopSlotCount();
-    assert.equal(state.shop.length, 4);
-    assert.ok(renderShopSlot(state.shop[3], 3).includes("TRINITY SEAL"));
+    assert.equal(state.shop.length, 3);
+    assert.equal(state.shop[0].item.id, "p131");
+    assert.ok(renderShopSlot(state.shop[0], 0).includes("TRINITY SEAL"));
   `);
   outcome("trinity", `const rolls = [0.1, 0.9]; Math.random = () => rolls.shift() ?? 0.5;`, `
     assert.deepEqual(state.trinityShopSealsNextShop, ["p132"]);
