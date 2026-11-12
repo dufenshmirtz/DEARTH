@@ -2691,6 +2691,35 @@ test("Records: most played SEAL counts runs, build of a run, nemesis, NEW marks,
   `);
 });
 
+test("KARMA: Honorable Death gives +1 when you die after defeating 4 or more BOSSES, once per run", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bossKills = 3;
+    finishGameOverRound();
+    assert.equal(karmaBalance(), 0);
+    assert.ok(!collectionRun().honorableDeath);
+  `);
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.bossKills = 4;
+    finishGameOverRound();
+    assert.equal(karmaBalance(), 1);
+    assert.equal(collectionRun().karma, 1);
+    assert.equal(collectionRun().honorableDeath, true);
+    // never twice in one run
+    assert.equal(collectionNoteHonorableDeath(), 0);
+    assert.equal(karmaBalance(), 1);
+  `);
+  game()(`
+    // PvP and other non-counting runs never pay it
+    fixture([], [10, 20, 30, 40, 50]);
+    state.mode = "pvp";
+    state.bossKills = 9;
+    assert.equal(collectionNoteHonorableDeath(), 0);
+    assert.equal(karmaBalance(), 0);
+  `);
+});
+
 test("KARMA drops: the nth main BOSS at n x 10% (the twins roll once), +8 for beating the game, demons 90%, Archangels 3 always", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);

@@ -11194,6 +11194,7 @@ function applyMoonCrossGuessShifts() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
+  collectionNoteHonorableDeath();
   updateArcadeRecordsFromCurrentRun({ final: true });
   removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
@@ -17301,7 +17302,7 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
-          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>Karma earned</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned"}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
@@ -20678,12 +20679,16 @@ function openCollectionFromMenu() {
                                                      are one BOSS: it rolls when both are down)
      a Goetic demon (or YOU in its place)            1 KARMA at KARMA_GOETIC_CHANCE
      an Archangel (or YOU in its place)              KARMA_ARCHANGEL_AMOUNT at KARMA_ARCHANGEL_CHANCE
+     Honorable Death: dying after defeating          +KARMA_HONORABLE_DEATH
+     KARMA_HONORABLE_DEATH_BOSSES or more BOSSES
    Spent on Jesus' Gifts (09-gifts.js). */
 const KARMA_GAME_BEATEN = 8;
 const KARMA_MAIN_BOSS_STEP = 0.1;
 const KARMA_GOETIC_CHANCE = 0.9;
 const KARMA_ARCHANGEL_CHANCE = 1;
 const KARMA_ARCHANGEL_AMOUNT = 3;
+const KARMA_HONORABLE_DEATH = 1;
+const KARMA_HONORABLE_DEATH_BOSSES = 4; // any BOSSES: main ones (the twins are one), demons, Archangels
 
 // KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
 const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
@@ -20742,9 +20747,18 @@ function collectionNoteKarmaDrop(bot) {
   else if (bot.goeticKey || bot.shadowOf) karmaRoll(KARMA_GOETIC_CHANCE, bot.name || "Demon");
 }
 
+// Honorable Death: the run ends in death after defeating KARMA_HONORABLE_DEATH_BOSSES or more BOSSES (from finishGameOverRound)
+function collectionNoteHonorableDeath() {
+  if (!collectionCounts()) return 0;
+  const run = collectionRun();
+  if (run.honorableDeath || (Number(state.bossKills) || 0) < KARMA_HONORABLE_DEATH_BOSSES) return 0;
+  run.honorableDeath = true;
+  return karmaGain(KARMA_HONORABLE_DEATH, "Honorable Death");
+}
+
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
-  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, spent on Jesus' Gifts"><span class="collection-karma-word">Karma</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
+  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, and by an Honorable Death (dying after 4 BOSSES); spent on Jesus' Gifts"><span class="collection-karma-word">Karma</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
 "use strict";
 

@@ -573,6 +573,7 @@ function applyMoonCrossGuessShifts() {
 
 function finishGameOverRound() {
   if (state.gameOver && state.stage === "ended") return;
+  collectionNoteHonorableDeath();
   updateArcadeRecordsFromCurrentRun({ final: true });
   removeArcadeRunSlot(state.currentRunSlotId);
   state.gameOver = true;
