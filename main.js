@@ -17013,7 +17013,8 @@ function renderShopSlot(slot, index) {
   // the demon bound in the Ars Goetia gives its SEAL away (not its ELITE upgrades)
   const free = isFreeBoundSealOffer(item) && cost <= 0;
   const priceText = free ? "free" : `${cost}${SIN_MARK}`;
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
+  // a SEAL with no free slot shows its price struck through, like an unaffordable one; a full ARTIFACT bag still says Full
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full && item.type !== "passive" ? "Full" : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
