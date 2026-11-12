@@ -137,8 +137,11 @@ function refreshGiftsScreen() {
   holder.innerHTML = renderGiftsScreen().trim();
   const next = holder.firstElementChild;
   next.classList.add("settled");
+  // the element under the mouse is replaced and never fires mouseleave: drop its tooltip, bind the new ones
+  hideFloatingTooltip();
   screen.replaceWith(next);
   bindGiftsEvents();
+  bindFloatingTooltips(next);
 }
 
 function closeGifts() {

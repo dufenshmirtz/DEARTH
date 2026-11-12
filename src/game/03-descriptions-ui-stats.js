@@ -91,7 +91,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p46", "p68", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -261,7 +261,7 @@ function itemDescription(item) {
     return `At the start of every round, reveal ${reveals === 1 ? "one DAMNED" : `${reveals} DAMNED`}, even ones that are already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack.`;
   }
   if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
-  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 22)} extra damage.`;
   if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
   if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
   if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double SOUL and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
@@ -364,7 +364,7 @@ function amySealDescription(item) {
   const main =
     stack <= 1
       ? parts.main
-      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+      : `At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ${copiedLabel} SEAL until the round ends.`;
   const copiedId = amyCopyThisRound(item);
   const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
   const copyText = copiedItem

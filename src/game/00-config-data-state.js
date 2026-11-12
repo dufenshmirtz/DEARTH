@@ -170,7 +170,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 15 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -918,7 +918,7 @@ const ITEMS = {
     name: "Seal of Amy",
     price: 14,
     description:
-      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+      "At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
   },
   p135: {
     id: "p135",
@@ -1142,7 +1142,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 22 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p117: {
     id: "p117",
@@ -1513,7 +1513,7 @@ const ARTIFACT_SEAL_BY_ARTIFACT = {
   a11: "p139" // 6th: Vial of Blood
 };
 const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
-// Seal of Amy copies a random Player SEAL each round
+// Seal of Amy copies a random Goetic SEAL each round
 const AMY_SEAL_ID = "p134";
 // the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
 const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];

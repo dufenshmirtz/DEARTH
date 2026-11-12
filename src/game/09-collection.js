@@ -165,7 +165,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p134: ["general"], // Amy (a random Player SEAL each round)
+  p134: ["general"], // Amy (a random Goetic SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
   p73: ["general"], // Asmoday

@@ -234,7 +234,7 @@ function mimicContributionFor(id) {
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
-// ---------- Seal of Amy: a random Player SEAL each round ----------
+// ---------- Seal of Amy: a random Goetic SEAL each round ----------
 // At the start of every round Amy rolls one Player (Goetic) SEAL and acts as it until the round ends, as an ELITE
 // SEAL two levels stronger per Amy ELITE level (Amy x1 copies at stack 2, ELITE Amy at stack 4, ELITE +2 at stack 6).
 // The roll is kept on Amy's item (amyCopiedId / amyCopiedRound) so a saved run keeps it.
@@ -250,7 +250,7 @@ function amyCopyPool() {
   return GOETIC_BOSS_PASSIVE_IDS.filter((id) => id !== AMY_SEAL_ID && ITEMS[id] && !isSealSuppressed(id));
 }
 
-// the Player SEAL Amy copies this round, or null
+// the Goetic SEAL Amy copies this round, or null
 function amyCopyThisRound(item = amyItem()) {
   if (!item || item.amyCopiedRound !== state.round) return null;
   const id = item.amyCopiedId;
@@ -1033,7 +1033,7 @@ function criticalCalipersWindow(idOrItem) {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+  return flatDamageValue(idOrItem, 15);
 }
 
 function gaapDamage(idOrItem) {
@@ -1307,7 +1307,7 @@ function orderedPassiveEntries() {
           index
         };
       }
-      // Seal of Amy acts as this round's copied Player SEAL (its triggers animate Amy)
+      // Seal of Amy acts as this round's copied Goetic SEAL (its triggers animate Amy)
       if (item.id === AMY_SEAL_ID) {
         const copiedId = amyCopyThisRound(item);
         if (!copiedId || isSealSuppressed(copiedId)) return null;

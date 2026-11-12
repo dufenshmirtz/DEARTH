@@ -717,7 +717,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
       .sort((left, right) => Math.abs(left.guess - round.target) - Math.abs(right.guess - round.target) || left.seat - right.seat)
       .slice(0, 2)
       .map((row) => row.bot);
-    const damage = passiveEntryFlatDamage(entry, 10);
+    const damage = passiveEntryFlatDamage(entry, 22);
     if (!ranked.length || damage <= 0) return;
     markPassiveEntryTriggered(entry);
     ranked.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, ITEMS.p116.name, true));

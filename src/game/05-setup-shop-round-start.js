@@ -977,7 +977,7 @@ function beginRound() {
     moonCrossBotIds: [],
     roundEvents: []
   };
-  // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
+  // Seal of Amy picks this round's Goetic SEAL before any start-of-round SEAL acts
   rollAmyCopy();
 
   state.bots.forEach((bot) => {

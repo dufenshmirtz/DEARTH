@@ -387,7 +387,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Glasya-Labolas",
     price: 12,
-    description: "When you hit CRITICAL, it deals 20 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, it deals 15 damage to everyone else. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p8: {
     id: "p8",
@@ -1135,7 +1135,7 @@ const ITEMS = {
     name: "Seal of Amy",
     price: 14,
     description:
-      "At the start of every round, this SEAL gains the effect of a random Player SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
+      "At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ELITE SEAL until the round ends. ELITE makes the copied effect 2 ELITE levels stronger each level."
   },
   p135: {
     id: "p135",
@@ -1359,7 +1359,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Beleth",
     price: 12,
-    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 10 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "When you hit CRITICAL, the 2 DAMNED with the best guesses take 22 extra damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p117: {
     id: "p117",
@@ -1730,7 +1730,7 @@ const ARTIFACT_SEAL_BY_ARTIFACT = {
   a11: "p139" // 6th: Vial of Blood
 };
 const ARTIFACT_SEAL_IDS = new Set(Object.values(ARTIFACT_SEAL_BY_ARTIFACT));
-// Seal of Amy copies a random Player SEAL each round
+// Seal of Amy copies a random Goetic SEAL each round
 const AMY_SEAL_ID = "p134";
 // the Poison SEALS (Pentacles of Mars), and the damage each POISON stack deals at the end of every round
 const POISON_SEAL_IDS = ["p140", "p141", "p142", "p143", "p144", "p145", "p146"];
@@ -4463,7 +4463,7 @@ function mimicContributionFor(id) {
   return target?.id === id ? mimic?.stack || 0 : 0;
 }
 
-// ---------- Seal of Amy: a random Player SEAL each round ----------
+// ---------- Seal of Amy: a random Goetic SEAL each round ----------
 // At the start of every round Amy rolls one Player (Goetic) SEAL and acts as it until the round ends, as an ELITE
 // SEAL two levels stronger per Amy ELITE level (Amy x1 copies at stack 2, ELITE Amy at stack 4, ELITE +2 at stack 6).
 // The roll is kept on Amy's item (amyCopiedId / amyCopiedRound) so a saved run keeps it.
@@ -4479,7 +4479,7 @@ function amyCopyPool() {
   return GOETIC_BOSS_PASSIVE_IDS.filter((id) => id !== AMY_SEAL_ID && ITEMS[id] && !isSealSuppressed(id));
 }
 
-// the Player SEAL Amy copies this round, or null
+// the Goetic SEAL Amy copies this round, or null
 function amyCopyThisRound(item = amyItem()) {
   if (!item || item.amyCopiedRound !== state.round) return null;
   const id = item.amyCopiedId;
@@ -5262,7 +5262,7 @@ function criticalCalipersWindow(idOrItem) {
 }
 
 function pressureSpikeDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+  return flatDamageValue(idOrItem, 15);
 }
 
 function gaapDamage(idOrItem) {
@@ -5536,7 +5536,7 @@ function orderedPassiveEntries() {
           index
         };
       }
-      // Seal of Amy acts as this round's copied Player SEAL (its triggers animate Amy)
+      // Seal of Amy acts as this round's copied Goetic SEAL (its triggers animate Amy)
       if (item.id === AMY_SEAL_ID) {
         const copiedId = amyCopyThisRound(item);
         if (!copiedId || isSealSuppressed(copiedId)) return null;
@@ -5882,7 +5882,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p46", "p68", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6052,7 +6052,7 @@ function itemDescription(item) {
     return `At the start of every round, reveal ${reveals === 1 ? "one DAMNED" : `${reveals} DAMNED`}, even ones that are already revealed. DAMNED can be revealed more than once a round; each reveal adds a reveal stack, and effects on revealed DAMNED affect them once per stack.`;
   }
   if (item.id === "p112") return `At end of round, DAMNED whose guesses are multiples of 2 take ${flatDamageValue(item, 2)} damage, multiples of 3 take ${flatDamageValue(item, 3)} damage, multiples of 5 take ${flatDamageValue(item, 5)} damage, and multiples of 7 take ${flatDamageValue(item, 14)} damage. Matching effects add together.`;
-  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 10)} extra damage.`;
+  if (item.id === "p116") return `When you hit CRITICAL, the 2 DAMNED with the best guesses take ${flatDamageValue(item, 22)} extra damage.`;
   if (item.id === "p117") return `In a round where you hit CRITICAL, every DAMNED that dies gives you ${scaledPassiveValueForItem(item, 2)} extra SIN.`;
   if (item.id === "p118") return `At end of round, each DAMNED takes ${flatDamageValue(item, 2)} damage for every round it has been alive.`;
   if (item.id === "p120") return `The non-boss DAMNED with the most MEMORY gets double SOUL and +${stack} MEMORY at the end of every round. Only when it dies does another DAMNED take its place.`;
@@ -6155,7 +6155,7 @@ function amySealDescription(item) {
   const main =
     stack <= 1
       ? parts.main
-      : `At the start of every round, this SEAL gains the effect of a random Player SEAL as an ${copiedLabel} SEAL until the round ends.`;
+      : `At the start of every round, this SEAL gains the effect of a random Goetic SEAL as an ${copiedLabel} SEAL until the round ends.`;
   const copiedId = amyCopyThisRound(item);
   const copiedItem = copiedId ? { ...ITEMS[copiedId], stack: copiedStack } : null;
   const copyText = copiedItem
@@ -9210,7 +9210,7 @@ function beginRound() {
     moonCrossBotIds: [],
     roundEvents: []
   };
-  // Seal of Amy picks this round's Player SEAL before any start-of-round SEAL acts
+  // Seal of Amy picks this round's Goetic SEAL before any start-of-round SEAL acts
   rollAmyCopy();
 
   state.bots.forEach((bot) => {
@@ -11310,7 +11310,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
       .sort((left, right) => Math.abs(left.guess - round.target) - Math.abs(right.guess - round.target) || left.seat - right.seat)
       .slice(0, 2)
       .map((row) => row.bot);
-    const damage = passiveEntryFlatDamage(entry, 10);
+    const damage = passiveEntryFlatDamage(entry, 22);
     if (!ranked.length || damage <= 0) return;
     markPassiveEntryTriggered(entry);
     ranked.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, ITEMS.p116.name, true));
@@ -12921,7 +12921,7 @@ function buyShopItem(slotIndex) {
       if (free) boughtSeal.freeStacks = 1;
       state.player.passives.push(boughtSeal);
       refreshMimicTarget();
-      // Seal of Amy bought mid-round takes its Player SEAL for the rest of this round
+      // Seal of Amy bought mid-round takes its Goetic SEAL for the rest of this round
       if (item.id === AMY_SEAL_ID && state.roundState && !state.roundState.penaltiesApplied) rollAmyCopy();
       addLog(`Bought ${item.name}.`);
     }
@@ -16292,8 +16292,8 @@ function readMomentSnapshot() {
     anyCritical: Boolean(round?.criticalHitKeys?.size),
     bosses: state.bots.filter((bot) => bot.isBoss && !bot.eliminated && bot.hp > 0).map((bot) => ({ id: bot.id, name: bot.name, twinOrder: bot.uniqueKey === "pavlos" ? 1 : 0 })),
     finals: Boolean(state.finalBossPhase),
-    downIds: Array.from(document.querySelectorAll(".bot-card.eliminated")).map((card) => card.dataset.botId),
-    downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated")).map((card) => card.dataset.botId),
+    downIds: Array.from(document.querySelectorAll(".bot-card.eliminated:not(.awaiting-ready)")).map((card) => card.dataset.botId),
+    downBossIds: Array.from(document.querySelectorAll(".bot-card.boss.eliminated:not(.awaiting-ready)")).map((card) => card.dataset.botId),
     hp: Number(shown.hp) || 0,
     credits: Number(shown.credits) || 0,
     pentakill: Boolean(round?.pentakillPopup) && !revealing,
@@ -16699,9 +16699,10 @@ function renderBot(bot, pendingPick) {
   const effective = round?.botEffectiveGuesses.get(bot.id);
   const displayHp = display?.hp ?? bot.hp;
   const displayMaxHp = display?.maxHp ?? bot.maxHp;
-  // fell before READY: SOUL reads 0, the KO (X, sound, notice) comes after READY
+  // fell before READY: the card shows it dead at once (grey, X); the KO sound, notice and BOUNTY SIN come after READY
+  // (class "awaiting-ready" keeps it out of the KO watch in readMomentSnapshot until then)
   const deathAwaitsReady = !display && botDeathAwaitsReady(bot);
-  const isDown = display ? display.eliminated : (bot.eliminated || bot.hp <= 0) && !deathAwaitsReady;
+  const isDown = display ? display.eliminated : bot.eliminated || bot.hp <= 0;
   const revealed = Number.isFinite(effective)
     ? formatNumber(effective)
     : state.stage !== "guess"
@@ -16727,7 +16728,7 @@ function renderBot(bot, pendingPick) {
   const freshClass = bot.fresh ? "fresh" : "";
   const bossClass = bot.isBoss ? "boss" : "";
   const diffMarkedClass = bot.diffMarkedByPlayer && !isDown ? "diff-marked" : "";
-  const downClass = isDown ? "eliminated" : "";
+  const downClass = isDown ? (deathAwaitsReady ? "eliminated awaiting-ready" : "eliminated") : "";
   const deathCauseClass = bot.deathCause && isDown ? `death-${bot.deathCause}` : "";
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
@@ -16789,7 +16790,7 @@ function renderBot(bot, pendingPick) {
       ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double SOUL, gains MEMORY every round.`)}">Host x2</span>`
       : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
-  const deathBadge = isDown && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
+  const deathBadge = isDown && !deathAwaitsReady && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
   const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
   const rewardLabel = botSinDisplay(bot);
   const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;
@@ -17060,7 +17061,8 @@ function renderShopSlot(slot, index) {
   // the demon bound in the Ars Goetia gives its SEAL away (not its ELITE upgrades)
   const free = isFreeBoundSealOffer(item) && cost <= 0;
   const priceText = free ? "free" : `${cost}${SIN_MARK}`;
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : full ? "Full" : free ? "Take free" : `Buy ${priceText}`;
+  // no free SEAL slot / a full ARTIFACT bag shows the price struck through, like an unaffordable offer
+  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : free ? "Take free" : `Buy ${priceText}`;
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
@@ -19345,7 +19347,7 @@ const SEAL_BUILD_TAGS = {
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
   p68: ["memory"], // Vapula
-  p134: ["general"], // Amy (a random Player SEAL each round)
+  p134: ["general"], // Amy (a random Goetic SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas
   p73: ["general"], // Asmoday
@@ -20825,8 +20827,11 @@ function refreshGiftsScreen() {
   holder.innerHTML = renderGiftsScreen().trim();
   const next = holder.firstElementChild;
   next.classList.add("settled");
+  // the element under the mouse is replaced and never fires mouseleave: drop its tooltip, bind the new ones
+  hideFloatingTooltip();
   screen.replaceWith(next);
   bindGiftsEvents();
+  bindFloatingTooltips(next);
 }
 
 function closeGifts() {
@@ -22405,30 +22410,7 @@ function bindEvents() {
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
 
-  const floatingTooltip = document.querySelector("#floatingTooltip");
-  if (floatingTooltip) {
-    document.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
-      bindOn(element, "mouseenter", (event) => {
-        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
-        floatingTooltipOwner = element;
-        if (element.dataset.tooltipHtml) {
-          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
-        } else {
-          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
-        }
-        floatingTooltip.classList.add("visible");
-        positionFloatingTooltip(event, floatingTooltip);
-      });
-      bindOn(element, "mousemove", (event) => {
-        positionFloatingTooltip(event, floatingTooltip);
-      });
-      bindOn(element, "mouseleave", () => {
-        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
-        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
-        hideFloatingTooltip();
-      });
-    });
-  }
+  bindFloatingTooltips();
 
   document.querySelectorAll("[data-pick-bot]").forEach((button) => {
     bindOn(button, "click", () => chooseBot(Number(button.dataset.pickBot)));
@@ -22448,6 +22430,35 @@ function bindEvents() {
     bindOn(inspectButton, "click", () => {
       state.inspectingGameOver = true;
       render();
+    });
+  }
+}
+
+// hover tooltips (data-tooltip / data-tooltip-html) for everything under root; also used by screens that
+// redraw themselves without a full render (Jesus' Gifts)
+function bindFloatingTooltips(root = document) {
+  const floatingTooltip = document.querySelector("#floatingTooltip");
+  if (floatingTooltip) {
+    root.querySelectorAll("[data-tooltip], [data-tooltip-html]").forEach((element) => {
+      bindOn(element, "mouseenter", (event) => {
+        if (touchTooltipMode()) setShiftTooltipMore(false); // on the phone every tooltip opens short
+        floatingTooltipOwner = element;
+        if (element.dataset.tooltipHtml) {
+          floatingTooltip.innerHTML = element.dataset.tooltipHtml;
+        } else {
+          floatingTooltip.innerHTML = descriptionHtml(element.dataset.tooltip);
+        }
+        floatingTooltip.classList.add("visible");
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mousemove", (event) => {
+        positionFloatingTooltip(event, floatingTooltip);
+      });
+      bindOn(element, "mouseleave", () => {
+        // phone: tapping More inside the tooltip moves the "hover" off the SEAL; keep it open
+        if (touchTooltipMode() && Date.now() - floatingTooltipTouchedAt < 1000) return;
+        hideFloatingTooltip();
+      });
     });
   }
 }
