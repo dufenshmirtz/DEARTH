@@ -253,7 +253,7 @@ function itemDescription(item) {
     return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
-    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;
   }
   if (item.id === "p121") return `${zilonConversionPercent(item)}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.`;
   if (item.id === "p123") {

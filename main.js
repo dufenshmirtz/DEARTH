@@ -1090,7 +1090,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 16,
-    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p129: {
     id: "p129",
@@ -6049,7 +6049,7 @@ function itemDescription(item) {
     return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
-    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;
   }
   if (item.id === "p121") return `${zilonConversionPercent(item)}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.`;
   if (item.id === "p123") {
@@ -10941,9 +10941,7 @@ function applyPenalties() {
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
-  // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
-  const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
-  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
+  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
@@ -10996,7 +10994,8 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && passiveStack("p128")) {
+        // Seal of Dantre: when you hit CRITICAL, the other CRITICALS can't hurt you
+        if (hitter.kind === "bot" && passiveStack("p128") && playerCritThisRound) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
           return;
@@ -11015,7 +11014,7 @@ function applyPenalties() {
       }
     });
   });
-  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked the other CRITICALS because you hit CRITICAL too.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -11225,8 +11224,7 @@ function getParticipants() {
 }
 
 function criticalDamageForVictim(hitter, victim) {
-  // Seal of Dantre: a DAMNED's CRITICAL deals your CRITICAL damage (with every bonus your SEALS give it)
-  if (hitter.key === "player" || (hitter.kind === "bot" && passiveStack("p128"))) {
+  if (hitter.key === "player") {
     return playerCriticalDamageTotal(victim);
   }
   return maxHealthCriticalDamageForVictim(victim);
@@ -11319,7 +11317,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max SOUL";
+  if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
   const bonusPercent = criticalPercentBonus();
   const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;

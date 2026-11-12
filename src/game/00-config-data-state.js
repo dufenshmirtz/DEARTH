@@ -873,7 +873,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 16,
-    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p129: {
     id: "p129",

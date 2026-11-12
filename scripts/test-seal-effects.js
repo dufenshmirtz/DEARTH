@@ -199,7 +199,7 @@ test("Eligos uses native crit ranges, never mirrors, and pays per DAMNED critica
   `);
 });
 
-test("Eligos pays once per critical in real resolution and preserves its protection", () => {
+test("Dantre pays once per DAMNED critical in real resolution; without your own CRITICAL theirs still hurt you", () => {
   game()(`
     fixture([["p128"]], [50, 50, 40, 50]);
     state.roundState.targetModifier = 1;
@@ -207,7 +207,7 @@ test("Eligos pays once per critical in real resolution and preserves its protect
     assert.equal(state.roundState.target, 50);
     assert.equal(state.roundState.criticalHitKeys.has("player"), false);
     assert.equal(state.player.credits, 3);
-    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+    assert.equal(state.playerDamageSources.filter(source => source.source.startsWith("CRITICAL from")).length, 3);
     assert.equal(state.stage, "summary");
   `);
 });
@@ -1150,13 +1150,28 @@ test("Threon: excess from Bathin when the round is recorded carries over and is 
   `);
 });
 
-test("Dantre pays SIN for DAMNED CRITICAL, shields you from it and counts it as your CRITICAL", () => {
+test("Dantre: when you hit CRITICAL, other CRITICALS can't hurt you; a DAMNED's CRITICAL no longer counts as yours", () => {
+  // you hit CRITICAL alongside three DAMNED: no CRITICAL damage to you, 1 SIN per DAMNED CRITICAL
   game()(`
-    fixture([["p128"]], [50, 50, 40, 50]);
+    fixture([["p128"]], [50, 50, 40, 60]);
+    state.roundState.targetModifier = 1;
+    state.roundState.playerEffectiveGuess = 50;
+    applyPenalties();
+    assert.equal(state.roundState.criticalHitKeys.has("player"), true);
+    assert.equal(state.roundState.target, 50);
+    assert.equal(state.player.credits >= 2, true);
+    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+  `);
+  // a DAMNED's CRITICAL deals its own 10% max SOUL and doesn't trigger your CRITICAL SEALS
+  game()(`
+    fixture([["p128"], ["p77"]], [50, 40, 40, 60]);
     state.roundState.targetModifier = 1;
     applyPenalties();
-    assert.equal(state.player.credits > 0, true);
-    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), false);
+    assert.equal(state.roundState.criticalHitKeys.size, 1);
+    assert.equal(state.playerDamageSources.some(source => source.source.startsWith("CRITICAL from")), true);
+    assert.equal(state.roundState.criticalHitKeys.has("player"), false);
+    assert.equal(state.paleHorseBoostArmed || false, false);
+    assert.equal(criticalDamageForVictim({ kind: "bot", key: "x" }, { kind: "bot", bot: state.bots[1] }), 100);
   `);
 });
 
