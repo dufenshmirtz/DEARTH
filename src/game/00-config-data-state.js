@@ -165,7 +165,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Orias",
     price: 13,
-    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+    description: "If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level."
   },
   p7: {
     id: "p7",
@@ -448,7 +448,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -875,7 +875,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 16,
-    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p129: {
     id: "p129",
@@ -2298,6 +2298,7 @@ const state = {
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
+  playerCritLastRound: false,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   previousRoundRevealedEliminations: 0,

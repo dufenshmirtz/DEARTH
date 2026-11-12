@@ -715,6 +715,7 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  if (typeof state.playerCritLastRound !== "boolean") state.playerCritLastRound = false;
   if (!Number.isFinite(state.freeRerolls)) state.freeRerolls = 0;
   if (!Number.isFinite(state.freeRerollsUntilRound)) state.freeRerollsUntilRound = 0;
   if (!Number.isFinite(state.trinityRevealsNextRound)) state.trinityRevealsNextRound = 0;

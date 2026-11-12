@@ -382,7 +382,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Orias",
     price: 13,
-    description: "Your CRITICAL hit triggers when your guess is within 2 of the right integer. ELITE widens the CRITICAL range by +1 each level."
+    description: "If you did not hit CRITICAL last round, your CRITICAL hit triggers when your guess is within 1 of the right integer. Hitting CRITICAL turns this off for the next round. ELITE widens the CRITICAL range by +1 each level."
   },
   p7: {
     id: "p7",
@@ -665,7 +665,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you also takes 20 damage, and its CRITICAL can't hurt you this round. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -1092,7 +1092,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Dantre",
     price: 16,
-    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL. ELITE increases the SIN gained by +20% each level, rounded up."
+    description: "Whenever a DAMNED hits CRITICAL, gain 1 SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round. ELITE increases the SIN gained by +20% each level, rounded up."
   },
   p129: {
     id: "p129",
@@ -2515,6 +2515,7 @@ const state = {
   trinityEliteNextShop: false,
   trinityShopSealsNextShop: [],
   critMomentumBonus: 0,
+  playerCritLastRound: false,
   exactGuessCritCharged: false,
   previousRoundEliminationsForMartyrs: 0,
   previousRoundRevealedEliminations: 0,
@@ -3261,6 +3262,7 @@ function normalizeLoadedArcadeRun() {
   if (!Array.isArray(state.playerHealSources)) state.playerHealSources = [];
   if (!Array.isArray(state.playerCreditSources)) state.playerCreditSources = [];
   if (!Number.isFinite(state.critMomentumBonus)) state.critMomentumBonus = 0;
+  if (typeof state.playerCritLastRound !== "boolean") state.playerCritLastRound = false;
   if (!Number.isFinite(state.freeRerolls)) state.freeRerolls = 0;
   if (!Number.isFinite(state.freeRerollsUntilRound)) state.freeRerollsUntilRound = 0;
   if (!Number.isFinite(state.trinityRevealsNextRound)) state.trinityRevealsNextRound = 0;
@@ -5199,11 +5201,17 @@ function applyTargetedItemSinGain(item, targets) {
   });
 }
 
+// Seal of Orias: its CRITICAL range only works in a round that follows one where you did not hit CRITICAL
+function oriasRangeReady() {
+  return state.roundState?.oriasReady !== false;
+}
+
 function critWindowDetails(idOrItem) {
+  const window = oriasRangeReady() ? criticalCalipersWindow(idOrItem) : 0;
   return {
-    guaranteed: criticalCalipersWindow(idOrItem),
+    guaranteed: window,
     chance: 0,
-    text: `+/-${criticalCalipersWindow(idOrItem)}`
+    text: `+/-${window}`
   };
 }
 
@@ -5261,8 +5269,7 @@ function spiteCircuitDamage(playerDamage) {
 }
 
 function criticalCalipersWindow(idOrItem) {
-  const stack = simpleStackCount(idOrItem);
-  return stack ? stack + 1 : 0;
+  return simpleStackCount(idOrItem);
 }
 
 function pressureSpikeDamage(idOrItem) {
@@ -5321,6 +5328,11 @@ function shaxRerollDamage(entry, spent) {
 // Seal of Barbatos: damage to each DAMNED that shares its guess
 function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 20);
+}
+
+// Seal of Barbatos: a hidden DAMNED on your guess takes this instead
+function barbatosYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 25);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -5886,7 +5898,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5939,7 +5951,7 @@ function itemDescription(item) {
     return `If your final effective guess is 0, 50, or 100, deal ${edgeGambitDamage(item)} damage to every DAMNED, take half TARGET-difference damage, and ignore worst guess penalty damage.`;
   }
   if (item.id === "p5") return `Whenever you take damage, all DAMNED take ${flatDamagePower(item)}x that damage as extra damage.`;
-  if (item.id === "p6") return `Your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer.`;
+  if (item.id === "p6") return `If you did not hit CRITICAL last round, your CRITICAL hit triggers within ${criticalCalipersWindow(item)} of the right integer. Hitting CRITICAL turns this off for the next round.`;
   if (item.id === "p7") return `When you hit CRITICAL, it deals ${pressureSpikeDamage(item)} damage to everyone else.`;
   if (item.id === "p8") return `At end of round, gain ${slowRepairSin(item)} SIN.`;
   if (item.id === "p9") return `Every DAMNED elimination spreads ${passiveConvertedSin(item, 3)} SIN and 3 MEMORY randomly among the DAMNED of the next round.`;
@@ -5997,7 +6009,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you also takes ${barbatosDamage(item)} damage, and its CRITICAL can't hurt you this round.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -6048,7 +6060,7 @@ function itemDescription(item) {
     return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
-    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. DAMNED CRITICAL damage cannot hurt you. A DAMNED's CRITICAL counts as your CRITICAL.`;
+    return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;
   }
   if (item.id === "p121") return `${zilonConversionPercent(item)}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.`;
   if (item.id === "p123") {
@@ -8694,11 +8706,15 @@ function rerollShop() {
   if (eliteBoosted) addLog(`${activeName("a23")} raised this Seal roll's ELITE chance to ${Math.round(eliteShopChance(eliteBoosted) * 100)}%.`);
   spendEliteBoostRoll();
   if (forceElite) addLog(`${ITEMS.p133.name} made this SEAL offer ELITE.`);
-  // Seal of the Holy Spirit: "Trinity" adds one missing Trinity SEAL as an extra offer
-  const trinityOffers = (state.trinityShopSealsNextShop || []).filter((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
+  // Seal of the Holy Spirit: "Trinity" puts one missing Trinity SEAL in the SEAL slot (no extra slot)
+  const trinityOffer = (state.trinityShopSealsNextShop || []).find((id) => TRINITY_SEAL_IDS.has(id) && !directPassiveStack(id) && !isSealLocked(id));
   state.trinityShopSealsNextShop = [];
-  trinityOffers.forEach((id) => state.shop.push({ item: itemCopy(id), sold: false, bonus: true }));
-  if (trinityOffers.length) addLog(`${ITEMS.p133.name} brought ${trinityOffers.map((id) => ITEMS[id].name).join(" and ")} to the offerings.`);
+  if (trinityOffer) {
+    state.shop[0] = { item: itemCopy(trinityOffer), sold: false };
+    // an ELITE offer queued at the same time waits for the next SEAL offer instead of being lost
+    if (forceElite) state.trinityEliteNextShop = true;
+    addLog(`${ITEMS.p133.name} brought ${ITEMS[trinityOffer].name} to the offerings.`);
+  }
   syncShopSlotCount();
 }
 
@@ -9131,6 +9147,7 @@ function startGame(options = {}) {
   state.trinityEliteNextShop = false;
   state.trinityShopSealsNextShop = [];
   state.critMomentumBonus = 0;
+  state.playerCritLastRound = false;
   state.exactGuessCritCharged = false;
   state.previousRoundEliminationsForMartyrs = 0;
   state.previousRoundRevealedEliminations = 0;
@@ -9160,6 +9177,7 @@ function beginRound() {
   const paleHorseDamageBoostActive = Boolean(state.paleHorseBoostArmed);
   state.paleHorseBoostArmed = false;
   state.roundState = {
+    oriasReady: !state.playerCritLastRound,
     playerSubmittedGuess: null,
     playerEffectiveGuess: null,
     playerCorruption: null,
@@ -10816,12 +10834,11 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
 }
 
 // Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes it too, and its CRITICAL can't hurt you this round. Returns those DAMNED's ids.
+// revealed and matches your guess takes the bigger damage instead (never both).
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
-  const shielded = new Set();
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
-  if (!round || !entries.length) return shielded;
+  if (!round || !entries.length) return;
   const guessOf = (bot) => round.botEffectiveGuesses.get(bot.id);
   const counts = new Map();
   activeBotList.forEach((bot) => {
@@ -10829,23 +10846,25 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
+  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    const matchesYou = !bot.revealedByPassive && Number.isFinite(playerGuess) && guess === playerGuess;
-    if (matchesYou) shielded.add(bot.id);
-    return counts.get(guess) >= 2 || matchesYou;
+    return counts.get(guess) >= 2 || matchesYou(bot);
   });
-  if (!hit.length) return shielded;
+  if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
-    const damage = barbatosDamage(entry);
-    if (damage <= 0) return;
-    markPassiveEntryTriggered(entry);
-    hit.forEach((bot) => addPendingBotDamage(botDamages, botDamageSources, bot, damage, name));
+    let triggered = false;
+    hit.forEach((bot) => {
+      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      if (damage <= 0) return;
+      triggered = true;
+      addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
+    });
+    if (triggered) markPassiveEntryTriggered(entry);
   });
   round.roundEvents.push(`${name} punished ${hit.length} DAMNED for sharing a guess.`);
-  return shielded;
 }
 
 function applyAstarothRevealedTargetDifferenceEcho(entry) {
@@ -10958,14 +10977,14 @@ function applyPenalties() {
     }
   }
 
-  const barbatosShielded = applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
+  applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
   // Guess quality: your final guess against the final TARGET (02-run-records.js)
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
-  // Seal of Dantre: a DAMNED's CRITICAL counts as your CRITICAL for every SEAL that reacts to it
-  const dantreCounts = Boolean(passiveStack("p128")) && criticals.some((hitter) => hitter.kind === "bot");
-  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player") || dantreCounts;
+  const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
+  // Seal of Orias reads this at the next round start
+  state.playerCritLastRound = playerCritThisRound;
   // Gabriel: every CRITICAL, yours or a DAMNED's
   criticals.forEach(() => applyArchangelTrigger("gabriel", 3, "a CRITICAL", addPlayerDamage));
   if (playerCritThisRound) {
@@ -10979,7 +10998,10 @@ function applyPenalties() {
       addRoundEvent(`${ITEMS.p142.name} gave ${poisoned.length} DAMNED ${amount} POISON each.`);
     });
     round.selfStackingCriticalDamage = triggerSelfStackingSeal("p98");
-    if (passiveStack("p6")) markPassiveTriggered("p6");
+    if (passiveStack("p6") && oriasRangeReady()) {
+      markPassiveTriggered("p6");
+      round.roundEvents.push(`${ITEMS.p6.name} goes quiet next round because you hit CRITICAL.`);
+    }
     if (passiveStack("p7")) markPassiveTriggered("p7");
     const paleHorseEntries = orderedPassiveEffectEntries("p77");
     if (paleHorseEntries.length) {
@@ -11010,7 +11032,6 @@ function applyPenalties() {
   }
   if (playerCritThisRound) applyBelethCriticalStrike(botDamages, botDamageSources);
   let eligosBlockedCritical = false;
-  let barbatosBlockedCritical = false;
   criticals.forEach((hitter) => {
     const criticalSummary = criticalSummaryForHitter(hitter);
     round.roundEvents.push(`${hitter.name} hit CRITICAL ${round.criticalInteger} for ${criticalSummary}.`);
@@ -11019,11 +11040,8 @@ function applyPenalties() {
       if (victim.key === hitter.key) return;
       const criticalDamage = criticalDamageForVictim(hitter, victim);
       if (victim.kind === "player") {
-        if (hitter.kind === "bot" && barbatosShielded.has(hitter.bot?.id)) {
-          barbatosBlockedCritical = true;
-          return;
-        }
-        if (hitter.kind === "bot" && passiveStack("p128")) {
+        // Seal of Dantre: when you hit CRITICAL, the other CRITICALS can't hurt you
+        if (hitter.kind === "bot" && passiveStack("p128") && playerCritThisRound) {
           markPassiveTriggered("p128");
           eligosBlockedCritical = true;
           return;
@@ -11042,8 +11060,7 @@ function applyPenalties() {
       }
     });
   });
-  if (barbatosBlockedCritical) round.roundEvents.push(`${ITEMS.p46.name} blocked the CRITICAL of a hidden DAMNED that shared your guess.`);
-  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked DAMNED CRITICAL damage against you.`);
+  if (eligosBlockedCritical) round.roundEvents.push(`${ITEMS.p128.name} blocked the other CRITICALS because you hit CRITICAL too.`);
 
   applyOrderedPenaltyPassiveDamage(activeBots, botDamages, botDamageSources, addPlayerDamage, queuePlayerHeal);
   applyBaelRepeatedGuessDamage(activeBots, botDamages, botDamageSources);
@@ -11256,8 +11273,7 @@ function getParticipants() {
 }
 
 function criticalDamageForVictim(hitter, victim) {
-  // Seal of Dantre: a DAMNED's CRITICAL deals your CRITICAL damage (with every bonus your SEALS give it)
-  if (hitter.key === "player" || (hitter.kind === "bot" && passiveStack("p128"))) {
+  if (hitter.key === "player") {
     return playerCriticalDamageTotal(victim);
   }
   return maxHealthCriticalDamageForVictim(victim);
@@ -11350,7 +11366,7 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 }
 
 function criticalSummaryForHitter(hitter) {
-  if (hitter.key !== "player" && !(hitter.kind === "bot" && passiveStack("p128"))) return "10% max SOUL";
+  if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
   const bonusPercent = criticalPercentBonus();
   const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
@@ -17293,6 +17309,7 @@ function renderOverlay() {
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
+        <div class="end-body">
         <div class="end-stats">
           <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
@@ -17306,6 +17323,7 @@ function renderOverlay() {
           ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
+        </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
           <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
@@ -17329,7 +17347,7 @@ function renderNewRecordsHtml() {
   return `
     <div class="new-records">
       <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
-      ${rows}
+      <div class="new-records-list">${rows}</div>
     </div>
   `;
 }
@@ -19388,7 +19406,7 @@ const SEAL_BUILD_TAGS = {
   p42: ["memory"], // Stolas
   p44: ["bounty"], // Andromalius
   p45: ["general"], // Crocell (double SIN payout only)
-  p46: ["reveal", "critical"], // Barbatos
+  p46: ["reveal"], // Barbatos
   p47: ["bounty"], // Ronove
   p48: ["bounty"], // Cimejes
   p49: ["bounty", "artifact"], // Phenex
