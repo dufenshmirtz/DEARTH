@@ -285,7 +285,7 @@ const NATIVE_IOS_APP = NATIVE_ARCADE_APP && window.Capacitor?.getPlatform?.() ==
 if (NATIVE_IOS_APP) document.body?.classList.add("native-ios");
 const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
-const SHOP_ELITE_CHANCE = 0.08;
+const SHOP_ELITE_CHANCE = 0.04;
 const PVP_ACTIVES = [
   {
     id: "pulse",

@@ -3576,3 +3576,19 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   assert.equal(revealed.player, plain.player);
   assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
 });
+
+test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots, doubled by a marked reroll", () => {
+  game()(`
+    state.player.passives = [];
+    state.eliteBoostedNextReroll = 0;
+    assert.equal(eliteShopChance(), 0);
+    state.player.passives.push(itemCopy("p1"));
+    assert.equal(sealSlotsFull(), false);
+    assert.equal(eliteShopChance(), 0.04);
+    assert.equal(eliteShopChance(1), 0.08);
+    for (let i = 2; ownedSealSlotCount() < passiveLimit(); i += 1) state.player.passives.push(itemCopy("p" + i));
+    assert.equal(sealSlotsFull(), true);
+    assert.equal(eliteShopChance(), 0.08);
+    assert.equal(eliteShopChance(1), 0.16);
+  `);
+});
