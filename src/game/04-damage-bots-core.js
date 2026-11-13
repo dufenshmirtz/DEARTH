@@ -661,17 +661,28 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   return dealt;
 }
 
-function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+// Seal of Satan's damage: kept per DAMNED so later multipliers can leave it out
+function noteUnmultipliedBotDamage(bot, damage) {
+  const round = state.roundState;
+  if (!round || !bot || damage <= 0) return;
+  if (!(round.unmultipliedDamageByBotId instanceof Map)) round.unmultipliedDamageByBotId = new Map();
+  round.unmultipliedDamageByBotId.set(bot.id, (round.unmultipliedDamageByBotId.get(bot.id) || 0) + damage);
+}
+
+// options.unmultiplied: no damage multiplier applies, now or later (Seal of Silence in Heaven skips it too)
+function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true, options = {}) {
   const eliminated = [];
+  const unmultiplied = !!options?.unmultiplied;
   const planned = bots.map((bot) => {
     if (!bot || bot.eliminated) return { bot, damageDetails: { damage: 0, baseDamage: 0, modifierEntries: [] }, damage: 0 };
-    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt, { unmultiplied });
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
   });
   planned.forEach(({ bot, damageDetails, damage }) => {
     if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
+    if (unmultiplied) noteUnmultipliedBotDamage(bot, damage);
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
       sourceFactory === null

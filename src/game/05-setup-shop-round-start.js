@@ -953,6 +953,7 @@ function beginRound() {
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
+    unmultipliedDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),

@@ -1241,8 +1241,8 @@ const ITEMS = {
     id: "p111",
     type: "passive",
     name: "Seal of Satan",
-    price: 20,
-    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
+    price: 40,
+    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level. Its damage can't be multiplied by any SEAL or effect."
   },
   p98: {
     id: "p98",
@@ -3201,7 +3201,8 @@ function normalizeLoadedRoundState(round) {
     "activeUseItemCounts",
     "artifactTargetCountsByBotId",
     "botDamageTotals",
-    "targetDifferenceDamageByBotId"
+    "targetDifferenceDamageByBotId",
+    "unmultipliedDamageByBotId"
   ].forEach((key) => {
     round[key] = ensureMap(round[key]);
   });
@@ -5627,8 +5628,10 @@ function scaledBotDamage(bot, amount, playerDealt = true) {
   return scaledBotDamageDetails(bot, amount, playerDealt).damage;
 }
 
-function scaledBotDamageDetails(bot, amount, playerDealt = true) {
+// options.unmultiplied: no damage multiplier applies (Seal of Satan); flat bonuses still add
+function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   const damage = Math.max(0, Math.ceil(amount));
+  const unmultiplied = !!options?.unmultiplied;
   if (!damage) return { damage: 0, baseDamage: 0, modifierEntries: [], redirectEntries: [] };
   let exactDamage = damage;
   let roundedDamage = damage;
@@ -5644,7 +5647,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     return true;
   };
   const applyMultiplier = (multiplier, source, entry) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
     const before = roundedDamage;
     exactDamage *= multiplier;
     roundedDamage = Math.ceil(exactDamage);
@@ -5654,7 +5657,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     markPassiveEntryTriggered(entry);
   };
   const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
     const boostedDamage = Math.ceil(exactDamage * multiplier);
     const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
     if (redirectedDamage <= 0) return;
@@ -7934,17 +7937,28 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   return dealt;
 }
 
-function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+// Seal of Satan's damage: kept per DAMNED so later multipliers can leave it out
+function noteUnmultipliedBotDamage(bot, damage) {
+  const round = state.roundState;
+  if (!round || !bot || damage <= 0) return;
+  if (!(round.unmultipliedDamageByBotId instanceof Map)) round.unmultipliedDamageByBotId = new Map();
+  round.unmultipliedDamageByBotId.set(bot.id, (round.unmultipliedDamageByBotId.get(bot.id) || 0) + damage);
+}
+
+// options.unmultiplied: no damage multiplier applies, now or later (Seal of Silence in Heaven skips it too)
+function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true, options = {}) {
   const eliminated = [];
+  const unmultiplied = !!options?.unmultiplied;
   const planned = bots.map((bot) => {
     if (!bot || bot.eliminated) return { bot, damageDetails: { damage: 0, baseDamage: 0, modifierEntries: [] }, damage: 0 };
-    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt, { unmultiplied });
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
   });
   planned.forEach(({ bot, damageDetails, damage }) => {
     if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
+    if (unmultiplied) noteUnmultipliedBotDamage(bot, damage);
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
       sourceFactory === null
@@ -9225,6 +9239,7 @@ function beginRound() {
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
+    unmultipliedDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),
@@ -12381,7 +12396,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
       entry.item.lastSatanDamage = roll.damage;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p111", "Seal of Satan");
-      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
+      // no multiplier may touch it: 666 / divisor is what they take
+      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name, true, { unmultiplied: true });
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
       return;
     }
@@ -12492,7 +12508,9 @@ function applySilenceInHeaven() {
     const botDamages = new Map();
     const botDamageSources = new Map();
     activeBots().forEach((bot) => {
-      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      // damage that can't be multiplied (Seal of Satan) is left out
+      const unmultiplied = round.unmultipliedDamageByBotId instanceof Map ? round.unmultipliedDamageByBotId.get(bot.id) || 0 : 0;
+      const taken = Math.max(0, Math.ceil((bot.lastDamage || 0) - unmultiplied));
       const extra = Math.ceil(taken * multiplier) - taken;
       if (extra <= 0) return;
       botDamages.set(bot.id, extra);

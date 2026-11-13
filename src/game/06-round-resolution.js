@@ -1742,7 +1742,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
       entry.item.lastSatanDamage = roll.damage;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p111", "Seal of Satan");
-      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
+      // no multiplier may touch it: 666 / divisor is what they take
+      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name, true, { unmultiplied: true });
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
       return;
     }
@@ -1853,7 +1854,9 @@ function applySilenceInHeaven() {
     const botDamages = new Map();
     const botDamageSources = new Map();
     activeBots().forEach((bot) => {
-      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      // damage that can't be multiplied (Seal of Satan) is left out
+      const unmultiplied = round.unmultipliedDamageByBotId instanceof Map ? round.unmultipliedDamageByBotId.get(bot.id) || 0 : 0;
+      const taken = Math.max(0, Math.ceil((bot.lastDamage || 0) - unmultiplied));
       const extra = Math.ceil(taken * multiplier) - taken;
       if (extra <= 0) return;
       botDamages.set(bot.id, extra);

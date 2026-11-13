@@ -296,8 +296,8 @@ Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBOR
 
 Seal of Satan
 
-Seal of Satan (20 SIN)
-Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level.
+Seal of Satan (40 SIN)
+Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level. Its damage can't be multiplied by any SEAL or effect.
 
 Trinity Seals
 

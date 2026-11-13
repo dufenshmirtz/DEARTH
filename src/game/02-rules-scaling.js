@@ -1392,8 +1392,10 @@ function scaledBotDamage(bot, amount, playerDealt = true) {
   return scaledBotDamageDetails(bot, amount, playerDealt).damage;
 }
 
-function scaledBotDamageDetails(bot, amount, playerDealt = true) {
+// options.unmultiplied: no damage multiplier applies (Seal of Satan); flat bonuses still add
+function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   const damage = Math.max(0, Math.ceil(amount));
+  const unmultiplied = !!options?.unmultiplied;
   if (!damage) return { damage: 0, baseDamage: 0, modifierEntries: [], redirectEntries: [] };
   let exactDamage = damage;
   let roundedDamage = damage;
@@ -1409,7 +1411,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     return true;
   };
   const applyMultiplier = (multiplier, source, entry) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
     const before = roundedDamage;
     exactDamage *= multiplier;
     roundedDamage = Math.ceil(exactDamage);
@@ -1419,7 +1421,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     markPassiveEntryTriggered(entry);
   };
   const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
     const boostedDamage = Math.ceil(exactDamage * multiplier);
     const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
     if (redirectedDamage <= 0) return;

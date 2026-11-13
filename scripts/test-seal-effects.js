@@ -755,11 +755,36 @@ test("Corruption shows the changed guess: the effective guess and what was typed
   `);
 });
 
-test("Seal of Satan costs 20 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
+test("Seal of Satan costs 40 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
   game()(`
-    assert.equal(ITEMS.p111.price, 20);
+    assert.equal(ITEMS.p111.price, 40);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
     assert.ok(ITEMS.p101.description.includes("+20 damage"));
+  `);
+});
+
+test("Seal of Satan: no multiplier touches its damage, and Seal of Silence in Heaven leaves it out", () => {
+  game()(`
+    fixture([["p111"], ["p80"]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.lastDamage = 0; });
+    // every DAMNED takes x1.25 from all sources (Padma's vulnerability)
+    state.roundState.padmaVulnerableBotIds = new Set(state.bots.map(b => b.id));
+    assert.equal(scaledBotDamageDetails(state.bots[0], 100).damage, 125);
+    Math.random = () => 0; // divisor 1: 666
+    applyEndOfRoundPassiveDamageInOrder();
+    assertDamage([666, 666, 666, 666, 666]);
+    // other damage is still multiplied, the Seal of Satan's part is not
+    damageBots([state.bots[0]], 8, "test hit", "Test");
+    assert.equal(state.bots[0].lastDamage, 676);
+    state.roundState.eliminationsThisRound = 2;
+    const before = state.bots[0].hp;
+    const beforeOther = state.bots[1].hp;
+    applySilenceInHeaven();
+    assert.equal(before - state.bots[0].hp, 5);
+    assert.equal(beforeOther - state.bots[1].hp, 0);
+    assert.ok(ITEMS.p111.description.includes("can't be multiplied"));
+    assert.ok(splitEliteDescription(ITEMS.p111.description).elite.includes("can't be multiplied"));
+    assert.ok(!descriptionWithoutElite(ITEMS.p111.description).includes("can't be multiplied"));
   `);
 });
 

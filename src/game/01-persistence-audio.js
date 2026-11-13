@@ -654,7 +654,8 @@ function normalizeLoadedRoundState(round) {
     "activeUseItemCounts",
     "artifactTargetCountsByBotId",
     "botDamageTotals",
-    "targetDifferenceDamageByBotId"
+    "targetDifferenceDamageByBotId",
+    "unmultipliedDamageByBotId"
   ].forEach((key) => {
     round[key] = ensureMap(round[key]);
   });
