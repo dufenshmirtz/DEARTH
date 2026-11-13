@@ -14654,3 +14654,38 @@ body.native-arcade #app .native-slot-band .mission-reward {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   The ARTIFACT being used (desktop): its target prompt and Cancel sit on its own card
+   ========================================================================== */
+#app .item-card.active.artifact-pending {
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-pending::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-pending .item-name {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .artifact-pending-text {
+  grid-column: 1 / -1;
+  margin: 2px 0 4px;
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  line-height: 1.25;
+  color: var(--bone, #e9e3d6) !important;
+  text-align: left;
+}
+
+#app .item-card.active.artifact-pending .artifact-cancel-button {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .item-card.active.artifact-pending .artifact-cancel-button::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}

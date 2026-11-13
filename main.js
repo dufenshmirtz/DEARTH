@@ -17071,7 +17071,7 @@ function renderConsole() {
         />
         ${isNativeArcadeApp() ? "" : `<button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>`}
       </div>
-      <div class="pending-panel ${state.pendingActive ? "visible" : ""}">
+      <div class="pending-panel ${state.pendingActive && !pendingArtifactOnCard() ? "visible" : ""}">
         <span>${escapeHtml(normalizeGameText(pendingText))}</span>
         ${pendingCancel}
       </div>
@@ -17088,7 +17088,7 @@ function renderPendingText() {
   if (state.pendingActive.id === "a14") return `${item.name} reduces the TARGET by ${artifactValue(10)}.`;
   if (state.pendingActive.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
+    return `${item.name}: pick a target: non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
   }
   if (state.pendingActive.id === "a25") {
     const lamb = artifactSealEntry("a25");
@@ -17252,8 +17252,17 @@ function artifactStateClass(index, actionLocked) {
   return "artifact-waiting";
 }
 
+// desktop: the ARTIFACT you are using shows its target prompt and a Cancel button on its own card, so the
+// prompt no longer covers the guess area (phone web closes the ARTIFACTS drawer and the phone app has its own panel)
+function pendingArtifactOnCard() {
+  const pending = state.pendingActive;
+  if (!pending?.uid || isNativeArcadeApp() || isMobileArcadeView()) return false;
+  return state.player.actives.some((item) => item.uid === pending.uid);
+}
+
 function renderActiveItem(item, index) {
   const actionLocked = Boolean(state.pendingActive);
+  const pendingHere = actionLocked && pendingArtifactOnCard() && item.uid === state.pendingActive.uid;
   const useDisabled = canUseActive(index) && !actionLocked ? "" : "disabled";
   const sellDisabled = actionLocked || arcadeActionLocked() ? "disabled" : "";
   const sale = activeSellValue(item);
@@ -17262,19 +17271,24 @@ function renderActiveItem(item, index) {
   const memoryLine =
     item.id === "a18" ? `<div class="artifact-memory-line">Last: ${escapeHtml(lastUsedArtifactName())}</div>` : "";
   return `
-    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""} ${artifactStateClass(index, actionLocked)}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""} ${pendingHere ? "artifact-pending" : artifactStateClass(index, actionLocked)}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
           <div class="item-name">${item.name}</div>
           ${memoryLine}
-          <div class="price">Sell ${sale}${SIN_MARK}</div>
+          ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
         </div>
         <span class="item-kind">ARTIFACT</span>
       </div>
+      ${pendingHere ? `<div class="artifact-pending-text">${escapeHtml(normalizeGameText(renderPendingText().replace(`${item.name}: `, "").replace(/^./, (c) => c.toUpperCase())))}</div>` : ""}
       <div class="item-actions">
-        <button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
-        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>Sell</button>
+        ${
+          pendingHere
+            ? `<button class="small-button artifact-cancel-button" data-cancel-pending>Cancel</button>`
+            : `<button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
+        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>Sell</button>`
+        }
       </div>
     </article>
   `;
@@ -23148,6 +23162,7 @@ function bindEvents() {
 
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
+  document.querySelectorAll("[data-cancel-pending]").forEach((button) => bindOn(button, "click", cancelPendingActive));
 
   bindFloatingTooltips();
 

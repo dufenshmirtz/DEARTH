@@ -328,6 +328,7 @@ function bindEvents() {
 
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
+  document.querySelectorAll("[data-cancel-pending]").forEach((button) => bindOn(button, "click", cancelPendingActive));
 
   bindFloatingTooltips();
 
