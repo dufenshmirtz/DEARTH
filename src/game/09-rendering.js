@@ -112,6 +112,8 @@ function render() {
   lastRenderedMode = state.mode;
   bindEvents();
   afterRenderEffects();
+  // the slot machine and the mission line up with the outer DAMNED cards
+  if (state.mode === "arcade") syncSlotEdges();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   scheduleArcadeRunSave();

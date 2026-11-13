@@ -14125,8 +14125,36 @@ body.native-arcade .gifts-screen .gifts-dev {
   width: var(--slot-reel-size);
   height: var(--slot-reel-size);
   overflow: hidden;
-  border: 1px solid rgba(233, 227, 214, 0.55);
+  border: 0;
   background: #000;
+}
+
+/* the game's hand-drawn frame over each reel (the spinning icons pass under it) */
+#app .slot-reel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 8px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 11px stretch;
+  opacity: 1;
+}
+
+body.outline-boil #app .slot-reel::after,
+body.outline-boil #app .slot-machine,
+body.outline-boil #app .mission-box {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+body.outline-boil #app .slot-reel:nth-child(2)::after,
+body.outline-boil #app .mission-box {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+body.outline-boil #app .slot-reel:nth-child(3)::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
 }
 
 #app .slot-idle {
@@ -14221,8 +14249,9 @@ body.native-arcade .gifts-screen .gifts-dev {
 }
 
 /* three of a kind: the reels go red */
-#app .slot-machine.slot-triple .slot-reel {
-  border-color: var(--blood-bright, #dc2a2f);
+#app .slot-machine.slot-triple .slot-reel::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
 }
 
 #app .slot-machine.slot-triple .slot-icon-label,
@@ -14382,6 +14411,8 @@ body.native-arcade .gifts-screen .gifts-dev {
 /* ---- desktop: slot left of the guess area, mission right of GUESS ----
    The guess area gets narrower so both side boxes fit on 1280-wide screens. */
 body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot {
+  padding-left: var(--slot-edge-left, 0px);
+  padding-right: var(--slot-edge-right, 0px);
   grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
   grid-template-rows: auto auto;
   row-gap: 4px;
@@ -14409,7 +14440,7 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .p
 body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .slot-machine {
   grid-column: 1;
   grid-row: 1 / span 2;
-  justify-self: end;
+  justify-self: start;
   align-self: end;
   max-width: 100%;
 }
@@ -14417,7 +14448,7 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .s
 body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .mission-box {
   grid-column: 3;
   grid-row: 1 / span 2;
-  justify-self: start;
+  justify-self: end;
   align-self: end;
   width: min(100%, 300px);
   min-height: 76px;
@@ -14471,7 +14502,8 @@ body.mobile-arcade #app .center-console.has-slot .mission-box {
 }
 
 body.mobile-arcade #app .center-console.has-slot .slot-machine {
-  right: calc(100% + 10px);
+  left: var(--slot-edge-left, calc(-100% - 10px));
+  right: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -14491,7 +14523,8 @@ body.mobile-arcade #app .center-console.has-slot .slot-machine .slot-spin {
 }
 
 body.mobile-arcade #app .center-console.has-slot .mission-box {
-  left: calc(100% + 10px);
+  right: var(--slot-edge-right, calc(-100% - 10px));
+  left: auto;
   width: min(230px, calc(50vw - 200px));
 }
 
@@ -14532,6 +14565,9 @@ body.native-arcade .native-arcade-frame.has-slot-band > .passive-bar {
 body.native-arcade .native-slot-band {
   grid-column: 1 / -1;
   grid-row: 2;
+  box-sizing: border-box;
+  padding-left: var(--slot-edge-left, 0px);
+  padding-right: var(--slot-edge-right, 0px);
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   gap: 8px;
@@ -14571,6 +14607,12 @@ body.native-arcade #app .native-slot-band .slot-glyph-mask {
 
 body.native-arcade #app .native-slot-band .slot-icon {
   padding: 2px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reel::after,
+body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+  border-width: 6px;
+  border-image-width: 7px;
 }
 
 body.native-arcade #app .native-slot-band .slot-spin {

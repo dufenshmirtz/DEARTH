@@ -570,3 +570,27 @@ function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
   return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
+
+/* ---- lining up with the DAMNED ----
+   The slot machine's left edge sits on the leftmost DAMNED card's left edge and the mission's right edge on the
+   rightmost card's right edge. The cards are laid out differently on every screen, so after each render the
+   distance from the console (or the phone app's band) to the card row is measured into two CSS variables on the
+   page root (--slot-edge-left / --slot-edge-right), which the render cycle never rebuilds. */
+function syncSlotEdges() {
+  if (typeof document === "undefined" || typeof document.querySelector !== "function") return;
+  const grid = document.querySelector("#app .arena .bot-grid");
+  const host = document.querySelector("#app .native-slot-band") || document.querySelector("#app .center-console.has-slot");
+  if (!grid || !host) return;
+  const cards = grid.getBoundingClientRect();
+  const box = host.getBoundingClientRect();
+  if (!cards.width || !box.width) return;
+  const root = document.documentElement.style;
+  const left = `${Math.round(cards.left - box.left)}px`;
+  const right = `${Math.round(box.right - cards.right)}px`;
+  if (root.getPropertyValue("--slot-edge-left") !== left) root.setProperty("--slot-edge-left", left);
+  if (root.getPropertyValue("--slot-edge-right") !== right) root.setProperty("--slot-edge-right", right);
+}
+
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("resize", () => syncSlotEdges());
+}
