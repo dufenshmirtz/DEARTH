@@ -812,6 +812,7 @@ function startGame(options = {}) {
   state.satanTightwadOffers = 0;
   state.satanRerollToll = false;
   state.pact = satanPactFresh();
+  resetMissionsForRun();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -1037,6 +1038,8 @@ function beginRound() {
   ensureSitriHost();
   applyZilonBossBounty();
   applyPoisonStartOfRound();
+  // missions: this round's counters (the mission itself is drawn on the first render)
+  missionsBeginRound();
 }
 
 // Poison SEALS at the start of the round, in SEAL slot order (after the start-of-round reveals):

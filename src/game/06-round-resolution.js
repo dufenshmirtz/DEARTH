@@ -258,6 +258,7 @@ function applyPenalties() {
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
+  missionsNoteReady();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -543,6 +544,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  missionsAfterResolution();
   noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
@@ -2105,6 +2107,7 @@ function advanceAfterSummary() {
     startSatanTightwadNow();
     return;
   }
+  missionsBeforeNextRound();
   clearDevTemporaryArtifacts();
   rememberRound();
   if (state.player.hp <= 0) {

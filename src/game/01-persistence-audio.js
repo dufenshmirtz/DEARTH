@@ -746,6 +746,7 @@ function normalizeLoadedArcadeRun() {
   // older saves have no snapshot; the records as they are now are the closest guess
   if (!state.recordsAtRunStart || typeof state.recordsAtRunStart !== "object") snapshotRecordsAtRunStart();
   state.roundState = normalizeLoadedRoundState(state.roundState);
+  normalizeMissionsState();
   if (!state.finalBossPhase && !state.finalBossQueued) ensureBossKillInterval();
   [...state.player.actives, ...state.shop.map((slot) => slot?.item), state.lastUsedArtifact].forEach((item) => {
     if (item?.type === "active" && ACTIVE_IDS.includes(item.id)) item.price = ITEMS[item.id].price;

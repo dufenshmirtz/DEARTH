@@ -737,14 +737,16 @@ function renderArcadeApp() {
       `;
     }
     const playerGuessCritical = Boolean(state.roundState?.criticalHitKeys?.has("player"));
+    const slotBand = nativeSlotBandHtml();
     return `
-      <div class="native-arcade-frame">
+      <div class="native-arcade-frame${slotBand ? " has-slot-band" : ""}">
         <main class="arena native-board-panel">
           ${renderTopbar()}
           ${renderBots()}
           ${renderOverlay()}
           ${renderPentakillPopup()}
         </main>
+        ${slotBand}
         <div class="native-seal-actions" aria-label="Menu controls">
           ${renderPauseButton()}
           ${satanDealButtonHtml()}
@@ -2404,8 +2406,11 @@ function renderConsole() {
   const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
   const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
 
+  // the slot machine (left) and the round's mission (right); the phone app has them in its own band
+  const sideParts = isNativeArcadeApp() ? { slot: "", mission: "" } : { slot: slotMachineHtml(), mission: missionBoxHtml() };
   return `
-    <section class="center-console" aria-label="Player action">
+    <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
+      ${sideParts.slot}
       ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
         ${corruptionNote}
@@ -2428,6 +2433,7 @@ function renderConsole() {
         <span>${escapeHtml(normalizeGameText(pendingText))}</span>
         ${pendingCancel}
       </div>
+      ${sideParts.mission}
     </section>
   `;
 }

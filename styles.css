@@ -14037,3 +14037,576 @@ body.native-arcade .gifts-screen .gifts-dev {
   color: var(--bone) !important;
   cursor: help;
 }
+
+/* ==========================================================================
+   Missions and the slot machine (09-slot-missions.js)
+   Desktop and phone web: inside the center console, the slot machine left of the guess
+   area and the round's mission right of the GUESS button, between the DAMNED and the SEALS.
+   Phone app: one band between the DAMNED and the SEALS.
+   ========================================================================== */
+:root {
+  --doubloon-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2' d='M12.6 2.6c5.2.4 9.1 4.6 8.8 9.8-.3 5.3-4.8 9.3-10 9-5.2-.3-9-4.7-8.7-9.9.3-5 4.4-8.8 9.3-9l1.6.4'/%3E%3Cpath stroke-width='1.1' d='M12.2 5.8c3.3.2 6 3 5.9 6.4-.1 3.3-3 6-6.3 5.8-3.3-.2-5.9-3-5.7-6.3'/%3E%3Cpath fill='%23000' stroke-width='0.8' d='M12 7.4l1.1 3.4 3.5 1.2-3.5 1.1L12 16.6l-1.1-3.5-3.5-1.1 3.5-1.2z'/%3E%3C/svg%3E");
+  --slot-reel-size: 46px;
+}
+
+#app .doubloon-mark,
+.floating-tooltip .doubloon-mark {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.16em;
+  vertical-align: -0.12em;
+  background: var(--bone, #e9e3d6);
+  -webkit-mask: var(--doubloon-coin) center / contain no-repeat;
+  mask: var(--doubloon-coin) center / contain no-repeat;
+  flex: 0 0 auto;
+}
+
+/* ---- the two boxes ---- */
+#app .slot-machine,
+#app .mission-box {
+  position: relative;
+  box-sizing: border-box;
+  pointer-events: auto;
+  padding: 2px 8px;
+  color: var(--bone, #e9e3d6);
+  border: 12px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 20px stretch;
+  background: transparent;
+}
+
+/* slot: three reels, SPIN and your DOUBLOONS beside them, the last result under them */
+#app .slot-machine {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+#app .slot-side {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+#app .slot-doubloons {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--bone, #e9e3d6);
+  white-space: nowrap;
+}
+
+#app .slot-result {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-book) !important;
+  font-size: 12px;
+  line-height: 1.15;
+  color: var(--ash, #8d877c) !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---- reels ---- */
+#app .slot-reels {
+  display: grid;
+  grid-template-columns: repeat(3, var(--slot-reel-size));
+  gap: 5px;
+}
+
+#app .slot-reel {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--slot-reel-size);
+  height: var(--slot-reel-size);
+  overflow: hidden;
+  border: 1px solid rgba(233, 227, 214, 0.55);
+  background: #000;
+}
+
+#app .slot-idle {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: rgba(141, 135, 124, 0.7);
+}
+
+#app .slot-icon {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--slot-reel-size);
+  padding: 4px 1px 3px;
+}
+
+#app .slot-glyph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+#app .slot-glyph svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--bone, #e9e3d6);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#app .slot-icon-damage .slot-glyph svg {
+  stroke: var(--blood-bright, #dc2a2f);
+}
+
+#app .slot-glyph-mask {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+#app .slot-glyph-sin {
+  background: var(--sin, #b0414c);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+}
+
+#app .slot-glyph-karma {
+  background: #e0383d;
+  -webkit-mask: var(--karma-spiral) center / contain no-repeat;
+  mask: var(--karma-spiral) center / contain no-repeat;
+}
+
+#app .slot-icon-label {
+  font-family: var(--font-display);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--ash, #8d877c);
+  white-space: nowrap;
+}
+
+/* spinning: a strip of every icon (twice) runs past, each reel stops on its own */
+#app .slot-reel.rolling .slot-strip {
+  display: grid;
+  animation: slot-roll 0.42s linear infinite;
+  filter: blur(0.7px);
+}
+
+@keyframes slot-roll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+#app .slot-reel.landed .slot-icon {
+  animation: slot-land 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+@keyframes slot-land {
+  from { transform: translateY(-38%); }
+  to { transform: translateY(0); }
+}
+
+/* three of a kind: the reels go red */
+#app .slot-machine.slot-triple .slot-reel {
+  border-color: var(--blood-bright, #dc2a2f);
+}
+
+#app .slot-machine.slot-triple .slot-icon-label,
+#app .slot-machine.slot-triple .slot-result {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+/* ---- spin button ---- */
+#app .slot-machine .slot-spin {
+  position: relative;
+  min-width: 0;
+  min-height: 30px;
+  padding: 5px 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--bone, #e9e3d6) !important;
+  font-family: var(--font-display);
+  font-size: 17px !important;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: none !important;
+  cursor: pointer;
+}
+
+#app .slot-machine .slot-spin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 8px solid transparent;
+  border-width: 8px 16px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 8px 16px stretch;
+  opacity: 0.8;
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled),
+#app .slot-machine .slot-spin:focus-visible {
+  color: var(--blood-bright, #dc2a2f) !important;
+  outline: none;
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled) .doubloon-mark,
+#app .slot-machine .slot-spin:focus-visible .doubloon-mark {
+  background: var(--blood-bright, #dc2a2f);
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled)::after,
+#app .slot-machine .slot-spin:focus-visible::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .slot-machine .slot-spin:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#app .slot-cost {
+  margin-left: 4px;
+}
+
+/* ---- mission ---- */
+#app .mission-box {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+#app .mission-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+#app .mission-title {
+  color: var(--ash, #8d877c);
+}
+
+#app .mission-reward {
+  margin-left: auto;
+  color: var(--bone, #e9e3d6);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+#app .mission-text {
+  font-family: var(--font-book) !important;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--bone, #e9e3d6);
+}
+
+#app .mission-status {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--ash, #8d877c) !important;
+  white-space: nowrap;
+}
+
+#app .mission-status.done {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .mission-box.done .mission-text {
+  color: var(--ash, #8d877c) !important;
+}
+
+#app .mission-box.done .mission-reward {
+  color: var(--blood-bright, #dc2a2f);
+}
+
+#app .mission-box.done .mission-reward .doubloon-mark {
+  background: var(--blood-bright, #dc2a2f);
+}
+
+/* ---- the paytable tooltip ---- */
+.floating-tooltip .slot-paytable {
+  display: grid;
+  gap: 4px;
+  min-width: 300px;
+}
+
+.floating-tooltip .slot-pay-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.floating-tooltip .slot-pay-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.floating-tooltip .slot-pay-row b {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.floating-tooltip .slot-pay-note {
+  color: var(--ash, #8d877c);
+  font-size: 0.92em;
+}
+
+/* ---- desktop: slot left of the guess area, mission right of GUESS ----
+   The guess area gets narrower so both side boxes fit on 1280-wide screens. */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot {
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: 4px;
+  column-gap: 14px;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .console-row {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
+  width: auto;
+  grid-template-columns: clamp(150px, 15vw, 280px) clamp(112px, 9vw, 160px);
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .console-hint,
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .pending-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  width: auto;
+  max-width: 100%;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .slot-machine {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  max-width: 100%;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .mission-box {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: end;
+  width: min(100%, 300px);
+  min-height: 76px;
+}
+
+body:not(.mobile-arcade) #app .center-console.has-slot .slot-result {
+  max-width: 230px;
+}
+
+@media (max-width: 1440px) {
+  #app .center-console.has-slot {
+    --slot-reel-size: 40px;
+  }
+}
+
+@media (max-width: 1440px), (max-height: 760px) {
+  #app .center-console.has-slot .slot-icon-label {
+    display: none;
+  }
+  #app .center-console.has-slot .slot-glyph svg,
+  #app .center-console.has-slot .slot-glyph-mask {
+    width: 22px;
+    height: 22px;
+  }
+  #app .center-console.has-slot .slot-machine .slot-spin {
+    font-size: 15px !important;
+    padding: 4px 12px !important;
+  }
+  #app .center-console.has-slot .mission-text {
+    font-size: 14px;
+  }
+  body:not(.mobile-arcade) #app .center-console.has-slot .slot-result {
+    max-width: 200px;
+  }
+}
+
+@media (max-height: 760px) {
+  #app .center-console.has-slot {
+    --slot-reel-size: 36px;
+  }
+}
+
+/* ---- phone web: the console sits in the middle, the slot and the mission beside it ---- */
+body.mobile-arcade #app .center-console.has-slot .slot-machine,
+body.mobile-arcade #app .center-console.has-slot .mission-box {
+  position: absolute;
+  bottom: 0;
+  padding: 4px 8px;
+  border-width: 8px;
+  border-image-width: 12px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-machine {
+  right: calc(100% + 10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  --slot-reel-size: 30px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-machine .slot-spin {
+  min-height: 24px;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+body.mobile-arcade #app .center-console.has-slot .mission-box {
+  left: calc(100% + 10px);
+  width: min(230px, calc(50vw - 200px));
+}
+
+body.mobile-arcade #app .slot-icon-label,
+body.native-arcade #app .slot-icon-label {
+  display: none;
+}
+
+body.mobile-arcade #app .slot-result {
+  display: none;
+}
+
+body.mobile-arcade #app .slot-glyph svg,
+body.mobile-arcade #app .slot-glyph-mask {
+  width: 18px;
+  height: 18px;
+}
+
+body.mobile-arcade #app .slot-icon {
+  padding: 2px;
+}
+
+body.mobile-arcade #app .mission-text {
+  font-size: 12px;
+}
+
+/* ---- phone app: one band between the DAMNED and the SEALS ---- */
+body.native-arcade .native-arcade-frame.has-slot-band {
+  grid-template-rows: minmax(0, 1fr) 44px var(--native-seal-row-height) !important;
+}
+
+body.native-arcade .native-arcade-frame.has-slot-band > .native-console-panel,
+body.native-arcade .native-arcade-frame.has-slot-band > .mobile-numpad,
+body.native-arcade .native-arcade-frame.has-slot-band > .passive-bar {
+  grid-row: 3 !important;
+}
+
+body.native-arcade .native-slot-band {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  --slot-reel-size: 26px;
+}
+
+body.native-arcade #app .native-slot-band .slot-machine,
+body.native-arcade #app .native-slot-band .mission-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  min-height: 0;
+  padding: 0 6px;
+  border-width: 8px;
+  border-image-width: 12px;
+  overflow: hidden;
+}
+
+body.native-arcade #app .native-slot-band .slot-result {
+  display: none;
+}
+
+body.native-arcade #app .native-slot-band .slot-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.native-arcade #app .native-slot-band .slot-glyph svg,
+body.native-arcade #app .native-slot-band .slot-glyph-mask {
+  width: 18px;
+  height: 18px;
+}
+
+body.native-arcade #app .native-slot-band .slot-icon {
+  padding: 2px;
+}
+
+body.native-arcade #app .native-slot-band .slot-spin {
+  min-height: 24px;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+body.native-arcade #app .native-slot-band .mission-head {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+body.native-arcade #app .native-slot-band .mission-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body.native-arcade #app .native-slot-band .mission-status {
+  font-size: 11px;
+}
+
+body.native-arcade #app .native-slot-band .mission-reward {
+  margin-left: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .slot-reel.rolling .slot-strip {
+    animation-duration: 1.4s;
+  }
+  #app .slot-reel.landed .slot-icon {
+    animation: none;
+  }
+}

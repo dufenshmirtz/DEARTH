@@ -242,6 +242,7 @@ function buyShopItem(slotIndex) {
     slot.sold = true;
     syncShopSlotCount();
     collectionNoteShopBuy();
+    missionsNoteShop("buySeal");
     applyGuessReveals();
     checkBalamMemoryBountyEliminations();
     playSealPurchaseSfx();
@@ -267,6 +268,7 @@ function buyShopItem(slotIndex) {
   slot.sold = true;
   syncShopSlotCount();
   collectionNoteShopBuy();
+  missionsNoteShop("buyArtifact");
   addLog(`Bought ${item.name}.`);
   playGameSfx("artifactBuy");
   applyOfferingTollDamage(item);
@@ -299,17 +301,21 @@ function rerollShopClick() {
   }
   rerollShop();
   playGameSfx("reroll");
-  if (free) {
-    // a free reroll (Seal of the Son) does not raise the price of the next paid one
-    state.freeRerolls = freeRerollsLeft() - 1;
+  if (free && sonFreeRerollsLeft() > 0) {
+    // a free reroll (Seal of the Son) does not raise the price of the next paid one; the Son's run out, so they go first
+    state.freeRerolls = sonFreeRerollsLeft() - 1;
     markPassiveTriggered("p132");
     addLog(`Devil's Offerings rerolled for free (${ITEMS.p132.name}). ${freeRerollsLeft()} left.`);
+  } else if (free) {
+    state.slotFreeRerolls = Math.max(0, Math.ceil(state.slotFreeRerolls || 0) - 1);
+    addLog(`Devil's Offerings rerolled for free (slot machine). ${freeRerollsLeft()} left.`);
   } else {
     state.rerollBaseCost += 1;
     addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
   }
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
+  missionsNoteShop("reroll");
   render();
 }
 
@@ -325,6 +331,7 @@ function rerollShopPayingSatanToll() {
   addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
+  missionsNoteShop("reroll");
 }
 
 function passiveSellValue(item) {
@@ -343,6 +350,7 @@ function sellTrinitySeals(index) {
   gainCredits(sale, false, `Sold ${names}`);
   syncShopSlotCount();
   addLog(`Sold ${names} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
@@ -363,6 +371,7 @@ function sellPassive(index) {
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
@@ -378,6 +387,7 @@ function sellActive(index) {
   gainCredits(sale, false, `Sold ${item.name}`);
   normalizeActiveCarouselIndex();
   addLog(`Sold ${item.name} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   playGameSfx("sell");
   quietMomentSfx("sinGain");
   render();
@@ -820,6 +830,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (state.player.hp <= 0) {
     finishGameOverRound();
   }
+  missionsNoteShop("artifact");
   if (renderAfter) render();
 }
 

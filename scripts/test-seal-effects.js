@@ -3836,3 +3836,142 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
     assert.ok(!html.includes("death-badge"), "no KO notice yet");
   `);
 });
+
+test("Missions: 15 worth 1, 2 and 3 DOUBLOONS; one per round, replaced at the start of the next round done or not", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    assert.equal(JSON.stringify([1, 2, 3].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[15,15,15]");
+    assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
+    const first = missionsEnsureRound();
+    assert.ok(first && MISSION_BY_ID[first.id]);
+    assert.equal(missionsEnsureRound(), first);
+    state.round += 1;
+    beginRound();
+    const second = missionsEnsureRound();
+    assert.notEqual(second, first);
+    assert.notEqual(second.id, first.id);
+    assert.equal(second.round, state.round);
+  `);
+});
+
+test("Missions: a finished mission pays its DOUBLOONS once; guess missions wait for the results, NEXT ROUND ones for NEXT ROUND", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.missions.current = { id: "use1", value: 1, param: null, round: state.round, done: false };
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 0);
+    state.roundState.activeUses = 1;
+    missionsCheck("event");
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 1);
+    // within 3 of the TARGET (50): your guess 52 counts only once READY has resolved
+    state.missions.current = { id: "near3", value: 2, param: null, round: state.round, done: false };
+    state.roundState.playerEffectiveGuess = 52;
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 1);
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, 3);
+    // holding 4 ARTIFACTS pays only when you move on
+    state.missions.current = { id: "hold4", value: 2, param: null, round: state.round, done: false };
+    state.player.actives = ["a15", "a15", "a6", "a6"].map((id) => freeActiveCopy(id));
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 3);
+    missionsCheck("leave");
+    assert.equal(state.missions.doubloons, 5);
+    assert.equal(state.missions.completed, 3);
+  `);
+});
+
+test("Missions: worst, closest and lowest guess are read from the table at READY", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    missionsNoteReady();
+    state.missions.round.resolved = true;
+    state.roundState.playerEffectiveGuess = 5;
+    let facts = missionFacts();
+    assert.equal(facts.worst, true);
+    assert.equal(facts.lowest, true);
+    assert.equal(facts.closest, false);
+    // a tie with the best DAMNED (50) still counts as the closest guess
+    state.roundState.playerEffectiveGuess = 50;
+    facts = missionFacts();
+    assert.equal(facts.worst, false);
+    assert.equal(facts.closest, true);
+    assert.equal(facts.botsFarther, 4);
+  `);
+});
+
+test("Slot machine: each icon pays by how many came up (SIN 3/6/20, SOUL 2/4/10, DAMAGE 5/10/30%, ELITE only 3, KARMA 1/2 ARTIFACTS or 6 KARMA, rerolls 2/4/10)", () => {
+  game()(`
+    const pay = (icons) => JSON.stringify(slotRewardsFor(icons));
+    let r = slotRewardsFor(["sin", "sin", "soul"]);
+    assert.equal(r.sin, 6); assert.equal(r.soul, 2); assert.equal(r.triple, null);
+    r = slotRewardsFor(["sin", "sin", "sin"]);
+    assert.equal(r.sin, 20); assert.equal(r.triple, "sin");
+    r = slotRewardsFor(["damage", "damage", "damage"]);
+    assert.equal(r.damagePercent, 30);
+    r = slotRewardsFor(["elite", "elite", "reroll"]);
+    assert.equal(r.elite, 0); assert.equal(r.rerolls, 2);
+    r = slotRewardsFor(["elite", "elite", "elite"]);
+    assert.equal(r.elite, 1);
+    r = slotRewardsFor(["karma", "karma", "soul"]);
+    assert.equal(r.artifacts, 2); assert.equal(r.karma, 0);
+    r = slotRewardsFor(["karma", "karma", "karma"]);
+    assert.equal(r.artifacts, 0); assert.equal(r.karma, 6);
+    r = slotRewardsFor(["reroll", "reroll", "reroll"]);
+    assert.equal(r.rerolls, 10);
+    assert.equal(SLOT_ICONS.reduce((sum, icon) => sum + icon.weight, 0), 100);
+  `);
+});
+
+test("Slot machine: a spin costs 3 DOUBLOONS and pays at once; SIN, damage to every DAMNED and free rerolls that are not the Son's", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    state.missions.doubloons = 2;
+    assert.equal(slotSpin(), false);
+    state.missions.doubloons = 3;
+    const icons = ["sin", "damage", "reroll"];
+    let next = 0;
+    slotRollIcon = () => icons[next++];
+    assert.equal(slotSpin(), true);
+    assert.equal(state.missions.doubloons, 0);
+    assert.equal(state.player.credits, 3);
+    assertDamage([50, 50, 50, 50, 50]);
+    assert.equal(state.slotFreeRerolls, 2);
+    assert.equal(currentRerollCost(), 0);
+    rerollShopClick();
+    assert.equal(state.slotFreeRerolls, 1);
+    assert.equal(state.rerollBaseCost, 1);
+    assert.equal(state.roundState.triggeredPassiveIds.has("p132"), false);
+    assert.equal(state.missions.round.rerolls, 1);
+  `);
+});
+
+test("Slot machine: three ELITES give a random SEAL a free ELITE level; three KARMA give 6 KARMA; one or two give ARTIFACTS", () => {
+  game()(`
+    fixture([["p59"]], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    state.missions.doubloons = 9;
+    const seal = state.player.passives[0];
+    const sellBefore = passiveSellValue(seal);
+    slotRollIcon = () => "elite";
+    slotSpin();
+    assert.equal(seal.stack, 2);
+    assert.equal(passiveSellValue(seal), sellBefore);
+    const karmaBefore = karmaBalance();
+    slotRollIcon = () => "karma";
+    slotSpin();
+    assert.equal(karmaBalance(), karmaBefore + 6);
+    const icons = ["karma", "karma", "sin"];
+    let next = 0;
+    slotRollIcon = () => icons[next++];
+    state.player.actives = [];
+    slotSpin();
+    assert.equal(state.player.actives.length, 2);
+    assert.equal(state.missions.doubloons, 0);
+  `);
+});

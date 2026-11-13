@@ -411,6 +411,11 @@ function currentRerollCost() {
 }
 
 function freeRerollsLeft() {
+  return sonFreeRerollsLeft() + Math.max(0, Math.ceil(state.slotFreeRerolls || 0));
+}
+
+// Seal of the Son's free rerolls (they run out at the end of the next round); the slot machine's last until used
+function sonFreeRerollsLeft() {
   return Math.max(0, Math.ceil(state.freeRerolls || 0));
 }
 

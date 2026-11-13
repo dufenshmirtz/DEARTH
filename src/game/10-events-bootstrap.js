@@ -238,6 +238,9 @@ function bindEvents() {
   const dealButton = document.querySelector("#dealButton");
   if (dealButton) bindOn(dealButton, "click", openSatanDeal);
 
+  const slotSpinButton = document.querySelector("#slotSpin");
+  if (slotSpinButton) bindOn(slotSpinButton, "click", slotSpin);
+
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
 
