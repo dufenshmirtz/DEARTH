@@ -1263,7 +1263,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sachiel",
     price: 15,
-    description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+    description: "At end of round, if the BOUNTY of all living DAMNED (BOSS BOUNTY included) adds up to more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
@@ -6800,7 +6800,7 @@ function selfStackingCurrentDamageForId(id) {
 }
 
 function selfStackingSealDescription(item) {
-  const description = item.id === "p102" ? ITEMS.p102.description : item.description;
+  const description = ["p100", "p102"].includes(item.id) ? ITEMS[item.id].description : item.description;
   return `${description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
 }
 
@@ -6868,7 +6868,8 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
 function applySelfStackingBountySumDamage() {
   const targets = activeBots();
   if (!targets.length) return;
-  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+  // every BOUNTY on the table: regular BOUNTY plus a BOSS's BOSS BOUNTY
+  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot) + botBossBounty(bot), 0);
   if (bountySum <= 40) return;
   const damage = triggerSelfStackingSeal("p100");
   if (damage <= 0) return;

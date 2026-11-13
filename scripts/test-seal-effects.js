@@ -788,6 +788,24 @@ test("Seal of Satan: no multiplier touches its damage, and Seal of Silence in He
   `);
 });
 
+test("Seal of Sachiel (p100): counts every BOUNTY on the table, a BOSS's BOSS BOUNTY included", () => {
+  game()(`
+    fixture([["p100"]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.reward = 5; b.lastDamage = 0; });
+    // 25 regular BOUNTY: not enough
+    applySelfStackingBountySumDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    // a BOSS's BOSS BOUNTY (20 + BOSS kills) now counts too: 45
+    state.bossKills = 0;
+    state.bots[0].isBoss = true;
+    assert.equal(botBossBounty(state.bots[0]), 20);
+    applySelfStackingBountySumDamage();
+    assert.ok(state.bots.every(b => b.lastDamage > 0));
+    // an old save's copy of the text shows the new rule
+    assert.ok(itemDescription({ ...ITEMS.p100, description: "old text" }).includes("BOSS BOUNTY included"));
+  `);
+});
+
 test("Seal of Raphael (p101): PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
   const run = game();
   run(`
