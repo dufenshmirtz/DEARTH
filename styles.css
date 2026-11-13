@@ -11837,6 +11837,8 @@ body.mobile-arcade #app .game-over-card .new-record-row small {
   min-height: 0;
   padding-right: 4px;
   scroll-behavior: smooth;
+  /* the scroll area stops above the panel's bottom frame line, so a card cut off by scrolling never crosses it */
+  margin-bottom: 14px;
 }
 #app .active-panel .active-list > .item-card {
   min-height: max-content !important;
