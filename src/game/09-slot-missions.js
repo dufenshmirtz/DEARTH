@@ -426,7 +426,7 @@ function slotResolve() {
   }
   if (reward.soul > 0) {
     const healed = healPlayer(reward.soul, "The slot machine", SLOT_SOURCE);
-    parts.push(healed > 0 ? `+${healed} SOUL` : `SOUL blocked`);
+    parts.push(healed > 0 ? `+${healed} SOUL` : state.player.hp >= playerMaxHp() ? "SOUL already full" : "SOUL blocked");
   }
   if (reward.damagePercent > 0) {
     const targets = activeBots();
@@ -485,27 +485,33 @@ const SLOT_ICON_SVG = {
   reroll: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 9A8 8 0 0 0 5 7.2"/><path d="M5 3v4.4h4.4"/><path d="M4.5 15A8 8 0 0 0 19 16.8"/><path d="M19 21v-4.4h-4.4"/></svg>`
 };
 
-function slotIconHtml(key) {
-  const label = slotIconLabel(key);
-  let glyph = SLOT_ICON_SVG[key] || "";
-  if (key === "sin") glyph = `<span class="slot-glyph-mask slot-glyph-sin"></span>`;
-  if (key === "karma") glyph = `<span class="slot-glyph-mask slot-glyph-karma"></span>`;
-  const shortLabel = key === "reroll" ? "REROLLS" : label;
-  return `<span class="slot-icon slot-icon-${key}" aria-label="${escapeAttr(label)}"><span class="slot-glyph">${glyph}</span><span class="slot-icon-label">${escapeHtml(shortLabel)}</span></span>`;
+// the symbol alone (reels show no text)
+function slotGlyphHtml(key) {
+  if (key === "sin") return `<span class="slot-glyph-mask slot-glyph-sin"></span>`;
+  if (key === "karma") return `<span class="slot-glyph-mask slot-glyph-karma"></span>`;
+  return SLOT_ICON_SVG[key] || "";
 }
 
+function slotIconHtml(key) {
+  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
+}
+
+// the slot machine's description: each symbol with what 1, 2 or 3 of it pay
 function slotPaytableHtml() {
-  const row = (label, values) => `<div class="slot-pay-row"><b>${label}</b><span>${values}</span></div>`;
+  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}">${slotGlyphHtml(key)}</span>`;
+  const row = (key, one, two, three) =>
+    `<div class="slot-pay-row">${symbol(key)}<span>${one}</span><span>${two}</span><span>${three}</span></div>`;
   return `
     <div class="slot-paytable">
-      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST} DOUBLOONS a spin</div>
-      ${row("SIN", "1: 3 SIN · 2: 6 SIN · 3: 20 SIN")}
-      ${row("SOUL", "1: 2 SOUL · 2: 4 SOUL · 3: 10 SOUL")}
-      ${row("DAMAGE", "1: 5% · 2: 10% · 3: 30% max SOUL to every DAMNED")}
-      ${row("ELITE", "1–2: nothing · 3: an ELITE level on a random SEAL of yours")}
-      ${row("KARMA", "1: an ARTIFACT · 2: 2 ARTIFACTS · 3: 6 KARMA")}
-      ${row("FREE REROLLS", "1: 2 · 2: 4 · 3: 10 free rerolls (kept until used)")}
-      <div class="slot-pay-note">Each icon type pays for how many of it came up. Missions pay DOUBLOONS.</div>
+      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${DOUBLOON_MARK} a spin</div>
+      <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
+      ${row("sin", `+3${SIN_MARK}`, `+6${SIN_MARK}`, `+20${SIN_MARK}`)}
+      ${row("soul", "+2 SOUL", "+4 SOUL", "+10 SOUL")}
+      ${row("damage", "5%", "10%", "30%")}
+      ${row("elite", "–", "–", "ELITE on a SEAL")}
+      ${row("karma", "1 ARTIFACT", "2 ARTIFACTS", `+6${KARMA_MARK}`)}
+      ${row("reroll", "2 rerolls", "4 rerolls", "10 rerolls")}
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED. ELITE gives a random SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay DOUBLOONS${DOUBLOON_MARK}.</div>
     </div>
   `;
 }
@@ -519,10 +525,10 @@ function slotMachineHtml() {
     .map((index) => {
       if (spin && !slotReelStopped(index)) {
         const strip = [...SLOT_ICONS, ...SLOT_ICONS].map((icon) => slotIconHtml(icon.key)).join("");
-        return `<div class="slot-reel rolling"><div class="slot-strip" style="animation-delay: -${index * 130}ms">${strip}</div></div>`;
+        return `<div class="slot-reel rolling"><div class="slot-window"><div class="slot-strip" style="animation-delay: -${index * 130}ms">${strip}</div></div></div>`;
       }
-      if (!icons) return `<div class="slot-reel empty"><span class="slot-idle">?</span></div>`;
-      return `<div class="slot-reel ${spin ? "landed" : "shown"}">${slotIconHtml(icons[index])}</div>`;
+      if (!icons) return `<div class="slot-reel empty"><div class="slot-window"><span class="slot-idle">?</span></div></div>`;
+      return `<div class="slot-reel ${spin ? "landed" : "shown"}"><div class="slot-window">${slotIconHtml(icons[index])}</div></div>`;
     })
     .join("");
   const triple = !spin && icons && icons.every((icon) => icon === icons[0]);

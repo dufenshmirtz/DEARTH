@@ -14159,6 +14159,14 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
   animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
 }
 
+/* the spin stays inside the hand-drawn line, which sits a few px inside the reel's box */
+#app .slot-window {
+  position: absolute;
+  inset: var(--slot-window-inset, 5px);
+  overflow: hidden;
+  --slot-cell: calc(var(--slot-reel-size) - 2 * var(--slot-window-inset, 5px));
+}
+
 #app .slot-idle {
   display: grid;
   place-items: center;
@@ -14171,13 +14179,13 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 
 #app .slot-icon {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   justify-items: center;
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  height: var(--slot-reel-size);
-  padding: 4px 1px 3px;
+  height: var(--slot-cell, var(--slot-reel-size));
+  padding: 2px;
 }
 
 #app .slot-glyph {
@@ -14189,8 +14197,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 }
 
 #app .slot-glyph svg {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   fill: none;
   stroke: var(--bone, #e9e3d6);
   stroke-width: 1.7;
@@ -14204,8 +14212,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 
 #app .slot-glyph-mask {
   display: block;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 #app .slot-glyph-sin {
@@ -14384,7 +14392,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 .floating-tooltip .slot-paytable {
   display: grid;
   gap: 4px;
-  min-width: 300px;
+  min-width: 320px;
+  max-width: 380px;
 }
 
 .floating-tooltip .slot-pay-title {
@@ -14395,14 +14404,54 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 
 .floating-tooltip .slot-pay-row {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 30px repeat(3, minmax(64px, auto));
+  align-items: center;
+  column-gap: 12px;
 }
 
-.floating-tooltip .slot-pay-row b {
+.floating-tooltip .slot-pay-head span {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  color: var(--ash, #8d877c);
+  letter-spacing: 0.06em;
+}
+
+.floating-tooltip .slot-pay-glyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+}
+
+.floating-tooltip .slot-pay-glyph svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--bone, #e9e3d6);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.floating-tooltip .slot-pay-glyph.slot-icon-damage svg {
+  stroke: var(--blood-bright, #dc2a2f);
+}
+
+.floating-tooltip .slot-pay-glyph .slot-glyph-mask {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.floating-tooltip .slot-glyph-sin {
+  background: var(--sin, #b0414c);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+}
+
+.floating-tooltip .slot-glyph-karma {
+  background: #e0383d;
+  -webkit-mask: var(--karma-spiral) center / contain no-repeat;
+  mask: var(--karma-spiral) center / contain no-repeat;
 }
 
 .floating-tooltip .slot-pay-note {
@@ -14472,8 +14521,8 @@ body:not(.mobile-arcade) #app .center-console.has-slot .slot-result {
   }
   #app .center-console.has-slot .slot-glyph svg,
   #app .center-console.has-slot .slot-glyph-mask {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
   }
   #app .center-console.has-slot .slot-machine .slot-spin {
     font-size: 15px !important;
@@ -14615,6 +14664,11 @@ body.native-arcade #app .native-slot-band .slot-reel::after,
 body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
   border-width: 6px;
   border-image-width: 11px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reel,
+body.mobile-arcade #app .center-console.has-slot .slot-reel {
+  --slot-window-inset: 4px;
 }
 
 body.native-arcade #app .native-slot-band .slot-spin {
