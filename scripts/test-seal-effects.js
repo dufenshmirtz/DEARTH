@@ -3910,30 +3910,37 @@ test("Missions: worst, closest and lowest guess are read from the table at READY
   `);
 });
 
-test("Slot machine: each icon pays by how many came up (SIN 3/6/20, SOUL 2/4/10, DAMAGE 5/10/30%, ELITE only 3, KARMA 1/2 ARTIFACTS or 6 KARMA, rerolls 2/4/10)", () => {
+test("Slot machine: each icon pays by how many came up (SIN 5/18/150, SOUL 1/4/20, DAMAGE 5/15/100%, ELITE only 3, KARMA 3 ARTIFACTS / 1 / 10 KARMA, rerolls 2/8/30)", () => {
   game()(`
-    const pay = (icons) => JSON.stringify(slotRewardsFor(icons));
     let r = slotRewardsFor(["sin", "sin", "soul"]);
-    assert.equal(r.sin, 6); assert.equal(r.soul, 2); assert.equal(r.triple, null);
+    assert.equal(r.sin, 18); assert.equal(r.soul, 1); assert.equal(r.triple, null);
     r = slotRewardsFor(["sin", "sin", "sin"]);
-    assert.equal(r.sin, 20); assert.equal(r.triple, "sin");
+    assert.equal(r.sin, 150); assert.equal(r.triple, "sin");
+    r = slotRewardsFor(["soul", "soul", "soul"]);
+    assert.equal(r.soul, 20);
+    r = slotRewardsFor(["damage", "damage", "elite"]);
+    assert.equal(r.damagePercent, 15);
     r = slotRewardsFor(["damage", "damage", "damage"]);
-    assert.equal(r.damagePercent, 30);
+    assert.equal(r.damagePercent, 100);
     r = slotRewardsFor(["elite", "elite", "reroll"]);
     assert.equal(r.elite, 0); assert.equal(r.rerolls, 2);
     r = slotRewardsFor(["elite", "elite", "elite"]);
     assert.equal(r.elite, 1);
+    r = slotRewardsFor(["karma", "soul", "sin"]);
+    assert.equal(r.artifacts, 3); assert.equal(r.karma, 0);
     r = slotRewardsFor(["karma", "karma", "soul"]);
-    assert.equal(r.artifacts, 2); assert.equal(r.karma, 0);
+    assert.equal(r.artifacts, 0); assert.equal(r.karma, 1);
     r = slotRewardsFor(["karma", "karma", "karma"]);
-    assert.equal(r.artifacts, 0); assert.equal(r.karma, 6);
+    assert.equal(r.artifacts, 0); assert.equal(r.karma, 10);
+    r = slotRewardsFor(["reroll", "reroll", "elite"]);
+    assert.equal(r.rerolls, 8);
     r = slotRewardsFor(["reroll", "reroll", "reroll"]);
-    assert.equal(r.rerolls, 10);
+    assert.equal(r.rerolls, 30);
     assert.equal(SLOT_ICONS.reduce((sum, icon) => sum + icon.weight, 0), 100);
   `);
 });
 
-test("Slot machine: a spin costs 3 FAVOR and pays at once; SIN, damage to every DAMNED and free rerolls that are not the Son's", () => {
+test("Slot machine: a spin costs 3 FAVOR and pays at once; its DAMAGE lands at the end of the next round; free rerolls are not the Son's", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
@@ -3944,10 +3951,20 @@ test("Slot machine: a spin costs 3 FAVOR and pays at once; SIN, damage to every 
     const icons = ["sin", "damage", "reroll"];
     let next = 0;
     slotRollIcon = () => icons[next++];
+    const round = state.round;
     assert.equal(slotSpin(), true);
     assert.equal(state.missions.doubloons, 0);
-    assert.equal(state.player.credits, 3);
+    assert.equal(state.player.credits, 5);
+    // nothing yet, not even at the end of this round
+    assertDamage([0, 0, 0, 0, 0]);
+    slotApplyPendingDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    assert.equal(slotPendingDamagePercent(round + 1), 5);
+    // the end of the next round: 5% of 1000
+    state.round = round + 1;
+    slotApplyPendingDamage();
     assertDamage([50, 50, 50, 50, 50]);
+    assert.equal(state.slotPendingDamage.length, 0);
     assert.equal(state.slotFreeRerolls, 2);
     assert.equal(currentRerollCost(), 0);
     rerollShopClick();
@@ -3958,28 +3975,54 @@ test("Slot machine: a spin costs 3 FAVOR and pays at once; SIN, damage to every 
   `);
 });
 
-test("Slot machine: three ELITES give a random SEAL a free ELITE level; three KARMA give 6 KARMA; one or two give ARTIFACTS", () => {
+test("Slot machine: SOUL cannot be blocked, it only stops at max SOUL", () => {
   game()(`
-    fixture([["p59"]], [10, 20, 30, 40, 50]);
+    fixture([], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
     render = () => {};
-    state.missions.doubloons = 9;
-    const seal = state.player.passives[0];
-    const sellBefore = passiveSellValue(seal);
+    // a BOSS whose ability blocks healing would stop healPlayer; the slot machine's SOUL still lands
+    soulStealingBlocker = () => ({ name: "Blocker" });
+    padmaHealingBlocker = () => ({ name: "Padma" });
+    assert.equal(healPlayer(5, "test", "test"), 0);
+    state.player.hp = 50;
+    state.missions.doubloons = 3;
+    slotRollIcon = () => "soul";
+    slotSpin();
+    assert.equal(state.player.hp, 70);
+    state.player.hp = playerMaxHp() - 3;
+    state.missions.doubloons = 3;
+    slotSpin();
+    assert.equal(state.player.hp, playerMaxHp());
+  `);
+});
+
+test("Slot machine: three ELITES give every SEAL a free ELITE level; KARMA: one gives 3 ARTIFACTS, two 1 KARMA, three 10 KARMA", () => {
+  game()(`
+    fixture([["p59"], ["p64"]], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    state.missions.doubloons = 12;
+    const [first, second] = state.player.passives;
+    const sellBefore = passiveSellValue(first);
     slotRollIcon = () => "elite";
     slotSpin();
-    assert.equal(seal.stack, 2);
-    assert.equal(passiveSellValue(seal), sellBefore);
+    assert.equal(first.stack, 2);
+    assert.equal(second.stack, 2);
+    assert.equal(passiveSellValue(first), sellBefore);
     const karmaBefore = karmaBalance();
     slotRollIcon = () => "karma";
     slotSpin();
-    assert.equal(karmaBalance(), karmaBefore + 6);
-    const icons = ["karma", "karma", "sin"];
+    assert.equal(karmaBalance(), karmaBefore + 10);
+    let icons = ["karma", "karma", "sin"];
     let next = 0;
     slotRollIcon = () => icons[next++];
+    slotSpin();
+    assert.equal(karmaBalance(), karmaBefore + 11);
+    icons = ["karma", "sin", "sin"];
+    next = 0;
     state.player.actives = [];
     slotSpin();
-    assert.equal(state.player.actives.length, 2);
+    assert.equal(state.player.actives.length, 3);
     assert.equal(state.missions.doubloons, 0);
   `);
 });

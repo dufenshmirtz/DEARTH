@@ -22,13 +22,13 @@ const SLOT_ICONS = [
 
 // what 0, 1, 2 or 3 of an icon pay
 const SLOT_PAYOUTS = {
-  sin: [0, 3, 6, 20], // SIN
-  soul: [0, 2, 4, 10], // SOUL healed
-  damage: [0, 5, 10, 30], // % max SOUL to every DAMNED
-  elite: [0, 0, 0, 1], // ELITE levels on a random SEAL of yours
-  karmaArtifacts: [0, 1, 2, 0], // random ARTIFACTS
-  karma: [0, 0, 0, 6], // KARMA
-  reroll: [0, 2, 4, 10] // free rerolls
+  sin: [0, 5, 18, 150], // SIN
+  soul: [0, 1, 4, 20], // SOUL healed; nothing can block it
+  damage: [0, 5, 15, 100], // % max SOUL to every DAMNED, dealt at the end of the next round
+  elite: [0, 0, 0, 1], // three ELITES: every SEAL of yours gains an ELITE level
+  karmaArtifacts: [0, 3, 0, 0], // random ARTIFACTS
+  karma: [0, 0, 1, 10], // KARMA
+  reroll: [0, 2, 8, 30] // free rerolls
 };
 
 // reels stop one after the other (ms after the spin, before the animation speed setting)
@@ -167,12 +167,14 @@ function missionsEnabled() {
 function resetMissionsForRun() {
   state.missions = missionsFresh();
   state.slotFreeRerolls = 0;
+  state.slotPendingDamage = [];
 }
 
 function normalizeMissionsState() {
   const missions = missionsState();
   if (missions.current && !MISSION_BY_ID[missions.current.id]) missions.current = null;
   if (!Number.isFinite(state.slotFreeRerolls)) state.slotFreeRerolls = 0;
+  if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
   // a spin that was still turning when the run was saved pays out now
   if (missions.spin && !missions.spin.resolved) slotResolve();
 }
@@ -426,32 +428,24 @@ function slotResolve() {
     parts.push(`+${gained} SIN`);
   }
   if (reward.soul > 0) {
-    const healed = healPlayer(reward.soul, "The slot machine", SLOT_SOURCE);
-    parts.push(healed > 0 ? `+${healed} SOUL` : state.player.hp >= playerMaxHp() ? "SOUL already full" : "SOUL blocked");
+    const healed = slotHealUnblockable(reward.soul);
+    parts.push(healed > 0 ? `+${healed} SOUL` : "SOUL already full");
   }
   if (reward.damagePercent > 0) {
-    const targets = activeBots();
-    damageBots(
-      targets,
-      (bot) => Math.ceil((bot.maxHp || 0) * (reward.damagePercent / 100)),
-      (bot, dealt) => `The slot machine dealt ${dealt} damage to ${bot.name}.`,
-      SLOT_SOURCE
-    );
-    parts.push(`${reward.damagePercent}% damage to every DAMNED`);
+    // dealt at the end of the next round (slotApplyPendingDamage, from applyPenalties)
+    if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
+    state.slotPendingDamage.push({ round: state.round + 1, percent: reward.damagePercent });
+    parts.push(`${reward.damagePercent}% damage to every DAMNED at the end of next round`);
   }
   if (reward.elite > 0) {
-    const choices = (state.player.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id));
-    if (choices.length) {
-      const seal = randomFrom(choices);
+    // three ELITES: every SEAL you own that can take ELITE gains a level (free: selling does not pay it back)
+    const seals = (state.player.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id));
+    seals.forEach((seal) => {
       seal.stack = (seal.stack || 1) + reward.elite;
-      // a free level: selling the SEAL does not pay it back
       seal.freeStacks = (seal.freeStacks || 0) + reward.elite;
       recordEliteLevelBought(seal.id, seal.stack);
-      if (typeof syncShopSlotCount === "function") syncShopSlotCount();
-      parts.push(`${passiveDisplayName(seal)}`);
-    } else {
-      parts.push("ELITE, but no SEAL can take it");
-    }
+    });
+    parts.push(seals.length ? `ELITE on all ${seals.length} SEAL${seals.length === 1 ? "" : "S"}` : "ELITE, but no SEAL can take it");
   }
   if (reward.artifacts > 0) {
     let given = 0;
@@ -471,11 +465,50 @@ function slotResolve() {
     parts.push(`+${reward.rerolls} free rerolls`);
   }
   missions.lastText = parts.length ? parts.join(" · ") : "Nothing";
+  missions.lastRound = state.round;
   addLog(`${SLOT_SOURCE}: ${spin.icons.map(slotIconLabel).join(" | ")}. ${missions.lastText}.`);
   if (state.roundState) addRoundEvent(`${SLOT_SOURCE}: ${missions.lastText}.`);
   if (state.player.hp <= 0) finishGameOverRound();
   // a spin can finish a mission (SIN earned, DAMNED eliminated, ...)
   missionsCheck("event");
+}
+
+// SOUL from the slot machine: nothing blocks it (no BOSS ability, no Padma), it only stops at max SOUL
+function slotHealUnblockable(amount) {
+  if (state.player.hp <= 0) return 0;
+  const before = state.player.hp;
+  state.player.hp = Math.min(playerMaxHp(), state.player.hp + Math.max(0, Math.ceil(amount)));
+  const healed = state.player.hp - before;
+  if (healed > 0) {
+    state.playerLastHeal = (state.playerLastHeal || 0) + healed;
+    recordPlayerHealSource(healed, SLOT_SOURCE);
+  }
+  return healed;
+}
+
+// the % of max SOUL every DAMNED takes at the end of this round (spins from earlier rounds)
+function slotPendingDamagePercent(round = state.round) {
+  return (Array.isArray(state.slotPendingDamage) ? state.slotPendingDamage : [])
+    .filter((entry) => entry && entry.round <= round)
+    .reduce((sum, entry) => sum + Math.max(0, Number(entry.percent) || 0), 0);
+}
+
+// end of the round (applyPenalties, after the BOSS abilities): the DAMAGE won by a spin in an earlier round lands
+function slotApplyPendingDamage() {
+  if (!Array.isArray(state.slotPendingDamage) || !state.slotPendingDamage.length) return;
+  const due = state.slotPendingDamage.filter((entry) => entry && entry.round <= state.round);
+  if (!due.length) return;
+  state.slotPendingDamage = state.slotPendingDamage.filter((entry) => entry && entry.round > state.round);
+  due.forEach((entry) => {
+    const percent = Math.max(0, Number(entry.percent) || 0);
+    if (!percent) return;
+    damageBots(
+      activeBots(),
+      (bot) => Math.ceil((bot.maxHp || 0) * (percent / 100)),
+      (bot, dealt) => `The slot machine dealt ${dealt} damage to ${bot.name}.`,
+      SLOT_SOURCE
+    );
+  });
 }
 
 /* ---- drawing ---- */
@@ -506,13 +539,13 @@ function slotPaytableHtml() {
     <div class="slot-paytable">
       <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${FAVOR_MARK} a spin</div>
       <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
-      ${row("sin", `+3${SIN_MARK}`, `+6${SIN_MARK}`, `+20${SIN_MARK}`)}
-      ${row("soul", "+2 SOUL", "+4 SOUL", "+10 SOUL")}
-      ${row("damage", "5%", "10%", "30%")}
-      ${row("elite", "–", "–", "ELITE on a SEAL")}
-      ${row("karma", "1 ARTIFACT", "2 ARTIFACTS", `+6${KARMA_MARK}`)}
-      ${row("reroll", "2 rerolls", "4 rerolls", "10 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED. ELITE gives a random SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
+      ${row("sin", `+5${SIN_MARK}`, `+18${SIN_MARK}`, `+150${SIN_MARK}`)}
+      ${row("soul", "+1 SOUL", "+4 SOUL", "+20 SOUL")}
+      ${row("damage", "5%", "15%", "100%")}
+      ${row("elite", "–", "–", "ELITE on every SEAL")}
+      ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
+      ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
     </div>
   `;
 }
@@ -533,7 +566,15 @@ function slotMachineHtml() {
     })
     .join("");
   const triple = !spin && icons && icons.every((icon) => icon === icons[0]);
-  const result = spin ? "" : missions.lastText;
+  const pendingNow = slotPendingDamagePercent(state.round);
+  const pendingNext = slotPendingDamagePercent(state.round + 1) - pendingNow;
+  const pendingText = pendingNow
+    ? `${pendingNow}% damage to every DAMNED at the end of this round`
+    : pendingNext
+      ? `${pendingNext}% damage to every DAMNED at the end of next round`
+      : "";
+  // this round's spin shows its result; later rounds show the DAMAGE still on its way
+  const result = spin ? "" : missions.lastRound === state.round ? missions.lastText : pendingText || missions.lastText;
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
   return `

@@ -532,6 +532,13 @@ function applyPenalties() {
     return;
   }
 
+  // the slot machine's DAMAGE from a spin last round lands now (before the PENTAKILL count)
+  slotApplyPendingDamage();
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
+    return;
+  }
+
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   // Seal of Silence in Heaven: the very last damage of the round, so it multiplies everything taken this round
