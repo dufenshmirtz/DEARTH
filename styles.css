@@ -14138,8 +14138,10 @@ body.native-arcade .gifts-screen .gifts-dev {
   pointer-events: none;
   box-sizing: border-box;
   border: 8px solid transparent;
-  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 11px stretch;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 16px stretch;
   opacity: 1;
+  /* thin lines at this size: brightened and given a faint glow so they read like the card frames */
+  filter: brightness(1.6) drop-shadow(0 0 1px rgba(233, 227, 214, 0.55));
 }
 
 body.outline-boil #app .slot-reel::after,
@@ -14612,7 +14614,7 @@ body.native-arcade #app .native-slot-band .slot-icon {
 body.native-arcade #app .native-slot-band .slot-reel::after,
 body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
   border-width: 6px;
-  border-image-width: 7px;
+  border-image-width: 11px;
 }
 
 body.native-arcade #app .native-slot-band .slot-spin {
