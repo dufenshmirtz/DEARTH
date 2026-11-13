@@ -435,7 +435,7 @@ function slotResolve() {
     // dealt at the end of the next round (slotApplyPendingDamage, from applyPenalties)
     if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
     state.slotPendingDamage.push({ round: state.round + 1, percent: reward.damagePercent });
-    parts.push(`${reward.damagePercent}% damage to every DAMNED at the end of next round`);
+    parts.push(`${reward.damagePercent}% DAMAGE at next round's end`);
   }
   if (reward.elite > 0) {
     // three ELITES: every SEAL you own that can take ELITE gains a level (free: selling does not pay it back)
@@ -569,9 +569,9 @@ function slotMachineHtml() {
   const pendingNow = slotPendingDamagePercent(state.round);
   const pendingNext = slotPendingDamagePercent(state.round + 1) - pendingNow;
   const pendingText = pendingNow
-    ? `${pendingNow}% damage to every DAMNED at the end of this round`
+    ? `${pendingNow}% DAMAGE at this round's end`
     : pendingNext
-      ? `${pendingNext}% damage to every DAMNED at the end of next round`
+      ? `${pendingNext}% DAMAGE at next round's end`
       : "";
   // this round's spin shows its result; later rounds show the DAMAGE still on its way
   const result = spin ? "" : missions.lastRound === state.round ? missions.lastText : pendingText || missions.lastText;
