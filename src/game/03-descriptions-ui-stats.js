@@ -1063,15 +1063,15 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
 function applySelfStackingBountySumDamage() {
   const targets = activeBots();
   if (!targets.length) return;
-  // every BOUNTY on the table: regular BOUNTY plus a BOSS's BOSS BOUNTY
-  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot) + botBossBounty(bot), 0);
+  // regular BOUNTY only (no BOSS BOUNTY), of every DAMNED in the slots, dead ones included
+  const bountySum = state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
   if (bountySum <= 40) return;
   const damage = triggerSelfStackingSeal("p100");
   if (damage <= 0) return;
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total BOUNTY was ${bountySum}.`,
+    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total regular BOUNTY was ${bountySum}.`,
     ITEMS.p100.name
   );
 }

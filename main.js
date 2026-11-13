@@ -1263,7 +1263,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sachiel",
     price: 15,
-    description: "At end of round, if the BOUNTY of all living DAMNED (BOSS BOUNTY included) adds up to more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+    description: "At end of round, if the regular BOUNTY of the 5 DAMNED in the slots (dead ones included, BOSS BOUNTY not counted) adds up to more than 40, this SEAL gains +1 damage, then all living DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
@@ -1743,7 +1743,7 @@ const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
-  p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
+  p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
@@ -6874,15 +6874,15 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
 function applySelfStackingBountySumDamage() {
   const targets = activeBots();
   if (!targets.length) return;
-  // every BOUNTY on the table: regular BOUNTY plus a BOSS's BOSS BOUNTY
-  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot) + botBossBounty(bot), 0);
+  // regular BOUNTY only (no BOSS BOUNTY), of every DAMNED in the slots, dead ones included
+  const bountySum = state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
   if (bountySum <= 40) return;
   const damage = triggerSelfStackingSeal("p100");
   if (damage <= 0) return;
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total BOUNTY was ${bountySum}.`,
+    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total regular BOUNTY was ${bountySum}.`,
     ITEMS.p100.name
   );
 }

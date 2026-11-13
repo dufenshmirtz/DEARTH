@@ -1046,7 +1046,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sachiel",
     price: 15,
-    description: "At end of round, if the BOUNTY of all living DAMNED (BOSS BOUNTY included) adds up to more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+    description: "At end of round, if the regular BOUNTY of the 5 DAMNED in the slots (dead ones included, BOSS BOUNTY not counted) adds up to more than 40, this SEAL gains +1 damage, then all living DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
@@ -1526,7 +1526,7 @@ const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
-  p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
+  p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },

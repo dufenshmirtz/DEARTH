@@ -788,21 +788,29 @@ test("Seal of Satan: no multiplier touches its damage, and Seal of Silence in He
   `);
 });
 
-test("Seal of Sachiel (p100): counts every BOUNTY on the table, a BOSS's BOSS BOUNTY included", () => {
+test("Seal of Sachiel (p100): counts only regular BOUNTY, of all 5 DAMNED in the slots, dead ones included", () => {
   game()(`
     fixture([["p100"]], [10, 20, 30, 40, 50]);
-    state.bots.forEach(b => { b.reward = 5; b.lastDamage = 0; });
-    // 25 regular BOUNTY: not enough
+    state.bots.forEach(b => { b.reward = 8; b.lastDamage = 0; });
+    // 40 regular BOUNTY: not more than 40
     applySelfStackingBountySumDamage();
     assertDamage([0, 0, 0, 0, 0]);
-    // a BOSS's BOSS BOUNTY (20 + BOSS kills) now counts too: 45
+    // a BOSS's BOSS BOUNTY does not count
     state.bossKills = 0;
     state.bots[0].isBoss = true;
     assert.equal(botBossBounty(state.bots[0]), 20);
     applySelfStackingBountySumDamage();
-    assert.ok(state.bots.every(b => b.lastDamage > 0));
+    assertDamage([0, 0, 0, 0, 0]);
+    state.bots[0].isBoss = false;
+    // a dead DAMNED still in its slot counts: 9 + 4 x 8 = 41, the 4 living ones are hit
+    state.bots[0].reward = 9;
+    state.bots[0].hp = 0;
+    state.bots[0].eliminated = true;
+    applySelfStackingBountySumDamage();
+    assert.equal(state.bots[0].lastDamage, 0);
+    assert.ok(state.bots.slice(1).every(b => b.lastDamage > 0));
     // an old save's copy of the text shows the new rule
-    assert.ok(itemDescription({ ...ITEMS.p100, description: "old text" }).includes("BOSS BOUNTY included"));
+    assert.ok(itemDescription({ ...ITEMS.p100, description: "old text" }).includes("dead ones included"));
   `);
 });
 

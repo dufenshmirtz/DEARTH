@@ -289,7 +289,7 @@ Seal of Raphael (15 SIN)
 Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded.
 
 Seal of Sachiel (15 SIN)
-At end of round, if the BOUNTY of all living DAMNED (BOSS BOUNTY included) adds up to more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded.
+At end of round, if the regular BOUNTY of the 5 DAMNED in the slots (dead ones included, BOSS BOUNTY not counted) adds up to more than 40, this SEAL gains +1 damage, then all living DAMNED take its current damage. Cannot be upgraded.
 
 Seal of Samael (15 SIN)
 Whenever a STUBBORN DAMNED dies, this SEAL gains +1 damage, then all non-STUBBORN DAMNED take its current damage. Cannot be upgraded.
