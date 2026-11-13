@@ -22239,8 +22239,8 @@ function satanDealButtonHtml() {
 /* ---------- Missions and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
-   mission pays 1, 2 or 3 DOUBLOONS at once. The slot machine left of the guess area is always available:
-   a spin costs SLOT_SPIN_COST DOUBLOONS, three reels each land on one icon, and the reward depends on how many
+   mission pays 1, 2 or 3 FAVOR at once. The slot machine left of the guess area is always available:
+   a spin costs SLOT_SPIN_COST FAVOR, three reels each land on one icon, and the reward depends on how many
    of each icon came up (SLOT_PAYOUTS). Arcade only: no PvP, not in the story's tutorial rounds.
    Run state: state.missions (saved with the run); free rerolls won here: state.slotFreeRerolls (they last
    until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, applyPenalties (READY and the
@@ -22280,15 +22280,16 @@ function slotSfx(key) {
   playGameSfx(key);
 }
 
-const DOUBLOON_MARK = `<span class="doubloon-mark" role="img" aria-label="DOUBLOONS"></span>`;
+// FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
 
-/* ---- the missions: 15 worth 1, 15 worth 2, 15 worth 3 DOUBLOONS ----
+/* ---- the missions: 15 worth 1, 15 worth 2, 15 worth 3 FAVOR ----
    when: "event"   checked after every action (shop, ARTIFACT, spin) and after the results
          "resolve" checked once the round's results are in (and after any later action that round)
          "leave"   checked when you move on to the next round
    can(): may this mission be drawn now? param(): a value drawn with it (shown in the text). */
 const MISSIONS = [
-  // ---- 1 DOUBLOON ----
+  // ---- 1 FAVOR ----
   { id: "near10", value: 1, when: "resolve", text: "Guess within 10 of the TARGET.", check: (f) => f.guessed && f.dist <= 10 },
   { id: "notWorst", value: 1, when: "resolve", text: "Don't have the worst guess.", check: (f) => f.guessed && !f.worst },
   { id: "beat3", value: 1, when: "resolve", text: "Guess closer than 3 DAMNED.", check: (f) => f.guessed && f.botsFarther >= 3 },
@@ -22305,7 +22306,7 @@ const MISSIONS = [
   { id: "sell1", value: 1, when: "event", text: "Sell a SEAL or an ARTIFACT.", can: () => ownedSealCount() + (state.player.actives || []).length >= 1, check: (f) => f.sells >= 1 },
   { id: "keep10", value: 1, when: "leave", text: "Go into the next round with 10 SIN or more.", check: (f) => f.sin >= 10 },
 
-  // ---- 2 DOUBLOONS ----
+  // ---- 2 FAVOR ----
   { id: "near3", value: 2, when: "resolve", text: "Guess within 3 of the TARGET.", check: (f) => f.guessed && f.dist <= 3 },
   { id: "closest", value: 2, when: "resolve", text: "Have the closest guess at the table.", check: (f) => f.guessed && f.closest },
   { id: "lowest", value: 2, when: "resolve", text: "Guess lower than every DAMNED.", check: (f) => f.guessed && f.lowest },
@@ -22332,7 +22333,7 @@ const MISSIONS = [
   { id: "pain10each", value: 2, when: "resolve", text: "Every DAMNED takes 10 damage or more.", check: (f) => f.everyBotHit10 },
   { id: "hold4", value: 2, when: "leave", text: "Go into the next round holding 4 ARTIFACTS.", check: (f) => f.artifactsHeld >= 4, progress: (f) => `${Math.min(4, f.artifactsHeld)}/4` },
 
-  // ---- 3 DOUBLOONS ----
+  // ---- 3 FAVOR ----
   { id: "critical", value: 3, when: "resolve", text: "Hit a CRITICAL.", check: (f) => f.critical },
   { id: "kill3", value: 3, when: "resolve", text: "Eliminate 3 DAMNED.", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
   { id: "unhurt", value: 3, when: "resolve", text: "Take no damage this round.", check: (f) => f.guessed && f.damageTaken === 0 },
@@ -22535,8 +22536,8 @@ function missionsComplete(current, mission) {
   missions.completed += 1;
   missions.earned += current.value;
   const text = missionText(mission, current.param);
-  addLog(`Mission done: ${text} +${current.value} DOUBLOON${current.value === 1 ? "" : "S"}.`);
-  if (state.roundState) addRoundEvent(`Mission done: +${current.value} DOUBLOON${current.value === 1 ? "" : "S"}.`);
+  addLog(`Mission done: ${text} +${current.value} FAVOR.`);
+  if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
   slotSfx("bountyUp");
 }
 
@@ -22741,7 +22742,7 @@ function slotPaytableHtml() {
     `<div class="slot-pay-row">${symbol(key)}<span>${one}</span><span>${two}</span><span>${three}</span></div>`;
   return `
     <div class="slot-paytable">
-      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${DOUBLOON_MARK} a spin</div>
+      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${FAVOR_MARK} a spin</div>
       <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
       ${row("sin", `+3${SIN_MARK}`, `+6${SIN_MARK}`, `+20${SIN_MARK}`)}
       ${row("soul", "+2 SOUL", "+4 SOUL", "+10 SOUL")}
@@ -22749,7 +22750,7 @@ function slotPaytableHtml() {
       ${row("elite", "–", "–", "ELITE on a SEAL")}
       ${row("karma", "1 ARTIFACT", "2 ARTIFACTS", `+6${KARMA_MARK}`)}
       ${row("reroll", "2 rerolls", "4 rerolls", "10 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED. ELITE gives a random SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay DOUBLOONS${DOUBLOON_MARK}.</div>
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED. ELITE gives a random SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
     </div>
   `;
 }
@@ -22777,10 +22778,10 @@ function slotMachineHtml() {
     <div class="slot-machine${triple && missions.lastText ? " slot-triple" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
-        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${DOUBLOON_MARK}</span></button>
-        <span class="slot-doubloons" aria-label="You have ${missions.doubloons} DOUBLOONS">${formatNumber(missions.doubloons)}${DOUBLOON_MARK}</span>
+        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
+        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
-      <div class="slot-result">${escapeHtml(result || "Missions pay DOUBLOONS.")}</div>
+      <div class="slot-result">${escapeHtml(result || "Missions pay FAVOR.")}</div>
     </div>
   `;
 }
@@ -22798,11 +22799,11 @@ function missionBoxHtml() {
   else if (mission.when === "leave") status = "At NEXT ROUND";
   const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn DOUBLOONS for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
         <span class="mission-title">Mission</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
-        <span class="mission-reward">+${current.value}${DOUBLOON_MARK}</span>
+        <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
       <div class="mission-text">${escapeHtml(missionText(mission, current.param))}</div>
     </div>

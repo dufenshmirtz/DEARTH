@@ -14045,20 +14045,20 @@ body.native-arcade .gifts-screen .gifts-dev {
    Phone app: one band between the DAMNED and the SEALS.
    ========================================================================== */
 :root {
-  --doubloon-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2' d='M12.6 2.6c5.2.4 9.1 4.6 8.8 9.8-.3 5.3-4.8 9.3-10 9-5.2-.3-9-4.7-8.7-9.9.3-5 4.4-8.8 9.3-9l1.6.4'/%3E%3Cpath stroke-width='1.1' d='M12.2 5.8c3.3.2 6 3 5.9 6.4-.1 3.3-3 6-6.3 5.8-3.3-.2-5.9-3-5.7-6.3'/%3E%3Cpath fill='%23000' stroke-width='0.8' d='M12 7.4l1.1 3.4 3.5 1.2-3.5 1.1L12 16.6l-1.1-3.5-3.5-1.1 3.5-1.2z'/%3E%3C/svg%3E");
+  --favor-horns: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2.1' d='M9.4 14.2C5.9 13.4 3.4 10 4 4.1c1.3 3.6 3.4 5.6 6.4 6.4'/%3E%3Cpath stroke-width='2.1' d='M14.6 14.2c3.5-.8 6-4.2 5.4-10.1-1.3 3.6-3.4 5.6-6.4 6.4'/%3E%3Cpath stroke-width='2' d='M8.3 12.4c-.2 4.6 1.6 7.6 3.7 8.1 2.2-.5 3.9-3.5 3.7-8.1-1.2-1.4-6.2-1.4-7.4 0z'/%3E%3Cpath stroke-width='1.6' d='M10.1 14.9l1.2.5M13.9 14.9l-1.2.5'/%3E%3Cpath stroke-width='1' d='M5.2 6.8c.6 1.8 1.6 3 2.9 3.8M18.8 6.8c-.6 1.8-1.6 3-2.9 3.8'/%3E%3C/svg%3E");
   --slot-reel-size: 46px;
 }
 
-#app .doubloon-mark,
-.floating-tooltip .doubloon-mark {
+#app .favor-mark,
+.floating-tooltip .favor-mark {
   display: inline-block;
   width: 0.95em;
   height: 0.95em;
   margin-left: 0.16em;
   vertical-align: -0.12em;
-  background: var(--bone, #e9e3d6);
-  -webkit-mask: var(--doubloon-coin) center / contain no-repeat;
-  mask: var(--doubloon-coin) center / contain no-repeat;
+  background: var(--blood-bright, #dc2a2f);
+  -webkit-mask: var(--favor-horns) center / contain no-repeat;
+  mask: var(--favor-horns) center / contain no-repeat;
   flex: 0 0 auto;
 }
 
@@ -14075,7 +14075,7 @@ body.native-arcade .gifts-screen .gifts-dev {
   background: transparent;
 }
 
-/* slot: three reels, SPIN and your DOUBLOONS beside them, the last result under them */
+/* slot: three reels, SPIN and your FAVOR beside them, the last result under them */
 #app .slot-machine {
   display: grid;
   grid-template-columns: max-content max-content;
@@ -14091,7 +14091,7 @@ body.native-arcade .gifts-screen .gifts-dev {
   gap: 5px;
 }
 
-#app .slot-doubloons {
+#app .slot-favor {
   font-family: var(--font-display);
   font-size: 16px;
   line-height: 1;
@@ -14307,8 +14307,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
   outline: none;
 }
 
-#app .slot-machine .slot-spin:hover:not(:disabled) .doubloon-mark,
-#app .slot-machine .slot-spin:focus-visible .doubloon-mark {
+#app .slot-machine .slot-spin:hover:not(:disabled) .favor-mark,
+#app .slot-machine .slot-spin:focus-visible .favor-mark {
   background: var(--blood-bright, #dc2a2f);
 }
 
@@ -14384,7 +14384,7 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
   color: var(--blood-bright, #dc2a2f);
 }
 
-#app .mission-box.done .mission-reward .doubloon-mark {
+#app .mission-box.done .mission-reward .favor-mark {
   background: var(--blood-bright, #dc2a2f);
 }
 

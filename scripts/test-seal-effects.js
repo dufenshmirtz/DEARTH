@@ -3837,7 +3837,7 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
   `);
 });
 
-test("Missions: 15 worth 1, 2 and 3 DOUBLOONS; one per round, replaced at the start of the next round done or not", () => {
+test("Missions: 15 worth 1, 2 and 3 FAVOR; one per round, replaced at the start of the next round done or not", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     assert.equal(JSON.stringify([1, 2, 3].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[15,15,15]");
@@ -3854,7 +3854,7 @@ test("Missions: 15 worth 1, 2 and 3 DOUBLOONS; one per round, replaced at the st
   `);
 });
 
-test("Missions: a finished mission pays its DOUBLOONS once; guess missions wait for the results, NEXT ROUND ones for NEXT ROUND", () => {
+test("Missions: a finished mission pays its FAVOR once; guess missions wait for the results, NEXT ROUND ones for NEXT ROUND", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     state.missions.current = { id: "use1", value: 1, param: null, round: state.round, done: false };
@@ -3925,7 +3925,7 @@ test("Slot machine: each icon pays by how many came up (SIN 3/6/20, SOUL 2/4/10,
   `);
 });
 
-test("Slot machine: a spin costs 3 DOUBLOONS and pays at once; SIN, damage to every DAMNED and free rerolls that are not the Son's", () => {
+test("Slot machine: a spin costs 3 FAVOR and pays at once; SIN, damage to every DAMNED and free rerolls that are not the Son's", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
