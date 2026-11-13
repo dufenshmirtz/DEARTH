@@ -14743,3 +14743,162 @@ body.native-arcade #app .native-slot-band .mission-reward {
   filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
   opacity: 1;
 }
+
+/* ==========================================================================
+   DEAL as a contract (09-satan-pact.js dealContractSvg): no button frame, the sheet is the button.
+   Hover writes a blood signature on the line; a signed deal keeps it; under 25% SOUL the corner smoulders.
+   ========================================================================== */
+#app .deal-button.deal-contract {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--bone, #e9e3d6);
+  overflow: visible;
+}
+
+#app .deal-button.deal-contract::before,
+#app .deal-button.deal-contract::after {
+  display: none !important;
+}
+
+/* the sheet takes the button's colour (a global rule forces every element white otherwise), so the pulse and the
+   red hover reach the lines and the word */
+#app .deal-button.deal-contract .deal-paper,
+#app .deal-button.deal-contract .deal-paper *,
+#app .deal-button.deal-contract .deal-word-inline {
+  color: inherit !important;
+}
+
+#app .deal-paper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#app .deal-ink {
+  filter: url(#dealRough0);
+}
+
+body.outline-boil #app .deal-ink {
+  animation: deal-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+@keyframes deal-boil {
+  0% { filter: url(#dealRough0); }
+  33.333% { filter: url(#dealRough1); }
+  66.666% { filter: url(#dealRough2); }
+}
+
+#app .deal-ink path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#app .deal-ink .deal-line {
+  stroke-width: 1.3;
+  opacity: 0.75;
+}
+
+#app .deal-word {
+  fill: currentColor;
+  font-family: var(--font-display);
+  font-size: 29px;
+  letter-spacing: 1px;
+  text-anchor: middle;
+}
+
+#app .deal-sign {
+  fill: none;
+  stroke: var(--blood-bright, #dc2a2f);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  transition: stroke-dashoffset 0.7s ease;
+}
+
+#app .deal-contract:hover:not(:disabled) .deal-sign,
+#app .deal-contract.deal-signed .deal-sign {
+  stroke-dashoffset: 0;
+}
+
+#app .deal-contract.deal-signed .deal-sign {
+  transition: none;
+}
+
+#app .deal-contract:hover:not(:disabled) {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .deal-burn {
+  fill: none;
+  stroke: var(--blood-bright, #dc2a2f);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px rgba(220, 42, 47, 1)) drop-shadow(0 0 2px rgba(220, 42, 47, 1));
+}
+
+#app .deal-contract.pact-urgent .deal-burn {
+  animation: deal-smoulder 1.6s ease-in-out infinite;
+}
+
+@keyframes deal-smoulder {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+body.reduce-flashes #app .deal-contract.pact-urgent .deal-burn {
+  animation: none;
+  opacity: 0.8;
+}
+
+/* desktop: the sheet under Pause, the testing buttons pushed below it */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-contract {
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  bottom: -6px;
+}
+
+/* phone web: the sheet fills the small DEAL spot */
+body.mobile-arcade #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-contract {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+/* phone app: a small contract mark beside the word, inside the Pause / Items column, with the usual frame */
+body.native-arcade #app .deal-button.deal-contract {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+body.native-arcade #app .deal-paper-mark {
+  width: 26px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+body.native-arcade #app .deal-paper-mark .deal-ink path,
+body.native-arcade #app .deal-paper-mark .deal-sign {
+  stroke-width: 5;
+}
+
+body.native-arcade #app .deal-word-inline {
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+body.native-arcade #app .deal-button.deal-contract::after {
+  display: block !important;
+}

@@ -22234,7 +22234,36 @@ function satanDealButtonHtml() {
   // every render rebuilds the button: the delay keeps the pulse running from where it was
   const period = urgent ? SATAN_DEAL_PULSE_FAST_MS : SATAN_DEAL_PULSE_MS;
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
-  return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
+  // the button is the contract itself; once signed, the signature stays on it
+  const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
+  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+}
+
+/* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
+   A sheet with a folded corner, DEAL written on it and an X with a line to sign. Hover: a signature writes itself in
+   blood on the line. Signed: the signature stays. Under 25% SOUL while he calls: the folded corner smoulders. The
+   phone app has no room for the sheet, so its button is a small contract mark beside the word. The lines tremble
+   with the outlines setting (three rough filters swapped by CSS, like the frames' boil). */
+function dealContractSvg() {
+  const rough = [3, 11, 19]
+    .map(
+      (seed, index) =>
+        `<filter id="dealRough${index}" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="${seed}"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>`
+    )
+    .join("");
+  const sheet = `
+    <path class="deal-burn" d="M96 4 L114 22"/>
+    <g class="deal-ink">
+      <path d="M6 4 H96 L114 22 V68 H6 Z"/>
+      <path d="M96 4 V22 H114"/>
+      <path class="deal-line" d="M24 58 H102"/>
+      <path d="M11 49 l8 8 M19 49 l-8 8"/>
+    </g>
+    <path class="deal-sign" d="M28 56 c4-9 7 3 11-2 s4-7 7-1 5 3 8-3 4-2 7 2 5 1 8-3 4 4 7 0 5-4 8 1 4 3 7-1"/>`;
+  if (isNativeArcadeApp()) {
+    return `<svg class="deal-paper deal-paper-mark" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}</svg><span class="deal-word-inline">DEAL</span>`;
+  }
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }
 /* ---------- Missions and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
