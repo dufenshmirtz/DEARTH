@@ -5902,6 +5902,18 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
+  // Seal of Aim: the SEAL you own always says how many stacks it has built up (one per CRITICAL in a row, up to 4)
+  if (item.id === "p91") {
+    const rule =
+      stack <= 1
+        ? ITEMS.p91.description
+        : `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage.`;
+    if (!state.player?.passives?.includes(item)) return rule;
+    const stacks = ascendingCritWindowBonus();
+    // before the ELITE sentence: the tooltip keeps everything from "ELITE" on for Shift
+    const { main, elite } = splitEliteDescription(rule);
+    return `${main}\nCurrent stacks: ${stacks}/4 (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
+  }
   if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
@@ -6128,9 +6140,6 @@ function itemDescription(item) {
   }
   if (item.id === "p90") {
     return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At end of round, one DAMNED changes to the most prevalent personality.`;
-  }
-  if (item.id === "p91") {
-    return `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage. Current range bonus: +${ascendingCritWindowBonus()}.`;
   }
   if (item.id === "p104") {
     const amount = item.stack || 1;

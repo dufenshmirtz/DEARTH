@@ -4026,3 +4026,17 @@ test("Slot machine: three ELITES give every SEAL a free ELITE level; KARMA: one 
     assert.equal(state.missions.doubloons, 0);
   `);
 });
+
+test("Seal of Aim: the SEAL you own says how many stacks it has (0/4 to 4/4); an offer in the shop does not", () => {
+  game()(`
+    fixture([["p91"]], [10, 20, 30, 40, 50]);
+    const seal = state.player.passives[0];
+    state.critMomentumBonus = 0;
+    assert.ok(itemDescription(seal).includes("Current stacks: 0/4 (+0 CRITICAL range)."));
+    state.critMomentumBonus = 3;
+    assert.ok(itemDescription(seal).includes("Current stacks: 3/4 (+3 CRITICAL range)."));
+    seal.stack = 2;
+    assert.ok(itemDescription(seal).includes("Current stacks: 3/4"));
+    assert.ok(!itemDescription({ ...ITEMS.p91 }).includes("Current stacks"));
+  `);
+});
