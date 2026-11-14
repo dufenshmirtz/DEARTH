@@ -8,7 +8,7 @@ Seal of Agares (14 SIN)
 At end of round, 20% of SIN earned this round spreads among DAMNED, prioritizing highest BOUNTY. DAMNED take 5 damage per BOUNTY gained from this SEAL. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 Seal of Aim (14 SIN)
-Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage.
+Scoring CRITICAL increases your CRITICAL range by +1, up to +2. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage.
 
 Seal of Alloces (13 SIN)
 At end of round, STUBBORN DAMNED gain +1 additional MEMORY and +1 BOUNTY. When a DAMNED is revealed, their personality changes to STUBBORN. ELITE adds +1 to both end-of-round gains.

@@ -4034,16 +4034,43 @@ test("Slot machine: three ELITES give every SEAL a free ELITE level; KARMA: one 
   `);
 });
 
-test("Seal of Aim: the SEAL you own says how many stacks it has (0/4 to 4/4); an offer in the shop does not", () => {
+test("Seal of Aim: stacks go up to 2 (+2 CRITICAL range); the SEAL you own says how many it has, an offer in the shop does not", () => {
   game()(`
     fixture([["p91"]], [10, 20, 30, 40, 50]);
     const seal = state.player.passives[0];
     state.critMomentumBonus = 0;
-    assert.ok(itemDescription(seal).includes("Current stacks: 0/4 (+0 CRITICAL range)."));
-    state.critMomentumBonus = 3;
-    assert.ok(itemDescription(seal).includes("Current stacks: 3/4 (+3 CRITICAL range)."));
+    assert.ok(itemDescription(seal).includes("Current stacks: 0/2 (+0 CRITICAL range)."));
+    state.critMomentumBonus = 1;
+    assert.ok(itemDescription(seal).includes("Current stacks: 1/2 (+1 CRITICAL range)."));
+    // an old save with more stacks counts as the cap
+    state.critMomentumBonus = 4;
+    assert.equal(ascendingCritWindowBonus(), 2);
     seal.stack = 2;
-    assert.ok(itemDescription(seal).includes("Current stacks: 3/4"));
+    assert.ok(itemDescription(seal).includes("Current stacks: 2/2"));
+    assert.ok(itemDescription(seal).includes("up to +2"));
     assert.ok(!itemDescription({ ...ITEMS.p91 }).includes("Current stacks"));
+  `);
+});
+
+test("Seal of Aim: three CRITICALS in a row give +2 CRITICAL range, not +3; a round without one resets it", () => {
+  game()(`
+    const guesses = [49, 47, 30, 70, 100];
+    fixture([["p91"]], guesses);
+    const playRound = (playerGuess) => {
+      state.roundState.targetModifier = 1;
+      state.roundState.playerEffectiveGuess = playerGuess;
+      guesses.forEach((guess, index) => state.roundState.botEffectiveGuesses.set(state.bots[index].id, guess));
+      state.player.hp = state.player.maxHp = 100;
+      applyPenalties();
+    };
+    for (let round = 0; round < 3; round += 1) {
+      if (round) beginRound();
+      playRound(60);
+    }
+    assert.equal(state.critMomentumBonus, 2);
+    assert.equal(ascendingCritWindowBonus(), 2);
+    beginRound();
+    playRound(0);
+    assert.equal(state.critMomentumBonus, 0);
   `);
 });

@@ -770,7 +770,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aim",
     price: 14,
-    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
+    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +2. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
   },
   p92: {
     id: "p92",

@@ -386,7 +386,7 @@ function applyPenalties() {
   if (passiveStack("p91")) {
     if (playerCritThisRound) {
       const before = state.critMomentumBonus || 0;
-      state.critMomentumBonus = Math.min(4, before + 1);
+      state.critMomentumBonus = Math.min(AIM_MAX_CRIT_BONUS, before + 1);
       markPassiveTriggered("p91");
       round.roundEvents.push(`${passiveName("p91", "Seal of Aim")} raised your CRITICAL range bonus to +${state.critMomentumBonus}.`);
     } else if (state.critMomentumBonus) {

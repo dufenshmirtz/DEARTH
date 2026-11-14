@@ -980,8 +980,11 @@ function critWindowDetails(idOrItem) {
   };
 }
 
+// Seal of Aim: +1 CRITICAL range per CRITICAL in a row, up to this
+const AIM_MAX_CRIT_BONUS = 2;
+
 function ascendingCritWindowBonus() {
-  return passiveStack("p91") ? Math.min(4, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
+  return passiveStack("p91") ? Math.min(AIM_MAX_CRIT_BONUS, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
 }
 
 function ascendingCritDamageBonus() {
