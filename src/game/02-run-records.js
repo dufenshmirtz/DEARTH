@@ -10,8 +10,9 @@
    CRITICALS in a row, most SIN held...) are read from there (loadCollectionProgress).
 
    Guess quality: every resolved round scores your final guess against the final TARGET:
-   a CRITICAL scores 100, anything else 100 x GUESS_QUALITY_STEP ^ distance (at most 99).
-   The shown number is the average, rounded down, so 100 means every guess was a CRITICAL. */
+   100 x GUESS_QUALITY_STEP ^ distance, so only an exact guess scores 100. A CRITICAL from a widened range
+   (Seal of Aim, Seal of Orias, the Holy Spirit) scores by its real distance like any other guess.
+   The shown number is the average, rounded down, so 100 means every guess was exact. */
 
 const RECORDS_LIFETIME_STORAGE_KEY = "dearthRecordsLifetimeV1";
 const GUESS_QUALITY_STEP = 0.9; // each step away from the TARGET keeps 90% of the score
@@ -353,13 +354,13 @@ function recordEliteLevelBought(id, stack) {
 }
 
 /* ---------- Guess quality ---------- */
-function guessQualityScore(distance, critical) {
-  if (critical) return 100;
+// only the distance counts: exact = 100, 1 off = 90, 2 off = 81 ... (a CRITICAL that is not exact is not perfect)
+function guessQualityScore(distance) {
   const steps = Math.max(0, Math.ceil(Number(distance) || 0));
-  return Math.min(99, Math.round(100 * Math.pow(GUESS_QUALITY_STEP, steps)));
+  return Math.round(100 * Math.pow(GUESS_QUALITY_STEP, steps));
 }
 
-// the average score, rounded down (100 only when every guess was a CRITICAL); null with no guesses
+// the average score, rounded down (100 only when every guess was exact); null with no guesses
 function guessQualityValue(sum, rounds) {
   const count = Math.max(0, Math.floor(Number(rounds) || 0));
   if (count <= 0) return null;
@@ -369,7 +370,7 @@ function guessQualityValue(sum, rounds) {
 // once per resolved round (applyPenalties): your final guess against the final TARGET
 function recordRoundGuess(distance, critical) {
   if (state.mode !== "arcade" || !Number.isFinite(Number(distance))) return;
-  const score = guessQualityScore(distance, critical);
+  const score = guessQualityScore(distance);
   const stats = ensureRunStats();
   stats.guessSum += score;
   stats.guessRounds += 1;

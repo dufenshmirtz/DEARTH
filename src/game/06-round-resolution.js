@@ -353,7 +353,8 @@ function applyPenalties() {
   applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
-  // Guess quality: your final guess against the final TARGET (02-run-records.js)
+  // Guess quality: your final guess against the final TARGET, after every ARTIFACT (02-run-records.js); the CRITICAL
+  // only feeds the CRITICAL records, the score is the distance alone
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   // Seal of Orias reads this at the next round start

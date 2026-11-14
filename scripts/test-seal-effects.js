@@ -2599,22 +2599,21 @@ test("Satan's Pact: killing a DAMNED keeps its BOUNTY and takes your ARTIFACTS f
   `);
 });
 
-test("Guess quality: a CRITICAL scores 100, a miss 100 x 0.9 per step; the run, lifetime and last 100 averages", () => {
+test("Guess quality: only an exact guess scores 100, anything else 100 x 0.9 per step; the run, lifetime and last 100 averages", () => {
   game()(`
-    assert.equal(guessQualityScore(0, true), 100);
-    assert.equal(guessQualityScore(2, true), 100); // a widened CRITICAL window still counts as a CRITICAL
-    assert.equal(guessQualityScore(0, false), 99); // never 100 without a CRITICAL
-    assert.equal(guessQualityScore(1, false), 90);
-    assert.equal(guessQualityScore(3, false), 73);
-    assert.equal(guessQualityScore(10, false), 35);
-    // the average is rounded down, so 100 only when every guess was a CRITICAL
+    assert.equal(guessQualityScore(0), 100);
+    assert.equal(guessQualityScore(2), 81); // a CRITICAL from a widened range (Seal of Aim) is not perfect
+    assert.equal(guessQualityScore(1), 90);
+    assert.equal(guessQualityScore(3), 73);
+    assert.equal(guessQualityScore(10), 35);
+    // the average is rounded down, so 100 only when every guess was exact
     assert.equal(guessQualityValue(100 * 9 + 99, 10), 99);
     assert.equal(guessQualityValue(300, 3), 100);
     assert.equal(guessQualityValue(0, 0), null);
     // a resolved round records your final guess against the final TARGET (60 vs 50: 10 off)
     fixture([], [10, 20, 30, 40, 50]);
     applyPenalties();
-    const first = guessQualityScore(Math.abs(60 - state.roundState.target), false);
+    const first = guessQualityScore(Math.abs(60 - state.roundState.target));
     assert.ok(first < 100);
     assert.equal(state.runStats.guessRounds, 1);
     assert.equal(state.runStats.guessSum, first);
