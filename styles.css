@@ -13221,6 +13221,16 @@ body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
   grid-column: span 2;
   grid-row: span 2;
 }
+/* Guess / Submit quality: the last guesses across two columns, one row high */
+#app .record-plaque-wide {
+  grid-column: span 2;
+}
+#app .record-plaque-wide .record-value {
+  font-size: 40px !important;
+}
+#app .record-plaque-wide .record-label {
+  color: var(--bone) !important;
+}
 #app .record-value {
   font-family: var(--font-display) !important;
   font-size: 28px !important;
@@ -13408,6 +13418,31 @@ body.native-arcade #app .record-build-artifact .record-artifact {
 body.mobile-arcade #app .record-guess-strip,
 body.native-arcade #app .record-guess-strip {
   height: 30px;
+}
+/* phones: the wide quality plaque is one row high, so the number sits beside its strip */
+body.mobile-arcade #app .record-plaque-wide,
+body.native-arcade #app .record-plaque-wide {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+}
+body.mobile-arcade #app .record-plaque-wide .record-value,
+body.native-arcade #app .record-plaque-wide .record-value {
+  grid-row: 1 / span 3;
+  font-size: 28px !important;
+}
+body.mobile-arcade #app .record-plaque-wide .record-guess-strip,
+body.native-arcade #app .record-plaque-wide .record-guess-strip {
+  grid-column: 2;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+}
+body.mobile-arcade #app .record-plaque-wide .record-label,
+body.native-arcade #app .record-plaque-wide .record-label,
+body.mobile-arcade #app .record-plaque-wide .record-sub,
+body.native-arcade #app .record-plaque-wide .record-sub {
+  grid-column: 2;
 }
 body.mobile-arcade #app .record-label,
 body.native-arcade #app .record-label,

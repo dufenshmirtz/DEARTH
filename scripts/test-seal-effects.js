@@ -4196,3 +4196,31 @@ test("Seal of Aim: three CRITICALS in a row give +2 CRITICAL range, not +3; a ro
     assert.equal(state.critMomentumBonus, 0);
   `);
 });
+
+test("Guess quality scores what you typed against the TARGET as first revealed; Submit quality the final guess against the final TARGET", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    // you typed 55 and the TARGET was revealed at 50; an ARTIFACT then moved things so your final guess is 60
+    state.roundState.playerSubmittedGuess = 55;
+    state.roundState.revealedTarget = 50;
+    state.roundState.playerEffectiveGuess = 60;
+    applyPenalties();
+    const submit = guessQualityScore(Math.abs(60 - state.roundState.target));
+    assert.equal(state.runStats.firstGuessRounds, 1);
+    assert.equal(state.runStats.firstGuessSum, guessQualityScore(5));
+    assert.equal(runFirstGuessQuality(), 59);
+    assert.equal(state.runStats.guessSum, submit);
+    assert.equal(runGuessQuality(), submit);
+    const lifetime = loadLifetimeRecords();
+    assert.deepEqual([...lifetime.recentFirstGuesses], [59]);
+    assert.deepEqual([...lifetime.recentGuesses], [submit]);
+    // Best run needs a finished run of 10+ guesses, for each quality
+    state.runStats.firstGuessRounds = 10;
+    state.runStats.firstGuessSum = 900;
+    state.runStats.guessRounds = 10;
+    state.runStats.guessSum = 800;
+    const reached = currentRunRecordCandidates({ final: true });
+    assert.equal(reached.bestRunFirstGuessQuality.value, 90);
+    assert.equal(reached.bestRunGuessQuality.value, 80);
+  `);
+});

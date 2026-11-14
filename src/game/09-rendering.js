@@ -327,6 +327,7 @@ const RECORDS_TABS = [
 
 // which tab shows each run record (for the NEW marks)
 const RECORD_TAB_OF_KEY = {
+  bestRunFirstGuessQuality: "guess",
   bestRunGuessQuality: "guess",
   mostCriticals: "guess",
   deepestDescent: "descent",
@@ -393,35 +394,43 @@ function renderRecordsMenu() {
 
   let plaques = "";
   if (tab === "guess") {
-    const recent = lifetime.recentGuesses;
-    const recentQuality = guessQualityValue(recent.reduce((sum, score) => sum + score, 0), recent.length);
-    const allQuality = guessQualityValue(lifetime.guessSum, lifetime.guessRounds);
-    const best = records.bestRunGuessQuality;
-    const strip = recent.length
-      ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
-      : "";
+    // the same three plaques for Guess quality (what you typed vs the TARGET as revealed) and
+    // Submit quality (your final guess vs the final TARGET, after ARTIFACTS)
+    const qualityPlaques = (name, recent, sum, rounds, recordKey, size) => {
+      const recentQuality = guessQualityValue(recent.reduce((total, score) => total + score, 0), recent.length);
+      const allQuality = guessQualityValue(sum, rounds);
+      const best = records[recordKey];
+      const strip = recent.length
+        ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
+        : "";
+      return [
+        renderRecordPlaque({
+          label: name,
+          value: recentQuality ?? "--",
+          sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+          size,
+          empty: recentQuality === null,
+          extra: strip
+        }),
+        renderRecordPlaque({
+          label: name,
+          value: allQuality ?? "--",
+          sub: rounds ? `all time · ${recordCountText(rounds, "guess", "guesses")}` : "all time",
+          empty: allQuality === null
+        }),
+        renderRecordPlaque({
+          label: `Best run ${name}`,
+          value: best.value > 0 ? formatNumber(best.value) : "None",
+          sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+          isNew: unseen.has(recordKey),
+          empty: !(best.value > 0)
+        })
+      ];
+    };
     plaques = [
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: recentQuality ?? "--",
-        sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
-        size: "hero",
-        empty: recentQuality === null,
-        extra: strip
-      }),
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: allQuality ?? "--",
-        sub: lifetime.guessRounds ? `all time · ${recordCountText(lifetime.guessRounds, "guess", "guesses")}` : "all time",
-        empty: allQuality === null
-      }),
-      renderRecordPlaque({
-        label: "Best run Guess quality",
-        value: best.value > 0 ? formatNumber(best.value) : "None",
-        sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
-        isNew: unseen.has("bestRunGuessQuality"),
-        empty: !(best.value > 0)
-      }),
+      // one row each: the last guesses (wide, with the strip), all time, best run
+      ...qualityPlaques("Guess quality", lifetime.recentFirstGuesses, lifetime.firstGuessSum, lifetime.firstGuessRounds, "bestRunFirstGuessQuality", "wide"),
+      ...qualityPlaques("Submit quality", lifetime.recentGuesses, lifetime.guessSum, lifetime.guessRounds, "bestRunGuessQuality", "wide"),
       lifetimePlaque("CRITICALS in a row", progress.best.critStreak || 0, "in one run"),
       runPlaque("mostCriticals", "Most CRITICALS")
     ].join("");
@@ -2864,7 +2873,8 @@ function renderOverlay() {
         <p class="end-copy">Welcome to Hell...</p>
         <div class="end-body">
         <div class="end-stats">
-          <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runFirstGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Submit quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}

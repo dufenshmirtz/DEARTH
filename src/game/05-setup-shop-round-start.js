@@ -2246,6 +2246,8 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  // Guess quality compares the number you typed with this TARGET, before ARTIFACTS or reveal SEALS move it
+  round.revealedTarget = round.target;
   applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();

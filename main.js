@@ -3696,10 +3696,13 @@ function installSoundtrack() {
    Lifetime counters the Collection already keeps (games beaten, DAMNED / demons / Yannis eliminated,
    CRITICALS in a row, most SIN held...) are read from there (loadCollectionProgress).
 
-   Guess quality: every resolved round scores your final guess against the final TARGET:
-   100 x GUESS_QUALITY_STEP ^ distance, so only an exact guess scores 100. A CRITICAL from a widened range
-   (Seal of Aim, Seal of Orias, the Holy Spirit) scores by its real distance like any other guess.
-   The shown number is the average, rounded down, so 100 means every guess was exact. */
+   Two qualities, both scored 100 x GUESS_QUALITY_STEP ^ distance (only an exact guess scores 100; a CRITICAL
+   from a widened range scores by its real distance like any other guess), shown as the average rounded down:
+   - Guess quality: the number you typed against the TARGET as it was first revealed, before any ARTIFACT or
+     reveal SEAL moved it (run stats firstGuess*, lifetime firstGuess* / recentFirstGuesses,
+     record bestRunFirstGuessQuality)
+   - Submit quality: your final guess against the final TARGET, after every ARTIFACT (run stats guess*,
+     lifetime guess* / recentGuesses, record bestRunGuessQuality; the keys are older than the name) */
 
 const RECORDS_LIFETIME_STORAGE_KEY = "dearthRecordsLifetimeV1";
 const GUESS_QUALITY_STEP = 0.9; // each step away from the TARGET keeps 90% of the score
@@ -3722,6 +3725,8 @@ function defaultRunStats() {
     criticals: 0,
     guessSum: 0,
     guessRounds: 0,
+    firstGuessSum: 0,
+    firstGuessRounds: 0,
     currentRoundSealDamage: {},
     maxSealRoundDamage: emptyRecord({ id: "", name: "" }),
     highestEliteLevel: emptyRecord({ id: "", name: "" }),
@@ -3748,6 +3753,8 @@ function normalizeRunStats(stats) {
     criticals: count(source.criticals),
     guessSum: count(source.guessSum),
     guessRounds: count(source.guessRounds),
+    firstGuessSum: count(source.firstGuessSum),
+    firstGuessRounds: count(source.firstGuessRounds),
     currentRoundSealDamage: object(source.currentRoundSealDamage),
     maxSealRoundDamage:
       source.maxSealRoundDamage && typeof source.maxSealRoundDamage === "object"
@@ -3781,6 +3788,7 @@ function defaultArcadeRecords() {
     mostPentakills: emptyRecord(),
     mostRoundEliminations: emptyRecord(),
     mostCriticals: emptyRecord(),
+    bestRunFirstGuessQuality: emptyRecord({ guesses: 0 }),
     bestRunGuessQuality: emptyRecord({ guesses: 0 }),
     // lower is better (RECORD_LOWER_IS_BETTER): the round the 8th BOSS fell
     fastestWin: emptyRecord(),
@@ -3863,8 +3871,14 @@ function currentBuildSnapshot() {
   return { build, artifacts };
 }
 
+// Submit quality of this run
 function runGuessQuality(stats = ensureRunStats()) {
   return guessQualityValue(stats.guessSum, stats.guessRounds);
+}
+
+// Guess quality of this run (what you typed against the TARGET as first revealed)
+function runFirstGuessQuality(stats = ensureRunStats()) {
+  return guessQualityValue(stats.firstGuessSum, stats.firstGuessRounds);
 }
 
 // what this run has reached for each record. Best run Guess quality only counts a finished run.
@@ -3873,6 +3887,7 @@ function currentRunRecordCandidates({ final = Boolean(state.gameOver) } = {}) {
   const depth = deepestDescentDepth();
   const round = Math.max(0, Math.floor(Number(state.round) || 0));
   const runQuality = runGuessQuality(stats);
+  const runFirstQuality = runFirstGuessQuality(stats);
   return {
     deepestDescent: {
       value: depth * DEEPEST_DESCENT_ROUND_SPAN + Math.min(round, DEEPEST_DESCENT_ROUND_SPAN - 1),
@@ -3890,6 +3905,10 @@ function currentRunRecordCandidates({ final = Boolean(state.gameOver) } = {}) {
     mostPentakills: { value: stats.pentakills || 0 },
     mostRoundEliminations: { value: stats.roundKOs || 0 },
     mostCriticals: { value: stats.criticals || 0 },
+    bestRunFirstGuessQuality:
+      final && stats.firstGuessRounds >= GUESS_QUALITY_MIN_RUN_GUESSES && runFirstQuality !== null
+        ? { value: runFirstQuality, guesses: stats.firstGuessRounds }
+        : { value: 0 },
     bestRunGuessQuality:
       final && stats.guessRounds >= GUESS_QUALITY_MIN_RUN_GUESSES && runQuality !== null
         ? { value: runQuality, guesses: stats.guessRounds }
@@ -3919,7 +3938,8 @@ const NEW_RECORD_LABELS = {
   deepestDescent: "Deepest descent",
   highestRoundReached: "Highest round",
   fastestWin: "Fastest win",
-  bestRunGuessQuality: "Guess quality",
+  bestRunFirstGuessQuality: "Guess quality",
+  bestRunGuessQuality: "Submit quality",
   mostCriticals: "Most CRITICALS",
   mostEliminations: "Most KOs",
   mostBossEliminations: "Most BOSS kills",
@@ -4054,7 +4074,23 @@ function guessQualityValue(sum, rounds) {
   return Math.max(0, Math.min(100, Math.floor((Number(sum) || 0) / count)));
 }
 
-// once per resolved round (applyPenalties): your final guess against the final TARGET
+// once per resolved round (applyPenalties): Guess quality, the number you typed against the TARGET as first revealed
+function recordRoundFirstGuess(distance) {
+  if (state.mode !== "arcade" || !Number.isFinite(Number(distance))) return;
+  const score = guessQualityScore(distance);
+  const stats = ensureRunStats();
+  stats.firstGuessSum += score;
+  stats.firstGuessRounds += 1;
+  if (!lifetimeRecordsCount()) return;
+  const lifetime = loadLifetimeRecords();
+  lifetime.firstGuessSum += score;
+  lifetime.firstGuessRounds += 1;
+  lifetime.recentFirstGuesses.push(score);
+  if (lifetime.recentFirstGuesses.length > GUESS_QUALITY_RECENT) lifetime.recentFirstGuesses.splice(0, lifetime.recentFirstGuesses.length - GUESS_QUALITY_RECENT);
+  saveLifetimeRecords();
+}
+
+// once per resolved round (applyPenalties): Submit quality, your final guess against the final TARGET
 function recordRoundGuess(distance, critical) {
   if (state.mode !== "arcade" || !Number.isFinite(Number(distance))) return;
   const score = guessQualityScore(distance);
@@ -4080,6 +4116,9 @@ function defaultLifetimeRecords() {
     guessSum: 0,
     guessRounds: 0,
     recentGuesses: [],
+    firstGuessSum: 0,
+    firstGuessRounds: 0,
+    recentFirstGuesses: [],
     runs: 0,
     sinEarned: 0,
     pacts: 0,
@@ -4103,10 +4142,10 @@ function loadLifetimeRecords() {
     const saved = raw ? JSON.parse(raw) : null;
     if (saved && typeof saved === "object") {
       const count = (value) => Math.max(0, Math.floor(Number(value) || 0));
-      ["guessSum", "guessRounds", "runs", "sinEarned", "pacts"].forEach((key) => { records[key] = count(saved[key]); });
-      if (Array.isArray(saved.recentGuesses)) {
-        records.recentGuesses = saved.recentGuesses.map((score) => Math.max(0, Math.min(100, count(score)))).slice(-GUESS_QUALITY_RECENT);
-      }
+      ["guessSum", "guessRounds", "firstGuessSum", "firstGuessRounds", "runs", "sinEarned", "pacts"].forEach((key) => { records[key] = count(saved[key]); });
+      ["recentGuesses", "recentFirstGuesses"].forEach((key) => {
+        if (Array.isArray(saved[key])) records[key] = saved[key].map((score) => Math.max(0, Math.min(100, count(score)))).slice(-GUESS_QUALITY_RECENT);
+      });
       ["sealRuns", "artifactUses"].forEach((group) => {
         const source = saved[group] && typeof saved[group] === "object" ? saved[group] : {};
         Object.entries(source).forEach(([id, value]) => { if (ITEMS[id] && count(value) > 0) records[group][id] = count(value); });
@@ -10565,6 +10604,8 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  // Guess quality compares the number you typed with this TARGET, before ARTIFACTS or reveal SEALS move it
+  round.revealedTarget = round.target;
   applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
@@ -11046,6 +11087,11 @@ function applyPenalties() {
   // Guess quality: your final guess against the final TARGET, after every ARTIFACT (02-run-records.js); the CRITICAL
   // only feeds the CRITICAL records, the score is the distance alone
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
+  // Guess quality: the number you typed against the TARGET as first revealed
+  const revealedTarget = Number.isFinite(round.revealedTarget) ? round.revealedTarget : round.target;
+  if (Number.isFinite(round.playerSubmittedGuess) && Number.isFinite(revealedTarget)) {
+    recordRoundFirstGuess(Math.abs(round.playerSubmittedGuess - revealedTarget));
+  }
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   // Seal of Orias reads this at the next round start
   state.playerCritLastRound = playerCritThisRound;
@@ -15012,6 +15058,7 @@ const RECORDS_TABS = [
 
 // which tab shows each run record (for the NEW marks)
 const RECORD_TAB_OF_KEY = {
+  bestRunFirstGuessQuality: "guess",
   bestRunGuessQuality: "guess",
   mostCriticals: "guess",
   deepestDescent: "descent",
@@ -15078,35 +15125,43 @@ function renderRecordsMenu() {
 
   let plaques = "";
   if (tab === "guess") {
-    const recent = lifetime.recentGuesses;
-    const recentQuality = guessQualityValue(recent.reduce((sum, score) => sum + score, 0), recent.length);
-    const allQuality = guessQualityValue(lifetime.guessSum, lifetime.guessRounds);
-    const best = records.bestRunGuessQuality;
-    const strip = recent.length
-      ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
-      : "";
+    // the same three plaques for Guess quality (what you typed vs the TARGET as revealed) and
+    // Submit quality (your final guess vs the final TARGET, after ARTIFACTS)
+    const qualityPlaques = (name, recent, sum, rounds, recordKey, size) => {
+      const recentQuality = guessQualityValue(recent.reduce((total, score) => total + score, 0), recent.length);
+      const allQuality = guessQualityValue(sum, rounds);
+      const best = records[recordKey];
+      const strip = recent.length
+        ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
+        : "";
+      return [
+        renderRecordPlaque({
+          label: name,
+          value: recentQuality ?? "--",
+          sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+          size,
+          empty: recentQuality === null,
+          extra: strip
+        }),
+        renderRecordPlaque({
+          label: name,
+          value: allQuality ?? "--",
+          sub: rounds ? `all time · ${recordCountText(rounds, "guess", "guesses")}` : "all time",
+          empty: allQuality === null
+        }),
+        renderRecordPlaque({
+          label: `Best run ${name}`,
+          value: best.value > 0 ? formatNumber(best.value) : "None",
+          sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+          isNew: unseen.has(recordKey),
+          empty: !(best.value > 0)
+        })
+      ];
+    };
     plaques = [
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: recentQuality ?? "--",
-        sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
-        size: "hero",
-        empty: recentQuality === null,
-        extra: strip
-      }),
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: allQuality ?? "--",
-        sub: lifetime.guessRounds ? `all time · ${recordCountText(lifetime.guessRounds, "guess", "guesses")}` : "all time",
-        empty: allQuality === null
-      }),
-      renderRecordPlaque({
-        label: "Best run Guess quality",
-        value: best.value > 0 ? formatNumber(best.value) : "None",
-        sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
-        isNew: unseen.has("bestRunGuessQuality"),
-        empty: !(best.value > 0)
-      }),
+      // one row each: the last guesses (wide, with the strip), all time, best run
+      ...qualityPlaques("Guess quality", lifetime.recentFirstGuesses, lifetime.firstGuessSum, lifetime.firstGuessRounds, "bestRunFirstGuessQuality", "wide"),
+      ...qualityPlaques("Submit quality", lifetime.recentGuesses, lifetime.guessSum, lifetime.guessRounds, "bestRunGuessQuality", "wide"),
       lifetimePlaque("CRITICALS in a row", progress.best.critStreak || 0, "in one run"),
       runPlaque("mostCriticals", "Most CRITICALS")
     ].join("");
@@ -17549,7 +17604,8 @@ function renderOverlay() {
         <p class="end-copy">Welcome to Hell...</p>
         <div class="end-body">
         <div class="end-stats">
-          <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runFirstGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Submit quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}

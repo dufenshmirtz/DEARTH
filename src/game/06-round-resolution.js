@@ -356,6 +356,11 @@ function applyPenalties() {
   // Guess quality: your final guess against the final TARGET, after every ARTIFACT (02-run-records.js); the CRITICAL
   // only feeds the CRITICAL records, the score is the distance alone
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
+  // Guess quality: the number you typed against the TARGET as first revealed
+  const revealedTarget = Number.isFinite(round.revealedTarget) ? round.revealedTarget : round.target;
+  if (Number.isFinite(round.playerSubmittedGuess) && Number.isFinite(revealedTarget)) {
+    recordRoundFirstGuess(Math.abs(round.playerSubmittedGuess - revealedTarget));
+  }
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   // Seal of Orias reads this at the next round start
   state.playerCritLastRound = playerCritThisRound;
