@@ -1177,9 +1177,16 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
-// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
-function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
-  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+// Seal of Haures: 50% chance a dead DAMNED comes back as the same soul; ELITE pays 4 SIN per level when it does
+const HAURES_REBIRTH_CHANCE = 0.5;
+
+function hauresRebirthSin(entry) {
+  return 4 * passiveEntryEliteLevels(entry);
+}
+
+// 4th Pentacle of the Moon: each Cursed Chalice adds flat damage to your CRITICAL this round (12, ELITE x1.5 each level)
+function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
+  return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
 // 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)

@@ -2431,7 +2431,9 @@ test("Satan's Pact: SEALS and ELITE wait for every SEAL slot; angels, Trinity, S
     assert.equal(satanPactAnswer("elite paimon").refuse, "tooEarly");
     assert.equal(satanPactAnswer("seal of michael").refuse, "angel");
     assert.equal(satanPactAnswer("seal of the father").refuse, "trinity");
-    assert.equal(satanPactAnswer("first pentacle of saturn").refuse, "saturn");
+    assert.equal(satanPactAnswer("first pentacle of saturn").refuse, "planetary");
+    assert.equal(satanPactAnswer(ITEMS.p137.name).refuse, "planetary");
+    assert.equal(satanPactAnswer(ITEMS[POISON_SEAL_IDS[0]].name).refuse, "planetary");
     assert.equal(satanPactAnswer("seal of the white horse").refuse, "apocalypse");
     state.bossKills = 6;
     state.player.passives = [itemCopy("p16")];
@@ -3101,7 +3103,124 @@ test("3rd Pentacle of the Moon: Inverted Cross pushes the DAMNED's guess away fr
   }
 });
 
-test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICAL this round (ELITE +1% each level)", () => {
+test("Satan's first win speech plays once per player, then the usual one", () => {
+  game()(`
+    globalThis.window = { localStorage };
+    assert.equal(satanFirstVictoryPending(), true);
+    assert.equal(satanVictoryLines(), SATAN_FIRST_VICTORY_LINES);
+    assert.equal(SATAN_FIRST_VICTORY_LINES.length, 7);
+    assert.ok(SATAN_FIRST_VICTORY_LINES[3][1].includes("casino"));
+    // leaving the scene (end or skip) marks it seen
+    globalThis.satanLeaveScene = () => {};
+    introState.phase = "victory";
+    satanVictoryLeave();
+    assert.equal(satanFirstVictoryPending(), false);
+    assert.equal(satanVictoryLines(), SATAN_VICTORY_LINES);
+    // and it stays seen for later runs
+    assert.equal(localStorage.getItem(SATAN_FIRST_VICTORY_STORAGE_KEY), "1");
+  `);
+});
+
+test("Satan's Pact: each price reads as a thing you pay, with its own wording where an offer line needs it", () => {
+  game()(`
+    const say = (key, price, vars) => satanPactAnswerLines({ lines: SATAN_DEAL_LINES[key], price, vars }).map(([, text]) => text).join(" ");
+    const boss = [{ type: "bossHealth", pct: 30, zeroBounty: true }, { type: "hp", n: 7 }];
+    // after "I'd like to see ... first" and "I'll be taking ...": their own wording
+    assert.equal(satanPactLineKey(SATAN_DEAL_LINES.sin), "sin");
+    assert.ok(say("sin", boss, { N: 40 }).includes("I'd like to see the next BOSS joining the game with 30% more SOUL, its BOSS BOUNTY in my pocket and 7 of your SOUL first. Do we have a deal?"));
+    assert.ok(say("sinCapped", boss, { N: 37 }).includes("I'll be taking your word that the next BOSS joins the game with 30% more SOUL, its BOSS BOUNTY and 7 of your SOUL."));
+    // everywhere else the usual wording
+    assert.ok(say("heal", [{ type: "bossHealth", pct: 30 }], { N: 3 }).includes("in return I want 30% more SOUL for the next BOSS."));
+    assert.ok(say("kill", [{ type: "noArtifacts" }, { type: "keepBounty" }], { NAME: "Luc-79" }).includes("cost ya your ARTIFACTS for a round and the BOUNTY on their head."));
+    assert.ok(say("usesTwo", [{ type: "useCap", cap: 1, rounds: 5 }], { N: 2 }).includes("The price is all but one ARTIFACT use a round for the next 5 rounds."));
+    assert.ok(say("artifacts", [{ type: "shopClosed", rounds: 3 }], { ITEM: "Vial of Blood", COUNT: 3 }).includes("That will be 3 rounds without my Offerings."));
+    // an offer that starts with an extra line still finds its price line
+    assert.equal(satanPactLineKey([...SATAN_DEAL_LINES.artifactsCapped, ...SATAN_DEAL_LINES.artifacts]), "artifacts");
+  `);
+});
+
+test("PYROS-TECH abilities have alchemical names and each shows its own mark, on DAMNED and on BOSSES", () => {
+  game()(`
+    const names = { metabolism: "Cinnabar", fumes: "Acid", thief: "Vitriol", spite: "Sulphur", wideCrit: "Fortis", shield: "Regia", lamb: "Vitaea" };
+    assert.deepEqual(Object.keys(PYROS_GIFT_PASSIVES).sort(), Object.keys(names).sort());
+    for (const [key, name] of Object.entries(names)) {
+      assert.equal(PYROS_GIFT_PASSIVES[key].name, name);
+      assert.ok(PYROS_GIFT_MARKS[key], key + " has a mark");
+    }
+    // every mark is different
+    assert.equal(new Set(Object.values(PYROS_GIFT_MARKS)).size, 7);
+    // Pyros's own text calls them Pyros' Alchemies
+    assert.ok(UNIQUE_BOSS_SPECS.pyros.descriptions[0].includes("Pyros' Alchemies"));
+    assert.ok(!UNIQUE_BOSS_SPECS.pyros.descriptions.join(" ").includes("Pyros Gift"));
+
+    globalThis.performance = { now: () => 0 };
+    fixture([], [50, 50]);
+    const damned = state.bots[0];
+    damned.passiveKeys = ["fumes"];
+    const card = renderBot(damned, false);
+    assert.ok(card.includes("pyros-glyph") && !card.includes("gift-glyph"), "a DAMNED shows the Acid mark, not the diamond");
+    assert.ok(card.includes(PYROS_GIFT_MARKS.fumes));
+    // the marks sit in the corner block, not in the name row
+    const title = card.slice(card.indexOf('class="bot-title"'), card.indexOf('class="bot-type'));
+    assert.ok(!title.includes("pyros-glyph"));
+    assert.ok(card.indexOf('class="pyros-marks" data-count="1"') >= 0 && card.indexOf("pyros-marks") < card.indexOf('class="bot-face'));
+    assert.ok(pyrosGiftGlyphHtml("fumes").includes("Acid") && pyrosGiftGlyphHtml("fumes").includes("PYROS-TECH"));
+    // several abilities: one corner block, in the order they were gained
+    damned.passiveKeys = ["fumes", "thief", "lamb"];
+    const block = pyrosMarksHtml(damned);
+    assert.ok(block.includes('data-count="3"'));
+    assert.ok(block.indexOf(PYROS_GIFT_MARKS.fumes) < block.indexOf(PYROS_GIFT_MARKS.thief) && block.indexOf(PYROS_GIFT_MARKS.thief) < block.indexOf(PYROS_GIFT_MARKS.lamb));
+    // a dead DAMNED shows none
+    damned.hp = 0;
+    damned.eliminated = true;
+    botDeathAwaitsReady = () => false;
+    assert.ok(!renderBot(damned, false).includes("pyros-marks"));
+
+    // a BOSS gets the corner marks too; its pentagram's tooltip leaves the PYROS-TECH ability out
+    const boss = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    boss.passiveKeys.push("shield");
+    const bossCard = renderBot(boss, false);
+    assert.ok(bossCard.includes("boss-glyph") && bossCard.includes("pyros-marks") && bossCard.includes(PYROS_GIFT_MARKS.shield));
+    const pentagram = bossGlyphHtml(boss);
+    assert.ok(!pentagram.includes("pyros-glyph") && !pentagram.includes("Regia"));
+
+    // the logs use the new names
+    const hits = [];
+    damagePlayer = (amount, reason) => hits.push(reason);
+    state.bots[1].passiveKeys = ["metabolism", "fumes"];
+    applyEndOfRoundPassives();
+    assert.ok(hits.some((reason) => reason.includes("Pyros Gift: Acid")));
+    assert.ok(!hits.some((reason) => reason.includes("Seal of Amon")));
+  `);
+});
+
+test("Seal of Haures: 50% rebirth at every ELITE level, ELITE pays 4 SIN per level when it triggers, and the text has no flag", () => {
+  // [ELITE stack, roll, reborn, Haures SIN]
+  for (const [stack, roll, reborn, sin] of [[1, 0.49, true, 0], [1, 0.5, false, 0], [3, 0.49, true, 8], [3, 0.5, false, 0], [5, 0.2, true, 16]]) {
+    game()(`
+      fixture([["p86", ${stack}]], [10, 20]);
+      const bot = state.bots[0];
+      bot.hp = 0;
+      Math.random = () => ${roll};
+      resolveEliminatedBots([bot]);
+      assert.equal(Boolean(bot.pendingReplacementInheritance), ${reborn});
+      assert.equal(state.player.credits - bot.eliminationReward, ${sin});
+      assert.equal(state.roundState.roundEvents.some(line => line.includes(ITEMS.p86.name + " paid ${sin} SIN")), ${sin > 0});
+      if (${reborn}) assert.equal(bot.pendingReplacementInheritance.name, bot.name);
+    `);
+  }
+  game()(`
+    // a saved run keeps the old base text: it is read from ITEMS instead
+    const saved = { ...ITEMS.p86, stack: 1, description: "old text with a flag" };
+    assert.equal(itemDescription(saved), ITEMS.p86.description);
+    assert.ok(!/flag/i.test(ITEMS.p86.description));
+    const elite = itemDescription({ ...ITEMS.p86, stack: 3 });
+    assert.ok(elite.includes("50% chance") && elite.includes("gain 8 SIN"));
+    assert.ok(!/flag/i.test(elite));
+  `);
+});
+
+test("4th Pentacle of the Moon: every Cursed Chalice adds +12 damage to your CRITICAL this round (ELITE x1.5 each level)", () => {
   game()(`
     ${ARTIFACT_TEST_STUBS}
     fixture([["p137"]], [50, 50]);
@@ -3109,8 +3228,9 @@ test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICA
     state.player.actives = [itemCopy("a22")];
     useActive(0);
     assert.equal(state.roundState.artifactCriticalRangeBonus, 1);
-    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 120);
-    assert.equal(criticalSummaryForHitter({ key: "player", kind: "player" }), "12% max SOUL");
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 112);
+    assert.equal(criticalSummaryForHitter({ key: "player", kind: "player" }), "10% max SOUL + 12 damage");
+    assert.ok(itemDescription(itemCopy("a22")).includes("+12 damage"));
   `);
   game()(`
     ${ARTIFACT_TEST_STUBS}
@@ -3120,7 +3240,10 @@ test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICA
     useActive(0);
     useActive(0);
     assert.equal(state.roundState.artifactCriticalRangeBonus, 2);
-    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 180);
+    // ELITE II: 12 -> 18 -> 27 per Chalice, two Chalices: +54
+    assert.equal(chaliceCriticalBonus(), 54);
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 154);
+    assert.ok(itemDescription(passiveEntry("p137")).includes("+27 damage"));
   `);
   game()(`
     ${ARTIFACT_TEST_STUBS}

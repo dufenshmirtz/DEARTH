@@ -9107,6 +9107,46 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit
   stroke: #ff6a5c;
 }
 
+/* PYROS-TECH marks: one red alchemical mark per ability (no inner fill, unlike the diamond) */
+#app .bot-glyph.pyros-glyph,
+#app .bot-glyph.pyros-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+#app .bot-glyph.pyros-glyph {
+  margin-right: 2px;
+}
+
+/* the PYROS-TECH marks float on the name row, left of the zodiac sign (or a BOSS's pentagram), without moving
+   the centred name: layoutPyrosMarks() places and sizes them; hidden until it has */
+#app .bot-card .pyros-marks {
+  position: absolute;
+  z-index: 9;
+  top: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--pyros-cols, 7), var(--pyros-size, 19px));
+  grid-auto-rows: var(--pyros-size, 19px);
+  gap: 4px;
+  visibility: hidden;
+}
+
+#app .bot-card .pyros-marks .bot-glyph {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  vertical-align: top;
+}
+
+body.mobile-arcade #app .bot-card .pyros-marks {
+  gap: 3px;
+}
+
+#app .bot-glyph.pyros-glyph:hover svg * {
+  stroke: #ff6a5c;
+}
+
 /* phone: the cards reach a little further down */
 body.native-arcade {
   --native-seal-row-height: clamp(100px, 27vh, 124px);

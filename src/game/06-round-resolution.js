@@ -667,26 +667,19 @@ function maxHealthCriticalDamageForVictim(victim) {
 }
 
 function playerCriticalFlatBonus() {
-  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0)) + chaliceCriticalBonus();
 }
 
-// 4th Pentacle of the Moon: % max SOUL added to your CRITICAL by the Cursed Chalices used this round
-function criticalPercentBonus() {
-  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
-}
-
-function criticalPercentBonusDamage(victim) {
-  const percent = criticalPercentBonus();
-  if (!percent) return 0;
-  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
-  return Math.ceil((maxHp * percent) / 100);
+// 4th Pentacle of the Moon: flat damage added to your CRITICAL by the Cursed Chalices used this round
+function chaliceCriticalBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalFlatBonus || 0));
 }
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
+  return base + eligos + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -749,10 +742,9 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
-  const bonusPercent = criticalPercentBonus();
-  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) {
-    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    const extraPercent = state.roundState?.exactGuessCritBoost ? 10 : 0;
     return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
   }
   return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
@@ -914,12 +906,21 @@ function resolveEliminatedBots(eliminated) {
     bot.pendingReplacementSpec = state.finalBossQueued ? null : nextBossSpecIfNeeded();
     if (!bot.pendingReplacementSpec) {
       bot.pendingReplacementInheritance = null;
+      let hauresEntry = null;
       for (const entry of orderedPassiveEffectEntries("p86")) {
         bot.pendingReplacementInheritance = inheritedReplacementProfile(bot, entry);
-        if (bot.pendingReplacementInheritance) break;
+        if (bot.pendingReplacementInheritance) {
+          hauresEntry = entry;
+          break;
+        }
       }
       if (bot.pendingReplacementInheritance) {
         state.roundState.roundEvents.push(`${passiveName("p86", "Seal of Haures")} prepared ${bot.name}'s replacement to inherit their identity.`);
+        const sin = hauresRebirthSin(hauresEntry);
+        if (sin > 0) {
+          const gained = gainCredits(sin, true, ITEMS.p86.name);
+          state.roundState.roundEvents.push(`${ITEMS.p86.name} paid ${gained} SIN for ${bot.name}'s rebirth.`);
+        }
       }
     }
   });
@@ -931,7 +932,7 @@ function resolveEliminatedBots(eliminated) {
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
     const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Pyros Gift: Seal of Sallos"));
+    activeBots().forEach((bot) => healBot(bot, heal, `Pyros Gift: ${PYROS_GIFT_PASSIVES.lamb.name}`));
   }
 
   checkRoundPentakillBonus();
@@ -1925,10 +1926,10 @@ function applyEndOfRoundPassives() {
     }
 
     activeBots().forEach((bot) => {
-      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
-      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
+      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.metabolism.name}`);
+      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.fumes.name} dealt 1 damage to you.`);
       if (botHasPassive(bot, "thief")) {
-        loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+        loseCredits(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.thief.name}`);
       }
     });
 

@@ -927,8 +927,8 @@ function applyFixedWillEndRound() {
 
 function inheritedReplacementProfile(bot, entry) {
   if (!bot || bot.isBoss || bot.immortal || !entry) return null;
-  const chance = Math.min(1, 0.5 + Math.max(0, (entry.stack || 1) - 1) * 0.1);
-  if (Math.random() >= chance) return null;
+  // Seal of Haures: always 50%; ELITE pays SIN instead (see the elimination code)
+  if (Math.random() >= HAURES_REBIRTH_CHANCE) return null;
   markPassiveEntryTriggered(entry);
   return {
     name: bot.name,

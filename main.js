@@ -952,7 +952,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Haures",
     price: 14,
-    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
+    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, and number. ELITE: whenever that happens, gain 4 SIN for each ELITE level."
   },
   p87: {
     id: "p87",
@@ -1161,7 +1161,7 @@ const ITEMS = {
     name: "4th Pentacle of the Moon",
     price: 12,
     description:
-      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+      "Every Cursed Chalice you use also makes your CRITICAL deal +12 damage this round, and Cursed Chalice appears twice as often in Devil's Offerings. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p138: {
     id: "p138",
@@ -2181,33 +2181,34 @@ const BOSS_PASSIVES = {
 };
 const SHADOW_BOSS_PASSIVE_KEY = "guilt";
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
+// PYROS-TECH: the abilities Pyros hands out, named after alchemical substances (their marks: PYROS_GIFT_MARKS in 09-rendering.js)
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
-    name: "Seal of Bathin",
+    name: "Cinnabar",
     description: "This Pyros Gift heals 5 SOUL at the end of every round."
   },
   fumes: {
-    name: "Seal of Amon",
+    name: "Acid",
     description: "While this Pyros Gift is alive, you take 1 damage at the end of every round."
   },
   thief: {
-    name: "Seal of Raum",
+    name: "Vitriol",
     description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
   },
   spite: {
-    name: "Seal of Botis",
+    name: "Sulphur",
     description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
   },
   wideCrit: {
-    name: "Seal of Ipos",
+    name: "Fortis",
     description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
   },
   shield: {
-    name: "Seal of Halphas",
+    name: "Regia",
     description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
   },
   lamb: {
-    name: "Seal of Sallos",
+    name: "Vitaea",
     description: "When this Pyros Gift dies, all other DAMNED gain 10 SOUL."
   }
 };
@@ -2309,7 +2310,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
+      "At the start of every round, one DAMNED receives one of Pyros' Alchemies at random.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },
@@ -5414,9 +5415,16 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
-// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
-function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
-  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+// Seal of Haures: 50% chance a dead DAMNED comes back as the same soul; ELITE pays 4 SIN per level when it does
+const HAURES_REBIRTH_CHANCE = 0.5;
+
+function hauresRebirthSin(entry) {
+  return 4 * passiveEntryEliteLevels(entry);
+}
+
+// 4th Pentacle of the Moon: each Cursed Chalice adds flat damage to your CRITICAL this round (12, ELITE x1.5 each level)
+function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
+  return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
 // 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
@@ -5860,9 +5868,9 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    const percent = moonChaliceCriticalPercent();
-    return percent
-      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+    const damage = moonChaliceCriticalDamage();
+    return damage
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${damage} damage (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
@@ -5922,7 +5930,7 @@ function itemDescription(item) {
     const { main, elite } = splitEliteDescription(rule);
     return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
   }
-  if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p86", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5954,7 +5962,7 @@ function itemDescription(item) {
     return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p137") {
-    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+    return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
     return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
@@ -6135,7 +6143,7 @@ function itemDescription(item) {
     return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
   }
   if (item.id === "p86") {
-    return `When a DAMNED is eliminated, ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance the replacement inherits its personality, MEMORY, name, number, and flag.`;
+    return `When a DAMNED is eliminated, 50% chance the replacement inherits its personality, MEMORY, name, and number, and you gain ${4 * Math.max(0, stack - 1)} SIN.`;
   }
   if (item.id === "p87") {
     return `When a DAMNED is eliminated, deal ${flatDamageValue(item, 30)} damage to each other living DAMNED with the same personality.`;
@@ -8227,8 +8235,8 @@ function applyFixedWillEndRound() {
 
 function inheritedReplacementProfile(bot, entry) {
   if (!bot || bot.isBoss || bot.immortal || !entry) return null;
-  const chance = Math.min(1, 0.5 + Math.max(0, (entry.stack || 1) - 1) * 0.1);
-  if (Math.random() >= chance) return null;
+  // Seal of Haures: always 50%; ELITE pays SIN instead (see the elimination code)
+  if (Math.random() >= HAURES_REBIRTH_CHANCE) return null;
   markPassiveEntryTriggered(entry);
   return {
     name: bot.name,
@@ -11348,26 +11356,19 @@ function maxHealthCriticalDamageForVictim(victim) {
 }
 
 function playerCriticalFlatBonus() {
-  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0)) + chaliceCriticalBonus();
 }
 
-// 4th Pentacle of the Moon: % max SOUL added to your CRITICAL by the Cursed Chalices used this round
-function criticalPercentBonus() {
-  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
-}
-
-function criticalPercentBonusDamage(victim) {
-  const percent = criticalPercentBonus();
-  if (!percent) return 0;
-  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
-  return Math.ceil((maxHp * percent) / 100);
+// 4th Pentacle of the Moon: flat damage added to your CRITICAL by the Cursed Chalices used this round
+function chaliceCriticalBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalFlatBonus || 0));
 }
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
+  return base + eligos + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -11430,10 +11431,9 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
-  const bonusPercent = criticalPercentBonus();
-  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) {
-    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    const extraPercent = state.roundState?.exactGuessCritBoost ? 10 : 0;
     return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
   }
   return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
@@ -11595,12 +11595,21 @@ function resolveEliminatedBots(eliminated) {
     bot.pendingReplacementSpec = state.finalBossQueued ? null : nextBossSpecIfNeeded();
     if (!bot.pendingReplacementSpec) {
       bot.pendingReplacementInheritance = null;
+      let hauresEntry = null;
       for (const entry of orderedPassiveEffectEntries("p86")) {
         bot.pendingReplacementInheritance = inheritedReplacementProfile(bot, entry);
-        if (bot.pendingReplacementInheritance) break;
+        if (bot.pendingReplacementInheritance) {
+          hauresEntry = entry;
+          break;
+        }
       }
       if (bot.pendingReplacementInheritance) {
         state.roundState.roundEvents.push(`${passiveName("p86", "Seal of Haures")} prepared ${bot.name}'s replacement to inherit their identity.`);
+        const sin = hauresRebirthSin(hauresEntry);
+        if (sin > 0) {
+          const gained = gainCredits(sin, true, ITEMS.p86.name);
+          state.roundState.roundEvents.push(`${ITEMS.p86.name} paid ${gained} SIN for ${bot.name}'s rebirth.`);
+        }
       }
     }
   });
@@ -11612,7 +11621,7 @@ function resolveEliminatedBots(eliminated) {
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
     const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Pyros Gift: Seal of Sallos"));
+    activeBots().forEach((bot) => healBot(bot, heal, `Pyros Gift: ${PYROS_GIFT_PASSIVES.lamb.name}`));
   }
 
   checkRoundPentakillBonus();
@@ -12606,10 +12615,10 @@ function applyEndOfRoundPassives() {
     }
 
     activeBots().forEach((bot) => {
-      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
-      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
+      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.metabolism.name}`);
+      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.fumes.name} dealt 1 damage to you.`);
       if (botHasPassive(bot, "thief")) {
-        loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+        loseCredits(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.thief.name}`);
       }
     });
 
@@ -13340,16 +13349,15 @@ function resolveFuneralCoin(item) {
   return `${item.name} spread ${spread} BOUNTY among the DAMNED (${name}).`;
 }
 
-// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon your CRITICAL also gains % max SOUL
+// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon each Chalice also adds flat CRITICAL damage
 function resolveCursedChalice(item) {
   const total = addArtifactCriticalRangeBonus(1, item.name);
   let message = `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`;
   const entry = artifactSealEntry("a22");
   if (entry && state.roundState) {
-    const percent = moonChaliceCriticalPercent(entry);
-    state.roundState.artifactCriticalPercentBonus = criticalPercentBonus() + percent;
+    state.roundState.artifactCriticalFlatBonus = chaliceCriticalBonus() + moonChaliceCriticalDamage(entry);
     markPassiveEntryTriggered(entry);
-    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${criticalPercentBonus()}% max SOUL this round.`;
+    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${chaliceCriticalBonus()} damage this round.`;
   }
   return message;
 }
@@ -13491,7 +13499,7 @@ function useActive(index) {
   activeBots()
     .filter((bot) => botHasPassive(bot, "spite"))
     .forEach((bot) => {
-      damagePlayer(3, `${bot.name}'s Pyros Gift: Seal of Botis dealt 3 damage because you used an ARTIFACT.`);
+      damagePlayer(3, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.spite.name} dealt 3 damage because you used an ARTIFACT.`);
     });
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -13676,7 +13684,7 @@ function chooseBot(botId) {
     return;
   }
   if (botHasPassive(bot, "shield")) {
-    addLog(`${bot.name}'s Pyros Gift: Seal of Halphas blocks ARTIFACTS.`);
+    addLog(`${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.shield.name} blocks ARTIFACTS.`);
     render();
     return;
   }
@@ -16604,6 +16612,7 @@ function afterRenderEffects() {
     return;
   }
   syncSealRings();
+  pyrosMarksAfterRender();
   watchSealTrigger();
   watchMoments();
   introAfterRender();
@@ -16723,14 +16732,20 @@ function renderTargetPanel() {
   `;
 }
 
-// ---------- personality glyphs: one small chalk mark per DAMNED type (replaces the emoji flags) ----------
+// ---------- personality glyphs: one small chalk mark per DAMNED type, drawn as a zodiac sign ----------
 const PERSONALITY_GLYPHS = {
-  Anchor: '<circle cx="12" cy="4.2" r="1.7"/><path d="M12 6v14.5M7.6 9.2h8.8M4.6 13.4c.4 4.3 3.4 7.2 7.4 7.3 4-.1 7-3 7.4-7.3M4.6 13.4l-1.3 1.5M19.4 13.4l1.3 1.5"/>',
-  Analyst: '<path d="M12 2.8 21.4 19.6H2.6Z"/><path d="M7.4 14.4c2.6-3.1 6.6-3.1 9.2 0-2.6 3.1-6.6 3.1-9.2 0Z"/><circle cx="12" cy="14.4" r="1.15"/>',
-  Follower: '<path d="M3.5 6.2 9.6 12l-6.1 5.8M10.6 6.2l6.1 5.8-6.1 5.8"/><path d="M19.2 9.4v5.2"/>',
-  Stubborn: '<path d="M12 21v-8.6M12 12.4C10.2 6 3 5.7 3 10.6c0 2.9 3.7 3.2 4.1.4M12 12.4C13.8 6 21 5.7 21 10.6c0 2.9-3.7 3.2-4.1.4"/><path d="M8.6 21h6.8"/>',
-  Drifter: '<path d="M2.6 9.2c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4M2.6 15.6c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4"/>',
-  Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
+  // Taurus: a circle with the bull's horns resting on top
+  Anchor: '<circle cx="12" cy="15.1" r="5.4"/><path d="M4.4 3.6C5.6 7.6 8.4 9.7 12 9.7s6.4-2.1 7.6-6.1"/>',
+  // Sagittarius: the archer's arrow, pointing up-right, with a crossbar on the shaft
+  Analyst: '<path d="M4 20 20 4M12.4 4H20v7.6M6.4 11.6l6 6"/>',
+  // Gemini: two pillars between two curved bars
+  Follower: '<path d="M4.6 4.2c4.9 1.7 9.9 1.7 14.8 0M4.6 19.8c4.9-1.7 9.9-1.7 14.8 0M9 5.5v13M15 5.5v13"/>',
+  // Aries: the ram's horns on a stem
+  Stubborn: '<path d="M12 20.6V9.8M12 9.8C11 5.2 7.9 3.4 5.6 4.1 3.5 4.8 2.9 7.6 4.2 9.2c1 1.2 2.8 1 3.3-.4M12 9.8c1-4.6 4.1-6.4 6.4-5.7 2.1.7 2.7 3.5 1.4 5.1-1 1.2-2.8 1-3.3-.4"/>',
+  // Aquarius: two zigzag waves of water
+  Drifter: '<path d="M2.8 10.4 6.6 6.8l3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6M2.8 17.2l3.8-3.6 3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6"/>',
+  // Cancer: two claws curling into each other
+  Caller: '<circle cx="7" cy="9.3" r="2.7"/><path d="M7 6.6c4.3-1.9 9.9-1.6 13.6 2.3"/><circle cx="17" cy="14.7" r="2.7"/><path d="M17 17.4c-4.3 1.9-9.9 1.6-13.6-2.3"/>'
 };
 
 // SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
@@ -16784,7 +16799,13 @@ function bossTooltipTitle(bot) {
   return bot.passiveKeys.map((key) => botPassiveKeyName(key)).join(" + ");
 }
 
-function bossGlyphHtml(bot) {
+// a BOSS without its PYROS-TECH abilities (those are shown by their own marks)
+function botWithoutPyrosGifts(bot) {
+  return { ...bot, passiveKeys: (bot.passiveKeys || []).filter((key) => !PYROS_GIFT_PASSIVES[key]), buffPassiveKey: null };
+}
+
+function bossGlyphHtml(realBot) {
+  const bot = botWithoutPyrosGifts(realBot);
   const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
   const tooltip = glyphTooltipHtml(
     bossTooltipTitle(bot),
@@ -16798,16 +16819,131 @@ function bossGlyphHtml(bot) {
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
-// a DAMNED that was given an ability (Pyros's gift) shows a diamond; hovering it names the ability
+// PYROS-TECH: each ability Pyros hands out has its own alchemical mark, red, on the name row left of the zodiac
+// sign (a BOSS's: left of its pentagram); hovering it names the ability. Same 24x24 line style as the other marks.
+const PYROS_GIFT_MARKS = {
+  // Cinnabar: two ezh (3) shapes with a line through them
+  metabolism: '<path d="M3.4 6h6.8L6.1 10.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M12.4 6h6.8l-4.1 4.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M2.4 9.2h19.2"/>',
+  // Acid: a cross with flat caps on every arm
+  fumes: '<path d="M12 3v18M3.4 12h17.2M9.4 3h5.2M9.4 21h5.2M3.4 9.4v5.2M20.6 9.4v5.2"/>',
+  // Vitriol: a circle with a vertical diameter and one horizontal radius
+  thief: '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2M12 12h8.6"/>',
+  // Sulphur (black sulphur): a double cross standing on an infinity loop
+  spite: '<path d="M12 2.6v14.2M9 5.2h6M6.8 9.2h10.4M12 16.8C10.3 14.6 8.9 13.4 7.1 13.4a3.4 3.4 0 0 0 0 6.8c1.8 0 3.2-1.2 4.9-3.4s3.1-3.4 4.9-3.4a3.4 3.4 0 0 1 0 6.8c-1.8 0-3.2-1.2-4.9-3.4"/>',
+  // Fortis (aqua fortis): a downward triangle whose right side is the stem of an F
+  wideCrit: '<path d="M2.8 4.6h12.4L9 20.2Z"/><path d="M15.2 4.6h5.8M12.8 10.6h5.6"/>',
+  // Regia (aqua regia): a downward triangle whose right side is the stem of an R
+  shield: '<path d="M2.6 4.6h11.6L8.4 20.2Z"/><path d="M14.2 4.6h2.6a3.3 3.3 0 0 1 0 6.6h-5.2M14.7 11.2l5.9 9"/>',
+  // Vitaea (spirit of wine): three small circles joined in a V
+  lamb: '<circle cx="6.4" cy="5.8" r="2.6"/><circle cx="17.6" cy="5.8" r="2.6"/><circle cx="12" cy="18.2" r="2.6"/><path d="M7.5 8.2l3.4 7.6M16.5 8.2l-3.4 7.6"/>'
+};
+
+function botPyrosGiftKeys(bot) {
+  return [...new Set([...(bot?.passiveKeys || []), bot?.buffPassiveKey].filter((key) => key && PYROS_GIFT_PASSIVES[key]))];
+}
+
+function pyrosGiftGlyphHtml(key) {
+  const gift = PYROS_GIFT_PASSIVES[key];
+  const mark = PYROS_GIFT_MARKS[key];
+  if (!gift || !mark) return "";
+  const tooltip = glyphTooltipHtml(gift.name, "PYROS-TECH", gift.description);
+  return `<span class="bot-glyph pyros-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${mark}</svg></span>`;
+}
+
+function pyrosGiftGlyphsHtml(bot) {
+  return botPyrosGiftKeys(bot).map((key) => pyrosGiftGlyphHtml(key)).join("");
+}
+
+// the marks block, in the order the abilities were gained; layoutPyrosMarks() places it beside the name row
+function pyrosMarksHtml(bot) {
+  const count = botPyrosGiftKeys(bot).length;
+  if (!count) return "";
+  return `<div class="pyros-marks" data-count="${count}">${pyrosGiftGlyphsHtml(bot)}</div>`;
+}
+
+// Places each card's PYROS-TECH marks on the name row, just left of the first sign (the zodiac sign, or a BOSS's
+// pentagram), without moving the name or the sign: the block floats beside the centred line. Marks match the
+// sign's size and shrink only when the room left of the line is short. Many marks that would get too small in
+// one row go on two rows, beside the name and the personality line below it. Nothing is ever covered.
+function pyrosOffsetIn(el, card) {
+  let x = 0;
+  let y = 0;
+  let node = el;
+  while (node && node !== card) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent;
+  }
+  return node === card ? { x, y } : null;
+}
+
+function layoutPyrosMarks() {
+  document.querySelectorAll("#app .bot-card .pyros-marks").forEach((block) => {
+    const card = block.closest(".bot-card");
+    const title = card?.querySelector(".bot-title");
+    const sign = title?.querySelector(".bot-glyph") || title?.querySelector(".bot-name");
+    const signAt = sign && pyrosOffsetIn(sign, card);
+    if (!signAt || !card.offsetWidth) return;
+    const count = Math.max(1, Number(block.dataset.count) || block.children.length);
+    const gap = parseFloat(getComputedStyle(block).columnGap) || 3;
+    const lineGap = parseFloat(getComputedStyle(title).columnGap) || gap;
+    const maxSize = sign.offsetHeight || 19;
+    const edge = (parseFloat(getComputedStyle(card).paddingLeft) || 0) + 2;
+    const right = signAt.x - lineGap;
+    const signMiddle = signAt.y + sign.offsetHeight / 2;
+    // one row, centred on the sign
+    let rows = 1;
+    let blockRight = right;
+    let size = Math.min(maxSize, (right - edge - (count - 1) * gap) / count);
+    // two rows (the first beside the sign, the second under it), left of the personality line too
+    const type = card.querySelector(".bot-type");
+    const typeAt = type && pyrosOffsetIn(type, card);
+    if (count > 1 && size < maxSize * 0.8 && typeAt && type.textContent.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(type);
+      const cardBox = card.getBoundingClientRect();
+      const scale = cardBox.width / card.offsetWidth || 1;
+      const typeTextLeft = (range.getBoundingClientRect().left - cardBox.left) / scale - card.clientLeft;
+      const right2 = Math.min(right, typeTextLeft - lineGap);
+      const cols2 = Math.ceil(count / 2);
+      const bottom = typeAt.y + type.offsetHeight;
+      const twoRows = Math.min(maxSize, (right2 - edge - (cols2 - 1) * gap) / cols2, (bottom - signMiddle - gap) / 1.5);
+      if (twoRows > size) {
+        rows = 2;
+        size = twoRows;
+        blockRight = right2;
+      }
+    }
+    size = Math.max(0, Math.floor(size));
+    const cols = Math.ceil(count / rows);
+    const width = cols * size + (cols - 1) * gap;
+    block.style.setProperty("--pyros-size", `${size}px`);
+    block.style.setProperty("--pyros-cols", String(cols));
+    block.style.left = `${Math.floor(blockRight - width)}px`;
+    block.style.top = `${Math.round(signMiddle - size / 2)}px`;
+    block.style.visibility = size >= 6 ? "visible" : "hidden";
+  });
+}
+
+let pyrosMarksResizeBound = false;
+function pyrosMarksAfterRender() {
+  layoutPyrosMarks();
+  if (pyrosMarksResizeBound) return;
+  pyrosMarksResizeBound = true;
+  window.addEventListener("resize", () => requestAnimationFrame(layoutPyrosMarks));
+  // the card text font arriving can move the name row
+  document.fonts?.ready?.then(() => layoutPyrosMarks());
+}
+
+// any other ability a DAMNED carries (not PYROS-TECH) still shows as a diamond; hovering it names the ability
 const GIFT_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.2 12 12 21.4 4.8 12Z"/><path d="M12 7.4 15.6 12 12 16.6 8.4 12Z" fill="currentColor" stroke="none" opacity="0.55"/></svg>`;
 
 function giftGlyphHtml(bot) {
-  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean);
+  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter((key) => key && !PYROS_GIFT_PASSIVES[key]);
   if (!keys.length) return "";
   const title = keys.map((key) => botPassiveKeyName(key)).join(" + ");
   const body = keys.map((key) => botPassiveKeyDescription(key)).filter(Boolean).join(" ");
-  const label = bot.buffPassiveKey ? "PYROS'S GIFT" : "ABILITY";
-  const tooltip = glyphTooltipHtml(title, label, body);
+  const tooltip = glyphTooltipHtml(title, "ABILITY", body);
   return `<span class="bot-glyph gift-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${GIFT_GLYPH_SVG}</span>`;
 }
 
@@ -16888,7 +17024,7 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
+  // a DAMNED's PYROS-TECH abilities float left of the name row (any other ability is the diamond), not in the personality line
   const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
@@ -16974,6 +17110,7 @@ function renderBot(bot, pendingPick) {
       ${hit.flash}
       ${deathBadge}
       ${markBadge}
+      ${isDown ? "" : pyrosMarksHtml(bot)}
       ${bot.isBoss && !isDown ? bossStolenTagHtml(bot) : ""}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
@@ -18121,6 +18258,8 @@ function drawCloth(rig, t) {
    Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
+// set once Satan's first-win speech (SATAN_FIRST_VICTORY_LINES) has been seen to its end or skipped
+const SATAN_FIRST_VICTORY_STORAGE_KEY = "dearthFirstVictorySeenV1";
 const INTRO_BLACK_MS = 5000; // silence before the bell
 const INTRO_LETTER_MS = 34; // typing speed
 const INTRO_PACT_DELAY_MS = 1100; // pause after round 2 resolves before Satan speaks
@@ -18183,7 +18322,19 @@ const INTRO_PACT_LINES = [
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
-// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact
+// the first time a player ever wins the main game (once per player, like the story; then SATAN_VICTORY_LINES)
+const SATAN_FIRST_VICTORY_LINES = [
+  ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
+  ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
+  ["satan", "I hope you didn't think this was actually the end, did you? Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right?"],
+  ["satan", "But it's not all doom and gloom my beloved minion. Me and my unholy buddies had so much fun watching you squirm and condemn the other sods, we decided to start betting on results of the games! Isn't that wonderful, all your hard work paid off and now I can finally open my very own casino, right here in purgatory!"],
+  ["satan", "Don't get your hopes too high up now tho buddy. It's not like you or any of the other vermin will get to play with the big boys. But you, and all other DAMNED to whom I share my gifts will play a very important role. You see, the Devil don't lose, so every round I shall be asking for little favors from you lot, to skew the odds and win big against the other demons!"],
+  ["satan", "However I respect and admire good work and dedication, so in all my gratitude I will allow you, my mortal minions to use the FAVOR you earn on one of my sweet sweet slot machines! So please, keep the SIN flowing and the sinners screaming, and maybe we shall meet again."],
+  ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
+];
+
+// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact;
+// every win after the first one
 const SATAN_VICTORY_LINES = [
   ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
   ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
@@ -18236,6 +18387,25 @@ function markIntroSeen() {
   try {
     window.localStorage?.setItem(INTRO_SEEN_STORAGE_KEY, "1");
   } catch (error) {}
+}
+
+// Satan's first-win speech plays until it has been seen once (to its end or skipped)
+function satanFirstVictoryPending() {
+  try {
+    return window.localStorage?.getItem(SATAN_FIRST_VICTORY_STORAGE_KEY) !== "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function markSatanFirstVictorySeen() {
+  try {
+    window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+  } catch (error) {}
+}
+
+function satanVictoryLines() {
+  return satanFirstVictoryPending() ? SATAN_FIRST_VICTORY_LINES : SATAN_VICTORY_LINES;
 }
 
 function introActive() {
@@ -18750,7 +18920,9 @@ function introStartPactNow() {
 /* ---- Satan returns: the 8 unique BOSSES are beaten ----
    state.satanVictoryDue is set when the 8th unique BOSS falls; the round's results then wait for him
    (Next Round brings him in at once), like the pact after round 2. Same entrance and box as the pact,
-   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). */
+   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). The very first win
+   of a player gets SATAN_FIRST_VICTORY_LINES instead; it counts as seen when he leaves (end or skip), so a
+   game closed in the middle of it shows it again at the next win. */
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
@@ -18789,7 +18961,7 @@ function startSatanVictoryNow() {
 function startSatanVictory() {
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = true;
-  satanOpenScene("victory", SATAN_VICTORY_LINES, "satan-victory-layer");
+  satanOpenScene("victory", satanVictoryLines(), "satan-victory-layer");
   saveArcadeRun();
 }
 
@@ -18815,6 +18987,7 @@ function satanOpenScene(phase, lines, layerClass) {
 }
 
 function satanVictoryLeave() {
+  if (introState.phase === "victory") markSatanFirstVictorySeen();
   satanLeaveScene("victory");
 }
 
@@ -21231,7 +21404,7 @@ document.addEventListener("keydown", (event) => {
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
    SEAL, the deal stays locked until your next BOSS kill.
 
-   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT right below. Edit them
+   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT(_FOR) right below. Edit them
    freely. The first word of each line is who speaks (satan / you). Words in {CAPS} are filled in by the
    game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q}. {SIN} draws the SIN icon.
    Each key holds a list of lines said one after another.
@@ -21259,94 +21432,111 @@ document.addEventListener("keydown", (event) => {
 const SATAN_DEAL_LINES = {
   // first time you open the deal in a run
   open: [
-    ["satan", "Well well, look who came crawling to me. Things not going so great down there, flesh puppet?"],
-    ["satan", "I'm feeling generous today. One deal, just one, so make it count. Tell me what you want and I'll tell you what it costs."]
+    ["satan", "Well well well, look who it is again, my loathsome little minion. So, what does your wretched heart desire?"]
   ],
   // every time after that, until the deal is made
-  openAgain: [["satan", "Back again? Spit it out, what do you want?"]],
+  openAgain: [["satan", "You got nerve calling me again whippersnapper, so come on spit it out."]],
   // the box under his line, where you type
   askPlaceholder: "Tell him what you want...",
 
   // asked for something he does not understand ({Q} is what you typed)
-  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for nonsense. Make a reasonable request before eternity catches up with you little puppet."]],
+  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for your nonsense. Make a reasonable request before eternity catches up with you mortal."]],
   // things he never gives
-  angel: [["satan", "Feathers? You come to ME and ask for feathers? Go pray to your little Archangels, see how far that gets you."]],
+  angel: [["satan", "Feathers? You come to ME and ask for feathers? You must be out of your mind. Go pray to your little Archangels, see how far that gets you."]],
   trinity: [["satan", "That one belongs to the big guy upstairs. Even I don't touch his toys."]],
-  saturn: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
-  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me. Bah. Lambs."]],
-  locked: [["satan", "That one isn't in my vault yet. Earn it first, then we talk."]],
-  bound: [["satan", "You already have that demon on a leash, and for free. Greedy little thing, aren't you?"]],
-  notDemon: [["satan", "That's not one of my demons. I only deal in what's mine."]],
+  // the Planetary SEALS: Seals of Saturn, Moon and Mars
+  planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
+  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
+  bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
+  notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
   // SEAL or ELITE before every SEAL slot is open
-  tooEarly: [["satan", "My demons don't serve nobodies. Open every SEAL slot you can, then come begging."]],
-  sealOwned: [["satan", "You already carry {SEAL}. If you want it stronger, ask for an ELITE."]],
-  eliteWhich: [["satan", "An ELITE on what? Name the SEAL, genius."]],
-  eliteNotOwned: [["satan", "You can't make stronger something you don't even have."]],
-  eliteCannot: [["satan", "{SEAL} can't get any stronger. Not even I can change that."]],
-  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. Ask me later."]],
+  tooEarly: [["satan", "Listen here you ungrateful worm, I ain't gonna do all the work for you. Open every SEAL slot you can, then you may come begging again."]],
+  sealOwned: [["satan", "You already control the {SEAL}. If you want to increase its power, ask for an ELITE."]],
+  eliteWhich: [["satan", "An ELITE of what? Name the SEAL."]],
+  eliteNotOwned: [["satan", "You can't increase the power of something you don't have."]],
+  eliteCannot: [["satan", "{SEAL} can't get any stronger. Does your avarice know no limit? I can respect that."]],
+  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. It would be very rude to do that. Did your mother never teach you manners?"]],
   // the 50% / 80% roll says no: the deal locks until the next BOSS kill
   sealRefused: [
-    ["satan", "{DEMON} doesn't feel like serving you. Can't say I blame him."],
-    ["satan", "Go kill another BOSS. Maybe I'll be in a better mood after that."]
+    ["satan", "{DEMON} doesn't feel like serving you right now. Can't say I blame him."],
+    ["satan", "You are starting to bore me. Go kill another BOSS. Maybe I'll be in a better mood after that."]
   ],
-  noRoomSeal: [["satan", "There's no room for another demon on you, and I'm not doing your tidying for you."]],
-  handsFull: [["satan", "Your hands are full of junk already. Make some room before you ask for more."]],
-  fullHealth: [["satan", "You're not even bleeding. Come back when it hurts."]],
+  noRoomSeal: [["satan", "My demons start complaining when they feel crammed, try opening up some more room for now."]],
+  handsFull: [["satan", "Your little fleshy hands are already full. Make some room before you ask for more."]],
+  fullHealth: [["satan", "There's only so much SOUL your puny human body can have, and you already have more than enough."]],
   sinHowMuch: [["satan", "How much SIN{SIN}? Give me a number."]],
   killWho: [["satan", "Kill who? Give me a name."]],
-  killBoss: [["satan", "BOSSES you deal with yourself. I only take the small fry."]],
-  satanSealNotEmpty: [["satan", "My own SEAL? Ha! It doesn't share a home with other demons. Empty every slot, then ask me again."]],
-  cheatDeathAlready: [["satan", "I already promised to drag you back once. Don't push your luck."]],
+  killBoss: [["satan", "BOSSES you deal with yourself cowboy. I only take the small fry."]],
+  satanSealNotEmpty: [["satan", "My own SEAL? Ha! If you wanna deal hard you best be ready to pay even harder! Empty every slot, then ask me again."]],
+  cheatDeathAlready: [["satan", "One chance is all you get my sweet summer slave. Don't push your luck, and back to work!"]],
 
   // offers: the last line of an offer is followed by YES / NO
-  artifact: [["satan", "{ITEM}? Cheap trinket. Fine, it's yours for {PRICE}."]],
+  artifact: [["satan", "{ITEM}? A fine fetish. It's yours for {PRICE}."]],
   artifacts: [["satan", "{COUNT} of {ITEM}? Somebody's planning a party. That will be {PRICE}."]],
-  artifactsCapped: [["satan", "Four. That's all I'll part with."]],
-  elite: [["satan", "An ELITE on {SEAL}? Done. It'll cost you {PRICE}."]],
+  artifactsCapped: [["satan", "Four. That's all you get you greedy git."]],
+  elite: [["satan", "An ELITE on {SEAL}? Consider it done, your bill is {PRICE}."]],
   eliteOther: [
-    ["satan", "Hmm. My demons tell me it's {OTHER} that's ready to grow, not {SEAL}."],
-    ["satan", "If you want it on {OTHER}, it's {PRICE}."]
+    ["satan", "Nahh, I think {OTHER} is a way better choice than {SEAL}."],
+    ["satan", "So for an ELITE {OTHER} it's gonna run you {PRICE}."]
   ],
-  seal: [["satan", "{DEMON} agrees to serve you. For that, I take {PRICE}."]],
-  heal: [["satan", "A little blood transfusion? {N} SOUL, and in return {PRICE}."]],
+  seal: [["satan", "{DEMON} agrees to serve you, but my services are gonna cost ya {PRICE}."]],
+  heal: [["satan", "A little spirit infusion? You get {N} SOUL, and in return I want {PRICE}."]],
   healTooMuch: [
-    ["satan", "{ASKED} SOUL? HAHAHA! You must be out of your mind."],
-    ["satan", "I'll give you {N}, and you'll thank me for it. In return, {PRICE}."]
+    ["satan", "{ASKED} SOUL? Do you think that stuff grows on trees? Trees don't have souls, ol' capital G said so."],
+    ["satan", "I'll give you {N}, and that's all you're getting. In return you best pay {PRICE}."]
   ],
-  sin: [["satan", "{N} SIN{SIN}, coming right up. In return, {PRICE}."]],
-  sinCapped: [["satan", "That much would kill you, and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return, {PRICE}."]],
-  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but {PRICE}."]],
-  uses: [["satan", "{N} more ARTIFACT use this round? Sure. Then {PRICE}."]],
-  usesTwo: [["satan", "Two more ARTIFACT uses this round? Greedy. Then {PRICE}."]],
-  usesTooMany: [["satan", "Two, or nothing. Don't get greedy with me."]],
+  sin: [["satan", "{N} SIN{SIN}, sure can do. But I'd like to see {PRICE} first."]],
+  sinCapped: [["satan", "That much would kill you dear lad and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return I'll be taking {PRICE}."]],
+  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but it's still gonna cost ya {PRICE}."]],
+  uses: [["satan", "{N} more ARTIFACT use this round? I can do that, but you'll have to pay me {PRICE}."]],
+  usesTwo: [["satan", "Two more ARTIFACT uses this round? Somebody's planning to make some moves I see. The price is {PRICE}."]],
+  usesTooMany: [["satan", "Two, or nothing. Don't you start getting greedy with me my little pawn."]],
   cheatDeath: [
-    ["satan", "Cheating death, now that's my kind of deal. Next time you drop, I'll drag you back up."],
-    ["satan", "The price? I'll pick it when you're lying on the floor."]
+    ["satan", "Cheating death, now that's my kind of deal. When you croak for the second time now in your pitiful existence, I'll drag you right back up."],
+    ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
-  satanSeal: [["satan", "My own SEAL, on an empty soul? You know what, I like you. No charge."]],
+  satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
   // the question after every offer (said on the same line as the price)
-  question: [["satan", "Do we have a deal, flesh puppet?"]],
+  question: [["satan", "Do we have a deal?"]],
 
   // after YES
   signed: [["satan", "Pleasure doing business with you."]],
   // after NO: the chance is gone for this run
-  refused: [["satan", "Your loss. Don't come crawling back, you had your chance."]]
+  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]]
 };
 
-// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name)
+// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name).
+// Each one is a "thing you pay", so it reads after any of his lead-ins: "it's yours for ...", "that will be ...",
+// "your bill is ...", "it's gonna run you ...", "cost ya ...", "I want ...", "you best pay ...", "pay me ...",
+// "the price is ..." (and the log's "you got X for ..."). Several parts are joined with commas and "and".
 const SATAN_DEAL_PRICE_TEXT = {
   hp: "{N} of your SOUL",
   sin: "{N} SIN{SIN}",
-  useCap: "only one ARTIFACT a round for the next {M} rounds",
-  useCapZero: "no ARTIFACTS at all for the next {M} rounds",
-  shopClosed: "my Offerings closed to you for {M} rounds",
-  bossHealth: "the next BOSS walks in with {N}% more SOUL",
-  bossBounty: "its BOSS BOUNTY goes to me",
+  useCap: "all but one ARTIFACT use a round for the next {M} rounds",
+  useCapZero: "every ARTIFACT use you get for the next {M} rounds",
+  shopClosed: "{M} rounds without my Offerings",
+  bossHealth: "{N}% more SOUL for the next BOSS",
+  bossBounty: "its BOSS BOUNTY",
   loseSeal: "your {SEAL}",
   damageTaken: "{N}% more pain for {M} rounds",
-  noArtifacts: "no ARTIFACTS for a round",
-  keepBounty: "its BOUNTY goes to me",
+  noArtifacts: "your ARTIFACTS for a round",
+  keepBounty: "the BOUNTY on their head",
   nothing: "nothing at all"
+};
+
+// the same parts, worded to fit one particular offer line (its key in SATAN_DEAL_LINES) where the usual
+// wording would not: anything not listed here uses SATAN_DEAL_PRICE_TEXT
+const SATAN_DEAL_PRICE_TEXT_FOR = {
+  // "But I'd like to see {PRICE} first."
+  sin: {
+    bossHealth: "the next BOSS joining the game with {N}% more SOUL",
+    bossBounty: "its BOSS BOUNTY in my pocket"
+  },
+  // "In return I'll be taking {PRICE}."
+  sinCapped: {
+    bossHealth: "your word that the next BOSS joins the game with {N}% more SOUL"
+  }
 };
 
 // the YES / NO buttons, and the buttons under the box where you type
@@ -21667,8 +21857,16 @@ function satanPactFill(text, vars = {}) {
   return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
 }
 
-function satanPactPartText(part) {
-  const t = SATAN_DEAL_PRICE_TEXT;
+// the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
+function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
+  if (part.type === "bossHealth") {
+    const health = satanPactFill(t.bossHealth, { N: part.pct });
+    return part.zeroBounty ? [health, t.bossBounty] : [health];
+  }
+  return [satanPactPartText(part, t)];
+}
+
+function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
   switch (part.type) {
     case "hp":
       return satanPactFill(t.hp, { N: part.n });
@@ -21679,7 +21877,7 @@ function satanPactPartText(part) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactFill(t.bossHealth, { N: part.pct }) + (part.zeroBounty ? `, and ${t.bossBounty}` : "");
+      return satanPactPartTexts(part, t).join(" and ");
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
@@ -21693,9 +21891,11 @@ function satanPactPartText(part) {
   }
 }
 
-function satanPactPriceText(parts) {
-  const texts = parts.map(satanPactPartText).filter(Boolean);
-  if (!texts.length) return SATAN_DEAL_PRICE_TEXT.nothing;
+// lineKey: the offer line the price is said in (its key in SATAN_DEAL_LINES), for SATAN_DEAL_PRICE_TEXT_FOR
+function satanPactPriceText(parts, lineKey = null) {
+  const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
+  const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
+  if (!texts.length) return t.nothing;
   if (texts.length === 1) return texts[0];
   return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
 }
@@ -21787,7 +21987,8 @@ function satanPactSealOffer(id) {
   const section = satanPactSealSection(id);
   if (SELF_STACKING_SEAL_IDS.has(id) || section === "archangel") return { refuse: "angel" };
   if (section === "trinity") return { refuse: "trinity" };
-  if (section === "saturn") return { refuse: "saturn" };
+  // the Planetary SEALS (Saturn, Moon, Mars) are Solomon's pentacles
+  if (["saturn", "artifact", "poison"].includes(section)) return { refuse: "planetary" };
   if (section === "apocalypse") return { refuse: "apocalypse" };
   if (section === "satan") return satanPactSatanSealOffer();
   if (!SATAN_PACT_GOETIC_IDS.has(id)) return { refuse: "notDemon" };
@@ -21914,13 +22115,19 @@ function satanPactAnswer(text) {
   }
 }
 
+// which SATAN_DEAL_LINES key an offer's price is said in (the one holding its last line)
+function satanPactLineKey(lines) {
+  const last = lines?.[lines.length - 1]?.[1];
+  return Object.keys(SATAN_DEAL_LINES).find((key) => Array.isArray(SATAN_DEAL_LINES[key]) && SATAN_DEAL_LINES[key].some((line) => line[1] === last)) || null;
+}
+
 // the lines Satan says for an answer (offers end with the question)
 function satanPactAnswerLines(answer) {
   const vars = { ...(answer.vars || {}) };
   if (answer.refuse) {
     return (SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   }
-  vars.PRICE = satanPactPriceText(answer.price);
+  vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   // the question goes on the same line as the price, so YES / NO sit right under it
   const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
@@ -22060,7 +22267,7 @@ function satanPactRefuse() {
   pact.used = true;
   pact.outcome = "refused";
   pact.offer = null;
-  addLog("You refused Satan's deal. He will not offer again this run.");
+  addLog("You refused Satan's deal. He shall not offer a deal again this run.");
 }
 
 // a request: an offer waits for YES / NO; a refusal maybe locks the deal; returns the lines to say
@@ -22257,11 +22464,11 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He will not offer again this run.";
+    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
-    tooltip = "Satan is not listening. Kill another BOSS.";
+    tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {
-    tooltip = "Not right now.";
+    tooltip = "Gone fishing.";
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
   const urgent = satanPactPulseUrgent();
