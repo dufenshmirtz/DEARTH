@@ -238,6 +238,9 @@ const BOT_HP_BONUS_PER_BOSS_ENDLESS = 50;
 const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
+// the first Goetic BOSS arrives with this much SOUL, a hard step up from the main game (the twins hold ~445 together);
+// every BOSS after it adds BOSS_HP_BONUS_PER_SPAWN_ENDLESS and the endless factor below, as before
+const ENDLESS_FIRST_BOSS_HP = 888;
 const HP_EXPONENTIAL_RATE = 1.2;
 // After the main game each Goetic BOSS multiplies BOSS SOUL by 1 + RATE + RATE_STEP x depth
 // (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
@@ -7826,12 +7829,25 @@ function botHealthBonus() {
 }
 
 function bossHealthBonus() {
-  return scalingBonus(
-    state.bossSpawnCount,
+  const spawned = state.bossSpawnCount || 0;
+  const bonus = scalingBonus(
+    spawned,
     BOSS_HP_BONUS_PER_SPAWN,
     BOSS_HP_BONUS_PER_SPAWN_LATE,
     BOSS_HP_BONUS_PER_SPAWN_ENDLESS
   );
+  return spawned >= ENDLESS_SCALING_BREAKPOINT_BOSSES ? bonus + endlessBossHealthJump() : bonus;
+}
+
+// one-time step after the main game, so the first Goetic BOSS starts at ENDLESS_FIRST_BOSS_HP base SOUL
+function endlessBossHealthJump() {
+  const atFirstDemon = 80 + scalingBonus(
+    ENDLESS_SCALING_BREAKPOINT_BOSSES,
+    BOSS_HP_BONUS_PER_SPAWN,
+    BOSS_HP_BONUS_PER_SPAWN_LATE,
+    BOSS_HP_BONUS_PER_SPAWN_ENDLESS
+  );
+  return Math.max(0, ENDLESS_FIRST_BOSS_HP - atFirstDemon);
 }
 
 function hpExponentialFactor(progressAfterFirstEight) {

@@ -21,6 +21,9 @@ const BOT_HP_BONUS_PER_BOSS_ENDLESS = 50;
 const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
+// the first Goetic BOSS arrives with this much SOUL, a hard step up from the main game (the twins hold ~445 together);
+// every BOSS after it adds BOSS_HP_BONUS_PER_SPAWN_ENDLESS and the endless factor below, as before
+const ENDLESS_FIRST_BOSS_HP = 888;
 const HP_EXPONENTIAL_RATE = 1.2;
 // After the main game each Goetic BOSS multiplies BOSS SOUL by 1 + RATE + RATE_STEP x depth
 // (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:

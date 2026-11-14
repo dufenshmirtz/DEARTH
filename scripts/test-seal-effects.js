@@ -1627,9 +1627,16 @@ test("Goetic BOSS SOUL growth speeds up with depth and leaves the main game alon
       assert.ok(growth > previousGrowth);
       previousGrowth = growth;
     }
+    // the main game keeps its steps (last unique BOSS: 80 + 365 before the twins' 0.5 each)
+    state.bossSpawnCount = 7;
+    assert.equal(80 + bossHealthBonus(), 445);
+    // the first demon jumps to 888, then +150 per demon and the endless factor
     state.bossSpawnCount = 8;
     const first = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
-    assert.equal(first.maxHp, 500);
+    assert.equal(first.maxHp, 888);
+    state.bossSpawnCount = 9;
+    const second = createBot({ boss: true, bossSpec: { goeticKey: "paimon" } });
+    assert.equal(second.maxHp, Math.ceil(1038 * 1.09));
     state.bossSpawnCount = 27;
     const deep = createBot({ boss: true, bossSpec: { goeticKey: "agares" } });
     assert.ok(deep.maxHp > 50000);
