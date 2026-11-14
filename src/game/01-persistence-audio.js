@@ -53,6 +53,7 @@ function loadDisplaySettings() {
       if (Number.isFinite(saved.screenShake)) state.display.screenShake = clamp(Math.round(saved.screenShake), 0, 2);
       if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
       if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
+      if (Number.isFinite(saved.guideText)) state.display.guideText = clamp(Math.round(saved.guideText), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -72,6 +73,7 @@ function applyDisplaySettings() {
   else document.body.style.removeProperty("--boil-duration");
   document.body.classList.toggle("reduce-flashes", !state.display.flashes);
   document.body.classList.toggle("text-large", Boolean(state.display.textSize));
+  document.body.classList.toggle("hide-guide-text", state.display.guideText === 0);
   document.body.dataset.animSpeed = String(animSpeed());
 }
 

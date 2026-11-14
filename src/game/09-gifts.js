@@ -7,9 +7,8 @@
      (it then counts as defeated in the Collection and can be bound); the other kinds are SEALS by
      Collection section (GIFT_KINDS).
    Owned (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
-   The Planetary Seals, the Trinity and Anael are locked from the start and only gifts unlock them
-   (GIFT_ONLY_SEAL_IDS in 09-collection.js); the other locked SEALS can also still be earned by their
-   achievement. Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
+   Every locked SEAL can come from a gift or be earned by its achievement (SEAL_UNLOCKS in
+   09-collection.js). Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
 const GIFT_PACKS = [
   { key: "myrrh", name: "Myrrh", price: 44, odds: { goetia: 57, planet: 25, archangel: 10, boss: 4, apocalypse: 2.001, trinity: 1.333, satan: 0.666 } },
   { key: "frankincense", name: "Frankincense", price: 88, odds: { goetia: 36, planet: 35, archangel: 15, boss: 8, apocalypse: 4.001, trinity: 1.333, satan: 0.666 } },
@@ -102,6 +101,10 @@ function openGift(packKey) {
   if (duplicate && !free) progress.karma += refund;
   else if (kind === "goetia") progress.slain.push(item);
   else progress.unlocked.push(item);
+  // "Buy a Gold Jesus gift" opens the Seal of the Son (not with DEV infinite KARMA); a demon from a gift
+  // can also complete "Unlock all Demons" (Seal of the Father)
+  if (pack.key === "gold" && !free) progress.flags.goldGift = true;
+  evaluateSealUnlocks(true);
   saveCollectionProgress();
   const spec = kind === "goetia" ? GOETIC_BOSS_BY_KEY[item] : null;
   return {

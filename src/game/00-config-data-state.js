@@ -56,6 +56,7 @@ const ANIM_SPEED_VALUES = [1, 2, 4];
 const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
+const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -2216,7 +2217,8 @@ const state = {
     animSpeed: 1,
     screenShake: 2,
     flashes: 1,
-    textSize: 0
+    textSize: 0,
+    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Missions pay FAVOR." (body.hide-guide-text)
   },
   settingsTab: "audio",
   pauseOpen: false,

@@ -386,30 +386,54 @@ At the end of every round, the two DAMNED with the most POISON take 15 damage, l
 
 Unlockable Seals
 
-These SEALS start locked and never appear in the Devil's Offerings until their achievement is met once; then they stay unlocked forever. The list lives in SEAL_UNLOCKS (src/game/09-collection.js).
+These SEALS start locked and never appear in the Devil's Offerings until their achievement is met once (or one of Jesus' Gifts brings them); then they stay unlocked forever. The list lives in SEAL_UNLOCKS (src/game/09-collection.js).
 
-Seal of the White Horse: Spend 160 SIN in one round.
-Seal of the Red Horse: Have exactly 1 SOUL.
-Seal of the Black Horse: Score 8 CRITICAL hits in a row.
-Seal of the Pale Horse: Eliminate a BOSS that was at max SOUL.
-Seal of the Souls of Martyrs: Be at 100 SOUL and eliminate a DAMNED.
-Seal of Creation Uncreated: Beat the game without using a single ARTIFACT (defeat the 8 BOSSES).
-Seal of Silence in Heaven: Score 3 PENTAKILLS in a row.
-Seal of Zilon: Buy out three entire Devil's Offerings while Zilon is active.
-Seal of Kalha: Get six SEALS that are all ELITE level 1 or more.
-Seal of Pyros: Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability.
-Seal of Padma: Don't get a KO for 8 rounds in a row.
-Seal of Petros-Pavlos: Have 5 BOSSES active at the same time.
-Seal of Serafeim: Have Serafeim steal 0 SIN from you when he is first summoned.
-Seal of Threon: Use 4 ARTIFACTS in one round while Threon is active.
-Seal of Dantre: Score a PENTAKILL while Dantre is active.
-Seal of Satan: Have 666 SIN.
-Seal of Gabriel: Score 3 CRITICAL hits in a row.
-Seal of Michael: Beat the game 8 times (defeat the 8 BOSSES).
-Seal of Sachiel: Get a SEAL to ELITE level 6.
-Seal of Raphael: Eliminate 66 demons (Goetic BOSSES) in total.
-Seal of Cassiel: Eliminate 666 DAMNED in total.
-Seal of Samael: Eliminate 8 DAMNED named Yannis in total.
+Seal of the White Horse: Get a seal to Elite level 6.
+Seal of the Red Horse: Beat the game in under 30 rounds.
+Seal of the Black Horse: Eliminate a Boss that was at max SOUL.
+Seal of the Pale Horse: Score 8 critical hits in a row.
+Seal of the Souls of Martyrs: Have the round target be 160 or above.
+Seal of Creation Uncreated: Have 666 sin.
+Seal of Silence in Heaven: Score 3 Pentakills in a row.
+Seal of Zilon: Buy out three entire shops while Zilon is active in one game.
+Seal of Kalha: Get six seals that are all level 1 elite or more.
+Seal of Pyros: Defeat 8 Bosses other than Pyros that have been granted a PYROS-TECH ability in total.
+Seal of Padma: Don't get a KO for 8 consecutive rounds.
+Seal of Petros-Pavlos: Have 5 bosses active at the same time.
+Seal of Serafeim: Have Serafim steal 0 sin from you when he is first summoned.
+Seal of Threon: Use 4 artifacts in two consecutive rounds successfully while Threon is active.
+Seal of Dantre: Score 1 Pentakill while Dantre is active.
+Seal of Michael: Have exactly 1 SOUL.
+Seal of Gabriel: Beat the game 8 times (defeat the 8 bosses).
+Seal of Samael: Score 3 critical hits in a row.
+Seal of Raphael: Be at 100 SOUL and eliminate a Damned.
+Seal of Sachiel: Gain 66 sin in one round.
+Seal of Anael: Beat the game without using sin to reroll Devil's Offerings.
+Seal of Cassiel: Beat the game 24 times (beat the 8 bosses).
+Seal of Satan: Beat the game without buying a seal.
+Seal of the Father: Unlock all Demons.
+Seal of the Son: Buy a Gold Jesus gift.
+Seal of the Holy Spirit: Unlock all Archangels.
+First Pentacle of Saturn: Eliminate a Damned with 66 memory.
+Second Pentacle of Saturn: Have a single Damned reach 40 bounty or more.
+Third Pentacle of Saturn: Get 30 karma in one run.
+Fourth Pentacle of Saturn: Have 4 revealed Damned at the same time.
+Fifth Pentacle of Saturn: Have a non-boss Damned with more than 25 bounty and more than 25 memory.
+Sixth Pentacle of Saturn: Buy 8 items (seals or artifacts) in one round.
+Seventh Pentacle of Saturn: Eliminate 5 Stubborn Damned in a single round.
+1st Pentacle of the Moon: Eliminate in total 666 Damned.
+2nd Pentacle of the Moon: Eliminate in total 66 demons (end game bosses).
+3rd Pentacle of the Moon: Complete 66 Deals.
+4th Pentacle of the Moon: Reroll the Devil's Offerings 666 times.
+5th Pentacle of the Moon: Use a total of 666 artifacts.
+6th Pentacle of the Moon: Eliminate in total 8 Damned named Yannis.
+1st Pentacle of Mars: Have the round target be below 0.
+2nd Pentacle of Mars: Defeat an Archangel.
+3rd Pentacle of Mars: Discover 66 unique seals.
+4th Pentacle of Mars: Beat the first two bosses without buying a seal.
+5th Pentacle of Mars: Spend 160 sin in one round.
+6th Pentacle of Mars: Beat the game without falling below 50 SOUL.
+7th Pentacle of Mars: Discover 100 unique seals.
 
 Artifacts
 

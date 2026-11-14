@@ -7,72 +7,119 @@
    discovered (red).
 
    To lock another SEAL or change an achievement, edit SEAL_UNLOCKS below. Each entry is one of:
-     stat: lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
-     best: best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
-     flag: something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
-   with `goal` for stat/best. A new kind of achievement needs its counter recorded below
-   (search for collectionBump / collectionRaise / collectionFlag). */
+     stat:  lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
+     best:  best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
+     flag:  something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
+     value: a function reading progress kept elsewhere (demons, Archangels, discoveries, Records)
+   with `goal` for stat/best/value. A new kind of achievement needs its counter recorded below
+   (search for collectionBump / collectionRaise / collectionFlag). The texts are the designer's own
+   wording; descriptionHtml puts the keywords (SIN, SOUL, DAMNED...) in the game's style. Every locked
+   SEAL can also come from one of Jesus' Gifts. */
 
 const COLLECTION_STORAGE_KEY = "dearthCollectionV2";
 const COLLECTION_OLD_STORAGE_KEYS = ["dearthCollectionV1"]; // discovered SEALS are carried over
 
 const SEAL_UNLOCKS = {
   // Apocalypse Seals
-  p74: { best: "roundSpent", goal: 160, text: "Spend 160 SIN in one round." },
-  p75: { flag: "oneHealth", text: "Have exactly 1 SOUL." },
-  p76: { best: "critStreak", goal: 8, text: "Score 8 CRITICAL hits in a row." },
-  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max SOUL." },
-  p78: { flag: "fullHealthKill", text: "Be at 100 SOUL and eliminate a DAMNED." },
-  p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
-  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals (the Pentacles of Saturn p92-p97 and p110 are open from the start)
-  p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
-  p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
-  p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
-  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
-  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
-  p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
-  p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
-  p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
+  p74: { best: "eliteLevel", goal: 6, text: "Get a seal to Elite level 6" }, // White Horse
+  p75: { flag: "beatUnder30", text: "Beat the game in under 30 rounds" }, // Red Horse
+  p76: { flag: "fullHealthBossKill", text: "Eliminate a Boss that was at max SOUL" }, // Black Horse
+  p77: { best: "critStreak", goal: 8, text: "Score 8 critical hits in a row" }, // Pale Horse
+  p78: { best: "highestTarget", goal: 160, text: "Have the round target be 160 or above" }, // Souls of Martyrs
+  p79: { best: "sinHeld", goal: 666, text: "Have 666 sin" }, // Creation Uncreated
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Pentakills in a row" }, // Silence in Heaven
+  // Boss Seals
+  p121: { flag: "zilonBuyouts", text: "Buy out three entire shops while Zilon is active in one game" },
+  p122: { flag: "sixEliteSeals", text: "Get six seals that are all level 1 elite or more" }, // Kalha
+  p123: { stat: "pyrosBossKills", goal: 8, text: "Defeat 8 Bosses other than Pyros that have been granted a PYROS-TECH ability in total" },
+  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 consecutive rounds" }, // Padma
+  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 bosses active at the same time" }, // Petros-Pavlos
+  p126: { flag: "serafimNoSteal", text: "Have Serafim steal 0 sin from you when he is first summoned" },
+  p127: { flag: "threonArtifacts", text: "Use 4 artifacts in two consecutive rounds successfully while Threon is active" },
+  p128: { flag: "dantrePentakill", text: "Score 1 Pentakill while Dantre is active" },
   // Seal of Satan
-  p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
-  // the Archangel Seals (self-stacking since they swapped effects with the Pentacles of Saturn)
-  p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
-  p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
-  p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
-  p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
-  p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
-  p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
+  p111: { flag: "beatNoSealBought", text: "Beat the game without buying a seal" },
+  // the Archangel Seals
+  p99: { flag: "oneHealth", text: "Have exactly 1 SOUL" }, // Michael
+  p98: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 bosses)" }, // Gabriel
+  p109: { best: "critStreak", goal: 3, text: "Score 3 critical hits in a row" }, // Samael
+  p101: { flag: "fullHealthKill", text: "Be at 100 SOUL and eliminate a Damned" }, // Raphael
+  p100: { best: "roundGained", goal: 66, text: "Gain 66 sin in one round" }, // Sachiel
+  p103: { flag: "beatNoPaidReroll", text: "Beat the game without using sin to reroll Devil's Offerings" }, // Anael
+  p102: { stat: "gamesBeaten", goal: 24, text: "Beat the game 24 times (beat the 8 bosses)" }, // Cassiel
+  // Trinity Seals
+  p131: { value: () => collectionRealSlainCount(), goal: GOETIC_BOSS_TOTAL, text: "Unlock all Demons" }, // Father
+  p132: { flag: "goldGift", text: "Buy a Gold Jesus gift" }, // Son
+  p133: { value: () => collectionRealArchangelCount(), goal: ARCHANGEL_BOSS_SPECS.length, text: "Unlock all Archangels" }, // Holy Spirit
+  // Seals of Saturn
+  p97: { flag: "memoryKill66", text: "Eliminate a Damned with 66 memory" }, // 1st
+  p93: { best: "bountyHeld", goal: 40, text: "Have a single Damned reach 40 bounty or more" }, // 2nd
+  p92: { best: "runKarma", goal: 30, text: "Get 30 karma in one run" }, // 3rd
+  p95: { best: "revealedAtOnce", goal: 4, text: "Have 4 revealed Damned at the same time" }, // 4th
+  p110: { flag: "bountyMemory25", text: "Have a non-boss Damned with more than 25 bounty and more than 25 memory" }, // 5th
+  p94: { best: "roundBuys", goal: 8, text: "Buy 8 items (seals or artifacts) in one round" }, // 6th
+  p96: { best: "stubbornRoundKills", goal: 5, text: "Eliminate 5 Stubborn Damned in a single round" }, // 7th
+  // Seals of Moon (the Pentacles of the Moon)
+  p70: { stat: "eliminations", goal: 666, text: "Eliminate in total 666 Damned" }, // 1st
+  p135: { stat: "goeticKills", goal: 66, text: "Eliminate in total 66 demons (end game bosses)" }, // 2nd
+  p136: { value: () => collectionLifetimeDeals(), goal: 66, text: "Complete 66 Deals" }, // 3rd
+  p137: { stat: "rerolls", goal: 666, text: "Reroll the Devil's Offerings 666 times" }, // 4th
+  p138: { value: () => collectionLifetimeArtifactUses(), goal: 666, text: "Use a total of 666 artifacts" }, // 5th
+  p139: { stat: "yannisKills", goal: 8, text: "Eliminate in total 8 Damned named Yannis" }, // 6th
+  // Seals of Mars (the Pentacles of Mars)
+  p140: { flag: "targetBelowZero", text: "Have the round target be below 0" }, // 1st
+  p141: { value: () => collectionRealArchangelCount(), goal: 1, text: "Defeat an Archangel" }, // 2nd
+  p142: { value: () => collectionDiscoveredCount(), goal: 66, text: "Discover 66 unique seals" }, // 3rd
+  p143: { flag: "twoBossesNoSealBought", text: "Beat the first two bosses without buying a seal" }, // 4th
+  p144: { best: "roundSpent", goal: 160, text: "Spend 160 sin in one round" }, // 5th
+  p145: { flag: "beatAbove50", text: "Beat the game without falling below 50 SOUL" }, // 6th
+  p146: { value: () => collectionDiscoveredCount(), goal: 100, text: "Discover 100 unique seals" } // 7th
 };
 
 const COLLECTION_STAT_LABELS = {
   eliminations: "DAMNED eliminated",
   yannisKills: "Yannis eliminated",
   goeticKills: "Goetic BOSSES eliminated",
-  gamesBeaten: "games beaten"
+  gamesBeaten: "games beaten",
+  pyrosBossKills: "PYROS-TECH BOSSES defeated",
+  rerolls: "Devil's Offerings rerolls"
 };
 
 const COLLECTION_BEST_LABELS = {
   roundSpent: "most SIN spent in a round",
+  roundGained: "most SIN gained in a round (sales not counted)",
   sinHeld: "most SIN held",
   critStreak: "CRITICALS in a row",
   pentakillStreak: "PENTAKILLS in a row",
   noKoStreak: "rounds in a row without a KO",
   bossesAtOnce: "BOSSES active at once",
-  eliteLevel: "highest ELITE level"
+  eliteLevel: "highest ELITE level",
+  highestTarget: "highest TARGET",
+  bountyHeld: "most BOUNTY on one DAMNED",
+  runKarma: "most KARMA in one run",
+  revealedAtOnce: "DAMNED revealed at once",
+  roundBuys: "most items bought in a round",
+  stubbornRoundKills: "STUBBORN DAMNED eliminated in a round"
 };
 
 const COLLECTION_FLAG_LABELS = {
   oneHealth: "had exactly 1 SOUL",
   fullHealthBossKill: "one-shot a full-SOUL BOSS",
   fullHealthKill: "eliminated at 100 SOUL",
-  beatNoArtifacts: "beat the game with no ARTIFACTS",
   dantrePentakill: "PENTAKILL with Dantre active",
   zilonBuyouts: "3 buyouts with Zilon active",
-  serafimNoSteal: "Serafeim stole nothing",
-  pyrosGiftBossKill: "beat a PYROS-TECH BOSS",
-  threonArtifacts: "4 ARTIFACTS with Threon active",
-  sixEliteSeals: "six ELITE SEALS"
+  serafimNoSteal: "Serafim stole nothing",
+  threonArtifacts: "4 working ARTIFACTS over two rounds with Threon active",
+  sixEliteSeals: "six ELITE SEALS",
+  beatUnder30: "beat the game in under 30 rounds",
+  beatNoSealBought: "beat the game without buying a SEAL",
+  beatNoPaidReroll: "beat the game without paying for a reroll",
+  beatAbove50: "beat the game without falling below 50 SOUL",
+  twoBossesNoSealBought: "beat the first two BOSSES without buying a SEAL",
+  goldGift: "opened a Gold gift",
+  memoryKill66: "eliminated a DAMNED with 66 MEMORY",
+  bountyMemory25: "a non-boss DAMNED with over 25 BOUNTY and 25 MEMORY",
+  targetBelowZero: "a TARGET below 0"
 };
 
 // sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Goetic Seals"
@@ -93,16 +140,6 @@ const COLLECTION_SECTIONS = [
   // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
   { key: "poison", title: "Seals of Mars", ids: POISON_SEAL_IDS.slice() }
 ];
-
-// SEALS only Jesus' Gifts unlock (no achievement): the Planetary Seals (Saturn, Moon, Mars), the Trinity and
-// the Archangel Seal of Anael. They start locked like every SEAL in SEAL_UNLOCKS.
-const GIFT_ONLY_SEAL_IDS = [
-  ...COLLECTION_SECTIONS.filter((section) => ["saturn", "artifact", "poison", "trinity"].includes(section.key)).flatMap((section) => section.ids),
-  "p103"
-];
-GIFT_ONLY_SEAL_IDS.forEach((id) => {
-  if (!SEAL_UNLOCKS[id]) SEAL_UNLOCKS[id] = { gift: true, text: "Only one of Jesus' Gifts unlocks it." };
-});
 
 /* ---- builds: the collection filters ----
    Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
@@ -430,6 +467,8 @@ function loadCollectionProgress() {
           progress[group][key] = Math.max(0, Math.floor(Number(source[key]) || 0));
         });
       }
+      // the Seal of Pyros once took one PYROS-TECH BOSS (old flag); now it takes 8, and that one counts
+      if (progress.flags.pyrosGiftBossKill && !progress.stats.pyrosBossKills) progress.stats.pyrosBossKills = 1;
     } else {
       // the first version had other achievements: keep only what was discovered
       COLLECTION_OLD_STORAGE_KEYS.forEach((key) => {
@@ -480,7 +519,33 @@ function sealUnlockProgress(id) {
   if (rule.stat) return { value: progress.stats[rule.stat] || 0, goal: rule.goal };
   if (rule.best) return { value: progress.best[rule.best] || 0, goal: rule.goal };
   if (rule.flag) return { value: progress.flags[rule.flag] ? 1 : 0, goal: 1 };
+  if (typeof rule.value === "function") return { value: Math.max(0, Math.floor(Number(rule.value(progress)) || 0)), goal: rule.goal };
   return null;
+}
+
+// value rules (SEAL_UNLOCKS): progress the Collection or the Records already keep. The DEV "unlock all"
+// demons button and DEV infinite KARMA never count.
+function collectionRealSlainCount() {
+  return new Set(loadCollectionProgress().slain.filter((key) => GOETIC_BOSS_BY_KEY[key])).size;
+}
+
+function collectionRealArchangelCount() {
+  return new Set(loadCollectionProgress().archangels.filter((key) => ARCHANGEL_BY_KEY[key])).size;
+}
+
+function collectionDiscoveredCount() {
+  const ids = new Set(collectibleSealIds());
+  return new Set(loadCollectionProgress().discovered.filter((id) => ids.has(id))).size;
+}
+
+// lifetime ARTIFACT uses and deals signed come from the Records (02-run-records.js), so they include past runs
+function collectionLifetimeArtifactUses() {
+  if (typeof loadLifetimeRecords !== "function") return 0;
+  return Object.values(loadLifetimeRecords().artifactUses || {}).reduce((sum, count) => sum + Math.max(0, Number(count) || 0), 0);
+}
+
+function collectionLifetimeDeals() {
+  return typeof loadLifetimeRecords === "function" ? Math.max(0, Math.floor(Number(loadLifetimeRecords().pacts) || 0)) : 0;
 }
 
 function sealUnlockMet(id) {
@@ -527,10 +592,29 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0, karma: 0, karmaRolled: 0 };
+  const defaults = {
+    uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0, karma: 0, karmaRolled: 0,
+    // false for a run saved before the counters below existed: the "without ..." achievements wait for a new run
+    fromStart: true,
+    sealsBought: 0, // SEALS taken from the Devil's Offerings (free ones and ELITE copies too)
+    paidRerolls: 0, // rerolls that cost SIN
+    fellBelow50: false,
+    roundGained: 0, // SIN gained this round, sales left out
+    roundBuys: 0, // SEALS and ARTIFACTS bought this round
+    stubbornKills: 0, // STUBBORN DAMNED eliminated this round
+    threonUses: {} // ARTIFACTS that worked while Threon was alive, by round (this round and the one before)
+  };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
-  else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  else {
+    if (!("fromStart" in state.collectionRun)) state.collectionRun.fromStart = false;
+    Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  }
   return state.collectionRun;
+}
+
+// the main BOSSES beaten this run (Petros and Pavlos are one BOSS, beaten once both have fallen)
+function collectionMainBossesBeaten(run = collectionRun()) {
+  return UNIQUE_BOSS_KEYS.filter((key) => run.uniqueKills.includes(key) && (key !== "petros" || run.uniqueKills.includes("pavlos"))).length;
 }
 
 function resetCollectionRun() {
@@ -545,7 +629,11 @@ function collectionBossPresent(key, aliveOnly = false) {
 
 function collectionBeginRound() {
   if (state.mode !== "arcade") return;
-  collectionRun().roundSpent = 0;
+  const run = collectionRun();
+  run.roundSpent = 0;
+  run.roundGained = 0;
+  run.roundBuys = 0;
+  run.stubbornKills = 0;
   // BOSSES at full SOUL when the round starts: knocking one out this round counts as a one-shot
   (state.bots || []).forEach((bot) => {
     if (bot?.isBoss) bot.fullHealthAtRoundStart = !bot.immortal && bot.hp >= bot.maxHp;
@@ -559,6 +647,22 @@ function collectionNoteSpend(cost) {
   collectionRaise("roundSpent", run.roundSpent);
 }
 
+// SIN that came in, sales left out (gainCreditsFromSourceEntries): the Seal of Sachiel's 66 in one round
+function collectionNoteSinEarned(amount) {
+  if (!collectionCounts() || !(amount > 0)) return;
+  const run = collectionRun();
+  run.roundGained += Math.floor(amount);
+  collectionRaise("roundGained", run.roundGained);
+}
+
+// the player's SOUL right after it changed (damagePlayer) and after every render
+function collectionNotePlayerHp() {
+  if (!collectionCounts()) return;
+  const hp = state.player.hp;
+  if (hp === 1) collectionFlag("oneHealth");
+  if (hp < 50) collectionRun().fellBelow50 = true;
+}
+
 function collectionNoteElimination(bot) {
   if (bot?.isBoss && bot.goeticKey) collectionSlayDemon(bot.goeticKey);
   if (bot?.isBoss && bot.archangelKey) collectionDefeatArchangel(bot.archangelKey);
@@ -566,13 +670,20 @@ function collectionNoteElimination(bot) {
   collectionBump("eliminations");
   if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
   if (state.player.hp >= 100) collectionFlag("fullHealthKill");
+  if ((bot.memory || []).length >= 66) collectionFlag("memoryKill66");
+  if (personalityTypes(bot).includes("Stubborn")) {
+    const run = collectionRun();
+    run.stubbornKills += 1;
+    collectionRaise("stubbornRoundKills", run.stubbornKills);
+  }
   if (!bot.isBoss) return;
   if (bot.goeticKey) collectionBump("goeticKills");
   if (bot.fullHealthAtRoundStart) collectionFlag("fullHealthBossKill");
-  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionFlag("pyrosGiftBossKill");
+  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionBump("pyrosBossKills");
   if (bot.uniqueKey) {
     const run = collectionRun();
     if (!run.uniqueKills.includes(bot.uniqueKey)) run.uniqueKills.push(bot.uniqueKey);
+    if (run.fromStart !== false && !run.sealsBought && collectionMainBossesBeaten(run) >= 2) collectionFlag("twoBossesNoSealBought");
     // beating the game = all 8 unique BOSSES defeated in one run (Petros and Pavlos both)
     const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
@@ -580,7 +691,12 @@ function collectionNoteElimination(bot) {
       run.beatenRound = state.round;
       collectionBump("gamesBeaten");
       collectionNoteSealWins();
-      if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
+      if (state.round < 30) collectionFlag("beatUnder30");
+      if (run.fromStart !== false) {
+        if (!run.sealsBought) collectionFlag("beatNoSealBought");
+        if (!run.paidRerolls) collectionFlag("beatNoPaidReroll");
+        if (!run.fellBelow50 && state.player.hp >= 50) collectionFlag("beatAbove50");
+      }
       karmaGain(KARMA_GAME_BEATEN, "Beating the game");
     }
   }
@@ -593,14 +709,29 @@ function collectionNotePentakill() {
   if (collectionBossPresent("dantre")) collectionFlag("dantrePentakill");
 }
 
-function collectionNoteArtifactUse() {
-  if (!collectionCounts() || !state.roundState) return;
-  if ((state.roundState.activeUses || 0) >= 4 && collectionBossPresent("threon", true)) collectionFlag("threonArtifacts");
+// an ARTIFACT was used (consumeActive); useActive marks the round when Threon made it malfunction
+function collectionNoteArtifactUse(item = null) {
+  const malfunctioned = Boolean(state.roundState?.artifactMalfunctioned);
+  if (state.roundState) state.roundState.artifactMalfunctioned = false;
+  if (!collectionCounts() || !state.roundState || item?.devTemporary) return;
+  collectionDirty = true; // the lifetime count lives in the Records (collectionLifetimeArtifactUses)
+  if (malfunctioned || !collectionBossPresent("threon", true)) return;
+  // Seal of Threon: 4 ARTIFACTS that worked over this round and the one before, with Threon alive
+  const run = collectionRun();
+  const uses = run.threonUses && typeof run.threonUses === "object" ? run.threonUses : {};
+  const now = (Number(uses[state.round]) || 0) + 1;
+  const before = Number(uses[state.round - 1]) || 0;
+  run.threonUses = { [state.round - 1]: before, [state.round]: now };
+  if (now + before >= 4) collectionFlag("threonArtifacts");
 }
 
-function collectionNoteShopBuy() {
+// kind: "seal" (a new SEAL, an ELITE copy or the bound demon's free one) or "artifact"
+function collectionNoteShopBuy(kind = "") {
   if (!collectionCounts()) return;
   const run = collectionRun();
+  run.roundBuys += 1;
+  collectionRaise("roundBuys", run.roundBuys);
+  if (kind === "seal") run.sealsBought += 1;
   const shop = state.shop || [];
   if (!shop.length || run.buyoutCounted || !shop.every((slot) => slot?.sold)) return;
   run.buyoutCounted = true;
@@ -613,6 +744,19 @@ function collectionNoteShopReroll() {
   if (state.mode === "arcade") collectionRun().buyoutCounted = false;
 }
 
+// a reroll the player asked for (not the new round's): every one counts toward the 666; one that took SIN
+// breaks "Beat the game without using sin to reroll" (Seal of Anael)
+function collectionNotePlayerReroll(sinUsed = 0) {
+  if (!collectionCounts()) return;
+  collectionBump("rerolls");
+  if (sinUsed > 0) collectionRun().paidRerolls += 1;
+}
+
+// a deal was signed (the lifetime count lives in the Records: collectionLifetimeDeals)
+function collectionNoteDeal() {
+  if (collectionCounts()) collectionDirty = true;
+}
+
 function collectionNoteSerafimEntry(bot, stolen) {
   if (bot?.uniqueKey === "serafim" && !(stolen > 0)) collectionFlag("serafimNoSteal");
 }
@@ -623,6 +767,7 @@ function collectionDiscover(id) {
   const progress = loadCollectionProgress();
   if (progress.discovered.includes(id)) return;
   progress.discovered.push(id);
+  collectionDirty = true; // "Discover 66 / 100 unique seals"
   saveCollectionProgress();
 }
 
@@ -783,6 +928,7 @@ function collectionDefeatArchangel(key) {
   const progress = loadCollectionProgress();
   if (progress.archangels.includes(key)) return;
   progress.archangels.push(key);
+  collectionDirty = true; // "Defeat an Archangel", "Unlock all Archangels"
   saveCollectionProgress();
 }
 
@@ -791,6 +937,7 @@ function collectionSlayDemon(key) {
   const progress = loadCollectionProgress();
   if (progress.slain.includes(key)) return;
   progress.slain.push(key);
+  collectionDirty = true; // "Unlock all Demons"
   saveCollectionProgress();
 }
 
@@ -958,15 +1105,25 @@ function collectionAfterRender() {
   if (!collectionCounts()) return;
   recordsNoteSlots();
   const run = collectionRun();
-  if (state.player.hp === 1) collectionFlag("oneHealth");
+  collectionNotePlayerHp();
   collectionRaise("sinHeld", state.player.credits);
+  if (typeof revealedDamnedCount === "function") collectionRaise("revealedAtOnce", revealedDamnedCount());
+  const living = (state.bots || []).filter((bot) => bot && !bot.eliminated && !bot.immortal && bot.hp > 0);
+  const bountyOf = (bot) => Math.max(0, Math.ceil(botRegularBounty(bot) || 0));
+  collectionRaise("bountyHeld", Math.max(0, ...living.map(bountyOf)));
+  if (living.some((bot) => !bot.isBoss && bountyOf(bot) > 25 && (bot.memory || []).length > 25)) collectionFlag("bountyMemory25");
   collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
   collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
   collectionNoteSealElite();
   const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
   if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
-  // once per round, when it is resolved
   const round = state.roundState;
+  // the round's TARGET once it is final (READY pressed and the reveal over)
+  if (round?.penaltiesApplied && !roundRevealAnimationActive() && Number.isFinite(round.target)) {
+    collectionRaise("highestTarget", round.target);
+    if (round.target < 0) collectionFlag("targetBelowZero");
+  }
+  // once per round, when it is resolved
   if (state.stage === "summary" && round && !roundRevealAnimationActive() && run.roundProcessed !== state.round) {
     run.roundProcessed = state.round;
     run.critStreak = round.criticalHitKeys?.has?.("player") ? run.critStreak + 1 : 0;
@@ -1478,6 +1635,7 @@ function karmaGain(amount, source) {
   progress.karma = karmaBalance() + gained;
   const run = collectionRun();
   run.karma = (run.karma || 0) + gained;
+  collectionRaise("runKarma", run.karma);
   saveCollectionProgress();
   addLog(`${source}: +${gained} KARMA.`);
   collectionToastQueue.push({ kind: "karma", karma: gained, source });

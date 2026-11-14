@@ -856,9 +856,12 @@ function satanPactSign() {
   pact.used = true;
   pact.outcome = "signed";
   recordPactSigned();
+  collectionNoteDeal();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
+  // the "sign a deal" mission
+  if (typeof missionsNoteDeal === "function") missionsNoteDeal();
   return true;
 }
 

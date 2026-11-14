@@ -14944,3 +14944,9 @@ body.native-arcade #app .deal-word-inline {
 body.native-arcade #app .deal-button.deal-contract::after {
   display: block !important;
 }
+
+/* Settings > Display > Guide text: Hidden takes the "Pick a number" hint and the slot machine's
+   "Missions pay FAVOR." off the game screen; their space is kept so nothing moves */
+body.hide-guide-text #app .guide-text {
+  visibility: hidden !important;
+}

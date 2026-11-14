@@ -158,6 +158,8 @@ function satanFirstVictoryPending() {
 function markSatanFirstVictorySeen() {
   try {
     window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+    // leaving the first-win speech opens the slot machine and the missions (09-slot-missions.js)
+    if (typeof unlockSlotMachine === "function") unlockSlotMachine();
   } catch (error) {}
 }
 

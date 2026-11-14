@@ -273,6 +273,7 @@ const ANIM_SPEED_VALUES = [1, 2, 4];
 const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
+const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -2433,7 +2434,8 @@ const state = {
     animSpeed: 1,
     screenShake: 2,
     flashes: 1,
-    textSize: 0
+    textSize: 0,
+    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Missions pay FAVOR." (body.hide-guide-text)
   },
   settingsTab: "audio",
   pauseOpen: false,
@@ -2601,6 +2603,7 @@ function loadDisplaySettings() {
       if (Number.isFinite(saved.screenShake)) state.display.screenShake = clamp(Math.round(saved.screenShake), 0, 2);
       if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
       if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
+      if (Number.isFinite(saved.guideText)) state.display.guideText = clamp(Math.round(saved.guideText), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -2620,6 +2623,7 @@ function applyDisplaySettings() {
   else document.body.style.removeProperty("--boil-duration");
   document.body.classList.toggle("reduce-flashes", !state.display.flashes);
   document.body.classList.toggle("text-large", Boolean(state.display.textSize));
+  document.body.classList.toggle("hide-guide-text", state.display.guideText === 0);
   document.body.dataset.animSpeed = String(animSpeed());
 }
 
@@ -7669,6 +7673,7 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
   // Satan's Pact "cheat death": back with 1 SOUL, and he collects
   if (nextHp <= 0 && satanPactCheatDeathArmed()) nextHp = satanPactCheatDeath();
   state.player.hp = Math.max(introPlayerHpFloor(), nextHp);
+  if (typeof collectionNotePlayerHp === "function") collectionNotePlayerHp();
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordPlayerDamageSource(sourceDamage, sourceLabel);
@@ -8865,6 +8870,7 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
     // lifetime SIN earned (Records); money from sales does not count
     const soldBase = normalizedEntries.filter((entry) => String(entry.source || "").startsWith("Sold ")).reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
     recordSinEarned(gained - Math.ceil(soldBase * multiplier));
+    collectionNoteSinEarned(gained - Math.ceil(soldBase * multiplier));
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
@@ -11554,6 +11560,7 @@ function resolveEliminatedBots(eliminated) {
     recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
+    missionsNoteElimination(bot);
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
@@ -13079,7 +13086,7 @@ function buyShopItem(slotIndex) {
     state.itemsBought += 1;
     slot.sold = true;
     syncShopSlotCount();
-    collectionNoteShopBuy();
+    collectionNoteShopBuy("seal");
     missionsNoteShop("buySeal");
     applyGuessReveals();
     checkBalamMemoryBountyEliminations();
@@ -13105,7 +13112,7 @@ function buyShopItem(slotIndex) {
   state.itemsBought += 1;
   slot.sold = true;
   syncShopSlotCount();
-  collectionNoteShopBuy();
+  collectionNoteShopBuy("artifact");
   missionsNoteShop("buyArtifact");
   addLog(`Bought ${item.name}.`);
   playGameSfx("artifactBuy");
@@ -13134,6 +13141,7 @@ function rerollShopClick() {
     return;
   }
   spendCredits(cost);
+  collectionNotePlayerReroll(free ? 0 : cost);
   if (state.roundState) {
     state.roundState.rerollSinSpentThisRound = (state.roundState.rerollSinSpentThisRound || 0) + Math.max(0, Math.ceil(cost));
   }
@@ -13164,6 +13172,7 @@ function rerollShopPayingSatanToll() {
   state.player.credits = 0;
   state.satanRerollToll = false;
   state.satanTightwadAbove = false;
+  collectionNotePlayerReroll(lost);
   rerollShop();
   playGameSfx("reroll");
   addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
@@ -13185,10 +13194,10 @@ function sellTrinitySeals(index) {
   ghostSealOut(index);
   state.player.passives = state.player.passives.filter((item) => !pieces.includes(item));
   refreshMimicTarget();
-  gainCredits(sale, false, `Sold ${names}`);
+  const gained = gainCredits(sale, false, `Sold ${names}`);
   syncShopSlotCount();
   addLog(`Sold ${names} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained, sealIds: pieces.map((piece) => piece.id) });
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
@@ -13206,10 +13215,10 @@ function sellPassive(index) {
   ghostSealOut(index);
   state.player.passives.splice(index, 1);
   refreshMimicTarget();
-  gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
+  const gained = gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained, sealIds: [item.id] });
   // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
@@ -13222,10 +13231,10 @@ function sellActive(index) {
   if (!item) return;
   const sale = activeSellValue(item);
   state.player.actives.splice(index, 1);
-  gainCredits(sale, false, `Sold ${item.name}`);
+  const gained = gainCredits(sale, false, `Sold ${item.name}`);
   normalizeActiveCarouselIndex();
   addLog(`Sold ${item.name} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained });
   playGameSfx("sell");
   quietMomentSfx("sinGain");
   render();
@@ -13509,6 +13518,8 @@ function useActive(index) {
 
   const threonSource = activeBossesWithPower("threon")[0];
   if (threonSource && Math.random() < 0.5) {
+    // a malfunction is still a use, but not one that worked (Seal of Threon's achievement)
+    if (state.roundState) state.roundState.artifactMalfunctioned = true;
     damagePlayer(3, `${threonSource.name} made ${item.name} malfunction for 3 damage.`);
     consumeActive(index, `${threonSource.name} made ${item.name} malfunction and do nothing.`, item.uid);
     return;
@@ -13654,7 +13665,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   // Seal of Serafeim never triggers on its own; using ARTIFACTS while holding it is what it does
   if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
-  collectionNoteArtifactUse();
+  collectionNoteArtifactUse(item);
   applyArchangelArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);
@@ -15269,6 +15280,14 @@ const SETTING_CHOICES = {
     set: (value) => { state.display.textSize = value; },
     text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
   },
+  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Missions pay FAVOR."
+  guideText: {
+    label: "Guide text",
+    values: () => [1, 0],
+    get: () => (state.display.guideText === 0 ? 0 : 1),
+    set: (value) => { state.display.guideText = value; },
+    text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+  },
   fullscreen: {
     label: "Window",
     values: () => [0, 1],
@@ -15369,7 +15388,8 @@ function renderSettingsPanel(prefix) {
       settingChoiceRow("outlineBoil"),
       settingChoiceRow("screenShake"),
       settingChoiceRow("flashes"),
-      settingChoiceRow("textSize")
+      settingChoiceRow("textSize"),
+      settingChoiceRow("guideText")
     ].join("");
   } else {
     const controls = isNativeArcadeApp()
@@ -15845,6 +15865,10 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
+      <h2>Slot machine (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+      </div>
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
@@ -17154,6 +17178,7 @@ function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
+  let guideHint = false; // the "Pick a number" line, which Settings > Display > Guide text can hide
   let disabled = "";
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
@@ -17185,13 +17210,14 @@ function consoleActionState() {
     hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {
     hint = `Pick a number between 0 and ${maxGuess}`;
+    guideHint = true;
   }
 
-  return { buttonText, disabled, hint, inputDisabled, maxGuess, round };
+  return { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round };
 }
 
 function renderConsole() {
-  const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
+  const { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round } = consoleActionState();
   // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
@@ -17225,7 +17251,7 @@ function renderConsole() {
   return `
     <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
       ${sideParts.slot}
-      ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
+      ${hint ? `<div class="console-hint${guideHint ? " guide-text" : ""}">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
         ${corruptionNote}
         <input
@@ -17733,6 +17759,7 @@ function resetSettings() {
   state.display.screenShake = prefersReducedMotion ? 0 : 2;
   state.display.flashes = 1;
   state.display.textSize = 0;
+  state.display.guideText = 1;
   saveSoundSettings();
   applySoundSettings();
   saveDisplaySettings();
@@ -17783,6 +17810,13 @@ function handlePauseAction(action) {
     // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
+    render();
+    return;
+  }
+  if (action === "unlock-slot") {
+    // testing: open the slot machine and the missions without a first win; nothing happens if they're open already
+    if (!unlockSlotMachine()) return;
+    addLog("Testing: slot machine and missions unlocked.");
     render();
     return;
   }
@@ -18401,6 +18435,8 @@ function satanFirstVictoryPending() {
 function markSatanFirstVictorySeen() {
   try {
     window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+    // leaving the first-win speech opens the slot machine and the missions (09-slot-missions.js)
+    if (typeof unlockSlotMachine === "function") unlockSlotMachine();
   } catch (error) {}
 }
 
@@ -19538,72 +19574,119 @@ function triggerMenuStory() {
    discovered (red).
 
    To lock another SEAL or change an achievement, edit SEAL_UNLOCKS below. Each entry is one of:
-     stat: lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
-     best: best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
-     flag: something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
-   with `goal` for stat/best. A new kind of achievement needs its counter recorded below
-   (search for collectionBump / collectionRaise / collectionFlag). */
+     stat:  lifetime counter across all runs           (COLLECTION_STAT_LABELS lists them)
+     best:  best value reached at any one moment / run  (COLLECTION_BEST_LABELS lists them)
+     flag:  something that happened at least once       (COLLECTION_FLAG_LABELS lists them)
+     value: a function reading progress kept elsewhere (demons, Archangels, discoveries, Records)
+   with `goal` for stat/best/value. A new kind of achievement needs its counter recorded below
+   (search for collectionBump / collectionRaise / collectionFlag). The texts are the designer's own
+   wording; descriptionHtml puts the keywords (SIN, SOUL, DAMNED...) in the game's style. Every locked
+   SEAL can also come from one of Jesus' Gifts. */
 
 const COLLECTION_STORAGE_KEY = "dearthCollectionV2";
 const COLLECTION_OLD_STORAGE_KEYS = ["dearthCollectionV1"]; // discovered SEALS are carried over
 
 const SEAL_UNLOCKS = {
   // Apocalypse Seals
-  p74: { best: "roundSpent", goal: 160, text: "Spend 160 SIN in one round." },
-  p75: { flag: "oneHealth", text: "Have exactly 1 SOUL." },
-  p76: { best: "critStreak", goal: 8, text: "Score 8 CRITICAL hits in a row." },
-  p77: { flag: "fullHealthBossKill", text: "Eliminate a BOSS that was at max SOUL." },
-  p78: { flag: "fullHealthKill", text: "Be at 100 SOUL and eliminate a DAMNED." },
-  p79: { flag: "beatNoArtifacts", text: "Beat the game without using a single ARTIFACT (defeat the 8 BOSSES)." },
-  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 PENTAKILLS in a row." },
-  // Boss Seals (the Pentacles of Saturn p92-p97 and p110 are open from the start)
-  p121: { flag: "zilonBuyouts", text: "Buy out three entire Devil's Offerings while Zilon is active." },
-  p122: { flag: "sixEliteSeals", text: "Get six SEALS that are all ELITE level 1 or more." },
-  p123: { flag: "pyrosGiftBossKill", text: "Defeat a BOSS other than Pyros that has been granted a PYROS-TECH ability." },
-  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 rounds in a row." },
-  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 BOSSES active at the same time." },
-  p126: { flag: "serafimNoSteal", text: "Have Serafeim steal 0 SIN from you when he is first summoned." },
-  p127: { flag: "threonArtifacts", text: "Use 4 ARTIFACTS in one round while Threon is active." },
-  p128: { flag: "dantrePentakill", text: "Score a PENTAKILL while Dantre is active." },
+  p74: { best: "eliteLevel", goal: 6, text: "Get a seal to Elite level 6" }, // White Horse
+  p75: { flag: "beatUnder30", text: "Beat the game in under 30 rounds" }, // Red Horse
+  p76: { flag: "fullHealthBossKill", text: "Eliminate a Boss that was at max SOUL" }, // Black Horse
+  p77: { best: "critStreak", goal: 8, text: "Score 8 critical hits in a row" }, // Pale Horse
+  p78: { best: "highestTarget", goal: 160, text: "Have the round target be 160 or above" }, // Souls of Martyrs
+  p79: { best: "sinHeld", goal: 666, text: "Have 666 sin" }, // Creation Uncreated
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Pentakills in a row" }, // Silence in Heaven
+  // Boss Seals
+  p121: { flag: "zilonBuyouts", text: "Buy out three entire shops while Zilon is active in one game" },
+  p122: { flag: "sixEliteSeals", text: "Get six seals that are all level 1 elite or more" }, // Kalha
+  p123: { stat: "pyrosBossKills", goal: 8, text: "Defeat 8 Bosses other than Pyros that have been granted a PYROS-TECH ability in total" },
+  p124: { best: "noKoStreak", goal: 8, text: "Don't get a KO for 8 consecutive rounds" }, // Padma
+  p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 bosses active at the same time" }, // Petros-Pavlos
+  p126: { flag: "serafimNoSteal", text: "Have Serafim steal 0 sin from you when he is first summoned" },
+  p127: { flag: "threonArtifacts", text: "Use 4 artifacts in two consecutive rounds successfully while Threon is active" },
+  p128: { flag: "dantrePentakill", text: "Score 1 Pentakill while Dantre is active" },
   // Seal of Satan
-  p111: { best: "sinHeld", goal: 666, text: "Have 666 SIN." },
-  // the Archangel Seals (self-stacking since they swapped effects with the Pentacles of Saturn)
-  p98: { best: "critStreak", goal: 3, text: "Score 3 CRITICAL hits in a row." },
-  p99: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 BOSSES)." },
-  p100: { best: "eliteLevel", goal: 6, text: "Get a SEAL to ELITE level 6." },
-  p101: { stat: "goeticKills", goal: 66, text: "Eliminate 66 demons (Goetic BOSSES) in total." },
-  p102: { stat: "eliminations", goal: 666, text: "Eliminate 666 DAMNED in total." },
-  p109: { stat: "yannisKills", goal: 8, text: "Eliminate 8 DAMNED named Yannis in total." }
+  p111: { flag: "beatNoSealBought", text: "Beat the game without buying a seal" },
+  // the Archangel Seals
+  p99: { flag: "oneHealth", text: "Have exactly 1 SOUL" }, // Michael
+  p98: { stat: "gamesBeaten", goal: 8, text: "Beat the game 8 times (defeat the 8 bosses)" }, // Gabriel
+  p109: { best: "critStreak", goal: 3, text: "Score 3 critical hits in a row" }, // Samael
+  p101: { flag: "fullHealthKill", text: "Be at 100 SOUL and eliminate a Damned" }, // Raphael
+  p100: { best: "roundGained", goal: 66, text: "Gain 66 sin in one round" }, // Sachiel
+  p103: { flag: "beatNoPaidReroll", text: "Beat the game without using sin to reroll Devil's Offerings" }, // Anael
+  p102: { stat: "gamesBeaten", goal: 24, text: "Beat the game 24 times (beat the 8 bosses)" }, // Cassiel
+  // Trinity Seals
+  p131: { value: () => collectionRealSlainCount(), goal: GOETIC_BOSS_TOTAL, text: "Unlock all Demons" }, // Father
+  p132: { flag: "goldGift", text: "Buy a Gold Jesus gift" }, // Son
+  p133: { value: () => collectionRealArchangelCount(), goal: ARCHANGEL_BOSS_SPECS.length, text: "Unlock all Archangels" }, // Holy Spirit
+  // Seals of Saturn
+  p97: { flag: "memoryKill66", text: "Eliminate a Damned with 66 memory" }, // 1st
+  p93: { best: "bountyHeld", goal: 40, text: "Have a single Damned reach 40 bounty or more" }, // 2nd
+  p92: { best: "runKarma", goal: 30, text: "Get 30 karma in one run" }, // 3rd
+  p95: { best: "revealedAtOnce", goal: 4, text: "Have 4 revealed Damned at the same time" }, // 4th
+  p110: { flag: "bountyMemory25", text: "Have a non-boss Damned with more than 25 bounty and more than 25 memory" }, // 5th
+  p94: { best: "roundBuys", goal: 8, text: "Buy 8 items (seals or artifacts) in one round" }, // 6th
+  p96: { best: "stubbornRoundKills", goal: 5, text: "Eliminate 5 Stubborn Damned in a single round" }, // 7th
+  // Seals of Moon (the Pentacles of the Moon)
+  p70: { stat: "eliminations", goal: 666, text: "Eliminate in total 666 Damned" }, // 1st
+  p135: { stat: "goeticKills", goal: 66, text: "Eliminate in total 66 demons (end game bosses)" }, // 2nd
+  p136: { value: () => collectionLifetimeDeals(), goal: 66, text: "Complete 66 Deals" }, // 3rd
+  p137: { stat: "rerolls", goal: 666, text: "Reroll the Devil's Offerings 666 times" }, // 4th
+  p138: { value: () => collectionLifetimeArtifactUses(), goal: 666, text: "Use a total of 666 artifacts" }, // 5th
+  p139: { stat: "yannisKills", goal: 8, text: "Eliminate in total 8 Damned named Yannis" }, // 6th
+  // Seals of Mars (the Pentacles of Mars)
+  p140: { flag: "targetBelowZero", text: "Have the round target be below 0" }, // 1st
+  p141: { value: () => collectionRealArchangelCount(), goal: 1, text: "Defeat an Archangel" }, // 2nd
+  p142: { value: () => collectionDiscoveredCount(), goal: 66, text: "Discover 66 unique seals" }, // 3rd
+  p143: { flag: "twoBossesNoSealBought", text: "Beat the first two bosses without buying a seal" }, // 4th
+  p144: { best: "roundSpent", goal: 160, text: "Spend 160 sin in one round" }, // 5th
+  p145: { flag: "beatAbove50", text: "Beat the game without falling below 50 SOUL" }, // 6th
+  p146: { value: () => collectionDiscoveredCount(), goal: 100, text: "Discover 100 unique seals" } // 7th
 };
 
 const COLLECTION_STAT_LABELS = {
   eliminations: "DAMNED eliminated",
   yannisKills: "Yannis eliminated",
   goeticKills: "Goetic BOSSES eliminated",
-  gamesBeaten: "games beaten"
+  gamesBeaten: "games beaten",
+  pyrosBossKills: "PYROS-TECH BOSSES defeated",
+  rerolls: "Devil's Offerings rerolls"
 };
 
 const COLLECTION_BEST_LABELS = {
   roundSpent: "most SIN spent in a round",
+  roundGained: "most SIN gained in a round (sales not counted)",
   sinHeld: "most SIN held",
   critStreak: "CRITICALS in a row",
   pentakillStreak: "PENTAKILLS in a row",
   noKoStreak: "rounds in a row without a KO",
   bossesAtOnce: "BOSSES active at once",
-  eliteLevel: "highest ELITE level"
+  eliteLevel: "highest ELITE level",
+  highestTarget: "highest TARGET",
+  bountyHeld: "most BOUNTY on one DAMNED",
+  runKarma: "most KARMA in one run",
+  revealedAtOnce: "DAMNED revealed at once",
+  roundBuys: "most items bought in a round",
+  stubbornRoundKills: "STUBBORN DAMNED eliminated in a round"
 };
 
 const COLLECTION_FLAG_LABELS = {
   oneHealth: "had exactly 1 SOUL",
   fullHealthBossKill: "one-shot a full-SOUL BOSS",
   fullHealthKill: "eliminated at 100 SOUL",
-  beatNoArtifacts: "beat the game with no ARTIFACTS",
   dantrePentakill: "PENTAKILL with Dantre active",
   zilonBuyouts: "3 buyouts with Zilon active",
-  serafimNoSteal: "Serafeim stole nothing",
-  pyrosGiftBossKill: "beat a PYROS-TECH BOSS",
-  threonArtifacts: "4 ARTIFACTS with Threon active",
-  sixEliteSeals: "six ELITE SEALS"
+  serafimNoSteal: "Serafim stole nothing",
+  threonArtifacts: "4 working ARTIFACTS over two rounds with Threon active",
+  sixEliteSeals: "six ELITE SEALS",
+  beatUnder30: "beat the game in under 30 rounds",
+  beatNoSealBought: "beat the game without buying a SEAL",
+  beatNoPaidReroll: "beat the game without paying for a reroll",
+  beatAbove50: "beat the game without falling below 50 SOUL",
+  twoBossesNoSealBought: "beat the first two BOSSES without buying a SEAL",
+  goldGift: "opened a Gold gift",
+  memoryKill66: "eliminated a DAMNED with 66 MEMORY",
+  bountyMemory25: "a non-boss DAMNED with over 25 BOUNTY and 25 MEMORY",
+  targetBelowZero: "a TARGET below 0"
 };
 
 // sections of the collection, in order (as in ITEMS.txt); any purchasable SEAL not listed lands in "Goetic Seals"
@@ -19624,16 +19707,6 @@ const COLLECTION_SECTIONS = [
   // the Pentacles of Mars: they give the DAMNED POISON, which deals damage at the end of every round
   { key: "poison", title: "Seals of Mars", ids: POISON_SEAL_IDS.slice() }
 ];
-
-// SEALS only Jesus' Gifts unlock (no achievement): the Planetary Seals (Saturn, Moon, Mars), the Trinity and
-// the Archangel Seal of Anael. They start locked like every SEAL in SEAL_UNLOCKS.
-const GIFT_ONLY_SEAL_IDS = [
-  ...COLLECTION_SECTIONS.filter((section) => ["saturn", "artifact", "poison", "trinity"].includes(section.key)).flatMap((section) => section.ids),
-  "p103"
-];
-GIFT_ONLY_SEAL_IDS.forEach((id) => {
-  if (!SEAL_UNLOCKS[id]) SEAL_UNLOCKS[id] = { gift: true, text: "Only one of Jesus' Gifts unlocks it." };
-});
 
 /* ---- builds: the collection filters ----
    Every SEAL is tagged with the build(s) it belongs to; a SEAL that fits two builds shows under both.
@@ -19961,6 +20034,8 @@ function loadCollectionProgress() {
           progress[group][key] = Math.max(0, Math.floor(Number(source[key]) || 0));
         });
       }
+      // the Seal of Pyros once took one PYROS-TECH BOSS (old flag); now it takes 8, and that one counts
+      if (progress.flags.pyrosGiftBossKill && !progress.stats.pyrosBossKills) progress.stats.pyrosBossKills = 1;
     } else {
       // the first version had other achievements: keep only what was discovered
       COLLECTION_OLD_STORAGE_KEYS.forEach((key) => {
@@ -20011,7 +20086,33 @@ function sealUnlockProgress(id) {
   if (rule.stat) return { value: progress.stats[rule.stat] || 0, goal: rule.goal };
   if (rule.best) return { value: progress.best[rule.best] || 0, goal: rule.goal };
   if (rule.flag) return { value: progress.flags[rule.flag] ? 1 : 0, goal: 1 };
+  if (typeof rule.value === "function") return { value: Math.max(0, Math.floor(Number(rule.value(progress)) || 0)), goal: rule.goal };
   return null;
+}
+
+// value rules (SEAL_UNLOCKS): progress the Collection or the Records already keep. The DEV "unlock all"
+// demons button and DEV infinite KARMA never count.
+function collectionRealSlainCount() {
+  return new Set(loadCollectionProgress().slain.filter((key) => GOETIC_BOSS_BY_KEY[key])).size;
+}
+
+function collectionRealArchangelCount() {
+  return new Set(loadCollectionProgress().archangels.filter((key) => ARCHANGEL_BY_KEY[key])).size;
+}
+
+function collectionDiscoveredCount() {
+  const ids = new Set(collectibleSealIds());
+  return new Set(loadCollectionProgress().discovered.filter((id) => ids.has(id))).size;
+}
+
+// lifetime ARTIFACT uses and deals signed come from the Records (02-run-records.js), so they include past runs
+function collectionLifetimeArtifactUses() {
+  if (typeof loadLifetimeRecords !== "function") return 0;
+  return Object.values(loadLifetimeRecords().artifactUses || {}).reduce((sum, count) => sum + Math.max(0, Number(count) || 0), 0);
+}
+
+function collectionLifetimeDeals() {
+  return typeof loadLifetimeRecords === "function" ? Math.max(0, Math.floor(Number(loadLifetimeRecords().pacts) || 0)) : 0;
 }
 
 function sealUnlockMet(id) {
@@ -20058,10 +20159,29 @@ function collectionFlag(key) {
 
 // per-run counters (saved with the run)
 function collectionRun() {
-  const defaults = { uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0, karma: 0, karmaRolled: 0 };
+  const defaults = {
+    uniqueKills: [], beaten: false, zilonBuyouts: 0, buyoutCounted: false, critStreak: 0, pentakillStreak: 0, noKoStreak: 0, roundSpent: 0, roundProcessed: 0, sealRound: null, beatenRound: 0, karma: 0, karmaRolled: 0,
+    // false for a run saved before the counters below existed: the "without ..." achievements wait for a new run
+    fromStart: true,
+    sealsBought: 0, // SEALS taken from the Devil's Offerings (free ones and ELITE copies too)
+    paidRerolls: 0, // rerolls that cost SIN
+    fellBelow50: false,
+    roundGained: 0, // SIN gained this round, sales left out
+    roundBuys: 0, // SEALS and ARTIFACTS bought this round
+    stubbornKills: 0, // STUBBORN DAMNED eliminated this round
+    threonUses: {} // ARTIFACTS that worked while Threon was alive, by round (this round and the one before)
+  };
   if (!state.collectionRun || typeof state.collectionRun !== "object") state.collectionRun = defaults;
-  else Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  else {
+    if (!("fromStart" in state.collectionRun)) state.collectionRun.fromStart = false;
+    Object.keys(defaults).forEach((key) => { if (!(key in state.collectionRun)) state.collectionRun[key] = defaults[key]; });
+  }
   return state.collectionRun;
+}
+
+// the main BOSSES beaten this run (Petros and Pavlos are one BOSS, beaten once both have fallen)
+function collectionMainBossesBeaten(run = collectionRun()) {
+  return UNIQUE_BOSS_KEYS.filter((key) => run.uniqueKills.includes(key) && (key !== "petros" || run.uniqueKills.includes("pavlos"))).length;
 }
 
 function resetCollectionRun() {
@@ -20076,7 +20196,11 @@ function collectionBossPresent(key, aliveOnly = false) {
 
 function collectionBeginRound() {
   if (state.mode !== "arcade") return;
-  collectionRun().roundSpent = 0;
+  const run = collectionRun();
+  run.roundSpent = 0;
+  run.roundGained = 0;
+  run.roundBuys = 0;
+  run.stubbornKills = 0;
   // BOSSES at full SOUL when the round starts: knocking one out this round counts as a one-shot
   (state.bots || []).forEach((bot) => {
     if (bot?.isBoss) bot.fullHealthAtRoundStart = !bot.immortal && bot.hp >= bot.maxHp;
@@ -20090,6 +20214,22 @@ function collectionNoteSpend(cost) {
   collectionRaise("roundSpent", run.roundSpent);
 }
 
+// SIN that came in, sales left out (gainCreditsFromSourceEntries): the Seal of Sachiel's 66 in one round
+function collectionNoteSinEarned(amount) {
+  if (!collectionCounts() || !(amount > 0)) return;
+  const run = collectionRun();
+  run.roundGained += Math.floor(amount);
+  collectionRaise("roundGained", run.roundGained);
+}
+
+// the player's SOUL right after it changed (damagePlayer) and after every render
+function collectionNotePlayerHp() {
+  if (!collectionCounts()) return;
+  const hp = state.player.hp;
+  if (hp === 1) collectionFlag("oneHealth");
+  if (hp < 50) collectionRun().fellBelow50 = true;
+}
+
 function collectionNoteElimination(bot) {
   if (bot?.isBoss && bot.goeticKey) collectionSlayDemon(bot.goeticKey);
   if (bot?.isBoss && bot.archangelKey) collectionDefeatArchangel(bot.archangelKey);
@@ -20097,13 +20237,20 @@ function collectionNoteElimination(bot) {
   collectionBump("eliminations");
   if (/^Yannis\b/i.test(bot.name || "")) collectionBump("yannisKills");
   if (state.player.hp >= 100) collectionFlag("fullHealthKill");
+  if ((bot.memory || []).length >= 66) collectionFlag("memoryKill66");
+  if (personalityTypes(bot).includes("Stubborn")) {
+    const run = collectionRun();
+    run.stubbornKills += 1;
+    collectionRaise("stubbornRoundKills", run.stubbornKills);
+  }
   if (!bot.isBoss) return;
   if (bot.goeticKey) collectionBump("goeticKills");
   if (bot.fullHealthAtRoundStart) collectionFlag("fullHealthBossKill");
-  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionFlag("pyrosGiftBossKill");
+  if (bot.pyrosGifted && bot.uniqueKey !== "pyros") collectionBump("pyrosBossKills");
   if (bot.uniqueKey) {
     const run = collectionRun();
     if (!run.uniqueKills.includes(bot.uniqueKey)) run.uniqueKills.push(bot.uniqueKey);
+    if (run.fromStart !== false && !run.sealsBought && collectionMainBossesBeaten(run) >= 2) collectionFlag("twoBossesNoSealBought");
     // beating the game = all 8 unique BOSSES defeated in one run (Petros and Pavlos both)
     const needed = [...UNIQUE_BOSS_KEYS, "pavlos"];
     if (!run.beaten && needed.every((key) => run.uniqueKills.includes(key))) {
@@ -20111,7 +20258,12 @@ function collectionNoteElimination(bot) {
       run.beatenRound = state.round;
       collectionBump("gamesBeaten");
       collectionNoteSealWins();
-      if (!(state.totalArtifactsUsed > 0)) collectionFlag("beatNoArtifacts");
+      if (state.round < 30) collectionFlag("beatUnder30");
+      if (run.fromStart !== false) {
+        if (!run.sealsBought) collectionFlag("beatNoSealBought");
+        if (!run.paidRerolls) collectionFlag("beatNoPaidReroll");
+        if (!run.fellBelow50 && state.player.hp >= 50) collectionFlag("beatAbove50");
+      }
       karmaGain(KARMA_GAME_BEATEN, "Beating the game");
     }
   }
@@ -20124,14 +20276,29 @@ function collectionNotePentakill() {
   if (collectionBossPresent("dantre")) collectionFlag("dantrePentakill");
 }
 
-function collectionNoteArtifactUse() {
-  if (!collectionCounts() || !state.roundState) return;
-  if ((state.roundState.activeUses || 0) >= 4 && collectionBossPresent("threon", true)) collectionFlag("threonArtifacts");
+// an ARTIFACT was used (consumeActive); useActive marks the round when Threon made it malfunction
+function collectionNoteArtifactUse(item = null) {
+  const malfunctioned = Boolean(state.roundState?.artifactMalfunctioned);
+  if (state.roundState) state.roundState.artifactMalfunctioned = false;
+  if (!collectionCounts() || !state.roundState || item?.devTemporary) return;
+  collectionDirty = true; // the lifetime count lives in the Records (collectionLifetimeArtifactUses)
+  if (malfunctioned || !collectionBossPresent("threon", true)) return;
+  // Seal of Threon: 4 ARTIFACTS that worked over this round and the one before, with Threon alive
+  const run = collectionRun();
+  const uses = run.threonUses && typeof run.threonUses === "object" ? run.threonUses : {};
+  const now = (Number(uses[state.round]) || 0) + 1;
+  const before = Number(uses[state.round - 1]) || 0;
+  run.threonUses = { [state.round - 1]: before, [state.round]: now };
+  if (now + before >= 4) collectionFlag("threonArtifacts");
 }
 
-function collectionNoteShopBuy() {
+// kind: "seal" (a new SEAL, an ELITE copy or the bound demon's free one) or "artifact"
+function collectionNoteShopBuy(kind = "") {
   if (!collectionCounts()) return;
   const run = collectionRun();
+  run.roundBuys += 1;
+  collectionRaise("roundBuys", run.roundBuys);
+  if (kind === "seal") run.sealsBought += 1;
   const shop = state.shop || [];
   if (!shop.length || run.buyoutCounted || !shop.every((slot) => slot?.sold)) return;
   run.buyoutCounted = true;
@@ -20144,6 +20311,19 @@ function collectionNoteShopReroll() {
   if (state.mode === "arcade") collectionRun().buyoutCounted = false;
 }
 
+// a reroll the player asked for (not the new round's): every one counts toward the 666; one that took SIN
+// breaks "Beat the game without using sin to reroll" (Seal of Anael)
+function collectionNotePlayerReroll(sinUsed = 0) {
+  if (!collectionCounts()) return;
+  collectionBump("rerolls");
+  if (sinUsed > 0) collectionRun().paidRerolls += 1;
+}
+
+// a deal was signed (the lifetime count lives in the Records: collectionLifetimeDeals)
+function collectionNoteDeal() {
+  if (collectionCounts()) collectionDirty = true;
+}
+
 function collectionNoteSerafimEntry(bot, stolen) {
   if (bot?.uniqueKey === "serafim" && !(stolen > 0)) collectionFlag("serafimNoSteal");
 }
@@ -20154,6 +20334,7 @@ function collectionDiscover(id) {
   const progress = loadCollectionProgress();
   if (progress.discovered.includes(id)) return;
   progress.discovered.push(id);
+  collectionDirty = true; // "Discover 66 / 100 unique seals"
   saveCollectionProgress();
 }
 
@@ -20314,6 +20495,7 @@ function collectionDefeatArchangel(key) {
   const progress = loadCollectionProgress();
   if (progress.archangels.includes(key)) return;
   progress.archangels.push(key);
+  collectionDirty = true; // "Defeat an Archangel", "Unlock all Archangels"
   saveCollectionProgress();
 }
 
@@ -20322,6 +20504,7 @@ function collectionSlayDemon(key) {
   const progress = loadCollectionProgress();
   if (progress.slain.includes(key)) return;
   progress.slain.push(key);
+  collectionDirty = true; // "Unlock all Demons"
   saveCollectionProgress();
 }
 
@@ -20489,15 +20672,25 @@ function collectionAfterRender() {
   if (!collectionCounts()) return;
   recordsNoteSlots();
   const run = collectionRun();
-  if (state.player.hp === 1) collectionFlag("oneHealth");
+  collectionNotePlayerHp();
   collectionRaise("sinHeld", state.player.credits);
+  if (typeof revealedDamnedCount === "function") collectionRaise("revealedAtOnce", revealedDamnedCount());
+  const living = (state.bots || []).filter((bot) => bot && !bot.eliminated && !bot.immortal && bot.hp > 0);
+  const bountyOf = (bot) => Math.max(0, Math.ceil(botRegularBounty(bot) || 0));
+  collectionRaise("bountyHeld", Math.max(0, ...living.map(bountyOf)));
+  if (living.some((bot) => !bot.isBoss && bountyOf(bot) > 25 && (bot.memory || []).length > 25)) collectionFlag("bountyMemory25");
   collectionRaise("bossesAtOnce", (state.bots || []).filter((bot) => bot?.isBoss && !bot.eliminated && bot.hp > 0).length);
   collectionRaise("eliteLevel", Math.max(0, ...(state.player.passives || []).map((item) => (item?.stack || 1) - 1)));
   collectionNoteSealElite();
   const eliteSeals = (state.player.passives || []).filter((item) => item && (item.stack || 1) >= 2).length;
   if (eliteSeals >= 6) collectionFlag("sixEliteSeals");
-  // once per round, when it is resolved
   const round = state.roundState;
+  // the round's TARGET once it is final (READY pressed and the reveal over)
+  if (round?.penaltiesApplied && !roundRevealAnimationActive() && Number.isFinite(round.target)) {
+    collectionRaise("highestTarget", round.target);
+    if (round.target < 0) collectionFlag("targetBelowZero");
+  }
+  // once per round, when it is resolved
   if (state.stage === "summary" && round && !roundRevealAnimationActive() && run.roundProcessed !== state.round) {
     run.roundProcessed = state.round;
     run.critStreak = round.criticalHitKeys?.has?.("player") ? run.critStreak + 1 : 0;
@@ -21009,6 +21202,7 @@ function karmaGain(amount, source) {
   progress.karma = karmaBalance() + gained;
   const run = collectionRun();
   run.karma = (run.karma || 0) + gained;
+  collectionRaise("runKarma", run.karma);
   saveCollectionProgress();
   addLog(`${source}: +${gained} KARMA.`);
   collectionToastQueue.push({ kind: "karma", karma: gained, source });
@@ -21059,9 +21253,8 @@ function collectionKarmaLine() {
      (it then counts as defeated in the Collection and can be bound); the other kinds are SEALS by
      Collection section (GIFT_KINDS).
    Owned (a defeated demon, an unlocked or never-locked SEAL): a duplicate, half the price back.
-   The Planetary Seals, the Trinity and Anael are locked from the start and only gifts unlock them
-   (GIFT_ONLY_SEAL_IDS in 09-collection.js); the other locked SEALS can also still be earned by their
-   achievement. Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
+   Every locked SEAL can come from a gift or be earned by its achievement (SEAL_UNLOCKS in
+   09-collection.js). Opening: a face-down card rises out of the vessel and turns over (see startGiftOpening). */
 const GIFT_PACKS = [
   { key: "myrrh", name: "Myrrh", price: 44, odds: { goetia: 57, planet: 25, archangel: 10, boss: 4, apocalypse: 2.001, trinity: 1.333, satan: 0.666 } },
   { key: "frankincense", name: "Frankincense", price: 88, odds: { goetia: 36, planet: 35, archangel: 15, boss: 8, apocalypse: 4.001, trinity: 1.333, satan: 0.666 } },
@@ -21154,6 +21347,10 @@ function openGift(packKey) {
   if (duplicate && !free) progress.karma += refund;
   else if (kind === "goetia") progress.slain.push(item);
   else progress.unlocked.push(item);
+  // "Buy a Gold Jesus gift" opens the Seal of the Son (not with DEV infinite KARMA); a demon from a gift
+  // can also complete "Unlock all Demons" (Seal of the Father)
+  if (pack.key === "gold" && !free) progress.flags.goldGift = true;
+  evaluateSealUnlocks(true);
   saveCollectionProgress();
   const spec = kind === "goetia" ? GOETIC_BOSS_BY_KEY[item] : null;
   return {
@@ -22255,9 +22452,12 @@ function satanPactSign() {
   pact.used = true;
   pact.outcome = "signed";
   recordPactSigned();
+  collectionNoteDeal();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
+  // the "sign a deal" mission
+  if (typeof missionsNoteDeal === "function") missionsNoteDeal();
   return true;
 }
 
@@ -22510,12 +22710,13 @@ function dealContractSvg() {
 /* ---------- Missions and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
-   mission pays 1, 2 or 3 FAVOR at once. The slot machine left of the guess area is always available:
+   mission pays its FAVOR (1, 2, 3 or 6) at once. The slot machine left of the guess area is always available:
    a spin costs SLOT_SPIN_COST FAVOR, three reels each land on one icon, and the reward depends on how many
    of each icon came up (SLOT_PAYOUTS). Arcade only: no PvP, not in the story's tutorial rounds.
    Run state: state.missions (saved with the run); free rerolls won here: state.slotFreeRerolls (they last
    until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, applyPenalties (READY and the
-   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells and consumeActive. */
+   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells, consumeActive, resolveEliminatedBots
+   (missionsNoteElimination) and satanPactSign (missionsNoteDeal). */
 
 const SLOT_SPIN_COST = 3;
 
@@ -22554,78 +22755,237 @@ function slotSfx(key) {
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
 const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
 
-/* ---- the missions: 15 worth 1, 15 worth 2, 15 worth 3 FAVOR ----
-   when: "event"   checked after every action (shop, ARTIFACT, spin) and after the results
+/* ---- the missions: 13 worth 1 FAVOR, 14 worth 2, 8 worth 3 or more ----
+   Each round MISSION_TIER_ODDS decides how much the mission is worth (45% 1 FAVOR, 40% 2, 15% 3 or more), then a
+   mission of that worth is drawn by its weight (1 unless set). Only missions that can be done right now are drawn.
+   when: "event"   checked after every action (shop, ARTIFACT, spin, deal) and after the results
          "resolve" checked once the round's results are in (and after any later action that round)
-         "leave"   checked when you move on to the next round
-   can(): may this mission be drawn now? param(): a value drawn with it (shown in the text). */
+         "leave"   checked when you move on to the next round (NEXT ROUND)
+   can(): may this mission be drawn now? param(): a value drawn with it (shown in the text).
+   failed(): it can no longer be done this round (the box says Missed). */
+const MISSION_TIER_ODDS = { 1: 45, 2: 40, 3: 15 };
+
+// living DAMNED a mission can name (no BOSSES)
+function missionNameableBots() {
+  return activeBots().filter((bot) => !bot.isBoss && !bot.immortal);
+}
+
+function missionBotParam(bot) {
+  return bot ? { id: bot.id, name: bot.name } : null;
+}
+
+function missionHeldArtifactIds() {
+  return (state.player?.actives || []).filter((item) => item && !item.devTemporary).map((item) => item.id);
+}
+
+// ARTIFACTS you aim at a DAMNED
+function missionTargetedArtifactsHeld() {
+  return missionHeldArtifactIds().filter((id) => TARGETED_ARTIFACT_IDS.has(id) || id === "a11").length;
+}
+
+function missionShopOpen() {
+  return typeof shopDisabledBySatan !== "function" || !shopDisabledBySatan();
+}
+
+const missionTargets = (f, param) => (param ? f.targetCounts.get(param.id) || 0 : 0);
+
+// mission texts read exactly as the list they were written from: "Use a Black Candle", "Use two Black Candles"
+function missionArtifactWithArticle(name) {
+  if (!name) return "an artifact";
+  if (/^the\s/i.test(name)) return name;
+  return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+}
+
+function missionArtifactPlural(name) {
+  if (!name) return "artifacts";
+  const base = name.replace(/^the\s+/i, "");
+  const of = base.match(/^(.+?)( of .+)$/);
+  if (of) return `${missionArtifactPlural(of[1])}${of[2]}`;
+  if (/fe$/i.test(base)) return base.replace(/fe$/i, "ves");
+  if (/(s|x|z|ch|sh)$/i.test(base)) return `${base}es`;
+  return `${base}s`;
+}
+
 const MISSIONS = [
   // ---- 1 FAVOR ----
-  { id: "near10", value: 1, when: "resolve", text: "Guess within 10 of the TARGET.", check: (f) => f.guessed && f.dist <= 10 },
-  { id: "notWorst", value: 1, when: "resolve", text: "Don't have the worst guess.", check: (f) => f.guessed && !f.worst },
-  { id: "beat3", value: 1, when: "resolve", text: "Guess closer than 3 DAMNED.", check: (f) => f.guessed && f.botsFarther >= 3 },
-  { id: "under", value: 1, when: "resolve", text: "Guess under the TARGET.", check: (f) => f.guessed && f.guess < f.target },
-  { id: "over", value: 1, when: "resolve", text: "Guess over the TARGET.", check: (f) => f.guessed && f.guess > f.target },
-  { id: "hurt15", value: 1, when: "resolve", text: "Take 15 damage or less.", check: (f) => f.guessed && f.damageTaken <= 15 },
-  { id: "kill1", value: 1, when: "resolve", text: "Eliminate a DAMNED.", check: (f) => f.eliminations >= 1 },
-  { id: "earn5", value: 1, when: "resolve", text: "Earn 5 SIN this round.", check: (f) => f.earned >= 5, progress: (f) => `${Math.min(5, f.earned)}/5` },
-  { id: "pain40", value: 1, when: "resolve", text: "The DAMNED take 40 damage in total.", check: (f) => f.botDamage >= 40 },
-  { id: "seal1", value: 1, when: "resolve", text: "Have a SEAL trigger.", can: () => ownedSealCount() >= 1, check: (f) => f.sealsTriggered >= 1 },
-  { id: "use1", value: 1, when: "event", text: "Use an ARTIFACT.", check: (f) => f.artifactsUsed >= 1 },
-  { id: "buy1", value: 1, when: "event", text: "Buy something in Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.buys >= 1 },
-  { id: "reroll1", value: 1, when: "event", text: "Reroll Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 1 },
-  { id: "sell1", value: 1, when: "event", text: "Sell a SEAL or an ARTIFACT.", can: () => ownedSealCount() + (state.player.actives || []).length >= 1, check: (f) => f.sells >= 1 },
-  { id: "keep10", value: 1, when: "leave", text: "Go into the next round with 10 SIN or more.", check: (f) => f.sin >= 10 },
+  {
+    id: "useItem",
+    value: 1,
+    weight: 4,
+    when: "event",
+    text: (param) => `Use ${missionArtifactWithArticle(ITEMS[param]?.name)}`,
+    can: () => activeUseLimit() >= 1,
+    param: () => {
+      const ids = [...new Set(missionHeldArtifactIds())];
+      return ids.length ? randomFrom(ids) : null;
+    },
+    check: (f, param) => (f.itemCounts.get(param) || 0) >= 1,
+    failed: (f) => f.resolved
+  },
+  { id: "noArtifacts", value: 1, when: "resolve", text: "Don't use artifacts this round", can: () => missionHeldArtifactIds().length >= 1, check: (f) => f.artifactsUsed === 0, failed: (f) => f.artifactsUsed > 0 },
+  { id: "gain6", value: 1, when: "event", text: "Gain 6 or more sin this round", check: (f) => f.earned >= 6, progress: (f) => `${Math.min(6, f.earned)}/6` },
+  { id: "kill2", value: 1, when: "resolve", text: "Eliminate two Damned", check: (f) => f.eliminations >= 2, progress: (f) => `${Math.min(2, f.eliminations)}/2` },
+  { id: "reroll5", value: 1, when: "event", text: "Reroll 5 times", can: missionShopOpen, check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
+  { id: "noBuy", value: 1, when: "leave", text: "Don't buy any Devil's Offerings", can: missionShopOpen, check: (f) => f.buys === 0, failed: (f) => f.buys > 0 },
+  {
+    id: "killName",
+    value: 1,
+    weight: 5,
+    when: "resolve",
+    text: (param) => `Eliminate ${param?.name || "a Damned"}`,
+    param: () => {
+      const bots = missionNameableBots();
+      return bots.length ? missionBotParam(randomFrom(bots)) : null;
+    },
+    check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
+  },
+  { id: "noKill", value: 1, when: "resolve", text: "Don't eliminate any Damned", check: (f) => f.eliminations === 0, failed: (f) => f.eliminations > 0 },
+  { id: "hurt4", value: 1, when: "resolve", text: "Take 4 or less damage this round", check: (f) => f.guessed && f.damageTaken <= 4 },
+  { id: "sell1", value: 1, when: "event", text: "Sell 1 seal", can: () => ownedSealCount() >= 1, check: (f) => f.sealSells >= 1 },
+  { id: "sameGuess", value: 1, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.guessed && f.matchesRevealed },
+  {
+    id: "noArtifactsHeld",
+    value: 1,
+    when: "leave",
+    text: "Have 0 artifacts in your inventory at the end of the round",
+    can: () => missionHeldArtifactIds().length >= 1,
+    check: (f) => f.artifactsHeld === 0
+  },
+  {
+    id: "useOn",
+    value: 1,
+    weight: 2,
+    when: "event",
+    text: (param) => `Use an artifact on ${param?.name || "a Damned"}`,
+    can: () => missionTargetedArtifactsHeld() >= 1 && activeUseLimit() >= 1,
+    param: () => {
+      const bots = missionNameableBots();
+      return bots.length ? missionBotParam(randomFrom(bots)) : null;
+    },
+    check: (f, param) => missionTargets(f, param) >= 1,
+    failed: (f) => f.resolved
+  },
 
   // ---- 2 FAVOR ----
-  { id: "near3", value: 2, when: "resolve", text: "Guess within 3 of the TARGET.", check: (f) => f.guessed && f.dist <= 3 },
-  { id: "closest", value: 2, when: "resolve", text: "Have the closest guess at the table.", check: (f) => f.guessed && f.closest },
-  { id: "lowest", value: 2, when: "resolve", text: "Guess lower than every DAMNED.", check: (f) => f.guessed && f.lowest },
-  { id: "hurt5", value: 2, when: "resolve", text: "Take 5 damage or less.", check: (f) => f.guessed && f.damageTaken <= 5 },
-  { id: "kill2", value: 2, when: "resolve", text: "Eliminate 2 DAMNED.", check: (f) => f.eliminations >= 2, progress: (f) => `${Math.min(2, f.eliminations)}/2` },
+  { id: "critical", value: 2, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
   {
-    id: "killType",
+    id: "useItemTwice",
+    value: 2,
+    weight: 4,
+    when: "event",
+    text: (param) => `Use two ${missionArtifactPlural(ITEMS[param]?.name)}`,
+    can: () => activeUseLimit() >= 2,
+    param: () => {
+      const held = missionHeldArtifactIds();
+      const pairs = [...new Set(held.filter((id) => held.filter((other) => other === id).length >= 2))];
+      return pairs.length ? randomFrom(pairs) : null;
+    },
+    check: (f, param) => (f.itemCounts.get(param) || 0) >= 2,
+    progress: (f, param) => `${Math.min(2, f.itemCounts.get(param) || 0)}/2`,
+    failed: (f) => f.resolved
+  },
+  { id: "gain12", value: 2, when: "event", text: "Gain 12 or more sin this round", check: (f) => f.earned >= 12, progress: (f) => `${Math.min(12, f.earned)}/12` },
+  { id: "buy6", value: 2, when: "event", text: "Buy six seals or artifacts", can: missionShopOpen, check: (f) => f.buys >= 6, progress: (f) => `${Math.min(6, f.buys)}/6` },
+  { id: "over66", value: 2, when: "resolve", text: "Guess over 66", check: (f) => f.guessed && f.guess > 66 },
+  { id: "under12", value: 2, when: "resolve", text: "Guess under 12", check: (f) => f.guessed && f.guess < 12 },
+  { id: "guess50", value: 2, when: "resolve", text: "Guess 50", check: (f) => f.guessed && f.guess === 50 },
+  {
+    id: "killMemory",
     value: 2,
     when: "resolve",
-    text: (param) => `Eliminate a ${String(param || "").toUpperCase()} DAMNED.`,
-    param: () => {
-      const types = [...new Set(activeBots().filter((bot) => !bot.isBoss).flatMap((bot) => personalityTypes(bot)))];
-      return types.length ? randomFrom(types) : null;
-    },
-    check: (f, param) => f.eliminatedTypes.includes(param)
+    text: "Eliminate a Damned with 10 or more memory",
+    can: () => activeBots().some((bot) => !bot.immortal && (bot.memory || []).length >= 10),
+    check: (f) => f.kills.some((kill) => kill.memory >= 10)
   },
-  { id: "bounty4", value: 2, when: "resolve", text: "Collect a BOUNTY of 4 SIN or more.", check: (f) => f.bestBounty >= 4 },
-  { id: "use2", value: 2, when: "event", text: "Use 2 ARTIFACTS.", check: (f) => f.artifactsUsed >= 2, progress: (f) => `${Math.min(2, f.artifactsUsed)}/2` },
-  { id: "buySeal", value: 2, when: "event", text: "Buy a SEAL or an ELITE level.", can: () => !shopDisabledBySatan(), check: (f) => f.sealsBought >= 1 },
-  { id: "reroll3", value: 2, when: "event", text: "Reroll Devil's Offerings 3 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 3, progress: (f) => `${Math.min(3, f.rerolls)}/3` },
-  { id: "seals3", value: 2, when: "resolve", text: "Have 3 different SEALS trigger.", can: () => ownedSealCount() >= 3, check: (f) => f.sealsTriggered >= 3, progress: (f) => `${Math.min(3, f.sealsTriggered)}/3` },
-  { id: "earn10", value: 2, when: "resolve", text: "Earn 10 SIN this round.", check: (f) => f.earned >= 10, progress: (f) => `${Math.min(10, f.earned)}/10` },
-  { id: "spend15", value: 2, when: "event", text: "Spend 15 SIN this round.", check: (f) => f.spent >= 15, progress: (f) => `${Math.min(15, f.spent)}/15` },
-  { id: "pain10each", value: 2, when: "resolve", text: "Every DAMNED takes 10 damage or more.", check: (f) => f.everyBotHit10 },
-  { id: "hold4", value: 2, when: "leave", text: "Go into the next round holding 4 ARTIFACTS.", check: (f) => f.artifactsHeld >= 4, progress: (f) => `${Math.min(4, f.artifactsHeld)}/4` },
+  {
+    id: "killBounty",
+    value: 2,
+    when: "resolve",
+    text: "Eliminate a Damned with 10 or more bounty",
+    can: () => activeBots().some((bot) => !bot.immortal && missionBountyOf(bot) >= 10),
+    check: (f) => f.kills.some((kill) => kill.bounty >= 10)
+  },
+  { id: "killRevealed", value: 2, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
+  {
+    id: "useOn2",
+    value: 2,
+    weight: 2,
+    when: "event",
+    text: (param) => `Use two artifacts on ${param?.name || "a Damned"}`,
+    can: () => missionTargetedArtifactsHeld() >= 2 && activeUseLimit() >= 2,
+    param: () => {
+      const bots = missionNameableBots();
+      return bots.length ? missionBotParam(randomFrom(bots)) : null;
+    },
+    check: (f, param) => missionTargets(f, param) >= 2,
+    progress: (f, param) => `${Math.min(2, missionTargets(f, param))}/2`,
+    failed: (f) => f.resolved
+  },
+  {
+    id: "useOnBoth",
+    value: 2,
+    weight: 2,
+    when: "event",
+    text: (param) => `Use one artifact on ${param?.first?.name || "a Damned"} and one on ${param?.second?.name || "another"}`,
+    can: () => missionTargetedArtifactsHeld() >= 2 && activeUseLimit() >= 2,
+    param: () => {
+      const bots = shuffled(missionNameableBots());
+      return bots.length >= 2 ? { first: missionBotParam(bots[0]), second: missionBotParam(bots[1]) } : null;
+    },
+    check: (f, param) => Boolean(param) && missionTargets(f, param.first) >= 1 && missionTargets(f, param.second) >= 1,
+    progress: (f, param) => `${(missionTargets(f, param?.first) >= 1 ? 1 : 0) + (missionTargets(f, param?.second) >= 1 ? 1 : 0)}/2`,
+    failed: (f) => f.resolved
+  },
+  {
+    id: "keepWeakest",
+    value: 2,
+    when: "resolve",
+    text: (param) => `Keep ${param?.name || "the weakest Damned"} alive`,
+    param: () => {
+      const bots = missionNameableBots();
+      if (!bots.length) return null;
+      const least = Math.min(...bots.map((bot) => bot.hp));
+      return missionBotParam(randomFrom(bots.filter((bot) => bot.hp === least)));
+    },
+    check: (f, param) => Boolean(param) && !f.killedIds.has(param.id),
+    failed: (f, param) => Boolean(param) && f.killedIds.has(param.id)
+  },
+  {
+    id: "killStrongest",
+    value: 2,
+    when: "resolve",
+    text: (param) => `Eliminate ${param?.name || "the strongest Damned"}`,
+    param: () => {
+      const bots = missionNameableBots();
+      if (!bots.length) return null;
+      const most = Math.max(...bots.map((bot) => bot.hp));
+      return missionBotParam(randomFrom(bots.filter((bot) => bot.hp === most)));
+    },
+    check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
+  },
 
-  // ---- 3 FAVOR ----
-  { id: "critical", value: 3, when: "resolve", text: "Hit a CRITICAL.", check: (f) => f.critical },
-  { id: "kill3", value: 3, when: "resolve", text: "Eliminate 3 DAMNED.", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
-  { id: "unhurt", value: 3, when: "resolve", text: "Take no damage this round.", check: (f) => f.guessed && f.damageTaken === 0 },
-  { id: "boss", value: 3, when: "resolve", text: "Defeat the BOSS.", can: () => activeBots().some((bot) => bot.isBoss && !bot.immortal), check: (f) => f.bossesKilled >= 1 },
-  { id: "killFull", value: 3, when: "resolve", text: "Eliminate a DAMNED that started the round at full SOUL.", check: (f) => f.fullKills >= 1 },
-  { id: "earn25", value: 3, when: "resolve", text: "Earn 25 SIN this round.", check: (f) => f.earned >= 25, progress: (f) => `${Math.min(25, f.earned)}/25` },
-  { id: "seals5", value: 3, when: "resolve", text: "Have 5 different SEALS trigger.", can: () => ownedSealCount() >= 5, check: (f) => f.sealsTriggered >= 5, progress: (f) => `${Math.min(5, f.sealsTriggered)}/5` },
-  { id: "reroll5", value: 3, when: "event", text: "Reroll Devil's Offerings 5 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
-  { id: "spend30", value: 3, when: "event", text: "Spend 30 SIN this round.", check: (f) => f.spent >= 30, progress: (f) => `${Math.min(30, f.spent)}/30` },
-  { id: "critBare", value: 3, when: "resolve", text: "Hit a CRITICAL without using an ARTIFACT.", check: (f) => f.critical && f.artifactsUsed === 0 },
-  { id: "near2safe", value: 3, when: "resolve", text: "Guess within 2 of the TARGET and take 5 damage or less.", check: (f) => f.guessed && f.dist <= 2 && f.damageTaken <= 5 },
-  { id: "keepSoul", value: 3, when: "leave", text: "Go into the next round with as much SOUL as you started this one.", check: (f) => f.hp >= f.startHp },
-  { id: "twoArtKill2", value: 3, when: "resolve", text: "Use 2 different ARTIFACTS and eliminate 2 DAMNED.", check: (f) => f.distinctArtifacts >= 2 && f.eliminations >= 2 },
-  { id: "closestKill2", value: 3, when: "resolve", text: "Have the closest guess and eliminate 2 DAMNED.", check: (f) => f.guessed && f.closest && f.eliminations >= 2 },
-  { id: "lowestNear3", value: 3, when: "resolve", text: "Guess lower than every DAMNED and within 3 of the TARGET.", check: (f) => f.guessed && f.lowest && f.dist <= 3 }
+  // ---- 3 FAVOR or more ----
+  { id: "pentakill", value: 3, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill },
+  { id: "kill3", value: 3, when: "resolve", text: "Eliminate three Damned", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
+  { id: "zeroSin", value: 3, when: "leave", text: "Have 0 sin at the end of the round", check: (f) => f.sin === 0 },
+  { id: "hurt12", value: 3, when: "resolve", text: "Take 12 or more damage", check: (f) => f.guessed && f.damageTaken >= 12 },
+  { id: "guess0", value: 3, when: "resolve", text: "Guess 0", check: (f) => f.guessed && f.guess === 0 },
+  { id: "guess100", value: 3, when: "resolve", text: "Guess 100", can: () => playerGuessLimit() >= 100, check: (f) => f.guessed && f.guess === 100 },
+  { id: "sellStartSeal", value: 3, when: "event", text: "Sell one of the seals you had at the start of the round", can: () => ownedSealCount() >= 1, check: (f) => f.startSealSold },
+  // only while the run's one deal is still to be made
+  { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned }
 ];
 
 const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));
 
 function ownedSealCount() {
   return (state.player?.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
+}
+
+// the BOUNTY on a DAMNED's card (a BOSS's BOSS BOUNTY counts too)
+function missionBountyOf(bot) {
+  if (!bot || bot.immortal) return 0;
+  return Math.max(0, Math.ceil(botRegularBounty(bot) || 0)) + (bot.isBoss ? Math.max(0, Math.ceil(botBossBounty(bot) || 0)) : 0);
 }
 
 /* ---- state ---- */
@@ -22652,6 +23012,12 @@ function missionsRoundFresh() {
     buys: 0,
     sealsBought: 0,
     sells: 0,
+    sealSells: 0,
+    soldSin: 0, // SIN from sales (not "gained" for the SIN missions)
+    startSealIds: (state.player?.passives || []).filter(Boolean).map((item) => item.id),
+    startSealSold: false,
+    kills: [], // { id, memory, bounty, revealed } as each DAMNED fell
+    dealSigned: false,
     startHp: state.player?.hp ?? 0,
     botStart: {},
     readyIds: null,
@@ -22667,8 +23033,44 @@ function missionsState() {
   return missions;
 }
 
+/* the slot machine and the missions stay hidden until the player has won once and left Satan's first-win
+   speech (09-intro-story.js, dearthFirstVictorySeenV1), or until Pause > DEV > Unlock slot machine */
+const SLOT_MACHINE_UNLOCK_STORAGE_KEY = "dearthSlotMachineUnlockedV1";
+
+function slotMachineStorage() {
+  try {
+    return typeof window !== "undefined" ? window.localStorage || null : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function slotMachineUnlocked() {
+  try {
+    const storage = slotMachineStorage();
+    if (!storage) return false;
+    if (storage.getItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY) === "1") return true;
+    const firstWinKey = typeof SATAN_FIRST_VICTORY_STORAGE_KEY === "string" ? SATAN_FIRST_VICTORY_STORAGE_KEY : "dearthFirstVictorySeenV1";
+    return storage.getItem(firstWinKey) === "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+// true when this call unlocked it, false when it already was (or storage is unavailable)
+function unlockSlotMachine() {
+  const wasUnlocked = slotMachineUnlocked();
+  try {
+    slotMachineStorage()?.setItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY, "1");
+  } catch (error) {
+    return false;
+  }
+  return !wasUnlocked && slotMachineUnlocked();
+}
+
 function missionsEnabled() {
   if (state.mode !== "arcade" || state.gameOver) return false;
+  if (!slotMachineUnlocked()) return false;
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
   return true;
 }
@@ -22682,6 +23084,12 @@ function resetMissionsForRun() {
 function normalizeMissionsState() {
   const missions = missionsState();
   if (missions.current && !MISSION_BY_ID[missions.current.id]) missions.current = null;
+  const counters = missions.round;
+  if (!Array.isArray(counters.kills)) counters.kills = [];
+  if (!Array.isArray(counters.startSealIds)) counters.startSealIds = [];
+  ["sealSells", "soldSin"].forEach((key) => {
+    if (!Number.isFinite(counters[key])) counters[key] = 0;
+  });
   if (!Number.isFinite(state.slotFreeRerolls)) state.slotFreeRerolls = 0;
   if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
   // a spin that was still turning when the run was saved pays out now
@@ -22701,15 +23109,42 @@ function missionText(mission, param) {
   return typeof mission.text === "function" ? mission.text(param) : mission.text;
 }
 
+function missionTier(mission) {
+  return Math.min(3, mission.value);
+}
+
+function missionWeightedPick(entries, weightOf) {
+  const total = entries.reduce((sum, entry) => sum + Math.max(0, weightOf(entry)), 0);
+  let roll = Math.random() * total;
+  for (const entry of entries) {
+    roll -= Math.max(0, weightOf(entry));
+    if (roll < 0) return entry;
+  }
+  return entries[entries.length - 1];
+}
+
+// the worth first (MISSION_TIER_ODDS, among the worths that have a mission that can be done now), then a mission
+// of that worth by its weight; never the same mission twice in a row
 function drawMission() {
   const missions = missionsState();
-  const options = MISSIONS.filter((mission) => mission.id !== missions.lastId && (!mission.can || mission.can()));
-  for (const mission of shuffled(options)) {
+  const options = [];
+  MISSIONS.forEach((mission) => {
+    if (mission.id === missions.lastId) return;
+    if (mission.can && !mission.can()) return;
     const param = mission.param ? mission.param() : null;
-    if (mission.param && !param) continue;
-    return { id: mission.id, value: mission.value, param, round: state.round, done: false };
-  }
-  return null;
+    if (mission.param && !param) return;
+    options.push({ mission, param });
+  });
+  if (!options.length) return null;
+  const tiers = Object.keys(MISSION_TIER_ODDS)
+    .map(Number)
+    .filter((tier) => options.some((option) => missionTier(option.mission) === tier));
+  const tier = missionWeightedPick(tiers, (value) => MISSION_TIER_ODDS[value]);
+  const pick = missionWeightedPick(
+    options.filter((option) => missionTier(option.mission) === tier),
+    (option) => option.mission.weight || 1
+  );
+  return { id: pick.mission.id, value: pick.mission.value, param: pick.param, round: state.round, done: false };
 }
 
 // the round's mission: drawn the first time it is needed in a round
@@ -22728,61 +23163,39 @@ function missionFacts() {
   const missions = missionsState();
   const counters = missions.round;
   const round = state.roundState || {};
-  const guess = round.playerEffectiveGuess;
-  const target = round.target;
-  const guessed = counters.resolved && Number.isFinite(guess) && Number.isFinite(target);
-  const dist = guessed ? Math.abs(guess - target) : Infinity;
-  const readyIds = counters.readyIds || Object.keys(counters.botStart).map(Number);
-  const removed = round.removedBotIds instanceof Set ? round.removedBotIds : new Set();
-  const botGuesses = [];
-  readyIds.forEach((id) => {
-    const value = round.botEffectiveGuesses instanceof Map ? round.botEffectiveGuesses.get(id) : undefined;
-    if (Number.isFinite(value) && !removed.has(id)) botGuesses.push(value);
-  });
-  const botDists = botGuesses.map((value) => Math.abs(value - target));
+  const guess = round.playerSubmittedGuess;
+  const guessed = Boolean(counters.resolved) && Number.isFinite(guess);
   const startedBots = state.bots.filter((bot) => counters.botStart[bot.id]);
   const killedBots = startedBots.filter((bot) => bot.eliminated && !bot.immortal);
-  const triggered = round.triggeredPassiveIds instanceof Set ? round.triggeredPassiveIds.size : 0;
-  const itemCounts = round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map();
+  const killedIds = new Set(killedBots.map((bot) => bot.id));
+  // each fallen DAMNED as it was when it fell (missionsNoteElimination), or as it is now
+  const kills = killedBots.map((bot) => counters.kills.find((kill) => kill.id === bot.id) || { id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+  const revealedIds = new Set(round.revealedBotIds instanceof Set ? round.revealedBotIds : []);
+  state.bots.forEach((bot) => {
+    if (bot.revealedByPassive && counters.botStart[bot.id]) revealedIds.add(bot.id);
+  });
+  const botGuesses = round.botSubmittedGuesses instanceof Map ? round.botSubmittedGuesses : new Map();
   return {
+    resolved: Boolean(counters.resolved),
     guessed,
     guess,
-    target,
-    dist,
     critical: Boolean(counters.resolved && round.criticalHitKeys instanceof Set && round.criticalHitKeys.has("player")),
-    worst: guessed && botDists.length > 0 && dist > 0 && botDists.every((other) => dist >= other),
-    closest: guessed && botDists.every((other) => dist <= other),
-    lowest: guessed && botGuesses.length > 0 && botGuesses.every((other) => guess < other),
-    botsFarther: guessed ? botDists.filter((other) => other > dist).length : 0,
+    pentakill: Boolean(round.pentakillAwarded),
     damageTaken: Math.max(0, Math.ceil(state.playerLastDamage || 0)),
-    hp: state.player.hp,
-    startHp: counters.startHp,
     eliminations: killedBots.length,
-    eliminatedTypes: Array.isArray(round.eliminatedPersonalities) ? round.eliminatedPersonalities : [],
-    bestBounty: killedBots.reduce((best, bot) => Math.max(best, Number(bot.eliminationReward) || 0), 0),
-    bossesKilled: killedBots.filter((bot) => bot.isBoss).length,
-    fullKills: killedBots.filter((bot) => {
-      const start = counters.botStart[bot.id];
-      return start && start.hp >= start.maxHp;
-    }).length,
-    botDamage: startedBots.reduce((sum, bot) => sum + Math.max(0, Number(bot.lastDamage) || 0), 0),
-    everyBotHit10:
-      counters.resolved &&
-      readyIds.length > 0 &&
-      readyIds.every((id) => {
-        const bot = state.bots.find((entry) => entry.id === id);
-        return bot && (Number(bot.lastDamage) || 0) >= 10;
-      }),
-    sealsTriggered: triggered,
+    killedIds,
+    kills,
+    matchesRevealed: guessed && [...revealedIds].some((id) => botGuesses.get(id) === guess),
     artifactsUsed: Math.max(0, round.activeUses || 0),
-    distinctArtifacts: itemCounts.size,
+    itemCounts: round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map(),
+    targetCounts: round.artifactTargetCountsByBotId instanceof Map ? round.artifactTargetCountsByBotId : new Map(),
     artifactsHeld: (state.player.actives || []).length,
     buys: counters.buys,
-    sealsBought: counters.sealsBought,
     rerolls: counters.rerolls,
-    sells: counters.sells,
-    earned: Math.max(0, Math.ceil(round.earnedSinThisRound || 0)),
-    spent: Math.max(0, Math.ceil(round.creditsSpentThisRound || 0)),
+    sealSells: counters.sealSells || 0,
+    startSealSold: Boolean(counters.startSealSold),
+    dealSigned: Boolean(counters.dealSigned),
+    earned: Math.max(0, Math.ceil((round.earnedSinThisRound || 0) - (counters.soldSin || 0))),
     sin: Math.max(0, Math.ceil(state.player.credits || 0))
   };
 }
@@ -22809,7 +23222,7 @@ function missionsComplete(current, mission) {
   missions.completed += 1;
   missions.earned += current.value;
   const text = missionText(mission, current.param);
-  addLog(`Mission done: ${text} +${current.value} FAVOR.`);
+  addLog(`Mission done: ${text} (+${current.value} FAVOR).`);
   if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
   slotSfx("bountyUp");
 }
@@ -22834,14 +23247,38 @@ function missionsBeforeNextRound() {
   missionsCheck("leave");
 }
 
+// a DAMNED falls (resolveEliminatedBots): its MEMORY, BOUNTY and whether its guess was revealed, as it fell
+function missionsNoteElimination(bot) {
+  if (!missionsEnabled() || !bot) return;
+  const counters = missionsState().round;
+  if (counters.kills.some((kill) => kill.id === bot.id)) return;
+  counters.kills.push({ id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+}
+
+// the deal was signed (satanPactSign)
+function missionsNoteDeal() {
+  if (!missionsEnabled()) return;
+  missionsState().round.dealSigned = true;
+  missionsCheck("event");
+}
+
 // kind: "buySeal" | "buyArtifact" | "reroll" | "sell" | "artifact"
-function missionsNoteShop(kind) {
+// a sale: info = { sin: SIN it paid, sealIds: the SEALS sold (none for an ARTIFACT) }
+function missionsNoteShop(kind, info = {}) {
   if (!missionsEnabled()) return;
   const counters = missionsState().round;
   if (kind === "buySeal" || kind === "buyArtifact") counters.buys += 1;
   if (kind === "buySeal") counters.sealsBought += 1;
   if (kind === "reroll") counters.rerolls += 1;
-  if (kind === "sell") counters.sells += 1;
+  if (kind === "sell") {
+    counters.sells += 1;
+    counters.soldSin = (counters.soldSin || 0) + Math.max(0, Math.ceil(info.sin || 0));
+    const sealIds = Array.isArray(info.sealIds) ? info.sealIds : [];
+    if (sealIds.length) {
+      counters.sealSells = (counters.sealSells || 0) + 1;
+      if (sealIds.some((id) => (counters.startSealIds || []).includes(id))) counters.startSealSold = true;
+    }
+  }
   missionsCheck("event");
 }
 
@@ -23093,7 +23530,7 @@ function slotMachineHtml() {
         <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
         <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
-      <div class="slot-result">${escapeHtml(result || "Missions pay FAVOR.")}</div>
+      <div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Missions pay FAVOR.")}</div>
     </div>
   `;
 }
@@ -23104,10 +23541,12 @@ function missionBoxHtml() {
   if (!current) return "";
   const mission = MISSION_BY_ID[current.id];
   const counters = missionsState().round;
+  const facts = missionFacts();
   let status = "";
   if (current.done) status = "Done";
-  else if (mission.when === "resolve" && counters.resolved && !mission.progress) status = "Missed";
-  else if (mission.progress) status = mission.progress(missionFacts(), current.param);
+  else if (mission.failed && mission.failed(facts, current.param)) status = "Missed";
+  else if (mission.when === "resolve" && counters.resolved) status = "Missed";
+  else if (mission.progress) status = mission.progress(facts, current.param);
   else if (mission.when === "leave") status = "At NEXT ROUND";
   const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
   return `
@@ -23668,3 +24107,9 @@ if (!resumeNativeArcadeOnForeground()) {
     showMainMenu();
   }
 }
+// SEALS whose achievement is already met open now: progress from before the achievements changed, and
+// value rules (demons, Archangels, discoveries, Records) that grew outside a run
+try {
+  evaluateSealUnlocks(true);
+  saveCollectionProgress();
+} catch (error) {}

@@ -865,6 +865,7 @@ function resolveEliminatedBots(eliminated) {
     recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
+    missionsNoteElimination(bot);
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
