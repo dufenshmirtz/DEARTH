@@ -665,7 +665,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -5337,6 +5337,11 @@ function barbatosYourGuessDamage(idOrItem) {
   return flatDamageValue(idOrItem, 25);
 }
 
+// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
+function barbatosRevealedYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
 function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
@@ -6025,7 +6030,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead, or ${barbatosRevealedYourGuessDamage(item)} if it is revealed; a DAMNED takes only the biggest of these.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -10867,8 +10872,9 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
-// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes the bigger damage instead (never both).
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED on your guess takes
+// the bigger "your guess" damage instead (25 hidden, 15 revealed, the revealed one once per reveal stack). A DAMNED
+// only ever takes one of them: the biggest that applies.
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
@@ -10880,18 +10886,28 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
-  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const matchesYou = (bot) => Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const shares = (bot) => counts.get(guessOf(bot)) >= 2;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    return counts.get(guess) >= 2 || matchesYou(bot);
+    return shares(bot) || matchesYou(bot);
   });
   if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
     let triggered = false;
     hit.forEach((bot) => {
-      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      const options = [];
+      if (shares(bot)) options.push(barbatosDamage(entry));
+      if (matchesYou(bot)) {
+        options.push(
+          bot.revealedByPassive
+            ? barbatosRevealedYourGuessDamage(entry) * Math.max(1, revealMultiplicity(bot))
+            : barbatosYourGuessDamage(entry)
+        );
+      }
+      const damage = Math.max(0, ...options);
       if (damage <= 0) return;
       triggered = true;
       addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);

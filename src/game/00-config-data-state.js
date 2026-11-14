@@ -448,7 +448,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",

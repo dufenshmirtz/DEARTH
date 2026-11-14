@@ -3661,7 +3661,7 @@ test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every
   `);
 });
 
-test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes 25 instead", () => {
+test("Seal of Barbatos: DAMNED that share a guess take 20; a DAMNED on your guess takes 25 instead, 15 if revealed", () => {
   const damageWith = (passives, guesses, playerGuess, extra = "") => {
     const run = game();
     run(`
@@ -3692,10 +3692,17 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   assert.equal(sealed.player, plain.player, "Barbatos no longer blocks the hidden DAMNED's CRITICAL");
   assert.deepEqual(diff(sealed, plain), [25, 0, 0, 0, 0]);
   assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [38, 0, 0, 0, 0]);
-  // a revealed DAMNED on your guess: no damage from Barbatos and its CRITICAL still hits you
-  const revealed = damageWith(`[["p46"]]`, guesses, 60, "state.bots[0].revealedByPassive = true;");
+  // a revealed DAMNED on your guess: 15 (23 with one ELITE level), and its CRITICAL still hits you
+  const reveal = "state.bots[0].revealedByPassive = true;";
+  const revealedPlain = damageWith("[]", guesses, 60, reveal);
+  const revealed = damageWith(`[["p46"]]`, guesses, 60, reveal);
   assert.equal(revealed.player, plain.player);
-  assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
+  assert.deepEqual(diff(revealed, revealedPlain), [15, 0, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60, reveal), revealedPlain), [23, 0, 0, 0, 0]);
+  // a revealed DAMNED on your guess that also shares it with another DAMNED takes the bigger: 20, not 15 + 20
+  guesses = [10, 10, 30, 55, 80];
+  const pairReveal = "state.bots[0].revealedByPassive = true; state.bots[1].revealedByPassive = true;";
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10, pairReveal), damageWith("[]", guesses, 10, pairReveal)), [20, 20, 0, 0, 0]);
 });
 
 test("Seal of Orias: +1 CRITICAL range (+1 per ELITE level) only after a round without your CRITICAL", () => {

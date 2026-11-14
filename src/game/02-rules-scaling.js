@@ -1100,6 +1100,11 @@ function barbatosYourGuessDamage(idOrItem) {
   return flatDamageValue(idOrItem, 25);
 }
 
+// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
+function barbatosRevealedYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
 function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
