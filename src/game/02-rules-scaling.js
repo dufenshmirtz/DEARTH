@@ -980,8 +980,11 @@ function critWindowDetails(idOrItem) {
   };
 }
 
+// Seal of Aim: +1 CRITICAL range per CRITICAL in a row, up to this
+const AIM_MAX_CRIT_BONUS = 2;
+
 function ascendingCritWindowBonus() {
-  return passiveStack("p91") ? Math.min(4, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
+  return passiveStack("p91") ? Math.min(AIM_MAX_CRIT_BONUS, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
 }
 
 function ascendingCritDamageBonus() {
@@ -1100,6 +1103,11 @@ function barbatosYourGuessDamage(idOrItem) {
   return flatDamageValue(idOrItem, 25);
 }
 
+// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
+function barbatosRevealedYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
 function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
@@ -1169,9 +1177,16 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
-// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
-function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
-  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+// Seal of Haures: 50% chance a dead DAMNED comes back as the same soul; ELITE pays 4 SIN per level when it does
+const HAURES_REBIRTH_CHANCE = 0.5;
+
+function hauresRebirthSin(entry) {
+  return 4 * passiveEntryEliteLevels(entry);
+}
+
+// 4th Pentacle of the Moon: each Cursed Chalice adds flat damage to your CRITICAL this round (12, ELITE x1.5 each level)
+function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
+  return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
 // 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
@@ -1392,8 +1407,10 @@ function scaledBotDamage(bot, amount, playerDealt = true) {
   return scaledBotDamageDetails(bot, amount, playerDealt).damage;
 }
 
-function scaledBotDamageDetails(bot, amount, playerDealt = true) {
+// options.unmultiplied: no damage multiplier applies (Seal of Satan); flat bonuses still add
+function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   const damage = Math.max(0, Math.ceil(amount));
+  const unmultiplied = !!options?.unmultiplied;
   if (!damage) return { damage: 0, baseDamage: 0, modifierEntries: [], redirectEntries: [] };
   let exactDamage = damage;
   let roundedDamage = damage;
@@ -1409,7 +1426,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     return true;
   };
   const applyMultiplier = (multiplier, source, entry) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
     const before = roundedDamage;
     exactDamage *= multiplier;
     roundedDamage = Math.ceil(exactDamage);
@@ -1419,7 +1436,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     markPassiveEntryTriggered(entry);
   };
   const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
     const boostedDamage = Math.ceil(exactDamage * multiplier);
     const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
     if (redirectedDamage <= 0) return;

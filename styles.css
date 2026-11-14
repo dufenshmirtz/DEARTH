@@ -9112,6 +9112,46 @@ body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .credit-wrap .player-credit
   stroke: #ff6a5c;
 }
 
+/* PYROS-TECH marks: one red alchemical mark per ability (no inner fill, unlike the diamond) */
+#app .bot-glyph.pyros-glyph,
+#app .bot-glyph.pyros-glyph svg * {
+  color: var(--blood-bright) !important;
+  stroke: var(--blood-bright);
+}
+
+#app .bot-glyph.pyros-glyph {
+  margin-right: 2px;
+}
+
+/* the PYROS-TECH marks float on the name row, left of the zodiac sign (or a BOSS's pentagram), without moving
+   the centred name: layoutPyrosMarks() places and sizes them; hidden until it has */
+#app .bot-card .pyros-marks {
+  position: absolute;
+  z-index: 9;
+  top: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--pyros-cols, 7), var(--pyros-size, 19px));
+  grid-auto-rows: var(--pyros-size, 19px);
+  gap: 4px;
+  visibility: hidden;
+}
+
+#app .bot-card .pyros-marks .bot-glyph {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  vertical-align: top;
+}
+
+body.mobile-arcade #app .bot-card .pyros-marks {
+  gap: 3px;
+}
+
+#app .bot-glyph.pyros-glyph:hover svg * {
+  stroke: #ff6a5c;
+}
+
 /* phone: the cards reach a little further down */
 body.native-arcade {
   --native-seal-row-height: clamp(100px, 27vh, 124px);
@@ -11842,6 +11882,8 @@ body.mobile-arcade #app .game-over-card .new-record-row small {
   min-height: 0;
   padding-right: 4px;
   scroll-behavior: smooth;
+  /* the scroll area stops above the panel's bottom frame line, so a card cut off by scrolling never crosses it */
+  margin-bottom: 14px;
 }
 #app .active-panel .active-list > .item-card {
   min-height: max-content !important;
@@ -14041,4 +14083,869 @@ body.native-arcade .gifts-screen .gifts-dev {
 #app .elite-chance-label.elite-chance-boosted {
   color: var(--bone) !important;
   cursor: help;
+}
+
+/* ==========================================================================
+   Missions and the slot machine (09-slot-missions.js)
+   Desktop and phone web: inside the center console, the slot machine left of the guess
+   area and the round's mission right of the GUESS button, between the DAMNED and the SEALS.
+   Phone app: one band between the DAMNED and the SEALS.
+   ========================================================================== */
+:root {
+  --favor-horns: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='2.1' d='M9.4 14.2C5.9 13.4 3.4 10 4 4.1c1.3 3.6 3.4 5.6 6.4 6.4'/%3E%3Cpath stroke-width='2.1' d='M14.6 14.2c3.5-.8 6-4.2 5.4-10.1-1.3 3.6-3.4 5.6-6.4 6.4'/%3E%3Cpath stroke-width='2' d='M8.3 12.4c-.2 4.6 1.6 7.6 3.7 8.1 2.2-.5 3.9-3.5 3.7-8.1-1.2-1.4-6.2-1.4-7.4 0z'/%3E%3Cpath stroke-width='1.6' d='M10.1 14.9l1.2.5M13.9 14.9l-1.2.5'/%3E%3Cpath stroke-width='1' d='M5.2 6.8c.6 1.8 1.6 3 2.9 3.8M18.8 6.8c-.6 1.8-1.6 3-2.9 3.8'/%3E%3C/svg%3E");
+  --slot-reel-size: 46px;
+}
+
+#app .favor-mark,
+.floating-tooltip .favor-mark {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-left: 0.16em;
+  vertical-align: -0.12em;
+  background: var(--blood-bright, #dc2a2f);
+  -webkit-mask: var(--favor-horns) center / contain no-repeat;
+  mask: var(--favor-horns) center / contain no-repeat;
+  flex: 0 0 auto;
+}
+
+/* ---- the two boxes ---- */
+#app .slot-machine,
+#app .mission-box {
+  position: relative;
+  box-sizing: border-box;
+  pointer-events: auto;
+  padding: 2px 8px;
+  color: var(--bone, #e9e3d6);
+  border: 12px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% fill / 20px stretch;
+  background: transparent;
+}
+
+/* slot: three reels, SPIN and your FAVOR beside them, the last result under them */
+#app .slot-machine {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+#app .slot-side {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+#app .slot-favor {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--bone, #e9e3d6);
+  white-space: nowrap;
+}
+
+#app .slot-result {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-book) !important;
+  font-size: 12px;
+  line-height: 1.15;
+  color: var(--ash, #8d877c) !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---- reels ---- */
+#app .slot-reels {
+  display: grid;
+  grid-template-columns: repeat(3, var(--slot-reel-size));
+  gap: 5px;
+}
+
+#app .slot-reel {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--slot-reel-size);
+  height: var(--slot-reel-size);
+  overflow: hidden;
+  border: 0;
+  background: #000;
+}
+
+/* the game's hand-drawn frame over each reel (the spinning icons pass under it) */
+#app .slot-reel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 8px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 16px stretch;
+  opacity: 1;
+  /* thin lines at this size: brightened and given a faint glow so they read like the card frames */
+  filter: brightness(1.6) drop-shadow(0 0 1px rgba(233, 227, 214, 0.55));
+}
+
+body.outline-boil #app .slot-reel::after,
+body.outline-boil #app .slot-machine,
+body.outline-boil #app .mission-box {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+body.outline-boil #app .slot-reel:nth-child(2)::after,
+body.outline-boil #app .mission-box {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.333);
+}
+
+body.outline-boil #app .slot-reel:nth-child(3)::after {
+  animation-delay: calc(var(--boil-duration, 375ms) * -0.666);
+}
+
+/* the spin stays inside the hand-drawn line, which sits a few px inside the reel's box */
+#app .slot-window {
+  position: absolute;
+  inset: var(--slot-window-inset, 5px);
+  overflow: hidden;
+  --slot-cell: calc(var(--slot-reel-size) - 2 * var(--slot-window-inset, 5px));
+}
+
+#app .slot-idle {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: rgba(141, 135, 124, 0.7);
+}
+
+#app .slot-icon {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--slot-cell, var(--slot-reel-size));
+  padding: 2px;
+}
+
+#app .slot-glyph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+#app .slot-glyph svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--bone, #e9e3d6);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#app .slot-icon-damage .slot-glyph svg {
+  stroke: var(--blood-bright, #dc2a2f);
+}
+
+#app .slot-glyph-mask {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+#app .slot-glyph-sin {
+  background: var(--sin, #b0414c);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+}
+
+#app .slot-glyph-karma {
+  background: #e0383d;
+  -webkit-mask: var(--karma-spiral) center / contain no-repeat;
+  mask: var(--karma-spiral) center / contain no-repeat;
+}
+
+#app .slot-icon-label {
+  font-family: var(--font-display);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--ash, #8d877c);
+  white-space: nowrap;
+}
+
+/* spinning: a strip of every icon (twice) runs past, each reel stops on its own */
+#app .slot-reel.rolling .slot-strip {
+  display: grid;
+  animation: slot-roll 0.42s linear infinite;
+  filter: blur(0.7px);
+}
+
+@keyframes slot-roll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+#app .slot-reel.landed .slot-icon {
+  animation: slot-land 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+@keyframes slot-land {
+  from { transform: translateY(-38%); }
+  to { transform: translateY(0); }
+}
+
+/* three of a kind: the reels go red */
+#app .slot-machine.slot-triple .slot-reel::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .slot-machine.slot-triple .slot-icon-label,
+#app .slot-machine.slot-triple .slot-result {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+/* ---- spin button ---- */
+#app .slot-machine .slot-spin {
+  position: relative;
+  min-width: 0;
+  min-height: 30px;
+  padding: 5px 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--bone, #e9e3d6) !important;
+  font-family: var(--font-display);
+  font-size: 17px !important;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: none !important;
+  cursor: pointer;
+}
+
+#app .slot-machine .slot-spin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 8px solid transparent;
+  border-width: 8px 16px;
+  border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 8px 16px stretch;
+  opacity: 0.8;
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled),
+#app .slot-machine .slot-spin:focus-visible {
+  color: var(--blood-bright, #dc2a2f) !important;
+  outline: none;
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled) .favor-mark,
+#app .slot-machine .slot-spin:focus-visible .favor-mark {
+  background: var(--blood-bright, #dc2a2f);
+}
+
+#app .slot-machine .slot-spin:hover:not(:disabled)::after,
+#app .slot-machine .slot-spin:focus-visible::after {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+}
+
+#app .slot-machine .slot-spin:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#app .slot-cost {
+  margin-left: 4px;
+}
+
+/* ---- mission ---- */
+#app .mission-box {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+#app .mission-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+#app .mission-title {
+  color: var(--ash, #8d877c);
+}
+
+#app .mission-reward {
+  margin-left: auto;
+  color: var(--bone, #e9e3d6);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+#app .mission-text {
+  font-family: var(--font-book) !important;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--bone, #e9e3d6);
+}
+
+#app .mission-status {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--ash, #8d877c) !important;
+  white-space: nowrap;
+}
+
+#app .mission-status.done {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .mission-box.done .mission-text {
+  color: var(--ash, #8d877c) !important;
+}
+
+#app .mission-box.done .mission-reward {
+  color: var(--blood-bright, #dc2a2f);
+}
+
+#app .mission-box.done .mission-reward .favor-mark {
+  background: var(--blood-bright, #dc2a2f);
+}
+
+/* ---- the paytable tooltip ---- */
+.floating-tooltip .slot-paytable {
+  display: grid;
+  gap: 4px;
+  min-width: 320px;
+  max-width: 380px;
+}
+
+.floating-tooltip .slot-pay-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.floating-tooltip .slot-pay-row {
+  display: grid;
+  grid-template-columns: 30px repeat(3, minmax(64px, auto));
+  align-items: center;
+  column-gap: 12px;
+}
+
+.floating-tooltip .slot-pay-head span {
+  font-family: var(--font-display);
+  color: var(--ash, #8d877c);
+  letter-spacing: 0.06em;
+}
+
+.floating-tooltip .slot-pay-glyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+}
+
+.floating-tooltip .slot-pay-glyph svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--bone, #e9e3d6);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.floating-tooltip .slot-pay-glyph.slot-icon-damage svg {
+  stroke: var(--blood-bright, #dc2a2f);
+}
+
+.floating-tooltip .slot-pay-glyph .slot-glyph-mask {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.floating-tooltip .slot-glyph-sin {
+  background: var(--sin, #b0414c);
+  -webkit-mask: var(--sin-coin) center / contain no-repeat;
+  mask: var(--sin-coin) center / contain no-repeat;
+}
+
+.floating-tooltip .slot-glyph-karma {
+  background: #e0383d;
+  -webkit-mask: var(--karma-spiral) center / contain no-repeat;
+  mask: var(--karma-spiral) center / contain no-repeat;
+}
+
+.floating-tooltip .slot-pay-note {
+  color: var(--ash, #8d877c);
+  font-size: 0.92em;
+}
+
+/* ---- desktop: slot left of the guess area, mission right of GUESS ----
+   The guess area gets narrower so both side boxes fit on 1280-wide screens. */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot {
+  padding-left: var(--slot-edge-left, 0px);
+  padding-right: var(--slot-edge-right, 0px);
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: 4px;
+  column-gap: 14px;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .console-row {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
+  width: auto;
+  grid-template-columns: clamp(150px, 15vw, 280px) clamp(112px, 9vw, 160px);
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .console-hint,
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .pending-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  width: auto;
+  max-width: 100%;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .slot-machine {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: end;
+  max-width: 100%;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .center-console.has-slot .mission-box {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  width: min(100%, 300px);
+  min-height: 76px;
+}
+
+body:not(.mobile-arcade) #app .center-console.has-slot .slot-result {
+  max-width: 230px;
+}
+
+@media (max-width: 1440px) {
+  #app .center-console.has-slot {
+    --slot-reel-size: 40px;
+  }
+}
+
+@media (max-width: 1440px), (max-height: 760px) {
+  #app .center-console.has-slot .slot-icon-label {
+    display: none;
+  }
+  #app .center-console.has-slot .slot-glyph svg,
+  #app .center-console.has-slot .slot-glyph-mask {
+    width: 24px;
+    height: 24px;
+  }
+  #app .center-console.has-slot .slot-machine .slot-spin {
+    font-size: 15px !important;
+    padding: 4px 12px !important;
+  }
+  #app .center-console.has-slot .mission-text {
+    font-size: 14px;
+  }
+  body:not(.mobile-arcade) #app .center-console.has-slot .slot-result {
+    max-width: 200px;
+  }
+}
+
+@media (max-height: 760px) {
+  #app .center-console.has-slot {
+    --slot-reel-size: 36px;
+  }
+}
+
+/* ---- phone web: the console sits in the middle, the slot and the mission beside it ---- */
+body.mobile-arcade #app .center-console.has-slot .slot-machine,
+body.mobile-arcade #app .center-console.has-slot .mission-box {
+  position: absolute;
+  bottom: 0;
+  padding: 4px 8px;
+  border-width: 8px;
+  border-image-width: 12px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-machine {
+  left: var(--slot-edge-left, calc(-100% - 10px));
+  right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  --slot-reel-size: 30px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.mobile-arcade #app .center-console.has-slot .slot-machine .slot-spin {
+  min-height: 24px;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+body.mobile-arcade #app .center-console.has-slot .mission-box {
+  right: var(--slot-edge-right, calc(-100% - 10px));
+  left: auto;
+  width: min(230px, calc(50vw - 200px));
+}
+
+body.mobile-arcade #app .slot-icon-label,
+body.native-arcade #app .slot-icon-label {
+  display: none;
+}
+
+body.mobile-arcade #app .slot-result {
+  display: none;
+}
+
+body.mobile-arcade #app .slot-glyph svg,
+body.mobile-arcade #app .slot-glyph-mask {
+  width: 18px;
+  height: 18px;
+}
+
+body.mobile-arcade #app .slot-icon {
+  padding: 2px;
+}
+
+body.mobile-arcade #app .mission-text {
+  font-size: 12px;
+}
+
+/* ---- phone app: one band between the DAMNED and the SEALS ---- */
+body.native-arcade .native-arcade-frame.has-slot-band {
+  grid-template-rows: minmax(0, 1fr) 44px var(--native-seal-row-height) !important;
+}
+
+body.native-arcade .native-arcade-frame.has-slot-band > .native-console-panel,
+body.native-arcade .native-arcade-frame.has-slot-band > .mobile-numpad,
+body.native-arcade .native-arcade-frame.has-slot-band > .passive-bar {
+  grid-row: 3 !important;
+}
+
+body.native-arcade .native-slot-band {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  box-sizing: border-box;
+  padding-left: var(--slot-edge-left, 0px);
+  padding-right: var(--slot-edge-right, 0px);
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  --slot-reel-size: 26px;
+}
+
+body.native-arcade #app .native-slot-band .slot-machine,
+body.native-arcade #app .native-slot-band .mission-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  min-height: 0;
+  padding: 0 6px;
+  border-width: 8px;
+  border-image-width: 12px;
+  overflow: hidden;
+}
+
+body.native-arcade #app .native-slot-band .slot-result {
+  display: none;
+}
+
+body.native-arcade #app .native-slot-band .slot-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.native-arcade #app .native-slot-band .slot-glyph svg,
+body.native-arcade #app .native-slot-band .slot-glyph-mask {
+  width: 18px;
+  height: 18px;
+}
+
+body.native-arcade #app .native-slot-band .slot-icon {
+  padding: 2px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reel::after,
+body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+  border-width: 6px;
+  border-image-width: 11px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reel,
+body.mobile-arcade #app .center-console.has-slot .slot-reel {
+  --slot-window-inset: 4px;
+}
+
+body.native-arcade #app .native-slot-band .slot-spin {
+  min-height: 24px;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+body.native-arcade #app .native-slot-band .mission-head {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+body.native-arcade #app .native-slot-band .mission-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body.native-arcade #app .native-slot-band .mission-status {
+  font-size: 11px;
+}
+
+body.native-arcade #app .native-slot-band .mission-reward {
+  margin-left: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .slot-reel.rolling .slot-strip {
+    animation-duration: 1.4s;
+  }
+  #app .slot-reel.landed .slot-icon {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   The ARTIFACT being used (desktop): its target prompt and Cancel sit on its own card
+   ========================================================================== */
+#app .item-card.active.artifact-pending {
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-pending::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+#app .item-card.active.artifact-pending .item-name {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .artifact-pending-text {
+  grid-column: 1 / -1;
+  margin: 2px 0 4px;
+  font-family: var(--font-book) !important;
+  font-size: 14px !important;
+  line-height: 1.25;
+  color: var(--bone, #e9e3d6) !important;
+  text-align: left;
+}
+
+#app .item-card.active.artifact-pending .artifact-cancel-button {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .item-card.active.artifact-pending .artifact-cancel-button::after {
+  filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   DEAL as a contract (09-satan-pact.js dealContractSvg): no button frame, the sheet is the button.
+   Hover writes a blood signature on the line; a signed deal keeps it; under 25% SOUL the corner smoulders.
+   ========================================================================== */
+#app .deal-button.deal-contract {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--bone, #e9e3d6);
+  overflow: visible;
+}
+
+#app .deal-button.deal-contract::before,
+#app .deal-button.deal-contract::after {
+  display: none !important;
+}
+
+/* the sheet takes the button's colour (a global rule forces every element white otherwise), so the pulse and the
+   red hover reach the lines and the word */
+#app .deal-button.deal-contract .deal-paper,
+#app .deal-button.deal-contract .deal-paper *,
+#app .deal-button.deal-contract .deal-word-inline {
+  color: inherit !important;
+}
+
+#app .deal-paper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#app .deal-ink {
+  filter: url(#dealRough0);
+}
+
+body.outline-boil #app .deal-ink {
+  animation: deal-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+@keyframes deal-boil {
+  0% { filter: url(#dealRough0); }
+  33.333% { filter: url(#dealRough1); }
+  66.666% { filter: url(#dealRough2); }
+}
+
+#app .deal-ink path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#app .deal-ink .deal-line {
+  stroke-width: 1.3;
+  opacity: 0.75;
+}
+
+#app .deal-word {
+  fill: currentColor;
+  font-family: var(--font-display);
+  font-size: 29px;
+  letter-spacing: 1px;
+  text-anchor: middle;
+}
+
+#app .deal-sign {
+  fill: none;
+  stroke: var(--blood-bright, #dc2a2f);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  transition: stroke-dashoffset 0.7s ease;
+}
+
+#app .deal-contract:hover:not(:disabled) .deal-sign,
+#app .deal-contract.deal-signed .deal-sign {
+  stroke-dashoffset: 0;
+}
+
+#app .deal-contract.deal-signed .deal-sign {
+  transition: none;
+}
+
+#app .deal-contract:hover:not(:disabled) {
+  color: var(--blood-bright, #dc2a2f) !important;
+}
+
+#app .deal-burn {
+  fill: none;
+  stroke: var(--blood-bright, #dc2a2f);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px rgba(220, 42, 47, 1)) drop-shadow(0 0 2px rgba(220, 42, 47, 1));
+}
+
+#app .deal-contract.pact-urgent .deal-burn {
+  animation: deal-smoulder 1.6s ease-in-out infinite;
+}
+
+@keyframes deal-smoulder {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+body.reduce-flashes #app .deal-contract.pact-urgent .deal-burn {
+  animation: none;
+  opacity: 0.8;
+}
+
+/* desktop: the sheet under Pause, the testing buttons pushed below it */
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-contract {
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+body:not(.mobile-arcade) #app .arena:not(.pvp-arena) .topbar > .dev-quick {
+  bottom: -6px;
+}
+
+/* phone web: the sheet fills the small DEAL spot */
+body.mobile-arcade #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-contract {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+/* phone app: a small contract mark beside the word, inside the Pause / Items column, with the usual frame */
+body.native-arcade #app .deal-button.deal-contract {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+body.native-arcade #app .deal-paper-mark {
+  width: 26px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+body.native-arcade #app .deal-paper-mark .deal-ink path,
+body.native-arcade #app .deal-paper-mark .deal-sign {
+  stroke-width: 5;
+}
+
+body.native-arcade #app .deal-word-inline {
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+body.native-arcade #app .deal-button.deal-contract::after {
+  display: block !important;
 }

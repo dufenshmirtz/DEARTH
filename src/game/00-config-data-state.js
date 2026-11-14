@@ -448,7 +448,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -735,7 +735,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Haures",
     price: 14,
-    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
+    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, and number. ELITE: whenever that happens, gain 4 SIN for each ELITE level."
   },
   p87: {
     id: "p87",
@@ -770,7 +770,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aim",
     price: 14,
-    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
+    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +2. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
   },
   p92: {
     id: "p92",
@@ -944,7 +944,7 @@ const ITEMS = {
     name: "4th Pentacle of the Moon",
     price: 12,
     description:
-      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+      "Every Cursed Chalice you use also makes your CRITICAL deal +12 damage this round, and Cursed Chalice appears twice as often in Devil's Offerings. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p138: {
     id: "p138",
@@ -1024,8 +1024,8 @@ const ITEMS = {
     id: "p111",
     type: "passive",
     name: "Seal of Satan",
-    price: 20,
-    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
+    price: 40,
+    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level. Its damage can't be multiplied by any SEAL or effect."
   },
   p98: {
     id: "p98",
@@ -1046,7 +1046,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sachiel",
     price: 15,
-    description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+    description: "At end of round, if the regular BOUNTY of the 5 DAMNED in the slots (dead ones included, BOSS BOUNTY not counted) adds up to more than 40, this SEAL gains +1 damage, then all living DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
@@ -1526,7 +1526,7 @@ const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
-  p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
+  p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
@@ -1964,33 +1964,34 @@ const BOSS_PASSIVES = {
 };
 const SHADOW_BOSS_PASSIVE_KEY = "guilt";
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
+// PYROS-TECH: the abilities Pyros hands out, named after alchemical substances (their marks: PYROS_GIFT_MARKS in 09-rendering.js)
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
-    name: "Seal of Bathin",
+    name: "Cinnabar",
     description: "This Pyros Gift heals 5 SOUL at the end of every round."
   },
   fumes: {
-    name: "Seal of Amon",
+    name: "Acid",
     description: "While this Pyros Gift is alive, you take 1 damage at the end of every round."
   },
   thief: {
-    name: "Seal of Raum",
+    name: "Vitriol",
     description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
   },
   spite: {
-    name: "Seal of Botis",
+    name: "Sulphur",
     description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
   },
   wideCrit: {
-    name: "Seal of Ipos",
+    name: "Fortis",
     description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
   },
   shield: {
-    name: "Seal of Halphas",
+    name: "Regia",
     description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
   },
   lamb: {
-    name: "Seal of Sallos",
+    name: "Vitaea",
     description: "When this Pyros Gift dies, all other DAMNED gain 10 SOUL."
   }
 };
@@ -2092,7 +2093,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
+      "At the start of every round, one DAMNED receives one of Pyros' Alchemies at random.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },

@@ -15,6 +15,8 @@
    Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
+// set once Satan's first-win speech (SATAN_FIRST_VICTORY_LINES) has been seen to its end or skipped
+const SATAN_FIRST_VICTORY_STORAGE_KEY = "dearthFirstVictorySeenV1";
 const INTRO_BLACK_MS = 5000; // silence before the bell
 const INTRO_LETTER_MS = 34; // typing speed
 const INTRO_PACT_DELAY_MS = 1100; // pause after round 2 resolves before Satan speaks
@@ -77,7 +79,19 @@ const INTRO_PACT_LINES = [
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
-// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact
+// the first time a player ever wins the main game (once per player, like the story; then SATAN_VICTORY_LINES)
+const SATAN_FIRST_VICTORY_LINES = [
+  ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
+  ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
+  ["satan", "I hope you didn't think this was actually the end, did you? Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right?"],
+  ["satan", "But it's not all doom and gloom my beloved minion. Me and my unholy buddies had so much fun watching you squirm and condemn the other sods, we decided to start betting on results of the games! Isn't that wonderful, all your hard work paid off and now I can finally open my very own casino, right here in purgatory!"],
+  ["satan", "Don't get your hopes too high up now tho buddy. It's not like you or any of the other vermin will get to play with the big boys. But you, and all other DAMNED to whom I share my gifts will play a very important role. You see, the Devil don't lose, so every round I shall be asking for little favors from you lot, to skew the odds and win big against the other demons!"],
+  ["satan", "However I respect and admire good work and dedication, so in all my gratitude I will allow you, my mortal minions to use the FAVOR you earn on one of my sweet sweet slot machines! So please, keep the SIN flowing and the sinners screaming, and maybe we shall meet again."],
+  ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
+];
+
+// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact;
+// every win after the first one
 const SATAN_VICTORY_LINES = [
   ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
   ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
@@ -130,6 +144,25 @@ function markIntroSeen() {
   try {
     window.localStorage?.setItem(INTRO_SEEN_STORAGE_KEY, "1");
   } catch (error) {}
+}
+
+// Satan's first-win speech plays until it has been seen once (to its end or skipped)
+function satanFirstVictoryPending() {
+  try {
+    return window.localStorage?.getItem(SATAN_FIRST_VICTORY_STORAGE_KEY) !== "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function markSatanFirstVictorySeen() {
+  try {
+    window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+  } catch (error) {}
+}
+
+function satanVictoryLines() {
+  return satanFirstVictoryPending() ? SATAN_FIRST_VICTORY_LINES : SATAN_VICTORY_LINES;
 }
 
 function introActive() {
@@ -644,7 +677,9 @@ function introStartPactNow() {
 /* ---- Satan returns: the 8 unique BOSSES are beaten ----
    state.satanVictoryDue is set when the 8th unique BOSS falls; the round's results then wait for him
    (Next Round brings him in at once), like the pact after round 2. Same entrance and box as the pact,
-   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). */
+   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). The very first win
+   of a player gets SATAN_FIRST_VICTORY_LINES instead; it counts as seen when he leaves (end or skip), so a
+   game closed in the middle of it shows it again at the next win. */
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
@@ -683,7 +718,7 @@ function startSatanVictoryNow() {
 function startSatanVictory() {
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = true;
-  satanOpenScene("victory", SATAN_VICTORY_LINES, "satan-victory-layer");
+  satanOpenScene("victory", satanVictoryLines(), "satan-victory-layer");
   saveArcadeRun();
 }
 
@@ -709,6 +744,7 @@ function satanOpenScene(phase, lines, layerClass) {
 }
 
 function satanVictoryLeave() {
+  if (introState.phase === "victory") markSatanFirstVictorySeen();
   satanLeaveScene("victory");
 }
 

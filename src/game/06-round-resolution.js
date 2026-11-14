@@ -194,8 +194,9 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
-// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes the bigger damage instead (never both).
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED on your guess takes
+// the bigger "your guess" damage instead (25 hidden, 15 revealed, the revealed one once per reveal stack). A DAMNED
+// only ever takes one of them: the biggest that applies.
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
@@ -207,18 +208,28 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
-  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const matchesYou = (bot) => Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const shares = (bot) => counts.get(guessOf(bot)) >= 2;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    return counts.get(guess) >= 2 || matchesYou(bot);
+    return shares(bot) || matchesYou(bot);
   });
   if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
     let triggered = false;
     hit.forEach((bot) => {
-      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      const options = [];
+      if (shares(bot)) options.push(barbatosDamage(entry));
+      if (matchesYou(bot)) {
+        options.push(
+          bot.revealedByPassive
+            ? barbatosRevealedYourGuessDamage(entry) * Math.max(1, revealMultiplicity(bot))
+            : barbatosYourGuessDamage(entry)
+        );
+      }
+      const damage = Math.max(0, ...options);
       if (damage <= 0) return;
       triggered = true;
       addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
@@ -258,6 +269,7 @@ function applyPenalties() {
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
+  missionsNoteReady();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -374,7 +386,7 @@ function applyPenalties() {
   if (passiveStack("p91")) {
     if (playerCritThisRound) {
       const before = state.critMomentumBonus || 0;
-      state.critMomentumBonus = Math.min(4, before + 1);
+      state.critMomentumBonus = Math.min(AIM_MAX_CRIT_BONUS, before + 1);
       markPassiveTriggered("p91");
       round.roundEvents.push(`${passiveName("p91", "Seal of Aim")} raised your CRITICAL range bonus to +${state.critMomentumBonus}.`);
     } else if (state.critMomentumBonus) {
@@ -531,6 +543,13 @@ function applyPenalties() {
     return;
   }
 
+  // the slot machine's DAMAGE from a spin last round lands now (before the PENTAKILL count)
+  slotApplyPendingDamage();
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
+    return;
+  }
+
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   // Seal of Silence in Heaven: the very last damage of the round, so it multiplies everything taken this round
@@ -543,6 +562,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  missionsAfterResolution();
   noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
@@ -647,26 +667,19 @@ function maxHealthCriticalDamageForVictim(victim) {
 }
 
 function playerCriticalFlatBonus() {
-  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0)) + chaliceCriticalBonus();
 }
 
-// 4th Pentacle of the Moon: % max SOUL added to your CRITICAL by the Cursed Chalices used this round
-function criticalPercentBonus() {
-  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
-}
-
-function criticalPercentBonusDamage(victim) {
-  const percent = criticalPercentBonus();
-  if (!percent) return 0;
-  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
-  return Math.ceil((maxHp * percent) / 100);
+// 4th Pentacle of the Moon: flat damage added to your CRITICAL by the Cursed Chalices used this round
+function chaliceCriticalBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalFlatBonus || 0));
 }
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
+  return base + eligos + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -729,10 +742,9 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
-  const bonusPercent = criticalPercentBonus();
-  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) {
-    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    const extraPercent = state.roundState?.exactGuessCritBoost ? 10 : 0;
     return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
   }
   return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
@@ -895,12 +907,21 @@ function resolveEliminatedBots(eliminated) {
     bot.pendingReplacementSpec = state.finalBossQueued ? null : nextBossSpecIfNeeded();
     if (!bot.pendingReplacementSpec) {
       bot.pendingReplacementInheritance = null;
+      let hauresEntry = null;
       for (const entry of orderedPassiveEffectEntries("p86")) {
         bot.pendingReplacementInheritance = inheritedReplacementProfile(bot, entry);
-        if (bot.pendingReplacementInheritance) break;
+        if (bot.pendingReplacementInheritance) {
+          hauresEntry = entry;
+          break;
+        }
       }
       if (bot.pendingReplacementInheritance) {
         state.roundState.roundEvents.push(`${passiveName("p86", "Seal of Haures")} prepared ${bot.name}'s replacement to inherit their identity.`);
+        const sin = hauresRebirthSin(hauresEntry);
+        if (sin > 0) {
+          const gained = gainCredits(sin, true, ITEMS.p86.name);
+          state.roundState.roundEvents.push(`${ITEMS.p86.name} paid ${gained} SIN for ${bot.name}'s rebirth.`);
+        }
       }
     }
   });
@@ -912,7 +933,7 @@ function resolveEliminatedBots(eliminated) {
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
     const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Pyros Gift: Seal of Sallos"));
+    activeBots().forEach((bot) => healBot(bot, heal, `Pyros Gift: ${PYROS_GIFT_PASSIVES.lamb.name}`));
   }
 
   checkRoundPentakillBonus();
@@ -1743,7 +1764,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
       entry.item.lastSatanDamage = roll.damage;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p111", "Seal of Satan");
-      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
+      // no multiplier may touch it: 666 / divisor is what they take
+      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name, true, { unmultiplied: true });
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
       return;
     }
@@ -1854,7 +1876,9 @@ function applySilenceInHeaven() {
     const botDamages = new Map();
     const botDamageSources = new Map();
     activeBots().forEach((bot) => {
-      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      // damage that can't be multiplied (Seal of Satan) is left out
+      const unmultiplied = round.unmultipliedDamageByBotId instanceof Map ? round.unmultipliedDamageByBotId.get(bot.id) || 0 : 0;
+      const taken = Math.max(0, Math.ceil((bot.lastDamage || 0) - unmultiplied));
       const extra = Math.ceil(taken * multiplier) - taken;
       if (extra <= 0) return;
       botDamages.set(bot.id, extra);
@@ -1903,10 +1927,10 @@ function applyEndOfRoundPassives() {
     }
 
     activeBots().forEach((bot) => {
-      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
-      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
+      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.metabolism.name}`);
+      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.fumes.name} dealt 1 damage to you.`);
       if (botHasPassive(bot, "thief")) {
-        loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+        loseCredits(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.thief.name}`);
       }
     });
 
@@ -2103,6 +2127,7 @@ function advanceAfterSummary() {
     startSatanTightwadNow();
     return;
   }
+  missionsBeforeNextRound();
   clearDevTemporaryArtifacts();
   rememberRound();
   if (state.player.hp <= 0) {

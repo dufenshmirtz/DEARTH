@@ -665,7 +665,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED that is not revealed and has the same guess as you takes 25 damage instead. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -952,7 +952,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Haures",
     price: 14,
-    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
+    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, and number. ELITE: whenever that happens, gain 4 SIN for each ELITE level."
   },
   p87: {
     id: "p87",
@@ -987,7 +987,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Aim",
     price: 14,
-    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +4. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
+    description: "Scoring CRITICAL increases your CRITICAL range by +1, up to +2. If you do not score CRITICAL in a round, this resets. ELITE adds +5 CRITICAL damage."
   },
   p92: {
     id: "p92",
@@ -1161,7 +1161,7 @@ const ITEMS = {
     name: "4th Pentacle of the Moon",
     price: 12,
     description:
-      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+      "Every Cursed Chalice you use also makes your CRITICAL deal +12 damage this round, and Cursed Chalice appears twice as often in Devil's Offerings. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p138: {
     id: "p138",
@@ -1241,8 +1241,8 @@ const ITEMS = {
     id: "p111",
     type: "passive",
     name: "Seal of Satan",
-    price: 20,
-    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level."
+    price: 40,
+    description: "Takes 2 SEAL slots. At end of round, divide 666 by a random number from 1 to 100 and deal the result as damage to every DAMNED. ELITE multiplies the max divisor by x0.8 each level. Its damage can't be multiplied by any SEAL or effect."
   },
   p98: {
     id: "p98",
@@ -1263,7 +1263,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Sachiel",
     price: 15,
-    description: "At end of round, if the regular BOUNTY sum of all living DAMNED is more than 40, this SEAL gains +1 damage, then all DAMNED take its current damage. Cannot be upgraded."
+    description: "At end of round, if the regular BOUNTY of the 5 DAMNED in the slots (dead ones included, BOSS BOUNTY not counted) adds up to more than 40, this SEAL gains +1 damage, then all living DAMNED take its current damage. Cannot be upgraded."
   },
   p101: {
     id: "p101",
@@ -1743,7 +1743,7 @@ const SELF_STACKING_SEAL_IDS = new Set(["p98", "p99", "p100", "p101", "p102", "p
 const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
-  p100: { key: "bountySum", label: "BOUNTY sum over 40", increment: 1 },
+  p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
   p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
@@ -2181,33 +2181,34 @@ const BOSS_PASSIVES = {
 };
 const SHADOW_BOSS_PASSIVE_KEY = "guilt";
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
+// PYROS-TECH: the abilities Pyros hands out, named after alchemical substances (their marks: PYROS_GIFT_MARKS in 09-rendering.js)
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
-    name: "Seal of Bathin",
+    name: "Cinnabar",
     description: "This Pyros Gift heals 5 SOUL at the end of every round."
   },
   fumes: {
-    name: "Seal of Amon",
+    name: "Acid",
     description: "While this Pyros Gift is alive, you take 1 damage at the end of every round."
   },
   thief: {
-    name: "Seal of Raum",
+    name: "Vitriol",
     description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
   },
   spite: {
-    name: "Seal of Botis",
+    name: "Sulphur",
     description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
   },
   wideCrit: {
-    name: "Seal of Ipos",
+    name: "Fortis",
     description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
   },
   shield: {
-    name: "Seal of Halphas",
+    name: "Regia",
     description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
   },
   lamb: {
-    name: "Seal of Sallos",
+    name: "Vitaea",
     description: "When this Pyros Gift dies, all other DAMNED gain 10 SOUL."
   }
 };
@@ -2309,7 +2310,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
+      "At the start of every round, one DAMNED receives one of Pyros' Alchemies at random.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },
@@ -3202,7 +3203,8 @@ function normalizeLoadedRoundState(round) {
     "activeUseItemCounts",
     "artifactTargetCountsByBotId",
     "botDamageTotals",
-    "targetDifferenceDamageByBotId"
+    "targetDifferenceDamageByBotId",
+    "unmultipliedDamageByBotId"
   ].forEach((key) => {
     round[key] = ensureMap(round[key]);
   });
@@ -3293,6 +3295,7 @@ function normalizeLoadedArcadeRun() {
   // older saves have no snapshot; the records as they are now are the closest guess
   if (!state.recordsAtRunStart || typeof state.recordsAtRunStart !== "object") snapshotRecordsAtRunStart();
   state.roundState = normalizeLoadedRoundState(state.roundState);
+  normalizeMissionsState();
   if (!state.finalBossPhase && !state.finalBossQueued) ensureBossKillInterval();
   [...state.player.actives, ...state.shop.map((slot) => slot?.item), state.lastUsedArtifact].forEach((item) => {
     if (item?.type === "active" && ACTIVE_IDS.includes(item.id)) item.price = ITEMS[item.id].price;
@@ -5216,8 +5219,11 @@ function critWindowDetails(idOrItem) {
   };
 }
 
+// Seal of Aim: +1 CRITICAL range per CRITICAL in a row, up to this
+const AIM_MAX_CRIT_BONUS = 2;
+
 function ascendingCritWindowBonus() {
-  return passiveStack("p91") ? Math.min(4, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
+  return passiveStack("p91") ? Math.min(AIM_MAX_CRIT_BONUS, Math.max(0, Math.ceil(state.critMomentumBonus || 0))) : 0;
 }
 
 function ascendingCritDamageBonus() {
@@ -5336,6 +5342,11 @@ function barbatosYourGuessDamage(idOrItem) {
   return flatDamageValue(idOrItem, 25);
 }
 
+// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
+function barbatosRevealedYourGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
+}
+
 function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
@@ -5405,9 +5416,16 @@ function sacrificialDaggerPercentForBot(bot) {
   return bot?.isBoss ? sacrificialDaggerBossPercent() : 20;
 }
 
-// 4th Pentacle of the Moon: Cursed Chalice adds % max-SOUL to your CRITICAL this round
-function moonChaliceCriticalPercent(entry = artifactSealEntry("a22")) {
-  return entry ? 2 + passiveEntryEliteLevels(entry) : 0;
+// Seal of Haures: 50% chance a dead DAMNED comes back as the same soul; ELITE pays 4 SIN per level when it does
+const HAURES_REBIRTH_CHANCE = 0.5;
+
+function hauresRebirthSin(entry) {
+  return 4 * passiveEntryEliteLevels(entry);
+}
+
+// 4th Pentacle of the Moon: each Cursed Chalice adds flat damage to your CRITICAL this round (12, ELITE x1.5 each level)
+function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
+  return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
 // 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
@@ -5628,8 +5646,10 @@ function scaledBotDamage(bot, amount, playerDealt = true) {
   return scaledBotDamageDetails(bot, amount, playerDealt).damage;
 }
 
-function scaledBotDamageDetails(bot, amount, playerDealt = true) {
+// options.unmultiplied: no damage multiplier applies (Seal of Satan); flat bonuses still add
+function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   const damage = Math.max(0, Math.ceil(amount));
+  const unmultiplied = !!options?.unmultiplied;
   if (!damage) return { damage: 0, baseDamage: 0, modifierEntries: [], redirectEntries: [] };
   let exactDamage = damage;
   let roundedDamage = damage;
@@ -5645,7 +5665,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     return true;
   };
   const applyMultiplier = (multiplier, source, entry) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0) return;
     const before = roundedDamage;
     exactDamage *= multiplier;
     roundedDamage = Math.ceil(exactDamage);
@@ -5655,7 +5675,7 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true) {
     markPassiveEntryTriggered(entry);
   };
   const applyRedirectMultiplier = (multiplier, source, entry, targetBot, redirectFullDamage = false) => {
-    if (!Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
+    if (unmultiplied || !Number.isFinite(multiplier) || multiplier <= 1 || roundedDamage <= 0 || !targetBot) return;
     const boostedDamage = Math.ceil(exactDamage * multiplier);
     const redirectedDamage = redirectFullDamage ? boostedDamage : Math.max(0, boostedDamage - roundedDamage);
     if (redirectedDamage <= 0) return;
@@ -5849,9 +5869,9 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    const percent = moonChaliceCriticalPercent();
-    return percent
-      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+    const damage = moonChaliceCriticalDamage();
+    return damage
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${damage} damage (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
@@ -5899,7 +5919,19 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  // Seal of Aim: the SEAL you own always says how many stacks it has built up (one per CRITICAL in a row, up to AIM_MAX_CRIT_BONUS)
+  if (item.id === "p91") {
+    const rule =
+      stack <= 1
+        ? ITEMS.p91.description
+        : `Scoring CRITICAL increases your CRITICAL range by +1, up to +${AIM_MAX_CRIT_BONUS}. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage.`;
+    if (!state.player?.passives?.includes(item)) return rule;
+    const stacks = ascendingCritWindowBonus();
+    // before the ELITE sentence: the tooltip keeps everything from "ELITE" on for Shift
+    const { main, elite } = splitEliteDescription(rule);
+    return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
+  }
+  if (stack <= 1) return ["p86", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -5931,7 +5963,7 @@ function itemDescription(item) {
     return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p137") {
-    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+    return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
     return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
@@ -6010,7 +6042,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead, or ${barbatosRevealedYourGuessDamage(item)} if it is revealed; a DAMNED takes only the biggest of these.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -6112,7 +6144,7 @@ function itemDescription(item) {
     return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
   }
   if (item.id === "p86") {
-    return `When a DAMNED is eliminated, ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance the replacement inherits its personality, MEMORY, name, number, and flag.`;
+    return `When a DAMNED is eliminated, 50% chance the replacement inherits its personality, MEMORY, name, and number, and you gain ${4 * Math.max(0, stack - 1)} SIN.`;
   }
   if (item.id === "p87") {
     return `When a DAMNED is eliminated, deal ${flatDamageValue(item, 30)} damage to each other living DAMNED with the same personality.`;
@@ -6125,9 +6157,6 @@ function itemDescription(item) {
   }
   if (item.id === "p90") {
     return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At end of round, one DAMNED changes to the most prevalent personality.`;
-  }
-  if (item.id === "p91") {
-    return `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage. Current range bonus: +${ascendingCritWindowBonus()}.`;
   }
   if (item.id === "p104") {
     const amount = item.stack || 1;
@@ -6219,6 +6248,11 @@ function currentRerollCost() {
 }
 
 function freeRerollsLeft() {
+  return sonFreeRerollsLeft() + Math.max(0, Math.ceil(state.slotFreeRerolls || 0));
+}
+
+// Seal of the Son's free rerolls (they run out at the end of the next round); the slot machine's last until used
+function sonFreeRerollsLeft() {
   return Math.max(0, Math.ceil(state.freeRerolls || 0));
 }
 
@@ -6798,7 +6832,7 @@ function selfStackingCurrentDamageForId(id) {
 }
 
 function selfStackingSealDescription(item) {
-  const description = item.id === "p102" ? ITEMS.p102.description : item.description;
+  const description = ["p100", "p102"].includes(item.id) ? ITEMS[item.id].description : item.description;
   return `${description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
 }
 
@@ -6866,14 +6900,15 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
 function applySelfStackingBountySumDamage() {
   const targets = activeBots();
   if (!targets.length) return;
-  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+  // regular BOUNTY only (no BOSS BOUNTY), of every DAMNED in the slots, dead ones included
+  const bountySum = state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
   if (bountySum <= 40) return;
   const damage = triggerSelfStackingSeal("p100");
   if (damage <= 0) return;
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total BOUNTY was ${bountySum}.`,
+    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total regular BOUNTY was ${bountySum}.`,
     ITEMS.p100.name
   );
 }
@@ -7935,17 +7970,28 @@ function damageBotNonLethal(bot, amount, reason, source = undefined, playerDealt
   return dealt;
 }
 
-function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true) {
+// Seal of Satan's damage: kept per DAMNED so later multipliers can leave it out
+function noteUnmultipliedBotDamage(bot, damage) {
+  const round = state.roundState;
+  if (!round || !bot || damage <= 0) return;
+  if (!(round.unmultipliedDamageByBotId instanceof Map)) round.unmultipliedDamageByBotId = new Map();
+  round.unmultipliedDamageByBotId.set(bot.id, (round.unmultipliedDamageByBotId.get(bot.id) || 0) + damage);
+}
+
+// options.unmultiplied: no damage multiplier applies, now or later (Seal of Silence in Heaven skips it too)
+function damageBots(bots, amount, reasonFactory, sourceFactory = undefined, playerDealt = true, options = {}) {
   const eliminated = [];
+  const unmultiplied = !!options?.unmultiplied;
   const planned = bots.map((bot) => {
     if (!bot || bot.eliminated) return { bot, damageDetails: { damage: 0, baseDamage: 0, modifierEntries: [] }, damage: 0 };
-    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt);
+    const damageDetails = scaledBotDamageDetails(bot, typeof amount === "function" ? amount(bot) : amount, playerDealt, { unmultiplied });
     const damage = damageDetails.damage;
     return { bot, damageDetails, damage };
   });
   planned.forEach(({ bot, damageDetails, damage }) => {
     if (!bot || bot.eliminated || damage <= 0) return;
     bot.lastDamage = (bot.lastDamage || 0) + damage;
+    if (unmultiplied) noteUnmultipliedBotDamage(bot, damage);
     const reason = typeof reasonFactory === "function" ? reasonFactory(bot, damage) : reasonFactory;
     const source =
       sourceFactory === null
@@ -8190,8 +8236,8 @@ function applyFixedWillEndRound() {
 
 function inheritedReplacementProfile(bot, entry) {
   if (!bot || bot.isBoss || bot.immortal || !entry) return null;
-  const chance = Math.min(1, 0.5 + Math.max(0, (entry.stack || 1) - 1) * 0.1);
-  if (Math.random() >= chance) return null;
+  // Seal of Haures: always 50%; ELITE pays SIN instead (see the elimination code)
+  if (Math.random() >= HAURES_REBIRTH_CHANCE) return null;
   markPassiveEntryTriggered(entry);
   return {
     name: bot.name,
@@ -9086,6 +9132,7 @@ function startGame(options = {}) {
   state.satanTightwadOffers = 0;
   state.satanRerollToll = false;
   state.pact = satanPactFresh();
+  resetMissionsForRun();
   state.pauseOpen = false;
   state.pauseDevOpen = false;
   state.devUnlockAllSeals = false;
@@ -9228,6 +9275,7 @@ function beginRound() {
     extraRevealMarked: {},
     amonRewardKeys: new Set(),
     targetDifferenceDamageByBotId: new Map(),
+    unmultipliedDamageByBotId: new Map(),
     playerTargetDifferenceDamage: 0,
     bossRevealPunishedKeys: new Set(),
     bossAbilityNullifiedBotIds: new Set(),
@@ -9311,6 +9359,8 @@ function beginRound() {
   ensureSitriHost();
   applyZilonBossBounty();
   applyPoisonStartOfRound();
+  // missions: this round's counters (the mission itself is drawn on the first render)
+  missionsBeginRound();
 }
 
 // Poison SEALS at the start of the round, in SEAL slot order (after the start-of-round reveals):
@@ -10836,8 +10886,9 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
-// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED that is not
-// revealed and matches your guess takes the bigger damage instead (never both).
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED on your guess takes
+// the bigger "your guess" damage instead (25 hidden, 15 revealed, the revealed one once per reveal stack). A DAMNED
+// only ever takes one of them: the biggest that applies.
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
@@ -10849,18 +10900,28 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
     if (Number.isFinite(guess)) counts.set(guess, (counts.get(guess) || 0) + 1);
   });
   const playerGuess = round.playerEffectiveGuess;
-  const matchesYou = (bot) => !bot.revealedByPassive && Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const matchesYou = (bot) => Number.isFinite(playerGuess) && guessOf(bot) === playerGuess;
+  const shares = (bot) => counts.get(guessOf(bot)) >= 2;
   const hit = activeBotList.filter((bot) => {
     const guess = guessOf(bot);
     if (!Number.isFinite(guess)) return false;
-    return counts.get(guess) >= 2 || matchesYou(bot);
+    return shares(bot) || matchesYou(bot);
   });
   if (!hit.length) return;
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
     let triggered = false;
     hit.forEach((bot) => {
-      const damage = matchesYou(bot) ? barbatosYourGuessDamage(entry) : barbatosDamage(entry);
+      const options = [];
+      if (shares(bot)) options.push(barbatosDamage(entry));
+      if (matchesYou(bot)) {
+        options.push(
+          bot.revealedByPassive
+            ? barbatosRevealedYourGuessDamage(entry) * Math.max(1, revealMultiplicity(bot))
+            : barbatosYourGuessDamage(entry)
+        );
+      }
+      const damage = Math.max(0, ...options);
       if (damage <= 0) return;
       triggered = true;
       addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
@@ -10900,6 +10961,7 @@ function applyPenalties() {
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
+  missionsNoteReady();
 
   const botDamages = new Map();
   const botDamageSources = new Map();
@@ -11016,7 +11078,7 @@ function applyPenalties() {
   if (passiveStack("p91")) {
     if (playerCritThisRound) {
       const before = state.critMomentumBonus || 0;
-      state.critMomentumBonus = Math.min(4, before + 1);
+      state.critMomentumBonus = Math.min(AIM_MAX_CRIT_BONUS, before + 1);
       markPassiveTriggered("p91");
       round.roundEvents.push(`${passiveName("p91", "Seal of Aim")} raised your CRITICAL range bonus to +${state.critMomentumBonus}.`);
     } else if (state.critMomentumBonus) {
@@ -11173,6 +11235,13 @@ function applyPenalties() {
     return;
   }
 
+  // the slot machine's DAMAGE from a spin last round lands now (before the PENTAKILL count)
+  slotApplyPendingDamage();
+  if (state.player.hp <= 0) {
+    finishGameOverRound();
+    return;
+  }
+
   applyRoundEliminationBonus();
   applyAgaresEarnedSinSpread();
   // Seal of Silence in Heaven: the very last damage of the round, so it multiplies everything taken this round
@@ -11185,6 +11254,7 @@ function applyPenalties() {
   }
 
   state.stage = "summary";
+  missionsAfterResolution();
   noteSatanTightwad();
   addLog("Penalties applied. Advance when ready.");
 }
@@ -11289,26 +11359,19 @@ function maxHealthCriticalDamageForVictim(victim) {
 }
 
 function playerCriticalFlatBonus() {
-  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0));
+  return ascendingCritDamageBonus() + Math.max(0, Math.ceil(state.roundState?.selfStackingCriticalDamage || 0)) + chaliceCriticalBonus();
 }
 
-// 4th Pentacle of the Moon: % max SOUL added to your CRITICAL by the Cursed Chalices used this round
-function criticalPercentBonus() {
-  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalPercentBonus || 0));
-}
-
-function criticalPercentBonusDamage(victim) {
-  const percent = criticalPercentBonus();
-  if (!percent) return 0;
-  const maxHp = victim?.kind === "player" ? playerMaxHp() : victim?.bot?.maxHp || 0;
-  return Math.ceil((maxHp * percent) / 100);
+// 4th Pentacle of the Moon: flat damage added to your CRITICAL by the Cursed Chalices used this round
+function chaliceCriticalBonus() {
+  return Math.max(0, Math.ceil(state.roundState?.artifactCriticalFlatBonus || 0));
 }
 
 function playerCriticalDamageTotal(victim) {
   const base = passiveStack("p7") ? pressureSpikeDamage("p7") : maxHealthCriticalDamageForVictim(victim);
   // Seal of Eligos: a charged CRITICAL deals 20% max SOUL instead of 10% (another 10% on top)
   const eligos = state.roundState?.exactGuessCritBoost ? maxHealthCriticalDamageForVictim(victim) : 0;
-  return base + eligos + criticalPercentBonusDamage(victim) + playerCriticalFlatBonus();
+  return base + eligos + playerCriticalFlatBonus();
 }
 
 // how many rounds a DAMNED has been at the table, counting the current one (Seal of Malphas)
@@ -11371,10 +11434,9 @@ function applyBelethCriticalStrike(botDamages, botDamageSources) {
 function criticalSummaryForHitter(hitter) {
   if (hitter.key !== "player") return "10% max SOUL";
   const flatBonus = playerCriticalFlatBonus();
-  const bonusPercent = criticalPercentBonus();
-  const percent = (state.roundState?.exactGuessCritBoost ? 20 : 10) + bonusPercent;
+  const percent = state.roundState?.exactGuessCritBoost ? 20 : 10;
   if (passiveStack("p7")) {
-    const extraPercent = (state.roundState?.exactGuessCritBoost ? 10 : 0) + bonusPercent;
+    const extraPercent = state.roundState?.exactGuessCritBoost ? 10 : 0;
     return extraPercent ? `${pressureSpikeDamage("p7") + flatBonus} damage + ${extraPercent}% max SOUL` : `${pressureSpikeDamage("p7") + flatBonus} damage`;
   }
   return flatBonus > 0 ? `${percent}% max SOUL + ${flatBonus} damage` : `${percent}% max SOUL`;
@@ -11537,12 +11599,21 @@ function resolveEliminatedBots(eliminated) {
     bot.pendingReplacementSpec = state.finalBossQueued ? null : nextBossSpecIfNeeded();
     if (!bot.pendingReplacementSpec) {
       bot.pendingReplacementInheritance = null;
+      let hauresEntry = null;
       for (const entry of orderedPassiveEffectEntries("p86")) {
         bot.pendingReplacementInheritance = inheritedReplacementProfile(bot, entry);
-        if (bot.pendingReplacementInheritance) break;
+        if (bot.pendingReplacementInheritance) {
+          hauresEntry = entry;
+          break;
+        }
       }
       if (bot.pendingReplacementInheritance) {
         state.roundState.roundEvents.push(`${passiveName("p86", "Seal of Haures")} prepared ${bot.name}'s replacement to inherit their identity.`);
+        const sin = hauresRebirthSin(hauresEntry);
+        if (sin > 0) {
+          const gained = gainCredits(sin, true, ITEMS.p86.name);
+          state.roundState.roundEvents.push(`${ITEMS.p86.name} paid ${gained} SIN for ${bot.name}'s rebirth.`);
+        }
       }
     }
   });
@@ -11554,7 +11625,7 @@ function resolveEliminatedBots(eliminated) {
   const lambDeaths = freshEliminations.filter((bot) => botHasPassive(bot, "lamb")).length;
   if (lambDeaths) {
     const heal = 10 * lambDeaths;
-    activeBots().forEach((bot) => healBot(bot, heal, "Pyros Gift: Seal of Sallos"));
+    activeBots().forEach((bot) => healBot(bot, heal, `Pyros Gift: ${PYROS_GIFT_PASSIVES.lamb.name}`));
   }
 
   checkRoundPentakillBonus();
@@ -12385,7 +12456,8 @@ function applyEndOfRoundPassiveDamageInOrder() {
       entry.item.lastSatanDamage = roll.damage;
       markPassiveEntryTriggered(entry);
       const name = passiveName("p111", "Seal of Satan");
-      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name);
+      // no multiplier may touch it: 666 / divisor is what they take
+      damageBots(targets, roll.damage, (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} by dividing 666 by ${roll.divisor}.`, name, true, { unmultiplied: true });
       state.roundState.roundEvents.push(`${name} current divisor: ${roll.divisor}. Damage: ${roll.damage}.`);
       return;
     }
@@ -12496,7 +12568,9 @@ function applySilenceInHeaven() {
     const botDamages = new Map();
     const botDamageSources = new Map();
     activeBots().forEach((bot) => {
-      const taken = Math.max(0, Math.ceil(bot.lastDamage || 0));
+      // damage that can't be multiplied (Seal of Satan) is left out
+      const unmultiplied = round.unmultipliedDamageByBotId instanceof Map ? round.unmultipliedDamageByBotId.get(bot.id) || 0 : 0;
+      const taken = Math.max(0, Math.ceil((bot.lastDamage || 0) - unmultiplied));
       const extra = Math.ceil(taken * multiplier) - taken;
       if (extra <= 0) return;
       botDamages.set(bot.id, extra);
@@ -12545,10 +12619,10 @@ function applyEndOfRoundPassives() {
     }
 
     activeBots().forEach((bot) => {
-      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: Seal of Bathin`);
-      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: Seal of Amon dealt 1 damage to you.`);
+      if (botHasPassive(bot, "metabolism")) healBot(bot, 5, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.metabolism.name}`);
+      if (botHasPassive(bot, "fumes")) damagePlayer(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.fumes.name} dealt 1 damage to you.`);
       if (botHasPassive(bot, "thief")) {
-        loseCredits(1, `${bot.name}'s Pyros Gift: Seal of Raum`);
+        loseCredits(1, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.thief.name}`);
       }
     });
 
@@ -12745,6 +12819,7 @@ function advanceAfterSummary() {
     startSatanTightwadNow();
     return;
   }
+  missionsBeforeNextRound();
   clearDevTemporaryArtifacts();
   rememberRound();
   if (state.player.hp <= 0) {
@@ -13009,6 +13084,7 @@ function buyShopItem(slotIndex) {
     slot.sold = true;
     syncShopSlotCount();
     collectionNoteShopBuy();
+    missionsNoteShop("buySeal");
     applyGuessReveals();
     checkBalamMemoryBountyEliminations();
     playSealPurchaseSfx();
@@ -13034,6 +13110,7 @@ function buyShopItem(slotIndex) {
   slot.sold = true;
   syncShopSlotCount();
   collectionNoteShopBuy();
+  missionsNoteShop("buyArtifact");
   addLog(`Bought ${item.name}.`);
   playGameSfx("artifactBuy");
   applyOfferingTollDamage(item);
@@ -13066,17 +13143,21 @@ function rerollShopClick() {
   }
   rerollShop();
   playGameSfx("reroll");
-  if (free) {
-    // a free reroll (Seal of the Son) does not raise the price of the next paid one
-    state.freeRerolls = freeRerollsLeft() - 1;
+  if (free && sonFreeRerollsLeft() > 0) {
+    // a free reroll (Seal of the Son) does not raise the price of the next paid one; the Son's run out, so they go first
+    state.freeRerolls = sonFreeRerollsLeft() - 1;
     markPassiveTriggered("p132");
     addLog(`Devil's Offerings rerolled for free (${ITEMS.p132.name}). ${freeRerollsLeft()} left.`);
+  } else if (free) {
+    state.slotFreeRerolls = Math.max(0, Math.ceil(state.slotFreeRerolls || 0) - 1);
+    addLog(`Devil's Offerings rerolled for free (slot machine). ${freeRerollsLeft()} left.`);
   } else {
     state.rerollBaseCost += 1;
     addLog(`Devil's Offerings rerolled for ${cost} SIN.`);
   }
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
+  missionsNoteShop("reroll");
   render();
 }
 
@@ -13092,6 +13173,7 @@ function rerollShopPayingSatanToll() {
   addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
   applyRerollTollDamage();
   if (state.player.hp <= 0) finishGameOverRound();
+  missionsNoteShop("reroll");
 }
 
 function passiveSellValue(item) {
@@ -13110,6 +13192,7 @@ function sellTrinitySeals(index) {
   gainCredits(sale, false, `Sold ${names}`);
   syncShopSlotCount();
   addLog(`Sold ${names} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
@@ -13130,6 +13213,7 @@ function sellPassive(index) {
   gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
@@ -13145,6 +13229,7 @@ function sellActive(index) {
   gainCredits(sale, false, `Sold ${item.name}`);
   normalizeActiveCarouselIndex();
   addLog(`Sold ${item.name} for ${sale} SIN.`);
+  missionsNoteShop("sell");
   playGameSfx("sell");
   quietMomentSfx("sinGain");
   render();
@@ -13268,16 +13353,15 @@ function resolveFuneralCoin(item) {
   return `${item.name} spread ${spread} BOUNTY among the DAMNED (${name}).`;
 }
 
-// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon your CRITICAL also gains % max SOUL
+// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon each Chalice also adds flat CRITICAL damage
 function resolveCursedChalice(item) {
   const total = addArtifactCriticalRangeBonus(1, item.name);
   let message = `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`;
   const entry = artifactSealEntry("a22");
   if (entry && state.roundState) {
-    const percent = moonChaliceCriticalPercent(entry);
-    state.roundState.artifactCriticalPercentBonus = criticalPercentBonus() + percent;
+    state.roundState.artifactCriticalFlatBonus = chaliceCriticalBonus() + moonChaliceCriticalDamage(entry);
     markPassiveEntryTriggered(entry);
-    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${criticalPercentBonus()}% max SOUL this round.`;
+    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${chaliceCriticalBonus()} damage this round.`;
   }
   return message;
 }
@@ -13419,7 +13503,7 @@ function useActive(index) {
   activeBots()
     .filter((bot) => botHasPassive(bot, "spite"))
     .forEach((bot) => {
-      damagePlayer(3, `${bot.name}'s Pyros Gift: Seal of Botis dealt 3 damage because you used an ARTIFACT.`);
+      damagePlayer(3, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.spite.name} dealt 3 damage because you used an ARTIFACT.`);
     });
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -13587,6 +13671,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   if (state.player.hp <= 0) {
     finishGameOverRound();
   }
+  missionsNoteShop("artifact");
   if (renderAfter) render();
 }
 
@@ -13603,7 +13688,7 @@ function chooseBot(botId) {
     return;
   }
   if (botHasPassive(bot, "shield")) {
-    addLog(`${bot.name}'s Pyros Gift: Seal of Halphas blocks ARTIFACTS.`);
+    addLog(`${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.shield.name} blocks ARTIFACTS.`);
     render();
     return;
   }
@@ -14719,6 +14804,8 @@ function render() {
   lastRenderedMode = state.mode;
   bindEvents();
   afterRenderEffects();
+  // the slot machine and the mission line up with the outer DAMNED cards
+  if (state.mode === "arcade") syncSlotEdges();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   scheduleArcadeRunSave();
@@ -15344,14 +15431,16 @@ function renderArcadeApp() {
       `;
     }
     const playerGuessCritical = Boolean(state.roundState?.criticalHitKeys?.has("player"));
+    const slotBand = nativeSlotBandHtml();
     return `
-      <div class="native-arcade-frame">
+      <div class="native-arcade-frame${slotBand ? " has-slot-band" : ""}">
         <main class="arena native-board-panel">
           ${renderTopbar()}
           ${renderBots()}
           ${renderOverlay()}
           ${renderPentakillPopup()}
         </main>
+        ${slotBand}
         <div class="native-seal-actions" aria-label="Menu controls">
           ${renderPauseButton()}
           ${satanDealButtonHtml()}
@@ -16533,6 +16622,7 @@ function afterRenderEffects() {
     return;
   }
   syncSealRings();
+  pyrosMarksAfterRender();
   watchSealTrigger();
   watchMoments();
   introAfterRender();
@@ -16652,14 +16742,20 @@ function renderTargetPanel() {
   `;
 }
 
-// ---------- personality glyphs: one small chalk mark per DAMNED type (replaces the emoji flags) ----------
+// ---------- personality glyphs: one small chalk mark per DAMNED type, drawn as a zodiac sign ----------
 const PERSONALITY_GLYPHS = {
-  Anchor: '<circle cx="12" cy="4.2" r="1.7"/><path d="M12 6v14.5M7.6 9.2h8.8M4.6 13.4c.4 4.3 3.4 7.2 7.4 7.3 4-.1 7-3 7.4-7.3M4.6 13.4l-1.3 1.5M19.4 13.4l1.3 1.5"/>',
-  Analyst: '<path d="M12 2.8 21.4 19.6H2.6Z"/><path d="M7.4 14.4c2.6-3.1 6.6-3.1 9.2 0-2.6 3.1-6.6 3.1-9.2 0Z"/><circle cx="12" cy="14.4" r="1.15"/>',
-  Follower: '<path d="M3.5 6.2 9.6 12l-6.1 5.8M10.6 6.2l6.1 5.8-6.1 5.8"/><path d="M19.2 9.4v5.2"/>',
-  Stubborn: '<path d="M12 21v-8.6M12 12.4C10.2 6 3 5.7 3 10.6c0 2.9 3.7 3.2 4.1.4M12 12.4C13.8 6 21 5.7 21 10.6c0 2.9-3.7 3.2-4.1.4"/><path d="M8.6 21h6.8"/>',
-  Drifter: '<path d="M2.6 9.2c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4M2.6 15.6c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4"/>',
-  Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
+  // Taurus: a circle with the bull's horns resting on top
+  Anchor: '<circle cx="12" cy="15.1" r="5.4"/><path d="M4.4 3.6C5.6 7.6 8.4 9.7 12 9.7s6.4-2.1 7.6-6.1"/>',
+  // Sagittarius: the archer's arrow, pointing up-right, with a crossbar on the shaft
+  Analyst: '<path d="M4 20 20 4M12.4 4H20v7.6M6.4 11.6l6 6"/>',
+  // Gemini: two pillars between two curved bars
+  Follower: '<path d="M4.6 4.2c4.9 1.7 9.9 1.7 14.8 0M4.6 19.8c4.9-1.7 9.9-1.7 14.8 0M9 5.5v13M15 5.5v13"/>',
+  // Aries: the ram's horns on a stem
+  Stubborn: '<path d="M12 20.6V9.8M12 9.8C11 5.2 7.9 3.4 5.6 4.1 3.5 4.8 2.9 7.6 4.2 9.2c1 1.2 2.8 1 3.3-.4M12 9.8c1-4.6 4.1-6.4 6.4-5.7 2.1.7 2.7 3.5 1.4 5.1-1 1.2-2.8 1-3.3-.4"/>',
+  // Aquarius: two zigzag waves of water
+  Drifter: '<path d="M2.8 10.4 6.6 6.8l3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6M2.8 17.2l3.8-3.6 3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6"/>',
+  // Cancer: two claws curling into each other
+  Caller: '<circle cx="7" cy="9.3" r="2.7"/><path d="M7 6.6c4.3-1.9 9.9-1.6 13.6 2.3"/><circle cx="17" cy="14.7" r="2.7"/><path d="M17 17.4c-4.3 1.9-9.9 1.6-13.6-2.3"/>'
 };
 
 // SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
@@ -16713,7 +16809,13 @@ function bossTooltipTitle(bot) {
   return bot.passiveKeys.map((key) => botPassiveKeyName(key)).join(" + ");
 }
 
-function bossGlyphHtml(bot) {
+// a BOSS without its PYROS-TECH abilities (those are shown by their own marks)
+function botWithoutPyrosGifts(bot) {
+  return { ...bot, passiveKeys: (bot.passiveKeys || []).filter((key) => !PYROS_GIFT_PASSIVES[key]), buffPassiveKey: null };
+}
+
+function bossGlyphHtml(realBot) {
+  const bot = botWithoutPyrosGifts(realBot);
   const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
   const tooltip = glyphTooltipHtml(
     bossTooltipTitle(bot),
@@ -16727,16 +16829,131 @@ function bossGlyphHtml(bot) {
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
-// a DAMNED that was given an ability (Pyros's gift) shows a diamond; hovering it names the ability
+// PYROS-TECH: each ability Pyros hands out has its own alchemical mark, red, on the name row left of the zodiac
+// sign (a BOSS's: left of its pentagram); hovering it names the ability. Same 24x24 line style as the other marks.
+const PYROS_GIFT_MARKS = {
+  // Cinnabar: two ezh (3) shapes with a line through them
+  metabolism: '<path d="M3.4 6h6.8L6.1 10.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M12.4 6h6.8l-4.1 4.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M2.4 9.2h19.2"/>',
+  // Acid: a cross with flat caps on every arm
+  fumes: '<path d="M12 3v18M3.4 12h17.2M9.4 3h5.2M9.4 21h5.2M3.4 9.4v5.2M20.6 9.4v5.2"/>',
+  // Vitriol: a circle with a vertical diameter and one horizontal radius
+  thief: '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2M12 12h8.6"/>',
+  // Sulphur (black sulphur): a double cross standing on an infinity loop
+  spite: '<path d="M12 2.6v14.2M9 5.2h6M6.8 9.2h10.4M12 16.8C10.3 14.6 8.9 13.4 7.1 13.4a3.4 3.4 0 0 0 0 6.8c1.8 0 3.2-1.2 4.9-3.4s3.1-3.4 4.9-3.4a3.4 3.4 0 0 1 0 6.8c-1.8 0-3.2-1.2-4.9-3.4"/>',
+  // Fortis (aqua fortis): a downward triangle whose right side is the stem of an F
+  wideCrit: '<path d="M2.8 4.6h12.4L9 20.2Z"/><path d="M15.2 4.6h5.8M12.8 10.6h5.6"/>',
+  // Regia (aqua regia): a downward triangle whose right side is the stem of an R
+  shield: '<path d="M2.6 4.6h11.6L8.4 20.2Z"/><path d="M14.2 4.6h2.6a3.3 3.3 0 0 1 0 6.6h-5.2M14.7 11.2l5.9 9"/>',
+  // Vitaea (spirit of wine): three small circles joined in a V
+  lamb: '<circle cx="6.4" cy="5.8" r="2.6"/><circle cx="17.6" cy="5.8" r="2.6"/><circle cx="12" cy="18.2" r="2.6"/><path d="M7.5 8.2l3.4 7.6M16.5 8.2l-3.4 7.6"/>'
+};
+
+function botPyrosGiftKeys(bot) {
+  return [...new Set([...(bot?.passiveKeys || []), bot?.buffPassiveKey].filter((key) => key && PYROS_GIFT_PASSIVES[key]))];
+}
+
+function pyrosGiftGlyphHtml(key) {
+  const gift = PYROS_GIFT_PASSIVES[key];
+  const mark = PYROS_GIFT_MARKS[key];
+  if (!gift || !mark) return "";
+  const tooltip = glyphTooltipHtml(gift.name, "PYROS-TECH", gift.description);
+  return `<span class="bot-glyph pyros-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${mark}</svg></span>`;
+}
+
+function pyrosGiftGlyphsHtml(bot) {
+  return botPyrosGiftKeys(bot).map((key) => pyrosGiftGlyphHtml(key)).join("");
+}
+
+// the marks block, in the order the abilities were gained; layoutPyrosMarks() places it beside the name row
+function pyrosMarksHtml(bot) {
+  const count = botPyrosGiftKeys(bot).length;
+  if (!count) return "";
+  return `<div class="pyros-marks" data-count="${count}">${pyrosGiftGlyphsHtml(bot)}</div>`;
+}
+
+// Places each card's PYROS-TECH marks on the name row, just left of the first sign (the zodiac sign, or a BOSS's
+// pentagram), without moving the name or the sign: the block floats beside the centred line. Marks match the
+// sign's size and shrink only when the room left of the line is short. Many marks that would get too small in
+// one row go on two rows, beside the name and the personality line below it. Nothing is ever covered.
+function pyrosOffsetIn(el, card) {
+  let x = 0;
+  let y = 0;
+  let node = el;
+  while (node && node !== card) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent;
+  }
+  return node === card ? { x, y } : null;
+}
+
+function layoutPyrosMarks() {
+  document.querySelectorAll("#app .bot-card .pyros-marks").forEach((block) => {
+    const card = block.closest(".bot-card");
+    const title = card?.querySelector(".bot-title");
+    const sign = title?.querySelector(".bot-glyph") || title?.querySelector(".bot-name");
+    const signAt = sign && pyrosOffsetIn(sign, card);
+    if (!signAt || !card.offsetWidth) return;
+    const count = Math.max(1, Number(block.dataset.count) || block.children.length);
+    const gap = parseFloat(getComputedStyle(block).columnGap) || 3;
+    const lineGap = parseFloat(getComputedStyle(title).columnGap) || gap;
+    const maxSize = sign.offsetHeight || 19;
+    const edge = (parseFloat(getComputedStyle(card).paddingLeft) || 0) + 2;
+    const right = signAt.x - lineGap;
+    const signMiddle = signAt.y + sign.offsetHeight / 2;
+    // one row, centred on the sign
+    let rows = 1;
+    let blockRight = right;
+    let size = Math.min(maxSize, (right - edge - (count - 1) * gap) / count);
+    // two rows (the first beside the sign, the second under it), left of the personality line too
+    const type = card.querySelector(".bot-type");
+    const typeAt = type && pyrosOffsetIn(type, card);
+    if (count > 1 && size < maxSize * 0.8 && typeAt && type.textContent.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(type);
+      const cardBox = card.getBoundingClientRect();
+      const scale = cardBox.width / card.offsetWidth || 1;
+      const typeTextLeft = (range.getBoundingClientRect().left - cardBox.left) / scale - card.clientLeft;
+      const right2 = Math.min(right, typeTextLeft - lineGap);
+      const cols2 = Math.ceil(count / 2);
+      const bottom = typeAt.y + type.offsetHeight;
+      const twoRows = Math.min(maxSize, (right2 - edge - (cols2 - 1) * gap) / cols2, (bottom - signMiddle - gap) / 1.5);
+      if (twoRows > size) {
+        rows = 2;
+        size = twoRows;
+        blockRight = right2;
+      }
+    }
+    size = Math.max(0, Math.floor(size));
+    const cols = Math.ceil(count / rows);
+    const width = cols * size + (cols - 1) * gap;
+    block.style.setProperty("--pyros-size", `${size}px`);
+    block.style.setProperty("--pyros-cols", String(cols));
+    block.style.left = `${Math.floor(blockRight - width)}px`;
+    block.style.top = `${Math.round(signMiddle - size / 2)}px`;
+    block.style.visibility = size >= 6 ? "visible" : "hidden";
+  });
+}
+
+let pyrosMarksResizeBound = false;
+function pyrosMarksAfterRender() {
+  layoutPyrosMarks();
+  if (pyrosMarksResizeBound) return;
+  pyrosMarksResizeBound = true;
+  window.addEventListener("resize", () => requestAnimationFrame(layoutPyrosMarks));
+  // the card text font arriving can move the name row
+  document.fonts?.ready?.then(() => layoutPyrosMarks());
+}
+
+// any other ability a DAMNED carries (not PYROS-TECH) still shows as a diamond; hovering it names the ability
 const GIFT_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.2 12 12 21.4 4.8 12Z"/><path d="M12 7.4 15.6 12 12 16.6 8.4 12Z" fill="currentColor" stroke="none" opacity="0.55"/></svg>`;
 
 function giftGlyphHtml(bot) {
-  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean);
+  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter((key) => key && !PYROS_GIFT_PASSIVES[key]);
   if (!keys.length) return "";
   const title = keys.map((key) => botPassiveKeyName(key)).join(" + ");
   const body = keys.map((key) => botPassiveKeyDescription(key)).filter(Boolean).join(" ");
-  const label = bot.buffPassiveKey ? "PYROS'S GIFT" : "ABILITY";
-  const tooltip = glyphTooltipHtml(title, label, body);
+  const tooltip = glyphTooltipHtml(title, "ABILITY", body);
   return `<span class="bot-glyph gift-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${GIFT_GLYPH_SVG}</span>`;
 }
 
@@ -16817,7 +17034,7 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
+  // a DAMNED's PYROS-TECH abilities float left of the name row (any other ability is the diamond), not in the personality line
   const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
@@ -16903,6 +17120,7 @@ function renderBot(bot, pendingPick) {
       ${hit.flash}
       ${deathBadge}
       ${markBadge}
+      ${isDown ? "" : pyrosMarksHtml(bot)}
       ${bot.isBoss && !isDown ? bossStolenTagHtml(bot) : ""}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
@@ -17012,8 +17230,11 @@ function renderConsole() {
   const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
   const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
 
+  // the slot machine (left) and the round's mission (right); the phone app has them in its own band
+  const sideParts = isNativeArcadeApp() ? { slot: "", mission: "" } : { slot: slotMachineHtml(), mission: missionBoxHtml() };
   return `
-    <section class="center-console" aria-label="Player action">
+    <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
+      ${sideParts.slot}
       ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
         ${corruptionNote}
@@ -17032,10 +17253,11 @@ function renderConsole() {
         />
         ${isNativeArcadeApp() ? "" : `<button id="mainAction" class="primary-button" ${disabled}>${buttonText}</button>`}
       </div>
-      <div class="pending-panel ${state.pendingActive ? "visible" : ""}">
+      <div class="pending-panel ${state.pendingActive && !pendingArtifactOnCard() ? "visible" : ""}">
         <span>${escapeHtml(normalizeGameText(pendingText))}</span>
         ${pendingCancel}
       </div>
+      ${sideParts.mission}
     </section>
   `;
 }
@@ -17048,7 +17270,7 @@ function renderPendingText() {
   if (state.pendingActive.id === "a14") return `${item.name} reduces the TARGET by ${artifactValue(10)}.`;
   if (state.pendingActive.id === "a15") {
     const extra = sacrificialDaggerExtraDamage("p70");
-    return `${item.name}: pick a target. non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
+    return `${item.name}: pick a target: non-boss DAMNED take ${artifactPercentValue(20)}%, BOSSES take ${artifactPercentValue(sacrificialDaggerBossPercent())}%${extra ? `, plus ${extra} from ${ITEMS.p70.name}` : ""}.`;
   }
   if (state.pendingActive.id === "a25") {
     const lamb = artifactSealEntry("a25");
@@ -17212,8 +17434,17 @@ function artifactStateClass(index, actionLocked) {
   return "artifact-waiting";
 }
 
+// desktop: the ARTIFACT you are using shows its target prompt and a Cancel button on its own card, so the
+// prompt no longer covers the guess area (phone web closes the ARTIFACTS drawer and the phone app has its own panel)
+function pendingArtifactOnCard() {
+  const pending = state.pendingActive;
+  if (!pending?.uid || isNativeArcadeApp() || isMobileArcadeView()) return false;
+  return state.player.actives.some((item) => item.uid === pending.uid);
+}
+
 function renderActiveItem(item, index) {
   const actionLocked = Boolean(state.pendingActive);
+  const pendingHere = actionLocked && pendingArtifactOnCard() && item.uid === state.pendingActive.uid;
   const useDisabled = canUseActive(index) && !actionLocked ? "" : "disabled";
   const sellDisabled = actionLocked || arcadeActionLocked() ? "disabled" : "";
   const sale = activeSellValue(item);
@@ -17222,19 +17453,24 @@ function renderActiveItem(item, index) {
   const memoryLine =
     item.id === "a18" ? `<div class="artifact-memory-line">Last: ${escapeHtml(lastUsedArtifactName())}</div>` : "";
   return `
-    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""} ${artifactStateClass(index, actionLocked)}" data-tooltip="${escapeAttr(description)}">
+    <article class="item-card active ${itemImage ? "has-item-icon has-artifact-icon" : ""} ${pendingHere ? "artifact-pending" : artifactStateClass(index, actionLocked)}" data-tooltip="${escapeAttr(description)}">
       ${itemImage}
       <div class="item-top">
         <div>
           <div class="item-name">${item.name}</div>
           ${memoryLine}
-          <div class="price">Sell ${sale}${SIN_MARK}</div>
+          ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
         </div>
         <span class="item-kind">ARTIFACT</span>
       </div>
+      ${pendingHere ? `<div class="artifact-pending-text">${escapeHtml(normalizeGameText(renderPendingText().replace(`${item.name}: `, "").replace(/^./, (c) => c.toUpperCase())))}</div>` : ""}
       <div class="item-actions">
-        <button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
-        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>Sell</button>
+        ${
+          pendingHere
+            ? `<button class="small-button artifact-cancel-button" data-cancel-pending>Cancel</button>`
+            : `<button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
+        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>Sell</button>`
+        }
       </div>
     </article>
   `;
@@ -18041,6 +18277,8 @@ function drawCloth(rig, t) {
    Edit the lines freely; the chunks are worked out from the punctuation. */
 
 const INTRO_SEEN_STORAGE_KEY = "dearthIntroSeenV1";
+// set once Satan's first-win speech (SATAN_FIRST_VICTORY_LINES) has been seen to its end or skipped
+const SATAN_FIRST_VICTORY_STORAGE_KEY = "dearthFirstVictorySeenV1";
 const INTRO_BLACK_MS = 5000; // silence before the bell
 const INTRO_LETTER_MS = 34; // typing speed
 const INTRO_PACT_DELAY_MS = 1100; // pause after round 2 resolves before Satan speaks
@@ -18103,7 +18341,19 @@ const INTRO_PACT_LINES = [
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
 
-// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact
+// the first time a player ever wins the main game (once per player, like the story; then SATAN_VICTORY_LINES)
+const SATAN_FIRST_VICTORY_LINES = [
+  ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
+  ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
+  ["satan", "I hope you didn't think this was actually the end, did you? Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right?"],
+  ["satan", "But it's not all doom and gloom my beloved minion. Me and my unholy buddies had so much fun watching you squirm and condemn the other sods, we decided to start betting on results of the games! Isn't that wonderful, all your hard work paid off and now I can finally open my very own casino, right here in purgatory!"],
+  ["satan", "Don't get your hopes too high up now tho buddy. It's not like you or any of the other vermin will get to play with the big boys. But you, and all other DAMNED to whom I share my gifts will play a very important role. You see, the Devil don't lose, so every round I shall be asking for little favors from you lot, to skew the odds and win big against the other demons!"],
+  ["satan", "However I respect and admire good work and dedication, so in all my gratitude I will allow you, my mortal minions to use the FAVOR you earn on one of my sweet sweet slot machines! So please, keep the SIN flowing and the sinners screaming, and maybe we shall meet again."],
+  ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
+];
+
+// after the 8th unique BOSS falls (the main game is won), Satan comes back the same way as in the pact;
+// every win after the first one
 const SATAN_VICTORY_LINES = [
   ["satan", "Well well well, colour me surprised, some congratulations are indeed in order. You actually defeated all my other special little sinners. While sending a hell of a lot of Damned to my boiling cauldrons as well, how kind of you."],
   ["satan", "You did so well that all my demons got so excited watching you torture and condemn the other souls, that they decided they wanted to play as well!"],
@@ -18156,6 +18406,25 @@ function markIntroSeen() {
   try {
     window.localStorage?.setItem(INTRO_SEEN_STORAGE_KEY, "1");
   } catch (error) {}
+}
+
+// Satan's first-win speech plays until it has been seen once (to its end or skipped)
+function satanFirstVictoryPending() {
+  try {
+    return window.localStorage?.getItem(SATAN_FIRST_VICTORY_STORAGE_KEY) !== "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function markSatanFirstVictorySeen() {
+  try {
+    window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+  } catch (error) {}
+}
+
+function satanVictoryLines() {
+  return satanFirstVictoryPending() ? SATAN_FIRST_VICTORY_LINES : SATAN_VICTORY_LINES;
 }
 
 function introActive() {
@@ -18670,7 +18939,9 @@ function introStartPactNow() {
 /* ---- Satan returns: the 8 unique BOSSES are beaten ----
    state.satanVictoryDue is set when the 8th unique BOSS falls; the round's results then wait for him
    (Next Round brings him in at once), like the pact after round 2. Same entrance and box as the pact,
-   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). */
+   with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). The very first win
+   of a player gets SATAN_FIRST_VICTORY_LINES instead; it counts as seen when he leaves (end or skip), so a
+   game closed in the middle of it shows it again at the next win. */
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
@@ -18709,7 +18980,7 @@ function startSatanVictoryNow() {
 function startSatanVictory() {
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = true;
-  satanOpenScene("victory", SATAN_VICTORY_LINES, "satan-victory-layer");
+  satanOpenScene("victory", satanVictoryLines(), "satan-victory-layer");
   saveArcadeRun();
 }
 
@@ -18735,6 +19006,7 @@ function satanOpenScene(phase, lines, layerClass) {
 }
 
 function satanVictoryLeave() {
+  if (introState.phase === "victory") markSatanFirstVictorySeen();
   satanLeaveScene("victory");
 }
 
@@ -21154,7 +21426,7 @@ document.addEventListener("keydown", (event) => {
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
    SEAL, the deal stays locked until your next BOSS kill.
 
-   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT right below. Edit them
+   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT(_FOR) right below. Edit them
    freely. The first word of each line is who speaks (satan / you). Words in {CAPS} are filled in by the
    game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q}. {SIN} draws the SIN icon.
    Each key holds a list of lines said one after another.
@@ -21182,94 +21454,111 @@ document.addEventListener("keydown", (event) => {
 const SATAN_DEAL_LINES = {
   // first time you open the deal in a run
   open: [
-    ["satan", "Well well, look who came crawling to me. Things not going so great down there, flesh puppet?"],
-    ["satan", "I'm feeling generous today. One deal, just one, so make it count. Tell me what you want and I'll tell you what it costs."]
+    ["satan", "Well well well, look who it is again, my loathsome little minion. So, what does your wretched heart desire?"]
   ],
   // every time after that, until the deal is made
-  openAgain: [["satan", "Back again? Spit it out, what do you want?"]],
+  openAgain: [["satan", "You got nerve calling me again whippersnapper, so come on spit it out."]],
   // the box under his line, where you type
   askPlaceholder: "Tell him what you want...",
 
   // asked for something he does not understand ({Q} is what you typed)
-  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for nonsense. Make a reasonable request before eternity catches up with you little puppet."]],
+  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for your nonsense. Make a reasonable request before eternity catches up with you mortal."]],
   // things he never gives
-  angel: [["satan", "Feathers? You come to ME and ask for feathers? Go pray to your little Archangels, see how far that gets you."]],
+  angel: [["satan", "Feathers? You come to ME and ask for feathers? You must be out of your mind. Go pray to your little Archangels, see how far that gets you."]],
   trinity: [["satan", "That one belongs to the big guy upstairs. Even I don't touch his toys."]],
-  saturn: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
-  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me. Bah. Lambs."]],
-  locked: [["satan", "That one isn't in my vault yet. Earn it first, then we talk."]],
-  bound: [["satan", "You already have that demon on a leash, and for free. Greedy little thing, aren't you?"]],
-  notDemon: [["satan", "That's not one of my demons. I only deal in what's mine."]],
+  // the Planetary SEALS: Seals of Saturn, Moon and Mars
+  planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
+  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
+  bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
+  notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
   // SEAL or ELITE before every SEAL slot is open
-  tooEarly: [["satan", "My demons don't serve nobodies. Open every SEAL slot you can, then come begging."]],
-  sealOwned: [["satan", "You already carry {SEAL}. If you want it stronger, ask for an ELITE."]],
-  eliteWhich: [["satan", "An ELITE on what? Name the SEAL, genius."]],
-  eliteNotOwned: [["satan", "You can't make stronger something you don't even have."]],
-  eliteCannot: [["satan", "{SEAL} can't get any stronger. Not even I can change that."]],
-  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. Ask me later."]],
+  tooEarly: [["satan", "Listen here you ungrateful worm, I ain't gonna do all the work for you. Open every SEAL slot you can, then you may come begging again."]],
+  sealOwned: [["satan", "You already control the {SEAL}. If you want to increase its power, ask for an ELITE."]],
+  eliteWhich: [["satan", "An ELITE of what? Name the SEAL."]],
+  eliteNotOwned: [["satan", "You can't increase the power of something you don't have."]],
+  eliteCannot: [["satan", "{SEAL} can't get any stronger. Does your avarice know no limit? I can respect that."]],
+  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. It would be very rude to do that. Did your mother never teach you manners?"]],
   // the 50% / 80% roll says no: the deal locks until the next BOSS kill
   sealRefused: [
-    ["satan", "{DEMON} doesn't feel like serving you. Can't say I blame him."],
-    ["satan", "Go kill another BOSS. Maybe I'll be in a better mood after that."]
+    ["satan", "{DEMON} doesn't feel like serving you right now. Can't say I blame him."],
+    ["satan", "You are starting to bore me. Go kill another BOSS. Maybe I'll be in a better mood after that."]
   ],
-  noRoomSeal: [["satan", "There's no room for another demon on you, and I'm not doing your tidying for you."]],
-  handsFull: [["satan", "Your hands are full of junk already. Make some room before you ask for more."]],
-  fullHealth: [["satan", "You're not even bleeding. Come back when it hurts."]],
+  noRoomSeal: [["satan", "My demons start complaining when they feel crammed, try opening up some more room for now."]],
+  handsFull: [["satan", "Your little fleshy hands are already full. Make some room before you ask for more."]],
+  fullHealth: [["satan", "There's only so much SOUL your puny human body can have, and you already have more than enough."]],
   sinHowMuch: [["satan", "How much SIN{SIN}? Give me a number."]],
   killWho: [["satan", "Kill who? Give me a name."]],
-  killBoss: [["satan", "BOSSES you deal with yourself. I only take the small fry."]],
-  satanSealNotEmpty: [["satan", "My own SEAL? Ha! It doesn't share a home with other demons. Empty every slot, then ask me again."]],
-  cheatDeathAlready: [["satan", "I already promised to drag you back once. Don't push your luck."]],
+  killBoss: [["satan", "BOSSES you deal with yourself cowboy. I only take the small fry."]],
+  satanSealNotEmpty: [["satan", "My own SEAL? Ha! If you wanna deal hard you best be ready to pay even harder! Empty every slot, then ask me again."]],
+  cheatDeathAlready: [["satan", "One chance is all you get my sweet summer slave. Don't push your luck, and back to work!"]],
 
   // offers: the last line of an offer is followed by YES / NO
-  artifact: [["satan", "{ITEM}? Cheap trinket. Fine, it's yours for {PRICE}."]],
+  artifact: [["satan", "{ITEM}? A fine fetish. It's yours for {PRICE}."]],
   artifacts: [["satan", "{COUNT} of {ITEM}? Somebody's planning a party. That will be {PRICE}."]],
-  artifactsCapped: [["satan", "Four. That's all I'll part with."]],
-  elite: [["satan", "An ELITE on {SEAL}? Done. It'll cost you {PRICE}."]],
+  artifactsCapped: [["satan", "Four. That's all you get you greedy git."]],
+  elite: [["satan", "An ELITE on {SEAL}? Consider it done, your bill is {PRICE}."]],
   eliteOther: [
-    ["satan", "Hmm. My demons tell me it's {OTHER} that's ready to grow, not {SEAL}."],
-    ["satan", "If you want it on {OTHER}, it's {PRICE}."]
+    ["satan", "Nahh, I think {OTHER} is a way better choice than {SEAL}."],
+    ["satan", "So for an ELITE {OTHER} it's gonna run you {PRICE}."]
   ],
-  seal: [["satan", "{DEMON} agrees to serve you. For that, I take {PRICE}."]],
-  heal: [["satan", "A little blood transfusion? {N} SOUL, and in return {PRICE}."]],
+  seal: [["satan", "{DEMON} agrees to serve you, but my services are gonna cost ya {PRICE}."]],
+  heal: [["satan", "A little spirit infusion? You get {N} SOUL, and in return I want {PRICE}."]],
   healTooMuch: [
-    ["satan", "{ASKED} SOUL? HAHAHA! You must be out of your mind."],
-    ["satan", "I'll give you {N}, and you'll thank me for it. In return, {PRICE}."]
+    ["satan", "{ASKED} SOUL? Do you think that stuff grows on trees? Trees don't have souls, ol' capital G said so."],
+    ["satan", "I'll give you {N}, and that's all you're getting. In return you best pay {PRICE}."]
   ],
-  sin: [["satan", "{N} SIN{SIN}, coming right up. In return, {PRICE}."]],
-  sinCapped: [["satan", "That much would kill you, and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return, {PRICE}."]],
-  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but {PRICE}."]],
-  uses: [["satan", "{N} more ARTIFACT use this round? Sure. Then {PRICE}."]],
-  usesTwo: [["satan", "Two more ARTIFACT uses this round? Greedy. Then {PRICE}."]],
-  usesTooMany: [["satan", "Two, or nothing. Don't get greedy with me."]],
+  sin: [["satan", "{N} SIN{SIN}, sure can do. But I'd like to see {PRICE} first."]],
+  sinCapped: [["satan", "That much would kill you dear lad and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return I'll be taking {PRICE}."]],
+  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but it's still gonna cost ya {PRICE}."]],
+  uses: [["satan", "{N} more ARTIFACT use this round? I can do that, but you'll have to pay me {PRICE}."]],
+  usesTwo: [["satan", "Two more ARTIFACT uses this round? Somebody's planning to make some moves I see. The price is {PRICE}."]],
+  usesTooMany: [["satan", "Two, or nothing. Don't you start getting greedy with me my little pawn."]],
   cheatDeath: [
-    ["satan", "Cheating death, now that's my kind of deal. Next time you drop, I'll drag you back up."],
-    ["satan", "The price? I'll pick it when you're lying on the floor."]
+    ["satan", "Cheating death, now that's my kind of deal. When you croak for the second time now in your pitiful existence, I'll drag you right back up."],
+    ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
-  satanSeal: [["satan", "My own SEAL, on an empty soul? You know what, I like you. No charge."]],
+  satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
   // the question after every offer (said on the same line as the price)
-  question: [["satan", "Do we have a deal, flesh puppet?"]],
+  question: [["satan", "Do we have a deal?"]],
 
   // after YES
   signed: [["satan", "Pleasure doing business with you."]],
   // after NO: the chance is gone for this run
-  refused: [["satan", "Your loss. Don't come crawling back, you had your chance."]]
+  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]]
 };
 
-// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name)
+// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name).
+// Each one is a "thing you pay", so it reads after any of his lead-ins: "it's yours for ...", "that will be ...",
+// "your bill is ...", "it's gonna run you ...", "cost ya ...", "I want ...", "you best pay ...", "pay me ...",
+// "the price is ..." (and the log's "you got X for ..."). Several parts are joined with commas and "and".
 const SATAN_DEAL_PRICE_TEXT = {
   hp: "{N} of your SOUL",
   sin: "{N} SIN{SIN}",
-  useCap: "only one ARTIFACT a round for the next {M} rounds",
-  useCapZero: "no ARTIFACTS at all for the next {M} rounds",
-  shopClosed: "my Offerings closed to you for {M} rounds",
-  bossHealth: "the next BOSS walks in with {N}% more SOUL",
-  bossBounty: "its BOSS BOUNTY goes to me",
+  useCap: "all but one ARTIFACT use a round for the next {M} rounds",
+  useCapZero: "every ARTIFACT use you get for the next {M} rounds",
+  shopClosed: "{M} rounds without my Offerings",
+  bossHealth: "{N}% more SOUL for the next BOSS",
+  bossBounty: "its BOSS BOUNTY",
   loseSeal: "your {SEAL}",
   damageTaken: "{N}% more pain for {M} rounds",
-  noArtifacts: "no ARTIFACTS for a round",
-  keepBounty: "its BOUNTY goes to me",
+  noArtifacts: "your ARTIFACTS for a round",
+  keepBounty: "the BOUNTY on their head",
   nothing: "nothing at all"
+};
+
+// the same parts, worded to fit one particular offer line (its key in SATAN_DEAL_LINES) where the usual
+// wording would not: anything not listed here uses SATAN_DEAL_PRICE_TEXT
+const SATAN_DEAL_PRICE_TEXT_FOR = {
+  // "But I'd like to see {PRICE} first."
+  sin: {
+    bossHealth: "the next BOSS joining the game with {N}% more SOUL",
+    bossBounty: "its BOSS BOUNTY in my pocket"
+  },
+  // "In return I'll be taking {PRICE}."
+  sinCapped: {
+    bossHealth: "your word that the next BOSS joins the game with {N}% more SOUL"
+  }
 };
 
 // the YES / NO buttons, and the buttons under the box where you type
@@ -21590,8 +21879,16 @@ function satanPactFill(text, vars = {}) {
   return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
 }
 
-function satanPactPartText(part) {
-  const t = SATAN_DEAL_PRICE_TEXT;
+// the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
+function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
+  if (part.type === "bossHealth") {
+    const health = satanPactFill(t.bossHealth, { N: part.pct });
+    return part.zeroBounty ? [health, t.bossBounty] : [health];
+  }
+  return [satanPactPartText(part, t)];
+}
+
+function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
   switch (part.type) {
     case "hp":
       return satanPactFill(t.hp, { N: part.n });
@@ -21602,7 +21899,7 @@ function satanPactPartText(part) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactFill(t.bossHealth, { N: part.pct }) + (part.zeroBounty ? `, and ${t.bossBounty}` : "");
+      return satanPactPartTexts(part, t).join(" and ");
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
@@ -21616,9 +21913,11 @@ function satanPactPartText(part) {
   }
 }
 
-function satanPactPriceText(parts) {
-  const texts = parts.map(satanPactPartText).filter(Boolean);
-  if (!texts.length) return SATAN_DEAL_PRICE_TEXT.nothing;
+// lineKey: the offer line the price is said in (its key in SATAN_DEAL_LINES), for SATAN_DEAL_PRICE_TEXT_FOR
+function satanPactPriceText(parts, lineKey = null) {
+  const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
+  const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
+  if (!texts.length) return t.nothing;
   if (texts.length === 1) return texts[0];
   return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
 }
@@ -21710,7 +22009,8 @@ function satanPactSealOffer(id) {
   const section = satanPactSealSection(id);
   if (SELF_STACKING_SEAL_IDS.has(id) || section === "archangel") return { refuse: "angel" };
   if (section === "trinity") return { refuse: "trinity" };
-  if (section === "saturn") return { refuse: "saturn" };
+  // the Planetary SEALS (Saturn, Moon, Mars) are Solomon's pentacles
+  if (["saturn", "artifact", "poison"].includes(section)) return { refuse: "planetary" };
   if (section === "apocalypse") return { refuse: "apocalypse" };
   if (section === "satan") return satanPactSatanSealOffer();
   if (!SATAN_PACT_GOETIC_IDS.has(id)) return { refuse: "notDemon" };
@@ -21837,13 +22137,19 @@ function satanPactAnswer(text) {
   }
 }
 
+// which SATAN_DEAL_LINES key an offer's price is said in (the one holding its last line)
+function satanPactLineKey(lines) {
+  const last = lines?.[lines.length - 1]?.[1];
+  return Object.keys(SATAN_DEAL_LINES).find((key) => Array.isArray(SATAN_DEAL_LINES[key]) && SATAN_DEAL_LINES[key].some((line) => line[1] === last)) || null;
+}
+
 // the lines Satan says for an answer (offers end with the question)
 function satanPactAnswerLines(answer) {
   const vars = { ...(answer.vars || {}) };
   if (answer.refuse) {
     return (SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   }
-  vars.PRICE = satanPactPriceText(answer.price);
+  vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   // the question goes on the same line as the price, so YES / NO sit right under it
   const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
@@ -21983,7 +22289,7 @@ function satanPactRefuse() {
   pact.used = true;
   pact.outcome = "refused";
   pact.offer = null;
-  addLog("You refused Satan's deal. He will not offer again this run.");
+  addLog("You refused Satan's deal. He shall not offer a deal again this run.");
 }
 
 // a request: an offer waits for YES / NO; a refusal maybe locks the deal; returns the lines to say
@@ -22180,11 +22486,11 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He will not offer again this run.";
+    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
-    tooltip = "Satan is not listening. Kill another BOSS.";
+    tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {
-    tooltip = "Not right now.";
+    tooltip = "Gone fishing.";
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
   const urgent = satanPactPulseUrgent();
@@ -22192,7 +22498,36 @@ function satanDealButtonHtml() {
   // every render rebuilds the button: the delay keeps the pulse running from where it was
   const period = urgent ? SATAN_DEAL_PULSE_FAST_MS : SATAN_DEAL_PULSE_MS;
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
-  return `<button class="pause-button deal-button ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>DEAL</button>`;
+  // the button is the contract itself; once signed, the signature stays on it
+  const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
+  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+}
+
+/* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
+   A sheet with a folded corner, DEAL written on it and an X with a line to sign. Hover: a signature writes itself in
+   blood on the line. Signed: the signature stays. Under 25% SOUL while he calls: the folded corner smoulders. The
+   phone app has no room for the sheet, so its button is a small contract mark beside the word. The lines tremble
+   with the outlines setting (three rough filters swapped by CSS, like the frames' boil). */
+function dealContractSvg() {
+  const rough = [3, 11, 19]
+    .map(
+      (seed, index) =>
+        `<filter id="dealRough${index}" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="${seed}"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>`
+    )
+    .join("");
+  const sheet = `
+    <path class="deal-burn" d="M96 4 L114 22"/>
+    <g class="deal-ink">
+      <path d="M6 4 H96 L114 22 V68 H6 Z"/>
+      <path d="M96 4 V22 H114"/>
+      <path class="deal-line" d="M24 58 H102"/>
+      <path d="M11 49 l8 8 M19 49 l-8 8"/>
+    </g>
+    <path class="deal-sign" d="M28 56 c4-9 7 3 11-2 s4-7 7-1 5 3 8-3 4-2 7 2 5 1 8-3 4 4 7 0 5-4 8 1 4 3 7-1"/>`;
+  if (isNativeArcadeApp()) {
+    return `<svg class="deal-paper deal-paper-mark" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}</svg><span class="deal-word-inline">DEAL</span>`;
+  }
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }
 /* ---------- Playtest feedback: a "Give feedback" button that opens the Google Form with the run filled in ----------
    Off unless PLAYTEST_BUILD is true; never in the native app. Entry ids are the form's, do not change them.
@@ -22326,6 +22661,650 @@ function renderPlaytestFeedbackButton(where) {
   if (!playtestFeedbackAvailable()) return "";
   if (where === "pause") return `<button class="primary-button" data-pause-action="feedback">Give feedback</button>`;
   return `<button class="primary-button end-feedback" id="playtestFeedback">Give feedback</button>`;
+}
+/* ---------- Missions and the slot machine ----------
+   Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
+   tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
+   mission pays 1, 2 or 3 FAVOR at once. The slot machine left of the guess area is always available:
+   a spin costs SLOT_SPIN_COST FAVOR, three reels each land on one icon, and the reward depends on how many
+   of each icon came up (SLOT_PAYOUTS). Arcade only: no PvP, not in the story's tutorial rounds.
+   Run state: state.missions (saved with the run); free rerolls won here: state.slotFreeRerolls (they last
+   until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, applyPenalties (READY and the
+   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells and consumeActive. */
+
+const SLOT_SPIN_COST = 3;
+
+// icon, label, chance in % (they add up to 100)
+const SLOT_ICONS = [
+  { key: "sin", label: "SIN", weight: 17 },
+  { key: "soul", label: "SOUL", weight: 17 },
+  { key: "damage", label: "DAMAGE", weight: 17 },
+  { key: "elite", label: "ELITE", weight: 16 },
+  { key: "karma", label: "KARMA", weight: 16 },
+  { key: "reroll", label: "FREE REROLLS", weight: 17 }
+];
+
+// what 0, 1, 2 or 3 of an icon pay
+const SLOT_PAYOUTS = {
+  sin: [0, 5, 18, 150], // SIN
+  soul: [0, 1, 4, 20], // SOUL healed; nothing can block it
+  damage: [0, 5, 15, 100], // % max SOUL to every DAMNED, dealt at the end of the next round
+  elite: [0, 0, 0, 1], // three ELITES: every SEAL of yours gains an ELITE level
+  karmaArtifacts: [0, 3, 0, 0], // random ARTIFACTS
+  karma: [0, 0, 1, 10], // KARMA
+  reroll: [0, 2, 8, 30] // free rerolls
+};
+
+// reels stop one after the other (ms after the spin, before the animation speed setting)
+const SLOT_REEL_STOP_MS = [700, 1050, 1400];
+const SLOT_RESOLVE_DELAY_MS = 220;
+const SLOT_SOURCE = "Slot machine";
+
+// sounds only where the game can play them (not in the logic tests)
+function slotSfx(key) {
+  if (typeof Audio === "undefined" || typeof playGameSfx !== "function") return;
+  playGameSfx(key);
+}
+
+// FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
+
+/* ---- the missions: 15 worth 1, 15 worth 2, 15 worth 3 FAVOR ----
+   when: "event"   checked after every action (shop, ARTIFACT, spin) and after the results
+         "resolve" checked once the round's results are in (and after any later action that round)
+         "leave"   checked when you move on to the next round
+   can(): may this mission be drawn now? param(): a value drawn with it (shown in the text). */
+const MISSIONS = [
+  // ---- 1 FAVOR ----
+  { id: "near10", value: 1, when: "resolve", text: "Guess within 10 of the TARGET.", check: (f) => f.guessed && f.dist <= 10 },
+  { id: "notWorst", value: 1, when: "resolve", text: "Don't have the worst guess.", check: (f) => f.guessed && !f.worst },
+  { id: "beat3", value: 1, when: "resolve", text: "Guess closer than 3 DAMNED.", check: (f) => f.guessed && f.botsFarther >= 3 },
+  { id: "under", value: 1, when: "resolve", text: "Guess under the TARGET.", check: (f) => f.guessed && f.guess < f.target },
+  { id: "over", value: 1, when: "resolve", text: "Guess over the TARGET.", check: (f) => f.guessed && f.guess > f.target },
+  { id: "hurt15", value: 1, when: "resolve", text: "Take 15 damage or less.", check: (f) => f.guessed && f.damageTaken <= 15 },
+  { id: "kill1", value: 1, when: "resolve", text: "Eliminate a DAMNED.", check: (f) => f.eliminations >= 1 },
+  { id: "earn5", value: 1, when: "resolve", text: "Earn 5 SIN this round.", check: (f) => f.earned >= 5, progress: (f) => `${Math.min(5, f.earned)}/5` },
+  { id: "pain40", value: 1, when: "resolve", text: "The DAMNED take 40 damage in total.", check: (f) => f.botDamage >= 40 },
+  { id: "seal1", value: 1, when: "resolve", text: "Have a SEAL trigger.", can: () => ownedSealCount() >= 1, check: (f) => f.sealsTriggered >= 1 },
+  { id: "use1", value: 1, when: "event", text: "Use an ARTIFACT.", check: (f) => f.artifactsUsed >= 1 },
+  { id: "buy1", value: 1, when: "event", text: "Buy something in Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.buys >= 1 },
+  { id: "reroll1", value: 1, when: "event", text: "Reroll Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 1 },
+  { id: "sell1", value: 1, when: "event", text: "Sell a SEAL or an ARTIFACT.", can: () => ownedSealCount() + (state.player.actives || []).length >= 1, check: (f) => f.sells >= 1 },
+  { id: "keep10", value: 1, when: "leave", text: "Go into the next round with 10 SIN or more.", check: (f) => f.sin >= 10 },
+
+  // ---- 2 FAVOR ----
+  { id: "near3", value: 2, when: "resolve", text: "Guess within 3 of the TARGET.", check: (f) => f.guessed && f.dist <= 3 },
+  { id: "closest", value: 2, when: "resolve", text: "Have the closest guess at the table.", check: (f) => f.guessed && f.closest },
+  { id: "lowest", value: 2, when: "resolve", text: "Guess lower than every DAMNED.", check: (f) => f.guessed && f.lowest },
+  { id: "hurt5", value: 2, when: "resolve", text: "Take 5 damage or less.", check: (f) => f.guessed && f.damageTaken <= 5 },
+  { id: "kill2", value: 2, when: "resolve", text: "Eliminate 2 DAMNED.", check: (f) => f.eliminations >= 2, progress: (f) => `${Math.min(2, f.eliminations)}/2` },
+  {
+    id: "killType",
+    value: 2,
+    when: "resolve",
+    text: (param) => `Eliminate a ${String(param || "").toUpperCase()} DAMNED.`,
+    param: () => {
+      const types = [...new Set(activeBots().filter((bot) => !bot.isBoss).flatMap((bot) => personalityTypes(bot)))];
+      return types.length ? randomFrom(types) : null;
+    },
+    check: (f, param) => f.eliminatedTypes.includes(param)
+  },
+  { id: "bounty4", value: 2, when: "resolve", text: "Collect a BOUNTY of 4 SIN or more.", check: (f) => f.bestBounty >= 4 },
+  { id: "use2", value: 2, when: "event", text: "Use 2 ARTIFACTS.", check: (f) => f.artifactsUsed >= 2, progress: (f) => `${Math.min(2, f.artifactsUsed)}/2` },
+  { id: "buySeal", value: 2, when: "event", text: "Buy a SEAL or an ELITE level.", can: () => !shopDisabledBySatan(), check: (f) => f.sealsBought >= 1 },
+  { id: "reroll3", value: 2, when: "event", text: "Reroll Devil's Offerings 3 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 3, progress: (f) => `${Math.min(3, f.rerolls)}/3` },
+  { id: "seals3", value: 2, when: "resolve", text: "Have 3 different SEALS trigger.", can: () => ownedSealCount() >= 3, check: (f) => f.sealsTriggered >= 3, progress: (f) => `${Math.min(3, f.sealsTriggered)}/3` },
+  { id: "earn10", value: 2, when: "resolve", text: "Earn 10 SIN this round.", check: (f) => f.earned >= 10, progress: (f) => `${Math.min(10, f.earned)}/10` },
+  { id: "spend15", value: 2, when: "event", text: "Spend 15 SIN this round.", check: (f) => f.spent >= 15, progress: (f) => `${Math.min(15, f.spent)}/15` },
+  { id: "pain10each", value: 2, when: "resolve", text: "Every DAMNED takes 10 damage or more.", check: (f) => f.everyBotHit10 },
+  { id: "hold4", value: 2, when: "leave", text: "Go into the next round holding 4 ARTIFACTS.", check: (f) => f.artifactsHeld >= 4, progress: (f) => `${Math.min(4, f.artifactsHeld)}/4` },
+
+  // ---- 3 FAVOR ----
+  { id: "critical", value: 3, when: "resolve", text: "Hit a CRITICAL.", check: (f) => f.critical },
+  { id: "kill3", value: 3, when: "resolve", text: "Eliminate 3 DAMNED.", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
+  { id: "unhurt", value: 3, when: "resolve", text: "Take no damage this round.", check: (f) => f.guessed && f.damageTaken === 0 },
+  { id: "boss", value: 3, when: "resolve", text: "Defeat the BOSS.", can: () => activeBots().some((bot) => bot.isBoss && !bot.immortal), check: (f) => f.bossesKilled >= 1 },
+  { id: "killFull", value: 3, when: "resolve", text: "Eliminate a DAMNED that started the round at full SOUL.", check: (f) => f.fullKills >= 1 },
+  { id: "earn25", value: 3, when: "resolve", text: "Earn 25 SIN this round.", check: (f) => f.earned >= 25, progress: (f) => `${Math.min(25, f.earned)}/25` },
+  { id: "seals5", value: 3, when: "resolve", text: "Have 5 different SEALS trigger.", can: () => ownedSealCount() >= 5, check: (f) => f.sealsTriggered >= 5, progress: (f) => `${Math.min(5, f.sealsTriggered)}/5` },
+  { id: "reroll5", value: 3, when: "event", text: "Reroll Devil's Offerings 5 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
+  { id: "spend30", value: 3, when: "event", text: "Spend 30 SIN this round.", check: (f) => f.spent >= 30, progress: (f) => `${Math.min(30, f.spent)}/30` },
+  { id: "critBare", value: 3, when: "resolve", text: "Hit a CRITICAL without using an ARTIFACT.", check: (f) => f.critical && f.artifactsUsed === 0 },
+  { id: "near2safe", value: 3, when: "resolve", text: "Guess within 2 of the TARGET and take 5 damage or less.", check: (f) => f.guessed && f.dist <= 2 && f.damageTaken <= 5 },
+  { id: "keepSoul", value: 3, when: "leave", text: "Go into the next round with as much SOUL as you started this one.", check: (f) => f.hp >= f.startHp },
+  { id: "twoArtKill2", value: 3, when: "resolve", text: "Use 2 different ARTIFACTS and eliminate 2 DAMNED.", check: (f) => f.distinctArtifacts >= 2 && f.eliminations >= 2 },
+  { id: "closestKill2", value: 3, when: "resolve", text: "Have the closest guess and eliminate 2 DAMNED.", check: (f) => f.guessed && f.closest && f.eliminations >= 2 },
+  { id: "lowestNear3", value: 3, when: "resolve", text: "Guess lower than every DAMNED and within 3 of the TARGET.", check: (f) => f.guessed && f.lowest && f.dist <= 3 }
+];
+
+const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));
+
+function ownedSealCount() {
+  return (state.player?.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
+}
+
+/* ---- state ---- */
+function missionsFresh() {
+  return {
+    doubloons: 0,
+    current: null, // { id, value, param, round, done }
+    lastId: null,
+    round: null, // this round's counters (missionsRoundFresh)
+    spin: null, // { icons, at, resolved }
+    lastIcons: null,
+    lastText: "",
+    completed: 0,
+    earned: 0,
+    spins: 0,
+    triples: 0
+  };
+}
+
+function missionsRoundFresh() {
+  return {
+    round: state.round,
+    rerolls: 0,
+    buys: 0,
+    sealsBought: 0,
+    sells: 0,
+    startHp: state.player?.hp ?? 0,
+    botStart: {},
+    readyIds: null,
+    resolved: false
+  };
+}
+
+function missionsState() {
+  if (!state.missions || typeof state.missions !== "object") state.missions = missionsFresh();
+  const missions = state.missions;
+  if (!Number.isFinite(missions.doubloons)) missions.doubloons = 0;
+  if (!missions.round || missions.round.round !== state.round) missions.round = missionsRoundFresh();
+  return missions;
+}
+
+function missionsEnabled() {
+  if (state.mode !== "arcade" || state.gameOver) return false;
+  if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
+  return true;
+}
+
+function resetMissionsForRun() {
+  state.missions = missionsFresh();
+  state.slotFreeRerolls = 0;
+  state.slotPendingDamage = [];
+}
+
+function normalizeMissionsState() {
+  const missions = missionsState();
+  if (missions.current && !MISSION_BY_ID[missions.current.id]) missions.current = null;
+  if (!Number.isFinite(state.slotFreeRerolls)) state.slotFreeRerolls = 0;
+  if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
+  // a spin that was still turning when the run was saved pays out now
+  if (missions.spin && !missions.spin.resolved) slotResolve();
+}
+
+// called at the end of beginRound: new counters; the mission itself is drawn by missionsEnsureRound
+function missionsBeginRound() {
+  const missions = missionsState();
+  missions.round = missionsRoundFresh();
+  activeBots().forEach((bot) => {
+    missions.round.botStart[bot.id] = { hp: bot.hp, maxHp: bot.maxHp };
+  });
+}
+
+function missionText(mission, param) {
+  return typeof mission.text === "function" ? mission.text(param) : mission.text;
+}
+
+function drawMission() {
+  const missions = missionsState();
+  const options = MISSIONS.filter((mission) => mission.id !== missions.lastId && (!mission.can || mission.can()));
+  for (const mission of shuffled(options)) {
+    const param = mission.param ? mission.param() : null;
+    if (mission.param && !param) continue;
+    return { id: mission.id, value: mission.value, param, round: state.round, done: false };
+  }
+  return null;
+}
+
+// the round's mission: drawn the first time it is needed in a round
+function missionsEnsureRound() {
+  if (!missionsEnabled()) return null;
+  const missions = missionsState();
+  if (!missions.current || missions.current.round !== state.round) {
+    missions.current = drawMission();
+    if (missions.current) missions.lastId = missions.current.id;
+  }
+  return missions.current;
+}
+
+/* ---- facts about the round, for the checks ---- */
+function missionFacts() {
+  const missions = missionsState();
+  const counters = missions.round;
+  const round = state.roundState || {};
+  const guess = round.playerEffectiveGuess;
+  const target = round.target;
+  const guessed = counters.resolved && Number.isFinite(guess) && Number.isFinite(target);
+  const dist = guessed ? Math.abs(guess - target) : Infinity;
+  const readyIds = counters.readyIds || Object.keys(counters.botStart).map(Number);
+  const removed = round.removedBotIds instanceof Set ? round.removedBotIds : new Set();
+  const botGuesses = [];
+  readyIds.forEach((id) => {
+    const value = round.botEffectiveGuesses instanceof Map ? round.botEffectiveGuesses.get(id) : undefined;
+    if (Number.isFinite(value) && !removed.has(id)) botGuesses.push(value);
+  });
+  const botDists = botGuesses.map((value) => Math.abs(value - target));
+  const startedBots = state.bots.filter((bot) => counters.botStart[bot.id]);
+  const killedBots = startedBots.filter((bot) => bot.eliminated && !bot.immortal);
+  const triggered = round.triggeredPassiveIds instanceof Set ? round.triggeredPassiveIds.size : 0;
+  const itemCounts = round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map();
+  return {
+    guessed,
+    guess,
+    target,
+    dist,
+    critical: Boolean(counters.resolved && round.criticalHitKeys instanceof Set && round.criticalHitKeys.has("player")),
+    worst: guessed && botDists.length > 0 && dist > 0 && botDists.every((other) => dist >= other),
+    closest: guessed && botDists.every((other) => dist <= other),
+    lowest: guessed && botGuesses.length > 0 && botGuesses.every((other) => guess < other),
+    botsFarther: guessed ? botDists.filter((other) => other > dist).length : 0,
+    damageTaken: Math.max(0, Math.ceil(state.playerLastDamage || 0)),
+    hp: state.player.hp,
+    startHp: counters.startHp,
+    eliminations: killedBots.length,
+    eliminatedTypes: Array.isArray(round.eliminatedPersonalities) ? round.eliminatedPersonalities : [],
+    bestBounty: killedBots.reduce((best, bot) => Math.max(best, Number(bot.eliminationReward) || 0), 0),
+    bossesKilled: killedBots.filter((bot) => bot.isBoss).length,
+    fullKills: killedBots.filter((bot) => {
+      const start = counters.botStart[bot.id];
+      return start && start.hp >= start.maxHp;
+    }).length,
+    botDamage: startedBots.reduce((sum, bot) => sum + Math.max(0, Number(bot.lastDamage) || 0), 0),
+    everyBotHit10:
+      counters.resolved &&
+      readyIds.length > 0 &&
+      readyIds.every((id) => {
+        const bot = state.bots.find((entry) => entry.id === id);
+        return bot && (Number(bot.lastDamage) || 0) >= 10;
+      }),
+    sealsTriggered: triggered,
+    artifactsUsed: Math.max(0, round.activeUses || 0),
+    distinctArtifacts: itemCounts.size,
+    artifactsHeld: (state.player.actives || []).length,
+    buys: counters.buys,
+    sealsBought: counters.sealsBought,
+    rerolls: counters.rerolls,
+    sells: counters.sells,
+    earned: Math.max(0, Math.ceil(round.earnedSinThisRound || 0)),
+    spent: Math.max(0, Math.ceil(round.creditsSpentThisRound || 0)),
+    sin: Math.max(0, Math.ceil(state.player.credits || 0))
+  };
+}
+
+// point: "event" | "resolve" | "leave"
+function missionsCheck(point = "event") {
+  if (!missionsEnabled()) return false;
+  const current = missionsEnsureRound();
+  if (!current || current.done) return false;
+  const mission = MISSION_BY_ID[current.id];
+  if (!mission) return false;
+  const counters = missionsState().round;
+  if (mission.when === "leave" && point !== "leave") return false;
+  if (mission.when === "resolve" && !counters.resolved) return false;
+  if (!mission.check(missionFacts(), current.param)) return false;
+  missionsComplete(current, mission);
+  return true;
+}
+
+function missionsComplete(current, mission) {
+  const missions = missionsState();
+  current.done = true;
+  missions.doubloons += current.value;
+  missions.completed += 1;
+  missions.earned += current.value;
+  const text = missionText(mission, current.param);
+  addLog(`Mission done: ${text} +${current.value} FAVOR.`);
+  if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
+  slotSfx("bountyUp");
+}
+
+/* ---- hooks ---- */
+// READY: who is at the table for this guess
+function missionsNoteReady() {
+  if (!missionsEnabled()) return;
+  missionsState().round.readyIds = activeBots().map((bot) => bot.id);
+}
+
+// the results are in (end of applyPenalties)
+function missionsAfterResolution() {
+  if (!missionsEnabled()) return;
+  missionsState().round.resolved = true;
+  missionsCheck("resolve");
+}
+
+// NEXT ROUND: the "go into the next round" missions, before the round changes
+function missionsBeforeNextRound() {
+  if (!missionsEnabled()) return;
+  missionsCheck("leave");
+}
+
+// kind: "buySeal" | "buyArtifact" | "reroll" | "sell" | "artifact"
+function missionsNoteShop(kind) {
+  if (!missionsEnabled()) return;
+  const counters = missionsState().round;
+  if (kind === "buySeal" || kind === "buyArtifact") counters.buys += 1;
+  if (kind === "buySeal") counters.sealsBought += 1;
+  if (kind === "reroll") counters.rerolls += 1;
+  if (kind === "sell") counters.sells += 1;
+  missionsCheck("event");
+}
+
+/* ---- the slot machine ---- */
+function slotRollIcon() {
+  const total = SLOT_ICONS.reduce((sum, icon) => sum + icon.weight, 0);
+  let roll = Math.random() * total;
+  for (const icon of SLOT_ICONS) {
+    roll -= icon.weight;
+    if (roll < 0) return icon.key;
+  }
+  return SLOT_ICONS[SLOT_ICONS.length - 1].key;
+}
+
+function slotIconLabel(key) {
+  return SLOT_ICONS.find((icon) => icon.key === key)?.label || key;
+}
+
+// what three icons pay: { sin, soul, damagePercent, elite, artifacts, karma, rerolls, triple }
+function slotRewardsFor(icons) {
+  const count = (key) => icons.filter((icon) => icon === key).length;
+  const n = (key) => Math.min(3, count(key));
+  return {
+    sin: SLOT_PAYOUTS.sin[n("sin")],
+    soul: SLOT_PAYOUTS.soul[n("soul")],
+    damagePercent: SLOT_PAYOUTS.damage[n("damage")],
+    elite: SLOT_PAYOUTS.elite[n("elite")],
+    artifacts: SLOT_PAYOUTS.karmaArtifacts[n("karma")],
+    karma: SLOT_PAYOUTS.karma[n("karma")],
+    rerolls: SLOT_PAYOUTS.reroll[n("reroll")],
+    triple: icons.length === 3 && icons.every((icon) => icon === icons[0]) ? icons[0] : null
+  };
+}
+
+function slotSpinning() {
+  const spin = state.missions?.spin;
+  return Boolean(spin && !spin.resolved);
+}
+
+function slotCanSpin() {
+  return missionsEnabled() && !arcadeActionLocked() && !slotSpinning() && missionsState().doubloons >= SLOT_SPIN_COST;
+}
+
+function slotSpin() {
+  if (!slotCanSpin()) return false;
+  const missions = missionsState();
+  missions.doubloons -= SLOT_SPIN_COST;
+  missions.spins += 1;
+  missions.spin = { icons: [slotRollIcon(), slotRollIcon(), slotRollIcon()], at: Date.now(), resolved: false };
+  missions.lastText = "";
+  slotSfx("reroll");
+  // no timers (logic tests): it pays out at once
+  if (typeof setTimeout !== "function" || typeof document?.querySelector !== "function") {
+    slotResolve();
+    return true;
+  }
+  SLOT_REEL_STOP_MS.forEach((ms, index) => {
+    setTimeout(() => {
+      slotSfx("uiHover");
+      if (index < SLOT_REEL_STOP_MS.length - 1) render();
+    }, gameMs(ms));
+  });
+  setTimeout(() => {
+    slotResolve();
+    render();
+  }, gameMs(SLOT_REEL_STOP_MS[SLOT_REEL_STOP_MS.length - 1] + SLOT_RESOLVE_DELAY_MS));
+  render();
+  return true;
+}
+
+// has reel `index` of the current spin stopped?
+function slotReelStopped(index) {
+  const spin = state.missions?.spin;
+  if (!spin || spin.resolved) return true;
+  return Date.now() - spin.at >= gameMs(SLOT_REEL_STOP_MS[index]);
+}
+
+function slotResolve() {
+  const missions = missionsState();
+  const spin = missions.spin;
+  if (!spin || spin.resolved) return;
+  spin.resolved = true;
+  missions.lastIcons = spin.icons.slice();
+  if (state.gameOver || state.mode !== "arcade") return;
+  const reward = slotRewardsFor(spin.icons);
+  const parts = [];
+  if (reward.triple) {
+    missions.triples += 1;
+    slotSfx("criticalBell");
+  }
+  if (reward.sin > 0) {
+    const gained = gainCredits(reward.sin, false, SLOT_SOURCE);
+    parts.push(`+${gained} SIN`);
+  }
+  if (reward.soul > 0) {
+    const healed = slotHealUnblockable(reward.soul);
+    parts.push(healed > 0 ? `+${healed} SOUL` : "SOUL already full");
+  }
+  if (reward.damagePercent > 0) {
+    // dealt at the end of the next round (slotApplyPendingDamage, from applyPenalties)
+    if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
+    state.slotPendingDamage.push({ round: state.round + 1, percent: reward.damagePercent });
+    parts.push(`${reward.damagePercent}% DAMAGE at next round's end`);
+  }
+  if (reward.elite > 0) {
+    // three ELITES: every SEAL you own that can take ELITE gains a level (free: selling does not pay it back)
+    const seals = (state.player.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id) && !isNonUpgradableSeal(item.id));
+    seals.forEach((seal) => {
+      seal.stack = (seal.stack || 1) + reward.elite;
+      seal.freeStacks = (seal.freeStacks || 0) + reward.elite;
+      recordEliteLevelBought(seal.id, seal.stack);
+    });
+    parts.push(seals.length ? `ELITE on all ${seals.length} SEAL${seals.length === 1 ? "" : "S"}` : "ELITE, but no SEAL can take it");
+  }
+  if (reward.artifacts > 0) {
+    let given = 0;
+    for (let index = 0; index < reward.artifacts && state.player.actives.length < activeInventoryLimit(); index += 1) {
+      state.player.actives.push(freeActiveCopy(randomFrom(ACTIVE_IDS)));
+      given += 1;
+    }
+    if (given) state.activeCarouselIndex = state.player.actives.length - 1;
+    parts.push(given ? `+${given} ARTIFACT${given === 1 ? "" : "S"}` : "ARTIFACTS full");
+  }
+  if (reward.karma > 0) {
+    const gained = typeof karmaGain === "function" ? karmaGain(reward.karma, SLOT_SOURCE) : 0;
+    parts.push(gained ? `+${gained} KARMA` : `${reward.karma} KARMA (not counted here)`);
+  }
+  if (reward.rerolls > 0) {
+    state.slotFreeRerolls = Math.max(0, Math.ceil(state.slotFreeRerolls || 0)) + reward.rerolls;
+    parts.push(`+${reward.rerolls} free rerolls`);
+  }
+  missions.lastText = parts.length ? parts.join(" · ") : "Nothing";
+  missions.lastRound = state.round;
+  addLog(`${SLOT_SOURCE}: ${spin.icons.map(slotIconLabel).join(" | ")}. ${missions.lastText}.`);
+  if (state.roundState) addRoundEvent(`${SLOT_SOURCE}: ${missions.lastText}.`);
+  if (state.player.hp <= 0) finishGameOverRound();
+  // a spin can finish a mission (SIN earned, DAMNED eliminated, ...)
+  missionsCheck("event");
+}
+
+// SOUL from the slot machine: nothing blocks it (no BOSS ability, no Padma), it only stops at max SOUL
+function slotHealUnblockable(amount) {
+  if (state.player.hp <= 0) return 0;
+  const before = state.player.hp;
+  state.player.hp = Math.min(playerMaxHp(), state.player.hp + Math.max(0, Math.ceil(amount)));
+  const healed = state.player.hp - before;
+  if (healed > 0) {
+    state.playerLastHeal = (state.playerLastHeal || 0) + healed;
+    recordPlayerHealSource(healed, SLOT_SOURCE);
+  }
+  return healed;
+}
+
+// the % of max SOUL every DAMNED takes at the end of this round (spins from earlier rounds)
+function slotPendingDamagePercent(round = state.round) {
+  return (Array.isArray(state.slotPendingDamage) ? state.slotPendingDamage : [])
+    .filter((entry) => entry && entry.round <= round)
+    .reduce((sum, entry) => sum + Math.max(0, Number(entry.percent) || 0), 0);
+}
+
+// end of the round (applyPenalties, after the BOSS abilities): the DAMAGE won by a spin in an earlier round lands
+function slotApplyPendingDamage() {
+  if (!Array.isArray(state.slotPendingDamage) || !state.slotPendingDamage.length) return;
+  const due = state.slotPendingDamage.filter((entry) => entry && entry.round <= state.round);
+  if (!due.length) return;
+  state.slotPendingDamage = state.slotPendingDamage.filter((entry) => entry && entry.round > state.round);
+  due.forEach((entry) => {
+    const percent = Math.max(0, Number(entry.percent) || 0);
+    if (!percent) return;
+    damageBots(
+      activeBots(),
+      (bot) => Math.ceil((bot.maxHp || 0) * (percent / 100)),
+      (bot, dealt) => `The slot machine dealt ${dealt} damage to ${bot.name}.`,
+      SLOT_SOURCE
+    );
+  });
+}
+
+/* ---- drawing ---- */
+const SLOT_ICON_SVG = {
+  soul: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.2 4.2 6 7.4 6 11.2a6 6 0 0 1-12 0c0-2.4 1.3-4.3 2.6-5.6.2 1.8 1 3 2.2 3.6-.6-3.3.2-6.2 1.2-9.2z"/></svg>`,
+  damage: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 13h-4.4z"/><path d="M6.5 15.2h11"/><path d="M12 15.2v4.8"/><circle cx="12" cy="21.3" r="1.2"/></svg>`,
+  elite: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 3.6l2.3 7.1h-4.6zM12 3.6L7 19M12 3.6L17 19M3.6 9.4h16.8M7 19L20.4 9.4M17 19L3.6 9.4"/></svg>`,
+  reroll: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 9A8 8 0 0 0 5 7.2"/><path d="M5 3v4.4h4.4"/><path d="M4.5 15A8 8 0 0 0 19 16.8"/><path d="M19 21v-4.4h-4.4"/></svg>`
+};
+
+// the symbol alone (reels show no text)
+function slotGlyphHtml(key) {
+  if (key === "sin") return `<span class="slot-glyph-mask slot-glyph-sin"></span>`;
+  if (key === "karma") return `<span class="slot-glyph-mask slot-glyph-karma"></span>`;
+  return SLOT_ICON_SVG[key] || "";
+}
+
+function slotIconHtml(key) {
+  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
+}
+
+// the slot machine's description: each symbol with what 1, 2 or 3 of it pay
+function slotPaytableHtml() {
+  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}">${slotGlyphHtml(key)}</span>`;
+  const row = (key, one, two, three) =>
+    `<div class="slot-pay-row">${symbol(key)}<span>${one}</span><span>${two}</span><span>${three}</span></div>`;
+  return `
+    <div class="slot-paytable">
+      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${FAVOR_MARK} a spin</div>
+      <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
+      ${row("sin", `+5${SIN_MARK}`, `+18${SIN_MARK}`, `+150${SIN_MARK}`)}
+      ${row("soul", "+1 SOUL", "+4 SOUL", "+20 SOUL")}
+      ${row("damage", "5%", "15%", "100%")}
+      ${row("elite", "–", "–", "ELITE on every SEAL")}
+      ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
+      ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
+    </div>
+  `;
+}
+
+function slotMachineHtml() {
+  if (!missionsEnabled()) return "";
+  const missions = missionsState();
+  const spin = missions.spin && !missions.spin.resolved ? missions.spin : null;
+  const icons = spin ? spin.icons : missions.lastIcons;
+  const reels = [0, 1, 2]
+    .map((index) => {
+      if (spin && !slotReelStopped(index)) {
+        const strip = [...SLOT_ICONS, ...SLOT_ICONS].map((icon) => slotIconHtml(icon.key)).join("");
+        return `<div class="slot-reel rolling"><div class="slot-window"><div class="slot-strip" style="animation-delay: -${index * 130}ms">${strip}</div></div></div>`;
+      }
+      if (!icons) return `<div class="slot-reel empty"><div class="slot-window"><span class="slot-idle">?</span></div></div>`;
+      return `<div class="slot-reel ${spin ? "landed" : "shown"}"><div class="slot-window">${slotIconHtml(icons[index])}</div></div>`;
+    })
+    .join("");
+  const triple = !spin && icons && icons.every((icon) => icon === icons[0]);
+  const pendingNow = slotPendingDamagePercent(state.round);
+  const pendingNext = slotPendingDamagePercent(state.round + 1) - pendingNow;
+  const pendingText = pendingNow
+    ? `${pendingNow}% DAMAGE at this round's end`
+    : pendingNext
+      ? `${pendingNext}% DAMAGE at next round's end`
+      : "";
+  // this round's spin shows its result; later rounds show the DAMAGE still on its way
+  const result = spin ? "" : missions.lastRound === state.round ? missions.lastText : pendingText || missions.lastText;
+  const disabled = slotCanSpin() ? "" : "disabled";
+  const tooltip = `${slotPaytableHtml()}`;
+  return `
+    <div class="slot-machine${triple && missions.lastText ? " slot-triple" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">
+      <div class="slot-reels">${reels}</div>
+      <div class="slot-side">
+        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
+        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
+      </div>
+      <div class="slot-result">${escapeHtml(result || "Missions pay FAVOR.")}</div>
+    </div>
+  `;
+}
+
+function missionBoxHtml() {
+  if (!missionsEnabled()) return "";
+  const current = missionsEnsureRound();
+  if (!current) return "";
+  const mission = MISSION_BY_ID[current.id];
+  const counters = missionsState().round;
+  let status = "";
+  if (current.done) status = "Done";
+  else if (mission.when === "resolve" && counters.resolved && !mission.progress) status = "Missed";
+  else if (mission.progress) status = mission.progress(missionFacts(), current.param);
+  else if (mission.when === "leave") status = "At NEXT ROUND";
+  const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
+  return `
+    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+      <div class="mission-head">
+        <span class="mission-title">Mission</span>
+        ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
+        <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
+      </div>
+      <div class="mission-text">${escapeHtml(missionText(mission, current.param))}</div>
+    </div>
+  `;
+}
+
+// the phone app: one band between the DAMNED and the SEALS
+function nativeSlotBandHtml() {
+  if (!missionsEnabled()) return "";
+  return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+}
+
+/* ---- lining up with the DAMNED ----
+   The slot machine's left edge sits on the leftmost DAMNED card's left edge and the mission's right edge on the
+   rightmost card's right edge. The cards are laid out differently on every screen, so after each render the
+   distance from the console (or the phone app's band) to the card row is measured into two CSS variables on the
+   page root (--slot-edge-left / --slot-edge-right), which the render cycle never rebuilds. */
+function syncSlotEdges() {
+  if (typeof document === "undefined" || typeof document.querySelector !== "function") return;
+  const grid = document.querySelector("#app .arena .bot-grid");
+  const host = document.querySelector("#app .native-slot-band") || document.querySelector("#app .center-console.has-slot");
+  if (!grid || !host) return;
+  const cards = grid.getBoundingClientRect();
+  const box = host.getBoundingClientRect();
+  if (!cards.width || !box.width) return;
+  const root = document.documentElement.style;
+  const left = `${Math.round(cards.left - box.left)}px`;
+  const right = `${Math.round(box.right - cards.right)}px`;
+  if (root.getPropertyValue("--slot-edge-left") !== left) root.setProperty("--slot-edge-left", left);
+  if (root.getPropertyValue("--slot-edge-right") !== right) root.setProperty("--slot-edge-right", right);
+}
+
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("resize", () => syncSlotEdges());
 }
 function bindPvpEvents() {
   if (state.mode !== "pvp" || !state.pvp) return;
@@ -22567,6 +23546,9 @@ function bindEvents() {
   const dealButton = document.querySelector("#dealButton");
   if (dealButton) bindOn(dealButton, "click", openSatanDeal);
 
+  const slotSpinButton = document.querySelector("#slotSpin");
+  if (slotSpinButton) bindOn(slotSpinButton, "click", slotSpin);
+
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
 
@@ -22654,6 +23636,7 @@ function bindEvents() {
 
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
+  document.querySelectorAll("[data-cancel-pending]").forEach((button) => bindOn(button, "click", cancelPendingActive));
 
   bindFloatingTooltips();
 

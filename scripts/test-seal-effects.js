@@ -755,11 +755,62 @@ test("Corruption shows the changed guess: the effective guess and what was typed
   `);
 });
 
-test("Seal of Satan costs 20 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
+test("Seal of Satan costs 40 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
   game()(`
-    assert.equal(ITEMS.p111.price, 20);
+    assert.equal(ITEMS.p111.price, 40);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
     assert.ok(ITEMS.p101.description.includes("+20 damage"));
+  `);
+});
+
+test("Seal of Satan: no multiplier touches its damage, and Seal of Silence in Heaven leaves it out", () => {
+  game()(`
+    fixture([["p111"], ["p80"]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.lastDamage = 0; });
+    // every DAMNED takes x1.25 from all sources (Padma's vulnerability)
+    state.roundState.padmaVulnerableBotIds = new Set(state.bots.map(b => b.id));
+    assert.equal(scaledBotDamageDetails(state.bots[0], 100).damage, 125);
+    Math.random = () => 0; // divisor 1: 666
+    applyEndOfRoundPassiveDamageInOrder();
+    assertDamage([666, 666, 666, 666, 666]);
+    // other damage is still multiplied, the Seal of Satan's part is not
+    damageBots([state.bots[0]], 8, "test hit", "Test");
+    assert.equal(state.bots[0].lastDamage, 676);
+    state.roundState.eliminationsThisRound = 2;
+    const before = state.bots[0].hp;
+    const beforeOther = state.bots[1].hp;
+    applySilenceInHeaven();
+    assert.equal(before - state.bots[0].hp, 5);
+    assert.equal(beforeOther - state.bots[1].hp, 0);
+    assert.ok(ITEMS.p111.description.includes("can't be multiplied"));
+    assert.ok(splitEliteDescription(ITEMS.p111.description).elite.includes("can't be multiplied"));
+    assert.ok(!descriptionWithoutElite(ITEMS.p111.description).includes("can't be multiplied"));
+  `);
+});
+
+test("Seal of Sachiel (p100): counts only regular BOUNTY, of all 5 DAMNED in the slots, dead ones included", () => {
+  game()(`
+    fixture([["p100"]], [10, 20, 30, 40, 50]);
+    state.bots.forEach(b => { b.reward = 8; b.lastDamage = 0; });
+    // 40 regular BOUNTY: not more than 40
+    applySelfStackingBountySumDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    // a BOSS's BOSS BOUNTY does not count
+    state.bossKills = 0;
+    state.bots[0].isBoss = true;
+    assert.equal(botBossBounty(state.bots[0]), 20);
+    applySelfStackingBountySumDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    state.bots[0].isBoss = false;
+    // a dead DAMNED still in its slot counts: 9 + 4 x 8 = 41, the 4 living ones are hit
+    state.bots[0].reward = 9;
+    state.bots[0].hp = 0;
+    state.bots[0].eliminated = true;
+    applySelfStackingBountySumDamage();
+    assert.equal(state.bots[0].lastDamage, 0);
+    assert.ok(state.bots.slice(1).every(b => b.lastDamage > 0));
+    // an old save's copy of the text shows the new rule
+    assert.ok(itemDescription({ ...ITEMS.p100, description: "old text" }).includes("dead ones included"));
   `);
 });
 
@@ -2380,7 +2431,9 @@ test("Satan's Pact: SEALS and ELITE wait for every SEAL slot; angels, Trinity, S
     assert.equal(satanPactAnswer("elite paimon").refuse, "tooEarly");
     assert.equal(satanPactAnswer("seal of michael").refuse, "angel");
     assert.equal(satanPactAnswer("seal of the father").refuse, "trinity");
-    assert.equal(satanPactAnswer("first pentacle of saturn").refuse, "saturn");
+    assert.equal(satanPactAnswer("first pentacle of saturn").refuse, "planetary");
+    assert.equal(satanPactAnswer(ITEMS.p137.name).refuse, "planetary");
+    assert.equal(satanPactAnswer(ITEMS[POISON_SEAL_IDS[0]].name).refuse, "planetary");
     assert.equal(satanPactAnswer("seal of the white horse").refuse, "apocalypse");
     state.bossKills = 6;
     state.player.passives = [itemCopy("p16")];
@@ -3050,7 +3103,124 @@ test("3rd Pentacle of the Moon: Inverted Cross pushes the DAMNED's guess away fr
   }
 });
 
-test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICAL this round (ELITE +1% each level)", () => {
+test("Satan's first win speech plays once per player, then the usual one", () => {
+  game()(`
+    globalThis.window = { localStorage };
+    assert.equal(satanFirstVictoryPending(), true);
+    assert.equal(satanVictoryLines(), SATAN_FIRST_VICTORY_LINES);
+    assert.equal(SATAN_FIRST_VICTORY_LINES.length, 7);
+    assert.ok(SATAN_FIRST_VICTORY_LINES[3][1].includes("casino"));
+    // leaving the scene (end or skip) marks it seen
+    globalThis.satanLeaveScene = () => {};
+    introState.phase = "victory";
+    satanVictoryLeave();
+    assert.equal(satanFirstVictoryPending(), false);
+    assert.equal(satanVictoryLines(), SATAN_VICTORY_LINES);
+    // and it stays seen for later runs
+    assert.equal(localStorage.getItem(SATAN_FIRST_VICTORY_STORAGE_KEY), "1");
+  `);
+});
+
+test("Satan's Pact: each price reads as a thing you pay, with its own wording where an offer line needs it", () => {
+  game()(`
+    const say = (key, price, vars) => satanPactAnswerLines({ lines: SATAN_DEAL_LINES[key], price, vars }).map(([, text]) => text).join(" ");
+    const boss = [{ type: "bossHealth", pct: 30, zeroBounty: true }, { type: "hp", n: 7 }];
+    // after "I'd like to see ... first" and "I'll be taking ...": their own wording
+    assert.equal(satanPactLineKey(SATAN_DEAL_LINES.sin), "sin");
+    assert.ok(say("sin", boss, { N: 40 }).includes("I'd like to see the next BOSS joining the game with 30% more SOUL, its BOSS BOUNTY in my pocket and 7 of your SOUL first. Do we have a deal?"));
+    assert.ok(say("sinCapped", boss, { N: 37 }).includes("I'll be taking your word that the next BOSS joins the game with 30% more SOUL, its BOSS BOUNTY and 7 of your SOUL."));
+    // everywhere else the usual wording
+    assert.ok(say("heal", [{ type: "bossHealth", pct: 30 }], { N: 3 }).includes("in return I want 30% more SOUL for the next BOSS."));
+    assert.ok(say("kill", [{ type: "noArtifacts" }, { type: "keepBounty" }], { NAME: "Luc-79" }).includes("cost ya your ARTIFACTS for a round and the BOUNTY on their head."));
+    assert.ok(say("usesTwo", [{ type: "useCap", cap: 1, rounds: 5 }], { N: 2 }).includes("The price is all but one ARTIFACT use a round for the next 5 rounds."));
+    assert.ok(say("artifacts", [{ type: "shopClosed", rounds: 3 }], { ITEM: "Vial of Blood", COUNT: 3 }).includes("That will be 3 rounds without my Offerings."));
+    // an offer that starts with an extra line still finds its price line
+    assert.equal(satanPactLineKey([...SATAN_DEAL_LINES.artifactsCapped, ...SATAN_DEAL_LINES.artifacts]), "artifacts");
+  `);
+});
+
+test("PYROS-TECH abilities have alchemical names and each shows its own mark, on DAMNED and on BOSSES", () => {
+  game()(`
+    const names = { metabolism: "Cinnabar", fumes: "Acid", thief: "Vitriol", spite: "Sulphur", wideCrit: "Fortis", shield: "Regia", lamb: "Vitaea" };
+    assert.deepEqual(Object.keys(PYROS_GIFT_PASSIVES).sort(), Object.keys(names).sort());
+    for (const [key, name] of Object.entries(names)) {
+      assert.equal(PYROS_GIFT_PASSIVES[key].name, name);
+      assert.ok(PYROS_GIFT_MARKS[key], key + " has a mark");
+    }
+    // every mark is different
+    assert.equal(new Set(Object.values(PYROS_GIFT_MARKS)).size, 7);
+    // Pyros's own text calls them Pyros' Alchemies
+    assert.ok(UNIQUE_BOSS_SPECS.pyros.descriptions[0].includes("Pyros' Alchemies"));
+    assert.ok(!UNIQUE_BOSS_SPECS.pyros.descriptions.join(" ").includes("Pyros Gift"));
+
+    globalThis.performance = { now: () => 0 };
+    fixture([], [50, 50]);
+    const damned = state.bots[0];
+    damned.passiveKeys = ["fumes"];
+    const card = renderBot(damned, false);
+    assert.ok(card.includes("pyros-glyph") && !card.includes("gift-glyph"), "a DAMNED shows the Acid mark, not the diamond");
+    assert.ok(card.includes(PYROS_GIFT_MARKS.fumes));
+    // the marks sit in the corner block, not in the name row
+    const title = card.slice(card.indexOf('class="bot-title"'), card.indexOf('class="bot-type'));
+    assert.ok(!title.includes("pyros-glyph"));
+    assert.ok(card.indexOf('class="pyros-marks" data-count="1"') >= 0 && card.indexOf("pyros-marks") < card.indexOf('class="bot-face'));
+    assert.ok(pyrosGiftGlyphHtml("fumes").includes("Acid") && pyrosGiftGlyphHtml("fumes").includes("PYROS-TECH"));
+    // several abilities: one corner block, in the order they were gained
+    damned.passiveKeys = ["fumes", "thief", "lamb"];
+    const block = pyrosMarksHtml(damned);
+    assert.ok(block.includes('data-count="3"'));
+    assert.ok(block.indexOf(PYROS_GIFT_MARKS.fumes) < block.indexOf(PYROS_GIFT_MARKS.thief) && block.indexOf(PYROS_GIFT_MARKS.thief) < block.indexOf(PYROS_GIFT_MARKS.lamb));
+    // a dead DAMNED shows none
+    damned.hp = 0;
+    damned.eliminated = true;
+    botDeathAwaitsReady = () => false;
+    assert.ok(!renderBot(damned, false).includes("pyros-marks"));
+
+    // a BOSS gets the corner marks too; its pentagram's tooltip leaves the PYROS-TECH ability out
+    const boss = createBot({ boss: true, bossSpec: { goeticKey: "bael" } });
+    boss.passiveKeys.push("shield");
+    const bossCard = renderBot(boss, false);
+    assert.ok(bossCard.includes("boss-glyph") && bossCard.includes("pyros-marks") && bossCard.includes(PYROS_GIFT_MARKS.shield));
+    const pentagram = bossGlyphHtml(boss);
+    assert.ok(!pentagram.includes("pyros-glyph") && !pentagram.includes("Regia"));
+
+    // the logs use the new names
+    const hits = [];
+    damagePlayer = (amount, reason) => hits.push(reason);
+    state.bots[1].passiveKeys = ["metabolism", "fumes"];
+    applyEndOfRoundPassives();
+    assert.ok(hits.some((reason) => reason.includes("Pyros Gift: Acid")));
+    assert.ok(!hits.some((reason) => reason.includes("Seal of Amon")));
+  `);
+});
+
+test("Seal of Haures: 50% rebirth at every ELITE level, ELITE pays 4 SIN per level when it triggers, and the text has no flag", () => {
+  // [ELITE stack, roll, reborn, Haures SIN]
+  for (const [stack, roll, reborn, sin] of [[1, 0.49, true, 0], [1, 0.5, false, 0], [3, 0.49, true, 8], [3, 0.5, false, 0], [5, 0.2, true, 16]]) {
+    game()(`
+      fixture([["p86", ${stack}]], [10, 20]);
+      const bot = state.bots[0];
+      bot.hp = 0;
+      Math.random = () => ${roll};
+      resolveEliminatedBots([bot]);
+      assert.equal(Boolean(bot.pendingReplacementInheritance), ${reborn});
+      assert.equal(state.player.credits - bot.eliminationReward, ${sin});
+      assert.equal(state.roundState.roundEvents.some(line => line.includes(ITEMS.p86.name + " paid ${sin} SIN")), ${sin > 0});
+      if (${reborn}) assert.equal(bot.pendingReplacementInheritance.name, bot.name);
+    `);
+  }
+  game()(`
+    // a saved run keeps the old base text: it is read from ITEMS instead
+    const saved = { ...ITEMS.p86, stack: 1, description: "old text with a flag" };
+    assert.equal(itemDescription(saved), ITEMS.p86.description);
+    assert.ok(!/flag/i.test(ITEMS.p86.description));
+    const elite = itemDescription({ ...ITEMS.p86, stack: 3 });
+    assert.ok(elite.includes("50% chance") && elite.includes("gain 8 SIN"));
+    assert.ok(!/flag/i.test(elite));
+  `);
+});
+
+test("4th Pentacle of the Moon: every Cursed Chalice adds +12 damage to your CRITICAL this round (ELITE x1.5 each level)", () => {
   game()(`
     ${ARTIFACT_TEST_STUBS}
     fixture([["p137"]], [50, 50]);
@@ -3058,8 +3228,9 @@ test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICA
     state.player.actives = [itemCopy("a22")];
     useActive(0);
     assert.equal(state.roundState.artifactCriticalRangeBonus, 1);
-    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 120);
-    assert.equal(criticalSummaryForHitter({ key: "player", kind: "player" }), "12% max SOUL");
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 112);
+    assert.equal(criticalSummaryForHitter({ key: "player", kind: "player" }), "10% max SOUL + 12 damage");
+    assert.ok(itemDescription(itemCopy("a22")).includes("+12 damage"));
   `);
   game()(`
     ${ARTIFACT_TEST_STUBS}
@@ -3069,7 +3240,10 @@ test("4th Pentacle of the Moon: Cursed Chalice adds +2% max SOUL to your CRITICA
     useActive(0);
     useActive(0);
     assert.equal(state.roundState.artifactCriticalRangeBonus, 2);
-    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 180);
+    // ELITE II: 12 -> 18 -> 27 per Chalice, two Chalices: +54
+    assert.equal(chaliceCriticalBonus(), 54);
+    assert.equal(playerCriticalDamageTotal({ kind: "bot", bot: state.bots[0] }), 154);
+    assert.ok(itemDescription(passiveEntry("p137")).includes("+27 damage"));
   `);
   game()(`
     ${ARTIFACT_TEST_STUBS}
@@ -3610,7 +3784,7 @@ test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every
   `);
 });
 
-test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on your guess takes 25 instead", () => {
+test("Seal of Barbatos: DAMNED that share a guess take 20; a DAMNED on your guess takes 25 instead, 15 if revealed", () => {
   const damageWith = (passives, guesses, playerGuess, extra = "") => {
     const run = game();
     run(`
@@ -3641,10 +3815,17 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a hidden DAMNED on yo
   assert.equal(sealed.player, plain.player, "Barbatos no longer blocks the hidden DAMNED's CRITICAL");
   assert.deepEqual(diff(sealed, plain), [25, 0, 0, 0, 0]);
   assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [38, 0, 0, 0, 0]);
-  // a revealed DAMNED on your guess: no damage from Barbatos and its CRITICAL still hits you
-  const revealed = damageWith(`[["p46"]]`, guesses, 60, "state.bots[0].revealedByPassive = true;");
+  // a revealed DAMNED on your guess: 15 (23 with one ELITE level), and its CRITICAL still hits you
+  const reveal = "state.bots[0].revealedByPassive = true;";
+  const revealedPlain = damageWith("[]", guesses, 60, reveal);
+  const revealed = damageWith(`[["p46"]]`, guesses, 60, reveal);
   assert.equal(revealed.player, plain.player);
-  assert.deepEqual(diff(revealed, damageWith("[]", guesses, 60, "state.bots[0].revealedByPassive = true;")), [0, 0, 0, 0, 0]);
+  assert.deepEqual(diff(revealed, revealedPlain), [15, 0, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60, reveal), revealedPlain), [23, 0, 0, 0, 0]);
+  // a revealed DAMNED on your guess that also shares it with another DAMNED takes the bigger: 20, not 15 + 20
+  guesses = [10, 10, 30, 55, 80];
+  const pairReveal = "state.bots[0].revealedByPassive = true; state.bots[1].revealedByPassive = true;";
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10, pairReveal), damageWith("[]", guesses, 10, pairReveal)), [20, 20, 0, 0, 0]);
 });
 
 test("Seal of Orias: +1 CRITICAL range (+1 per ELITE level) only after a round without your CRITICAL", () => {
@@ -3903,5 +4084,228 @@ test("the playtest build hides DEV / Unlock, the Collection DEV button and PvP, 
     state.menuScreen = "main";
     handleMenuAction("quit");
     assert.equal(state.menuScreen, "main");
+  `);
+});
+
+test("Missions: 15 worth 1, 2 and 3 FAVOR; one per round, replaced at the start of the next round done or not", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    assert.equal(JSON.stringify([1, 2, 3].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[15,15,15]");
+    assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
+    const first = missionsEnsureRound();
+    assert.ok(first && MISSION_BY_ID[first.id]);
+    assert.equal(missionsEnsureRound(), first);
+    state.round += 1;
+    beginRound();
+    const second = missionsEnsureRound();
+    assert.notEqual(second, first);
+    assert.notEqual(second.id, first.id);
+    assert.equal(second.round, state.round);
+  `);
+});
+
+test("Missions: a finished mission pays its FAVOR once; guess missions wait for the results, NEXT ROUND ones for NEXT ROUND", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.missions.current = { id: "use1", value: 1, param: null, round: state.round, done: false };
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 0);
+    state.roundState.activeUses = 1;
+    missionsCheck("event");
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 1);
+    // within 3 of the TARGET (50): your guess 52 counts only once READY has resolved
+    state.missions.current = { id: "near3", value: 2, param: null, round: state.round, done: false };
+    state.roundState.playerEffectiveGuess = 52;
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 1);
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, 3);
+    // holding 4 ARTIFACTS pays only when you move on
+    state.missions.current = { id: "hold4", value: 2, param: null, round: state.round, done: false };
+    state.player.actives = ["a15", "a15", "a6", "a6"].map((id) => freeActiveCopy(id));
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 3);
+    missionsCheck("leave");
+    assert.equal(state.missions.doubloons, 5);
+    assert.equal(state.missions.completed, 3);
+  `);
+});
+
+test("Missions: worst, closest and lowest guess are read from the table at READY", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    missionsNoteReady();
+    state.missions.round.resolved = true;
+    state.roundState.playerEffectiveGuess = 5;
+    let facts = missionFacts();
+    assert.equal(facts.worst, true);
+    assert.equal(facts.lowest, true);
+    assert.equal(facts.closest, false);
+    // a tie with the best DAMNED (50) still counts as the closest guess
+    state.roundState.playerEffectiveGuess = 50;
+    facts = missionFacts();
+    assert.equal(facts.worst, false);
+    assert.equal(facts.closest, true);
+    assert.equal(facts.botsFarther, 4);
+  `);
+});
+
+test("Slot machine: each icon pays by how many came up (SIN 5/18/150, SOUL 1/4/20, DAMAGE 5/15/100%, ELITE only 3, KARMA 3 ARTIFACTS / 1 / 10 KARMA, rerolls 2/8/30)", () => {
+  game()(`
+    let r = slotRewardsFor(["sin", "sin", "soul"]);
+    assert.equal(r.sin, 18); assert.equal(r.soul, 1); assert.equal(r.triple, null);
+    r = slotRewardsFor(["sin", "sin", "sin"]);
+    assert.equal(r.sin, 150); assert.equal(r.triple, "sin");
+    r = slotRewardsFor(["soul", "soul", "soul"]);
+    assert.equal(r.soul, 20);
+    r = slotRewardsFor(["damage", "damage", "elite"]);
+    assert.equal(r.damagePercent, 15);
+    r = slotRewardsFor(["damage", "damage", "damage"]);
+    assert.equal(r.damagePercent, 100);
+    r = slotRewardsFor(["elite", "elite", "reroll"]);
+    assert.equal(r.elite, 0); assert.equal(r.rerolls, 2);
+    r = slotRewardsFor(["elite", "elite", "elite"]);
+    assert.equal(r.elite, 1);
+    r = slotRewardsFor(["karma", "soul", "sin"]);
+    assert.equal(r.artifacts, 3); assert.equal(r.karma, 0);
+    r = slotRewardsFor(["karma", "karma", "soul"]);
+    assert.equal(r.artifacts, 0); assert.equal(r.karma, 1);
+    r = slotRewardsFor(["karma", "karma", "karma"]);
+    assert.equal(r.artifacts, 0); assert.equal(r.karma, 10);
+    r = slotRewardsFor(["reroll", "reroll", "elite"]);
+    assert.equal(r.rerolls, 8);
+    r = slotRewardsFor(["reroll", "reroll", "reroll"]);
+    assert.equal(r.rerolls, 30);
+    assert.equal(SLOT_ICONS.reduce((sum, icon) => sum + icon.weight, 0), 100);
+  `);
+});
+
+test("Slot machine: a spin costs 3 FAVOR and pays at once; its DAMAGE lands at the end of the next round; free rerolls are not the Son's", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    state.missions.doubloons = 2;
+    assert.equal(slotSpin(), false);
+    state.missions.doubloons = 3;
+    const icons = ["sin", "damage", "reroll"];
+    let next = 0;
+    slotRollIcon = () => icons[next++];
+    const round = state.round;
+    assert.equal(slotSpin(), true);
+    assert.equal(state.missions.doubloons, 0);
+    assert.equal(state.player.credits, 5);
+    // nothing yet, not even at the end of this round
+    assertDamage([0, 0, 0, 0, 0]);
+    slotApplyPendingDamage();
+    assertDamage([0, 0, 0, 0, 0]);
+    assert.equal(slotPendingDamagePercent(round + 1), 5);
+    // the end of the next round: 5% of 1000
+    state.round = round + 1;
+    slotApplyPendingDamage();
+    assertDamage([50, 50, 50, 50, 50]);
+    assert.equal(state.slotPendingDamage.length, 0);
+    assert.equal(state.slotFreeRerolls, 2);
+    assert.equal(currentRerollCost(), 0);
+    rerollShopClick();
+    assert.equal(state.slotFreeRerolls, 1);
+    assert.equal(state.rerollBaseCost, 1);
+    assert.equal(state.roundState.triggeredPassiveIds.has("p132"), false);
+    assert.equal(state.missions.round.rerolls, 1);
+  `);
+});
+
+test("Slot machine: SOUL cannot be blocked, it only stops at max SOUL", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    // a BOSS whose ability blocks healing would stop healPlayer; the slot machine's SOUL still lands
+    soulStealingBlocker = () => ({ name: "Blocker" });
+    padmaHealingBlocker = () => ({ name: "Padma" });
+    assert.equal(healPlayer(5, "test", "test"), 0);
+    state.player.hp = 50;
+    state.missions.doubloons = 3;
+    slotRollIcon = () => "soul";
+    slotSpin();
+    assert.equal(state.player.hp, 70);
+    state.player.hp = playerMaxHp() - 3;
+    state.missions.doubloons = 3;
+    slotSpin();
+    assert.equal(state.player.hp, playerMaxHp());
+  `);
+});
+
+test("Slot machine: three ELITES give every SEAL a free ELITE level; KARMA: one gives 3 ARTIFACTS, two 1 KARMA, three 10 KARMA", () => {
+  game()(`
+    fixture([["p59"], ["p64"]], [10, 20, 30, 40, 50]);
+    playGameSfx = () => {};
+    render = () => {};
+    state.missions.doubloons = 12;
+    const [first, second] = state.player.passives;
+    const sellBefore = passiveSellValue(first);
+    slotRollIcon = () => "elite";
+    slotSpin();
+    assert.equal(first.stack, 2);
+    assert.equal(second.stack, 2);
+    assert.equal(passiveSellValue(first), sellBefore);
+    const karmaBefore = karmaBalance();
+    slotRollIcon = () => "karma";
+    slotSpin();
+    assert.equal(karmaBalance(), karmaBefore + 10);
+    let icons = ["karma", "karma", "sin"];
+    let next = 0;
+    slotRollIcon = () => icons[next++];
+    slotSpin();
+    assert.equal(karmaBalance(), karmaBefore + 11);
+    icons = ["karma", "sin", "sin"];
+    next = 0;
+    state.player.actives = [];
+    slotSpin();
+    assert.equal(state.player.actives.length, 3);
+    assert.equal(state.missions.doubloons, 0);
+  `);
+});
+
+test("Seal of Aim: stacks go up to 2 (+2 CRITICAL range); the SEAL you own says how many it has, an offer in the shop does not", () => {
+  game()(`
+    fixture([["p91"]], [10, 20, 30, 40, 50]);
+    const seal = state.player.passives[0];
+    state.critMomentumBonus = 0;
+    assert.ok(itemDescription(seal).includes("Current stacks: 0/2 (+0 CRITICAL range)."));
+    state.critMomentumBonus = 1;
+    assert.ok(itemDescription(seal).includes("Current stacks: 1/2 (+1 CRITICAL range)."));
+    // an old save with more stacks counts as the cap
+    state.critMomentumBonus = 4;
+    assert.equal(ascendingCritWindowBonus(), 2);
+    seal.stack = 2;
+    assert.ok(itemDescription(seal).includes("Current stacks: 2/2"));
+    assert.ok(itemDescription(seal).includes("up to +2"));
+    assert.ok(!itemDescription({ ...ITEMS.p91 }).includes("Current stacks"));
+  `);
+});
+
+test("Seal of Aim: three CRITICALS in a row give +2 CRITICAL range, not +3; a round without one resets it", () => {
+  game()(`
+    const guesses = [49, 47, 30, 70, 100];
+    fixture([["p91"]], guesses);
+    const playRound = (playerGuess) => {
+      state.roundState.targetModifier = 1;
+      state.roundState.playerEffectiveGuess = playerGuess;
+      guesses.forEach((guess, index) => state.roundState.botEffectiveGuesses.set(state.bots[index].id, guess));
+      state.player.hp = state.player.maxHp = 100;
+      applyPenalties();
+    };
+    for (let round = 0; round < 3; round += 1) {
+      if (round) beginRound();
+      playRound(60);
+    }
+    assert.equal(state.critMomentumBonus, 2);
+    assert.equal(ascendingCritWindowBonus(), 2);
+    beginRound();
+    playRound(0);
+    assert.equal(state.critMomentumBonus, 0);
   `);
 });

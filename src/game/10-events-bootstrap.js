@@ -238,6 +238,9 @@ function bindEvents() {
   const dealButton = document.querySelector("#dealButton");
   if (dealButton) bindOn(dealButton, "click", openSatanDeal);
 
+  const slotSpinButton = document.querySelector("#slotSpin");
+  if (slotSpinButton) bindOn(slotSpinButton, "click", slotSpin);
+
   const playtestMoney = document.querySelector("#playtestMoney");
   if (playtestMoney) bindOn(playtestMoney, "click", togglePlaytestMoneyMode);
 
@@ -325,6 +328,7 @@ function bindEvents() {
 
   const cancelActive = document.querySelector("#cancelPendingActive");
   if (cancelActive) bindOn(cancelActive, "click", cancelPendingActive);
+  document.querySelectorAll("[data-cancel-pending]").forEach((button) => bindOn(button, "click", cancelPendingActive));
 
   bindFloatingTooltips();
 

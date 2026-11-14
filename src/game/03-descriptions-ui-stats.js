@@ -41,9 +41,9 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    const percent = moonChaliceCriticalPercent();
-    return percent
-      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+    const damage = moonChaliceCriticalDamage();
+    return damage
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${damage} damage (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
@@ -91,7 +91,19 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  // Seal of Aim: the SEAL you own always says how many stacks it has built up (one per CRITICAL in a row, up to AIM_MAX_CRIT_BONUS)
+  if (item.id === "p91") {
+    const rule =
+      stack <= 1
+        ? ITEMS.p91.description
+        : `Scoring CRITICAL increases your CRITICAL range by +1, up to +${AIM_MAX_CRIT_BONUS}. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage.`;
+    if (!state.player?.passives?.includes(item)) return rule;
+    const stacks = ascendingCritWindowBonus();
+    // before the ELITE sentence: the tooltip keeps everything from "ELITE" on for Shift
+    const { main, elite } = splitEliteDescription(rule);
+    return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
+  }
+  if (stack <= 1) return ["p86", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -123,7 +135,7 @@ function itemDescription(item) {
     return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p137") {
-    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+    return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
     return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
@@ -202,7 +214,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED that is not revealed and has the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead, or ${barbatosRevealedYourGuessDamage(item)} if it is revealed; a DAMNED takes only the biggest of these.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -304,7 +316,7 @@ function itemDescription(item) {
     return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
   }
   if (item.id === "p86") {
-    return `When a DAMNED is eliminated, ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance the replacement inherits its personality, MEMORY, name, number, and flag.`;
+    return `When a DAMNED is eliminated, 50% chance the replacement inherits its personality, MEMORY, name, and number, and you gain ${4 * Math.max(0, stack - 1)} SIN.`;
   }
   if (item.id === "p87") {
     return `When a DAMNED is eliminated, deal ${flatDamageValue(item, 30)} damage to each other living DAMNED with the same personality.`;
@@ -317,9 +329,6 @@ function itemDescription(item) {
   }
   if (item.id === "p90") {
     return `Whenever a DAMNED's personality is altered by a SEAL or ARTIFACT, they take ${flatDamageValue(item, 10)} damage. At end of round, one DAMNED changes to the most prevalent personality.`;
-  }
-  if (item.id === "p91") {
-    return `Scoring CRITICAL increases your CRITICAL range by +1, up to +4. Missing CRITICAL resets it. ELITE adds +${eliteLevels(item) * 5} CRITICAL damage. Current range bonus: +${ascendingCritWindowBonus()}.`;
   }
   if (item.id === "p104") {
     const amount = item.stack || 1;
@@ -411,6 +420,11 @@ function currentRerollCost() {
 }
 
 function freeRerollsLeft() {
+  return sonFreeRerollsLeft() + Math.max(0, Math.ceil(state.slotFreeRerolls || 0));
+}
+
+// Seal of the Son's free rerolls (they run out at the end of the next round); the slot machine's last until used
+function sonFreeRerollsLeft() {
   return Math.max(0, Math.ceil(state.freeRerolls || 0));
 }
 
@@ -990,7 +1004,7 @@ function selfStackingCurrentDamageForId(id) {
 }
 
 function selfStackingSealDescription(item) {
-  const description = item.id === "p102" ? ITEMS.p102.description : item.description;
+  const description = ["p100", "p102"].includes(item.id) ? ITEMS[item.id].description : item.description;
   return `${description}\nCurrent damage: ${selfStackingCurrentDamage(item)}.`;
 }
 
@@ -1058,14 +1072,15 @@ function applySelfStackingMemoryOverTen(bot, beforeMemory, afterMemory) {
 function applySelfStackingBountySumDamage() {
   const targets = activeBots();
   if (!targets.length) return;
-  const bountySum = targets.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
+  // regular BOUNTY only (no BOSS BOUNTY), of every DAMNED in the slots, dead ones included
+  const bountySum = state.bots.reduce((sum, bot) => sum + botRegularBounty(bot), 0);
   if (bountySum <= 40) return;
   const damage = triggerSelfStackingSeal("p100");
   if (damage <= 0) return;
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total BOUNTY was ${bountySum}.`,
+    (bot, dealt) => `${ITEMS.p100.name} dealt ${dealt} damage to ${bot.name} because total regular BOUNTY was ${bountySum}.`,
     ITEMS.p100.name
   );
 }
