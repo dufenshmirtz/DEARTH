@@ -731,7 +731,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Haures",
     price: 14,
-    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance."
+    description: "When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, and number. ELITE: whenever that happens, gain 4 SIN for each ELITE level."
   },
   p87: {
     id: "p87",
@@ -940,7 +940,7 @@ const ITEMS = {
     name: "4th Pentacle of the Moon",
     price: 12,
     description:
-      "Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level."
+      "Every Cursed Chalice you use also makes your CRITICAL deal +12 damage this round, and Cursed Chalice appears twice as often in Devil's Offerings. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p138: {
     id: "p138",
@@ -1960,33 +1960,34 @@ const BOSS_PASSIVES = {
 };
 const SHADOW_BOSS_PASSIVE_KEY = "guilt";
 const BOSS_PASSIVE_KEYS = Object.keys(BOSS_PASSIVES).filter((key) => key !== SHADOW_BOSS_PASSIVE_KEY);
+// PYROS-TECH: the abilities Pyros hands out, named after alchemical substances (their marks: PYROS_GIFT_MARKS in 09-rendering.js)
 const PYROS_GIFT_PASSIVES = {
   metabolism: {
-    name: "Seal of Bathin",
+    name: "Cinnabar",
     description: "This Pyros Gift heals 5 SOUL at the end of every round."
   },
   fumes: {
-    name: "Seal of Amon",
+    name: "Acid",
     description: "While this Pyros Gift is alive, you take 1 damage at the end of every round."
   },
   thief: {
-    name: "Seal of Raum",
+    name: "Vitriol",
     description: "While this Pyros Gift is alive, you lose 1 SIN at the end of every round."
   },
   spite: {
-    name: "Seal of Botis",
+    name: "Sulphur",
     description: "While this Pyros Gift is alive, every time you use an ARTIFACT, you take 3 damage."
   },
   wideCrit: {
-    name: "Seal of Ipos",
+    name: "Fortis",
     description: "This Pyros Gift hits CRITICAL within 2 of the right integer and deals damage only to you."
   },
   shield: {
-    name: "Seal of Halphas",
+    name: "Regia",
     description: "This Pyros Gift cannot be picked or targeted by ARTIFACTS, and its guess cannot be revealed."
   },
   lamb: {
-    name: "Seal of Sallos",
+    name: "Vitaea",
     description: "When this Pyros Gift dies, all other DAMNED gain 10 SOUL."
   }
 };
@@ -2088,7 +2089,7 @@ const UNIQUE_BOSS_SPECS = {
     modifierOverride: 1,
     grantsBuffs: true,
     descriptions: [
-      "At the start of every round, one DAMNED receives a random Pyros Gift from Pyros's own gift pool.",
+      "At the start of every round, one DAMNED receives one of Pyros' Alchemies at random.",
       "The TARGET modifier becomes 1.0 while Pyros is alive."
     ]
   },

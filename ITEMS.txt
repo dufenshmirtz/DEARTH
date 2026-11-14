@@ -122,7 +122,7 @@ Seal of Halphas (12 SIN)
 At end of round, each DAMNED independently has a 30% chance to take 5 damage and a separate 10% chance to take 10 damage. ELITE multiplies both damage values by x1.5 each level, rounded up.
 
 Seal of Haures (14 SIN)
-When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, number, and flag. ELITE adds +10% chance.
+When a DAMNED is eliminated, 50% chance the replacement arrives with the same personality, MEMORY, name, and number. ELITE: whenever that happens, gain 4 SIN for each ELITE level.
 
 Seal of Ipos (13 SIN)
 The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, the next two take 10. ELITE multiplies both damage values by x1.5 each level, rounded up.
@@ -351,7 +351,7 @@ Funeral Coin no longer pays you SIN: it spreads 6 to 16 BOUNTY randomly among th
 The DAMNED you pick with Inverted Cross also has its guess pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings. ELITE gives that DAMNED +3 MEMORY each level before it is pushed.
 
 4th Pentacle of the Moon (12 SIN)
-Cursed Chalice also makes your CRITICAL deal +2% max-SOUL damage this round, and appears twice as often in Devil's Offerings. ELITE adds +1% each level.
+Every Cursed Chalice you use also makes your CRITICAL deal +12 damage this round, and Cursed Chalice appears twice as often in Devil's Offerings. ELITE multiplies the damage by x1.5 each level, rounded up.
 
 5th Pentacle of the Moon (12 SIN)
 If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level.

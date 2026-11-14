@@ -501,16 +501,15 @@ function resolveFuneralCoin(item) {
   return `${item.name} spread ${spread} BOUNTY among the DAMNED (${name}).`;
 }
 
-// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon your CRITICAL also gains % max SOUL
+// Cursed Chalice: +1 CRITICAL range this round; with the 4th Pentacle of the Moon each Chalice also adds flat CRITICAL damage
 function resolveCursedChalice(item) {
   const total = addArtifactCriticalRangeBonus(1, item.name);
   let message = `${item.name} raised your CRITICAL range by +1 this round. Total ARTIFACT bonus: +${total}.`;
   const entry = artifactSealEntry("a22");
   if (entry && state.roundState) {
-    const percent = moonChaliceCriticalPercent(entry);
-    state.roundState.artifactCriticalPercentBonus = criticalPercentBonus() + percent;
+    state.roundState.artifactCriticalFlatBonus = chaliceCriticalBonus() + moonChaliceCriticalDamage(entry);
     markPassiveEntryTriggered(entry);
-    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${criticalPercentBonus()}% max SOUL this round.`;
+    message += ` ${ITEMS.p137.name}: your CRITICAL deals +${chaliceCriticalBonus()} damage this round.`;
   }
   return message;
 }
@@ -652,7 +651,7 @@ function useActive(index) {
   activeBots()
     .filter((bot) => botHasPassive(bot, "spite"))
     .forEach((bot) => {
-      damagePlayer(3, `${bot.name}'s Pyros Gift: Seal of Botis dealt 3 damage because you used an ARTIFACT.`);
+      damagePlayer(3, `${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.spite.name} dealt 3 damage because you used an ARTIFACT.`);
     });
   if (state.player.hp <= 0) {
     finishGameOverRound();
@@ -836,7 +835,7 @@ function chooseBot(botId) {
     return;
   }
   if (botHasPassive(bot, "shield")) {
-    addLog(`${bot.name}'s Pyros Gift: Seal of Halphas blocks ARTIFACTS.`);
+    addLog(`${bot.name}'s Pyros Gift: ${PYROS_GIFT_PASSIVES.shield.name} blocks ARTIFACTS.`);
     render();
     return;
   }

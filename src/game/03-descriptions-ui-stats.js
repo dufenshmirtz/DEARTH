@@ -41,9 +41,9 @@ function artifactDescription(item) {
     return "This round, whenever you take damage, each DAMNED takes max-SOUL damage equal to the same percent of your max SOUL that you took.";
   }
   if (item.id === "a22") {
-    const percent = moonChaliceCriticalPercent();
-    return percent
-      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${percent}% max SOUL (${ITEMS.p137.name}).`
+    const damage = moonChaliceCriticalDamage();
+    return damage
+      ? `+1 CRITICAL range for the round, and your CRITICAL deals +${damage} damage (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
   if (item.id === "a23") return "Double the ELITE chance for the Seal slot on the next Devil's Offerings reroll.";
@@ -91,7 +91,7 @@ function itemDescription(item) {
     return `If your guess is exactly the TARGET when it is revealed (before ARTIFACTS change it), your next CRITICAL deals 20% max-SOUL damage instead of 10%.${elite}${charged}`;
   }
   if (item.id === AMY_SEAL_ID) return amySealDescription(item);
-  if (stack <= 1) return ["p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p86", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -123,7 +123,7 @@ function itemDescription(item) {
     return `The DAMNED you pick with Inverted Cross gains ${3 * eliteLevelCount} MEMORY, then its guess is pushed away from the final TARGET by 1 for every MEMORY it has. Inverted Cross appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p137") {
-    return `Cursed Chalice also makes your CRITICAL deal +${2 + eliteLevelCount}% max-SOUL damage this round, and appears twice as often in Devil's Offerings.`;
+    return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
     return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
@@ -300,7 +300,7 @@ function itemDescription(item) {
     return `At end of round, each DAMNED takes ${flatDamageValue(item, 10)} damage for every other living DAMNED with the same personality.`;
   }
   if (item.id === "p86") {
-    return `When a DAMNED is eliminated, ${Math.round(Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1) * 100)}% chance the replacement inherits its personality, MEMORY, name, number, and flag.`;
+    return `When a DAMNED is eliminated, 50% chance the replacement inherits its personality, MEMORY, name, and number, and you gain ${4 * Math.max(0, stack - 1)} SIN.`;
   }
   if (item.id === "p87") {
     return `When a DAMNED is eliminated, deal ${flatDamageValue(item, 30)} damage to each other living DAMNED with the same personality.`;

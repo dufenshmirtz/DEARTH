@@ -5,7 +5,7 @@
    Asking for something he will not give, or gibberish, does not use the chance up. If he turns down a
    SEAL, the deal stays locked until your next BOSS kill.
 
-   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT right below. Edit them
+   WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT(_FOR) right below. Edit them
    freely. The first word of each line is who speaks (satan / you). Words in {CAPS} are filled in by the
    game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q}. {SIN} draws the SIN icon.
    Each key holds a list of lines said one after another.
@@ -33,94 +33,111 @@
 const SATAN_DEAL_LINES = {
   // first time you open the deal in a run
   open: [
-    ["satan", "Well well, look who came crawling to me. Things not going so great down there, flesh puppet?"],
-    ["satan", "I'm feeling generous today. One deal, just one, so make it count. Tell me what you want and I'll tell you what it costs."]
+    ["satan", "Well well well, look who it is again, my loathsome little minion. So, what does your wretched heart desire?"]
   ],
   // every time after that, until the deal is made
-  openAgain: [["satan", "Back again? Spit it out, what do you want?"]],
+  openAgain: [["satan", "You got nerve calling me again whippersnapper, so come on spit it out."]],
   // the box under his line, where you type
   askPlaceholder: "Tell him what you want...",
 
   // asked for something he does not understand ({Q} is what you typed)
-  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for nonsense. Make a reasonable request before eternity catches up with you little puppet."]],
+  gibberish: [["satan", "\"{Q}\"? Is this supposed to be a joke? I don't have time for your nonsense. Make a reasonable request before eternity catches up with you mortal."]],
   // things he never gives
-  angel: [["satan", "Feathers? You come to ME and ask for feathers? Go pray to your little Archangels, see how far that gets you."]],
+  angel: [["satan", "Feathers? You come to ME and ask for feathers? You must be out of your mind. Go pray to your little Archangels, see how far that gets you."]],
   trinity: [["satan", "That one belongs to the big guy upstairs. Even I don't touch his toys."]],
-  saturn: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
-  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me. Bah. Lambs."]],
-  locked: [["satan", "That one isn't in my vault yet. Earn it first, then we talk."]],
-  bound: [["satan", "You already have that demon on a leash, and for free. Greedy little thing, aren't you?"]],
-  notDemon: [["satan", "That's not one of my demons. I only deal in what's mine."]],
+  // the Planetary SEALS: Seals of Saturn, Moon and Mars
+  planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
+  apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
+  bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
+  notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
   // SEAL or ELITE before every SEAL slot is open
-  tooEarly: [["satan", "My demons don't serve nobodies. Open every SEAL slot you can, then come begging."]],
-  sealOwned: [["satan", "You already carry {SEAL}. If you want it stronger, ask for an ELITE."]],
-  eliteWhich: [["satan", "An ELITE on what? Name the SEAL, genius."]],
-  eliteNotOwned: [["satan", "You can't make stronger something you don't even have."]],
-  eliteCannot: [["satan", "{SEAL} can't get any stronger. Not even I can change that."]],
-  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. Ask me later."]],
+  tooEarly: [["satan", "Listen here you ungrateful worm, I ain't gonna do all the work for you. Open every SEAL slot you can, then you may come begging again."]],
+  sealOwned: [["satan", "You already control the {SEAL}. If you want to increase its power, ask for an ELITE."]],
+  eliteWhich: [["satan", "An ELITE of what? Name the SEAL."]],
+  eliteNotOwned: [["satan", "You can't increase the power of something you don't have."]],
+  eliteCannot: [["satan", "{SEAL} can't get any stronger. Does your avarice know no limit? I can respect that."]],
+  demonBusy: [["satan", "{DEMON} is a little busy trying to kill you right now. It would be very rude to do that. Did your mother never teach you manners?"]],
   // the 50% / 80% roll says no: the deal locks until the next BOSS kill
   sealRefused: [
-    ["satan", "{DEMON} doesn't feel like serving you. Can't say I blame him."],
-    ["satan", "Go kill another BOSS. Maybe I'll be in a better mood after that."]
+    ["satan", "{DEMON} doesn't feel like serving you right now. Can't say I blame him."],
+    ["satan", "You are starting to bore me. Go kill another BOSS. Maybe I'll be in a better mood after that."]
   ],
-  noRoomSeal: [["satan", "There's no room for another demon on you, and I'm not doing your tidying for you."]],
-  handsFull: [["satan", "Your hands are full of junk already. Make some room before you ask for more."]],
-  fullHealth: [["satan", "You're not even bleeding. Come back when it hurts."]],
+  noRoomSeal: [["satan", "My demons start complaining when they feel crammed, try opening up some more room for now."]],
+  handsFull: [["satan", "Your little fleshy hands are already full. Make some room before you ask for more."]],
+  fullHealth: [["satan", "There's only so much SOUL your puny human body can have, and you already have more than enough."]],
   sinHowMuch: [["satan", "How much SIN{SIN}? Give me a number."]],
   killWho: [["satan", "Kill who? Give me a name."]],
-  killBoss: [["satan", "BOSSES you deal with yourself. I only take the small fry."]],
-  satanSealNotEmpty: [["satan", "My own SEAL? Ha! It doesn't share a home with other demons. Empty every slot, then ask me again."]],
-  cheatDeathAlready: [["satan", "I already promised to drag you back once. Don't push your luck."]],
+  killBoss: [["satan", "BOSSES you deal with yourself cowboy. I only take the small fry."]],
+  satanSealNotEmpty: [["satan", "My own SEAL? Ha! If you wanna deal hard you best be ready to pay even harder! Empty every slot, then ask me again."]],
+  cheatDeathAlready: [["satan", "One chance is all you get my sweet summer slave. Don't push your luck, and back to work!"]],
 
   // offers: the last line of an offer is followed by YES / NO
-  artifact: [["satan", "{ITEM}? Cheap trinket. Fine, it's yours for {PRICE}."]],
+  artifact: [["satan", "{ITEM}? A fine fetish. It's yours for {PRICE}."]],
   artifacts: [["satan", "{COUNT} of {ITEM}? Somebody's planning a party. That will be {PRICE}."]],
-  artifactsCapped: [["satan", "Four. That's all I'll part with."]],
-  elite: [["satan", "An ELITE on {SEAL}? Done. It'll cost you {PRICE}."]],
+  artifactsCapped: [["satan", "Four. That's all you get you greedy git."]],
+  elite: [["satan", "An ELITE on {SEAL}? Consider it done, your bill is {PRICE}."]],
   eliteOther: [
-    ["satan", "Hmm. My demons tell me it's {OTHER} that's ready to grow, not {SEAL}."],
-    ["satan", "If you want it on {OTHER}, it's {PRICE}."]
+    ["satan", "Nahh, I think {OTHER} is a way better choice than {SEAL}."],
+    ["satan", "So for an ELITE {OTHER} it's gonna run you {PRICE}."]
   ],
-  seal: [["satan", "{DEMON} agrees to serve you. For that, I take {PRICE}."]],
-  heal: [["satan", "A little blood transfusion? {N} SOUL, and in return {PRICE}."]],
+  seal: [["satan", "{DEMON} agrees to serve you, but my services are gonna cost ya {PRICE}."]],
+  heal: [["satan", "A little spirit infusion? You get {N} SOUL, and in return I want {PRICE}."]],
   healTooMuch: [
-    ["satan", "{ASKED} SOUL? HAHAHA! You must be out of your mind."],
-    ["satan", "I'll give you {N}, and you'll thank me for it. In return, {PRICE}."]
+    ["satan", "{ASKED} SOUL? Do you think that stuff grows on trees? Trees don't have souls, ol' capital G said so."],
+    ["satan", "I'll give you {N}, and that's all you're getting. In return you best pay {PRICE}."]
   ],
-  sin: [["satan", "{N} SIN{SIN}, coming right up. In return, {PRICE}."]],
-  sinCapped: [["satan", "That much would kill you, and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return, {PRICE}."]],
-  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but {PRICE}."]],
-  uses: [["satan", "{N} more ARTIFACT use this round? Sure. Then {PRICE}."]],
-  usesTwo: [["satan", "Two more ARTIFACT uses this round? Greedy. Then {PRICE}."]],
-  usesTooMany: [["satan", "Two, or nothing. Don't get greedy with me."]],
+  sin: [["satan", "{N} SIN{SIN}, sure can do. But I'd like to see {PRICE} first."]],
+  sinCapped: [["satan", "That much would kill you dear lad and a dead puppet pays nothing. {N} SIN{SIN} is all you can afford. In return I'll be taking {PRICE}."]],
+  kill: [["satan", "{NAME}? Never liked that one. Consider it done, but it's still gonna cost ya {PRICE}."]],
+  uses: [["satan", "{N} more ARTIFACT use this round? I can do that, but you'll have to pay me {PRICE}."]],
+  usesTwo: [["satan", "Two more ARTIFACT uses this round? Somebody's planning to make some moves I see. The price is {PRICE}."]],
+  usesTooMany: [["satan", "Two, or nothing. Don't you start getting greedy with me my little pawn."]],
   cheatDeath: [
-    ["satan", "Cheating death, now that's my kind of deal. Next time you drop, I'll drag you back up."],
-    ["satan", "The price? I'll pick it when you're lying on the floor."]
+    ["satan", "Cheating death, now that's my kind of deal. When you croak for the second time now in your pitiful existence, I'll drag you right back up."],
+    ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
-  satanSeal: [["satan", "My own SEAL, on an empty soul? You know what, I like you. No charge."]],
+  satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
   // the question after every offer (said on the same line as the price)
-  question: [["satan", "Do we have a deal, flesh puppet?"]],
+  question: [["satan", "Do we have a deal?"]],
 
   // after YES
   signed: [["satan", "Pleasure doing business with you."]],
   // after NO: the chance is gone for this run
-  refused: [["satan", "Your loss. Don't come crawling back, you had your chance."]]
+  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]]
 };
 
-// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name)
+// how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name).
+// Each one is a "thing you pay", so it reads after any of his lead-ins: "it's yours for ...", "that will be ...",
+// "your bill is ...", "it's gonna run you ...", "cost ya ...", "I want ...", "you best pay ...", "pay me ...",
+// "the price is ..." (and the log's "you got X for ..."). Several parts are joined with commas and "and".
 const SATAN_DEAL_PRICE_TEXT = {
   hp: "{N} of your SOUL",
   sin: "{N} SIN{SIN}",
-  useCap: "only one ARTIFACT a round for the next {M} rounds",
-  useCapZero: "no ARTIFACTS at all for the next {M} rounds",
-  shopClosed: "my Offerings closed to you for {M} rounds",
-  bossHealth: "the next BOSS walks in with {N}% more SOUL",
-  bossBounty: "its BOSS BOUNTY goes to me",
+  useCap: "all but one ARTIFACT use a round for the next {M} rounds",
+  useCapZero: "every ARTIFACT use you get for the next {M} rounds",
+  shopClosed: "{M} rounds without my Offerings",
+  bossHealth: "{N}% more SOUL for the next BOSS",
+  bossBounty: "its BOSS BOUNTY",
   loseSeal: "your {SEAL}",
   damageTaken: "{N}% more pain for {M} rounds",
-  noArtifacts: "no ARTIFACTS for a round",
-  keepBounty: "its BOUNTY goes to me",
+  noArtifacts: "your ARTIFACTS for a round",
+  keepBounty: "the BOUNTY on their head",
   nothing: "nothing at all"
+};
+
+// the same parts, worded to fit one particular offer line (its key in SATAN_DEAL_LINES) where the usual
+// wording would not: anything not listed here uses SATAN_DEAL_PRICE_TEXT
+const SATAN_DEAL_PRICE_TEXT_FOR = {
+  // "But I'd like to see {PRICE} first."
+  sin: {
+    bossHealth: "the next BOSS joining the game with {N}% more SOUL",
+    bossBounty: "its BOSS BOUNTY in my pocket"
+  },
+  // "In return I'll be taking {PRICE}."
+  sinCapped: {
+    bossHealth: "your word that the next BOSS joins the game with {N}% more SOUL"
+  }
 };
 
 // the YES / NO buttons, and the buttons under the box where you type
@@ -441,8 +458,16 @@ function satanPactFill(text, vars = {}) {
   return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
 }
 
-function satanPactPartText(part) {
-  const t = SATAN_DEAL_PRICE_TEXT;
+// the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
+function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
+  if (part.type === "bossHealth") {
+    const health = satanPactFill(t.bossHealth, { N: part.pct });
+    return part.zeroBounty ? [health, t.bossBounty] : [health];
+  }
+  return [satanPactPartText(part, t)];
+}
+
+function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
   switch (part.type) {
     case "hp":
       return satanPactFill(t.hp, { N: part.n });
@@ -453,7 +478,7 @@ function satanPactPartText(part) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactFill(t.bossHealth, { N: part.pct }) + (part.zeroBounty ? `, and ${t.bossBounty}` : "");
+      return satanPactPartTexts(part, t).join(" and ");
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
@@ -467,9 +492,11 @@ function satanPactPartText(part) {
   }
 }
 
-function satanPactPriceText(parts) {
-  const texts = parts.map(satanPactPartText).filter(Boolean);
-  if (!texts.length) return SATAN_DEAL_PRICE_TEXT.nothing;
+// lineKey: the offer line the price is said in (its key in SATAN_DEAL_LINES), for SATAN_DEAL_PRICE_TEXT_FOR
+function satanPactPriceText(parts, lineKey = null) {
+  const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
+  const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
+  if (!texts.length) return t.nothing;
   if (texts.length === 1) return texts[0];
   return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
 }
@@ -561,7 +588,8 @@ function satanPactSealOffer(id) {
   const section = satanPactSealSection(id);
   if (SELF_STACKING_SEAL_IDS.has(id) || section === "archangel") return { refuse: "angel" };
   if (section === "trinity") return { refuse: "trinity" };
-  if (section === "saturn") return { refuse: "saturn" };
+  // the Planetary SEALS (Saturn, Moon, Mars) are Solomon's pentacles
+  if (["saturn", "artifact", "poison"].includes(section)) return { refuse: "planetary" };
   if (section === "apocalypse") return { refuse: "apocalypse" };
   if (section === "satan") return satanPactSatanSealOffer();
   if (!SATAN_PACT_GOETIC_IDS.has(id)) return { refuse: "notDemon" };
@@ -688,13 +716,19 @@ function satanPactAnswer(text) {
   }
 }
 
+// which SATAN_DEAL_LINES key an offer's price is said in (the one holding its last line)
+function satanPactLineKey(lines) {
+  const last = lines?.[lines.length - 1]?.[1];
+  return Object.keys(SATAN_DEAL_LINES).find((key) => Array.isArray(SATAN_DEAL_LINES[key]) && SATAN_DEAL_LINES[key].some((line) => line[1] === last)) || null;
+}
+
 // the lines Satan says for an answer (offers end with the question)
 function satanPactAnswerLines(answer) {
   const vars = { ...(answer.vars || {}) };
   if (answer.refuse) {
     return (SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   }
-  vars.PRICE = satanPactPriceText(answer.price);
+  vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
   // the question goes on the same line as the price, so YES / NO sit right under it
   const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
@@ -834,7 +868,7 @@ function satanPactRefuse() {
   pact.used = true;
   pact.outcome = "refused";
   pact.offer = null;
-  addLog("You refused Satan's deal. He will not offer again this run.");
+  addLog("You refused Satan's deal. He shall not offer a deal again this run.");
 }
 
 // a request: an offer waits for YES / NO; a refusal maybe locks the deal; returns the lines to say
@@ -1031,11 +1065,11 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He will not offer again this run.";
+    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
-    tooltip = "Satan is not listening. Kill another BOSS.";
+    tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {
-    tooltip = "Not right now.";
+    tooltip = "Gone fishing.";
   }
   const disabled = !satanPactCanOpenNow() ? "disabled" : "";
   const urgent = satanPactPulseUrgent();

@@ -1925,6 +1925,7 @@ function afterRenderEffects() {
     return;
   }
   syncSealRings();
+  pyrosMarksAfterRender();
   watchSealTrigger();
   watchMoments();
   introAfterRender();
@@ -2044,14 +2045,20 @@ function renderTargetPanel() {
   `;
 }
 
-// ---------- personality glyphs: one small chalk mark per DAMNED type (replaces the emoji flags) ----------
+// ---------- personality glyphs: one small chalk mark per DAMNED type, drawn as a zodiac sign ----------
 const PERSONALITY_GLYPHS = {
-  Anchor: '<circle cx="12" cy="4.2" r="1.7"/><path d="M12 6v14.5M7.6 9.2h8.8M4.6 13.4c.4 4.3 3.4 7.2 7.4 7.3 4-.1 7-3 7.4-7.3M4.6 13.4l-1.3 1.5M19.4 13.4l1.3 1.5"/>',
-  Analyst: '<path d="M12 2.8 21.4 19.6H2.6Z"/><path d="M7.4 14.4c2.6-3.1 6.6-3.1 9.2 0-2.6 3.1-6.6 3.1-9.2 0Z"/><circle cx="12" cy="14.4" r="1.15"/>',
-  Follower: '<path d="M3.5 6.2 9.6 12l-6.1 5.8M10.6 6.2l6.1 5.8-6.1 5.8"/><path d="M19.2 9.4v5.2"/>',
-  Stubborn: '<path d="M12 21v-8.6M12 12.4C10.2 6 3 5.7 3 10.6c0 2.9 3.7 3.2 4.1.4M12 12.4C13.8 6 21 5.7 21 10.6c0 2.9-3.7 3.2-4.1.4"/><path d="M8.6 21h6.8"/>',
-  Drifter: '<path d="M2.6 9.2c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4M2.6 15.6c2.3-3 4.5-3 6.6 0s4.4 3 6.6 0 4.3-3 5.6-1.4"/>',
-  Caller: '<path d="M3.4 10v4.2h3.4l5.4 4.4V5.6L6.8 10Z"/><path d="M15.3 9c1.6 1.7 1.6 4.3 0 6M18.2 6.4c3.1 3.2 3.1 8 0 11.2"/>'
+  // Taurus: a circle with the bull's horns resting on top
+  Anchor: '<circle cx="12" cy="15.1" r="5.4"/><path d="M4.4 3.6C5.6 7.6 8.4 9.7 12 9.7s6.4-2.1 7.6-6.1"/>',
+  // Sagittarius: the archer's arrow, pointing up-right, with a crossbar on the shaft
+  Analyst: '<path d="M4 20 20 4M12.4 4H20v7.6M6.4 11.6l6 6"/>',
+  // Gemini: two pillars between two curved bars
+  Follower: '<path d="M4.6 4.2c4.9 1.7 9.9 1.7 14.8 0M4.6 19.8c4.9-1.7 9.9-1.7 14.8 0M9 5.5v13M15 5.5v13"/>',
+  // Aries: the ram's horns on a stem
+  Stubborn: '<path d="M12 20.6V9.8M12 9.8C11 5.2 7.9 3.4 5.6 4.1 3.5 4.8 2.9 7.6 4.2 9.2c1 1.2 2.8 1 3.3-.4M12 9.8c1-4.6 4.1-6.4 6.4-5.7 2.1.7 2.7 3.5 1.4 5.1-1 1.2-2.8 1-3.3-.4"/>',
+  // Aquarius: two zigzag waves of water
+  Drifter: '<path d="M2.8 10.4 6.6 6.8l3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6M2.8 17.2l3.8-3.6 3.6 3.6 3.6-3.6 3.6 3.6 3.8-3.6"/>',
+  // Cancer: two claws curling into each other
+  Caller: '<circle cx="7" cy="9.3" r="2.7"/><path d="M7 6.6c4.3-1.9 9.9-1.6 13.6 2.3"/><circle cx="17" cy="14.7" r="2.7"/><path d="M17 17.4c-4.3 1.9-9.9 1.6-13.6-2.3"/>'
 };
 
 // SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
@@ -2105,7 +2112,13 @@ function bossTooltipTitle(bot) {
   return bot.passiveKeys.map((key) => botPassiveKeyName(key)).join(" + ");
 }
 
-function bossGlyphHtml(bot) {
+// a BOSS without its PYROS-TECH abilities (those are shown by their own marks)
+function botWithoutPyrosGifts(bot) {
+  return { ...bot, passiveKeys: (bot.passiveKeys || []).filter((key) => !PYROS_GIFT_PASSIVES[key]), buffPassiveKey: null };
+}
+
+function bossGlyphHtml(realBot) {
+  const bot = botWithoutPyrosGifts(realBot);
   const borrowed = bot.finalKey ? null : bossBorrowedPower(bot);
   const tooltip = glyphTooltipHtml(
     bossTooltipTitle(bot),
@@ -2119,16 +2132,131 @@ function bossGlyphHtml(bot) {
   return `<span class="bot-glyph boss-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${BOSS_GLYPH_SVG}</span>`;
 }
 
-// a DAMNED that was given an ability (Pyros's gift) shows a diamond; hovering it names the ability
+// PYROS-TECH: each ability Pyros hands out has its own alchemical mark, red, on the name row left of the zodiac
+// sign (a BOSS's: left of its pentagram); hovering it names the ability. Same 24x24 line style as the other marks.
+const PYROS_GIFT_MARKS = {
+  // Cinnabar: two ezh (3) shapes with a line through them
+  metabolism: '<path d="M3.4 6h6.8L6.1 10.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M12.4 6h6.8l-4.1 4.8c2.7-.3 4.6 1.2 4.6 3.6 0 2.6-2 4.1-4.3 4.1-1.4 0-2.5-.5-3.3-1.4M2.4 9.2h19.2"/>',
+  // Acid: a cross with flat caps on every arm
+  fumes: '<path d="M12 3v18M3.4 12h17.2M9.4 3h5.2M9.4 21h5.2M3.4 9.4v5.2M20.6 9.4v5.2"/>',
+  // Vitriol: a circle with a vertical diameter and one horizontal radius
+  thief: '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2M12 12h8.6"/>',
+  // Sulphur (black sulphur): a double cross standing on an infinity loop
+  spite: '<path d="M12 2.6v14.2M9 5.2h6M6.8 9.2h10.4M12 16.8C10.3 14.6 8.9 13.4 7.1 13.4a3.4 3.4 0 0 0 0 6.8c1.8 0 3.2-1.2 4.9-3.4s3.1-3.4 4.9-3.4a3.4 3.4 0 0 1 0 6.8c-1.8 0-3.2-1.2-4.9-3.4"/>',
+  // Fortis (aqua fortis): a downward triangle whose right side is the stem of an F
+  wideCrit: '<path d="M2.8 4.6h12.4L9 20.2Z"/><path d="M15.2 4.6h5.8M12.8 10.6h5.6"/>',
+  // Regia (aqua regia): a downward triangle whose right side is the stem of an R
+  shield: '<path d="M2.6 4.6h11.6L8.4 20.2Z"/><path d="M14.2 4.6h2.6a3.3 3.3 0 0 1 0 6.6h-5.2M14.7 11.2l5.9 9"/>',
+  // Vitaea (spirit of wine): three small circles joined in a V
+  lamb: '<circle cx="6.4" cy="5.8" r="2.6"/><circle cx="17.6" cy="5.8" r="2.6"/><circle cx="12" cy="18.2" r="2.6"/><path d="M7.5 8.2l3.4 7.6M16.5 8.2l-3.4 7.6"/>'
+};
+
+function botPyrosGiftKeys(bot) {
+  return [...new Set([...(bot?.passiveKeys || []), bot?.buffPassiveKey].filter((key) => key && PYROS_GIFT_PASSIVES[key]))];
+}
+
+function pyrosGiftGlyphHtml(key) {
+  const gift = PYROS_GIFT_PASSIVES[key];
+  const mark = PYROS_GIFT_MARKS[key];
+  if (!gift || !mark) return "";
+  const tooltip = glyphTooltipHtml(gift.name, "PYROS-TECH", gift.description);
+  return `<span class="bot-glyph pyros-glyph" data-tooltip-html="${escapeAttr(tooltip)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${mark}</svg></span>`;
+}
+
+function pyrosGiftGlyphsHtml(bot) {
+  return botPyrosGiftKeys(bot).map((key) => pyrosGiftGlyphHtml(key)).join("");
+}
+
+// the marks block, in the order the abilities were gained; layoutPyrosMarks() places it beside the name row
+function pyrosMarksHtml(bot) {
+  const count = botPyrosGiftKeys(bot).length;
+  if (!count) return "";
+  return `<div class="pyros-marks" data-count="${count}">${pyrosGiftGlyphsHtml(bot)}</div>`;
+}
+
+// Places each card's PYROS-TECH marks on the name row, just left of the first sign (the zodiac sign, or a BOSS's
+// pentagram), without moving the name or the sign: the block floats beside the centred line. Marks match the
+// sign's size and shrink only when the room left of the line is short. Many marks that would get too small in
+// one row go on two rows, beside the name and the personality line below it. Nothing is ever covered.
+function pyrosOffsetIn(el, card) {
+  let x = 0;
+  let y = 0;
+  let node = el;
+  while (node && node !== card) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent;
+  }
+  return node === card ? { x, y } : null;
+}
+
+function layoutPyrosMarks() {
+  document.querySelectorAll("#app .bot-card .pyros-marks").forEach((block) => {
+    const card = block.closest(".bot-card");
+    const title = card?.querySelector(".bot-title");
+    const sign = title?.querySelector(".bot-glyph") || title?.querySelector(".bot-name");
+    const signAt = sign && pyrosOffsetIn(sign, card);
+    if (!signAt || !card.offsetWidth) return;
+    const count = Math.max(1, Number(block.dataset.count) || block.children.length);
+    const gap = parseFloat(getComputedStyle(block).columnGap) || 3;
+    const lineGap = parseFloat(getComputedStyle(title).columnGap) || gap;
+    const maxSize = sign.offsetHeight || 19;
+    const edge = (parseFloat(getComputedStyle(card).paddingLeft) || 0) + 2;
+    const right = signAt.x - lineGap;
+    const signMiddle = signAt.y + sign.offsetHeight / 2;
+    // one row, centred on the sign
+    let rows = 1;
+    let blockRight = right;
+    let size = Math.min(maxSize, (right - edge - (count - 1) * gap) / count);
+    // two rows (the first beside the sign, the second under it), left of the personality line too
+    const type = card.querySelector(".bot-type");
+    const typeAt = type && pyrosOffsetIn(type, card);
+    if (count > 1 && size < maxSize * 0.8 && typeAt && type.textContent.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(type);
+      const cardBox = card.getBoundingClientRect();
+      const scale = cardBox.width / card.offsetWidth || 1;
+      const typeTextLeft = (range.getBoundingClientRect().left - cardBox.left) / scale - card.clientLeft;
+      const right2 = Math.min(right, typeTextLeft - lineGap);
+      const cols2 = Math.ceil(count / 2);
+      const bottom = typeAt.y + type.offsetHeight;
+      const twoRows = Math.min(maxSize, (right2 - edge - (cols2 - 1) * gap) / cols2, (bottom - signMiddle - gap) / 1.5);
+      if (twoRows > size) {
+        rows = 2;
+        size = twoRows;
+        blockRight = right2;
+      }
+    }
+    size = Math.max(0, Math.floor(size));
+    const cols = Math.ceil(count / rows);
+    const width = cols * size + (cols - 1) * gap;
+    block.style.setProperty("--pyros-size", `${size}px`);
+    block.style.setProperty("--pyros-cols", String(cols));
+    block.style.left = `${Math.floor(blockRight - width)}px`;
+    block.style.top = `${Math.round(signMiddle - size / 2)}px`;
+    block.style.visibility = size >= 6 ? "visible" : "hidden";
+  });
+}
+
+let pyrosMarksResizeBound = false;
+function pyrosMarksAfterRender() {
+  layoutPyrosMarks();
+  if (pyrosMarksResizeBound) return;
+  pyrosMarksResizeBound = true;
+  window.addEventListener("resize", () => requestAnimationFrame(layoutPyrosMarks));
+  // the card text font arriving can move the name row
+  document.fonts?.ready?.then(() => layoutPyrosMarks());
+}
+
+// any other ability a DAMNED carries (not PYROS-TECH) still shows as a diamond; hovering it names the ability
 const GIFT_GLYPH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6 19.2 12 12 21.4 4.8 12Z"/><path d="M12 7.4 15.6 12 12 16.6 8.4 12Z" fill="currentColor" stroke="none" opacity="0.55"/></svg>`;
 
 function giftGlyphHtml(bot) {
-  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter(Boolean);
+  const keys = [...(bot.passiveKeys || []), bot.buffPassiveKey].filter((key) => key && !PYROS_GIFT_PASSIVES[key]);
   if (!keys.length) return "";
   const title = keys.map((key) => botPassiveKeyName(key)).join(" + ");
   const body = keys.map((key) => botPassiveKeyDescription(key)).filter(Boolean).join(" ");
-  const label = bot.buffPassiveKey ? "PYROS'S GIFT" : "ABILITY";
-  const tooltip = glyphTooltipHtml(title, label, body);
+  const tooltip = glyphTooltipHtml(title, "ABILITY", body);
   return `<span class="bot-glyph gift-glyph" data-tooltip-html="${escapeAttr(tooltip)}">${GIFT_GLYPH_SVG}</span>`;
 }
 
@@ -2208,7 +2336,7 @@ function renderBot(bot, pendingPick) {
   const faceClass = bot.isBoss ? "boss-face" : "";
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
-  // a DAMNED's gifted ability (Pyros) lives in the diamond mark, not in the personality line
+  // a DAMNED's PYROS-TECH abilities float left of the name row (any other ability is the diamond), not in the personality line
   const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
   const passiveDescription = "";
   const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
@@ -2294,6 +2422,7 @@ function renderBot(bot, pendingPick) {
       ${hit.flash}
       ${deathBadge}
       ${markBadge}
+      ${isDown ? "" : pyrosMarksHtml(bot)}
       ${bot.isBoss && !isDown ? bossStolenTagHtml(bot) : ""}
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
