@@ -1,0 +1,64 @@
+# Every push to main builds the playtest demo (demo.html as index.html) and uploads it to itch.io,
+# replacing the version testers play. It can also be started by hand: Actions > Deploy playtest to itch.io > Run workflow.
+# Needs the repository secret BUTLER_API_KEY: an itch.io API key (itch.io > Settings > API keys) from an account
+# that can upload to koutaliaris/dearth.
+name: Deploy playtest to itch.io
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "android/**"
+      - "ios/**"
+      - "desktop/**"
+  workflow_dispatch:
+
+# a newer push replaces a deploy that is still running
+concurrency:
+  group: itch-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check for the itch.io key
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "::error::The BUTLER_API_KEY secret is missing (repo Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      # nothing goes to the testers if a test fails
+      - name: Tests
+        run: node --test scripts/test-seal-effects.js
+
+      - name: Build the playtest zip
+        run: |
+          node scripts/build-playtest-zip.js
+          mkdir -p dist/playtest/itch
+          unzip -q dist/playtest/DEARTH-playtest-itch-*.zip -d dist/playtest/itch
+          ls dist/playtest/itch
+
+      - name: Install butler
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler
+          chmod +x butler/butler
+          ./butler/butler -V
+
+      - name: Upload to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")-${GITHUB_SHA::7}"
+          ./butler/butler push dist/playtest/itch koutaliaris/dearth:html5 --userversion "$VERSION"
