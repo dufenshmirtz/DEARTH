@@ -1214,7 +1214,8 @@ function sourceLabelFromReason(reason, fallback) {
     ["CRITICAL", "CRITICAL"],
     ["Sacrificial Dagger", "Sacrificial Dagger"],
     ["Engraved Skull", "Engraved Skull"],
-    ["Black Candle", "Black Candle"],
+    ["Spirit Board", "Spirit Board"],
+    ["Black Candle", "Spirit Board"], // its old name, in older saves
     ["Ceremonial Altar", "Ceremonial Altar"],
     ["Demonic Idol", "Demonic Idol"],
     ["Goat Head", "Goat Head"],

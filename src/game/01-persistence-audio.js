@@ -725,9 +725,10 @@ function normalizeLoadedArcadeRun() {
   state.trinityEliteNextShop = Boolean(state.trinityEliteNextShop);
   if (!Array.isArray(state.trinityShopSealsNextShop)) state.trinityShopSealsNextShop = [];
   state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
-  // SEALS keep their current name and text after a rename (older saves hold a copy of both)
-  [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
-    if (item?.type === "passive" && ITEMS[item.id]) {
+  // SEALS and ARTIFACTS keep their current name and text after a rename (older saves hold a copy of both;
+  // the Black Candle became the Spirit Board)
+  [...state.player.passives, ...state.player.actives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
+    if ((item?.type === "passive" || item?.type === "active") && ITEMS[item.id]) {
       item.name = ITEMS[item.id].name;
       item.description = ITEMS[item.id].description;
     }

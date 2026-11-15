@@ -24,6 +24,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/artifacts/lambCall.mp3": { m: -8.1, i: -12.9 },
   "assets/audio/artifacts/pentakill.mp3": { m: -6.1, i: -12.4 },
   "assets/audio/artifacts/skull.mp3": { m: -14.3, i: -16.1 },
+  "assets/audio/artifacts/spiritBoard.mp3": { m: -9.4, i: -12.9 },
   "assets/audio/artifacts/voodoo.mp3": { m: -8.2, i: -12.2 },
   "assets/audio/dragon-studio-evil-laughter-353177.mp3": { m: -12, i: -14.6 },
   "assets/audio/intro/intro-bell.mp3": { m: -12.4, i: -19.3 },
@@ -138,7 +139,7 @@ const ARTIFACT_SFX = {
   a10: { src: "assets/audio/artifacts/coinDrop.mp3", tier: "item" },
   a11: { src: "assets/audio/artifacts/VialofBlood.mp3", tier: "item" },
   a12: { src: "assets/audio/artifacts/invertedCross.mp3", tier: "item" },
-  a14: { src: "assets/audio/artifacts/candle.mp3", tier: "item" },
+  a14: { src: "assets/audio/artifacts/spiritBoard.mp3", tier: "item" }, // the planchette sliding (freesound_community "wood chest slid3")
   a15: { src: "assets/audio/artifacts/Dagger.mp3", tier: "item" },
   a18: { src: "assets/audio/artifacts/Crystal.mp3", tier: "item" },
   a21: { src: "assets/audio/artifacts/pentakill.mp3", tier: "item" },
@@ -306,8 +307,8 @@ const PVP_ACTIVES = [
   },
   {
     id: "sink",
-    name: "Black Candle",
-    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
+    name: "Spirit Board",
+    icon: "assets/artifacts/occult-items-17/13 SPIRIT BOARD.png",
     description: "Change the final TARGET by -5.",
     needsTarget: false
   },
@@ -1402,7 +1403,7 @@ const ITEMS = {
   a14: {
     id: "a14",
     type: "active",
-    name: "Black Candle",
+    name: "Spirit Board", // was the Black Candle (same effect; only the name, picture and sound changed)
     price: 3,
     description: "During reveal, reduce the TARGET by 10."
   },
@@ -1778,7 +1779,7 @@ const ARTIFACT_ICONS = {
   a11: "occult-items-17/05 VIAL OF BLOOD.png",
   a12: "occult-items-17/16 DARK TALISMAN.png",
   a13: "a13.png",
-  a14: "occult-items-17/02 BLACK CANDLE.png",
+  a14: "occult-items-17/13 SPIRIT BOARD.png",
   a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
   a16: "a16.png",
   a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
@@ -2506,6 +2507,9 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanVictorySkipped: false, // SKIP past the 8 BOSSES: the victory speech may play outside the results
+  judgementTalkDue: false, // the 72 demons have fallen: Jesus and Satan talk before Final Judgment
+  judgementTalkPlayed: false,
   satanTightwadDue: false,
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
@@ -3275,9 +3279,10 @@ function normalizeLoadedArcadeRun() {
   state.trinityEliteNextShop = Boolean(state.trinityEliteNextShop);
   if (!Array.isArray(state.trinityShopSealsNextShop)) state.trinityShopSealsNextShop = [];
   state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
-  // SEALS keep their current name and text after a rename (older saves hold a copy of both)
-  [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
-    if (item?.type === "passive" && ITEMS[item.id]) {
+  // SEALS and ARTIFACTS keep their current name and text after a rename (older saves hold a copy of both;
+  // the Black Candle became the Spirit Board)
+  [...state.player.passives, ...state.player.actives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
+    if ((item?.type === "passive" || item?.type === "active") && ITEMS[item.id]) {
       item.name = ITEMS[item.id].name;
       item.description = ITEMS[item.id].description;
     }
@@ -7045,7 +7050,8 @@ function sourceLabelFromReason(reason, fallback) {
     ["CRITICAL", "CRITICAL"],
     ["Sacrificial Dagger", "Sacrificial Dagger"],
     ["Engraved Skull", "Engraved Skull"],
-    ["Black Candle", "Black Candle"],
+    ["Spirit Board", "Spirit Board"],
+    ["Black Candle", "Spirit Board"], // its old name, in older saves
     ["Ceremonial Altar", "Ceremonial Altar"],
     ["Demonic Idol", "Demonic Idol"],
     ["Goat Head", "Goat Head"],
@@ -8527,6 +8533,12 @@ function skipToFirstGoeticBoss() {
   rerollShop();
   beginRound();
   addLog("SKIP: jumped past the eight special bosses to the first Goetic Seal boss.");
+  // it counts as beating them: Satan's victory speech (the first-win one if it is still to come) plays as soon
+  // as the new round is on the table (09-intro-story.js)
+  if (!state.satanVictoryPlayed && state.mode === "arcade") {
+    state.satanVictoryDue = true;
+    state.satanVictorySkipped = true;
+  }
   render();
 }
 
@@ -8537,10 +8549,23 @@ function skipToFinalBosses() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * (UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL));
+  addLog("SKIP: jumped to the Jesus and Satan phase.");
+  // Jesus and Satan have their say first, as after the 72nd demon (09-intro-story.js); their end calls
+  // finishSkipToFinalBosses. Queued meanwhile, so a run reloaded in the middle still reaches Final Judgment.
+  if (!state.judgementTalkPlayed && state.mode === "arcade" && introState.phase === "off") {
+    state.finalBossQueued = true;
+    state.judgementTalkDue = false;
+    render();
+    startJudgementTalk({ fromSkip: true });
+    return;
+  }
+  finishSkipToFinalBosses();
+}
+
+function finishSkipToFinalBosses() {
   enterFinalBossPhase();
   rerollShop();
   beginRound();
-  addLog("SKIP: jumped to the Jesus and Satan phase.");
   render();
 }
 
@@ -9131,6 +9156,9 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanVictorySkipped = false;
+  state.judgementTalkDue = false;
+  state.judgementTalkPlayed = false;
   state.satanTightwadDue = false;
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;
@@ -11587,6 +11615,8 @@ function resolveEliminatedBots(eliminated) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
+          // Jesus and Satan talk once the results are on screen, then Final Judgment (09-intro-story.js)
+          if (!state.judgementTalkPlayed && state.mode === "arcade") state.judgementTalkDue = true;
           state.roundState.roundEvents.push("The seventy-two Goetic Seals are broken. Jesus and Satan approach.");
         }
       }
@@ -12814,6 +12844,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // the 72 demons have fallen: the results wait for Jesus and Satan; moving on brings them in now
+  if (introState.phase === "finale" || introState.phase === "finale-leave") return;
+  if (judgementTalkHoldsSummary()) {
+    startJudgementTalkNow();
     return;
   }
   // too much SIN held: the results wait for Satan's offer; moving on brings him in now
@@ -18376,6 +18412,21 @@ const SATAN_VICTORY_LINES = [
   ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
 ];
 
+// the 72 Goetic demons have fallen (or SKIP in the demon stage): Jesus and Satan have their say right
+// before Final Judgment. Jesus stands where Satan stands in his scenes; on your line you stand there
+// (as in the story's judgement) and neither of them does.
+const FINAL_JUDGEMENT_LINES = [
+  ["jesus", "Enough games. You really are a troublesome wretch."],
+  ["satan", "You either are beyond persistent or cheated. Either way you are an enormous virgin!"],
+  ["jesus", "There was no chance I was ever going to let you come back, it was clear from the start. Yet you came all this way, I really wonder why."],
+  ["satan", "I am telling you, no way this vermin sat through and outmanoeuvred all my demons. He clearly edited the game data or found some other exploit. He is probably just reading this in the game files the sore loser!"],
+  ["jesus", "Regardless, this display of defiance can't go any longer. I am stepping in to end you sinner."],
+  ["satan", "You know what cowboy, you have gotten way too big for your boots and it's high time you started payin'. Furcas hold my beer."],
+  ["jesus", "Lucifer you miserable fucker, I hope you understand this whole situation is your fault."],
+  ["satan", "Hey hey hey we can talk about the dos and don'ts and whens and hows and whys and such later. This moron here has booked himself a first class ticket to the deepest pit of Tartarus, it's a shame to keep them waiting."],
+  ["you", "Fuck you both."]
+];
+
 // the player ends a round holding SATAN_TIGHTWAD_SIN or more: Satan offers to take it all (YES / NO at the end)
 const SATAN_TIGHTWAD_LINES = [
   ["satan", "Wow, we got a tightwad here don't we? I thought we had an understanding about how things work out here you little bitch."],
@@ -18390,6 +18441,7 @@ const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the ri
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
+//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment)
 const introState = {
   phase: "off",
   timers: [],
@@ -18405,7 +18457,8 @@ const introState = {
   typing: false,
   waiting: false,
   pactTimer: null,
-  keyBound: false
+  keyBound: false,
+  finaleFromSkip: false
 };
 
 /* ---- flags used by the rest of the game ---- */
@@ -18457,7 +18510,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -18467,7 +18520,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -18711,7 +18764,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory", "tightwad", "deal"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -18743,6 +18796,7 @@ function introAdvance() {
   }
   if (introState.phase === "judgement") introBootGame();
   else if (introState.phase === "victory") satanVictoryLeave();
+  else if (introState.phase === "finale") judgementTalkLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
   else if (introState.phase === "deal") satanDealEndOfLines();
   else introSealPact();
@@ -18752,7 +18806,7 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+    if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
@@ -18827,6 +18881,10 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanVictoryLeave();
+  } else if (introState.phase === "finale") {
+    introClearTimers();
+    introState.typing = false;
+    judgementTalkLeave();
   } else if (introState.phase === "tightwad") {
     // the offer cannot be skipped, only its talk: straight to YES / NO
     introClearTimers();
@@ -18924,8 +18982,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+  if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
   satanVictoryAfterRender();
+  judgementTalkAfterRender();
   satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
   if (state.round >= 2 && state.stage === "summary") {
@@ -18959,12 +19018,14 @@ function introStartPactNow() {
    with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). The very first win
    of a player gets SATAN_FIRST_VICTORY_LINES instead; it counts as seen when he leaves (end or skip), so a
    game closed in the middle of it shows it again at the next win. */
+// SKIP past the eight special BOSSES counts as beating them: the speech comes as soon as the new round is
+// on the table (state.satanVictorySkipped lets it play outside the results)
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
     introState.phase === "off" &&
     state.mode === "arcade" &&
-    state.stage === "summary" &&
+    (state.stage === "summary" || state.satanVictorySkipped) &&
     !state.gameOver &&
     !state.pauseOpen &&
     !roundRevealAnimationActive() &&
@@ -18978,11 +19039,12 @@ function satanVictoryHoldsSummary() {
 
 function satanVictoryAfterRender() {
   if (!state.satanVictoryDue || introState.pactTimer || introState.phase !== "off") return;
-  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const waiting = () => state.satanVictoryDue && state.mode === "arcade" && !state.gameOver && (state.stage === "summary" || state.satanVictorySkipped);
+  if (!waiting()) return;
   const check = () => {
     introState.pactTimer = null;
     if (satanVictoryReady()) startSatanVictory();
-    else if (state.satanVictoryDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+    else if (waiting()) introState.pactTimer = setTimeout(check, 400);
   };
   introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
 }
@@ -18996,6 +19058,7 @@ function startSatanVictoryNow() {
 
 function startSatanVictory() {
   state.satanVictoryDue = false;
+  state.satanVictorySkipped = false;
   state.satanVictoryPlayed = true;
   satanOpenScene("victory", satanVictoryLines(), "satan-victory-layer");
   saveArcadeRun();
@@ -19043,6 +19106,97 @@ function satanLeaveScene(phase) {
     introState.phase = "off";
     render();
   }, 1300);
+}
+
+/* ---- before Final Judgment: the 72 Goetic demons have fallen ----
+   state.judgementTalkDue is set when the 72nd demon falls; the round's results then wait for Jesus and Satan
+   (Next Round brings them in at once), like Satan's victory speech. They take turns standing where Satan
+   stands in his scenes (Jesus drawn in candlelight cream, mirrored to face the table), and the box takes the speaker's colour
+   (yellow, red, white); on your line you stand on the right as in the story's judgement. The end of their
+   talk (or its skip) goes straight into Final Judgment: the round moves on, they take the table and the
+   Judgement banner plays. SKIP in the demon stage brings it in at once (skipToFinalBosses, 05). Once per run
+   (state.judgementTalkPlayed, kept in the save). */
+function judgementTalkReady() {
+  return (
+    state.judgementTalkDue &&
+    introState.phase === "off" &&
+    state.mode === "arcade" &&
+    state.stage === "summary" &&
+    !state.gameOver &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function judgementTalkHoldsSummary() {
+  return Boolean(state.judgementTalkDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function judgementTalkAfterRender() {
+  if (!state.judgementTalkDue || introState.pactTimer || introState.phase !== "off") return;
+  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (judgementTalkReady()) startJudgementTalk();
+    else if (state.judgementTalkDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startJudgementTalkNow() {
+  if (!judgementTalkHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startJudgementTalk();
+}
+
+// options.fromSkip: SKIP brought them in (the run is not at its results); their end calls finishSkipToFinalBosses
+function startJudgementTalk(options = {}) {
+  state.judgementTalkDue = false;
+  state.judgementTalkPlayed = true;
+  introState.finaleFromSkip = Boolean(options.fromSkip);
+  introBindKeys();
+  introState.phase = "finale";
+  introState.lines = FINAL_JUDGEMENT_LINES;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  document.querySelector("#floatingTooltip")?.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-pact-layer finale-layer";
+  layer.innerHTML = `
+    <div class="finale-figure finale-figure-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus-yellow.webp" alt="" draggable="false" /></div>
+    <div class="finale-figure finale-figure-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    <div class="finale-figure finale-figure-you" aria-hidden="true"><img src="assets/ui/intro/intro-sinner.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introPlacePactBox();
+  introShowLine(0);
+  if (!introState.finaleFromSkip) saveArcadeRun();
+}
+
+// they fade, and Final Judgment begins
+function judgementTalkLeave() {
+  if (introState.phase !== "finale") return;
+  const fromSkip = Boolean(introState.finaleFromSkip);
+  introSetWaiting(false);
+  introState.phase = "finale-leave";
+  introState.box?.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introState.finaleFromSkip = false;
+    introClearTimers();
+    introState.phase = "off";
+    if (state.mode !== "arcade" || state.gameOver) return;
+    if (fromSkip) finishSkipToFinalBosses();
+    else advanceAfterSummary();
+  }, 900);
 }
 
 /* ---- Satan's offer: too much SIN held ----
@@ -21622,6 +21776,10 @@ document.addEventListener("keydown", (event) => {
    - Cheat death: back with 1 SOUL once; when it happens he takes a random SEAL, half your SIN, or the
      next BOSS comes with +50% SOUL.
    - Seal of Satan: only with every SEAL slot open and empty. Free.
+   - N FAVOR (up to 6; only once the slot machine and missions are open, 09-slot-missions.js, otherwise he
+     doesn't follow): 4 SIN per FAVOR; short of SIN, 1 SOUL per FAVOR; if that would kill you, his Offerings
+     closed for half as many rounds.
+   - KARMA (or Jesus' Gifts): never; he sends you to Jesus.
    Every number is x0.8 to x1.25 (most often near x1). 4+ SEALS sharing a build with the SEAL asked
    for (ELITE / SEAL) make the price x1.5. A SOUL price never takes you below 1 SOUL.
    "This round" means the current round during guess / ARTIFACTS, the next round from the results on. */
@@ -21644,6 +21802,8 @@ const SATAN_DEAL_LINES = {
   // the Planetary SEALS: Seals of Saturn, Moon and Mars
   planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
   apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  // KARMA or Jesus' Gifts
+  karma: [["satan", "I don't touch that my dear sinner, that's Jesus' domain, ask for something else."]],
   locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
   bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
   notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
@@ -21694,6 +21854,9 @@ const SATAN_DEAL_LINES = {
     ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
   satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
+  // FAVOR for the slot machine; more than six gets six with favorTooMuch instead
+  favor: [["satan", "{COUNT} FAVOR, I see we got a betting man in our midst. I like that, {PRICE} and it's yours high roller."]],
+  favorTooMuch: [["satan", "Hey there blackleg, that's way too much for your puny wallet. Six is all you can get and the price is {PRICE}."]],
   // the question after every offer (said on the same line as the price)
   question: [["satan", "Do we have a deal?"]],
 
@@ -21751,6 +21914,9 @@ const SATAN_DEAL_SEAL_ACCEPT = 0.5;
 const SATAN_DEAL_SEAL_ACCEPT_SLAIN = 0.8;
 const SATAN_DEAL_MAX_COPIES = 4;
 const SATAN_DEAL_MAX_HEAL = 5;
+const SATAN_DEAL_MAX_FAVOR = 6;
+const SATAN_DEAL_FAVOR_SIN = 4; // SIN per FAVOR
+const SATAN_DEAL_FAVOR_HP = 1; // SOUL per FAVOR when your SIN is short
 const SATAN_DEAL_SOURCE = "Satan's Pact";
 
 function satanPactFresh() {
@@ -22025,6 +22191,8 @@ function satanPactParse(text) {
   const normalized = satanPactNormalize(text);
   const number = satanPactNumber(normalized);
   if (!normalized) return { intent: "gibberish" };
+  if (/\b(karma|karmas|myrrh|frankincense|gift|gifts)\b/.test(normalized)) return { intent: "karma" };
+  if (/\b(favor|favors|favour|favours)\b/.test(normalized)) return { intent: "favor", n: number };
   if (/\b(seal of satan|satans seal|your own seal|your seal|lucifer)\b/.test(normalized)) return { intent: "satanSeal" };
   const sealMatch = satanPactMatchName(normalized, satanPactNamedSealIds());
   if (/\b(elite|upgrade|stronger|level up)\b/.test(normalized)) {
@@ -22280,6 +22448,25 @@ function satanPactUsesOffer(asked) {
   };
 }
 
+// FAVOR means nothing before the slot machine is open (or in Final Judgment): then he doesn't follow (null)
+function satanPactFavorOffer(asked) {
+  if (typeof missionsEnabled !== "function" || !missionsEnabled()) return null;
+  const askedN = asked && asked > 0 ? Math.floor(asked) : SATAN_DEAL_MAX_FAVOR;
+  const n = Math.min(askedN, SATAN_DEAL_MAX_FAVOR);
+  const sinCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_SIN * n * satanPactRoll()));
+  const hpCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_HP * n * satanPactRoll()));
+  let price;
+  if (Math.ceil(state.player.credits || 0) >= sinCost) price = [{ type: "sin", n: sinCost }];
+  else if (state.player.hp - hpCost >= 1) price = [{ type: "hp", n: hpCost }];
+  else {
+    const from = satanPactEffectRound();
+    const rounds = Math.max(1, Math.round((n / 2) * satanPactRoll()));
+    price = [{ type: "shopClosed", from, to: from + rounds - 1, rounds }];
+  }
+  const lines = askedN > SATAN_DEAL_MAX_FAVOR ? SATAN_DEAL_LINES.favorTooMuch : SATAN_DEAL_LINES.favor;
+  return { gain: { type: "favor", n }, price, lines, vars: { COUNT: n }, request: `${n} FAVOR` };
+}
+
 function satanPactCheatDeathOffer() {
   if (satanPact().cheatDeath) return { refuse: "cheatDeathAlready" };
   return { gain: { type: "cheatDeath" }, price: [], lines: SATAN_DEAL_LINES.cheatDeath, vars: {}, request: "a second life" };
@@ -22307,6 +22494,13 @@ function satanPactAnswer(text) {
       return satanPactUsesOffer(asked.n);
     case "cheatDeath":
       return satanPactCheatDeathOffer();
+    case "karma":
+      return { refuse: "karma" };
+    case "favor": {
+      const offer = satanPactFavorOffer(asked.n);
+      if (offer) return offer;
+      return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
+    }
     default:
       return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
   }
@@ -22436,6 +22630,10 @@ function satanPactReceive(gain) {
       break;
     case "cheatDeath":
       pact.cheatDeath = true;
+      break;
+    case "favor":
+      // the slot machine's FAVOR (09-slot-missions.js keeps it as state.missions.doubloons)
+      missionsState().doubloons += gain.n;
       break;
     default:
       break;
@@ -22789,7 +22987,13 @@ function missionShopOpen() {
 
 const missionTargets = (f, param) => (param ? f.targetCounts.get(param.id) || 0 : 0);
 
-// mission texts read exactly as the list they were written from: "Use a Black Candle", "Use two Black Candles"
+function missionIsPrime(n) {
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let d = 2; d * d <= n; d += 1) if (n % d === 0) return false;
+  return true;
+}
+
+// mission texts read exactly as the list they were written from: "Use a Spirit Board", "Use two Spirit Boards"
 function missionArtifactWithArticle(name) {
   if (!name) return "an artifact";
   if (/^the\s/i.test(name)) return name;
@@ -22843,6 +23047,7 @@ const MISSIONS = [
   { id: "hurt4", value: 1, when: "resolve", text: "Take 4 or less damage this round", check: (f) => f.guessed && f.damageTaken <= 4 },
   { id: "sell1", value: 1, when: "event", text: "Sell 1 seal", can: () => ownedSealCount() >= 1, check: (f) => f.sealSells >= 1 },
   { id: "sameGuess", value: 1, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.guessed && f.matchesRevealed },
+  { id: "guessPrime", value: 1, when: "resolve", text: "Guess a prime number", check: (f) => f.guessed && missionIsPrime(f.guess) },
   {
     id: "noArtifactsHeld",
     value: 1,
@@ -22867,7 +23072,7 @@ const MISSIONS = [
   },
 
   // ---- 2 FAVOR ----
-  { id: "critical", value: 2, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
+  { id: "critical", value: 3, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
   {
     id: "useItemTwice",
     value: 2,
@@ -22889,6 +23094,8 @@ const MISSIONS = [
   { id: "over66", value: 2, when: "resolve", text: "Guess over 66", check: (f) => f.guessed && f.guess > 66 },
   { id: "under12", value: 2, when: "resolve", text: "Guess under 12", check: (f) => f.guessed && f.guess < 12 },
   { id: "guess50", value: 2, when: "resolve", text: "Guess 50", check: (f) => f.guessed && f.guess === 50 },
+  // your guess is the lowest on the table: no DAMNED guessed less (a tie counts)
+  { id: "guessLowest", value: 2, when: "resolve", text: "Guess the lowest number amongst the DAMNED", check: (f) => f.guessed && f.lowestGuess },
   {
     id: "killMemory",
     value: 2,
@@ -22905,7 +23112,7 @@ const MISSIONS = [
     can: () => activeBots().some((bot) => !bot.immortal && missionBountyOf(bot) >= 10),
     check: (f) => f.kills.some((kill) => kill.bounty >= 10)
   },
-  { id: "killRevealed", value: 2, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
+  { id: "killRevealed", value: 1, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
   {
     id: "useOn2",
     value: 2,
@@ -22965,7 +23172,6 @@ const MISSIONS = [
   },
 
   // ---- 3 FAVOR or more ----
-  { id: "pentakill", value: 3, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill },
   { id: "kill3", value: 3, when: "resolve", text: "Eliminate three Damned", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
   { id: "zeroSin", value: 3, when: "leave", text: "Have 0 sin at the end of the round", check: (f) => f.sin === 0 },
   { id: "hurt12", value: 3, when: "resolve", text: "Take 12 or more damage", check: (f) => f.guessed && f.damageTaken >= 12 },
@@ -23070,6 +23276,8 @@ function unlockSlotMachine() {
 
 function missionsEnabled() {
   if (state.mode !== "arcade" || state.gameOver) return false;
+  // Final Judgment closes them like the Devil's Offerings
+  if (state.finalBossPhase) return false;
   if (!slotMachineUnlocked()) return false;
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
   return true;
@@ -23175,6 +23383,7 @@ function missionFacts() {
     if (bot.revealedByPassive && counters.botStart[bot.id]) revealedIds.add(bot.id);
   });
   const botGuesses = round.botSubmittedGuesses instanceof Map ? round.botSubmittedGuesses : new Map();
+  const damnedGuesses = startedBots.map((bot) => botGuesses.get(bot.id)).filter(Number.isFinite);
   return {
     resolved: Boolean(counters.resolved),
     guessed,
@@ -23186,6 +23395,7 @@ function missionFacts() {
     killedIds,
     kills,
     matchesRevealed: guessed && [...revealedIds].some((id) => botGuesses.get(id) === guess),
+    lowestGuess: guessed && damnedGuesses.length > 0 && guess <= Math.min(...damnedGuesses),
     artifactsUsed: Math.max(0, round.activeUses || 0),
     itemCounts: round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map(),
     targetCounts: round.artifactTargetCountsByBotId instanceof Map ? round.artifactTargetCountsByBotId : new Map(),

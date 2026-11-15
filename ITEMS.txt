@@ -437,9 +437,6 @@ Seventh Pentacle of Saturn: Eliminate 5 Stubborn Damned in a single round.
 
 Artifacts
 
-Black Candle (3 SIN)
-During reveal, reduce the TARGET by 10.
-
 Ceremonial Altar (3 SIN)
 During reveal, add 20 to the TARGET.
 
@@ -475,6 +472,9 @@ Pick a DAMNED. Deal 20% max-SOUL damage to non-boss DAMNED, or 10% to BOSSES.
 
 Satanic Bible (2 SIN)
 Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls (rerolls and new offerings). Every cast doubles it again and counts its own 5 rolls.
+
+Spirit Board (3 SIN)
+During reveal, reduce the TARGET by 10. (Was the Black Candle; same effect.)
 
 Vial of Blood (2 SIN)
 Pick two non-boss DAMNED. The first takes 30% max-SOUL damage. The second overheals 30% max SOUL and copies the first's PERSONALITY.

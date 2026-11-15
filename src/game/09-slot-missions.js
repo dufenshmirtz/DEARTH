@@ -80,7 +80,13 @@ function missionShopOpen() {
 
 const missionTargets = (f, param) => (param ? f.targetCounts.get(param.id) || 0 : 0);
 
-// mission texts read exactly as the list they were written from: "Use a Black Candle", "Use two Black Candles"
+function missionIsPrime(n) {
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let d = 2; d * d <= n; d += 1) if (n % d === 0) return false;
+  return true;
+}
+
+// mission texts read exactly as the list they were written from: "Use a Spirit Board", "Use two Spirit Boards"
 function missionArtifactWithArticle(name) {
   if (!name) return "an artifact";
   if (/^the\s/i.test(name)) return name;
@@ -134,6 +140,7 @@ const MISSIONS = [
   { id: "hurt4", value: 1, when: "resolve", text: "Take 4 or less damage this round", check: (f) => f.guessed && f.damageTaken <= 4 },
   { id: "sell1", value: 1, when: "event", text: "Sell 1 seal", can: () => ownedSealCount() >= 1, check: (f) => f.sealSells >= 1 },
   { id: "sameGuess", value: 1, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.guessed && f.matchesRevealed },
+  { id: "guessPrime", value: 1, when: "resolve", text: "Guess a prime number", check: (f) => f.guessed && missionIsPrime(f.guess) },
   {
     id: "noArtifactsHeld",
     value: 1,
@@ -158,7 +165,7 @@ const MISSIONS = [
   },
 
   // ---- 2 FAVOR ----
-  { id: "critical", value: 2, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
+  { id: "critical", value: 3, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
   {
     id: "useItemTwice",
     value: 2,
@@ -180,6 +187,8 @@ const MISSIONS = [
   { id: "over66", value: 2, when: "resolve", text: "Guess over 66", check: (f) => f.guessed && f.guess > 66 },
   { id: "under12", value: 2, when: "resolve", text: "Guess under 12", check: (f) => f.guessed && f.guess < 12 },
   { id: "guess50", value: 2, when: "resolve", text: "Guess 50", check: (f) => f.guessed && f.guess === 50 },
+  // your guess is the lowest on the table: no DAMNED guessed less (a tie counts)
+  { id: "guessLowest", value: 2, when: "resolve", text: "Guess the lowest number amongst the DAMNED", check: (f) => f.guessed && f.lowestGuess },
   {
     id: "killMemory",
     value: 2,
@@ -196,7 +205,7 @@ const MISSIONS = [
     can: () => activeBots().some((bot) => !bot.immortal && missionBountyOf(bot) >= 10),
     check: (f) => f.kills.some((kill) => kill.bounty >= 10)
   },
-  { id: "killRevealed", value: 2, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
+  { id: "killRevealed", value: 1, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
   {
     id: "useOn2",
     value: 2,
@@ -256,7 +265,6 @@ const MISSIONS = [
   },
 
   // ---- 3 FAVOR or more ----
-  { id: "pentakill", value: 3, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill },
   { id: "kill3", value: 3, when: "resolve", text: "Eliminate three Damned", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
   { id: "zeroSin", value: 3, when: "leave", text: "Have 0 sin at the end of the round", check: (f) => f.sin === 0 },
   { id: "hurt12", value: 3, when: "resolve", text: "Take 12 or more damage", check: (f) => f.guessed && f.damageTaken >= 12 },
@@ -361,6 +369,8 @@ function unlockSlotMachine() {
 
 function missionsEnabled() {
   if (state.mode !== "arcade" || state.gameOver) return false;
+  // Final Judgment closes them like the Devil's Offerings
+  if (state.finalBossPhase) return false;
   if (!slotMachineUnlocked()) return false;
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
   return true;
@@ -466,6 +476,7 @@ function missionFacts() {
     if (bot.revealedByPassive && counters.botStart[bot.id]) revealedIds.add(bot.id);
   });
   const botGuesses = round.botSubmittedGuesses instanceof Map ? round.botSubmittedGuesses : new Map();
+  const damnedGuesses = startedBots.map((bot) => botGuesses.get(bot.id)).filter(Number.isFinite);
   return {
     resolved: Boolean(counters.resolved),
     guessed,
@@ -477,6 +488,7 @@ function missionFacts() {
     killedIds,
     kills,
     matchesRevealed: guessed && [...revealedIds].some((id) => botGuesses.get(id) === guess),
+    lowestGuess: guessed && damnedGuesses.length > 0 && guess <= Math.min(...damnedGuesses),
     artifactsUsed: Math.max(0, round.activeUses || 0),
     itemCounts: round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map(),
     targetCounts: round.artifactTargetCountsByBotId instanceof Map ? round.artifactTargetCountsByBotId : new Map(),
