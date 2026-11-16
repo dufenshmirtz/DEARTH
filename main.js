@@ -17982,26 +17982,85 @@ const MENU_BG_SPIN_MS = 240000;
 // node: the live backdrop (background, doorway, figures, logo). It is built once and moved into each
 // re-rendered menu so clicking buttons never reloads or restarts it.
 const menuBackdropState = { startedAt: 0, resizeBound: false, glitchStarted: false, node: null };
-// fixed dark doorway behind the buttons (art pixels): matches .menu-door in styles.css
-const MENU_DOOR = { cx: 696 + 283 / 2, top: 476, solidTop: 55, solidBottom: 388 };
-// Options and its Settings widen the doorway (.menu-door.door-wide in styles.css): it grows around
-// the top of its solid part, so the buttons are centred lower by the extra height
-const MENU_DOOR_WIDE_SCREENS = ["options", "sound"];
-const MENU_DOOR_WIDE_SCALE_Y = 1.14;
+// the menu buttons are centred on this point (art pixels); the dark doorway (.menu-door, a black arch
+// drawn in CSS) is then fitted around whatever the screen shows: its width follows the widest button,
+// its height the number of buttons, and its visual centre sits on the buttons' centre
+const MENU_DOOR_ANCHOR = { cx: 837.5, cy: 697.5 };
+const MENU_DOOR_FIT = { padX: 60, padY: 58, minWidth: 230, maxArch: 150, footRadius: 46 };
 
-function menuDoorIsWide() {
-  return MENU_DOOR_WIDE_SCREENS.includes(state.menuScreen || "main");
+// visible part of the menu content in viewport px: text width for plain buttons and lines,
+// the element box for framed things (save slots, the Settings card, Records)
+function menuDoorContentRect(panel) {
+  const root = panel.firstElementChild;
+  if (!root) return null;
+  const parts = root.matches(".main-menu-actions") ? [...root.children] : [root];
+  const rects = parts
+    .map((el) => {
+      const box = el.getBoundingClientRect();
+      if (!el.matches(".menu-button, .quit-copy")) return box;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const text = range.getBoundingClientRect();
+      return { left: text.left, right: text.right, top: box.top, bottom: box.bottom, width: text.width, height: box.height };
+    })
+    .filter((r) => r.width > 0 && r.height > 0);
+  if (!rects.length) return null;
+  return {
+    left: Math.min(...rects.map((r) => r.left)),
+    right: Math.max(...rects.map((r) => r.right)),
+    top: Math.min(...rects.map((r) => r.top)),
+    bottom: Math.max(...rects.map((r) => r.bottom))
+  };
 }
 
-// the backdrop node is moved into every re-rendered menu, which drops CSS transitions; it keeps its
-// classes, so flush the old look first and then switch, and the doorway animates between screens
-function updateMenuDoorWidth() {
+// distance from the top of the arch to its centre of mass (rounded top, small rounded foot)
+function menuDoorCentroidFromTop(width, height, arch, foot) {
+  let sum = 0;
+  let weighted = 0;
+  for (let y = 0.5; y < height; y += 1) {
+    let w = width;
+    if (y < arch) w = width * Math.sqrt(Math.max(0, 1 - ((arch - y) / arch) ** 2));
+    else if (y > height - foot) {
+      const dy = (y - (height - foot)) / foot;
+      w = width - 2 * foot * (1 - Math.sqrt(Math.max(0, 1 - dy * dy)));
+    }
+    sum += w;
+    weighted += w * y;
+  }
+  return sum ? weighted / sum : height / 2;
+}
+
+// ox, oy, s: the stage transform (viewport px = art px * s + offset)
+function fitMenuDoor(panel, ox, oy, s) {
   const door = document.querySelector(".menu-door");
-  if (!door) return;
-  const wide = menuDoorIsWide();
-  if (door.classList.contains("door-wide") === wide) return;
-  void getComputedStyle(door).transform;
-  door.classList.toggle("door-wide", wide);
+  const content = panel && menuDoorContentRect(panel);
+  if (!door || !content) return;
+  const fit = MENU_DOOR_FIT;
+  const left = (content.left - ox) / s;
+  const right = (content.right - ox) / s;
+  const top = (content.top - oy) / s;
+  const bottom = (content.bottom - oy) / s;
+  const width = Math.max(right - left + fit.padX * 2, fit.minWidth);
+  const arch = Math.min(width / 2, fit.maxArch);
+  const height = bottom - top + fit.padY * 2 + arch * 0.55;
+  const centreY = (top + bottom) / 2;
+  const doorTop = centreY - menuDoorCentroidFromTop(width, height, arch, fit.footRadius);
+  const next = {
+    left: `${((left + right) / 2 - width / 2).toFixed(1)}px`,
+    top: `${doorTop.toFixed(1)}px`,
+    width: `${width.toFixed(1)}px`,
+    height: `${height.toFixed(1)}px`,
+    "--door-arch": `${arch.toFixed(1)}px`
+  };
+  // the backdrop node is moved into every re-rendered menu, which drops CSS transitions:
+  // flush the old box first so the doorway animates between screens (the first fit just appears)
+  const first = !door.classList.contains("door-fitted");
+  if (!first) void getComputedStyle(door).width;
+  for (const [key, value] of Object.entries(next)) door.style.setProperty(key, value);
+  if (first) {
+    void getComputedStyle(door).width;
+    door.classList.add("door-fitted");
+  }
 }
 
 function menuReducedMotion() {
@@ -18031,7 +18090,7 @@ function renderMenuBackdrop() {
         </svg>
         <div class="menu-stage">
           <div class="menu-bg-spin"><img class="menu-bg-img" src="assets/ui/menu/menu-bg-spin.jpg" alt=""></div>
-          <img class="menu-door" src="assets/ui/menu/menu-door.webp" alt="">
+          <div class="menu-door"></div>
           <div class="menu-logo-glow"></div>
           ${renderMenuFigure("jesus")}
           ${renderMenuFigure("satan")}
@@ -18062,7 +18121,6 @@ function initMenuBackdrop() {
   const crown = document.querySelector(".menu-fig .fig-crown-shimmer");
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
-  updateMenuDoorWidth();
   initMenuFigures(menuReducedMotion());
   bindMenuFigureTriggers();
   if (!menuBackdropState.resizeBound) {
@@ -18099,18 +18157,18 @@ function layoutMenuBackdrop() {
   const zoom = Math.max(1, (far + 2) / MENU_BG_COVER);
   const spin = stage.querySelector(".menu-bg-spin");
   if (spin) spin.style.transform = `scale(${zoom.toFixed(4)})`;
-  // centre the menu buttons inside the solid part of the fixed dark doorway
+  // centre the menu buttons on the anchor point, then fit the dark doorway around them
   const panel = document.querySelector(".main-menu-panel");
   const menu = document.querySelector(".main-menu");
   if (panel && menu) {
-    const doorX = ox + MENU_DOOR.cx * s;
-    const solidHeight = (MENU_DOOR.solidBottom - MENU_DOOR.solidTop) * (menuDoorIsWide() ? MENU_DOOR_WIDE_SCALE_Y : 1);
-    const doorMid = oy + (MENU_DOOR.top + MENU_DOOR.solidTop + solidHeight / 2) * s;
+    const anchorX = ox + MENU_DOOR_ANCHOR.cx * s;
+    const anchorY = oy + MENU_DOOR_ANCHOR.cy * s;
     const h = panel.offsetHeight;
-    const top = Math.max(8, Math.min(doorMid - h / 2, vh - h - 12));
+    const top = Math.max(8, Math.min(anchorY - h / 2, vh - h - 12));
     panel.classList.add("door-anchored");
-    panel.style.left = `${doorX}px`;
+    panel.style.left = `${anchorX}px`;
     panel.style.top = `${top}px`;
+    fitMenuDoor(panel, ox, oy, s);
   }
 }
 

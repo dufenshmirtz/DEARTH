@@ -5305,28 +5305,40 @@ body.native-arcade .main-menu {
   }
 }
 
-/* the dark doorway behind the buttons stays fixed while the background turns */
-.menu-door {
-  left: 696px;
-  top: 476px;
-  width: 283px;
-  height: 452px;
-  transform-origin: 50% 12%;
-  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
+@property --door-arch {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 115px;
 }
 
-/* Options and Settings: the doorway opens wider (scale Y matches MENU_DOOR_WIDE_SCALE_Y in 09-rendering.js) */
-.menu-door.door-wide {
-  transform: scale(1.7, 1.14);
+/* the dark doorway behind the buttons: a soft black arch that stays still while the background turns.
+   fitMenuDoor (09-rendering.js) sets its box (art px) and --door-arch to fit the current screen */
+.menu-door {
+  left: 727px;
+  top: 520px;
+  width: 230px;
+  height: 330px;
+  background: #000;
+  border-radius: 50% 50% 46px 46px / var(--door-arch, 115px) var(--door-arch, 115px) 46px 46px;
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.menu-door.door-fitted {
+  transition:
+    left 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    top 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    width 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    height 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    --door-arch 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu-door {
+  .menu-door.door-fitted {
     transition: none;
   }
 }
 
-.menu-door,
 .menu-logo img {
   user-select: none;
   -webkit-user-drag: none;
@@ -5372,7 +5384,7 @@ body.native-arcade .main-menu {
   }
 }
 
-/* Menu buttons sit centred in the fixed dark doorway (position set by layoutMenuBackdrop) */
+/* Menu buttons sit centred on the menu anchor, with the doorway fitted around them (layoutMenuBackdrop) */
 .main-menu-panel.door-anchored {
   position: absolute;
   z-index: 2;
