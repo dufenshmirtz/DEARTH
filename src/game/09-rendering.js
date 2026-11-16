@@ -2506,7 +2506,8 @@ function consoleActionState() {
       ? "Penalties are locked in. Satan has sealed Devil's Offerings."
       : "Penalties are locked in. Devil's Offerings is still available before you advance.";
   } else if (state.stage === "ended") {
-    buttonText = "Restart";
+    // inspecting the death screen's round: the button goes back to the death screen
+    buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
     inputDisabled = "disabled";
     hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {

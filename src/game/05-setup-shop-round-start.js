@@ -2347,7 +2347,13 @@ function performMainAction() {
     playNextRoundSfx();
     advanceAfterSummary();
   } else if (state.stage === "ended") {
-    startGame();
+    if (state.gameOver && state.inspectingGameOver) {
+      // Inspect on the death screen: back to the death screen, not a new run
+      state.inspectingGameOver = false;
+      render();
+    } else {
+      startGame();
+    }
   }
 }
 

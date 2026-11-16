@@ -10727,7 +10727,13 @@ function performMainAction() {
     playNextRoundSfx();
     advanceAfterSummary();
   } else if (state.stage === "ended") {
-    startGame();
+    if (state.gameOver && state.inspectingGameOver) {
+      // Inspect on the death screen: back to the death screen, not a new run
+      state.inspectingGameOver = false;
+      render();
+    } else {
+      startGame();
+    }
   }
 }
 
@@ -17258,7 +17264,8 @@ function consoleActionState() {
       ? "Penalties are locked in. Satan has sealed Devil's Offerings."
       : "Penalties are locked in. Devil's Offerings is still available before you advance.";
   } else if (state.stage === "ended") {
-    buttonText = "Restart";
+    // inspecting the death screen's round: the button goes back to the death screen
+    buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
     inputDisabled = "disabled";
     hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {

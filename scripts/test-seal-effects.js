@@ -4299,3 +4299,26 @@ test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only wh
     `);
   }
 });
+
+test("Death screen: after Inspect the main button says Back and returns to the death screen instead of restarting", () => {
+  game()(`
+    globalThis.render = () => {};
+    let restarted = false;
+    globalThis.startGame = () => { restarted = true; };
+    state.mode = "arcade";
+    state.stage = "ended";
+    state.gameOver = true;
+    state.inspectingGameOver = false;
+    assert.equal(consoleActionState().buttonText, "Restart");
+    state.inspectingGameOver = true;
+    assert.equal(consoleActionState().buttonText, "Back");
+    performMainAction();
+    assert.equal(state.inspectingGameOver, false);
+    assert.equal(restarted, false);
+    assert.equal(state.stage, "ended");
+    // a run that ended without the death screen still restarts
+    state.gameOver = false;
+    performMainAction();
+    assert.equal(restarted, true);
+  `);
+});
