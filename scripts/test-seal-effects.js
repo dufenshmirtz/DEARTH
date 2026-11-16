@@ -4197,3 +4197,28 @@ test("Seal of Aim: three CRITICALS in a row give +2 CRITICAL range, not +3; a ro
     assert.equal(state.critMomentumBonus, 0);
   `);
 });
+
+test("Jesus' tutorial guess: the guess he writes in lands on the TARGET it makes (or as close as any guess can)", () => {
+  game()(`
+    const cases = [[46, 60, 48, 73, 62], [0, 0, 0, 0, 0], [100, 100, 100, 100, 100], [57, 56, 21, 28, 25]];
+    cases.forEach((guesses) => {
+      fixture([], guesses);
+      state.round = 1;
+      state.bots.forEach((bot, index) => { bot.plannedGuess = guesses[index]; });
+      state.roundState.targetModifier = 0.8;
+      state.roundState.targetOffset = 0;
+      const forecast = jesusGuideForecast();
+      state.roundState.playerEffectiveGuess = forecast.guess;
+      recalculateTarget();
+      assert.equal(state.roundState.target, forecast.target);
+      let bestMiss = Infinity;
+      for (let guess = 0; guess <= 100; guess += 1) {
+        state.roundState.playerEffectiveGuess = guess;
+        recalculateTarget();
+        bestMiss = Math.min(bestMiss, Math.abs(guess - state.roundState.target));
+      }
+      assert.equal(forecast.miss, bestMiss);
+      assert.equal(forecast.others, 5);
+    });
+  `);
+});

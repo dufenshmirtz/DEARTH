@@ -18246,6 +18246,8 @@ function drawCloth(rig, t) {
    1. Black screen, silence. After INTRO_BLACK_MS the bell tolls and the judgement dialogue starts
       (Jesus on the left, the sinner on the right, one text box in the middle).
    2. The game boots with the Devil's Offerings, ARTIFACTS and SEAL slots blacked out and no music.
+      Jesus stands at the table and explains it before the first guess (JESUS_GUIDE_LINES), writes in the
+      guess that hits the TARGET, and comes back once when round 1's TARGET is revealed (JESUS_REVEAL_LINES).
    3. When round 2 is resolved, Satan stands on the right of the screen and his text box opens over
       the SEAL slots. After the pact the hidden parts burn back into place, the music starts and
       the run goes on as a normal, saved run.
@@ -18299,6 +18301,37 @@ const INTRO_JUDGEMENT_LINES = [
   ["jesus", "Be ready, the game is about to start."],
   ["you", "Alright that's great and all, but how many enemies do I have to defeat again?"]
 ];
+
+// Jesus at the tutorial table, before the first guess. Third item: what the veil lights up while he says it
+// (a key of JESUS_GUIDE_FOCUS); fourth "fill": he writes his guess into the guess box.
+// {MOD} the modifier, {OTHERS} how many DAMNED sit at the table, {AVG} their average guess (he knows it),
+// {GUESS} the guess that lands closest to the TARGET it makes, {TARGET} that TARGET.
+const JESUS_GUIDE_LINES = [
+  ["jesus", "You asked how many. ALL of them. Now sit down and listen, I will explain my game once and only once."],
+  ["jesus", "These are the DAMNED, wretches just like you. Every round each of them guesses a number from 0 to 100, and so do you.", "table"],
+  ["jesus", "This is your SOUL. When it is gone, so are you, and this time there will be no one left to beg.", "soul"],
+  ["jesus", "When everyone has guessed, I take the average of all the guesses, multiply it by the MODIFIER and round it up. That is the TARGET.", "target"],
+  ["jesus", "Every point between your guess and the TARGET is torn out of your SOUL. And whoever guessed worst at the table loses a tenth of their max SOUL on top.", "target"],
+  ["jesus", "Now pay attention, because this is where every one of you fools fails. The MODIFIER. Right now it is {MOD}.", "modifier"],
+  ["jesus", "If everyone guesses 50, the TARGET is 40. But the clever ones see that coming and guess 40, and then the TARGET is 32. Never guess what the others will guess. Guess what they will guess, times the MODIFIER.", "modifier"],
+  ["jesus", "And it will not stay {MOD}. The BOSSES bend it to their will. Some drag it lower, some push it past 1, and then the TARGET climbs above the average. Look at it before every single guess.", "modifier"],
+  ["jesus", "Hit the TARGET exactly and it is a CRITICAL. Every other soul at the table loses a tenth of their max SOUL. The closest thing to a miracle you will see down here.", "target"],
+  ["jesus", "Each DAMNED has a personality that decides how it guesses, and a MEMORY of the rounds it has seen. Hover over one to read it. Now and then a guess is REVEALED before you choose. Use it.", "revealed"],
+  ["jesus", "When a DAMNED runs out of SOUL it is gone, and a fresh one takes its seat. I count the fallen here. Fell enough of them and a BOSS sits down at the table.", "kos"],
+  ["jesus", "Now, your first guess. I already know what they will say, I am omniscient. The other {OTHERS} will average {AVG}.", "table"],
+  ["jesus", "Count your own guess in and the TARGET lands on {TARGET}. So you guess {GUESS}. I have written it in for you, press GUESS. And do not get used to it.", "guess", "fill"]
+];
+
+// Jesus again when round 1's TARGET is revealed. {N} guesses at the table, {AVG} their average, {MOD} the
+// modifier, {RAW} average x modifier, {TARGET}; {DIST} how far your guess was, {GUESS} the one he gave you
+const JESUS_REVEAL_LINES = {
+  sum: "There. The average of all {N} guesses is {AVG}. Times {MOD} that is {RAW}, rounded up: {TARGET}. The Calc line does this sum for you every round.",
+  critical: "Exactly on it. A CRITICAL. When you press READY, every other soul at the table pays a tenth of their max SOUL for it. You are welcome.",
+  close: "Off by {DIST}. Nobody could get closer this round, not even with my help. Count your blessings, you have few.",
+  missed: "You missed it by {DIST}. I gave you {GUESS} and you thought you knew better. Every one of those points comes out of your SOUL.",
+  missedAlone: "You missed it by {DIST}. Every one of those points comes out of your SOUL.",
+  ready: "Press READY and the damage lands. Then the next round begins, and I will not be there to hold your hand."
+};
 
 // third item: what happens on the click after the line ("evil": the pact sound before the next line);
 // "deal": the DEAL button appears, pulsing, as the line starts (introShowDealButton)
@@ -18419,21 +18452,21 @@ function introHoldsMusic() {
 }
 
 function introBlocksRunSave() {
-  return ["black", "judgement", "booting", "tutorial", "pact"].includes(introState.phase);
+  return ["black", "judgement", "booting", "tutorial", "guide-wait", "guide", "guide-leave", "pact"].includes(introState.phase);
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal"].includes(introState.phase);
+  return ["black", "judgement", "booting", "guide-wait", "guide", "guide-leave", "pact", "victory", "tightwad", "deal"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
 function introPlayerHpFloor() {
-  return introState.phase === "tutorial" || introState.phase === "pact" ? 1 : 0;
+  return ["tutorial", "guide-wait", "guide", "guide-leave", "pact"].includes(introState.phase) ? 1 : 0;
 }
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -18456,7 +18489,7 @@ function introClearTimers() {
 }
 
 function introRemoveLayers() {
-  document.querySelectorAll(".intro-layer, .intro-pact-layer, .intro-burn-canvas, .menu-jesus-flash").forEach((node) => node.remove());
+  document.querySelectorAll(".intro-layer, .intro-pact-layer, .intro-guide-layer, .intro-burn-canvas, .menu-jesus-flash").forEach((node) => node.remove());
   document.body.classList.remove("intro-tutorial", "intro-crt-on", "intro-running");
   introState.layer = null;
   introState.box = null;
@@ -18637,6 +18670,7 @@ function introShowLine(index) {
   box.classList.remove(...INTRO_SPEAKERS.map((name) => `intro-says-${name}`), "intro-box-hush");
   box.classList.add(`intro-says-${speaker}`);
   if (introState.layer) introState.layer.dataset.speaker = speaker;
+  if (introState.phase === "guide") jesusGuideShowFocus(introState.lines[index]);
   introDrawText();
   introFitText();
   introTypeTo(introState.ends[0]);
@@ -18679,7 +18713,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory", "tightwad", "deal"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "guide", "pact", "victory", "tightwad", "deal"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -18710,6 +18744,7 @@ function introAdvance() {
     return;
   }
   if (introState.phase === "judgement") introBootGame();
+  else if (introState.phase === "guide") jesusGuideLeave();
   else if (introState.phase === "victory") satanVictoryLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
   else if (introState.phase === "deal") satanDealEndOfLines();
@@ -18721,6 +18756,7 @@ function introBindKeys() {
   introState.keyBound = true;
   window.addEventListener("resize", () => {
     if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+    else if (introState.phase === "guide") jesusGuidePlace();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
@@ -18779,13 +18815,23 @@ function introBindSkip(layer) {
   });
 }
 
-// judgement: straight to the game (Satan still comes after round 2); pact: straight to its end;
-// Satan's offer: straight to its YES / NO
+// judgement: straight to the game (Satan still comes after round 2); Jesus at the table: he leaves and
+// does not come back at the reveal; pact: straight to its end; Satan's offer: straight to its YES / NO
 function introSkip() {
   if (introState.phase === "judgement") {
     introClearTimers();
     introState.typing = false;
     introBootGame();
+  } else if (introState.phase === "guide-wait") {
+    introClearTimers();
+    introState.guideSkipped = true;
+    introState.phase = "tutorial";
+  } else if (introState.phase === "guide") {
+    introClearTimers();
+    introState.typing = false;
+    introState.guideSkipped = true;
+    introState.guideFill = null;
+    jesusGuideLeave();
   } else if (introState.phase === "pact") {
     introClearTimers();
     introState.typing = false;
@@ -18817,6 +18863,10 @@ function startIntroSequence(options = {}) {
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   state.mobileOfferingsOpen = false;
   introState.phase = "black";
+  introState.guideSkipped = false;
+  introState.guideRevealDone = false;
+  introState.guideForecast = null;
+  introState.guideFill = null;
   introState.lines = INTRO_JUDGEMENT_LINES;
   introState.lineIndex = -1;
   ensureGameSfx("introThunder");
@@ -18876,6 +18926,7 @@ function introBootGame() {
     introState.layer = null;
     introState.box = null;
     introLater(() => document.body.classList.remove("intro-crt-on"), 1100);
+    jesusGuideBegin();
   }, INTRO_BOOT_REVEAL_MS);
 }
 
@@ -18893,6 +18944,7 @@ function introPactReady() {
 
 function introAfterRender() {
   if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+  jesusGuideAfterRender();
   satanVictoryAfterRender();
   satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
@@ -18919,6 +18971,262 @@ function introStartPactNow() {
   clearTimeout(introState.pactTimer);
   introState.pactTimer = null;
   introStartPact();
+}
+
+/* ---- 2b. Jesus at the tutorial table ----
+   A moment after the game switches on, Jesus stands on the right and explains the table line by line
+   (JESUS_GUIDE_LINES). The veil around him has a hole that moves to what each line is about
+   (JESUS_GUIDE_FOCUS); he fades back when that is behind him. His box sits over the hidden SEAL slots,
+   or on a phone over the larger free band above or below the lit part. His last line writes in the guess
+   that lands closest to the TARGET it makes (he knows what the DAMNED will say: their planned guesses).
+   When round 1's TARGET is revealed he comes back once for the sum and READY (JESUS_REVEAL_LINES).
+   Phases: guide-wait (input held until he walks in) > guide > guide-leave > tutorial.
+   skip / Esc sends him away, and then he does not come back at the reveal. */
+const JESUS_GUIDE_ENTER_MS = 1500; // after the game switches on
+const JESUS_GUIDE_REVEAL_MS = 900; // after round 1's TARGET is revealed
+const JESUS_GUIDE_LEAVE_MS = 900;
+
+// what the veil lights up: selectors whose boxes are joined, or a function returning the elements
+const JESUS_GUIDE_FOCUS = {
+  table: [".bot-grid"],
+  soul: [".topbar .health-wrap"],
+  target: [".target-panel"],
+  modifier: [".target-panel .target-modifier"],
+  calc: [".target-panel .target-big", ".target-panel .target-calc-line"],
+  kos: [".topbar .round-wrap"],
+  guess: ["#guessInput", "#mainAction", ".mobile-numpad"],
+  ready: ["#mainAction"],
+  // the REVEALED DAMNED, or the whole table when none is
+  revealed: () => {
+    const cards = state.bots
+      .filter((bot) => !bot.eliminated && bot.revealedByPassive)
+      .map((bot) => document.querySelector(`.bot-card[data-bot-id="${CSS.escape(String(bot.id))}"]`))
+      .filter(Boolean);
+    return cards.length ? cards : [...document.querySelectorAll(".bot-grid")];
+  }
+};
+
+function jesusGuideText(text, values) {
+  return text.replace(/\{(MOD|OTHERS|AVG|GUESS|TARGET|N|RAW|DIST)\}/g, (mark, key) => (values[key] === undefined ? mark : String(values[key])));
+}
+
+function jesusGuideDecimal(value) {
+  return String(Math.round(value * 10) / 10);
+}
+
+// what he knows: the DAMNED's planned guesses give the TARGET for each guess you could make; he picks the
+// one closest to the TARGET it makes (the same sum as recalculateTarget)
+function jesusGuideForecast() {
+  const round = state.roundState;
+  if (!round) return null;
+  const bots = state.bots.filter((bot) => !bot.eliminated && !round.removedBotIds?.has(bot.id) && Number.isFinite(bot.plannedGuess));
+  if (!bots.length) return null;
+  let total = 0;
+  let weight = 0;
+  bots.forEach((bot) => {
+    const botWeight = botTargetWeight(bot);
+    total += bot.plannedGuess * botWeight;
+    weight += botWeight;
+  });
+  const average = total / weight;
+  (round.extraAverageGuesses || []).forEach((entry) => {
+    if (!Number.isFinite(entry.guess)) return;
+    total += entry.guess;
+    weight += 1;
+  });
+  const modifier = Number.isFinite(round.targetModifier) ? round.targetModifier : currentTargetModifier();
+  const offset = Number.isFinite(round.targetOffset) ? round.targetOffset : 0;
+  const playerWeight = 1 + wealthWeightBonus();
+  let best = null;
+  for (let guess = 0; guess <= playerGuessLimit(); guess += 1) {
+    const target = Math.ceil(Math.min(200, ((total + guess * playerWeight) / (weight + playerWeight)) * modifier + offset));
+    const miss = Math.abs(guess - target);
+    if (!best || miss < best.miss) best = { guess, target, miss };
+  }
+  return { ...best, others: bots.length, average, modifier };
+}
+
+function jesusGuideBegin() {
+  introState.phase = "guide-wait";
+  introLater(() => {
+    if (introState.phase !== "guide-wait") return;
+    if (state.mode !== "arcade" || state.stage !== "guess" || state.round !== 1 || state.pauseOpen) {
+      introState.phase = "tutorial";
+      return;
+    }
+    const forecast = jesusGuideForecast();
+    introState.guideForecast = forecast;
+    const values = { MOD: formatModifier(forecast?.modifier ?? currentTargetModifier()) };
+    if (forecast) Object.assign(values, { OTHERS: forecast.others, AVG: Math.round(forecast.average), GUESS: forecast.guess, TARGET: forecast.target });
+    const lines = JESUS_GUIDE_LINES
+      .filter(([, text]) => forecast || !/\{(AVG|GUESS)\}/.test(text))
+      .map(([speaker, text, focus, action]) => [speaker, jesusGuideText(text, values), focus, action]);
+    introPlaySfx("introBell");
+    jesusGuideOpen(lines);
+  }, JESUS_GUIDE_ENTER_MS);
+}
+
+function jesusRevealLines() {
+  const round = state.roundState;
+  const guesses = 1 + state.bots.filter((bot) => round.botEffectiveGuesses?.has(bot.id) && !round.removedBotIds?.has(bot.id)).length;
+  const values = {
+    N: guesses,
+    AVG: jesusGuideDecimal(round.tableAverage),
+    MOD: formatModifier(round.targetModifier),
+    RAW: jesusGuideDecimal(round.tableAverage * round.targetModifier + (round.targetOffset || 0)),
+    TARGET: formatNumber(round.target)
+  };
+  const lines = [["jesus", jesusGuideText(JESUS_REVEAL_LINES.sum, values), "calc"]];
+  const guess = round.playerEffectiveGuess;
+  const dist = Math.abs(Math.ceil(guess) - Math.ceil(round.target));
+  const forecast = introState.guideForecast;
+  const missValues = { DIST: dist, GUESS: forecast?.guess };
+  if (Number.isFinite(guess)) {
+    if (dist === 0) lines.push(["jesus", JESUS_REVEAL_LINES.critical, "table"]);
+    else if (forecast && guess === forecast.guess) lines.push(["jesus", jesusGuideText(JESUS_REVEAL_LINES.close, missValues), "guess"]);
+    else if (forecast) lines.push(["jesus", jesusGuideText(JESUS_REVEAL_LINES.missed, missValues), "guess"]);
+    else lines.push(["jesus", jesusGuideText(JESUS_REVEAL_LINES.missedAlone, missValues), "guess"]);
+  }
+  lines.push(["jesus", JESUS_REVEAL_LINES.ready, "ready"]);
+  return lines;
+}
+
+// round 1's TARGET is up: he comes back once (not after a skip)
+function jesusGuideAfterRender() {
+  if (introState.phase === "guide") jesusGuidePlace();
+  if (introState.phase !== "tutorial" || introState.guideRevealDone || introState.guideSkipped) return;
+  if (state.mode !== "arcade" || state.round !== 1 || state.stage !== "active" || state.pauseOpen) return;
+  if (!Number.isFinite(state.roundState?.target) || roundRevealAnimationActive()) return;
+  introState.guideRevealDone = true;
+  introState.phase = "guide-wait";
+  introLater(() => {
+    if (introState.phase !== "guide-wait") return;
+    if (state.mode !== "arcade" || state.round !== 1 || state.stage !== "active" || state.pauseOpen) {
+      introState.phase = "tutorial";
+      return;
+    }
+    jesusGuideOpen(jesusRevealLines());
+  }, JESUS_GUIDE_REVEAL_MS);
+}
+
+function jesusGuideOpen(lines) {
+  introBindKeys();
+  introState.phase = "guide";
+  introState.lines = lines;
+  introState.guideFocus = null;
+  introState.guideFill = null;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  document.querySelector("#floatingTooltip")?.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-guide-layer";
+  layer.innerHTML = `
+    <div class="intro-guide-spot intro-guide-spot-none" aria-hidden="true"></div>
+    <div class="intro-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("guide")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introShowLine(0);
+}
+
+// called by introShowLine before the text is fitted
+function jesusGuideShowFocus(line) {
+  introState.guideFocus = line[2] || null;
+  if (line[3] === "fill" && introState.guideForecast && state.stage === "guess") {
+    introState.guideFill = introState.guideForecast.guess;
+    setGuessInputValue(String(introState.guideFill));
+  }
+  jesusGuidePlace();
+}
+
+function jesusGuideFocusRect(key) {
+  const focus = JESUS_GUIDE_FOCUS[key];
+  if (!focus) return null;
+  const nodes = typeof focus === "function" ? focus() : focus.flatMap((selector) => [...document.querySelectorAll(selector)]);
+  const rects = nodes.map((node) => node.getBoundingClientRect()).filter((rect) => rect.width && rect.height);
+  if (!rects.length) return null;
+  const pad = 12;
+  const left = Math.max(2, Math.min(...rects.map((rect) => rect.left)) - pad);
+  const top = Math.max(2, Math.min(...rects.map((rect) => rect.top)) - pad);
+  const right = Math.min(window.innerWidth - 2, Math.max(...rects.map((rect) => rect.right)) + pad);
+  const bottom = Math.min(window.innerHeight - 2, Math.max(...rects.map((rect) => rect.bottom)) + pad);
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
+function jesusGuideOverlap(a, b) {
+  const width = Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
+  const height = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
+  return width > 0 && height > 0 ? width * height : 0;
+}
+
+// over the hidden SEAL bar when it has room and is clear of the lit part (desktop);
+// otherwise (phones) the larger free band above or below the lit part, on the left of him
+function jesusGuideBoxRect(focus) {
+  const slots = introPactRect();
+  const bar = document.querySelector(".passive-bar")?.getBoundingClientRect();
+  const base = slots && bar && bar.width ? { left: slots.left, top: slots.top, height: slots.height, width: Math.max(slots.width, Math.min(bar.right - slots.left - 10, 980)) } : slots;
+  if (base && base.height >= 140 && (!focus || !jesusGuideOverlap(base, focus))) return base;
+  const margin = 6;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.66));
+  const above = focus ? focus.top - margin * 2 : 0;
+  const below = focus ? vh - focus.bottom - margin * 2 : vh;
+  const maxHeight = Math.min(180, vh * 0.46);
+  const minHeight = Math.min(100, vh * 0.28);
+  const height = clamp(Math.max(above, below), minHeight, maxHeight);
+  return { left: margin, top: below >= above ? vh - margin - height : margin, width, height };
+}
+
+function jesusGuidePlace() {
+  const layer = introState.layer;
+  const box = introState.box;
+  if (!layer || !box || !box.classList.contains("intro-box-guide")) return;
+  const focus = jesusGuideFocusRect(introState.guideFocus);
+  const spot = layer.querySelector(".intro-guide-spot");
+  if (spot) {
+    // no focus: the hole closes to a point over the table and the whole screen is veiled
+    const place = focus || { left: window.innerWidth * 0.4, top: window.innerHeight * 0.35, width: 0, height: 0 };
+    spot.classList.toggle("intro-guide-spot-none", !focus);
+    spot.style.left = `${Math.round(place.left)}px`;
+    spot.style.top = `${Math.round(place.top)}px`;
+    spot.style.width = `${Math.round(place.width)}px`;
+    spot.style.height = `${Math.round(place.height)}px`;
+  }
+  const rect = jesusGuideBoxRect(focus);
+  box.style.left = `${Math.round(rect.left)}px`;
+  box.style.top = `${Math.round(rect.top)}px`;
+  box.style.width = `${Math.round(rect.width)}px`;
+  box.style.height = `${Math.round(rect.height)}px`;
+  introFitText();
+  // he steps back when what he points at is behind him
+  const figure = layer.querySelector(".intro-jesus")?.getBoundingClientRect();
+  const hidden = focus && figure ? jesusGuideOverlap(figure, focus) : 0;
+  layer.classList.toggle("intro-guide-aside", Boolean(focus && hidden > focus.width * focus.height * 0.12));
+}
+
+function jesusGuideLeave() {
+  if (introState.phase !== "guide") return;
+  introSetWaiting(false);
+  introState.phase = "guide-leave";
+  introState.box?.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-guide-leaving");
+  const fill = introState.guideFill;
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introState.phase = "tutorial";
+    // his guess stays in the box unselected (Enter submits it without leaving it highlighted)
+    state.shouldFocusGuessInput = state.stage === "guess" && !Number.isFinite(fill);
+    render();
+    if (!Number.isFinite(fill) || state.stage !== "guess") return;
+    setGuessInputValue(String(fill));
+    const input = document.querySelector("#guessInput");
+    if (input && !input.readOnly && !input.disabled) input.focus({ preventScroll: true });
+  }, JESUS_GUIDE_LEAVE_MS);
 }
 
 /* ---- Satan returns: the 8 unique BOSSES are beaten ----
