@@ -37,7 +37,7 @@ const INTRO_JUDGEMENT_LINES = [
   ["you", "I am sure I went to church like, at least 4 times! And during one Easter I even fasted!"],
   ["jesus", "SILENCE{THUNDER}. My word is final. And during the Easter of 2018 you fasted only because you had gotten food poisoning from eating ten day old pizza."],
   ["you", "Okay okay, but I can change. In middle school we learned that you always accept your children when they turn to you, prodigal son and all that. So please, just send me back and I promise I will do good this time."],
-  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, voting conservative, being a good Samaritan, loving my neighbor, hating all the homosexuals, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at heretics..."],
+  ["you", "If I knew you were real I would be going to church every day, having faith and doubt not, voting conservative, being a good Samaritan, loving my neighbor, refusing premarital relations, honoring my father and my mother, trusting in the lord with all my heart, throwing rocks at heretics..."],
   ["you", "..."],
   ["you", "Jesus?"],
   ["you", "Hey please, talk to me!"],
