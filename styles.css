@@ -9997,6 +9997,52 @@ body.mobile-arcade .intro-box-guide::before {
   border-image-width: 18px;
 }
 
+/* Satan's lesson after the pact (satanLessonBegin): the same scene in his colours */
+.intro-guide-satan .intro-guide-spot {
+  box-shadow: 0 0 26px 4px rgba(220, 30, 30, 0.14), 0 0 46px 200vmax rgba(0, 0, 0, 0.7);
+}
+
+.intro-guide-satan .intro-satan img {
+  filter: brightness(1) drop-shadow(0 0 22px rgba(220, 25, 25, 0.45));
+}
+
+.intro-guide-satan .intro-satan::before,
+.intro-guide-satan .intro-satan img {
+  transition: opacity 0.5s ease, filter 0.7s ease;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-satan img {
+  opacity: 0.14;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-satan::before {
+  opacity: 0;
+}
+
+.intro-guide-leaving .intro-satan {
+  animation: intro-satan-out 1.3s ease-in both;
+}
+
+.intro-guide-satan .intro-box-guide::before {
+  filter: brightness(0.5) sepia(1) saturate(10) hue-rotate(-48deg);
+}
+
+.intro-guide-satan .intro-box-guide::after {
+  box-shadow: 0 0 34px rgba(190, 18, 18, 0.28), inset 0 0 40px rgba(150, 10, 10, 0.25);
+}
+
+.intro-guide-satan .intro-box-guide.intro-box-leave {
+  animation: intro-pact-out 1.3s ease-in both;
+}
+
+.intro-guide-satan .intro-skip {
+  color: #b5545a !important;
+}
+
+.intro-guide-satan .intro-skip:hover {
+  color: #ff5a5f !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .intro-guide-spot { transition: opacity 0.9s ease; }
   .intro-jesus img { animation: none; -webkit-mask-image: none; mask-image: none; }
