@@ -1108,6 +1108,7 @@ function satanDealBoxRect(rect) {
 // hidden in the story's tutorial; greyed out once the deal is made, refused or locked
 function satanDealButtonHtml() {
   if (state.mode !== "arcade") return "";
+  if (["pact", "reveal"].includes(introState.phase) && introState.dealShownAt) return satanDealIntroButtonHtml();
   if (["black", "judgement", "booting", "tutorial", "pact", "reveal"].includes(introState.phase)) return "";
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
@@ -1127,6 +1128,13 @@ function satanDealButtonHtml() {
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
   return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+}
+
+// in the story, from the line where Satan names the button: it fades in and pulses red (.deal-intro-show in styles.css);
+// the delay keeps the fade and the pulse running through renders. It can't be pressed until the story is over.
+function satanDealIntroButtonHtml() {
+  const delay = `-${Math.max(0, Date.now() - introState.dealShownAt)}ms`;
+  return `<button class="pause-button deal-button deal-contract deal-intro-show" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="Make a deal with Satan. Once per run." style="animation-delay: ${delay}, ${delay}" disabled>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----

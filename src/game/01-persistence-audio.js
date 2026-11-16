@@ -606,7 +606,7 @@ function saveArcadeRun() {
     arcadeRunSaveTimer = null;
   }
   if (state.mode !== "arcade") return;
-  // the story's two tutorial rounds are not a saved run until the pact is made
+  // the story's tutorial rounds are not a saved run until the pact is made
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
   if (state.gameOver) {
     removeArcadeRunSlot(state.currentRunSlotId);

@@ -2119,7 +2119,7 @@ function clearMarkedProspects() {
 
 function advanceAfterSummary() {
   if (state.stage !== "summary") return;
-  // first-launch story: from round 2 the results wait for Satan; moving on brings him in now
+  // first-launch story: from round INTRO_PACT_ROUND the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
     return;
