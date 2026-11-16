@@ -15389,3 +15389,94 @@ body.mobile-arcade .finale-figure-you {
   height: 58vh;
   max-width: 30vw;
 }
+
+/* ==========================================================================
+   Credits (Options > Credits, renderCreditsMenu in 09-credits.js): a framed card
+   like the Records, centred on the screen; the list scrolls when it is too tall.
+   ========================================================================== */
+#app .main-menu-panel.menu-screen-credits {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(560px, 92vw) !important;
+  z-index: 5;
+}
+#app .credits-menu {
+  gap: 10px;
+  justify-items: center;
+  padding: 24px 30px 18px;
+}
+#app .credits-scroll {
+  width: 100%;
+  max-height: min(62vh, 560px);
+  overflow-y: auto;
+  padding: 14px 6px 6px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+  text-align: center;
+}
+#app .credits-section {
+  margin: 0 0 18px;
+}
+#app .credits-heading {
+  margin: 0 0 6px;
+  font-family: "Razor Keen", serif !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+#app .credits-lines {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#app .credits-line {
+  display: grid;
+  gap: 1px;
+}
+#app .credits-name {
+  font-family: "Razor Keen", serif !important;
+  font-size: 20px !important;
+  color: var(--bone) !important;
+}
+#app .credits-team .credits-name {
+  font-size: 26px !important;
+}
+#app .credits-note {
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  color: rgba(233, 227, 214, 0.62) !important;
+}
+#app .credits-closing {
+  margin: 6px 0 4px;
+  font-family: var(--font-book) !important;
+  font-style: italic !important;
+  font-size: 16px !important;
+  color: var(--blood-bright) !important;
+}
+#app .credits-menu > .secondary-menu-button {
+  justify-self: center;
+}
+
+/* phone: landscape, little height */
+body.mobile-arcade #app .credits-menu,
+body.native-arcade #app .credits-menu {
+  gap: 6px;
+  padding: 12px 18px 10px;
+}
+body.mobile-arcade #app .credits-scroll,
+body.native-arcade #app .credits-scroll {
+  max-height: 56vh;
+}
+body.mobile-arcade #app .credits-section,
+body.native-arcade #app .credits-section {
+  margin-bottom: 10px;
+}
+body.mobile-arcade #app .credits-team .credits-name,
+body.native-arcade #app .credits-team .credits-name {
+  font-size: 20px !important;
+}

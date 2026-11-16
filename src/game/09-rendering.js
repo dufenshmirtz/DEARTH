@@ -162,6 +162,8 @@ function renderMenuApp() {
                 ? renderSoundOptionsMenu()
                 : screen === "records"
                   ? renderRecordsMenu()
+                  : screen === "credits"
+                    ? renderCreditsMenu()
                   : screen === "quit"
                     ? renderQuitMenu()
                     : renderMainMenu()
@@ -280,6 +282,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button" data-menu-action="gifts">Shop</button>
+      <button class="menu-button" data-menu-action="credits">Credits</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -3009,6 +3012,11 @@ function handleMenuAction(action) {
   if (action === "records") {
     state.menuScreen = "records";
     state.recordsTab = null;
+    render();
+    return;
+  }
+  if (action === "credits") {
+    state.menuScreen = "credits";
     render();
     return;
   }
