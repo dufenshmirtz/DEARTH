@@ -13007,6 +13007,68 @@ body.reduce-flashes .deal-button.pact-calling {
   cursor: default;
 }
 
+/* the story: Satan names DEAL and it appears under Pause, fading in, then pulsing white to blood red and a little
+   bigger (introShowDealButton); his veil opens a soft gap around it (.intro-deal-spot) */
+@keyframes deal-intro-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes deal-intro-pulse {
+  0%, 100% { --pact-call: #ffffff; scale: 1; }
+  50% { --pact-call: #dc2a2f; scale: 1.14; }
+}
+
+#app .deal-button.deal-intro-show {
+  color: var(--pact-call) !important;
+  animation: deal-intro-in 0.7s ease-out both, deal-intro-pulse 1.4s ease-in-out infinite;
+}
+
+#app .deal-button.deal-intro-show:disabled {
+  opacity: 1;
+}
+
+body.reduce-flashes #app .deal-button.deal-intro-show {
+  animation: deal-intro-in 0.7s ease-out both;
+  --pact-call: #dc2a2f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .deal-button.deal-intro-show {
+    animation: deal-intro-in 0.7s ease-out both;
+    --pact-call: #dc2a2f;
+  }
+}
+
+/* the veil moves to ::before so the gap in it does not cut Satan or his box */
+.intro-pact-layer.intro-deal-spot {
+  background: transparent;
+  animation: none;
+}
+
+.intro-pact-layer.intro-deal-spot::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000, #000), radial-gradient(closest-side, #000 72%, transparent 100%);
+  -webkit-mask-size: 100% 100%, var(--deal-spot-w) var(--deal-spot-h);
+  -webkit-mask-position: 0 0, var(--deal-spot-x) var(--deal-spot-y);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-image: linear-gradient(#000, #000), radial-gradient(closest-side, #000 72%, transparent 100%);
+  mask-size: 100% 100%, var(--deal-spot-w) var(--deal-spot-h);
+  mask-position: 0 0, var(--deal-spot-x) var(--deal-spot-y);
+  mask-repeat: no-repeat;
+  mask-composite: exclude;
+  transition: opacity 1.3s ease;
+}
+
+.intro-pact-layer.intro-deal-spot.intro-pact-leaving::before {
+  opacity: 0;
+}
+
 /* where DEAL sits: desktop under Pause, between it and the testing buttons */
 body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button.deal-button {
   top: 66px !important;

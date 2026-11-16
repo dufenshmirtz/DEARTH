@@ -18300,7 +18300,8 @@ const INTRO_JUDGEMENT_LINES = [
   ["you", "Alright that's great and all, but how many enemies do I have to defeat again?"]
 ];
 
-// third item: what happens on the click after the line ("evil": the pact sound before the next line)
+// third item: what happens on the click after the line ("evil": the pact sound before the next line);
+// "deal": the DEAL button appears, pulsing, as the line starts (introShowDealButton)
 const INTRO_PACT_LINES = [
   ["satan", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
   ["you", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
@@ -18317,7 +18318,7 @@ const INTRO_PACT_LINES = [
   ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
   ["satan", "Yea yea definitely, or whatever the other guy promised you."],
   ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya."],
+  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya.", "deal"],
   ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
   ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
 ];
@@ -18371,6 +18372,7 @@ const introState = {
   typing: false,
   waiting: false,
   pactTimer: null,
+  dealShownAt: 0, // when Satan named the DEAL button in the pact (it shows from then on, see satanDealButtonHtml)
   keyBound: false
 };
 
@@ -18465,6 +18467,7 @@ function introAbort() {
   introClearTimers();
   introRemoveLayers();
   introState.phase = "off";
+  introState.dealShownAt = 0;
   markIntroSeen();
   playSoundtrack();
 }
@@ -18637,6 +18640,7 @@ function introShowLine(index) {
   introDrawText();
   introFitText();
   introTypeTo(introState.ends[0]);
+  if (introState.lines[index][2] === "deal") introShowDealButton();
 }
 
 // a part of a line has finished typing; Satan's offer asks YES / NO as soon as its last part is down
@@ -19173,10 +19177,37 @@ function introPlacePactBox() {
   box.style.width = `${rect.width}px`;
   box.style.height = `${rect.height}px`;
   introFitText();
+  introPlaceDealSpot();
+}
+
+// Satan names the DEAL button: it appears under Pause, pulsing, and the veil opens a gap around it
+function introShowDealButton() {
+  if (introState.phase !== "pact" || introState.dealShownAt) return;
+  introState.dealShownAt = Date.now();
+  render();
+  introPlaceDealSpot();
+}
+
+function introPlaceDealSpot() {
+  const layer = introState.layer;
+  if (!layer || introState.phase !== "pact" || !introState.dealShownAt) return;
+  const rect = document.querySelector("#dealButton")?.getBoundingClientRect();
+  if (!rect || !rect.width || !rect.height) {
+    layer.classList.remove("intro-deal-spot");
+    return;
+  }
+  const width = Math.round(rect.width * 1.8 + 36);
+  const height = Math.round(rect.height * 2.2 + 36);
+  layer.style.setProperty("--deal-spot-x", `${Math.round(rect.left + rect.width / 2 - width / 2)}px`);
+  layer.style.setProperty("--deal-spot-y", `${Math.round(rect.top + rect.height / 2 - height / 2)}px`);
+  layer.style.setProperty("--deal-spot-w", `${width}px`);
+  layer.style.setProperty("--deal-spot-h", `${height}px`);
+  layer.classList.add("intro-deal-spot");
 }
 
 function introStartPact() {
   introState.phase = "pact";
+  introState.dealShownAt = 0;
   introState.lines = INTRO_PACT_LINES;
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   const floatingTooltip = document.querySelector("#floatingTooltip");
@@ -19389,6 +19420,11 @@ function introFinish() {
   markIntroSeen();
   playSoundtrack();
   saveArcadeRun();
+  // the DEAL button shown since Satan named it settles into its usual look
+  if (introState.dealShownAt) {
+    introState.dealShownAt = 0;
+    render();
+  }
 }
 
 /* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
@@ -22460,6 +22496,7 @@ function satanDealBoxRect(rect) {
 // hidden in the story's tutorial; greyed out once the deal is made, refused or locked
 function satanDealButtonHtml() {
   if (state.mode !== "arcade") return "";
+  if (["pact", "reveal"].includes(introState.phase) && introState.dealShownAt) return satanDealIntroButtonHtml();
   if (["black", "judgement", "booting", "tutorial", "pact", "reveal"].includes(introState.phase)) return "";
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
@@ -22479,6 +22516,13 @@ function satanDealButtonHtml() {
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
   return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+}
+
+// in the story, from the line where Satan names the button: it fades in and pulses red (.deal-intro-show in styles.css);
+// the delay keeps the fade and the pulse running through renders. It can't be pressed until the story is over.
+function satanDealIntroButtonHtml() {
+  const delay = `-${Math.max(0, Date.now() - introState.dealShownAt)}ms`;
+  return `<button class="pause-button deal-button deal-contract deal-intro-show" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="Make a deal with Satan. Once per run." style="animation-delay: ${delay}, ${delay}" disabled>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
