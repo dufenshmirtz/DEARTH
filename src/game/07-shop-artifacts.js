@@ -240,7 +240,7 @@ function buyShopItem(slotIndex) {
     state.itemsBought += 1;
     slot.sold = true;
     syncShopSlotCount();
-    collectionNoteShopBuy();
+    collectionNoteShopBuy("seal");
     missionsNoteShop("buySeal");
     applyGuessReveals();
     playSealPurchaseSfx();
@@ -265,7 +265,7 @@ function buyShopItem(slotIndex) {
   state.itemsBought += 1;
   slot.sold = true;
   syncShopSlotCount();
-  collectionNoteShopBuy();
+  collectionNoteShopBuy("artifact");
   missionsNoteShop("buyArtifact");
   addLog(`Bought ${item.name}.`);
   playGameSfx("artifactBuy");
@@ -294,6 +294,7 @@ function rerollShopClick() {
     return;
   }
   spendCredits(cost);
+  collectionNotePlayerReroll(free ? 0 : cost);
   if (state.roundState) {
     state.roundState.rerollSinSpentThisRound = (state.roundState.rerollSinSpentThisRound || 0) + Math.max(0, Math.ceil(cost));
   }
@@ -324,6 +325,7 @@ function rerollShopPayingSatanToll() {
   state.player.credits = 0;
   state.satanRerollToll = false;
   state.satanTightwadAbove = false;
+  collectionNotePlayerReroll(lost);
   rerollShop();
   playGameSfx("reroll");
   addLog(`Satan's toll: the reroll took all your SIN (${lost}).`);
@@ -345,10 +347,10 @@ function sellTrinitySeals(index) {
   ghostSealOut(index);
   state.player.passives = state.player.passives.filter((item) => !pieces.includes(item));
   refreshMimicTarget();
-  gainCredits(sale, false, `Sold ${names}`);
+  const gained = gainCredits(sale, false, `Sold ${names}`);
   syncShopSlotCount();
   addLog(`Sold ${names} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained, sealIds: pieces.map((piece) => piece.id) });
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
   render();
@@ -366,10 +368,10 @@ function sellPassive(index) {
   ghostSealOut(index);
   state.player.passives.splice(index, 1);
   refreshMimicTarget();
-  gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
+  const gained = gainCredits(sale, false, `Sold ${passiveDisplayName(item)}`);
   syncShopSlotCount();
   addLog(`Sold ${passiveDisplayName(item)} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained, sealIds: [item.id] });
   // a sold SEAL leaves with the ghost alone; the coin sound is for ARTIFACTS
   playGameSfx("sealSellGhost");
   quietMomentSfx("sinGain");
@@ -382,10 +384,10 @@ function sellActive(index) {
   if (!item) return;
   const sale = activeSellValue(item);
   state.player.actives.splice(index, 1);
-  gainCredits(sale, false, `Sold ${item.name}`);
+  const gained = gainCredits(sale, false, `Sold ${item.name}`);
   normalizeActiveCarouselIndex();
   addLog(`Sold ${item.name} for ${sale} SIN.`);
-  missionsNoteShop("sell");
+  missionsNoteShop("sell", { sin: gained });
   playGameSfx("sell");
   quietMomentSfx("sinGain");
   render();
@@ -669,6 +671,8 @@ function useActive(index) {
 
   const threonSource = activeBossesWithPower("threon")[0];
   if (threonSource && Math.random() < 0.5) {
+    // a malfunction is still a use, but not one that worked (Seal of Threon's achievement)
+    if (state.roundState) state.roundState.artifactMalfunctioned = true;
     damagePlayer(3, `${threonSource.name} made ${item.name} malfunction for 3 damage.`);
     consumeActive(index, `${threonSource.name} made ${item.name} malfunction and do nothing.`, item.uid);
     return;
@@ -814,7 +818,7 @@ function consumeActive(index, message, uid = state.pendingActive?.uid, renderAft
   // Seal of Serafeim never triggers on its own; using ARTIFACTS while holding it is what it does
   if (passiveStack("p126")) collectionDiscover("p126");
   if (!item.devTemporary) state.roundState.activeUses += 1;
-  collectionNoteArtifactUse();
+  collectionNoteArtifactUse(item);
   applyArchangelArtifactUse();
   state.pendingActive = null;
   state.roundState.roundEvents.push(message);

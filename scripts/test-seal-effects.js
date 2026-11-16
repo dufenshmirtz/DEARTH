@@ -39,6 +39,11 @@ function game() {
       guesses.forEach((guess, index) => state.roundState.botEffectiveGuesses.set(state.bots[index].id, guess));
       Math.random = () => 0.99;
     }
+    // the slot machine and the missions only show after the first win (or Pause > DEV > Unlock slot machine)
+    function unlockSlotsForTest() {
+      globalThis.window = { localStorage };
+      unlockSlotMachine();
+    }
     function assertDamage(expected) {
       assert.equal(JSON.stringify(state.bots.map(bot => bot.lastDamage)), JSON.stringify(expected));
     }
@@ -1374,7 +1379,7 @@ test("Trinity SEALS cost 33, cannot be ELITE, have art for every set, and are in
     assert.ok(run(`isNonUpgradableSeal("${id}")`));
     assert.ok(catalog.includes(`${item.name} (33 SIN)\n${item.description}`), item.name);
     assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
-    assert.ok(run(`collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`)); // only Jesus' Gifts unlock it
+    assert.ok(run(`collectibleSealIds().includes("${id}") && isSealLocked("${id}") && sealUnlockProgress("${id}") !== null`)); // locked, with an achievement (or a gift)
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))));
   }
   for (const file of Object.values(run("TRINITY_SEAL_ART"))) {
@@ -2367,7 +2372,7 @@ test("Satan's Pact reads what you typed: typos, counts, numbers and kinds of req
     const read = (text) => satanPactParse(text);
     assert.equal(read("gimme the pamion seal").intent, "seal");
     assert.equal(read("gimme the pamion seal").id, "p2");
-    const candles = read("3 black candels please");
+    const candles = read("3 spirit bords please");
     assert.equal(candles.intent, "artifact");
     assert.equal(candles.id, "a14");
     assert.equal(candles.count, 3);
@@ -2850,7 +2855,7 @@ test("KARMA drops: the nth main BOSS at n x 10% (the twins roll once), +8 for be
   `);
 });
 
-test("Jesus' Gifts: three packs whose odds match the table, Trinity/Planetary/Anael only from gifts", () => {
+test("Jesus' Gifts: three packs whose odds match the table, every locked SEAL also has an achievement", () => {
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     assert.deepEqual(GIFT_PACKS.map((pack) => [pack.key, pack.price]), [["myrrh", 44], ["frankincense", 88], ["gold", 166]]);
@@ -2864,16 +2869,14 @@ test("Jesus' Gifts: three packs whose odds match the table, Trinity/Planetary/An
     GIFT_KINDS.forEach((kind) => assert.ok(giftKindItems(kind.key).length, kind.key));
     assert.equal(giftKindItems("goetia").length, 72);
     assert.ok(giftKindItems("archangel").includes("p103"));
-    // gift-only SEALS: locked, no achievement opens them
-    for (const id of ["p103", ...giftKindItems("planet"), ...giftKindItems("trinity")]) {
+    // every SEAL a gift can bring (except the Goetic demons) is locked and has an achievement too
+    for (const id of ["p103", ...giftKindItems("planet"), ...giftKindItems("trinity"), ...giftKindItems("boss"), ...giftKindItems("apocalypse")]) {
       assert.equal(isSealLocked(id), true, id);
-      assert.equal(SEAL_UNLOCKS[id].gift, true, id);
+      assert.ok(!SEAL_UNLOCKS[id].gift, id);
+      assert.ok(sealUnlockProgress(id), id);
       assert.equal(sealUnlockMet(id), false, id);
+      assert.ok(collectionInfoHtml(id).includes("Or find it in one of Jesus' Gifts."), id);
     }
-    // the other locked SEALS keep their achievement and say a gift can bring them too
-    assert.ok(!SEAL_UNLOCKS.p74.gift);
-    assert.ok(collectionInfoHtml("p74").includes("Or find it in one of Jesus' Gifts."));
-    assert.ok(!collectionInfoHtml("p103").includes("Or find it in one of Jesus' Gifts."));
     // no more buying with KARMA in the Collection
     loadCollectionProgress().karma = 999;
     assert.ok(!renderCollectionScreen("menu").includes("data-collection-karma"));
@@ -3052,8 +3055,8 @@ test("every Artifact SEAL doubles its ARTIFACT in the Devil's Offerings and is i
     assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 2 })`).length, id);
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
     assert.equal(run(`sealIdFromStatSource(ITEMS.${id}.name)`), id);
-    // the Moon's SEALS only come from Jesus' Gifts; the Seal of Amy is a Goetic SEAL, always open
-    assert.ok(run(id === "p134" ? `collectibleSealIds().includes("${id}") && !isSealLocked("${id}")` : `collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`), id);
+    // the Moon's SEALS are locked behind an achievement (or a gift); the Seal of Amy is a Goetic SEAL, always open
+    assert.ok(run(id === "p134" ? `collectibleSealIds().includes("${id}") && !isSealLocked("${id}")` : `collectibleSealIds().includes("${id}") && isSealLocked("${id}") && sealUnlockProgress("${id}") !== null`), id);
   }
 });
 
@@ -3562,7 +3565,7 @@ test("the Poison SEALS are in the collection, catalog and art, and POISON shows 
     assert.ok(run(`splitEliteDescription(ITEMS.${id}.description).elite`).length, id);
     assert.ok(run(`itemDescription({ ...ITEMS.${id}, stack: 3 })`).includes("POISON"), id);
     assert.ok(fs.existsSync(path.join(root, run(`sealSigilPath("${id}")`))), id);
-    assert.ok(run(`sealBuilds("${id}").includes("poison") && collectibleSealIds().includes("${id}") && isSealLocked("${id}") && SEAL_UNLOCKS["${id}"].gift === true`), id); // only Jesus' Gifts unlock it
+    assert.ok(run(`sealBuilds("${id}").includes("poison") && collectibleSealIds().includes("${id}") && isSealLocked("${id}") && sealUnlockProgress("${id}") !== null`), id); // locked, with an achievement (or a gift)
   }
 });
 
@@ -3999,11 +4002,21 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
   `);
 });
 
-test("Missions: 15 worth 1, 2 and 3 FAVOR; one per round, replaced at the start of the next round done or not", () => {
+test("Missions: 36 missions (15 worth 1 FAVOR, 13 worth 2, 8 worth 3 or more, the deal 6; no pentakill); one per round, replaced at the start of the next round", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    assert.equal(JSON.stringify([1, 2, 3].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[15,15,15]");
+    assert.equal(MISSIONS.length, 36);
     assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
+    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[15,13,8]");
+    assert.equal(MISSION_BY_ID.pentakill, undefined);
+    assert.equal(MISSION_BY_ID.critical.value, 3);
+    assert.equal(MISSION_BY_ID.guessPrime.value, 1);
+    assert.equal(MISSION_BY_ID.guessLowest.value, 2);
+    assert.equal(MISSION_BY_ID.kill3.value, 3);
+    assert.equal(MISSION_BY_ID.killRevealed.value, 1);
+    assert.equal(MISSION_BY_ID.deal.value, 6);
+    assert.equal(JSON.stringify(MISSION_TIER_ODDS), JSON.stringify({ 1: 45, 2: 40, 3: 15 }));
     const first = missionsEnsureRound();
     assert.ok(first && MISSION_BY_ID[first.id]);
     assert.equal(missionsEnsureRound(), first);
@@ -4016,51 +4029,178 @@ test("Missions: 15 worth 1, 2 and 3 FAVOR; one per round, replaced at the start 
   `);
 });
 
-test("Missions: a finished mission pays its FAVOR once; guess missions wait for the results, NEXT ROUND ones for NEXT ROUND", () => {
+test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked kinds come 4x, 5x and 2x as often", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    state.missions.current = { id: "use1", value: 1, param: null, round: state.round, done: false };
-    missionsCheck("event");
-    assert.equal(state.missions.doubloons, 0);
-    state.roundState.activeUses = 1;
-    missionsCheck("event");
-    missionsCheck("event");
-    assert.equal(state.missions.doubloons, 1);
-    // within 3 of the TARGET (50): your guess 52 counts only once READY has resolved
-    state.missions.current = { id: "near3", value: 2, param: null, round: state.round, done: false };
-    state.roundState.playerEffectiveGuess = 52;
-    missionsCheck("event");
-    assert.equal(state.missions.doubloons, 1);
-    state.missions.round.resolved = true;
-    missionsCheck("resolve");
-    assert.equal(state.missions.doubloons, 3);
-    // holding 4 ARTIFACTS pays only when you move on
-    state.missions.current = { id: "hold4", value: 2, param: null, round: state.round, done: false };
-    state.player.actives = ["a15", "a15", "a6", "a6"].map((id) => freeActiveCopy(id));
-    missionsCheck("event");
-    assert.equal(state.missions.doubloons, 3);
-    missionsCheck("leave");
-    assert.equal(state.missions.doubloons, 5);
-    assert.equal(state.missions.completed, 3);
+    state.player.actives = ["a6", "a6", "a15", "a15"].map((id) => freeActiveCopy(id));
+    let seed = 7;
+    Math.random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+    const counts = {};
+    const tiers = { 1: 0, 2: 0, 3: 0 };
+    const draws = 8000;
+    for (let i = 0; i < draws; i += 1) {
+      state.missions.lastId = null;
+      const drawn = drawMission();
+      counts[drawn.id] = (counts[drawn.id] || 0) + 1;
+      tiers[missionTier(MISSION_BY_ID[drawn.id])] += 1;
+    }
+    const near = (value, expected, slack) => Math.abs(value - expected) <= slack;
+    assert.ok(near(tiers[1] / draws, 0.45, 0.03), "1 FAVOR " + tiers[1] / draws);
+    assert.ok(near(tiers[2] / draws, 0.4, 0.03), "2 FAVOR " + tiers[2] / draws);
+    assert.ok(near(tiers[3] / draws, 0.15, 0.03), "3+ FAVOR " + tiers[3] / draws);
+    const ratio = (a, b) => counts[a] / counts[b];
+    assert.ok(near(ratio("useItem", "noArtifacts"), 4, 1.2), "useItem x4 " + ratio("useItem", "noArtifacts"));
+    assert.ok(near(ratio("killName", "noKill"), 5, 1.4), "killName x5 " + ratio("killName", "noKill"));
+    assert.ok(near(ratio("useOn", "noKill"), 2, 0.7), "useOn x2 " + ratio("useOn", "noKill"));
+    assert.ok(near(ratio("useItemTwice", "critical"), 4, 1.2), "useItemTwice x4 " + ratio("useItemTwice", "critical"));
+    assert.ok(near(ratio("useOn2", "critical"), 2, 0.7) && near(ratio("useOnBoth", "critical"), 2, 0.7), "two on one / one on two x2");
   `);
 });
 
-test("Missions: worst, closest and lowest guess are read from the table at READY", () => {
+test("Missions: only missions that can be done now are drawn (the deal only before the run's deal, ARTIFACT ones only with the ARTIFACTS)", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    missionsNoteReady();
+    state.player.actives = [];
+    assert.equal(MISSION_BY_ID.useItem.param(), null);
+    assert.equal(MISSION_BY_ID.noArtifacts.can(), false);
+    assert.equal(MISSION_BY_ID.noArtifactsHeld.can(), false);
+    assert.equal(MISSION_BY_ID.useOn.can(), false);
+    state.player.actives = ["a6", "a15"].map((id) => freeActiveCopy(id));
+    assert.ok(["a6", "a15"].includes(MISSION_BY_ID.useItem.param()));
+    assert.equal(MISSION_BY_ID.useItemTwice.param(), null, "twice needs two of the same");
+    assert.equal(MISSION_BY_ID.useOn.can(), true, "Sacrificial Dagger is aimed at a DAMNED");
+    assert.equal(MISSION_BY_ID.useOn2.can(), false, "two aimed ARTIFACTS needed");
+    state.player.actives.push(freeActiveCopy("a6"));
+    assert.equal(MISSION_BY_ID.useItemTwice.param(), "a6");
+    // the deal: only while the run's one deal is still to be made
+    assert.equal(MISSION_BY_ID.deal.can(), true);
+    satanPact().used = true;
+    assert.equal(MISSION_BY_ID.deal.can(), false);
+    // MEMORY / BOUNTY 10: only when a DAMNED at the table has that much
+    assert.equal(MISSION_BY_ID.killMemory.can(), false);
+    state.bots[2].memory = new Array(10).fill(state.bots[2].memory[0] || { guess: 50, target: 50 });
+    assert.equal(MISSION_BY_ID.killMemory.can(), true);
+    state.bots.forEach((bot) => { bot.reward = 3; });
+    assert.equal(MISSION_BY_ID.killBounty.can(), false);
+    state.bots[1].reward = 10;
+    assert.equal(MISSION_BY_ID.killBounty.can(), true);
+    // the weakest / strongest DAMNED by SOUL right now
+    state.bots[3].hp = 200;
+    state.bots[4].hp = 900;
+    assert.equal(MISSION_BY_ID.keepWeakest.param().id, state.bots[3].id);
+    state.bots[0].hp = 1000;
+    state.bots[0].maxHp = 1200;
+    state.bots[0].hp = 1100;
+    assert.equal(MISSION_BY_ID.killStrongest.param().id, state.bots[0].id);
+  `);
+});
+
+test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROUND ones, SIN without sales, SEALS you started with, the deal)", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([["p1"]], [10, 20, 30, 40, 50]);
+    const set = (id, param = null) => { state.missions.current = { id, value: MISSION_BY_ID[id].value, param, round: state.round, done: false }; };
+    let favor = 0;
+    const paid = (value) => { favor += value; assert.equal(state.missions.doubloons, favor); };
+    // only the named ARTIFACT counts
+    set("useItem", "a6");
+    state.roundState.activeUseItemCounts.set("a15", 1);
+    missionsCheck("event");
+    paid(0);
+    state.roundState.activeUseItemCounts.set("a6", 1);
+    missionsCheck("event");
+    paid(1);
+    // a guess mission reads the guess you typed, once the results are in
+    set("guess50");
+    state.roundState.playerSubmittedGuess = 50;
+    missionsCheck("event");
+    paid(0);
     state.missions.round.resolved = true;
-    state.roundState.playerEffectiveGuess = 5;
-    let facts = missionFacts();
-    assert.equal(facts.worst, true);
-    assert.equal(facts.lowest, true);
-    assert.equal(facts.closest, false);
-    // a tie with the best DAMNED (50) still counts as the closest guess
-    state.roundState.playerEffectiveGuess = 50;
-    facts = missionFacts();
-    assert.equal(facts.worst, false);
-    assert.equal(facts.closest, true);
-    assert.equal(facts.botsFarther, 4);
+    missionsCheck("resolve");
+    paid(2);
+    // no buying: decided at NEXT ROUND, missed as soon as you buy
+    set("noBuy");
+    missionsCheck("event");
+    paid(0);
+    missionsNoteShop("buyArtifact");
+    assert.ok(MISSION_BY_ID.noBuy.failed(missionFacts()));
+    missionsCheck("leave");
+    paid(0);
+    // 0 SIN when you go into the next round
+    set("zeroSin");
+    state.player.credits = 0;
+    missionsCheck("event");
+    paid(0);
+    missionsCheck("leave");
+    paid(3);
+    // SIN from a sale is not "gained"
+    set("gain6");
+    state.roundState.earnedSinThisRound = 0;
+    gainCredits(10, false, "Sold Ceremonial Altar");
+    missionsNoteShop("sell", { sin: 10 });
+    paid(0);
+    gainCredits(6, false, "Test");
+    missionsCheck("event");
+    paid(1);
+    // a SEAL you had when the round began (p1), not one bought since
+    set("sellStartSeal");
+    missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
+    paid(0);
+    missionsNoteShop("sell", { sin: 4, sealIds: ["p1"] });
+    paid(3);
+    // the deal: 6 FAVOR when it is signed
+    set("deal");
+    missionsCheck("event");
+    paid(0);
+    missionsNoteDeal();
+    paid(6);
+  `);
+});
+
+test("Missions: eliminations are counted as each DAMNED fell (MEMORY, BOUNTY, revealed), named DAMNED, kept alive, ARTIFACTS aimed at them", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    const set = (id, param = null) => { state.missions.current = { id, value: MISSION_BY_ID[id].value, param, round: state.round, done: false }; };
+    const [a, b, c] = state.bots;
+    const named = (bot) => ({ id: bot.id, name: bot.name });
+    // a falls with 10 MEMORY, a BOUNTY of 12 and its guess revealed
+    a.memory = new Array(10).fill(a.memory[0] || { guess: 50, target: 50 });
+    a.reward = 12;
+    a.revealedByPassive = true;
+    a.hp = 0;
+    resolveEliminatedBots([a]);
+    assert.equal(JSON.stringify(state.missions.round.kills[0]), JSON.stringify({ id: a.id, memory: 10, bounty: 12, revealed: true }));
+    state.missions.round.resolved = true;
+    let favor = 0;
+    const done = (id, param, value) => {
+      set(id, param);
+      missionsCheck("resolve");
+      favor += value;
+      assert.equal(state.missions.doubloons, favor, id);
+    };
+    done("killMemory", null, 2);
+    done("killBounty", null, 2);
+    done("killRevealed", null, 1);
+    done("killName", named(a), 1);
+    done("killStrongest", named(b), 0);
+    done("keepWeakest", named(b), 2);
+    done("keepWeakest", named(a), 0);
+    assert.ok(MISSION_BY_ID.keepWeakest.failed(missionFacts(), named(a)));
+    done("noKill", null, 0);
+    done("kill2", null, 0);
+    // ARTIFACTS aimed at named DAMNED (counted per target)
+    state.missions.round.resolved = false;
+    set("useOnBoth", { first: named(b), second: named(c) });
+    state.roundState.artifactTargetCountsByBotId.set(b.id, 1);
+    missionsCheck("event");
+    assert.equal(MISSION_BY_ID.useOnBoth.progress(missionFacts(), state.missions.current.param), "1/2");
+    assert.equal(state.missions.doubloons, favor);
+    state.roundState.artifactTargetCountsByBotId.set(c.id, 1);
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, favor + 2);
   `);
 });
 
@@ -4096,6 +4236,7 @@ test("Slot machine: each icon pays by how many came up (SIN 5/18/150, SOUL 1/4/2
 
 test("Slot machine: a spin costs 3 FAVOR and pays at once; its DAMAGE lands at the end of the next round; free rerolls are not the Son's", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
     render = () => {};
@@ -4131,6 +4272,7 @@ test("Slot machine: a spin costs 3 FAVOR and pays at once; its DAMAGE lands at t
 
 test("Slot machine: SOUL cannot be blocked, it only stops at max SOUL", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
     render = () => {};
@@ -4152,6 +4294,7 @@ test("Slot machine: SOUL cannot be blocked, it only stops at max SOUL", () => {
 
 test("Slot machine: three ELITES give every SEAL a free ELITE level; KARMA: one gives 3 ARTIFACTS, two 1 KARMA, three 10 KARMA", () => {
   game()(`
+    unlockSlotsForTest();
     fixture([["p59"], ["p64"]], [10, 20, 30, 40, 50]);
     playGameSfx = () => {};
     render = () => {};
@@ -4300,6 +4443,497 @@ test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only wh
   }
 });
 
+test("Slot machine: hidden until the first-win speech has been heard; Pause > DEV > Unlock slot machine opens it once", () => {
+  game()(`
+    globalThis.window = { localStorage };
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    state.missions.doubloons = 9;
+    assert.equal(slotMachineUnlocked(), false);
+    assert.equal(missionsEnabled(), false);
+    assert.equal(slotMachineHtml(), "");
+    assert.equal(missionBoxHtml(), "");
+    assert.equal(missionsEnsureRound(), null);
+    assert.equal(slotCanSpin(), false);
+    // a first win counts once its speech is left (to its end or skipped)
+    markSatanFirstVictorySeen();
+    assert.equal(slotMachineUnlocked(), true);
+    assert.equal(localStorage.getItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY), "1");
+    assert.ok(slotMachineHtml().includes("slot-machine"));
+    assert.ok(missionBoxHtml().includes("mission-box"));
+    // players who heard the speech before this lock existed keep the slot machine
+    localStorage.removeItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY);
+    assert.equal(slotMachineUnlocked(), true);
+    // the DEV button: unlocks when locked, does nothing when it already is
+    localStorage.removeItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY);
+    localStorage.removeItem(SATAN_FIRST_VICTORY_STORAGE_KEY);
+    assert.equal(slotMachineUnlocked(), false);
+    assert.match(renderSelfStackingDevPanel(), /data-pause-action="unlock-slot"[^>]*>Unlock slot machine</);
+    const logs = state.log.length;
+    handlePauseAction("unlock-slot");
+    assert.equal(slotMachineUnlocked(), true);
+    assert.equal(state.log.length, logs + 1);
+    handlePauseAction("unlock-slot");
+    assert.equal(state.log.length, logs + 1);
+    assert.equal(unlockSlotMachine(), false);
+  `);
+});
+
+test("Missions read as they were written", () => {
+  game()(`
+    const text = (id, param = null) => missionText(MISSION_BY_ID[id], param);
+    const bot = { id: "x", name: "Lilith" };
+    const other = { id: "y", name: "Azazel" };
+    assert.equal(text("critical"), "Get a critical hit");
+    assert.equal(text("guessPrime"), "Guess a prime number");
+    assert.equal(text("guessLowest"), "Guess the lowest number amongst the DAMNED");
+    assert.equal(text("useItem", "a14"), "Use a Spirit Board");
+    assert.equal(text("useItem", "a28"), "Use an Engraved Skull");
+    assert.equal(text("useItem", "a13"), "Use The White-Hilted Knife");
+    assert.equal(text("useItemTwice", "a14"), "Use two Spirit Boards");
+    assert.equal(text("useItemTwice", "a11"), "Use two Vials of Blood");
+    assert.equal(text("useItemTwice", "a9"), "Use two Inverted Crosses");
+    assert.equal(text("useItemTwice", "a13"), "Use two White-Hilted Knives");
+    assert.equal(text("noArtifacts"), "Don't use artifacts this round");
+    assert.equal(text("gain6"), "Gain 6 or more sin this round");
+    assert.equal(text("gain12"), "Gain 12 or more sin this round");
+    assert.equal(text("kill2"), "Eliminate two Damned");
+    assert.equal(text("kill3"), "Eliminate three Damned");
+    assert.equal(text("zeroSin"), "Have 0 sin at the end of the round");
+    assert.equal(text("reroll5"), "Reroll 5 times");
+    assert.equal(text("buy6"), "Buy six seals or artifacts");
+    assert.equal(text("hurt12"), "Take 12 or more damage");
+    assert.equal(text("over66"), "Guess over 66");
+    assert.equal(text("under12"), "Guess under 12");
+    assert.equal(text("guess0"), "Guess 0");
+    assert.equal(text("guess100"), "Guess 100");
+    assert.equal(text("noBuy"), "Don't buy any Devil's Offerings");
+    assert.equal(text("guess50"), "Guess 50");
+    assert.equal(text("killMemory"), "Eliminate a Damned with 10 or more memory");
+    assert.equal(text("killBounty"), "Eliminate a Damned with 10 or more bounty");
+    assert.equal(text("killRevealed"), "Eliminate a revealed Damned");
+    assert.equal(text("killName", bot), "Eliminate Lilith");
+    assert.equal(text("noKill"), "Don't eliminate any Damned");
+    assert.equal(text("sellStartSeal"), "Sell one of the seals you had at the start of the round");
+    assert.equal(text("hurt4"), "Take 4 or less damage this round");
+    assert.equal(text("deal"), "Complete a Deal");
+    assert.equal(text("sell1"), "Sell 1 seal");
+    assert.equal(text("sameGuess"), "Guess the same number as a revealed damned");
+    assert.equal(text("noArtifactsHeld"), "Have 0 artifacts in your inventory at the end of the round");
+    assert.equal(text("useOn", bot), "Use an artifact on Lilith");
+    assert.equal(text("useOn2", bot), "Use two artifacts on Lilith");
+    assert.equal(text("useOnBoth", { first: bot, second: other }), "Use one artifact on Lilith and one on Azazel");
+    assert.equal(text("keepWeakest", bot), "Keep Lilith alive");
+    assert.equal(text("killStrongest", other), "Eliminate Azazel");
+  `);
+});
+
+test("Settings > Display > Guide text hides the Pick a number hint and Missions pay FAVOR., and nothing else", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    state.stage = "guess";
+    assert.equal(state.display.guideText, 1);
+    assert.equal(consoleActionState().guideHint, true);
+    assert.ok(renderConsole().includes('class="console-hint guide-text"'));
+    assert.ok(slotMachineHtml().includes('class="slot-result guide-text">Missions pay FAVOR.'));
+    // a real result line on the slot machine is not guide text
+    state.missions.lastText = "+5 SIN";
+    state.missions.lastRound = state.round;
+    assert.ok(slotMachineHtml().includes('class="slot-result">+5 SIN'));
+    state.stage = "active";
+    assert.equal(consoleActionState().guideHint, false);
+    // the setting
+    render = () => {};
+    assert.equal(SETTING_CHOICES.guideText.text(SETTING_CHOICES.guideText.get()), "Shown");
+    updateSettingChoice("guideText", 1);
+    assert.equal(state.display.guideText, 0);
+    assert.equal(SETTING_CHOICES.guideText.text(SETTING_CHOICES.guideText.get()), "Hidden");
+    assert.equal(JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_STORAGE_KEY)).guideText, 0);
+    updateSettingChoice("guideText", 1);
+    assert.equal(state.display.guideText, 1);
+  `);
+});
+
+test("Unlocks: every locked SEAL has the designer's achievement, worded as written", () => {
+  game()(`
+    const expected = {
+      p99: "Have exactly 1 SOUL",
+      p139: "Eliminate in total 8 Damned named Yannis",
+      p76: "Eliminate a Boss that was at max SOUL",
+      p98: "Beat the game 8 times (defeat the 8 bosses)",
+      p127: "Use 4 artifacts in two consecutive rounds successfully while Threon is active",
+      p121: "Buy out three entire shops while Zilon is active in one game",
+      p79: "Have 666 sin",
+      p126: "Have Serafim steal 0 sin from you when he is first summoned",
+      p125: "Have 5 bosses active at the same time",
+      p128: "Score 1 Pentakill while Dantre is active",
+      p80: "Score 3 Pentakills in a row",
+      p109: "Score 3 critical hits in a row",
+      p77: "Score 8 critical hits in a row",
+      p101: "Be at 100 SOUL and eliminate a Damned",
+      p111: "Beat the game without buying a seal",
+      p70: "Eliminate in total 666 Damned",
+      p135: "Eliminate in total 66 demons (end game bosses)",
+      p74: "Get a seal to Elite level 6",
+      p122: "Get six seals that are all level 1 elite or more",
+      p123: "Defeat 8 Bosses other than Pyros that have been granted a PYROS-TECH ability in total",
+      p144: "Spend 160 sin in one round",
+      p124: "Don't get a KO for 8 consecutive rounds",
+      p93: "Have a single Damned reach 40 bounty or more",
+      p95: "Have 4 revealed Damned at the same time",
+      p78: "Have the round target be 160 or above",
+      p140: "Have the round target be below 0",
+      p110: "Have a non-boss Damned with more than 25 bounty and more than 25 memory",
+      p138: "Use a total of 666 artifacts",
+      p75: "Beat the game in under 30 rounds",
+      p97: "Eliminate a Damned with 66 memory",
+      p96: "Eliminate 5 Stubborn Damned in a single round",
+      p131: "Unlock all Demons",
+      p145: "Beat the game without falling below 50 SOUL",
+      p94: "Buy 8 items (seals or artifacts) in one round",
+      p103: "Beat the game without using sin to reroll Devil's Offerings",
+      p143: "Beat the first two bosses without buying a seal",
+      p100: "Gain 66 sin in one round",
+      p102: "Beat the game 24 times (beat the 8 bosses)",
+      p146: "Discover 100 unique seals",
+      p141: "Defeat an Archangel",
+      p133: "Unlock all Archangels",
+      p137: "Reroll the Devil's Offerings 666 times",
+      p136: "Complete 66 Deals",
+      p132: "Buy a Gold Jesus gift",
+      p92: "Get 30 karma in one run",
+      p142: "Discover 66 unique seals"
+    };
+    assert.equal(Object.keys(expected).length, 46);
+    assert.deepEqual(Object.keys(SEAL_UNLOCKS).sort(), Object.keys(expected).sort());
+    for (const [id, text] of Object.entries(expected)) {
+      assert.equal(SEAL_UNLOCKS[id].text, text, id);
+      assert.ok(isSealLocked(id), id);
+      assert.ok(sealUnlockProgress(id), id);
+      assert.equal(sealUnlockMet(id), false, id);
+    }
+    // goals
+    const goal = (id) => sealUnlockProgress(id).goal;
+    assert.deepEqual(["p139", "p98", "p102", "p70", "p135", "p123", "p138", "p137", "p136", "p142", "p146", "p131", "p133", "p141"].map(goal), [8, 8, 24, 666, 66, 8, 666, 666, 66, 66, 100, 72, 7, 1]);
+    assert.deepEqual(["p79", "p77", "p109", "p80", "p74", "p144", "p124", "p125", "p93", "p95", "p78", "p94", "p96", "p100", "p92"].map(goal), [666, 8, 3, 3, 6, 160, 8, 5, 40, 4, 160, 8, 5, 66, 30]);
+    // the 6th Pentacle of the Moon has the Yannis one; "deal 666 damage" is not used
+    assert.equal(SEAL_UNLOCKS.p139.stat, "yannisKills");
+  `);
+});
+
+test("Unlocks: moment checks (1 SOUL, 666 SIN, BOUNTY, MEMORY, reveals, the TARGET) open their SEALS", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const open = (id) => !isSealLocked(id);
+    state.player.hp = 1;
+    state.player.credits = 666;
+    collectionAfterRender();
+    assert.ok(open("p99") && open("p79"));
+    // 4 revealed DAMNED at once
+    state.bots.forEach((bot) => { bot.revealedByPassive = false; }); // the round's own reveal
+    state.bots.slice(0, 3).forEach((bot) => { bot.revealedByPassive = true; });
+    collectionAfterRender();
+    assert.ok(!open("p95"));
+    state.bots[3].revealedByPassive = true;
+    collectionAfterRender();
+    assert.ok(open("p95"));
+    // BOUNTY: 40 on one DAMNED (a BOSS counts with its normal BOUNTY)
+    state.bots[0].reward = 39;
+    collectionAfterRender();
+    assert.ok(!open("p93"));
+    state.bots[0].isBoss = true;
+    state.bots[0].reward = 40;
+    collectionAfterRender();
+    assert.ok(open("p93"));
+    // a non-boss DAMNED with more than 25 BOUNTY and more than 25 MEMORY (the BOSS above does not count)
+    state.bots[0].memory = Array(30).fill(50);
+    collectionAfterRender();
+    assert.ok(!open("p110"));
+    state.bots[1].reward = 26;
+    state.bots[1].memory = Array(25).fill(50);
+    collectionAfterRender();
+    assert.ok(!open("p110"));
+    state.bots[1].memory = Array(26).fill(50);
+    collectionAfterRender();
+    assert.ok(open("p110"));
+    // the round's TARGET, once READY has been pressed
+    state.roundState.target = 170;
+    collectionAfterRender();
+    assert.ok(!open("p78"));
+    state.roundState.penaltiesApplied = true;
+    collectionAfterRender();
+    assert.ok(open("p78") && !open("p140"));
+    state.roundState.target = -1;
+    collectionAfterRender();
+    assert.ok(open("p140"));
+  `);
+});
+
+test("Unlocks: round counters (SIN gained without sales, SIN spent, items bought, STUBBORN eliminations) start again each round", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const open = (id) => !isSealLocked(id);
+    gainCredits(60, false, "Bounty");
+    gainCredits(30, false, "Sold Seal of Bael");
+    collectionAfterRender();
+    assert.equal(collectionRun().roundGained, 60);
+    assert.ok(!open("p100"));
+    gainCredits(6, false, "Bounty");
+    collectionAfterRender();
+    assert.ok(open("p100"));
+    // spent and bought
+    collectionNoteSpend(159);
+    for (let i = 0; i < 7; i += 1) collectionNoteShopBuy(i % 2 ? "seal" : "artifact");
+    collectionAfterRender();
+    assert.ok(!open("p144") && !open("p94"));
+    beginRound();
+    collectionNoteSpend(1);
+    collectionNoteShopBuy("artifact");
+    collectionAfterRender();
+    assert.ok(!open("p144") && !open("p94"));
+    collectionNoteSpend(159);
+    for (let i = 0; i < 7; i += 1) collectionNoteShopBuy("artifact");
+    collectionAfterRender();
+    assert.ok(open("p144") && open("p94"));
+    assert.equal(collectionRun().sealsBought, 3);
+    // 5 STUBBORN DAMNED in one round (a STUBBORN BOSS counts)
+    for (let i = 0; i < 4; i += 1) collectionNoteElimination({ name: "S" + i, type: "Stubborn" });
+    collectionNoteElimination({ name: "A", type: "Anchor" });
+    beginRound();
+    for (let i = 0; i < 4; i += 1) collectionNoteElimination({ name: "S" + i, type: "Stubborn" });
+    collectionAfterRender();
+    assert.ok(!open("p96"));
+    collectionNoteElimination({ name: "Boss", isBoss: true, stubborn: true });
+    collectionAfterRender();
+    assert.ok(open("p96"));
+  `);
+});
+
+test("Unlocks: eliminations (Yannis, MEMORY 66, demons, PYROS-TECH BOSSES, 666 DAMNED)", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    const open = (id) => !isSealLocked(id);
+    for (let i = 0; i < 7; i += 1) collectionNoteElimination({ name: "Yannis" });
+    collectionNoteElimination({ name: "Memory", memory: Array(65).fill(1) });
+    collectionAfterRender();
+    assert.ok(!open("p139") && !open("p97"));
+    collectionNoteElimination({ name: "Yannis", memory: Array(66).fill(1) });
+    collectionAfterRender();
+    assert.ok(open("p139") && open("p97"));
+    // PYROS-TECH BOSSES other than Pyros, 8 in total
+    collectionNoteElimination({ name: "Pyros", isBoss: true, uniqueKey: "pyros", pyrosGifted: true });
+    for (let i = 0; i < 7; i += 1) collectionNoteElimination({ name: "B" + i, isBoss: true, pyrosGifted: true });
+    collectionNoteElimination({ name: "Plain", isBoss: true });
+    collectionAfterRender();
+    assert.equal(loadCollectionProgress().stats.pyrosBossKills, 7);
+    assert.ok(!open("p123"));
+    collectionNoteElimination({ name: "B8", isBoss: true, pyrosGifted: true });
+    collectionAfterRender();
+    assert.ok(open("p123"));
+    // 66 demons, 666 DAMNED
+    loadCollectionProgress().stats.goeticKills = 65;
+    loadCollectionProgress().stats.eliminations = 600;
+    collectionNoteElimination({ name: "Demon", isBoss: true, goeticKey: GOETIC_BOSS_KEYS[0] });
+    collectionAfterRender();
+    assert.ok(open("p135") && !open("p70"));
+    while (loadCollectionProgress().stats.eliminations < 666) collectionNoteElimination({ name: "Damned" });
+    collectionAfterRender();
+    assert.ok(open("p70"));
+  `);
+});
+
+test("Unlocks: beating the game fast, without buying a SEAL, without paying for a reroll, above 50 SOUL; the first two BOSSES without a SEAL", () => {
+  const beat = (setup) => {
+    const run = game();
+    run(`
+      fixture([], [10, 20, 30, 40, 50]);
+      resetCollectionRun();
+      ${setup}
+      for (const key of ["zilon", "dantre", "petros", "pavlos", "pyros", "threon", "kalha", "serafim", "padma"]) {
+        if (key === "petros") globalThis.afterTwo = !isSealLocked("p143") ? "early" : "";
+        collectionNoteElimination({ isBoss: true, uniqueKey: key, name: key });
+        if (key === "dantre") globalThis.afterDantre = collectionMainBossesBeaten();
+      }
+      collectionAfterRender();
+    `);
+    return run;
+  };
+  let run = beat("state.round = 29;");
+  run(`
+    assert.equal(afterDantre, 2);
+    for (const id of ["p75", "p111", "p103", "p145", "p143"]) assert.ok(!isSealLocked(id), id);
+  `);
+  // the twins are one BOSS: with Zilon and Petros down, two BOSSES are not beaten yet
+  run = game();
+  run(`
+    fixture([], [10, 20, 30, 40, 50]);
+    resetCollectionRun();
+    collectionNoteElimination({ isBoss: true, uniqueKey: "zilon", name: "Zilon" });
+    collectionNoteElimination({ isBoss: true, uniqueKey: "petros", name: "Petros" });
+    assert.equal(collectionMainBossesBeaten(), 1);
+    collectionAfterRender();
+    assert.ok(isSealLocked("p143"));
+    collectionNoteElimination({ isBoss: true, uniqueKey: "pavlos", name: "Pavlos" });
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p143"));
+  `);
+  // each condition broken on its own
+  run = beat("state.round = 30;");
+  run(`assert.ok(isSealLocked("p75")); assert.ok(!isSealLocked("p111"));`);
+  run = beat("state.round = 20; collectionNoteShopBuy('seal');");
+  run(`for (const id of ["p111", "p143"]) assert.ok(isSealLocked(id), id); assert.ok(!isSealLocked("p103"));`);
+  run = beat("state.round = 20; collectionNotePlayerReroll(0); collectionNotePlayerReroll(3);");
+  run(`assert.ok(isSealLocked("p103")); assert.ok(!isSealLocked("p111")); assert.equal(loadCollectionProgress().stats.rerolls, 2);`);
+  run = beat("state.round = 20; state.player.hp = 60; damagePlayer(11, 'test'); state.player.hp = 90;");
+  run(`assert.ok(isSealLocked("p145")); assert.ok(!isSealLocked("p111"));`);
+  // a run saved before these counters existed does not count for the "without" ones
+  run = beat("state.round = 20; state.collectionRun = { uniqueKills: [], beaten: false };");
+  run(`
+    for (const id of ["p111", "p103", "p145", "p143"]) assert.ok(isSealLocked(id), id);
+    assert.ok(!isSealLocked("p75"));
+  `);
+});
+
+test("Unlocks: rerolls count paid and free; a free reroll keeps Anael's, a paid one breaks it", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    resetCollectionRun();
+    render = () => {};
+    playGameSfx = () => {};
+    state.stage = "summary";
+    state.player.credits = 50;
+    state.slotFreeRerolls = 1;
+    rerollShopClick();
+    assert.equal(loadCollectionProgress().stats.rerolls, 1);
+    assert.equal(collectionRun().paidRerolls, 0);
+    rerollShopClick();
+    assert.equal(loadCollectionProgress().stats.rerolls, 2);
+    assert.equal(collectionRun().paidRerolls, 1);
+    loadCollectionProgress().stats.rerolls = 665;
+    rerollShopClick();
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p137"));
+  `);
+});
+
+test("Unlocks: Threon needs 4 ARTIFACTS that work over two rounds in a row, Threon alive", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    resetCollectionRun();
+    const use = (broken = false) => { if (broken) state.roundState.artifactMalfunctioned = true; collectionNoteArtifactUse({ id: "a10" }); };
+    // without Threon nothing counts
+    use(); use();
+    state.bots[0].isBoss = true;
+    state.bots[0].uniqueKey = "threon";
+    use(); use(true);
+    state.round += 1;
+    use(); use(true);
+    collectionAfterRender();
+    assert.ok(isSealLocked("p127"));
+    // two rounds later the old ones are gone
+    state.round += 2;
+    use(); use();
+    collectionAfterRender();
+    assert.ok(isSealLocked("p127"));
+    state.round += 1;
+    use(); use(true); use();
+    assert.equal(state.roundState.artifactMalfunctioned, false);
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p127"));
+  `);
+  // the malfunction is marked by Threon's power
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    playGameSfx = () => {};
+    playArtifactSfx = () => {};
+    state.bots = [createBot({ boss: true, bossSpec: { uniqueKey: "threon" } })];
+    fillBots();
+    state.stage = "active";
+    state.player.actives = [freeActiveCopy("a10")];
+    let flagged = null;
+    const note = collectionNoteArtifactUse;
+    collectionNoteArtifactUse = (item) => { flagged = state.roundState.artifactMalfunctioned; note(item); };
+    Math.random = () => 0.1;
+    useActive(0);
+    assert.equal(flagged, true);
+  `);
+});
+
+test("Unlocks: value rules read the demons, Archangels, discoveries and the Records; DEV switches never count", () => {
+  game()(`
+    globalThis.window = globalThis;
+    fixture([], [10, 20, 30, 40, 50]);
+    const progress = loadCollectionProgress();
+    progress.devAllDemons = true;
+    evaluateSealUnlocks(false);
+    assert.ok(isSealLocked("p131") && isSealLocked("p133") && isSealLocked("p141"));
+    progress.devAllDemons = false;
+    progress.slain = GOETIC_BOSS_KEYS.slice(0, 71);
+    progress.archangels = [ARCHANGEL_KEYS[0]];
+    evaluateSealUnlocks(false);
+    assert.ok(isSealLocked("p131") && isSealLocked("p133") && !isSealLocked("p141"));
+    progress.slain = GOETIC_BOSS_KEYS.slice();
+    progress.archangels = ARCHANGEL_KEYS.slice();
+    evaluateSealUnlocks(false);
+    assert.ok(!isSealLocked("p131") && !isSealLocked("p133"));
+    // discoveries
+    progress.discovered = collectibleSealIds().slice(0, 65);
+    evaluateSealUnlocks(false);
+    assert.ok(isSealLocked("p142"));
+    collectionDiscover(collectibleSealIds()[65]);
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p142") && isSealLocked("p146"));
+    progress.discovered = collectibleSealIds().slice(0, 100);
+    evaluateSealUnlocks(false);
+    assert.ok(!isSealLocked("p146"));
+    // ARTIFACT uses and deals come from the Records (past runs included)
+    const lifetime = loadLifetimeRecords();
+    lifetime.artifactUses = { a10: 600, a6: 65 };
+    lifetime.pacts = 65;
+    evaluateSealUnlocks(false);
+    assert.ok(isSealLocked("p138") && isSealLocked("p136"));
+    recordPlayedArtifact("a10");
+    collectionNoteArtifactUse({ id: "a10" });
+    recordPactSigned();
+    collectionNoteDeal();
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p138") && !isSealLocked("p136"));
+    // KARMA in one run, games beaten
+    karmaGain(29, "test");
+    collectionAfterRender();
+    assert.ok(isSealLocked("p92"));
+    karmaGain(1, "test");
+    collectionAfterRender();
+    assert.ok(!isSealLocked("p92"));
+    progress.stats.gamesBeaten = 8;
+    evaluateSealUnlocks(false);
+    assert.ok(!isSealLocked("p98") && isSealLocked("p102"));
+    progress.stats.gamesBeaten = 24;
+    evaluateSealUnlocks(false);
+    assert.ok(!isSealLocked("p102"));
+  `);
+});
+
+test("Unlocks: a Gold gift opens the Seal of the Son, but not one opened with DEV infinite KARMA", () => {
+  for (const dev of [false, true]) {
+    game()(`
+      globalThis.window = globalThis;
+      state.mode = "menu";
+      const progress = loadCollectionProgress();
+      progress.karma = 500;
+      progress.devInfiniteKarma = ${dev};
+      Math.random = () => 0.999; // the Satan kind, not a Trinity SEAL
+      openGift("myrrh");
+      assert.ok(isSealLocked("p132"));
+      openGift("gold");
+      assert.equal(Boolean(progress.flags.goldGift), ${!dev});
+      assert.equal(isSealLocked("p132"), ${dev});
+    `);
+  }
+});
+
 test("Death screen: after Inspect the main button says Back and returns to the death screen instead of restarting", () => {
   game()(`
     globalThis.render = () => {};
@@ -4320,5 +4954,179 @@ test("Death screen: after Inspect the main button says Back and returns to the d
     state.gameOver = false;
     performMainAction();
     assert.equal(restarted, true);
+  `);
+});
+
+test("SKIP past the eight special BOSSES brings Satan's victory speech, as if they were beaten", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    skipArcadeProgression();
+    assert.ok(state.bots.some((bot) => bot.goeticKey || bot.archangelKey || bot.shadowOf));
+    assert.equal(state.satanVictoryDue, true);
+    assert.equal(state.satanVictorySkipped, true);
+    // it may play during GUESS (a legit win waits for the results)
+    assert.equal(state.stage, "guess");
+    assert.equal(satanVictoryReady(), true);
+    let played = 0;
+    satanOpenScene = () => { played += 1; };
+    saveArcadeRun = () => {};
+    startSatanVictory();
+    assert.equal(played, 1);
+    assert.equal(state.satanVictoryDue, false);
+    assert.equal(state.satanVictorySkipped, false);
+    assert.equal(state.satanVictoryPlayed, true);
+  `);
+  // once played in a run, a SKIP does not bring it again
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    state.satanVictoryPlayed = true;
+    skipToFirstGoeticBoss();
+    assert.equal(state.satanVictoryDue, false);
+  `);
+});
+
+test("Final Judgment: the 72nd demon brings Jesus and Satan's talk at the results, SKIP in the demon stage brings it at once", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    state.bossKills = 80;
+    state.goeticBossKills = GOETIC_BOSS_TOTAL - 1;
+    const demon = createBot({ boss: true, bossSpec: { goeticKey: GOETIC_BOSS_KEYS[0] } });
+    state.bots[0] = demon;
+    demon.hp = 0;
+    resolveEliminatedBots([demon]);
+    assert.equal(state.finalBossQueued, true);
+    assert.equal(state.judgementTalkDue, true);
+    // the results wait for them: Next Round brings them in instead of moving on
+    globalThis.clearTimeout = () => {};
+    state.stage = "summary";
+    let started = 0;
+    startJudgementTalk = () => { started += 1; state.judgementTalkDue = false; state.judgementTalkPlayed = true; };
+    const round = state.round;
+    advanceAfterSummary();
+    assert.equal(started, 1);
+    assert.equal(state.round, round);
+    assert.equal(state.finalBossPhase, false);
+    // after their talk the round moves on into Final Judgment
+    advanceAfterSummary();
+    assert.equal(state.finalBossPhase, true);
+    assert.deepEqual(state.bots.map((bot) => bot.finalKey), ["jesus", "satan"]);
+    // the slot machine and the missions close with the Devil's Offerings
+    globalThis.window = { localStorage };
+    unlockSlotMachine();
+    assert.equal(missionsEnabled(), false);
+    assert.equal(slotMachineHtml(), "");
+  `);
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    skipToFirstGoeticBoss();
+    state.satanVictoryDue = false;
+    let fromSkip = null;
+    startJudgementTalk = (options) => { fromSkip = options.fromSkip; state.judgementTalkPlayed = true; };
+    skipArcadeProgression();
+    assert.equal(fromSkip, true);
+    assert.equal(state.goeticBossKills, GOETIC_BOSS_TOTAL);
+    assert.equal(state.finalBossQueued, true);
+    assert.equal(state.finalBossPhase, false);
+    finishSkipToFinalBosses();
+    assert.equal(state.finalBossPhase, true);
+    assert.deepEqual(state.bots.map((bot) => bot.finalKey), ["jesus", "satan"]);
+  `);
+  // their talk plays once per run: a later SKIP goes straight to Final Judgment
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    skipToFirstGoeticBoss();
+    state.judgementTalkPlayed = true;
+    let started = 0;
+    startJudgementTalk = () => { started += 1; };
+    skipArcadeProgression();
+    assert.equal(started, 0);
+    assert.equal(state.finalBossPhase, true);
+  `);
+  // the lines: Jesus, Satan and the player, as written
+  game()(`
+    assert.equal(FINAL_JUDGEMENT_LINES.length, 9);
+    assert.deepEqual(FINAL_JUDGEMENT_LINES.map((line) => line[0]), ["jesus", "satan", "jesus", "satan", "jesus", "satan", "jesus", "satan", "you"]);
+    assert.equal(FINAL_JUDGEMENT_LINES[8][1], "Fuck you both.");
+  `);
+});
+
+test("Satan's Pact: KARMA is Jesus' business; FAVOR up to six once the slot machine is open", () => {
+  game()(`
+    ${PACT_SETUP}
+    const line = (answer) => satanPactAnswerLines(answer).map((entry) => entry[1]).join(" ");
+    // KARMA and Jesus' Gifts: refused, and the chance is kept
+    for (const text of ["karma", "give me 50 karma please", "a myrrh gift", "frankincense"]) {
+      const answer = satanPactAnswer(text);
+      assert.equal(answer.refuse, "karma", text);
+      assert.equal(line(answer), "I don't touch that my dear sinner, that's Jesus' domain, ask for something else.");
+    }
+    assert.equal(satanPactRequest("karma").next, "ask");
+    assert.equal(satanPact().used, false);
+    // before the slot machine is open he doesn't follow
+    assert.equal(satanPactAnswer("5 favor").refuse, "gibberish");
+    globalThis.window = { localStorage };
+    unlockSlotMachine();
+    state.player.credits = 100;
+    Math.random = () => 0.5;
+    const five = satanPactAnswer("5 favor");
+    assert.equal(five.gain.type, "favor");
+    assert.equal(five.gain.n, 5);
+    assert.equal(five.price[0].type, "sin");
+    assert.ok(line(five).startsWith("5 FAVOR, I see we got a betting man in our midst. I like that, "));
+    assert.ok(line(five).includes(" SIN{SIN} and it's yours high roller. Do we have a deal?"));
+    // no number: six; more than six: six, with his other line
+    assert.equal(satanPactAnswer("favour").gain.n, 6);
+    const ten = satanPactAnswer("10 favors");
+    assert.equal(ten.gain.n, 6);
+    assert.ok(line(ten).startsWith("Hey there blackleg, that's way too much for your puny wallet. Six is all you can get and the price is "));
+    // short of SIN: SOUL; a SOUL price that would kill: the Offerings close instead
+    state.player.credits = 0;
+    assert.equal(satanPactAnswer("4 favor").price[0].type, "hp");
+    state.player.hp = 2;
+    assert.equal(satanPactAnswer("4 favor").price[0].type, "shopClosed");
+    // YES: the FAVOR lands on the slot machine
+    state.player.hp = 80;
+    state.player.credits = 100;
+    const before = missionsState().doubloons;
+    satanPactRequest("3 favor");
+    const cost = satanPact().offer.price[0].n;
+    assert.equal(satanPactSign(), true);
+    assert.equal(missionsState().doubloons, before + 3);
+    assert.equal(state.player.credits, 100 - cost);
+  `);
+});
+
+test("Missions: a prime guess; the lowest guess on the table (a tie counts); the critical hit pays 3", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    const check = (id, guess) => {
+      state.roundState.playerSubmittedGuess = guess;
+      state.missions.round.resolved = true;
+      return MISSION_BY_ID[id].check(missionFacts());
+    };
+    assert.deepEqual([0, 1, 2, 3, 4, 9, 13, 49, 89, 97, 100].map((n) => missionIsPrime(n)), [false, false, true, true, false, false, true, false, true, true, false]);
+    assert.equal(check("guessPrime", 13), true);
+    assert.equal(check("guessPrime", 15), false);
+    // not before the results are in
+    state.roundState.playerSubmittedGuess = 13;
+    state.missions.round.resolved = false;
+    assert.equal(MISSION_BY_ID.guessPrime.check(missionFacts()), false);
+    // the DAMNED's typed guesses this round
+    state.roundState.botSubmittedGuesses = new Map(state.bots.map((bot, i) => [bot.id, [10, 20, 30, 40, 50][i]]));
+    assert.equal(check("guessLowest", 9), true);
+    assert.equal(check("guessLowest", 10), true);
+    assert.equal(check("guessLowest", 11), false);
+    // paid when it is the round's mission
+    state.missions.current = { id: "critical", value: MISSION_BY_ID.critical.value, param: null, round: state.round, done: false };
+    state.roundState.criticalHitKeys = new Set(["player"]);
+    const before = state.missions.doubloons;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, before + 3);
   `);
 });

@@ -26,6 +26,10 @@
    - Cheat death: back with 1 SOUL once; when it happens he takes a random SEAL, half your SIN, or the
      next BOSS comes with +50% SOUL.
    - Seal of Satan: only with every SEAL slot open and empty. Free.
+   - N FAVOR (up to 6; only once the slot machine and missions are open, 09-slot-missions.js, otherwise he
+     doesn't follow): 4 SIN per FAVOR; short of SIN, 1 SOUL per FAVOR; if that would kill you, his Offerings
+     closed for half as many rounds.
+   - KARMA (or Jesus' Gifts): never; he sends you to Jesus.
    Every number is x0.8 to x1.25 (most often near x1). 4+ SEALS sharing a build with the SEAL asked
    for (ELITE / SEAL) make the price x1.5. A SOUL price never takes you below 1 SOUL.
    "This round" means the current round during guess / ARTIFACTS, the next round from the results on. */
@@ -48,6 +52,8 @@ const SATAN_DEAL_LINES = {
   // the Planetary SEALS: Seals of Saturn, Moon and Mars
   planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
   apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  // KARMA or Jesus' Gifts
+  karma: [["satan", "I don't touch that my dear sinner, that's Jesus' domain, ask for something else."]],
   locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
   bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
   notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
@@ -98,6 +104,9 @@ const SATAN_DEAL_LINES = {
     ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
   satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
+  // FAVOR for the slot machine; more than six gets six with favorTooMuch instead
+  favor: [["satan", "{COUNT} FAVOR, I see we got a betting man in our midst. I like that, {PRICE} and it's yours high roller."]],
+  favorTooMuch: [["satan", "Hey there blackleg, that's way too much for your puny wallet. Six is all you can get and the price is {PRICE}."]],
   // the question after every offer (said on the same line as the price)
   question: [["satan", "Do we have a deal?"]],
 
@@ -155,6 +164,9 @@ const SATAN_DEAL_SEAL_ACCEPT = 0.5;
 const SATAN_DEAL_SEAL_ACCEPT_SLAIN = 0.8;
 const SATAN_DEAL_MAX_COPIES = 4;
 const SATAN_DEAL_MAX_HEAL = 5;
+const SATAN_DEAL_MAX_FAVOR = 6;
+const SATAN_DEAL_FAVOR_SIN = 4; // SIN per FAVOR
+const SATAN_DEAL_FAVOR_HP = 1; // SOUL per FAVOR when your SIN is short
 const SATAN_DEAL_SOURCE = "Satan's Pact";
 
 function satanPactFresh() {
@@ -429,6 +441,8 @@ function satanPactParse(text) {
   const normalized = satanPactNormalize(text);
   const number = satanPactNumber(normalized);
   if (!normalized) return { intent: "gibberish" };
+  if (/\b(karma|karmas|myrrh|frankincense|gift|gifts)\b/.test(normalized)) return { intent: "karma" };
+  if (/\b(favor|favors|favour|favours)\b/.test(normalized)) return { intent: "favor", n: number };
   if (/\b(seal of satan|satans seal|your own seal|your seal|lucifer)\b/.test(normalized)) return { intent: "satanSeal" };
   const sealMatch = satanPactMatchName(normalized, satanPactNamedSealIds());
   if (/\b(elite|upgrade|stronger|level up)\b/.test(normalized)) {
@@ -684,6 +698,25 @@ function satanPactUsesOffer(asked) {
   };
 }
 
+// FAVOR means nothing before the slot machine is open (or in Final Judgment): then he doesn't follow (null)
+function satanPactFavorOffer(asked) {
+  if (typeof missionsEnabled !== "function" || !missionsEnabled()) return null;
+  const askedN = asked && asked > 0 ? Math.floor(asked) : SATAN_DEAL_MAX_FAVOR;
+  const n = Math.min(askedN, SATAN_DEAL_MAX_FAVOR);
+  const sinCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_SIN * n * satanPactRoll()));
+  const hpCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_HP * n * satanPactRoll()));
+  let price;
+  if (Math.ceil(state.player.credits || 0) >= sinCost) price = [{ type: "sin", n: sinCost }];
+  else if (state.player.hp - hpCost >= 1) price = [{ type: "hp", n: hpCost }];
+  else {
+    const from = satanPactEffectRound();
+    const rounds = Math.max(1, Math.round((n / 2) * satanPactRoll()));
+    price = [{ type: "shopClosed", from, to: from + rounds - 1, rounds }];
+  }
+  const lines = askedN > SATAN_DEAL_MAX_FAVOR ? SATAN_DEAL_LINES.favorTooMuch : SATAN_DEAL_LINES.favor;
+  return { gain: { type: "favor", n }, price, lines, vars: { COUNT: n }, request: `${n} FAVOR` };
+}
+
 function satanPactCheatDeathOffer() {
   if (satanPact().cheatDeath) return { refuse: "cheatDeathAlready" };
   return { gain: { type: "cheatDeath" }, price: [], lines: SATAN_DEAL_LINES.cheatDeath, vars: {}, request: "a second life" };
@@ -711,6 +744,13 @@ function satanPactAnswer(text) {
       return satanPactUsesOffer(asked.n);
     case "cheatDeath":
       return satanPactCheatDeathOffer();
+    case "karma":
+      return { refuse: "karma" };
+    case "favor": {
+      const offer = satanPactFavorOffer(asked.n);
+      if (offer) return offer;
+      return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
+    }
     default:
       return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
   }
@@ -841,6 +881,10 @@ function satanPactReceive(gain) {
     case "cheatDeath":
       pact.cheatDeath = true;
       break;
+    case "favor":
+      // the slot machine's FAVOR (09-slot-missions.js keeps it as state.missions.doubloons)
+      missionsState().doubloons += gain.n;
+      break;
     default:
       break;
   }
@@ -856,9 +900,12 @@ function satanPactSign() {
   pact.used = true;
   pact.outcome = "signed";
   recordPactSigned();
+  collectionNoteDeal();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
+  // the "sign a deal" mission
+  if (typeof missionsNoteDeal === "function") missionsNoteDeal();
   return true;
 }
 

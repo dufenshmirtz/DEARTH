@@ -872,6 +872,7 @@ function resolveEliminatedBots(eliminated) {
     recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
+    missionsNoteElimination(bot);
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
@@ -898,6 +899,8 @@ function resolveEliminatedBots(eliminated) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
+          // Jesus and Satan talk once the results are on screen, then Final Judgment (09-intro-story.js)
+          if (!state.judgementTalkPlayed && state.mode === "arcade") state.judgementTalkDue = true;
           state.roundState.roundEvents.push("The seventy-two Goetic Seals are broken. Jesus and Satan approach.");
         }
       }
@@ -2125,6 +2128,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // the 72 demons have fallen: the results wait for Jesus and Satan; moving on brings them in now
+  if (introState.phase === "finale" || introState.phase === "finale-leave") return;
+  if (judgementTalkHoldsSummary()) {
+    startJudgementTalkNow();
     return;
   }
   // too much SIN held: the results wait for Satan's offer; moving on brings him in now

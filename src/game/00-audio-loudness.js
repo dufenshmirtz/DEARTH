@@ -24,6 +24,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/artifacts/lambCall.mp3": { m: -8.1, i: -12.9 },
   "assets/audio/artifacts/pentakill.mp3": { m: -6.1, i: -12.4 },
   "assets/audio/artifacts/skull.mp3": { m: -14.3, i: -16.1 },
+  "assets/audio/artifacts/spiritBoard.mp3": { m: -9.4, i: -12.9 },
   "assets/audio/artifacts/voodoo.mp3": { m: -8.2, i: -12.2 },
   "assets/audio/dragon-studio-evil-laughter-353177.mp3": { m: -12, i: -14.6 },
   "assets/audio/intro/intro-bell.mp3": { m: -12.4, i: -19.3 },

@@ -14979,3 +14979,124 @@ body.native-arcade #app .deal-word-inline {
 body.native-arcade #app .deal-button.deal-contract::after {
   display: block !important;
 }
+
+/* Settings > Display > Guide text: Hidden takes the "Pick a number" hint and the slot machine's
+   "Missions pay FAVOR." off the game screen; their space is kept so nothing moves */
+body.hide-guide-text #app .guide-text {
+  visibility: hidden !important;
+}
+
+/* Jesus and Satan before Final Judgment (09-intro-story.js, phase "finale"): the speaker stands where Satan
+   stands in his scenes, Jesus drawn in candlelight cream (intro-jesus-yellow.webp) and mirrored to face the table; on your
+   line you stand on the right as in the story's judgement. The box takes the speaker's colour. */
+.finale-figure {
+  position: fixed;
+  right: max(0.5vw, 4px);
+  bottom: 0;
+  height: min(96vh, 1216px);
+  max-width: 34vw;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(4px) brightness(0.5);
+  transition: opacity 0.75s ease, transform 0.95s cubic-bezier(0.25, 0.6, 0.3, 1), filter 0.75s ease;
+}
+
+.finale-figure-jesus { aspect-ratio: 886 / 1216; }
+.finale-figure-satan { aspect-ratio: 768 / 1195; }
+
+/* the same pool of darkness Satan stands in, so the table does not show through */
+.finale-figure::before {
+  content: "";
+  position: absolute;
+  inset: -6% -14% -2% -22%;
+  background: radial-gradient(ellipse at 55% 55%, rgba(0, 0, 0, 0.92) 0, rgba(0, 0, 0, 0.8) 42%, rgba(0, 0, 0, 0) 70%);
+}
+
+.finale-figure img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right bottom;
+  -webkit-user-drag: none;
+}
+
+/* "Candlelight": cream lines (#fff0bc, baked into the image) in a warm gold glow; his box and text keep the
+   story's yellow */
+.finale-figure-jesus img {
+  transform: scaleX(-1);
+  filter: drop-shadow(0 0 7px rgba(255, 236, 170, 0.45)) drop-shadow(0 0 26px rgba(255, 200, 80, 0.5));
+}
+
+/* you: where the story's judgement puts you (.intro-portrait-sinner), a little narrower so you stay clear of
+   the box */
+.finale-figure-you {
+  right: max(1vw, 6px);
+  bottom: 4vh;
+  height: min(58vh, 640px);
+  max-width: 26vw;
+  aspect-ratio: 1038 / 1028;
+}
+
+.finale-figure-satan img {
+  filter: drop-shadow(0 0 22px rgba(220, 25, 25, 0.45));
+}
+
+.finale-layer[data-speaker="jesus"] .finale-figure-jesus,
+.finale-layer[data-speaker="satan"] .finale-figure-satan,
+.finale-layer[data-speaker="you"] .finale-figure-you {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.finale-layer[data-speaker="you"] .finale-figure-you {
+  transform: translateY(-4px);
+}
+
+/* the box in the speaker's colour: Satan red (as in his scenes), Jesus yellow, you white */
+.finale-layer .intro-box-pact::before,
+.finale-layer .intro-box-pact::after {
+  transition: filter 0.5s ease, box-shadow 0.5s ease, opacity 0.5s ease;
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus::before {
+  filter: brightness(0.9) sepia(1) saturate(7) hue-rotate(8deg);
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus::after {
+  box-shadow: 0 0 34px rgba(255, 190, 30, 0.26), inset 0 0 40px rgba(220, 160, 20, 0.22);
+}
+
+.finale-layer .intro-box-pact.intro-says-you::before {
+  filter: none;
+  opacity: 0.92;
+}
+
+.finale-layer .intro-box-pact.intro-says-you::after {
+  box-shadow: 0 0 30px rgba(236, 230, 216, 0.12), inset 0 0 36px rgba(236, 230, 216, 0.08);
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus .intro-skip { color: #b89a45 !important; }
+.finale-layer .intro-box-pact.intro-says-jesus .intro-skip:hover { color: #ffd23f !important; }
+.finale-layer .intro-box-pact.intro-says-you .intro-skip { color: #8d877c !important; }
+.finale-layer .intro-box-pact.intro-says-you .intro-skip:hover { color: #ece6d8 !important; }
+
+.finale-layer.intro-pact-leaving .finale-figure {
+  opacity: 0;
+  filter: brightness(0.4) blur(4px);
+  transform: translateY(16px);
+  transition: opacity 0.85s ease-in, transform 0.85s ease-in, filter 0.85s ease-in;
+}
+
+body.mobile-arcade .finale-figure {
+  height: 98vh;
+  max-width: 40vw;
+}
+
+body.mobile-arcade .finale-figure-you {
+  height: 58vh;
+  max-width: 30vw;
+}

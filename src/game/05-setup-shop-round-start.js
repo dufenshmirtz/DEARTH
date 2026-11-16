@@ -204,6 +204,12 @@ function skipToFirstGoeticBoss() {
   rerollShop();
   beginRound();
   addLog("SKIP: jumped past the eight special bosses to the first Goetic Seal boss.");
+  // it counts as beating them: Satan's victory speech (the first-win one if it is still to come) plays as soon
+  // as the new round is on the table (09-intro-story.js)
+  if (!state.satanVictoryPlayed && state.mode === "arcade") {
+    state.satanVictoryDue = true;
+    state.satanVictorySkipped = true;
+  }
   render();
 }
 
@@ -214,10 +220,23 @@ function skipToFinalBosses() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * (UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL));
+  addLog("SKIP: jumped to the Jesus and Satan phase.");
+  // Jesus and Satan have their say first, as after the 72nd demon (09-intro-story.js); their end calls
+  // finishSkipToFinalBosses. Queued meanwhile, so a run reloaded in the middle still reaches Final Judgment.
+  if (!state.judgementTalkPlayed && state.mode === "arcade" && introState.phase === "off") {
+    state.finalBossQueued = true;
+    state.judgementTalkDue = false;
+    render();
+    startJudgementTalk({ fromSkip: true });
+    return;
+  }
+  finishSkipToFinalBosses();
+}
+
+function finishSkipToFinalBosses() {
   enterFinalBossPhase();
   rerollShop();
   beginRound();
-  addLog("SKIP: jumped to the Jesus and Satan phase.");
   render();
 }
 
@@ -547,6 +566,7 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
     // lifetime SIN earned (Records); money from sales does not count
     const soldBase = normalizedEntries.filter((entry) => String(entry.source || "").startsWith("Sold ")).reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
     recordSinEarned(gained - Math.ceil(soldBase * multiplier));
+    collectionNoteSinEarned(gained - Math.ceil(soldBase * multiplier));
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
@@ -807,6 +827,9 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanVictorySkipped = false;
+  state.judgementTalkDue = false;
+  state.judgementTalkPlayed = false;
   state.satanTightwadDue = false;
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;

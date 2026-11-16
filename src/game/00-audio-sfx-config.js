@@ -64,7 +64,7 @@ const ARTIFACT_SFX = {
   a10: { src: "assets/audio/artifacts/coinDrop.mp3", tier: "item" },
   a11: { src: "assets/audio/artifacts/VialofBlood.mp3", tier: "item" },
   a12: { src: "assets/audio/artifacts/invertedCross.mp3", tier: "item" },
-  a14: { src: "assets/audio/artifacts/candle.mp3", tier: "item" },
+  a14: { src: "assets/audio/artifacts/spiritBoard.mp3", tier: "item" }, // the planchette sliding (freesound_community "wood chest slid3")
   a15: { src: "assets/audio/artifacts/Dagger.mp3", tier: "item" },
   a18: { src: "assets/audio/artifacts/Crystal.mp3", tier: "item" },
   a21: { src: "assets/audio/artifacts/pentakill.mp3", tier: "item" },

@@ -59,6 +59,7 @@ const ANIM_SPEED_VALUES = [1, 2, 4];
 const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
+const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -93,8 +94,8 @@ const PVP_ACTIVES = [
   },
   {
     id: "sink",
-    name: "Black Candle",
-    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
+    name: "Spirit Board",
+    icon: "assets/artifacts/occult-items-17/13 SPIRIT BOARD.png",
     description: "Change the final TARGET by -5.",
     needsTarget: false
   },
@@ -1189,7 +1190,7 @@ const ITEMS = {
   a14: {
     id: "a14",
     type: "active",
-    name: "Black Candle",
+    name: "Spirit Board", // was the Black Candle (same effect; only the name, picture and sound changed)
     price: 3,
     description: "During reveal, reduce the TARGET by 10."
   },
@@ -1565,7 +1566,7 @@ const ARTIFACT_ICONS = {
   a11: "occult-items-17/05 VIAL OF BLOOD.png",
   a12: "occult-items-17/16 DARK TALISMAN.png",
   a13: "a13.png",
-  a14: "occult-items-17/02 BLACK CANDLE.png",
+  a14: "occult-items-17/13 SPIRIT BOARD.png",
   a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
   a16: "a16.png",
   a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
@@ -2221,7 +2222,8 @@ const state = {
     animSpeed: 1,
     screenShake: 2,
     flashes: 1,
-    textSize: 0
+    textSize: 0,
+    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Missions pay FAVOR." (body.hide-guide-text)
   },
   settingsTab: "audio",
   pauseOpen: false,
@@ -2292,6 +2294,9 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanVictorySkipped: false, // SKIP past the 8 BOSSES: the victory speech may play outside the results
+  judgementTalkDue: false, // the 72 demons have fallen: Jesus and Satan talk before Final Judgment
+  judgementTalkPlayed: false,
   satanTightwadDue: false,
   satanTightwadAbove: false,
   satanTightwadOffers: 0,

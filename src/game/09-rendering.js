@@ -595,6 +595,14 @@ const SETTING_CHOICES = {
     set: (value) => { state.display.textSize = value; },
     text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
   },
+  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Missions pay FAVOR."
+  guideText: {
+    label: "Guide text",
+    values: () => [1, 0],
+    get: () => (state.display.guideText === 0 ? 0 : 1),
+    set: (value) => { state.display.guideText = value; },
+    text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+  },
   fullscreen: {
     label: "Window",
     values: () => [0, 1],
@@ -695,7 +703,8 @@ function renderSettingsPanel(prefix) {
       settingChoiceRow("outlineBoil"),
       settingChoiceRow("screenShake"),
       settingChoiceRow("flashes"),
-      settingChoiceRow("textSize")
+      settingChoiceRow("textSize"),
+      settingChoiceRow("guideText")
     ].join("");
   } else {
     const controls = isNativeArcadeApp()
@@ -1171,6 +1180,10 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
+      <h2>Slot machine (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+      </div>
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
@@ -2480,6 +2493,7 @@ function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
+  let guideHint = false; // the "Pick a number" line, which Settings > Display > Guide text can hide
   let disabled = "";
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
@@ -2512,13 +2526,14 @@ function consoleActionState() {
     hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {
     hint = `Pick a number between 0 and ${maxGuess}`;
+    guideHint = true;
   }
 
-  return { buttonText, disabled, hint, inputDisabled, maxGuess, round };
+  return { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round };
 }
 
 function renderConsole() {
-  const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
+  const { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round } = consoleActionState();
   // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
@@ -2552,7 +2567,7 @@ function renderConsole() {
   return `
     <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
       ${sideParts.slot}
-      ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
+      ${hint ? `<div class="console-hint${guideHint ? " guide-text" : ""}">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
         ${corruptionNote}
         <input
@@ -3061,6 +3076,7 @@ function resetSettings() {
   state.display.screenShake = prefersReducedMotion ? 0 : 2;
   state.display.flashes = 1;
   state.display.textSize = 0;
+  state.display.guideText = 1;
   saveSoundSettings();
   applySoundSettings();
   saveDisplaySettings();
@@ -3111,6 +3127,13 @@ function handlePauseAction(action) {
     // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
+    render();
+    return;
+  }
+  if (action === "unlock-slot") {
+    // testing: open the slot machine and the missions without a first win; nothing happens if they're open already
+    if (!unlockSlotMachine()) return;
+    addLog("Testing: slot machine and missions unlocked.");
     render();
     return;
   }

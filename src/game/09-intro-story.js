@@ -99,6 +99,21 @@ const SATAN_VICTORY_LINES = [
   ["satan", "Hell is right around the corner my dearest little flesh puppet..."]
 ];
 
+// the 72 Goetic demons have fallen (or SKIP in the demon stage): Jesus and Satan have their say right
+// before Final Judgment. Jesus stands where Satan stands in his scenes; on your line you stand there
+// (as in the story's judgement) and neither of them does.
+const FINAL_JUDGEMENT_LINES = [
+  ["jesus", "Enough games. You really are a troublesome wretch."],
+  ["satan", "You either are beyond persistent or cheated. Either way you are an enormous virgin!"],
+  ["jesus", "There was no chance I was ever going to let you come back, it was clear from the start. Yet you came all this way, I really wonder why."],
+  ["satan", "I am telling you, no way this vermin sat through and outmanoeuvred all my demons. He clearly edited the game data or found some other exploit. He is probably just reading this in the game files the sore loser!"],
+  ["jesus", "Regardless, this display of defiance can't go any longer. I am stepping in to end you sinner."],
+  ["satan", "You know what cowboy, you have gotten way too big for your boots and it's high time you started payin'. Furcas hold my beer."],
+  ["jesus", "Lucifer you miserable fucker, I hope you understand this whole situation is your fault."],
+  ["satan", "Hey hey hey we can talk about the dos and don'ts and whens and hows and whys and such later. This moron here has booked himself a first class ticket to the deepest pit of Tartarus, it's a shame to keep them waiting."],
+  ["you", "Fuck you both."]
+];
+
 // the player ends a round holding SATAN_TIGHTWAD_SIN or more: Satan offers to take it all (YES / NO at the end)
 const SATAN_TIGHTWAD_LINES = [
   ["satan", "Wow, we got a tightwad here don't we? I thought we had an understanding about how things work out here you little bitch."],
@@ -113,6 +128,7 @@ const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the ri
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
+//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment)
 const introState = {
   phase: "off",
   timers: [],
@@ -128,7 +144,8 @@ const introState = {
   typing: false,
   waiting: false,
   pactTimer: null,
-  keyBound: false
+  keyBound: false,
+  finaleFromSkip: false
 };
 
 /* ---- flags used by the rest of the game ---- */
@@ -158,6 +175,8 @@ function satanFirstVictoryPending() {
 function markSatanFirstVictorySeen() {
   try {
     window.localStorage?.setItem(SATAN_FIRST_VICTORY_STORAGE_KEY, "1");
+    // leaving the first-win speech opens the slot machine and the missions (09-slot-missions.js)
+    if (typeof unlockSlotMachine === "function") unlockSlotMachine();
   } catch (error) {}
 }
 
@@ -178,7 +197,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal"].includes(introState.phase);
+  return ["black", "judgement", "booting", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -188,7 +207,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -432,7 +451,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "pact", "victory", "tightwad", "deal"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -464,6 +483,7 @@ function introAdvance() {
   }
   if (introState.phase === "judgement") introBootGame();
   else if (introState.phase === "victory") satanVictoryLeave();
+  else if (introState.phase === "finale") judgementTalkLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
   else if (introState.phase === "deal") satanDealEndOfLines();
   else introSealPact();
@@ -473,7 +493,7 @@ function introBindKeys() {
   if (introState.keyBound) return;
   introState.keyBound = true;
   window.addEventListener("resize", () => {
-    if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+    if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
     else if (introState.phase === "judgement") introFitText();
   });
   document.addEventListener(
@@ -548,6 +568,10 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanVictoryLeave();
+  } else if (introState.phase === "finale") {
+    introClearTimers();
+    introState.typing = false;
+    judgementTalkLeave();
   } else if (introState.phase === "tightwad") {
     // the offer cannot be skipped, only its talk: straight to YES / NO
     introClearTimers();
@@ -645,8 +669,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (["pact", "victory", "tightwad", "deal"].includes(introState.phase)) introPlacePactBox();
+  if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
   satanVictoryAfterRender();
+  judgementTalkAfterRender();
   satanTightwadAfterRender();
   if (introState.phase !== "tutorial" || introState.pactTimer) return;
   if (state.round >= 2 && state.stage === "summary") {
@@ -680,12 +705,14 @@ function introStartPactNow() {
    with its own skip. It plays once per run (state.satanVictoryPlayed, kept in the save). The very first win
    of a player gets SATAN_FIRST_VICTORY_LINES instead; it counts as seen when he leaves (end or skip), so a
    game closed in the middle of it shows it again at the next win. */
+// SKIP past the eight special BOSSES counts as beating them: the speech comes as soon as the new round is
+// on the table (state.satanVictorySkipped lets it play outside the results)
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
     introState.phase === "off" &&
     state.mode === "arcade" &&
-    state.stage === "summary" &&
+    (state.stage === "summary" || state.satanVictorySkipped) &&
     !state.gameOver &&
     !state.pauseOpen &&
     !roundRevealAnimationActive() &&
@@ -699,11 +726,12 @@ function satanVictoryHoldsSummary() {
 
 function satanVictoryAfterRender() {
   if (!state.satanVictoryDue || introState.pactTimer || introState.phase !== "off") return;
-  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const waiting = () => state.satanVictoryDue && state.mode === "arcade" && !state.gameOver && (state.stage === "summary" || state.satanVictorySkipped);
+  if (!waiting()) return;
   const check = () => {
     introState.pactTimer = null;
     if (satanVictoryReady()) startSatanVictory();
-    else if (state.satanVictoryDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+    else if (waiting()) introState.pactTimer = setTimeout(check, 400);
   };
   introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
 }
@@ -717,6 +745,7 @@ function startSatanVictoryNow() {
 
 function startSatanVictory() {
   state.satanVictoryDue = false;
+  state.satanVictorySkipped = false;
   state.satanVictoryPlayed = true;
   satanOpenScene("victory", satanVictoryLines(), "satan-victory-layer");
   saveArcadeRun();
@@ -764,6 +793,97 @@ function satanLeaveScene(phase) {
     introState.phase = "off";
     render();
   }, 1300);
+}
+
+/* ---- before Final Judgment: the 72 Goetic demons have fallen ----
+   state.judgementTalkDue is set when the 72nd demon falls; the round's results then wait for Jesus and Satan
+   (Next Round brings them in at once), like Satan's victory speech. They take turns standing where Satan
+   stands in his scenes (Jesus drawn in candlelight cream, mirrored to face the table), and the box takes the speaker's colour
+   (yellow, red, white); on your line you stand on the right as in the story's judgement. The end of their
+   talk (or its skip) goes straight into Final Judgment: the round moves on, they take the table and the
+   Judgement banner plays. SKIP in the demon stage brings it in at once (skipToFinalBosses, 05). Once per run
+   (state.judgementTalkPlayed, kept in the save). */
+function judgementTalkReady() {
+  return (
+    state.judgementTalkDue &&
+    introState.phase === "off" &&
+    state.mode === "arcade" &&
+    state.stage === "summary" &&
+    !state.gameOver &&
+    !state.pauseOpen &&
+    !roundRevealAnimationActive() &&
+    !(activeMoment && activeMoment.until > performance.now())
+  );
+}
+
+function judgementTalkHoldsSummary() {
+  return Boolean(state.judgementTalkDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function judgementTalkAfterRender() {
+  if (!state.judgementTalkDue || introState.pactTimer || introState.phase !== "off") return;
+  if (state.mode !== "arcade" || state.stage !== "summary") return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (judgementTalkReady()) startJudgementTalk();
+    else if (state.judgementTalkDue && state.mode === "arcade" && state.stage === "summary") introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startJudgementTalkNow() {
+  if (!judgementTalkHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startJudgementTalk();
+}
+
+// options.fromSkip: SKIP brought them in (the run is not at its results); their end calls finishSkipToFinalBosses
+function startJudgementTalk(options = {}) {
+  state.judgementTalkDue = false;
+  state.judgementTalkPlayed = true;
+  introState.finaleFromSkip = Boolean(options.fromSkip);
+  introBindKeys();
+  introState.phase = "finale";
+  introState.lines = FINAL_JUDGEMENT_LINES;
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+  document.querySelector("#floatingTooltip")?.classList.remove("visible");
+  const layer = document.createElement("div");
+  layer.className = "intro-pact-layer finale-layer";
+  layer.innerHTML = `
+    <div class="finale-figure finale-figure-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus-yellow.webp" alt="" draggable="false" /></div>
+    <div class="finale-figure finale-figure-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>
+    <div class="finale-figure finale-figure-you" aria-hidden="true"><img src="assets/ui/intro/intro-sinner.webp" alt="" draggable="false" /></div>
+    ${introBoxHtml("pact")}`;
+  layer.addEventListener("click", introAdvance);
+  introBindSkip(layer);
+  document.body.appendChild(layer);
+  introState.layer = layer;
+  introState.box = layer.querySelector(".intro-box");
+  introPlacePactBox();
+  introShowLine(0);
+  if (!introState.finaleFromSkip) saveArcadeRun();
+}
+
+// they fade, and Final Judgment begins
+function judgementTalkLeave() {
+  if (introState.phase !== "finale") return;
+  const fromSkip = Boolean(introState.finaleFromSkip);
+  introSetWaiting(false);
+  introState.phase = "finale-leave";
+  introState.box?.classList.add("intro-box-leave");
+  introState.layer?.classList.add("intro-pact-leaving");
+  introLater(() => {
+    introState.layer?.remove();
+    introState.layer = null;
+    introState.box = null;
+    introState.finaleFromSkip = false;
+    introClearTimers();
+    introState.phase = "off";
+    if (state.mode !== "arcade" || state.gameOver) return;
+    if (fromSkip) finishSkipToFinalBosses();
+    else advanceAfterSummary();
+  }, 900);
 }
 
 /* ---- Satan's offer: too much SIN held ----
