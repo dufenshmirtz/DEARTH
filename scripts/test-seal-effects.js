@@ -4232,16 +4232,21 @@ test("Guess quality scores what you typed against the TARGET as first revealed; 
   `);
 });
 
-test("Seal of Balam: a DAMNED with 10 MEMORY and 10 BOUNTY is eliminated only when you press READY, then its max SOUL is spread as damage", () => {
+test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only when you press READY, then its max SOUL is spread as damage", () => {
   game()(`
     fixture([["p57"]], [10, 20, 30, 40, 50]);
-    state.round = 20;
+    state.round = 25;
     const [doomed, ...others] = state.bots;
     others.forEach(bot => { bot.reward = 0; });
+    // 14 of each is not enough
+    others[0].memory = [];
+    addBotMemory(others[0], 14, "");
+    changeBotSin(others[0], 14, "");
     doomed.memory = [];
-    addBotMemory(doomed, 10, "");
-    changeBotSin(doomed, 10 - botSin(doomed), "");
-    assert.ok(doomed.memory.length >= 10 && botSin(doomed) >= 10);
+    addBotMemory(doomed, 15, "");
+    changeBotSin(doomed, 15 - botSin(doomed), "");
+    assert.equal(doomed.memory.length, 15);
+    assert.equal(botSin(doomed), 15);
     // meeting the condition before READY does nothing yet
     assert.equal(doomed.eliminated, false);
     assert.ok(doomed.hp > 0);
@@ -4249,6 +4254,10 @@ test("Seal of Balam: a DAMNED with 10 MEMORY and 10 BOUNTY is eliminated only wh
     applyPenalties();
     assert.equal(doomed.eliminated, true);
     assert.equal(doomed.deathNotice, "BALAM");
+    assert.equal(others[0].memory.length, 14);
+    assert.ok(!state.roundState.roundEvents.some(line => line.includes(ITEMS.p57.name + " eliminated " + others[0].name)));
+    assert.ok(ITEMS.p57.description.includes("15+ MEMORY and 15+ BOUNTY"));
+    assert.ok(itemDescription({ ...ITEMS.p57, stack: 2 }).includes("15+ MEMORY and 15+ BOUNTY"));
     assert.ok(state.roundState.roundEvents.some(line => line.includes(ITEMS.p57.name + " eliminated " + doomed.name)));
     assert.ok(state.roundState.roundEvents.some(line => line.includes("collapse damage")));
   `);

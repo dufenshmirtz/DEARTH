@@ -842,13 +842,16 @@ function stubbornArtifactChance(idOrItem) {
   return Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1);
 }
 
+// MEMORY and BOUNTY a non-boss DAMNED needs (both) for the Seal of Balam to eliminate it
+const BALAM_THRESHOLD = 15;
+
 function balamCollapseTargets(sourceBot) {
   const bosses = activeBots().filter((bot) => bot.id !== sourceBot?.id && bot.isBoss);
   if (bosses.length) return bosses;
   return activeBots().filter((bot) => bot.id !== sourceBot?.id);
 }
 
-// Seal of Balam acts only when you press READY: a DAMNED that reaches 10 MEMORY and 10 BOUNTY earlier
+// Seal of Balam acts only when you press READY: a DAMNED that reaches BALAM_THRESHOLD MEMORY and BOUNTY earlier
 // keeps playing until then (called from applyPenalties, 06)
 function applyBalamAtReady() {
   const round = state.roundState;
@@ -856,14 +859,14 @@ function applyBalamAtReady() {
   if (!round || round.balamResolving || !entries.length) return;
   round.balamResolving = true;
   try {
-    let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+    let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     while (target) {
       entries.forEach((entry) => markPassiveEntryTriggered(entry));
       const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";
-      round.roundEvents.push(`${ITEMS.p57.name} eliminated ${target.name} for reaching 10 MEMORY and 10 BOUNTY.`);
+      round.roundEvents.push(`${ITEMS.p57.name} eliminated ${target.name} for reaching ${BALAM_THRESHOLD} MEMORY and ${BALAM_THRESHOLD} BOUNTY.`);
 
       const damageTargets = balamCollapseTargets(target);
       if (damagePool > 0 && damageTargets.length) {
@@ -877,7 +880,7 @@ function applyBalamAtReady() {
       }
 
       resolveEliminatedBots([target]);
-      target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+      target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     }
   } finally {
     round.balamResolving = false;
