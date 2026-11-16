@@ -173,7 +173,6 @@ function devGrantSeal(id) {
   }
   syncShopSlotCount();
   applyGuessReveals();
-  checkBalamMemoryBountyEliminations();
   playSealPurchaseSfx();
   addLog(`Testing: ${note}`);
   return { ok: true, note };
@@ -244,7 +243,6 @@ function buyShopItem(slotIndex) {
     collectionNoteShopBuy();
     missionsNoteShop("buySeal");
     applyGuessReveals();
-    checkBalamMemoryBountyEliminations();
     playSealPurchaseSfx();
     applyOfferingTollDamage(item);
     if (state.player.hp <= 0) finishGameOverRound();

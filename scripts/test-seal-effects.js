@@ -4231,3 +4231,25 @@ test("Guess quality scores what you typed against the TARGET as first revealed; 
     assert.equal(reached.bestRunGuessQuality.value, 80);
   `);
 });
+
+test("Seal of Balam: a DAMNED with 10 MEMORY and 10 BOUNTY is eliminated only when you press READY, then its max SOUL is spread as damage", () => {
+  game()(`
+    fixture([["p57"]], [10, 20, 30, 40, 50]);
+    state.round = 20;
+    const [doomed, ...others] = state.bots;
+    others.forEach(bot => { bot.reward = 0; });
+    doomed.memory = [];
+    addBotMemory(doomed, 10, "");
+    changeBotSin(doomed, 10 - botSin(doomed), "");
+    assert.ok(doomed.memory.length >= 10 && botSin(doomed) >= 10);
+    // meeting the condition before READY does nothing yet
+    assert.equal(doomed.eliminated, false);
+    assert.ok(doomed.hp > 0);
+    assert.equal(state.sealStats?.p57?.triggers || 0, 0);
+    applyPenalties();
+    assert.equal(doomed.eliminated, true);
+    assert.equal(doomed.deathNotice, "BALAM");
+    assert.ok(state.roundState.roundEvents.some(line => line.includes(ITEMS.p57.name + " eliminated " + doomed.name)));
+    assert.ok(state.roundState.roundEvents.some(line => line.includes("collapse damage")));
+  `);
+});

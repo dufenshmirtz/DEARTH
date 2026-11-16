@@ -269,6 +269,7 @@ function applyPenalties() {
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
+  applyBalamAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();

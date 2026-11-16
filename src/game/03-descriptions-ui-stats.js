@@ -103,7 +103,7 @@ function itemDescription(item) {
     const { main, elite } = splitEliteDescription(rule);
     return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
   }
-  if (stack <= 1) return ["p86", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p86", "p57", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -237,7 +237,7 @@ function itemDescription(item) {
   }
   if (item.id === "p57") {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
-    return `If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. ${multiplier}x its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
+    return `When you press READY, every non-boss DAMNED with 10+ MEMORY and 10+ BOUNTY is eliminated. ${multiplier}x its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
   }
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;

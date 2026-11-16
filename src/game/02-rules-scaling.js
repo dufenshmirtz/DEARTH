@@ -781,7 +781,6 @@ function addBotMemory(bot, count, reason = "", options = {}) {
   applyBathinMemoryDamage(bot, bathinEntries);
   if (reason) state.roundState?.roundEvents.push(reason);
   applySelfStackingMemoryOverTen(bot, beforeMemory, bot.memory?.length || 0);
-  checkBalamMemoryBountyEliminations();
   return actualIncrease;
 }
 
@@ -849,7 +848,9 @@ function balamCollapseTargets(sourceBot) {
   return activeBots().filter((bot) => bot.id !== sourceBot?.id);
 }
 
-function checkBalamMemoryBountyEliminations() {
+// Seal of Balam acts only when you press READY: a DAMNED that reaches 10 MEMORY and 10 BOUNTY earlier
+// keeps playing until then (called from applyPenalties, 06)
+function applyBalamAtReady() {
   const round = state.roundState;
   const entries = orderedPassiveEffectEntries("p57");
   if (!round || round.balamResolving || !entries.length) return;
@@ -862,7 +863,7 @@ function checkBalamMemoryBountyEliminations() {
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";
-      round.roundEvents.push(`Seal of Balam eliminated ${target.name} for reaching 10 memory and 10 bounty.`);
+      round.roundEvents.push(`${ITEMS.p57.name} eliminated ${target.name} for reaching 10 MEMORY and 10 BOUNTY.`);
 
       const damageTargets = balamCollapseTargets(target);
       if (damagePool > 0 && damageTargets.length) {
@@ -870,8 +871,8 @@ function checkBalamMemoryBountyEliminations() {
         damageBots(
           damageTargets,
           (bot) => allocations.get(bot.id) || 0,
-          (bot, damage) => `Seal of Balam dealt ${damage} collapse damage to ${bot.name}.`,
-          "Seal of Balam"
+          (bot, damage) => `${ITEMS.p57.name} dealt ${damage} collapse damage to ${bot.name}.`,
+          ITEMS.p57.name
         );
       }
 
@@ -904,7 +905,6 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
     applyBountyToMemoryMirror(bot, gained, options);
     applyBountyPoison(bot);
   }
-  checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
 }
 

@@ -530,7 +530,7 @@ const ITEMS = {
     name: "Seal of Balam",
     price: 14,
     description:
-      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
+      "When you press READY, every non-boss DAMNED with 10+ MEMORY and 10+ BOUNTY is eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
   p58: {
     id: "p58",
