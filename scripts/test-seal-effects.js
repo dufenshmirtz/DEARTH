@@ -4232,7 +4232,7 @@ test("Guess quality scores what you typed against the TARGET as first revealed; 
   `);
 });
 
-test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only when you press READY, then its max SOUL is spread as damage", () => {
+test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only when you press READY, then half its max SOUL is spread as damage", () => {
   game()(`
     fixture([["p57"]], [10, 20, 30, 40, 50]);
     state.round = 25;
@@ -4260,5 +4260,24 @@ test("Seal of Balam: a DAMNED with 15 MEMORY and 15 BOUNTY is eliminated only wh
     assert.ok(itemDescription({ ...ITEMS.p57, stack: 2 }).includes("15+ MEMORY and 15+ BOUNTY"));
     assert.ok(state.roundState.roundEvents.some(line => line.includes(ITEMS.p57.name + " eliminated " + doomed.name)));
     assert.ok(state.roundState.roundEvents.some(line => line.includes("collapse damage")));
+    assert.ok(ITEMS.p57.description.includes("Half its max SOUL"));
   `);
+  // collapse damage: half of 1000 max SOUL = 500, ELITE x1.5 per level
+  for (const [stack, expected] of [[1, 500], [2, 750]]) {
+    game()(`
+      fixture([["p57", ${stack}]], [10, 20, 30, 40, 50]);
+      state.round = 25;
+      const doomed = state.bots[0];
+      doomed.memory = [];
+      addBotMemory(doomed, 15, "");
+      changeBotSin(doomed, 15 - botSin(doomed), "");
+      applyPenalties();
+      assert.equal(doomed.eliminated, true);
+      const collapse = state.roundState.roundEvents
+        .map(line => line.match(/dealt (\\d+) collapse damage/))
+        .filter(Boolean)
+        .reduce((sum, match) => sum + Number(match[1]), 0);
+      assert.equal(collapse, ${expected});
+    `);
+  }
 });

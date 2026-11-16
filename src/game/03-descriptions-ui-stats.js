@@ -237,7 +237,7 @@ function itemDescription(item) {
   }
   if (item.id === "p57") {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
-    return `When you press READY, every non-boss DAMNED with ${BALAM_THRESHOLD}+ MEMORY and ${BALAM_THRESHOLD}+ BOUNTY is eliminated. ${multiplier}x its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
+    return `When you press READY, every non-boss DAMNED with ${BALAM_THRESHOLD}+ MEMORY and ${BALAM_THRESHOLD}+ BOUNTY is eliminated. Half its max SOUL x${multiplier} becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
   }
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;

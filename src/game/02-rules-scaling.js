@@ -862,7 +862,8 @@ function applyBalamAtReady() {
     let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     while (target) {
       entries.forEach((entry) => markPassiveEntryTriggered(entry));
-      const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
+      // half its max SOUL (rounded up), then ELITE x1.5 per level
+      const damagePool = passiveEntryFlatDamage(entries[0], Math.ceil((target.maxHp || 0) / 2));
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";

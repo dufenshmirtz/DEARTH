@@ -747,7 +747,7 @@ const ITEMS = {
     name: "Seal of Balam",
     price: 14,
     description:
-      "When you press READY, every non-boss DAMNED with 15+ MEMORY and 15+ BOUNTY is eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
+      "When you press READY, every non-boss DAMNED with 15+ MEMORY and 15+ BOUNTY is eliminated. Half its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
   p58: {
     id: "p58",
@@ -5143,7 +5143,8 @@ function applyBalamAtReady() {
     let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     while (target) {
       entries.forEach((entry) => markPassiveEntryTriggered(entry));
-      const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
+      // half its max SOUL (rounded up), then ELITE x1.5 per level
+      const damagePool = passiveEntryFlatDamage(entries[0], Math.ceil((target.maxHp || 0) / 2));
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";
@@ -6110,7 +6111,7 @@ function itemDescription(item) {
   }
   if (item.id === "p57") {
     const multiplier = Number(flatDamagePower(item).toFixed(2));
-    return `When you press READY, every non-boss DAMNED with ${BALAM_THRESHOLD}+ MEMORY and ${BALAM_THRESHOLD}+ BOUNTY is eliminated. ${multiplier}x its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
+    return `When you press READY, every non-boss DAMNED with ${BALAM_THRESHOLD}+ MEMORY and ${BALAM_THRESHOLD}+ BOUNTY is eliminated. Half its max SOUL x${multiplier} becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage.`;
   }
   if (item.id === "p58") {
     return `The worst guess penalty hits the 3 furthest guesses. The furthest takes ${flatDamageValue(item, 20)} damage, and the next two take ${flatDamageValue(item, 10)}.`;
