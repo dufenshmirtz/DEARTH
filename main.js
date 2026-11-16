@@ -290,7 +290,9 @@ const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
 // Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
-const SATANIC_BIBLE_ROLLS = 5;
+const SATANIC_BIBLE_ROLLS = 3;
+// the Seal slot's ELITE chance never goes above this, however many Satanic Bibles are cast
+const SHOP_ELITE_CHANCE_MAX = 0.5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -1511,7 +1513,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
+    description: "Double the ELITE chance for the SEAL slot for the next 3 Devil's Offerings rolls. Every cast doubles it again and counts its own 3 rolls, up to 50%."
   },
   a25: {
     id: "a25",
@@ -5920,7 +5922,7 @@ function artifactDescription(item) {
       ? `+1 CRITICAL range for the round, and your CRITICAL deals +${damage} damage (${ITEMS.p137.name}).`
       : "+1 CRITICAL range for the round.";
   }
-  if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls.`;
+  if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls, up to ${Math.round(SHOP_ELITE_CHANCE_MAX * 100)}%.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
     if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
@@ -7941,7 +7943,7 @@ function eliteShopChance(eliteBoosted = activeEliteBoostCount()) {
   let multiplier = 1;
   multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
   if (sealSlotsFull()) multiplier *= 2;
-  return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
+  return Math.min(SHOP_ELITE_CHANCE_MAX, SHOP_ELITE_CHANCE * multiplier);
 }
 
 function activeInventoryLimit() {

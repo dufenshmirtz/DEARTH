@@ -3875,7 +3875,7 @@ test("Devil's Offerings Seal slot ELITE chance: 4%, 8% with no empty Seal slots,
   `);
 });
 
-test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 Devil's Offerings rolls", () => {
+test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 3 Devil's Offerings rolls", () => {
   game()(`
     state.player.passives = [itemCopy("p1")];
     state.eliteBoostRolls = [];
@@ -3888,11 +3888,9 @@ test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 
     // a second cast stacks: x4 while both last
     addEliteRerollBoost();
     assert.equal(eliteShopChance(), 0.16);
-    assert.deepEqual(state.eliteBoostRolls.slice(), [3, 5]);
+    assert.deepEqual(state.eliteBoostRolls.slice(), [1, 3]);
     rerollShop();
-    rerollShop();
-    rerollShop();
-    // the first cast is spent after its 5 rolls; the second still has 2
+    // the first cast is spent after its 3 rolls; the second still has 2
     assert.deepEqual(state.eliteBoostRolls.slice(), [2]);
     assert.equal(eliteShopChance(), 0.08);
     rerollShop();
@@ -3904,6 +3902,26 @@ test("Satanic Bible: each cast doubles the Seal slot ELITE chance for its own 5 
     assert.equal(eliteShopChance(), 0.16);
     rerollShop();
     assert.equal(eliteShopChance(), 0.04);
+  `);
+});
+
+test("Satanic Bible: the Seal slot ELITE chance never goes above 50%, however many are cast", () => {
+  game()(`
+    state.player.passives = [];
+    state.eliteBoostRolls = [];
+    state.eliteBoostedNextReroll = 0;
+    for (let i = 1; ownedSealSlotCount() < passiveLimit(); i += 1) state.player.passives.push(itemCopy("p" + i));
+    assert.equal(eliteShopChance(), 0.08);
+    addEliteRerollBoost();
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.32);
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.5);
+    addEliteRerollBoost();
+    addEliteRerollBoost();
+    assert.equal(eliteShopChance(), 0.5);
+    assert.ok(itemDescription(ITEMS.a23).includes("up to 50%"));
+    assert.ok(itemDescription(ITEMS.a23).includes("next 3 Devil's Offerings rolls"));
   `);
 });
 

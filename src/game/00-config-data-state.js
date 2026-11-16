@@ -73,7 +73,9 @@ const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
 // Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
-const SATANIC_BIBLE_ROLLS = 5;
+const SATANIC_BIBLE_ROLLS = 3;
+// the Seal slot's ELITE chance never goes above this, however many Satanic Bibles are cast
+const SHOP_ELITE_CHANCE_MAX = 0.5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -1294,7 +1296,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
+    description: "Double the ELITE chance for the SEAL slot for the next 3 Devil's Offerings rolls. Every cast doubles it again and counts its own 3 rolls, up to 50%."
   },
   a25: {
     id: "a25",

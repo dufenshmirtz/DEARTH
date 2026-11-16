@@ -586,7 +586,7 @@ function eliteShopChance(eliteBoosted = activeEliteBoostCount()) {
   let multiplier = 1;
   multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
   if (sealSlotsFull()) multiplier *= 2;
-  return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
+  return Math.min(SHOP_ELITE_CHANCE_MAX, SHOP_ELITE_CHANCE * multiplier);
 }
 
 function activeInventoryLimit() {
