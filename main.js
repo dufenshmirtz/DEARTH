@@ -25033,7 +25033,20 @@ const CREDITS_SECTIONS = [
   {
     heading: "A game by",
     team: true,
-    lines: [{ name: "Dufenshmirtz" }, { name: "TheodenKink" }, { name: "Omagkas" }]
+    lines: [{ name: "TheodenKink" }, { name: "Omagkas" }, { name: "Dufenshmirtz" }]
+  },
+  {
+    heading: "Seal designs",
+    lines: [
+      { name: "Giannis Chrysomallis", note: "Seal of Zilon" },
+      { name: "Thanasis Chrysomallis", note: "Seal of Kalha" },
+      { name: "Iro Hartopoulou", note: "Seal of Padma" },
+      { name: "Zoe Tatsoglou", note: "Seal of Petros & Pavlos" },
+      { name: "Maria Xaralampou", note: "Seal of Serafeim" },
+      { name: "TheodenKink", note: "Seal of Dantre" },
+      { name: "skarnatis", note: "Seal of Pyros" },
+      { name: "Dufenshmirtz", note: "Seal of Threon" }
+    ]
   },
   {
     heading: "Music",
