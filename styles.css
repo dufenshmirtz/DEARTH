@@ -14540,6 +14540,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 
 #app .slot-icon {
   display: grid;
+  /* one fixed column: a symbol wider than the cell stays centred instead of growing the column to the right */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   justify-items: center;
   align-items: center;
@@ -14963,52 +14965,94 @@ body.mobile-arcade #app .mission-text {
   font-size: 12px;
 }
 
-/* ---- phone app: one band between the DAMNED and the SEALS ---- */
-body.native-arcade .native-arcade-frame.has-slot-band {
-  grid-template-rows: minmax(0, 1fr) 44px var(--native-seal-row-height) !important;
+/* phone web: the reels' frame at their small size */
+body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+  border-width: 6px;
+  border-image-width: 11px;
 }
 
-body.native-arcade .native-arcade-frame.has-slot-band > .native-console-panel,
-body.native-arcade .native-arcade-frame.has-slot-band > .mobile-numpad,
-body.native-arcade .native-arcade-frame.has-slot-band > .passive-bar {
-  grid-row: 3 !important;
+body.mobile-arcade #app .center-console.has-slot .slot-reel {
+  --slot-window-inset: 4px;
 }
 
-body.native-arcade .native-slot-band {
+/* ---- phone app: a rail on the left of the DAMNED, under the TARGET box ----
+   The slot machine on top (reels, SPIN centred under them, your FAVOR under SPIN), the round's mission under it,
+   only as tall as its text. The rail is laid over the board's grid area, so the board and the SEALS keep their
+   size; the DAMNED move right to make room. It is only as tall as the two boxes, so the SEALS under it stay
+   free to tap. */
+body.native-arcade {
+  --native-slot-rail-width: 116px;
+}
+
+body.native-arcade #app .native-arcade-frame.has-slot-band .arena:not(.pvp-arena) .bot-grid {
+  left: calc(var(--native-slot-rail-width) + 8px) !important;
+}
+
+body.native-arcade #app .native-slot-band {
+  position: absolute;
+  z-index: 4;
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 1;
+  top: 72px;
+  left: 6px;
+  width: var(--native-slot-rail-width);
   box-sizing: border-box;
-  padding-left: var(--slot-edge-left, 0px);
-  padding-right: var(--slot-edge-right, 0px);
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
   min-height: 0;
-  --slot-reel-size: 26px;
+  overflow: hidden;
+  --slot-reel-size: 30px;
 }
 
 body.native-arcade #app .native-slot-band .slot-machine,
 body.native-arcade #app .native-slot-band .mission-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
+  flex: 0 0 auto;
+  width: 100%;
   min-height: 0;
-  padding: 0 6px;
   border-width: 8px;
   border-image-width: 12px;
   overflow: hidden;
+}
+
+body.native-arcade #app .native-slot-band .slot-machine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  justify-items: center;
+  row-gap: 5px;
+  padding: 4px 0 3px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reels {
+  gap: 4px;
+}
+
+/* SPIN centred under the reels, your FAVOR centred under SPIN */
+body.native-arcade #app .native-slot-band .slot-side {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+body.native-arcade #app .native-slot-band .slot-spin {
+  min-height: 22px;
+  padding: 1px 10px !important;
+  font-size: 12px !important;
+}
+
+body.native-arcade #app .native-slot-band .slot-favor {
+  font-size: 12px;
 }
 
 body.native-arcade #app .native-slot-band .slot-result {
   display: none;
 }
 
-body.native-arcade #app .native-slot-band .slot-side {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+body.native-arcade #app .native-slot-band .slot-icon {
+  padding: 0;
 }
 
 body.native-arcade #app .native-slot-band .slot-glyph svg,
@@ -15017,48 +15061,53 @@ body.native-arcade #app .native-slot-band .slot-glyph-mask {
   height: 18px;
 }
 
-body.native-arcade #app .native-slot-band .slot-icon {
-  padding: 2px;
-}
-
-body.native-arcade #app .native-slot-band .slot-reel::after,
-body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+body.native-arcade #app .native-slot-band .slot-reel::after {
   border-width: 6px;
   border-image-width: 11px;
 }
 
-body.native-arcade #app .native-slot-band .slot-reel,
-body.mobile-arcade #app .center-console.has-slot .slot-reel {
+body.native-arcade #app .native-slot-band .slot-reel {
   --slot-window-inset: 4px;
 }
 
-body.native-arcade #app .native-slot-band .slot-spin {
-  min-height: 24px;
-  padding: 2px 10px !important;
-  font-size: 12px !important;
+/* the mission: a small box, text at its normal size, wrapped between words */
+body.native-arcade #app .native-slot-band .mission-box {
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  gap: 2px;
+  padding: 0 1px 2px;
+  text-align: center;
 }
 
 body.native-arcade #app .native-slot-band .mission-head {
-  flex: 0 0 auto;
-  gap: 6px;
-}
-
-body.native-arcade #app .native-slot-band .mission-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 1.1;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-body.native-arcade #app .native-slot-band .mission-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1px 4px;
   font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
 body.native-arcade #app .native-slot-band .mission-reward {
-  margin-left: 2px;
+  margin-left: 0;
+  font-size: 12px;
+}
+
+body.native-arcade #app .native-slot-band .mission-status {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+body.native-arcade #app .native-slot-band .mission-text {
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

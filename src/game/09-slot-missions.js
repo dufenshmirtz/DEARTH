@@ -864,7 +864,7 @@ function missionBoxHtml() {
   `;
 }
 
-// the phone app: one band between the DAMNED and the SEALS
+// the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
   return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
