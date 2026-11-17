@@ -227,7 +227,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Leraje",
     price: 12,
-    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+    description: "At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",

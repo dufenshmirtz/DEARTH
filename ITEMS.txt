@@ -128,7 +128,7 @@ Seal of Ipos (13 SIN)
 The worst guess penalty hits the 3 furthest guesses. The furthest takes 20 damage, the next two take 10. ELITE multiplies both damage values by x1.5 each level, rounded up.
 
 Seal of Leraje (12 SIN)
-At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%.
+At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%.
 
 Seal of Malphas (13 SIN)
 At end of round, each DAMNED takes 2 damage for every round it has been alive: 2 in its first round, 4 in its second, and so on. ELITE multiplies the damage by x1.5 each level, rounded up.

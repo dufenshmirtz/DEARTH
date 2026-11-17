@@ -3754,6 +3754,50 @@ test("Seere and Vassago play their trigger animation as soon as the DAMNED they 
   `);
 });
 
+test("Seal of Leraje: picks its DAMNED and turns it STUBBORN at round start, deals the damage only at READY", () => {
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const round = state.roundState;
+    assert.equal(round.lerajeMarks.length, 1);
+    const marked = state.bots.find((bot) => bot.id === round.lerajeMarks[0].botId);
+    assert.ok(personalityTypes(marked).includes("Stubborn"));
+    // nothing before READY
+    assert.ok(state.bots.every((bot) => bot.hp === bot.maxHp), "no damage at round start");
+    assert.equal(round.triggeredPassiveIds.has("p14"), false);
+    applyPenalties();
+    assert.equal(round.triggeredPassiveIds.has("p14"), true);
+    assert.ok(marked.maxHp - marked.hp >= 20, "the marked DAMNED took the 20 at READY");
+    assert.equal(round.lerajeMarks.length, 0);
+  `);
+  game()(`
+    fixture([["p14", 2]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    applyLerajeAtReady();
+    assert.equal(marked.maxHp - marked.hp, 30, "ELITE: x1.5");
+  `);
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    marked.hp = 15;
+    applyLerajeAtReady();
+    assert.ok(marked.eliminated);
+    assert.ok(state.roundState.roundEvents.includes(\`Seal of Leraje paid 8 SIN for eliminating \${marked.name}.\`), "a kill pays 8 SIN (on top of its BOUNTY)");
+  `);
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    marked.hp = 0;
+    resolveEliminatedBots([marked]);
+    const others = state.bots.filter((bot) => bot !== marked);
+    others.forEach((bot) => { bot.hp = bot.maxHp; });
+    applyLerajeAtReady();
+    const hit = others.filter((bot) => bot.hp < bot.maxHp);
+    assert.equal(hit.length, 1, "a fallen mark passes the damage to one living DAMNED");
+    assert.equal(hit[0].maxHp - hit[0].hp, 20);
+    assert.ok(personalityTypes(hit[0]).includes("Stubborn"));
+  `);
+});
+
 test("Seal of Vapula deals 10 damage at end of round to every DAMNED with more than 8 MEMORY", () => {
   game()(`
     fixture([["p68"]], [10, 20, 30, 40, 50]);

@@ -449,7 +449,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Leraje",
     price: 12,
-    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+    description: "At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",
@@ -5992,7 +5992,7 @@ function itemDescription(item) {
     const { main, elite } = splitEliteDescription(rule);
     return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
   }
-  if (stack <= 1) return ["p86", "p57", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p86", "p57", "p14", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6061,7 +6061,7 @@ function itemDescription(item) {
     return `If two or more DAMNED are eliminated in a round, gain ${scaledPassiveValueForItem(item, 8)} SIN. If two or more share a personality, gain ${scaledPassiveValueForItem(item, 16)} SIN.`;
   }
   if (item.id === "p14") {
-    return `At the start of each round, deal ${flatDamageValue(item, 20)} damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain ${scaledPassiveValueForItem(item, 8)} SIN.`;
+    return `At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal ${flatDamageValue(item, 20)} damage to that DAMNED. If that damage eliminates them, gain ${scaledPassiveValueForItem(item, 8)} SIN.`;
   }
   if (item.id === "p15") {
     return `Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal ${bathinMemoryDamage(item)} damage to that DAMNED.`;
@@ -9633,24 +9633,42 @@ function applyStartOfRoundSinRedistribution() {
 function applyStartOfRoundPassives() {
   applyStartOfRoundSinRedistribution();
 
+  // Seal of Leraje picks its DAMNED now and turns it STUBBORN at once; the damage waits for READY
+  // (applyLerajeAtReady, called from applyPenalties)
+  state.roundState.lerajeMarks = [];
   orderedPassiveEffectEntries("p14").forEach((entry) => {
     const targets = activeBots();
     if (!targets.length) return;
     const target = randomFrom(targets);
+    state.roundState.lerajeMarks.push({ index: entry.index, botId: target.id });
+    setBotPersonality(target, "Stubborn", ITEMS.p14.name);
+  });
+}
+
+// Seal of Leraje: when you press READY, the DAMNED it picked at the start of the round takes the damage (a random
+// living DAMNED if that one has already fallen, which also turns STUBBORN); a kill pays SIN
+function applyLerajeAtReady() {
+  const round = state.roundState;
+  if (!round) return;
+  const marks = Array.isArray(round.lerajeMarks) ? round.lerajeMarks : [];
+  round.lerajeMarks = [];
+  const name = ITEMS.p14.name;
+  orderedPassiveEffectEntries("p14").forEach((entry) => {
+    const mark = marks.find((candidate) => candidate.index === entry.index);
+    const marked = mark ? state.bots.find((bot) => bot.id === mark.botId && bot.hp > 0 && !bot.eliminated) : null;
+    const living = activeBots();
+    const target = marked || (living.length ? randomFrom(living) : null);
+    if (!target) return;
     const damage = passiveEntryFlatDamage(entry, 20);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    const wasAlive = target.hp > 0 && !target.eliminated;
-    damageBot(target, damage, `Seal of Leraje dealt ${damage} damage to ${target.name}.`, "Seal of Leraje");
-    if (wasAlive && target.eliminated) {
-      const credits = passiveEntryScaledValue(entry, 8);
-      const gained = gainCredits(credits, true, "Seal of Leraje");
-      state.roundState.roundEvents.push(`Seal of Leraje paid ${gained} SIN for eliminating ${target.name}.`);
+    damageBot(target, damage, `${name} dealt ${damage} damage to ${target.name}.`, name);
+    if (target.eliminated) {
+      const gained = gainCredits(passiveEntryScaledValue(entry, 8), true, name);
+      round.roundEvents.push(`${name} paid ${gained} SIN for eliminating ${target.name}.`);
       return;
     }
-    if (!target.eliminated) {
-      setBotPersonality(target, "Stubborn", "Seal of Leraje");
-    }
+    if (!marked) setBotPersonality(target, "Stubborn", name);
   });
 }
 
@@ -11067,6 +11085,7 @@ function applyPenalties() {
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
   applyBalamAtReady();
+  applyLerajeAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();

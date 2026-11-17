@@ -270,6 +270,7 @@ function applyPenalties() {
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
   applyBalamAtReady();
+  applyLerajeAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();
