@@ -9073,12 +9073,15 @@ body.native-arcade #app .mobile-offerings-header {
   padding-top: 8px !important;
 }
 
-/* the figure grows with the card on taller screens */
+/* the figure grows with the card on taller screens, and shrinks to its row on short ones so it never
+   pokes out of the card's top */
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
-  width: clamp(46px, 13.5vh, 120px) !important;
-  height: clamp(46px, 13.5vh, 120px) !important;
+  width: auto !important;
+  height: min(clamp(46px, 13.5vh, 120px), 100%) !important;
+  min-height: 0 !important;
+  aspect-ratio: 1 / 1;
 }
 
 /* desktop: SIN gained sits bottom-right inside the SIN box, clear of the outline */
@@ -9989,7 +9992,7 @@ body.mobile-arcade .intro-jesus {
 }
 
 body.mobile-arcade .intro-box-guide {
-  padding: 12px 20px;
+  padding: 22px 20px 18px;
 }
 
 body.mobile-arcade .intro-box-guide::before {
@@ -14124,6 +14127,10 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 .gifts-screen .gift-card.gift-card-away {
   visibility: hidden;
 }
+/* an affordable card keeps the "You need ... more" line's room, so opening a gift never resizes the cards */
+.gifts-screen .gift-card-open.gift-card-open-spacer {
+  visibility: hidden;
+}
 /* 1. turn: the shop card turns over where it stands (edge-on, faces swap, back) */
 .gifts-screen .gift-opening.phase-turn .gift-flip-card {
   animation: gift-card-turn 0.44s ease-in-out both;
@@ -15229,32 +15236,30 @@ body.mobile-arcade #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-
   min-height: 30px !important;
 }
 
-/* phone app: a small contract mark beside the word, inside the Pause / Items column, with the usual frame */
+/* phone app: the same sheet as the game, no button frame, in the Pause / Items column; a little taller than
+   its row so DEAL can be read */
 body.native-arcade #app .deal-button.deal-contract {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 5px;
 }
 
-body.native-arcade #app .deal-paper-mark {
-  width: 26px;
-  height: 16px;
+body.native-arcade #app .deal-button.deal-contract .deal-paper {
+  width: auto;
+  height: 28px;
   flex: 0 0 auto;
 }
 
-body.native-arcade #app .deal-paper-mark .deal-ink path,
-body.native-arcade #app .deal-paper-mark .deal-sign {
-  stroke-width: 5;
+body.native-arcade #app .deal-button.deal-contract .deal-ink path {
+  stroke-width: 3.6;
 }
 
-body.native-arcade #app .deal-word-inline {
-  font-family: var(--font-display);
-  line-height: 1;
+body.native-arcade #app .deal-button.deal-contract .deal-ink .deal-line {
+  stroke-width: 2;
 }
 
-body.native-arcade #app .deal-button.deal-contract::after {
-  display: block !important;
+body.native-arcade #app .deal-button.deal-contract .deal-word {
+  font-size: 34px;
 }
 
 /* Settings > Display > Guide text: Hidden takes the "Pick a number" hint and the slot machine's
