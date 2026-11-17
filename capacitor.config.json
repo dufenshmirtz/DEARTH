@@ -1,5 +1,6 @@
 {
   "appId": "com.aenao.dearth",
   "appName": "DEARTH",
-  "webDir": "native-www"
+  "webDir": "native-www",
+  "backgroundColor": "#000000"
 }
