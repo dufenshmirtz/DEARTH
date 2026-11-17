@@ -29,7 +29,13 @@ const CREDITS_SECTIONS = [
   {
     heading: "Sound",
     lines: [
-      { name: "Evil Laughter", note: "Dragon Studio · Pixabay" },
+      { name: "Dragon Studio", note: "Pixabay" },
+      { name: "Universfield", note: "Pixabay" },
+      { name: "IdoBerg", note: "Pixabay" },
+      { name: "SoundReality", note: "Pixabay" },
+      { name: "DJARTMUSIC", note: "Pixabay" },
+      { name: "EduFigueres (Freesound)", note: "Pixabay" },
+      { name: "freesound_gamestudio", note: "Pixabay" },
       { name: "Additional sound effects", note: "Pixabay contributors" }
     ]
   },
