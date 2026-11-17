@@ -542,24 +542,36 @@ function readLegacyArcadeRunSlot() {
   }
 }
 
+// Older builds kept one run under ARCADE_RUN_STORAGE_KEY. It used to be read as a fallback whenever the slot list
+// was empty, so removing it from the Load Run menu never took: it came back on the next read. It is now moved into
+// the slot list once (the old key is removed only after the slot list is written), and is removed like any run.
+function migrateLegacyArcadeRunSlot() {
+  const legacy = readLegacyArcadeRunSlot();
+  if (!legacy) return [];
+  try {
+    const slots = sortArcadeRunSlots([legacy]);
+    window.localStorage?.setItem(
+      ARCADE_RUN_SLOTS_STORAGE_KEY,
+      JSON.stringify({ version: ARCADE_RUN_SAVE_VERSION, slots }, encodeArcadeSaveValue)
+    );
+    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    return slots;
+  } catch (error) {
+    return [legacy];
+  }
+}
+
 function readArcadeRunSlots() {
   try {
     const raw = window.localStorage?.getItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
-    if (!raw) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!raw) return migrateLegacyArcadeRunSlot();
     const parsed = JSON.parse(raw, decodeArcadeSaveValue);
     const slots = Array.isArray(parsed?.slots) ? parsed.slots : Array.isArray(parsed) ? parsed : [];
     const normalized = sortArcadeRunSlots(slots);
-    if (!normalized.length) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!normalized.length) return migrateLegacyArcadeRunSlot();
     return normalized;
   } catch (error) {
-    const legacy = readLegacyArcadeRunSlot();
-    return legacy ? [legacy] : [];
+    return migrateLegacyArcadeRunSlot();
   }
 }
 
@@ -585,6 +597,12 @@ function upsertArcadeRunPayload(payload) {
 function removeArcadeRunSlot(slotId) {
   if (!slotId) return;
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
+  // the same run may still sit under the old single-run key (written by older builds)
+  if (readLegacyArcadeRunSlot()?.slotId === slotId) {
+    try {
+      window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    } catch (error) {}
+  }
 }
 
 // Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
