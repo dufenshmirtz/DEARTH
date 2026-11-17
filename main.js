@@ -450,7 +450,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Leraje",
     price: 12,
-    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+    description: "At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",
@@ -2446,7 +2446,7 @@ const state = {
     screenShake: 2,
     flashes: 1,
     textSize: 0,
-    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Missions pay FAVOR." (body.hide-guide-text)
+    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Satan's bets pay FAVOR." (body.hide-guide-text)
     slotMachine: 0 // the slot machine's look: 0 Default, 1 Fancy (old machine with a lever)
   },
   settingsTab: "audio",
@@ -3109,24 +3109,36 @@ function readLegacyArcadeRunSlot() {
   }
 }
 
+// Older builds kept one run under ARCADE_RUN_STORAGE_KEY. It used to be read as a fallback whenever the slot list
+// was empty, so removing it from the Load Run menu never took: it came back on the next read. It is now moved into
+// the slot list once (the old key is removed only after the slot list is written), and is removed like any run.
+function migrateLegacyArcadeRunSlot() {
+  const legacy = readLegacyArcadeRunSlot();
+  if (!legacy) return [];
+  try {
+    const slots = sortArcadeRunSlots([legacy]);
+    window.localStorage?.setItem(
+      ARCADE_RUN_SLOTS_STORAGE_KEY,
+      JSON.stringify({ version: ARCADE_RUN_SAVE_VERSION, slots }, encodeArcadeSaveValue)
+    );
+    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    return slots;
+  } catch (error) {
+    return [legacy];
+  }
+}
+
 function readArcadeRunSlots() {
   try {
     const raw = window.localStorage?.getItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
-    if (!raw) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!raw) return migrateLegacyArcadeRunSlot();
     const parsed = JSON.parse(raw, decodeArcadeSaveValue);
     const slots = Array.isArray(parsed?.slots) ? parsed.slots : Array.isArray(parsed) ? parsed : [];
     const normalized = sortArcadeRunSlots(slots);
-    if (!normalized.length) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!normalized.length) return migrateLegacyArcadeRunSlot();
     return normalized;
   } catch (error) {
-    const legacy = readLegacyArcadeRunSlot();
-    return legacy ? [legacy] : [];
+    return migrateLegacyArcadeRunSlot();
   }
 }
 
@@ -3152,6 +3164,12 @@ function upsertArcadeRunPayload(payload) {
 function removeArcadeRunSlot(slotId) {
   if (!slotId) return;
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
+  // the same run may still sit under the old single-run key (written by older builds)
+  if (readLegacyArcadeRunSlot()?.slotId === slotId) {
+    try {
+      window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    } catch (error) {}
+  }
 }
 
 // Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
@@ -5996,7 +6014,7 @@ function itemDescription(item) {
     const { main, elite } = splitEliteDescription(rule);
     return `${main}\nCurrent stacks: ${stacks}/${AIM_MAX_CRIT_BONUS} (+${stacks} CRITICAL range).${elite ? ` ${elite}` : ""}`;
   }
-  if (stack <= 1) return ["p86", "p57", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
+  if (stack <= 1) return ["p86", "p57", "p14", "p1", "p6", "p7", "p46", "p68", "p116", "p61", "p63", "p64", "p129", "p65", "p70", "p71", "p102", "p75", "p80", "p92", "p95", "p112", "p113", "p121", "p122", "p123", "p124", "p125", "p126", "p127", "p128", "p93", "p133", "p135", "p136", "p137", "p138", "p139", ...POISON_SEAL_IDS].includes(item.id) ? ITEMS[item.id].description : item.description;
   const eliteLevelCount = stack - 1;
   // Poison SEALS (Pentacles of Mars)
   const poisonRule = `Each POISON deals ${POISON_DAMAGE_PER_STACK} damage at the end of every round.`;
@@ -6065,7 +6083,7 @@ function itemDescription(item) {
     return `If two or more DAMNED are eliminated in a round, gain ${scaledPassiveValueForItem(item, 8)} SIN. If two or more share a personality, gain ${scaledPassiveValueForItem(item, 16)} SIN.`;
   }
   if (item.id === "p14") {
-    return `At the start of each round, deal ${flatDamageValue(item, 20)} damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain ${scaledPassiveValueForItem(item, 8)} SIN.`;
+    return `At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal ${flatDamageValue(item, 20)} damage to that DAMNED. If that damage eliminates them, gain ${scaledPassiveValueForItem(item, 8)} SIN.`;
   }
   if (item.id === "p15") {
     return `Whenever MEMORY would be added to a DAMNED, add +1 extra MEMORY and deal ${bathinMemoryDamage(item)} damage to that DAMNED.`;
@@ -9639,24 +9657,42 @@ function applyStartOfRoundSinRedistribution() {
 function applyStartOfRoundPassives() {
   applyStartOfRoundSinRedistribution();
 
+  // Seal of Leraje picks its DAMNED now and turns it STUBBORN at once; the damage waits for READY
+  // (applyLerajeAtReady, called from applyPenalties)
+  state.roundState.lerajeMarks = [];
   orderedPassiveEffectEntries("p14").forEach((entry) => {
     const targets = activeBots();
     if (!targets.length) return;
     const target = randomFrom(targets);
+    state.roundState.lerajeMarks.push({ index: entry.index, botId: target.id });
+    setBotPersonality(target, "Stubborn", ITEMS.p14.name);
+  });
+}
+
+// Seal of Leraje: when you press READY, the DAMNED it picked at the start of the round takes the damage (a random
+// living DAMNED if that one has already fallen, which also turns STUBBORN); a kill pays SIN
+function applyLerajeAtReady() {
+  const round = state.roundState;
+  if (!round) return;
+  const marks = Array.isArray(round.lerajeMarks) ? round.lerajeMarks : [];
+  round.lerajeMarks = [];
+  const name = ITEMS.p14.name;
+  orderedPassiveEffectEntries("p14").forEach((entry) => {
+    const mark = marks.find((candidate) => candidate.index === entry.index);
+    const marked = mark ? state.bots.find((bot) => bot.id === mark.botId && bot.hp > 0 && !bot.eliminated) : null;
+    const living = activeBots();
+    const target = marked || (living.length ? randomFrom(living) : null);
+    if (!target) return;
     const damage = passiveEntryFlatDamage(entry, 20);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    const wasAlive = target.hp > 0 && !target.eliminated;
-    damageBot(target, damage, `Seal of Leraje dealt ${damage} damage to ${target.name}.`, "Seal of Leraje");
-    if (wasAlive && target.eliminated) {
-      const credits = passiveEntryScaledValue(entry, 8);
-      const gained = gainCredits(credits, true, "Seal of Leraje");
-      state.roundState.roundEvents.push(`Seal of Leraje paid ${gained} SIN for eliminating ${target.name}.`);
+    damageBot(target, damage, `${name} dealt ${damage} damage to ${target.name}.`, name);
+    if (target.eliminated) {
+      const gained = gainCredits(passiveEntryScaledValue(entry, 8), true, name);
+      round.roundEvents.push(`${name} paid ${gained} SIN for eliminating ${target.name}.`);
       return;
     }
-    if (!target.eliminated) {
-      setBotPersonality(target, "Stubborn", "Seal of Leraje");
-    }
+    if (!marked) setBotPersonality(target, "Stubborn", name);
   });
 }
 
@@ -11074,6 +11110,7 @@ function applyPenalties() {
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
   applyBalamAtReady();
+  applyLerajeAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();
@@ -11841,7 +11878,7 @@ function checkRoundPentakillBonus() {
   round.pentakillPopup = true;
   // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
-  const healed = healPlayer(5, null, "PENTAKILL");
+  const healed = healPlayer(3, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
@@ -15439,7 +15476,7 @@ const SETTING_CHOICES = {
     set: (value) => { state.display.textSize = value; },
     text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
   },
-  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Missions pay FAVOR."
+  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Satan's bets pay FAVOR."
   guideText: {
     label: "Guide text",
     values: () => [1, 0],
@@ -16035,7 +16072,7 @@ function renderSelfStackingDevPanel() {
     <div class="pause-dev-panel">
       <h2>Unlocks (testing)</h2>
       <div class="dev-summon-row">
-        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
         <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
       </div>
       <h2>Faustian Codex (testing)</h2>
@@ -17828,6 +17865,14 @@ function confirmRunRemoval(slotId) {
   render();
 }
 
+// the Android app closes itself on Quit (DearthAppPlugin in android/.../MainActivity); elsewhere Quit shows
+// "Close the tab" (a browser page cannot close itself). The iPhone app has no Quit.
+function quitNativeApp() {
+  if (!NATIVE_ARCADE_APP || NATIVE_IOS_APP || typeof window.Capacitor?.nativePromise !== "function") return false;
+  window.Capacitor.nativePromise("DearthApp", "exitApp", {}).catch(() => {});
+  return true;
+}
+
 function handleMenuAction(action) {
   resumeSoundtrack();
   if (String(action).startsWith("records-tab:")) {
@@ -17911,6 +17956,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    if (quitNativeApp()) return;
     state.menuScreen = "quit";
     render();
     window.close();
@@ -18014,7 +18060,7 @@ function handlePauseAction(action) {
   if (action === "unlock-slot") {
     // testing: open the slot machine and the missions without a first win; nothing happens if they're open already
     if (!unlockSlotMachine()) return;
-    addLog("Testing: slot machine and missions unlocked.");
+    addLog("Testing: slot machine and Satan's bets unlocked.");
     render();
     return;
   }
@@ -24352,7 +24398,7 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
   codexTurn(screen, event.key === "ArrowRight" ? 1 : -1);
 });
-/* ---------- Missions and the slot machine ----------
+/* ---------- Satan's bets (missions in the code) and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
    mission pays its FAVOR (1, 2, 3, 4, 6 or 8) at once. The slot machine left of the guess area is always available:
@@ -24409,7 +24455,7 @@ const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></spa
          "resolve" checked once the round's results are in (and after any later action that round)
          "leave"   checked when you move on to the next round (NEXT ROUND)
    can(): may this mission be drawn now? param(): a value drawn with it (shown in the text).
-   failed(): it can no longer be done this round (the box says Missed).
+   failed(): it can no longer be done this round (the box says Lost).
    "at reveal" = the moment the TARGET first shows, right after GUESS (missionsNoteReveal): the guesses then against
    that TARGET, before any ARTIFACT or SEAL moves them. The others read the round as it is scored at READY
    (missionsNoteReady). Bets that compare you with the DAMNED are paid after READY even when they read the reveal,
@@ -24999,8 +25045,8 @@ function missionsComplete(current, mission) {
   missions.completed += 1;
   missions.earned += current.value;
   const text = missionText(mission, current.param);
-  addLog(`Mission done: ${text} (+${current.value} FAVOR).`);
-  if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
+  addLog(`Satan's bet won: ${text} (+${current.value} FAVOR).`);
+  if (state.roundState) addRoundEvent(`Satan's bet won: +${current.value} FAVOR.`);
   slotSfx("bountyUp");
 }
 
@@ -25321,7 +25367,7 @@ function slotPaytableHtml() {
       ${row("elite", "–", "–", "ELITE on every SEAL")}
       ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
       ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR${FAVOR_MARK}.</div>
     </div>
   `;
 }
@@ -25359,7 +25405,7 @@ function slotMachineHtml() {
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
   const tripleClass = triple && missions.lastText ? " slot-triple" : "";
-  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Missions pay FAVOR.")}</div>`;
+  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Satan's bets pay FAVOR.")}</div>`;
   // Settings > Display > Slot machine: Default (the framed box with SPIN) or Fancy (the old machine below)
   if (!slotMachineFancy()) {
     return `
@@ -25403,14 +25449,14 @@ function missionBoxHtml() {
   const counters = missionsState().round;
   const facts = missionFacts();
   let status = "";
-  if (current.done) status = "Done";
-  else if (mission.failed && mission.failed(facts, current.param)) status = "Missed";
-  else if (mission.when === "resolve" && counters.resolved) status = "Missed";
+  if (current.done) status = "Won";
+  else if (mission.failed && mission.failed(facts, current.param)) status = "Lost";
+  else if (mission.when === "resolve" && counters.resolved) status = "Lost";
   else if (mission.progress) status = mission.progress(facts, current.param);
   else if (mission.when === "leave") status = "At NEXT ROUND";
-  const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
+  const statusClass = current.done ? "done" : status === "Lost" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
         <span class="mission-title">Satan's Bet</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
@@ -25424,7 +25470,7 @@ function missionBoxHtml() {
 // the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----
@@ -25459,7 +25505,20 @@ const CREDITS_SECTIONS = [
   {
     heading: "A game by",
     team: true,
-    lines: [{ name: "Dufenshmirtz" }, { name: "TheodenKink" }, { name: "Omagkas" }]
+    lines: [{ name: "TheodenKink" }, { name: "Omagkas" }, { name: "Dufenshmirtz" }]
+  },
+  {
+    heading: "Seal designs",
+    lines: [
+      { name: "Giannis Chrysomallis", note: "Seal of Zilon" },
+      { name: "Thanasis Chrysomallis", note: "Seal of Kalha" },
+      { name: "Iro Hartopoulou", note: "Seal of Padma" },
+      { name: "Zoe Tatsoglou", note: "Seal of Petros & Pavlos" },
+      { name: "Maria Xaralampou", note: "Seal of Serafeim" },
+      { name: "TheodenKink", note: "Seal of Dantre" },
+      { name: "skarnatis", note: "Seal of Pyros" },
+      { name: "Dufenshmirtz", note: "Seal of Threon" }
+    ]
   },
   {
     heading: "Music",
@@ -25468,7 +25527,13 @@ const CREDITS_SECTIONS = [
   {
     heading: "Sound",
     lines: [
-      { name: "Evil Laughter", note: "Dragon Studio · Pixabay" },
+      { name: "Dragon Studio", note: "Pixabay" },
+      { name: "Universfield", note: "Pixabay" },
+      { name: "IdoBerg", note: "Pixabay" },
+      { name: "SoundReality", note: "Pixabay" },
+      { name: "DJARTMUSIC", note: "Pixabay" },
+      { name: "EduFigueres (Freesound)", note: "Pixabay" },
+      { name: "freesound_gamestudio", note: "Pixabay" },
       { name: "Additional sound effects", note: "Pixabay contributors" }
     ]
   },

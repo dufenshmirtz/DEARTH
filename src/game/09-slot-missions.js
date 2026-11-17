@@ -1,4 +1,4 @@
-/* ---------- Missions and the slot machine ----------
+/* ---------- Satan's bets (missions in the code) and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
    mission pays its FAVOR (1, 2, 3, 4, 6 or 8) at once. The slot machine left of the guess area is always available:
@@ -55,7 +55,7 @@ const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></spa
          "resolve" checked once the round's results are in (and after any later action that round)
          "leave"   checked when you move on to the next round (NEXT ROUND)
    can(): may this mission be drawn now? param(): a value drawn with it (shown in the text).
-   failed(): it can no longer be done this round (the box says Missed).
+   failed(): it can no longer be done this round (the box says Lost).
    "at reveal" = the moment the TARGET first shows, right after GUESS (missionsNoteReveal): the guesses then against
    that TARGET, before any ARTIFACT or SEAL moves them. The others read the round as it is scored at READY
    (missionsNoteReady). Bets that compare you with the DAMNED are paid after READY even when they read the reveal,
@@ -645,8 +645,8 @@ function missionsComplete(current, mission) {
   missions.completed += 1;
   missions.earned += current.value;
   const text = missionText(mission, current.param);
-  addLog(`Mission done: ${text} (+${current.value} FAVOR).`);
-  if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
+  addLog(`Satan's bet won: ${text} (+${current.value} FAVOR).`);
+  if (state.roundState) addRoundEvent(`Satan's bet won: +${current.value} FAVOR.`);
   slotSfx("bountyUp");
 }
 
@@ -967,7 +967,7 @@ function slotPaytableHtml() {
       ${row("elite", "–", "–", "ELITE on every SEAL")}
       ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
       ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Missions pay FAVOR${FAVOR_MARK}.</div>
+      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR${FAVOR_MARK}.</div>
     </div>
   `;
 }
@@ -1005,7 +1005,7 @@ function slotMachineHtml() {
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
   const tripleClass = triple && missions.lastText ? " slot-triple" : "";
-  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Missions pay FAVOR.")}</div>`;
+  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Satan's bets pay FAVOR.")}</div>`;
   // Settings > Display > Slot machine: Default (the framed box with SPIN) or Fancy (the old machine below)
   if (!slotMachineFancy()) {
     return `
@@ -1049,14 +1049,14 @@ function missionBoxHtml() {
   const counters = missionsState().round;
   const facts = missionFacts();
   let status = "";
-  if (current.done) status = "Done";
-  else if (mission.failed && mission.failed(facts, current.param)) status = "Missed";
-  else if (mission.when === "resolve" && counters.resolved) status = "Missed";
+  if (current.done) status = "Won";
+  else if (mission.failed && mission.failed(facts, current.param)) status = "Lost";
+  else if (mission.when === "resolve" && counters.resolved) status = "Lost";
   else if (mission.progress) status = mission.progress(facts, current.param);
   else if (mission.when === "leave") status = "At NEXT ROUND";
-  const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
+  const statusClass = current.done ? "done" : status === "Lost" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
         <span class="mission-title">Satan's Bet</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
@@ -1070,7 +1070,7 @@ function missionBoxHtml() {
 // the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----

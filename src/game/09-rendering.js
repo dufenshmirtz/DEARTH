@@ -615,7 +615,7 @@ const SETTING_CHOICES = {
     set: (value) => { state.display.textSize = value; },
     text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
   },
-  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Missions pay FAVOR."
+  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Satan's bets pay FAVOR."
   guideText: {
     label: "Guide text",
     values: () => [1, 0],
@@ -1211,7 +1211,7 @@ function renderSelfStackingDevPanel() {
     <div class="pause-dev-panel">
       <h2>Unlocks (testing)</h2>
       <div class="dev-summon-row">
-        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
         <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
       </div>
       <h2>Faustian Codex (testing)</h2>
@@ -3004,6 +3004,14 @@ function confirmRunRemoval(slotId) {
   render();
 }
 
+// the Android app closes itself on Quit (DearthAppPlugin in android/.../MainActivity); elsewhere Quit shows
+// "Close the tab" (a browser page cannot close itself). The iPhone app has no Quit.
+function quitNativeApp() {
+  if (!NATIVE_ARCADE_APP || NATIVE_IOS_APP || typeof window.Capacitor?.nativePromise !== "function") return false;
+  window.Capacitor.nativePromise("DearthApp", "exitApp", {}).catch(() => {});
+  return true;
+}
+
 function handleMenuAction(action) {
   resumeSoundtrack();
   if (String(action).startsWith("records-tab:")) {
@@ -3087,6 +3095,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    if (quitNativeApp()) return;
     state.menuScreen = "quit";
     render();
     window.close();
@@ -3190,7 +3199,7 @@ function handlePauseAction(action) {
   if (action === "unlock-slot") {
     // testing: open the slot machine and the missions without a first win; nothing happens if they're open already
     if (!unlockSlotMachine()) return;
-    addLog("Testing: slot machine and missions unlocked.");
+    addLog("Testing: slot machine and Satan's bets unlocked.");
     render();
     return;
   }

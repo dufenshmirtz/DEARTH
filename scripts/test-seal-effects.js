@@ -1058,6 +1058,19 @@ test("Kalha upgrades a random upgradable SEAL on every PENTAKILL and cannot be u
   `);
 });
 
+test("a PENTAKILL heals you 3 SOUL and pays 8 SIN", () => {
+  game()(`
+    fixture([], [50, 50, 50, 50, 50]);
+    state.player.hp = 50;
+    const sin = state.player.credits;
+    state.roundState.eliminationsThisRound = BOT_COUNT;
+    checkRoundPentakillBonus();
+    assert.equal(state.player.hp, 53);
+    assert.equal(state.player.credits, sin + 8);
+    assert.ok(state.roundState.roundEvents.some(line => line.includes("Healed 3")));
+  `);
+});
+
 test("Pyros reveals a DAMNED at round start and lets reveals stack, which multiplies reveal effects", () => {
   game()(`
     fixture([["p123"]], [10, 20, 30, 40, 50]);
@@ -3747,6 +3760,50 @@ test("Seere and Vassago play their trigger animation as soon as the DAMNED they 
   `);
 });
 
+test("Seal of Leraje: picks its DAMNED and turns it STUBBORN at round start, deals the damage only at READY", () => {
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const round = state.roundState;
+    assert.equal(round.lerajeMarks.length, 1);
+    const marked = state.bots.find((bot) => bot.id === round.lerajeMarks[0].botId);
+    assert.ok(personalityTypes(marked).includes("Stubborn"));
+    // nothing before READY
+    assert.ok(state.bots.every((bot) => bot.hp === bot.maxHp), "no damage at round start");
+    assert.equal(round.triggeredPassiveIds.has("p14"), false);
+    applyPenalties();
+    assert.equal(round.triggeredPassiveIds.has("p14"), true);
+    assert.ok(marked.maxHp - marked.hp >= 20, "the marked DAMNED took the 20 at READY");
+    assert.equal(round.lerajeMarks.length, 0);
+  `);
+  game()(`
+    fixture([["p14", 2]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    applyLerajeAtReady();
+    assert.equal(marked.maxHp - marked.hp, 30, "ELITE: x1.5");
+  `);
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    marked.hp = 15;
+    applyLerajeAtReady();
+    assert.ok(marked.eliminated);
+    assert.ok(state.roundState.roundEvents.includes(\`Seal of Leraje paid 8 SIN for eliminating \${marked.name}.\`), "a kill pays 8 SIN (on top of its BOUNTY)");
+  `);
+  game()(`
+    fixture([["p14"]], [10, 20, 30, 40, 50]);
+    const marked = state.bots.find((bot) => bot.id === state.roundState.lerajeMarks[0].botId);
+    marked.hp = 0;
+    resolveEliminatedBots([marked]);
+    const others = state.bots.filter((bot) => bot !== marked);
+    others.forEach((bot) => { bot.hp = bot.maxHp; });
+    applyLerajeAtReady();
+    const hit = others.filter((bot) => bot.hp < bot.maxHp);
+    assert.equal(hit.length, 1, "a fallen mark passes the damage to one living DAMNED");
+    assert.equal(hit[0].maxHp - hit[0].hp, 20);
+    assert.ok(personalityTypes(hit[0]).includes("Stubborn"));
+  `);
+});
+
 test("Seal of Vapula deals 10 damage at end of round to every DAMNED with more than 8 MEMORY", () => {
   game()(`
     fixture([["p68"]], [10, 20, 30, 40, 50]);
@@ -4553,7 +4610,7 @@ test("Satan's Bets: 'at reveal' reads the guesses when the TARGET first shows; w
     missionsNoteReveal();
     missionsCheck("event");
     assert.equal(state.missions.doubloons, 1, "not before READY, so no hidden guess is given away");
-    assert.ok(!missionBoxHtml().includes("Missed"));
+    assert.ok(!missionBoxHtml().includes("Lost"));
     state.missions.round.resolved = true;
     missionsCheck("resolve");
     assert.equal(state.missions.doubloons, 3);
@@ -4904,7 +4961,7 @@ test("Slot machine: hidden until the first-win speech has been heard; Pause > DE
   `);
 });
 
-test("Settings > Display > Guide text hides the guide lines (Pick a number, Missions pay FAVOR. ...), and nothing else", () => {
+test("Settings > Display > Guide text hides the guide lines (Pick a number, Satan's bets pay FAVOR. ...), and nothing else", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
@@ -4912,7 +4969,7 @@ test("Settings > Display > Guide text hides the guide lines (Pick a number, Miss
     assert.equal(state.display.guideText, 1);
     assert.equal(consoleActionState().guideHint, true);
     assert.ok(renderConsole().includes('class="console-hint guide-text"'));
-    assert.ok(slotMachineHtml().includes('class="slot-result guide-text">Missions pay FAVOR.'));
+    assert.ok(slotMachineHtml().includes('class="slot-result guide-text">' + escapeHtml("Satan's bets pay FAVOR.")));
     // a real result line on the slot machine is not guide text
     state.missions.lastText = "+5 SIN";
     state.missions.lastRound = state.round;

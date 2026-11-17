@@ -228,7 +228,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Leraje",
     price: 12,
-    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+    description: "At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",
@@ -2224,7 +2224,7 @@ const state = {
     screenShake: 2,
     flashes: 1,
     textSize: 0,
-    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Missions pay FAVOR." (body.hide-guide-text)
+    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Satan's bets pay FAVOR." (body.hide-guide-text)
     slotMachine: 0 // the slot machine's look: 0 Default, 1 Fancy (old machine with a lever)
   },
   settingsTab: "audio",

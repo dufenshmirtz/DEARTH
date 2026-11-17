@@ -270,6 +270,7 @@ function applyPenalties() {
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
   applyBalamAtReady();
+  applyLerajeAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();
@@ -1037,7 +1038,7 @@ function checkRoundPentakillBonus() {
   round.pentakillPopup = true;
   // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
-  const healed = healPlayer(5, null, "PENTAKILL");
+  const healed = healPlayer(3, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
