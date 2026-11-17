@@ -463,6 +463,8 @@ function introShowLine(index) {
   if (introState.layer) introState.layer.dataset.speaker = speaker;
   if (introState.phase === "guide") introGuideShowFocus(introState.lines[index]);
   introDrawText();
+  // the box is sized to the new line once it is in the layout
+  if (introState.phase === "guide") introGuidePlace();
   introFitText();
   introTypeTo(introState.ends[0]);
   if (introState.lines[index][2] === "deal") introShowDealButton();
@@ -783,6 +785,7 @@ const JESUS_GUIDE_ENTER_MS = 1500; // after the game switches on
 const JESUS_GUIDE_REVEAL_MS = 900; // after round 1's TARGET is revealed
 const INTRO_GUIDE_LEAVE_MS = 900;
 const INTRO_GUIDE_SATAN_LEAVE_MS = 1300; // his laugh
+const INTRO_GUIDE_PHONE_MIN_HEIGHT = 88; // phones: the guide box never gets shorter than this
 
 // the elements of the selectors that are on screen (a closed phone drawer or a hidden panel is not)
 function introGuideVisible(selectors) {
@@ -991,13 +994,29 @@ function introGuideBoxRect(focus) {
   const margin = 6;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.66));
+  // about the size of the judgement's box; introGuidePlace shrinks it to the line it holds
+  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.46));
   const above = focus ? focus.top - margin * 2 : 0;
   const below = focus ? vh - focus.bottom - margin * 2 : vh;
   const maxHeight = Math.min(180, vh * 0.46);
   const minHeight = Math.min(100, vh * 0.28);
   const height = clamp(Math.max(above, below), minHeight, maxHeight);
-  return { left: margin, top: below >= above ? vh - margin - height : margin, width, height };
+  const atBottom = below >= above;
+  return { left: margin, top: atBottom ? vh - margin - height : margin, width, height, fit: atBottom ? "bottom" : "top" };
+}
+
+// phones: the box only as tall as the line needs (the ghost keeps the whole line in the layout),
+// kept against the edge it was placed at
+function introGuideFitBox(box, rect) {
+  const text = box.querySelector(".intro-text");
+  if (!text) return rect;
+  text.style.removeProperty("font-size");
+  box.style.height = "auto";
+  const style = getComputedStyle(box);
+  const needed = text.scrollHeight + (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0) + 4;
+  const height = clamp(Math.ceil(needed), Math.min(INTRO_GUIDE_PHONE_MIN_HEIGHT, rect.height), rect.height);
+  const top = rect.fit === "bottom" ? rect.top + rect.height - height : rect.top;
+  return { ...rect, top, height };
 }
 
 function introGuidePlace() {
@@ -1015,10 +1034,11 @@ function introGuidePlace() {
     spot.style.width = `${Math.round(place.width)}px`;
     spot.style.height = `${Math.round(place.height)}px`;
   }
-  const rect = introGuideBoxRect(focus);
+  let rect = introGuideBoxRect(focus);
   box.style.left = `${Math.round(rect.left)}px`;
-  box.style.top = `${Math.round(rect.top)}px`;
   box.style.width = `${Math.round(rect.width)}px`;
+  if (rect.fit) rect = introGuideFitBox(box, rect);
+  box.style.top = `${Math.round(rect.top)}px`;
   box.style.height = `${Math.round(rect.height)}px`;
   introFitText();
   // he steps back when what he points at is behind him

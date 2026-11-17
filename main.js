@@ -18941,6 +18941,8 @@ function introShowLine(index) {
   if (introState.layer) introState.layer.dataset.speaker = speaker;
   if (introState.phase === "guide") introGuideShowFocus(introState.lines[index]);
   introDrawText();
+  // the box is sized to the new line once it is in the layout
+  if (introState.phase === "guide") introGuidePlace();
   introFitText();
   introTypeTo(introState.ends[0]);
   if (introState.lines[index][2] === "deal") introShowDealButton();
@@ -19261,6 +19263,7 @@ const JESUS_GUIDE_ENTER_MS = 1500; // after the game switches on
 const JESUS_GUIDE_REVEAL_MS = 900; // after round 1's TARGET is revealed
 const INTRO_GUIDE_LEAVE_MS = 900;
 const INTRO_GUIDE_SATAN_LEAVE_MS = 1300; // his laugh
+const INTRO_GUIDE_PHONE_MIN_HEIGHT = 88; // phones: the guide box never gets shorter than this
 
 // the elements of the selectors that are on screen (a closed phone drawer or a hidden panel is not)
 function introGuideVisible(selectors) {
@@ -19469,13 +19472,29 @@ function introGuideBoxRect(focus) {
   const margin = 6;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.66));
+  // about the size of the judgement's box; introGuidePlace shrinks it to the line it holds
+  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.46));
   const above = focus ? focus.top - margin * 2 : 0;
   const below = focus ? vh - focus.bottom - margin * 2 : vh;
   const maxHeight = Math.min(180, vh * 0.46);
   const minHeight = Math.min(100, vh * 0.28);
   const height = clamp(Math.max(above, below), minHeight, maxHeight);
-  return { left: margin, top: below >= above ? vh - margin - height : margin, width, height };
+  const atBottom = below >= above;
+  return { left: margin, top: atBottom ? vh - margin - height : margin, width, height, fit: atBottom ? "bottom" : "top" };
+}
+
+// phones: the box only as tall as the line needs (the ghost keeps the whole line in the layout),
+// kept against the edge it was placed at
+function introGuideFitBox(box, rect) {
+  const text = box.querySelector(".intro-text");
+  if (!text) return rect;
+  text.style.removeProperty("font-size");
+  box.style.height = "auto";
+  const style = getComputedStyle(box);
+  const needed = text.scrollHeight + (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0) + 4;
+  const height = clamp(Math.ceil(needed), Math.min(INTRO_GUIDE_PHONE_MIN_HEIGHT, rect.height), rect.height);
+  const top = rect.fit === "bottom" ? rect.top + rect.height - height : rect.top;
+  return { ...rect, top, height };
 }
 
 function introGuidePlace() {
@@ -19493,10 +19512,11 @@ function introGuidePlace() {
     spot.style.width = `${Math.round(place.width)}px`;
     spot.style.height = `${Math.round(place.height)}px`;
   }
-  const rect = introGuideBoxRect(focus);
+  let rect = introGuideBoxRect(focus);
   box.style.left = `${Math.round(rect.left)}px`;
-  box.style.top = `${Math.round(rect.top)}px`;
   box.style.width = `${Math.round(rect.width)}px`;
+  if (rect.fit) rect = introGuideFitBox(box, rect);
+  box.style.top = `${Math.round(rect.top)}px`;
   box.style.height = `${Math.round(rect.height)}px`;
   introFitText();
   // he steps back when what he points at is behind him
@@ -22178,7 +22198,9 @@ function renderGiftsScreen() {
         <span class="gift-name">${escapeHtml(pack.name)}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
         ${giftOddsHtml(pack)}
-        ${can ? "" : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
+        ${can
+          ? `<span class="gift-card-open gift-card-open-spacer" aria-hidden="true">You need ${formatNumber(pack.price)}${KARMA_MARK} more</span>`
+          : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
       </button>`;
   }).join("");
   return `
@@ -23739,8 +23761,9 @@ function satanDealIntroButtonHtml() {
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
    A sheet with a folded corner, DEAL written on it and an X with a line to sign. Hover: a signature writes itself in
    blood on the line. Signed: the signature stays. Under 25% SOUL while he calls: the folded corner smoulders. The
-   phone app has no room for the sheet, so its button is a small contract mark beside the word. The lines tremble
-   with the outlines setting (three rough filters swapped by CSS, like the frames' boil). */
+   phone app has only a button's height for it, so it gets the same contract drawn as a long strip: folded corner,
+   DEAL on the left, the X, the line and the signature on the right. The lines tremble with the outlines setting
+   (three rough filters swapped by CSS, like the frames' boil). */
 function dealContractSvg() {
   const rough = [3, 11, 19]
     .map(
@@ -23758,7 +23781,16 @@ function dealContractSvg() {
     </g>
     <path class="deal-sign" d="M28 56 c4-9 7 3 11-2 s4-7 7-1 5 3 8-3 4-2 7 2 5 1 8-3 4 4 7 0 5-4 8 1 4 3 7-1"/>`;
   if (isNativeArcadeApp()) {
-    return `<svg class="deal-paper deal-paper-mark" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}</svg><span class="deal-word-inline">DEAL</span>`;
+    const strip = `
+    <path class="deal-burn" d="M163 3 L177 17"/>
+    <g class="deal-ink">
+      <path d="M3 3 H163 L177 17 V37 H3 Z"/>
+      <path d="M163 3 V17 H177"/>
+      <path class="deal-line" d="M120 31 H156"/>
+      <path d="M110 25 l6 6 M116 25 l-6 6"/>
+    </g>
+    <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
   }
   return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }
@@ -25021,7 +25053,7 @@ function missionBoxHtml() {
   `;
 }
 
-// the phone app: one band between the DAMNED and the SEALS
+// the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
   return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;

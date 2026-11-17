@@ -184,7 +184,9 @@ function renderGiftsScreen() {
         <span class="gift-name">${escapeHtml(pack.name)}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
         ${giftOddsHtml(pack)}
-        ${can ? "" : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
+        ${can
+          ? `<span class="gift-card-open gift-card-open-spacer" aria-hidden="true">You need ${formatNumber(pack.price)}${KARMA_MARK} more</span>`
+          : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
       </button>`;
   }).join("");
   return `
