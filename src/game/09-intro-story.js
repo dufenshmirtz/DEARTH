@@ -90,8 +90,9 @@ const JESUS_REVEAL_LINES = {
   ready: "Press READY and the damage lands. Then the next round begins, and I will not be there to hold your hand."
 };
 
-// third item: what happens on the click after the line ("evil": the pact sound before the next line);
-// "deal": the DEAL button appears, pulsing, as the line starts (introShowDealButton)
+// third item: what happens on the click after the line ("evil": the pact sound before the next line).
+// The last line leads straight into the burn-in and his lesson; the DEAL button is not in the story (Satan names
+// it when the player beats a BOSS for the first time, SATAN_DEAL_INTRO_LINES)
 const INTRO_PACT_LINES = [
   ["satan", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
   ["you", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
@@ -108,24 +109,31 @@ const INTRO_PACT_LINES = [
   ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
   ["satan", "Yea yea definitely, or whatever the other guy promised you."],
   ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya.", "deal"],
-  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
-  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
+  ["satan", "Great. Let me show you around the place, I despise wasted potential."]
 ];
 
-// Satan's lesson, right after the pact has burnt the offerings, ARTIFACTS and SEALS into place. Same
-// scene as Jesus at the table (third item: what lights up, keys in INTRO_GUIDE_FOCUS); he laughs and goes.
+// Satan's lesson, right after the pact has burnt the offerings, ARTIFACTS and SEALS into place (and the music
+// has started). Same scene as Jesus at the table (third item: what lights up, keys in INTRO_GUIDE_FOCUS); he
+// laughs and goes.
 const SATAN_LESSON_LINES = [
-  ["satan", "Oh, before I forget. Let me show you around the place, I hate wasted potential."],
   ["satan", "My Devil's Offerings. You spend your SIN{SIN} here, on SEALS and ARTIFACTS. Fresh stock every round.", "shop"],
   ["satan", "And where does SIN{SIN} come from? The dead. Every DAMNED carries a BOUNTY, that little number in the corner. When one falls, its BOUNTY is yours.", "bounty"],
   ["satan", "SEALS hold the power of my demons. Put one in a slot and it works on its own, every round, you don't have to lift a finger. Hover over one to read what it does.", "seals"],
-  ["satan", "You start with 3 slots, and every 2 BOSSES you put down opens another, up to 6. Buy a SEAL you already own and it turns ELITE, stronger every time.", "seals"],
+  ["satan", "You start with 3 slots, if I deem your performance worthy more will open, up to 6. Buy a SEAL you already own and it turns ELITE, stronger every time.", "seals"],
   ["satan", "Changed your mind? Sell a SEAL and I'll give you back half of what you paid. I'm generous like that.", "seals"],
   ["satan", "ARTIFACTS are the rituals. You can carry 5 of them and they do nothing until you use them. Once the guesses are revealed and before you press READY, you get to use 2 a round.", "artifacts"],
   ["satan", "Some want a victim: use it, then click the DAMNED you want it on. Once a ritual is done, the ARTIFACT is gone.", "artifacts"],
   ["satan", "Don't like what's on offer? Reroll it. A little SIN{SIN} the first time, a little more each time after that, until the next round.", "reroll"],
-  ["satan", "That's all you need to know, flesh puppet. Now go make me some SIN{SIN}."]
+  ["satan", "That's probably a lot of information to get through your mortal skull right now, but do not worry dear, you'll figure it out as you go. It's only your SOUL that's at stake!"],
+  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
+];
+
+// the first BOSS a player ever beats: Satan names the DEAL button, laughs and goes, and it burns in
+// (it stays for every run from then on: satanDealUnlocked, 09-satan-pact.js)
+const SATAN_DEAL_INTRO_LINES = [
+  ["satan", "Look at you my little heathen, you managed to eliminate one of my special sinners. Maybe you are worth my time after all. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya."],
+  ["satan", "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet..."]
 ];
 
 // the first time a player ever wins the main game (once per player, like the story; then SATAN_VICTORY_LINES)
@@ -177,7 +185,7 @@ const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the ri
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
-//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment)
+//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment) | dealintro(-leave) (the first BOSS)
 const introState = {
   phase: "off",
   timers: [],
@@ -193,7 +201,7 @@ const introState = {
   typing: false,
   waiting: false,
   pactTimer: null,
-  dealShownAt: 0, // when Satan named the DEAL button in the pact (it shows from then on, see satanDealButtonHtml)
+  musicFreed: false, // the burn-in after the pact starts the music, under Satan's lesson
   keyBound: false,
   finaleFromSkip: false
 };
@@ -239,7 +247,7 @@ function introActive() {
 }
 
 function introHoldsMusic() {
-  return introActive();
+  return introActive() && !introState.musicFreed;
 }
 
 function introBlocksRunSave() {
@@ -247,7 +255,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "guide-wait", "guide", "guide-leave", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase);
+  return ["black", "judgement", "booting", "guide-wait", "guide", "guide-leave", "pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -257,7 +265,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave", "dealintro", "dealintro-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -291,7 +299,7 @@ function introAbort() {
   introClearTimers();
   introRemoveLayers();
   introState.phase = "off";
-  introState.dealShownAt = 0;
+  introState.musicFreed = false;
   markIntroSeen();
   playSoundtrack();
 }
@@ -467,7 +475,6 @@ function introShowLine(index) {
   if (introState.phase === "guide") introGuidePlace();
   introFitText();
   introTypeTo(introState.ends[0]);
-  if (introState.lines[index][2] === "deal") introShowDealButton();
 }
 
 // a part of a line has finished typing; Satan's offer asks YES / NO as soon as its last part is down
@@ -506,7 +513,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "guide", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "guide", "pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -542,6 +549,7 @@ function introAdvance() {
   else if (introState.phase === "finale") judgementTalkLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
   else if (introState.phase === "deal") satanDealEndOfLines();
+  else if (introState.phase === "dealintro") satanDealIntroLeave();
   else introSealPact();
 }
 
@@ -648,6 +656,10 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanDealSkip();
+  } else if (introState.phase === "dealintro") {
+    introClearTimers();
+    introState.typing = false;
+    satanDealIntroLeave();
   }
 }
 
@@ -661,6 +673,7 @@ function startIntroSequence(options = {}) {
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   state.mobileOfferingsOpen = false;
   introState.phase = "black";
+  introState.musicFreed = false;
   introState.guideSkipped = false;
   introState.guideRevealDone = false;
   introState.guideForecast = null;
@@ -741,8 +754,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
+  if (["pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase)) introPlacePactBox();
   jesusGuideAfterRender();
+  satanDealIntroAfterRender();
   satanVictoryAfterRender();
   judgementTalkAfterRender();
   satanTightwadAfterRender();
@@ -938,10 +952,12 @@ function introGuideOpen(lines, who = "jesus", onDone = null) {
   document.querySelector("#floatingTooltip")?.classList.remove("visible");
   const layer = document.createElement("div");
   layer.className = `intro-guide-layer intro-guide-${who}`;
+  // Jesus at the table looks as he does before Final Judgment: "Candlelight" (intro-jesus-yellow.webp), the same
+  // size and glow, his box in the same yellow (.intro-guide-jesus in styles.css); the opening judgement keeps its own
   const figure =
     who === "satan"
       ? `<div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>`
-      : `<div class="intro-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus.webp" alt="" draggable="false" /></div>`;
+      : `<div class="intro-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus-yellow.webp" alt="" draggable="false" /></div>`;
   layer.innerHTML = `
     <div class="intro-guide-spot intro-guide-spot-none" aria-hidden="true"></div>
     ${figure}
@@ -985,11 +1001,14 @@ function introGuideOverlap(a, b) {
 }
 
 // over the hidden SEAL bar when it has room and is clear of the lit part (desktop);
-// otherwise (phones) the larger free band above or below the lit part, on the left of him
+// otherwise (phones) the larger free band above or below the lit part, on the left of him.
+// Jesus's box is the size of his box before Final Judgment (the SEAL slots, introPactRect); Satan's is widened
+// along the SEAL bar
 function introGuideBoxRect(focus) {
   const slots = introPactRect();
   const bar = document.querySelector(".passive-bar")?.getBoundingClientRect();
-  const base = slots && bar && bar.width ? { left: slots.left, top: slots.top, height: slots.height, width: Math.max(slots.width, Math.min(bar.right - slots.left - 10, 980)) } : slots;
+  const widen = introState.guideWho === "satan" && slots && bar && bar.width;
+  const base = widen ? { left: slots.left, top: slots.top, height: slots.height, width: Math.max(slots.width, Math.min(bar.right - slots.left - 10, 980)) } : slots;
   if (base && base.height >= 140 && (!focus || !introGuideOverlap(base, focus))) return base;
   const margin = 6;
   const vw = window.innerWidth;
@@ -1088,6 +1107,7 @@ function introGuideLeave() {
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
+    !state.satanDealIntroDue &&
     introState.phase === "off" &&
     state.mode === "arcade" &&
     (state.stage === "summary" || state.satanVictorySkipped) &&
@@ -1099,7 +1119,7 @@ function satanVictoryReady() {
 }
 
 function satanVictoryHoldsSummary() {
-  return Boolean(state.satanVictoryDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+  return Boolean(state.satanVictoryDue && !state.satanDealIntroDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
 }
 
 function satanVictoryAfterRender() {
@@ -1155,8 +1175,8 @@ function satanVictoryLeave() {
   satanLeaveScene("victory");
 }
 
-// he laughs and goes; the run carries on
-function satanLeaveScene(phase) {
+// he laughs and goes; the run carries on (onGone runs once he has gone)
+function satanLeaveScene(phase, onGone = null) {
   if (introState.phase !== phase) return;
   introSetWaiting(false);
   introState.phase = `${phase}-leave`;
@@ -1170,7 +1190,80 @@ function satanLeaveScene(phase) {
     introClearTimers();
     introState.phase = "off";
     render();
+    if (onGone) onGone();
   }, 1300);
+}
+
+/* ---- the first BOSS ever beaten: Satan names the DEAL ----
+   The DEAL button stays hidden (satanDealUnlocked, 09-satan-pact.js) until the player beats a BOSS for the first
+   time: state.satanDealIntroDue is set then (06-round-resolution.js), and the round's results wait for him like
+   for the victory speech (Next Round brings him in at once; the victory and tightwad scenes wait for this one).
+   Same entrance and box as the pact. He says SATAN_DEAL_INTRO_LINES, laughs and goes, and the DEAL button burns
+   in like the panels after the pact; it stays for the rest of this run and every run after. Ending or skipping
+   him unlocks it; a game closed in the middle of it brings him back at the next BOSS. Pause > DEV > Unlock DEAL
+   opens it without him. */
+function satanDealIntroHoldsSummary() {
+  return Boolean(state.satanDealIntroDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function satanDealIntroReady() {
+  return satanDealIntroHoldsSummary() && !state.pauseOpen && !roundRevealAnimationActive() && !(activeMoment && activeMoment.until > performance.now());
+}
+
+function satanDealIntroAfterRender() {
+  if (!satanDealIntroHoldsSummary() || introState.pactTimer) return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanDealIntroReady()) startSatanDealIntro();
+    else if (satanDealIntroHoldsSummary()) introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanDealIntroNow() {
+  if (!satanDealIntroHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanDealIntro();
+}
+
+function startSatanDealIntro() {
+  state.satanDealIntroDue = false;
+  // already open (Pause > DEV > Unlock DEAL in the meantime): nothing to say
+  if (satanDealUnlocked()) {
+    render();
+    return;
+  }
+  satanOpenScene("dealintro", SATAN_DEAL_INTRO_LINES, "satan-deal-intro-layer");
+  saveArcadeRun();
+}
+
+function satanDealIntroLeave() {
+  if (introState.phase !== "dealintro") return;
+  unlockSatanDeal();
+  satanLeaveScene("dealintro", satanDealBurnIn);
+}
+
+// the DEAL button comes in like the panels after the pact: a burnt sheet played backwards
+function satanDealBurnIn() {
+  const button = typeof document !== "undefined" ? document.querySelector("#dealButton") : null;
+  const cover = button ? introMakeBurnCover(button) : null;
+  if (!cover) return;
+  introPlaySfx("introBurn");
+  // drawn at once, so the button never shows before its cover
+  introDrawBurn(cover, 0, performance.now());
+  const start = performance.now();
+  const frame = (now) => {
+    if (state.mode !== "arcade" || !cover.canvas.isConnected) {
+      cover.canvas.remove();
+      return;
+    }
+    const progress = Math.min(1, (now - start) / INTRO_BURN_MS);
+    introDrawBurn(cover, progress, now);
+    if (progress < 1) requestAnimationFrame(frame);
+    else cover.canvas.remove();
+  };
+  requestAnimationFrame(frame);
 }
 
 /* ---- before Final Judgment: the 72 Goetic demons have fallen ----
@@ -1297,6 +1390,7 @@ function satanTightwadHoldsSummary() {
   return Boolean(
     state.satanTightwadDue &&
       !state.satanVictoryDue &&
+      !state.satanDealIntroDue &&
       introState.phase === "off" &&
       state.mode === "arcade" &&
       state.stage === "summary" &&
@@ -1428,37 +1522,10 @@ function introPlacePactBox() {
   box.style.width = `${rect.width}px`;
   box.style.height = `${rect.height}px`;
   introFitText();
-  introPlaceDealSpot();
-}
-
-// Satan names the DEAL button: it appears under Pause, pulsing, and the veil opens a gap around it
-function introShowDealButton() {
-  if (introState.phase !== "pact" || introState.dealShownAt) return;
-  introState.dealShownAt = Date.now();
-  render();
-  introPlaceDealSpot();
-}
-
-function introPlaceDealSpot() {
-  const layer = introState.layer;
-  if (!layer || introState.phase !== "pact" || !introState.dealShownAt) return;
-  const rect = document.querySelector("#dealButton")?.getBoundingClientRect();
-  if (!rect || !rect.width || !rect.height) {
-    layer.classList.remove("intro-deal-spot");
-    return;
-  }
-  const width = Math.round(rect.width * 1.8 + 36);
-  const height = Math.round(rect.height * 2.2 + 36);
-  layer.style.setProperty("--deal-spot-x", `${Math.round(rect.left + rect.width / 2 - width / 2)}px`);
-  layer.style.setProperty("--deal-spot-y", `${Math.round(rect.top + rect.height / 2 - height / 2)}px`);
-  layer.style.setProperty("--deal-spot-w", `${width}px`);
-  layer.style.setProperty("--deal-spot-h", `${height}px`);
-  layer.classList.add("intro-deal-spot");
 }
 
 function introStartPact() {
   introState.phase = "pact";
-  introState.dealShownAt = 0;
   introState.lines = INTRO_PACT_LINES;
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   const floatingTooltip = document.querySelector("#floatingTooltip");
@@ -1493,10 +1560,11 @@ function introPactEvil(nextIndex) {
   }, 2000);
 }
 
+// "Great. Let me show you around the place": he steps aside (no laugh, that comes at the end of his lesson)
+// and the panels burn in
 function introSealPact() {
   introSetWaiting(false);
   introState.phase = "reveal";
-  introPlaySfx("introLaugh");
   introState.box.classList.add("intro-box-leave");
   introState.layer?.classList.add("intro-pact-leaving");
   introLater(() => {
@@ -1521,6 +1589,9 @@ function introBurnIn() {
   const covers = targets.map((element) => introMakeBurnCover(element)).filter(Boolean);
   document.body.classList.remove("intro-tutorial");
   introPlaySfx("introBurn");
+  // the music starts with the burn-in and plays under his lesson
+  introState.musicFreed = true;
+  playSoundtrack();
   const start = performance.now();
   const frame = (now) => {
     if (introState.phase !== "reveal") return;
@@ -1678,11 +1749,6 @@ function introFinish() {
   markIntroSeen();
   playSoundtrack();
   saveArcadeRun();
-  // the DEAL button shown since Satan named it settles into its usual look
-  if (introState.dealShownAt) {
-    introState.dealShownAt = 0;
-    render();
-  }
 }
 
 /* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------

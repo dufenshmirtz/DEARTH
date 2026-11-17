@@ -44,6 +44,11 @@ function game() {
       globalThis.window = { localStorage };
       unlockSlotMachine();
     }
+    // the DEAL only shows once Satan has named it after the player's first BOSS (or Pause > DEV > Unlock DEAL)
+    function unlockDealForTest() {
+      if (typeof window === "undefined") globalThis.window = { localStorage };
+      unlockSatanDeal();
+    }
     function assertDamage(expected) {
       assert.equal(JSON.stringify(state.bots.map(bot => bot.lastDamage)), JSON.stringify(expected));
     }
@@ -2350,6 +2355,7 @@ test("a bound Archangel: the run starts with its SEAL (sells for nothing) and YO
 
 // ---------- Satan's Pact (09-satan-pact.js) ----------
 const PACT_SETUP = `
+  unlockDealForTest();
   state.mode = "arcade";
   state.round = 3;
   state.stage = "guess";
@@ -4002,21 +4008,40 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
   `);
 });
 
-test("Missions: 36 missions (15 worth 1 FAVOR, 13 worth 2, 8 worth 3 or more, the deal 6; no pentakill); one per round, replaced at the start of the next round", () => {
+test("Satan's Bets: the list of Nov 17 2026: 68 bets (23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more: 13 at 3, 4 at 4, 4 at 6, the pentakill 8); one per round, replaced at the start of the next round", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    assert.equal(MISSIONS.length, 36);
+    assert.equal(MISSIONS.length, 68);
     assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
-    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[15,13,8]");
-    assert.equal(MISSION_BY_ID.pentakill, undefined);
-    assert.equal(MISSION_BY_ID.critical.value, 3);
-    assert.equal(MISSION_BY_ID.guessPrime.value, 1);
-    assert.equal(MISSION_BY_ID.guessLowest.value, 2);
-    assert.equal(MISSION_BY_ID.kill3.value, 3);
-    assert.equal(MISSION_BY_ID.killRevealed.value, 1);
-    assert.equal(MISSION_BY_ID.deal.value, 6);
+    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[23,23,22]");
+    assert.equal(JSON.stringify([3, 4, 6, 8].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[13,4,4,1]");
+    // every bet as likely as the next one of its worth
+    assert.equal(MISSIONS.filter((mission) => mission.weight).length, 0);
     assert.equal(JSON.stringify(MISSION_TIER_ODDS), JSON.stringify({ 1: 45, 2: 40, 3: 15 }));
+    const worth = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission.value]));
+    assert.equal(worth.critical, 3);
+    assert.equal(worth.pentakill, 8);
+    assert.equal(worth.useItem, 2);
+    assert.equal(worth.noArtifacts, 2);
+    assert.equal(worth.kill1, 1);
+    assert.equal(worth.kill2, 2);
+    assert.equal(worth.kill3, 4);
+    assert.equal(worth.kill4, 6);
+    assert.equal(worth.reroll6, 3);
+    assert.equal(worth.buy3, 2);
+    assert.equal(worth.buy6, 4);
+    assert.equal(worth.hurt12, 4);
+    assert.equal(worth.guess0, 6);
+    assert.equal(worth.guess100, 6);
+    assert.equal(worth.sellStartSeal, 4);
+    assert.equal(worth.killName, 2);
+    assert.equal(worth.killRevealed, 2);
+    assert.equal(worth.keepWeakest, 3);
+    assert.equal(worth.killStrongest, 3);
+    assert.equal(worth.deal, 6);
+    assert.equal(worth.closestReveal, 2);
+    ["gain6", "gain12", "reroll5", "hurt4", "sell1", "over66", "under12", "guess50", "guessLowest", "useItemTwice", "buy4", "buy7"].forEach((id) => assert.equal(MISSION_BY_ID[id], undefined, id));
     const first = missionsEnsureRound();
     assert.ok(first && MISSION_BY_ID[first.id]);
     assert.equal(missionsEnsureRound(), first);
@@ -4029,7 +4054,7 @@ test("Missions: 36 missions (15 worth 1 FAVOR, 13 worth 2, 8 worth 3 or more, th
   `);
 });
 
-test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked kinds come 4x, 5x and 2x as often", () => {
+test("Satan's Bets: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; within a worth every bet is as likely", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
@@ -4038,7 +4063,7 @@ test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked 
     Math.random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
     const counts = {};
     const tiers = { 1: 0, 2: 0, 3: 0 };
-    const draws = 8000;
+    const draws = 12000;
     for (let i = 0; i < draws; i += 1) {
       state.missions.lastId = null;
       const drawn = drawMission();
@@ -4050,54 +4075,162 @@ test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked 
     assert.ok(near(tiers[2] / draws, 0.4, 0.03), "2 FAVOR " + tiers[2] / draws);
     assert.ok(near(tiers[3] / draws, 0.15, 0.03), "3+ FAVOR " + tiers[3] / draws);
     const ratio = (a, b) => counts[a] / counts[b];
-    assert.ok(near(ratio("useItem", "noArtifacts"), 4, 1.2), "useItem x4 " + ratio("useItem", "noArtifacts"));
-    assert.ok(near(ratio("killName", "noKill"), 5, 1.4), "killName x5 " + ratio("killName", "noKill"));
-    assert.ok(near(ratio("useOn", "noKill"), 2, 0.7), "useOn x2 " + ratio("useOn", "noKill"));
-    assert.ok(near(ratio("useItemTwice", "critical"), 4, 1.2), "useItemTwice x4 " + ratio("useItemTwice", "critical"));
-    assert.ok(near(ratio("useOn2", "critical"), 2, 0.7) && near(ratio("useOnBoth", "critical"), 2, 0.7), "two on one / one on two x2");
+    assert.ok(near(ratio("killName", "kill2"), 1, 0.35), "Eliminate {name} no longer 5x " + ratio("killName", "kill2"));
+    assert.ok(near(ratio("useItem", "kill2"), 1, 0.35), "Use a {named artifact} no longer 4x " + ratio("useItem", "kill2"));
+    assert.ok(near(ratio("useOn", "kill1"), 1, 0.35), "Use an artifact on {name} no longer 2x " + ratio("useOn", "kill1"));
   `);
 });
 
-test("Missions: only missions that can be done now are drawn (the deal only before the run's deal, ARTIFACT ones only with the ARTIFACTS)", () => {
+test("Satan's Bets: only bets that can be done now are drawn (ARTIFACTS held, the deal, MEMORY / BOUNTY 12, a BOSS, SEALS in the slots, last round's guess)", () => {
   game()(`
     unlockSlotsForTest();
+    unlockDealForTest();
     fixture([], [10, 20, 30, 40, 50]);
     state.player.actives = [];
     assert.equal(MISSION_BY_ID.useItem.param(), null);
     assert.equal(MISSION_BY_ID.noArtifacts.can(), false);
     assert.equal(MISSION_BY_ID.noArtifactsHeld.can(), false);
     assert.equal(MISSION_BY_ID.useOn.can(), false);
+    assert.equal(MISSION_BY_ID.useTwo.can(), false);
     state.player.actives = ["a6", "a15"].map((id) => freeActiveCopy(id));
     assert.ok(["a6", "a15"].includes(MISSION_BY_ID.useItem.param()));
-    assert.equal(MISSION_BY_ID.useItemTwice.param(), null, "twice needs two of the same");
+    assert.equal(MISSION_BY_ID.useTwo.can(), true);
     assert.equal(MISSION_BY_ID.useOn.can(), true, "Sacrificial Dagger is aimed at a DAMNED");
     assert.equal(MISSION_BY_ID.useOn2.can(), false, "two aimed ARTIFACTS needed");
-    state.player.actives.push(freeActiveCopy("a6"));
-    assert.equal(MISSION_BY_ID.useItemTwice.param(), "a6");
     // the deal: only while the run's one deal is still to be made
     assert.equal(MISSION_BY_ID.deal.can(), true);
     satanPact().used = true;
     assert.equal(MISSION_BY_ID.deal.can(), false);
-    // MEMORY / BOUNTY 10: only when a DAMNED at the table has that much
+    // MEMORY / BOUNTY 12: only when a DAMNED at the table has that much
+    state.bots[2].memory = new Array(11).fill(state.bots[2].memory[0] || { guess: 50, target: 50 });
     assert.equal(MISSION_BY_ID.killMemory.can(), false);
-    state.bots[2].memory = new Array(10).fill(state.bots[2].memory[0] || { guess: 50, target: 50 });
+    state.bots[2].memory = new Array(12).fill(state.bots[2].memory[0] || { guess: 50, target: 50 });
     assert.equal(MISSION_BY_ID.killMemory.can(), true);
-    state.bots.forEach((bot) => { bot.reward = 3; });
+    state.bots.forEach((bot) => { bot.reward = 11; });
     assert.equal(MISSION_BY_ID.killBounty.can(), false);
-    state.bots[1].reward = 10;
+    state.bots[1].reward = 12;
     assert.equal(MISSION_BY_ID.killBounty.can(), true);
     // the weakest / strongest DAMNED by SOUL right now
     state.bots[3].hp = 200;
     state.bots[4].hp = 900;
     assert.equal(MISSION_BY_ID.keepWeakest.param().id, state.bots[3].id);
-    state.bots[0].hp = 1000;
     state.bots[0].maxHp = 1200;
     state.bots[0].hp = 1100;
     assert.equal(MISSION_BY_ID.killStrongest.param().id, state.bots[0].id);
+    // Defeat a Boss: only while one is at the table
+    assert.equal(MISSION_BY_ID.killBoss.can(), false);
+    state.bots[4].isBoss = true;
+    assert.equal(MISSION_BY_ID.killBoss.can(), true);
+    // 3 / 5 SEALS trigger: only with that many different SEALS in your slots
+    state.player.passives = [{ ...ITEMS.p1, stack: 3 }, { ...ITEMS.p2, stack: 1 }];
+    assert.equal(MISSION_BY_ID.seals3.can(), false, "an ELITE copy is not another SEAL");
+    state.player.passives.push({ ...ITEMS.p6, stack: 1 });
+    assert.equal(MISSION_BY_ID.seals3.can(), true);
+    assert.equal(MISSION_BY_ID.seals5.can(), false);
+    state.player.passives.push({ ...ITEMS.p7, stack: 1 }, { ...ITEMS.p9, stack: 1 });
+    assert.equal(MISSION_BY_ID.seals5.can(), true);
+    // the same number as last round: only after a guess last round
+    assert.equal(MISSION_BY_ID.sameAsLastRound.param(), null);
+    state.missions.lastGuess = { round: state.round - 1, guess: 0 };
+    assert.equal(JSON.stringify(MISSION_BY_ID.sameAsLastRound.param()), JSON.stringify({ guess: 0 }), "a guess of 0 counts");
+    state.missions.lastGuess = { round: state.round - 2, guess: 40 };
+    assert.equal(MISSION_BY_ID.sameAsLastRound.param(), null);
+    // a personality of one of the DAMNED at the table; a digit 0-9
+    state.bots.forEach((bot) => { bot.type = "Drifter"; });
+    state.bots[4].isBoss = false;
+    assert.equal(MISSION_BY_ID.killPersonality.param().type, "Drifter");
+    Math.random = () => 0.99;
+    assert.equal(MISSION_BY_ID.guessDigit.param().digit, 9);
+    Math.random = () => 0;
+    assert.equal(MISSION_BY_ID.guessDigit.param().digit, 0);
   `);
 });
 
-test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROUND ones, SIN without sales, SEALS you started with, the deal)", () => {
+test("Satan's Bets read as they were written", () => {
+  game()(`
+    const text = (id, param = null) => missionText(MISSION_BY_ID[id], param);
+    const bot = { id: "x", name: "Lilith" };
+    const other = { id: "y", name: "Azazel" };
+    const expected = {
+      critical: "Get a critical hit",
+      pentakill: "Get a pentakill",
+      noArtifacts: "Don't use artifacts this round",
+      kill2: "Eliminate two Damned",
+      kill3: "Eliminate three Damned",
+      kill4: "Eliminate four Damned",
+      zeroSin: "Have 0 sin at the end of the round",
+      reroll6: "Reroll 6 times",
+      buy6: "Buy six seals or artifacts",
+      buy3: "Buy three seals or artifacts",
+      hurt12: "Take 12 or more damage",
+      under11: "Guess under 11",
+      guess0: "Guess 0",
+      guess100: "Guess 100",
+      noBuy: "Don't buy any Devil's Offerings",
+      killMemory: "Eliminate a Damned with 12 or more memory",
+      killBounty: "Eliminate a Damned with 12 or more bounty",
+      killRevealed: "Eliminate a revealed Damned",
+      noKill: "Don't eliminate any Damned",
+      sellStartSeal: "Sell one of the seals you had at the start of the round",
+      deal: "Complete a Deal",
+      sameGuess: "Guess the same number as a revealed damned",
+      noArtifactsHeld: "Have 0 artifacts in your inventory at the end of the round",
+      guessPrime: "Guess a prime number",
+      guessAbove: "Guess above the round target",
+      guessBelow: "Guess below the round target",
+      guessMultiple3: "Guess a multiple of 3",
+      guessMultiple5: "Guess a multiple of 5",
+      kill1: "Eliminate a Damned",
+      buySeal: "Buy or upgrade a seal",
+      buyArtifacts2: "Buy two artifacts",
+      sameAsLastRound: "Guess the same number as last round",
+      reroll2: "Reroll Devil's Offerings 2 times",
+      spend12: "Spend at least 12 SIN",
+      revealWithin10: "Guess within 10 of the TARGET at reveal",
+      notWorstReveal: "Don't have the worst Guess at reveal",
+      closerThan3: "Guess closer than 3 DAMNED",
+      hurtMax11: "Take 11 damage or less",
+      earn5: "Earn 5 SIN this round",
+      damnedTake40: "The DAMNED take at least 40 damage in total",
+      useTwo: "Use two ARTIFACTS",
+      sellSeal: "Sell a SEAL",
+      nextRound12Sin: "Go into the next round with 12 sin or more",
+      within3: "Guess within 3 of the TARGET",
+      closest: "Have the closest guess amongst the other Damned",
+      lowerThanAll: "Guess lower than every DAMNED",
+      hurtMax5: "Take 5 damage or less",
+      reroll3: "Reroll Devil's Offerings 3 times",
+      earn12: "Earn 12 SIN this round",
+      spend16: "Spend at least 16 SIN",
+      everyTakes10: "Every DAMNED takes 10 damage or more",
+      nextRound5Artifacts: "Go into the next round holding 5 ARTIFACTS",
+      seals3: "Have 3 seals trigger this round",
+      keepSoul: "Have the same or more SOUL at the end of the round",
+      killBoss: "Defeat a Boss",
+      earn25: "Earn 25 SIN this round",
+      seals5: "Have 5 seals trigger this round",
+      spend33: "Spend at least 33 SIN",
+      closestReveal: "Have the closest Guess at reveal"
+    };
+    Object.entries(expected).forEach(([id, line]) => assert.equal(text(id), line, id));
+    assert.equal(text("useItem", "a14"), "Use a Spirit Board");
+    assert.equal(text("useItem", "a28"), "Use an Engraved Skull");
+    assert.equal(text("useItem", "a13"), "Use The White-Hilted Knife");
+    assert.equal(text("killName", bot), "Eliminate Lilith");
+    assert.equal(text("useOn", bot), "Use an artifact on Lilith");
+    assert.equal(text("useOn2", bot), "Use two artifacts on Lilith");
+    assert.equal(text("useOnBoth", { first: bot, second: other }), "Use one artifact on Lilith and one on Azazel");
+    assert.equal(text("keepWeakest", bot), "Keep Lilith alive");
+    assert.equal(text("killStrongest", other), "Eliminate Azazel");
+    assert.equal(text("killPersonality", { type: "Anchor" }), "Eliminate an Anchor damned");
+    assert.equal(text("killPersonality", { type: "Stubborn" }), "Eliminate a Stubborn damned");
+    assert.equal(text("guessDigit", { digit: 7 }), "Guess a number containing the digit 7");
+    assert.equal(text("guessDigit", { digit: 0 }), "Guess a number containing the digit 0");
+    assert.equal(Object.keys(expected).length + 9, MISSIONS.length, "every bet's text is checked");
+  `);
+});
+
+test("Satan's Bets: the shop and SIN ones (buys, rerolls, SIN earned without sales, SIN spent incl. the deal's, NEXT ROUND ones, your SOUL, the deal)", () => {
   game()(`
     unlockSlotsForTest();
     fixture([["p1"]], [10, 20, 30, 40, 50]);
@@ -4111,16 +4244,50 @@ test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROU
     paid(0);
     state.roundState.activeUseItemCounts.set("a6", 1);
     missionsCheck("event");
-    paid(1);
-    // a guess mission reads the guess you typed, once the results are in
-    set("guess50");
-    state.roundState.playerSubmittedGuess = 50;
+    paid(2);
+    // two ARTIFACTS of any kind
+    set("useTwo");
+    state.roundState.activeUses = 1;
     missionsCheck("event");
     paid(0);
-    state.missions.round.resolved = true;
-    missionsCheck("resolve");
+    assert.equal(MISSION_BY_ID.useTwo.progress(missionFacts()), "1/2");
+    state.roundState.activeUses = 2;
+    missionsCheck("event");
+    paid(1);
+    // buying: SEALS (an ELITE upgrade is a SEAL bought) and ARTIFACTS
+    set("buySeal");
+    missionsNoteShop("buyArtifact");
+    paid(0);
+    missionsNoteShop("buySeal");
+    paid(1);
+    set("buyArtifacts2");
+    missionsNoteShop("buyArtifact");
+    paid(1);
+    set("buy3");
+    missionsNoteShop("buySeal");
     paid(2);
+    set("buy6");
+    assert.equal(MISSION_BY_ID.buy6.progress(missionFacts()), "4/6");
+    missionsNoteShop("buySeal");
+    missionsNoteShop("buySeal");
+    paid(4);
+    // rerolls
+    set("reroll2");
+    missionsNoteShop("reroll");
+    paid(0);
+    missionsNoteShop("reroll");
+    paid(1);
+    set("reroll3");
+    missionsNoteShop("reroll");
+    paid(2);
+    set("reroll6");
+    missionsNoteShop("reroll");
+    missionsNoteShop("reroll");
+    paid(0);
+    missionsNoteShop("reroll");
+    paid(3);
     // no buying: decided at NEXT ROUND, missed as soon as you buy
+    missionsBeginRound();
     set("noBuy");
     missionsCheck("event");
     paid(0);
@@ -4128,28 +4295,95 @@ test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROU
     assert.ok(MISSION_BY_ID.noBuy.failed(missionFacts()));
     missionsCheck("leave");
     paid(0);
-    // 0 SIN when you go into the next round
+    // SIN spent: the Devil's Offerings and paid rerolls (spendCredits) and the deal's SIN
+    missionsBeginRound();
+    set("spend12");
+    state.player.credits = 50;
+    spendCredits(7);
+    missionsCheck("event");
+    paid(0);
+    assert.equal(MISSION_BY_ID.spend12.progress(missionFacts()), "7/12");
+    satanPactPay({ type: "sin", n: 5 });
+    missionsCheck("event");
+    paid(1);
+    set("spend16");
+    spendCredits(4);
+    missionsCheck("event");
+    paid(2);
+    set("spend33");
+    spendCredits(16);
+    missionsCheck("event");
+    paid(0);
+    spendCredits(1);
+    missionsCheck("event");
+    paid(3);
+    // SIN earned this round; a sale is not earned
+    missionsBeginRound();
+    set("earn5");
+    state.roundState.earnedSinThisRound = 0;
+    gainCredits(10, false, "Sold Ceremonial Altar");
+    missionsNoteShop("sell", { sin: 10 });
+    paid(0);
+    gainCredits(5, false, "Test");
+    missionsCheck("event");
+    paid(1);
+    set("earn12");
+    gainCredits(7, false, "Test");
+    missionsCheck("event");
+    paid(2);
+    set("earn25");
+    gainCredits(12, false, "Test");
+    missionsCheck("event");
+    paid(0);
+    gainCredits(1, false, "Test");
+    missionsCheck("event");
+    paid(3);
+    // NEXT ROUND: 0 SIN, 12 SIN or more, 5 ARTIFACTS held, no ARTIFACTS held
     set("zeroSin");
     state.player.credits = 0;
     missionsCheck("event");
     paid(0);
     missionsCheck("leave");
     paid(3);
-    // SIN from a sale is not "gained"
-    set("gain6");
-    state.roundState.earnedSinThisRound = 0;
-    gainCredits(10, false, "Sold Ceremonial Altar");
-    missionsNoteShop("sell", { sin: 10 });
+    set("nextRound12Sin");
+    state.player.credits = 11;
+    missionsCheck("leave");
     paid(0);
-    gainCredits(6, false, "Test");
-    missionsCheck("event");
+    state.player.credits = 12;
+    missionsCheck("leave");
     paid(1);
-    // a SEAL you had when the round began (p1), not one bought since
+    set("nextRound5Artifacts");
+    state.player.actives = ["a6", "a6", "a15", "a15"].map((id) => freeActiveCopy(id));
+    missionsCheck("leave");
+    paid(0);
+    state.player.actives.push(freeActiveCopy("a6"));
+    missionsCheck("leave");
+    paid(2);
+    set("noArtifactsHeld");
+    state.player.actives = [];
+    missionsCheck("leave");
+    paid(1);
+    // your SOUL when you press NEXT ROUND against your SOUL when the round began
+    state.player.hp = 70;
+    missionsBeginRound();
+    set("keepSoul");
+    state.player.hp = 64;
+    missionsCheck("leave");
+    paid(0);
+    state.player.hp = 70;
+    missionsCheck("leave");
+    paid(3);
+    // selling a SEAL; one you had when the round began (p1), not one bought since
+    set("sellSeal");
+    missionsNoteShop("sell", { sin: 4 });
+    paid(0);
+    missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
+    paid(1);
     set("sellStartSeal");
     missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
     paid(0);
     missionsNoteShop("sell", { sin: 4, sealIds: ["p1"] });
-    paid(3);
+    paid(4);
     // the deal: 6 FAVOR when it is signed
     set("deal");
     missionsCheck("event");
@@ -4159,20 +4393,21 @@ test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROU
   `);
 });
 
-test("Missions: eliminations are counted as each DAMNED fell (MEMORY, BOUNTY, revealed), named DAMNED, kept alive, ARTIFACTS aimed at them", () => {
+test("Satan's Bets: eliminations as each DAMNED fell (MEMORY / BOUNTY 12, revealed, BOSS, personality), named DAMNED, the pentakill, ARTIFACTS aimed at them", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
     const set = (id, param = null) => { state.missions.current = { id, value: MISSION_BY_ID[id].value, param, round: state.round, done: false }; };
-    const [a, b, c] = state.bots;
+    const [a, b, c, d] = state.bots;
     const named = (bot) => ({ id: bot.id, name: bot.name });
-    // a falls with 10 MEMORY, a BOUNTY of 12 and its guess revealed
-    a.memory = new Array(10).fill(a.memory[0] || { guess: 50, target: 50 });
+    // a falls with 12 MEMORY, a BOUNTY of 12, its guess revealed, an Analyst
+    a.memory = new Array(12).fill(a.memory[0] || { guess: 50, target: 50 });
     a.reward = 12;
     a.revealedByPassive = true;
+    a.type = "Analyst";
     a.hp = 0;
     resolveEliminatedBots([a]);
-    assert.equal(JSON.stringify(state.missions.round.kills[0]), JSON.stringify({ id: a.id, memory: 10, bounty: 12, revealed: true }));
+    assert.equal(JSON.stringify(state.missions.round.kills[0]), JSON.stringify({ id: a.id, memory: 12, bounty: 12, revealed: true, boss: false, types: ["Analyst"] }));
     state.missions.round.resolved = true;
     let favor = 0;
     const done = (id, param, value) => {
@@ -4181,26 +4416,216 @@ test("Missions: eliminations are counted as each DAMNED fell (MEMORY, BOUNTY, re
       favor += value;
       assert.equal(state.missions.doubloons, favor, id);
     };
-    done("killMemory", null, 2);
-    done("killBounty", null, 2);
-    done("killRevealed", null, 1);
-    done("killName", named(a), 1);
+    done("killMemory", null, 3);
+    done("killBounty", null, 3);
+    done("killRevealed", null, 2);
+    done("killName", named(a), 2);
+    done("killPersonality", { type: "Analyst" }, 2);
+    done("killPersonality", { type: "Anchor" }, 0);
     done("killStrongest", named(b), 0);
-    done("keepWeakest", named(b), 2);
+    done("keepWeakest", named(b), 3);
     done("keepWeakest", named(a), 0);
     assert.ok(MISSION_BY_ID.keepWeakest.failed(missionFacts(), named(a)));
     done("noKill", null, 0);
+    done("kill1", null, 1);
     done("kill2", null, 0);
+    done("killBoss", null, 0);
+    // a BOSS falls too: Defeat a Boss, and the counts go up
+    b.isBoss = true;
+    b.hp = 0;
+    resolveEliminatedBots([b]);
+    done("killBoss", null, 3);
+    done("kill2", null, 2);
+    c.hp = 0;
+    resolveEliminatedBots([c]);
+    done("kill3", null, 4);
+    done("kill4", null, 0);
+    assert.equal(MISSION_BY_ID.kill4.progress(missionFacts()), "3/4");
+    d.hp = 0;
+    resolveEliminatedBots([d]);
+    done("kill4", null, 6);
+    // the pentakill: all five in one round
+    done("pentakill", null, 0);
+    state.roundState.pentakillAwarded = true;
+    done("pentakill", null, 8);
     // ARTIFACTS aimed at named DAMNED (counted per target)
     state.missions.round.resolved = false;
-    set("useOnBoth", { first: named(b), second: named(c) });
-    state.roundState.artifactTargetCountsByBotId.set(b.id, 1);
+    const e = state.bots[4];
+    set("useOnBoth", { first: named(e), second: named(c) });
+    state.roundState.artifactTargetCountsByBotId.set(e.id, 1);
     missionsCheck("event");
     assert.equal(MISSION_BY_ID.useOnBoth.progress(missionFacts(), state.missions.current.param), "1/2");
     assert.equal(state.missions.doubloons, favor);
     state.roundState.artifactTargetCountsByBotId.set(c.id, 1);
     missionsCheck("event");
     assert.equal(state.missions.doubloons, favor + 2);
+  `);
+});
+
+test("Satan's Bets: guesses (prime, multiples with 0, a digit, under 11, 0 and 100, last round's number), within 3 / closest / lower than all / closer than 3 at READY", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    const check = (id, guess, param = null) => {
+      state.roundState.playerSubmittedGuess = guess;
+      state.missions.round.resolved = true;
+      return MISSION_BY_ID[id].check(missionFacts(), param);
+    };
+    assert.deepEqual([0, 1, 2, 3, 4, 9, 13, 49, 89, 97, 100].map((n) => missionIsPrime(n)), [false, false, true, true, false, false, true, false, true, true, false]);
+    assert.equal(check("guessPrime", 13), true);
+    assert.equal(check("guessPrime", 15), false);
+    assert.equal(check("guessMultiple3", 0), true);
+    assert.equal(check("guessMultiple3", 51), true);
+    assert.equal(check("guessMultiple3", 50), false);
+    assert.equal(check("guessMultiple5", 0), true);
+    assert.equal(check("guessMultiple5", 35), true);
+    assert.equal(check("guessMultiple5", 36), false);
+    assert.equal(check("guessDigit", 70, { digit: 7 }), true);
+    assert.equal(check("guessDigit", 17, { digit: 7 }), true);
+    assert.equal(check("guessDigit", 100, { digit: 0 }), true);
+    assert.equal(check("guessDigit", 18, { digit: 7 }), false);
+    assert.equal(check("under11", 10), true);
+    assert.equal(check("under11", 11), false);
+    assert.equal(check("guess0", 0), true);
+    assert.equal(check("guess100", 100), true);
+    assert.equal(check("sameAsLastRound", 0, { guess: 0 }), true);
+    assert.equal(check("sameAsLastRound", 1, { guess: 0 }), false);
+    // not before the results are in
+    state.roundState.playerSubmittedGuess = 13;
+    state.missions.round.resolved = false;
+    assert.equal(MISSION_BY_ID.guessPrime.check(missionFacts()), false);
+    // the guesses as they are scored at READY: yours 60 by the fixture, the DAMNED 10-50, TARGET 50
+    missionsNoteReady();
+    state.missions.round.resolved = true;
+    const ready = (id) => MISSION_BY_ID[id].check(missionFacts());
+    assert.equal(JSON.stringify(state.missions.round.ready.bots.map((bot) => bot.distance)), "[40,30,20,10,0]");
+    assert.equal(state.missions.round.ready.distance, 10);
+    assert.equal(ready("within3"), false);
+    assert.equal(ready("closest"), false);
+    assert.equal(ready("closerThan3"), true, "40, 30 and 20 are farther");
+    assert.equal(ready("lowerThanAll"), false);
+    state.roundState.playerEffectiveGuess = 53;
+    state.roundState.botEffectiveGuesses.set(state.bots[4].id, 47);
+    missionsNoteReady();
+    assert.equal(ready("within3"), true);
+    assert.equal(ready("closest"), true, "a tie for the closest counts");
+    state.roundState.playerEffectiveGuess = 10;
+    missionsNoteReady();
+    assert.equal(ready("lowerThanAll"), false, "a tie is not lower");
+    state.roundState.playerEffectiveGuess = 9;
+    missionsNoteReady();
+    assert.equal(ready("lowerThanAll"), true);
+    // closer than 3 DAMNED: strictly closer
+    state.roundState.playerEffectiveGuess = 70;
+    missionsNoteReady();
+    assert.equal(state.missions.round.ready.distance, 20);
+    assert.equal(ready("closerThan3"), false, "only 40 and 30 are farther; 20 is a tie");
+    // your guess is kept for the next round's "same number" bet
+    state.roundState.playerSubmittedGuess = 33;
+    missionsAfterResolution();
+    assert.equal(JSON.stringify(state.missions.lastGuess), JSON.stringify({ round: state.round, guess: 33 }));
+  `);
+});
+
+test("Satan's Bets: 'at reveal' reads the guesses when the TARGET first shows; within 10 pays at GUESS, the ones against the DAMNED only after READY", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    const set = (id) => { state.missions.current = { id, value: MISSION_BY_ID[id].value, param: null, round: state.round, done: false }; };
+    // the TARGET showed at 44; ARTIFACTS and SEALS moved it to 50 by READY
+    state.roundState.revealedTarget = 44;
+    state.roundState.playerEffectiveGuess = 52;
+    set("revealWithin10");
+    missionsNoteReveal();
+    assert.equal(state.missions.round.reveal.target, 44);
+    assert.equal(state.missions.round.reveal.distance, 8);
+    assert.equal(state.missions.doubloons, 1, "paid at GUESS");
+    state.roundState.playerEffectiveGuess = 60;
+    missionsBeginRound();
+    set("revealWithin10");
+    missionsNoteReveal();
+    assert.equal(state.missions.doubloons, 1);
+    assert.ok(MISSION_BY_ID.revealWithin10.failed(missionFacts()), "16 away: Missed at once");
+    // the closest at reveal: DAMNED at 10-50 against 44 (the one at 40 is 4 away, the one at 50 is 6)
+    state.roundState.playerEffectiveGuess = 41;
+    missionsBeginRound();
+    set("closestReveal");
+    missionsNoteReveal();
+    missionsCheck("event");
+    assert.equal(state.missions.doubloons, 1, "not before READY, so no hidden guess is given away");
+    assert.ok(!missionBoxHtml().includes("Missed"));
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, 3);
+    // the worst guess at reveal: a tie for the worst is the worst
+    state.roundState.playerEffectiveGuess = 78;
+    missionsBeginRound();
+    set("notWorstReveal");
+    missionsNoteReveal();
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, 3, "34 away, as far as the DAMNED at 10");
+    state.roundState.playerEffectiveGuess = 77;
+    missionsBeginRound();
+    set("notWorstReveal");
+    missionsNoteReveal();
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, 4);
+  `);
+});
+
+test("Satan's Bets: damage (yours, the DAMNED's in total and each), SEALS that acted, the critical hit; the box is titled Satan's Bet; a saved bet whose worth changed is drawn again", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    state.missions.round.resolved = true;
+    const check = (id) => MISSION_BY_ID[id].check(missionFacts());
+    state.roundState.playerSubmittedGuess = 50;
+    state.playerLastDamage = 11;
+    assert.equal(check("hurtMax11"), true);
+    assert.equal(check("hurtMax5"), false);
+    assert.equal(check("hurt12"), false);
+    state.playerLastDamage = 12;
+    assert.equal(check("hurtMax11"), false);
+    assert.equal(check("hurt12"), true);
+    state.playerLastDamage = 5;
+    assert.equal(check("hurtMax5"), true);
+    // the DAMNED's damage this round
+    state.bots.forEach((bot, i) => { bot.lastDamage = [10, 9, 8, 7, 5][i]; });
+    assert.equal(check("damnedTake40"), false);
+    assert.equal(MISSION_BY_ID.damnedTake40.progress(missionFacts()), "39/40");
+    assert.equal(check("everyTakes10"), false);
+    state.bots[4].lastDamage = 6;
+    assert.equal(check("damnedTake40"), true);
+    state.bots.forEach((bot) => { bot.lastDamage = 10; });
+    assert.equal(check("everyTakes10"), true);
+    // different SEALS that acted this round
+    state.roundState.triggeredPassiveIds = new Set(["p1", "p2"]);
+    assert.equal(check("seals3"), false);
+    state.roundState.triggeredPassiveIds.add("p2");
+    state.roundState.triggeredPassiveIds.add("p7");
+    assert.equal(check("seals3"), true);
+    assert.equal(check("seals5"), false);
+    ["p9", "p10"].forEach((id) => state.roundState.triggeredPassiveIds.add(id));
+    assert.equal(check("seals5"), true);
+    // the critical hit pays 3
+    state.missions.current = { id: "critical", value: MISSION_BY_ID.critical.value, param: null, round: state.round, done: false };
+    state.roundState.criticalHitKeys = new Set(["player"]);
+    const before = state.missions.doubloons;
+    missionsCheck("resolve");
+    assert.equal(state.missions.doubloons, before + 3);
+    // the box
+    missionsState().current = { id: "kill2", round: state.round, value: 2, param: null, done: false };
+    assert.ok(missionBoxHtml().includes('<span class="mission-title">Satan\\'s Bet</span>'));
+    // a run saved with a bet that is gone, or whose worth changed, gets a new one
+    missionsState().current = { id: "gain6", round: state.round, value: 1, param: null, done: false };
+    let redrawn = missionsEnsureRound();
+    assert.ok(redrawn && MISSION_BY_ID[redrawn.id]);
+    missionsState().current = { id: "kill3", round: state.round, value: 3, param: null, done: false };
+    redrawn = missionsEnsureRound();
+    assert.ok(redrawn && MISSION_BY_ID[redrawn.id] && MISSION_BY_ID[redrawn.id].value === redrawn.value);
+    assert.ok(!(redrawn.id === "kill3" && redrawn.value === 3));
   `);
 });
 
@@ -4479,56 +4904,7 @@ test("Slot machine: hidden until the first-win speech has been heard; Pause > DE
   `);
 });
 
-test("Missions read as they were written", () => {
-  game()(`
-    const text = (id, param = null) => missionText(MISSION_BY_ID[id], param);
-    const bot = { id: "x", name: "Lilith" };
-    const other = { id: "y", name: "Azazel" };
-    assert.equal(text("critical"), "Get a critical hit");
-    assert.equal(text("guessPrime"), "Guess a prime number");
-    assert.equal(text("guessLowest"), "Guess the lowest number amongst the DAMNED");
-    assert.equal(text("useItem", "a14"), "Use a Spirit Board");
-    assert.equal(text("useItem", "a28"), "Use an Engraved Skull");
-    assert.equal(text("useItem", "a13"), "Use The White-Hilted Knife");
-    assert.equal(text("useItemTwice", "a14"), "Use two Spirit Boards");
-    assert.equal(text("useItemTwice", "a11"), "Use two Vials of Blood");
-    assert.equal(text("useItemTwice", "a9"), "Use two Inverted Crosses");
-    assert.equal(text("useItemTwice", "a13"), "Use two White-Hilted Knives");
-    assert.equal(text("noArtifacts"), "Don't use artifacts this round");
-    assert.equal(text("gain6"), "Gain 6 or more sin this round");
-    assert.equal(text("gain12"), "Gain 12 or more sin this round");
-    assert.equal(text("kill2"), "Eliminate two Damned");
-    assert.equal(text("kill3"), "Eliminate three Damned");
-    assert.equal(text("zeroSin"), "Have 0 sin at the end of the round");
-    assert.equal(text("reroll5"), "Reroll 5 times");
-    assert.equal(text("buy6"), "Buy six seals or artifacts");
-    assert.equal(text("hurt12"), "Take 12 or more damage");
-    assert.equal(text("over66"), "Guess over 66");
-    assert.equal(text("under12"), "Guess under 12");
-    assert.equal(text("guess0"), "Guess 0");
-    assert.equal(text("guess100"), "Guess 100");
-    assert.equal(text("noBuy"), "Don't buy any Devil's Offerings");
-    assert.equal(text("guess50"), "Guess 50");
-    assert.equal(text("killMemory"), "Eliminate a Damned with 10 or more memory");
-    assert.equal(text("killBounty"), "Eliminate a Damned with 10 or more bounty");
-    assert.equal(text("killRevealed"), "Eliminate a revealed Damned");
-    assert.equal(text("killName", bot), "Eliminate Lilith");
-    assert.equal(text("noKill"), "Don't eliminate any Damned");
-    assert.equal(text("sellStartSeal"), "Sell one of the seals you had at the start of the round");
-    assert.equal(text("hurt4"), "Take 4 or less damage this round");
-    assert.equal(text("deal"), "Complete a Deal");
-    assert.equal(text("sell1"), "Sell 1 seal");
-    assert.equal(text("sameGuess"), "Guess the same number as a revealed damned");
-    assert.equal(text("noArtifactsHeld"), "Have 0 artifacts in your inventory at the end of the round");
-    assert.equal(text("useOn", bot), "Use an artifact on Lilith");
-    assert.equal(text("useOn2", bot), "Use two artifacts on Lilith");
-    assert.equal(text("useOnBoth", { first: bot, second: other }), "Use one artifact on Lilith and one on Azazel");
-    assert.equal(text("keepWeakest", bot), "Keep Lilith alive");
-    assert.equal(text("killStrongest", other), "Eliminate Azazel");
-  `);
-});
-
-test("Settings > Display > Guide text hides the Pick a number hint and Missions pay FAVOR., and nothing else", () => {
+test("Settings > Display > Guide text hides the guide lines (Pick a number, Missions pay FAVOR. ...), and nothing else", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
@@ -4541,7 +4917,8 @@ test("Settings > Display > Guide text hides the Pick a number hint and Missions 
     state.missions.lastText = "+5 SIN";
     state.missions.lastRound = state.round;
     assert.ok(slotMachineHtml().includes('class="slot-result">+5 SIN'));
-    state.stage = "active";
+    // the end of a run is not guide text
+    state.stage = "ended";
     assert.equal(consoleActionState().guideHint, false);
     // the setting
     render = () => {};
@@ -4989,6 +5366,7 @@ test("SKIP past the eight special BOSSES brings Satan's victory speech, as if th
 
 test("Final Judgment: the 72nd demon brings Jesus and Satan's talk at the results, SKIP in the demon stage brings it at once", () => {
   game()(`
+    unlockDealForTest(); // a player this far has long had the DEAL
     fixture([], [10, 20, 30, 40, 50]);
     render = () => {};
     state.bossKills = 80;
@@ -5098,36 +5476,6 @@ test("Satan's Pact: KARMA is Jesus' business; FAVOR up to six once the slot mach
     assert.equal(satanPactSign(), true);
     assert.equal(missionsState().doubloons, before + 3);
     assert.equal(state.player.credits, 100 - cost);
-  `);
-});
-
-test("Missions: a prime guess; the lowest guess on the table (a tie counts); the critical hit pays 3", () => {
-  game()(`
-    unlockSlotsForTest();
-    fixture([], [10, 20, 30, 40, 50]);
-    const check = (id, guess) => {
-      state.roundState.playerSubmittedGuess = guess;
-      state.missions.round.resolved = true;
-      return MISSION_BY_ID[id].check(missionFacts());
-    };
-    assert.deepEqual([0, 1, 2, 3, 4, 9, 13, 49, 89, 97, 100].map((n) => missionIsPrime(n)), [false, false, true, true, false, false, true, false, true, true, false]);
-    assert.equal(check("guessPrime", 13), true);
-    assert.equal(check("guessPrime", 15), false);
-    // not before the results are in
-    state.roundState.playerSubmittedGuess = 13;
-    state.missions.round.resolved = false;
-    assert.equal(MISSION_BY_ID.guessPrime.check(missionFacts()), false);
-    // the DAMNED's typed guesses this round
-    state.roundState.botSubmittedGuesses = new Map(state.bots.map((bot, i) => [bot.id, [10, 20, 30, 40, 50][i]]));
-    assert.equal(check("guessLowest", 9), true);
-    assert.equal(check("guessLowest", 10), true);
-    assert.equal(check("guessLowest", 11), false);
-    // paid when it is the round's mission
-    state.missions.current = { id: "critical", value: MISSION_BY_ID.critical.value, param: null, round: state.round, done: false };
-    state.roundState.criticalHitKeys = new Set(["player"]);
-    const before = state.missions.doubloons;
-    missionsCheck("resolve");
-    assert.equal(state.missions.doubloons, before + 3);
   `);
 });
 
@@ -5281,3 +5629,171 @@ test("Faustian Codex: NO to his price drops it too; nothing counts outside a rea
     assert.ok(codexState().seen.includes("refused"));
   `);
 });
+
+test("Settings > Display > Slot machine: Default keeps the framed box with SPIN, Fancy draws the old machine", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    unlockSlotsForTest();
+    missionsBeginRound();
+    state.missions.doubloons = 7;
+    // Default (0) is the setting's start value: SPIN button and plain FAVOR count, nothing of the Fancy look
+    assert.equal(state.display.slotMachine, 0);
+    const plain = slotMachineHtml();
+    assert.ok(plain.includes('class="slot-spin"') && plain.includes('id="slotSpin"'));
+    assert.ok(!plain.includes("slot-fancy") && !plain.includes("slot-lever") && !plain.includes("slot-rivet") && !plain.includes("slot-counter"));
+    // Fancy (1): rivets, the three-digit counter and the lever, still the same #slotSpin
+    state.display.slotMachine = 1;
+    const fancy = slotMachineHtml();
+    assert.ok(fancy.includes("slot-machine slot-fancy") && fancy.includes('id="slotSpin"') && fancy.includes("slot-lever-knob"));
+    assert.equal((fancy.match(/slot-rivet-/g) || []).length, 4);
+    assert.ok(fancy.includes("<b>0</b><b>0</b><b>7</b>"));
+    assert.ok(!fancy.includes('class="slot-spin"'));
+    // the setting is offered in Display and comes back from storage
+    assert.equal(SETTING_CHOICES.slotMachine.text(1), "Fancy");
+    assert.equal(SETTING_CHOICES.slotMachine.text(0), "Default");
+    globalThis.window = globalThis;
+    saveDisplaySettings();
+    state.display.slotMachine = 0;
+    loadDisplaySettings();
+    assert.equal(state.display.slotMachine, 1);
+  `);
+});
+
+test("Records > Challenges: every SEAL achievement, done when it is met, not when a gift opened the SEAL", () => {
+  game()(`
+    globalThis.window = globalThis;
+    const all = sealChallenges();
+    assert.equal(all.length, Object.keys(SEAL_UNLOCKS).length);
+    assert.equal(all.length, 46);
+    assert.ok(all.every((challenge) => !challenge.done));
+    const index = Object.keys(SEAL_UNLOCKS).indexOf("p70"); // Eliminate in total 666 Damned
+    const progress = loadCollectionProgress();
+    // a SEAL opened by Jesus' Gifts leaves its challenge open
+    progress.unlocked.push("p70");
+    assert.equal(sealChallenges()[index].done, false);
+    progress.stats.eliminations = 120;
+    assert.deepEqual(JSON.parse(JSON.stringify(sealChallenges()[index])), { text: "Eliminate in total 666 Damned", value: 120, goal: 666, done: false });
+    progress.stats.eliminations = 700;
+    assert.equal(sealChallenges()[index].done, true);
+    assert.equal(sealChallenges()[index].value, 666);
+    // the tab: progress for counted ones, the pentagram and the red line for done ones, no SEAL names
+    state.recordsTab = "challenges";
+    const html = renderRecordsMenu();
+    assert.ok(html.includes("1 / 46 completed"));
+    assert.equal((html.match(/class="challenge done"/g) || []).length, 1);
+    assert.ok(html.includes("0 / 8")); // Gabriel's: beat the game 8 times
+    assert.ok(!collectibleSealIds().some((id) => SEAL_UNLOCKS[id] && html.includes(ITEMS[id].name)));
+    assert.ok(RECORDS_TABS.some((tab) => tab.key === "challenges" && tab.label === "Challenges"));
+  `);
+});
+
+test("Settings > Display > Guide text: the console's guide lines are marked, Satan's sealed Offerings line is not", () => {
+  game()(`
+    fixture([], [10, 20, 30, 40, 50]);
+    state.stage = "guess";
+    assert.equal(consoleActionState().guideHint, true); // Pick a number
+    state.stage = "active";
+    assert.equal(consoleActionState().hint, "Ready applies penalties.");
+    assert.equal(consoleActionState().guideHint, true);
+    state.stage = "summary";
+    globalThis.shopDisabledBySatan = () => false;
+    assert.equal(consoleActionState().hint, "Penalties are locked in. Devil's Offerings is still available before you advance.");
+    assert.equal(consoleActionState().guideHint, true);
+    globalThis.shopDisabledBySatan = () => true;
+    assert.equal(consoleActionState().guideHint, false);
+  `);
+});
+
+test("Tutorial: the pact ends on Great, let me show you around; the lesson keeps its middle and ends with the warning; no DEAL in the story", () => {
+  game()(`
+    const last = INTRO_PACT_LINES[INTRO_PACT_LINES.length - 1];
+    assert.deepEqual([...last], ["satan", "Great. Let me show you around the place, I despise wasted potential."]);
+    assert.ok(INTRO_PACT_LINES.every((line) => line[2] !== "deal"));
+    assert.ok(!INTRO_PACT_LINES.some((line) => /DEAL|beware|Wishing you/.test(line[1])));
+    // the accept line still brings the pact sound before Great
+    assert.equal(INTRO_PACT_LINES[INTRO_PACT_LINES.length - 2][2], "evil");
+    assert.equal(SATAN_LESSON_LINES.length, 11);
+    assert.ok(SATAN_LESSON_LINES[0][1].startsWith("My Devil's Offerings."));
+    assert.equal(SATAN_LESSON_LINES[0][2], "shop");
+    assert.ok(SATAN_LESSON_LINES[7][1].startsWith("Don't like what's on offer? Reroll it."));
+    assert.deepEqual(SATAN_LESSON_LINES.slice(8).map((line) => line[1]), [
+      "That's probably a lot of information to get through your mortal skull right now, but do not worry dear, you'll figure it out as you go. It's only your SOUL that's at stake!",
+      "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time.",
+      "Wishing you all the best, and I'll be seeing you soon enough..."
+    ]);
+    assert.ok(SATAN_LESSON_LINES.every((line) => line[0] === "satan" && !/DEAL/.test(line[1])));
+    // the music waits for the burn-in, then plays under the lesson
+    introState.phase = "pact";
+    assert.equal(introHoldsMusic(), true);
+    introState.musicFreed = true;
+    introState.phase = "guide";
+    assert.equal(introHoldsMusic(), false);
+    introState.phase = "off";
+    introState.musicFreed = false;
+  `);
+});
+
+test("DEAL: hidden until the first BOSS is beaten and Satan names it; then open for every run; Pause > DEV > Unlock DEAL", () => {
+  game()(`
+    globalThis.window = { localStorage };
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    // a new player: no DEAL button, no deal, no deal mission
+    assert.equal(satanDealUnlocked(), false);
+    assert.equal(satanDealButtonHtml(), "");
+    assert.equal(satanPactAvailable(), false);
+    assert.equal(MISSION_BY_ID.deal.can(), false);
+    // the first BOSS falls: Satan is due at the results, and the results wait for him before the victory speech
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    boss.hp = 0;
+    const before = state.bossKills;
+    resolveEliminatedBots([boss]);
+    assert.equal(state.bossKills, before + 1);
+    assert.equal(state.satanDealIntroDue, true);
+    state.stage = "summary";
+    state.satanVictoryDue = true;
+    assert.equal(satanDealIntroHoldsSummary(), true);
+    assert.equal(satanVictoryHoldsSummary(), false);
+    assert.deepEqual(SATAN_DEAL_INTRO_LINES.map((line) => line[0]), ["satan", "satan"]);
+    assert.ok(SATAN_DEAL_INTRO_LINES[0][1].startsWith("Look at you my little heathen"));
+    assert.ok(SATAN_DEAL_INTRO_LINES[0][1].includes("Maybe you are worth my time after all."));
+    assert.equal(SATAN_DEAL_INTRO_LINES[1][1], "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet...");
+    // his leaving (end or skip) opens it for good
+    introState.phase = "dealintro";
+    satanLeaveScene = () => {};
+    satanDealIntroLeave();
+    assert.equal(satanDealUnlocked(), true);
+    introState.phase = "off";
+    state.satanDealIntroDue = false;
+    assert.equal(satanVictoryHoldsSummary(), true);
+    state.satanVictoryDue = false;
+    state.stage = "guess";
+    state.pact = satanPactFresh();
+    assert.ok(satanDealButtonHtml().includes('id="dealButton"'));
+    assert.equal(satanPactAvailable(), true);
+    // later BOSSES bring nobody
+    const second = state.bots[1];
+    second.isBoss = true;
+    second.hp = 0;
+    resolveEliminatedBots([second]);
+    assert.equal(state.satanDealIntroDue, false);
+    // still hidden in the story's tutorial
+    introState.phase = "tutorial";
+    assert.equal(satanDealButtonHtml(), "");
+    introState.phase = "off";
+  `);
+  // Pause > DEV > Unlock DEAL, on a fresh device
+  game()(`
+    globalThis.window = { localStorage };
+    fixture([], [10, 20, 30, 40, 50]);
+    render = () => {};
+    assert.match(renderSelfStackingDevPanel(), /data-pause-action="unlock-deal"[^>]*>Unlock DEAL</);
+    assert.match(renderSelfStackingDevPanel(), /data-pause-action="unlock-slot"[^>]*>Unlock slot machine</);
+    handlePauseAction("unlock-deal");
+    assert.equal(satanDealUnlocked(), true);
+    assert.equal(unlockSatanDeal(), false); // already open: nothing happens
+    assert.match(renderSelfStackingDevPanel(), /small-button active" data-pause-action="unlock-deal"/);
+  `);
+});
+

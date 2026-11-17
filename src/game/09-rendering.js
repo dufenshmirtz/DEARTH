@@ -325,7 +325,8 @@ const RECORDS_TABS = [
   { key: "descent", label: "Descent" },
   { key: "eliminations", label: "Eliminations" },
   { key: "seals", label: "Seals" },
-  { key: "sin", label: "SIN" }
+  { key: "sin", label: "SIN" },
+  { key: "challenges", label: "Challenges" }
 ];
 
 // which tab shows each run record (for the NEW marks)
@@ -530,6 +531,22 @@ function renderRecordsMenu() {
       runPlaque("mostRoundSealDamage", "SEAL damage in one round"),
       runPlaque("highestEliteLevel", "Highest ELITE")
     ].join("");
+  } else if (tab === "challenges") {
+    // every SEAL's achievement, without the SEAL: progress for counted ones (like the Collection),
+    // and once met the BOSS pentagram on the left and a red line through the text
+    const challenges = sealChallenges();
+    const done = challenges.filter((challenge) => challenge.done).length;
+    plaques = `
+      <p class="challenges-summary">${formatNumber(done)} / ${formatNumber(challenges.length)} completed</p>
+      <ol class="challenges-list">${challenges
+        .map((challenge) => `
+        <li class="challenge${challenge.done ? " done" : ""}">
+          <span class="challenge-mark"${challenge.done ? ` aria-label="Completed"` : ` aria-hidden="true"`}>${challenge.done ? BOSS_GLYPH_SVG : ""}</span>
+          <span class="challenge-text">${descriptionHtml(challenge.text)}</span>
+          ${!challenge.done && challenge.goal > 1 ? `<span class="challenge-progress">${formatNumber(challenge.value)} / ${formatNumber(challenge.goal)}</span>` : ""}
+        </li>`)
+        .join("")}
+      </ol>`;
   } else {
     plaques = [
       lifetimePlaque("Most SIN held", progress.best.sinHeld || 0, "at once", { size: "hero" }),
@@ -605,6 +622,14 @@ const SETTING_CHOICES = {
     get: () => (state.display.guideText === 0 ? 0 : 1),
     set: (value) => { state.display.guideText = value; },
     text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+  },
+  // the slot machine's look: Default (framed box, SPIN button) or Fancy (old machine with a lever)
+  slotMachine: {
+    label: "Slot machine",
+    values: () => [0, 1],
+    get: () => (state.display.slotMachine === 1 ? 1 : 0),
+    set: (value) => { state.display.slotMachine = value; },
+    text: (value) => SLOT_MACHINE_LOOK_LABELS[value] || "Default"
   },
   fullscreen: {
     label: "Window",
@@ -707,7 +732,8 @@ function renderSettingsPanel(prefix) {
       settingChoiceRow("screenShake"),
       settingChoiceRow("flashes"),
       settingChoiceRow("textSize"),
-      settingChoiceRow("guideText")
+      settingChoiceRow("guideText"),
+      settingChoiceRow("slotMachine")
     ].join("");
   } else {
     const controls = isNativeArcadeApp()
@@ -1183,9 +1209,10 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
-      <h2>Slot machine (testing)</h2>
+      <h2>Unlocks (testing)</h2>
       <div class="dev-summon-row">
         <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+        <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
       </div>
       <h2>Faustian Codex (testing)</h2>
       <div class="dev-summon-row">
@@ -2499,7 +2526,9 @@ function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
-  let guideHint = false; // the "Pick a number" line, which Settings > Display > Guide text can hide
+  // the lines Settings > Display > Guide text can hide: "Pick a number", "Ready applies penalties." and
+  // "Penalties are locked in. Devil's Offerings is still available..." (Satan's sealed Offerings stay shown)
+  let guideHint = false;
   let disabled = "";
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
@@ -2519,12 +2548,15 @@ function consoleActionState() {
     disabled = state.pendingActive ? "disabled" : "";
     // the ARTIFACTS used this round are counted in the ARTIFACTS panel
     hint = "Ready applies penalties.";
+    guideHint = true;
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
-    hint = shopDisabledBySatan()
+    const sealed = shopDisabledBySatan();
+    hint = sealed
       ? "Penalties are locked in. Satan has sealed Devil's Offerings."
       : "Penalties are locked in. Devil's Offerings is still available before you advance.";
+    guideHint = !sealed;
   } else if (state.stage === "ended") {
     // inspecting the death screen's round: the button goes back to the death screen
     buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
@@ -3088,6 +3120,7 @@ function resetSettings() {
   state.display.flashes = 1;
   state.display.textSize = 0;
   state.display.guideText = 1;
+  state.display.slotMachine = 0;
   saveSoundSettings();
   applySoundSettings();
   saveDisplaySettings();
@@ -3144,6 +3177,13 @@ function handlePauseAction(action) {
   if (action === "codex-whole") {
     // testing: the Codex tab with every page (the real pages found are kept for when it is off)
     addLog(toggleDevWholeCodex() ? "Testing: the whole Faustian Codex shows in the Collection." : "Testing: the Codex shows only the pages really found.");
+    render();
+    return;
+  }
+  if (action === "unlock-deal") {
+    // testing: open the DEAL without beating a BOSS; nothing happens if it's open already
+    if (!unlockSatanDeal()) return;
+    addLog("Testing: DEAL unlocked.");
     render();
     return;
   }

@@ -891,6 +891,8 @@ function resolveEliminatedBots(eliminated) {
       const previousPassiveLimit = passiveLimit();
       if (bot.countsAsBossProgress !== false) {
         state.bossKills += 1;
+        // the first BOSS this player has ever beaten: Satan names the DEAL once the results are on screen
+        if (state.mode === "arcade" && typeof satanDealUnlocked === "function" && !satanDealUnlocked()) state.satanDealIntroDue = true;
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
@@ -2122,6 +2124,12 @@ function advanceAfterSummary() {
   // first-launch story: from round INTRO_PACT_ROUND the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
+    return;
+  }
+  // the first BOSS ever beaten: the results wait for Satan to name the DEAL; moving on brings him in now
+  if (introState.phase === "dealintro" || introState.phase === "dealintro-leave") return;
+  if (satanDealIntroHoldsSummary()) {
+    startSatanDealIntroNow();
     return;
   }
   // after the 8th unique BOSS, the results wait for Satan; moving on brings him in now

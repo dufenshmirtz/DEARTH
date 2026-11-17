@@ -282,6 +282,7 @@ const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
 const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
+const SLOT_MACHINE_LOOK_LABELS = ["Default", "Fancy"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -2445,7 +2446,8 @@ const state = {
     screenShake: 2,
     flashes: 1,
     textSize: 0,
-    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Missions pay FAVOR." (body.hide-guide-text)
+    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Missions pay FAVOR." (body.hide-guide-text)
+    slotMachine: 0 // the slot machine's look: 0 Default, 1 Fancy (old machine with a lever)
   },
   settingsTab: "audio",
   pauseOpen: false,
@@ -2514,6 +2516,7 @@ const state = {
   // Satanic Bible: rolls left for each cast still active (old saves kept a count in eliteBoostedNextReroll)
   eliteBoostRolls: [],
   eliteBoostedNextReroll: 0,
+  satanDealIntroDue: false, // the first BOSS ever beaten: Satan names the DEAL once the results are on screen
   satanVictoryDue: false,
   satanVictoryPlayed: false,
   satanVictorySkipped: false, // SKIP past the 8 BOSSES: the victory speech may play outside the results
@@ -2617,6 +2620,7 @@ function loadDisplaySettings() {
       if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
       if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
       if (Number.isFinite(saved.guideText)) state.display.guideText = clamp(Math.round(saved.guideText), 0, 1);
+      if (Number.isFinite(saved.slotMachine)) state.display.slotMachine = clamp(Math.round(saved.slotMachine), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -8929,6 +8933,7 @@ function spendCredits(amount) {
   if (!canSpendCredits(cost)) return false;
   state.player.credits -= cost;
   collectionNoteSpend(cost);
+  if (typeof missionsNoteSpend === "function") missionsNoteSpend(cost);
   applyCreditLashSpent(cost);
   return true;
 }
@@ -9220,6 +9225,7 @@ function startGame(options = {}) {
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
   snapshotRecordsAtRunStart();
+  state.satanDealIntroDue = false;
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
   state.satanVictorySkipped = false;
@@ -10666,6 +10672,7 @@ function submitGuess() {
   recalculateTarget();
   // Guess quality compares the number you typed with this TARGET, before ARTIFACTS or reveal SEALS move it
   round.revealedTarget = round.target;
+  if (typeof missionsNoteReveal === "function") missionsNoteReveal();
   applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
@@ -11688,6 +11695,8 @@ function resolveEliminatedBots(eliminated) {
       const previousPassiveLimit = passiveLimit();
       if (bot.countsAsBossProgress !== false) {
         state.bossKills += 1;
+        // the first BOSS this player has ever beaten: Satan names the DEAL once the results are on screen
+        if (state.mode === "arcade" && typeof satanDealUnlocked === "function" && !satanDealUnlocked()) state.satanDealIntroDue = true;
         // the main game is won: Satan comes back once the results are on screen
         if (state.bossKills === UNIQUE_BOSS_KEYS.length && !state.satanVictoryPlayed && state.mode === "arcade") state.satanVictoryDue = true;
       }
@@ -12919,6 +12928,12 @@ function advanceAfterSummary() {
   // first-launch story: from round INTRO_PACT_ROUND the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
+    return;
+  }
+  // the first BOSS ever beaten: the results wait for Satan to name the DEAL; moving on brings him in now
+  if (introState.phase === "dealintro" || introState.phase === "dealintro-leave") return;
+  if (satanDealIntroHoldsSummary()) {
+    startSatanDealIntroNow();
     return;
   }
   // after the 8th unique BOSS, the results wait for Satan; moving on brings him in now
@@ -15134,7 +15149,8 @@ const RECORDS_TABS = [
   { key: "descent", label: "Descent" },
   { key: "eliminations", label: "Eliminations" },
   { key: "seals", label: "Seals" },
-  { key: "sin", label: "SIN" }
+  { key: "sin", label: "SIN" },
+  { key: "challenges", label: "Challenges" }
 ];
 
 // which tab shows each run record (for the NEW marks)
@@ -15339,6 +15355,22 @@ function renderRecordsMenu() {
       runPlaque("mostRoundSealDamage", "SEAL damage in one round"),
       runPlaque("highestEliteLevel", "Highest ELITE")
     ].join("");
+  } else if (tab === "challenges") {
+    // every SEAL's achievement, without the SEAL: progress for counted ones (like the Collection),
+    // and once met the BOSS pentagram on the left and a red line through the text
+    const challenges = sealChallenges();
+    const done = challenges.filter((challenge) => challenge.done).length;
+    plaques = `
+      <p class="challenges-summary">${formatNumber(done)} / ${formatNumber(challenges.length)} completed</p>
+      <ol class="challenges-list">${challenges
+        .map((challenge) => `
+        <li class="challenge${challenge.done ? " done" : ""}">
+          <span class="challenge-mark"${challenge.done ? ` aria-label="Completed"` : ` aria-hidden="true"`}>${challenge.done ? BOSS_GLYPH_SVG : ""}</span>
+          <span class="challenge-text">${descriptionHtml(challenge.text)}</span>
+          ${!challenge.done && challenge.goal > 1 ? `<span class="challenge-progress">${formatNumber(challenge.value)} / ${formatNumber(challenge.goal)}</span>` : ""}
+        </li>`)
+        .join("")}
+      </ol>`;
   } else {
     plaques = [
       lifetimePlaque("Most SIN held", progress.best.sinHeld || 0, "at once", { size: "hero" }),
@@ -15414,6 +15446,14 @@ const SETTING_CHOICES = {
     get: () => (state.display.guideText === 0 ? 0 : 1),
     set: (value) => { state.display.guideText = value; },
     text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+  },
+  // the slot machine's look: Default (framed box, SPIN button) or Fancy (old machine with a lever)
+  slotMachine: {
+    label: "Slot machine",
+    values: () => [0, 1],
+    get: () => (state.display.slotMachine === 1 ? 1 : 0),
+    set: (value) => { state.display.slotMachine = value; },
+    text: (value) => SLOT_MACHINE_LOOK_LABELS[value] || "Default"
   },
   fullscreen: {
     label: "Window",
@@ -15516,7 +15556,8 @@ function renderSettingsPanel(prefix) {
       settingChoiceRow("screenShake"),
       settingChoiceRow("flashes"),
       settingChoiceRow("textSize"),
-      settingChoiceRow("guideText")
+      settingChoiceRow("guideText"),
+      settingChoiceRow("slotMachine")
     ].join("");
   } else {
     const controls = isNativeArcadeApp()
@@ -15992,9 +16033,10 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
-      <h2>Slot machine (testing)</h2>
+      <h2>Unlocks (testing)</h2>
       <div class="dev-summon-row">
         <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+        <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
       </div>
       <h2>Faustian Codex (testing)</h2>
       <div class="dev-summon-row">
@@ -17308,7 +17350,9 @@ function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
-  let guideHint = false; // the "Pick a number" line, which Settings > Display > Guide text can hide
+  // the lines Settings > Display > Guide text can hide: "Pick a number", "Ready applies penalties." and
+  // "Penalties are locked in. Devil's Offerings is still available..." (Satan's sealed Offerings stay shown)
+  let guideHint = false;
   let disabled = "";
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
@@ -17328,12 +17372,15 @@ function consoleActionState() {
     disabled = state.pendingActive ? "disabled" : "";
     // the ARTIFACTS used this round are counted in the ARTIFACTS panel
     hint = "Ready applies penalties.";
+    guideHint = true;
   } else if (state.stage === "summary") {
     buttonText = "Next Round";
     inputDisabled = "disabled";
-    hint = shopDisabledBySatan()
+    const sealed = shopDisabledBySatan();
+    hint = sealed
       ? "Penalties are locked in. Satan has sealed Devil's Offerings."
       : "Penalties are locked in. Devil's Offerings is still available before you advance.";
+    guideHint = !sealed;
   } else if (state.stage === "ended") {
     // inspecting the death screen's round: the button goes back to the death screen
     buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
@@ -17897,6 +17944,7 @@ function resetSettings() {
   state.display.flashes = 1;
   state.display.textSize = 0;
   state.display.guideText = 1;
+  state.display.slotMachine = 0;
   saveSoundSettings();
   applySoundSettings();
   saveDisplaySettings();
@@ -17953,6 +18001,13 @@ function handlePauseAction(action) {
   if (action === "codex-whole") {
     // testing: the Codex tab with every page (the real pages found are kept for when it is off)
     addLog(toggleDevWholeCodex() ? "Testing: the whole Faustian Codex shows in the Collection." : "Testing: the Codex shows only the pages really found.");
+    render();
+    return;
+  }
+  if (action === "unlock-deal") {
+    // testing: open the DEAL without beating a BOSS; nothing happens if it's open already
+    if (!unlockSatanDeal()) return;
+    addLog("Testing: DEAL unlocked.");
     render();
     return;
   }
@@ -18568,8 +18623,9 @@ const JESUS_REVEAL_LINES = {
   ready: "Press READY and the damage lands. Then the next round begins, and I will not be there to hold your hand."
 };
 
-// third item: what happens on the click after the line ("evil": the pact sound before the next line);
-// "deal": the DEAL button appears, pulsing, as the line starts (introShowDealButton)
+// third item: what happens on the click after the line ("evil": the pact sound before the next line).
+// The last line leads straight into the burn-in and his lesson; the DEAL button is not in the story (Satan names
+// it when the player beats a BOSS for the first time, SATAN_DEAL_INTRO_LINES)
 const INTRO_PACT_LINES = [
   ["satan", "Looking kinda rough there guy, a few more of these and you'll be going down below where the sun don't shine no more."],
   ["you", "Who in the lord's name are you. I am a Christian now, fighting for my right to be a good little Jesus child. Are you one of the players?"],
@@ -18586,24 +18642,31 @@ const INTRO_PACT_LINES = [
   ["you", "Okay I get it, so I get the demons' power, I use the artifacts and after I defeat some other souls I go free, right?"],
   ["satan", "Yea yea definitely, or whatever the other guy promised you."],
   ["you", "Okay okay, I accept. Anything to get me out of this mess.", "evil"],
-  ["satan", "Great. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya.", "deal"],
-  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
-  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
+  ["satan", "Great. Let me show you around the place, I despise wasted potential."]
 ];
 
-// Satan's lesson, right after the pact has burnt the offerings, ARTIFACTS and SEALS into place. Same
-// scene as Jesus at the table (third item: what lights up, keys in INTRO_GUIDE_FOCUS); he laughs and goes.
+// Satan's lesson, right after the pact has burnt the offerings, ARTIFACTS and SEALS into place (and the music
+// has started). Same scene as Jesus at the table (third item: what lights up, keys in INTRO_GUIDE_FOCUS); he
+// laughs and goes.
 const SATAN_LESSON_LINES = [
-  ["satan", "Oh, before I forget. Let me show you around the place, I hate wasted potential."],
   ["satan", "My Devil's Offerings. You spend your SIN{SIN} here, on SEALS and ARTIFACTS. Fresh stock every round.", "shop"],
   ["satan", "And where does SIN{SIN} come from? The dead. Every DAMNED carries a BOUNTY, that little number in the corner. When one falls, its BOUNTY is yours.", "bounty"],
   ["satan", "SEALS hold the power of my demons. Put one in a slot and it works on its own, every round, you don't have to lift a finger. Hover over one to read what it does.", "seals"],
-  ["satan", "You start with 3 slots, and every 2 BOSSES you put down opens another, up to 6. Buy a SEAL you already own and it turns ELITE, stronger every time.", "seals"],
+  ["satan", "You start with 3 slots, if I deem your performance worthy more will open, up to 6. Buy a SEAL you already own and it turns ELITE, stronger every time.", "seals"],
   ["satan", "Changed your mind? Sell a SEAL and I'll give you back half of what you paid. I'm generous like that.", "seals"],
   ["satan", "ARTIFACTS are the rituals. You can carry 5 of them and they do nothing until you use them. Once the guesses are revealed and before you press READY, you get to use 2 a round.", "artifacts"],
   ["satan", "Some want a victim: use it, then click the DAMNED you want it on. Once a ritual is done, the ARTIFACT is gone.", "artifacts"],
   ["satan", "Don't like what's on offer? Reroll it. A little SIN{SIN} the first time, a little more each time after that, until the next round.", "reroll"],
-  ["satan", "That's all you need to know, flesh puppet. Now go make me some SIN{SIN}."]
+  ["satan", "That's probably a lot of information to get through your mortal skull right now, but do not worry dear, you'll figure it out as you go. It's only your SOUL that's at stake!"],
+  ["satan", "Oh, and one last thing, I'd recommend you beware. You are not the first I've given this opportunity to. There's give or take about 8 others like you that have been playing this game for quite some time."],
+  ["satan", "Wishing you all the best, and I'll be seeing you soon enough..."]
+];
+
+// the first BOSS a player ever beats: Satan names the DEAL button, laughs and goes, and it burns in
+// (it stays for every run from then on: satanDealUnlocked, 09-satan-pact.js)
+const SATAN_DEAL_INTRO_LINES = [
+  ["satan", "Look at you my little heathen, you managed to eliminate one of my special sinners. Maybe you are worth my time after all. If you need me for anything, and I mean you really need me for anything, just hit the big shiny button that says DEAL. But I am a busy man, so I'm only gonna come once, and be sure it's gonna cost ya."],
+  ["satan", "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet..."]
 ];
 
 // the first time a player ever wins the main game (once per player, like the story; then SATAN_VICTORY_LINES)
@@ -18655,7 +18718,7 @@ const SATAN_TIGHTWAD_AGAIN_LINES = [["satan", "I won't say it again, make the ri
 const INTRO_SPEAKERS = ["jesus", "you", "satan"];
 
 // phase: off | black | judgement | booting | tutorial | pact | reveal | victory(-leave) | tightwad(-leave)
-//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment)
+//        | deal(-leave) | finale(-leave) (Jesus and Satan before Final Judgment) | dealintro(-leave) (the first BOSS)
 const introState = {
   phase: "off",
   timers: [],
@@ -18671,7 +18734,7 @@ const introState = {
   typing: false,
   waiting: false,
   pactTimer: null,
-  dealShownAt: 0, // when Satan named the DEAL button in the pact (it shows from then on, see satanDealButtonHtml)
+  musicFreed: false, // the burn-in after the pact starts the music, under Satan's lesson
   keyBound: false,
   finaleFromSkip: false
 };
@@ -18717,7 +18780,7 @@ function introActive() {
 }
 
 function introHoldsMusic() {
-  return introActive();
+  return introActive() && !introState.musicFreed;
 }
 
 function introBlocksRunSave() {
@@ -18725,7 +18788,7 @@ function introBlocksRunSave() {
 }
 
 function introCapturesInput() {
-  return ["black", "judgement", "booting", "guide-wait", "guide", "guide-leave", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase);
+  return ["black", "judgement", "booting", "guide-wait", "guide", "guide-leave", "pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase);
 }
 
 // the tutorial table cannot kill you before Satan has had his say
@@ -18735,7 +18798,7 @@ function introPlayerHpFloor() {
 
 // leaving the run (menu, PvP) during the story ends the story
 function introGuardMode() {
-  if (["tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
+  if (["tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal", "victory", "victory-leave", "tightwad", "tightwad-leave", "deal", "deal-leave", "finale", "finale-leave", "dealintro", "dealintro-leave"].includes(introState.phase) && state.mode !== "arcade") introAbort();
 }
 
 /* ---- timers & teardown ---- */
@@ -18769,7 +18832,7 @@ function introAbort() {
   introClearTimers();
   introRemoveLayers();
   introState.phase = "off";
-  introState.dealShownAt = 0;
+  introState.musicFreed = false;
   markIntroSeen();
   playSoundtrack();
 }
@@ -18945,7 +19008,6 @@ function introShowLine(index) {
   if (introState.phase === "guide") introGuidePlace();
   introFitText();
   introTypeTo(introState.ends[0]);
-  if (introState.lines[index][2] === "deal") introShowDealButton();
 }
 
 // a part of a line has finished typing; Satan's offer asks YES / NO as soon as its last part is down
@@ -18984,7 +19046,7 @@ function introTypeTo(end) {
 
 // click / tap / Enter / Space
 function introAdvance() {
-  if (!["judgement", "guide", "pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase) || !introState.box) return;
+  if (!["judgement", "guide", "pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase) || !introState.box) return;
   if (introState.box.classList.contains("intro-choosing")) return; // only YES / NO answer now
   introWakePencil();
   if (introState.typing) {
@@ -19020,6 +19082,7 @@ function introAdvance() {
   else if (introState.phase === "finale") judgementTalkLeave();
   else if (introState.phase === "tightwad") satanTightwadAsk();
   else if (introState.phase === "deal") satanDealEndOfLines();
+  else if (introState.phase === "dealintro") satanDealIntroLeave();
   else introSealPact();
 }
 
@@ -19126,6 +19189,10 @@ function introSkip() {
     introClearTimers();
     introState.typing = false;
     satanDealSkip();
+  } else if (introState.phase === "dealintro") {
+    introClearTimers();
+    introState.typing = false;
+    satanDealIntroLeave();
   }
 }
 
@@ -19139,6 +19206,7 @@ function startIntroSequence(options = {}) {
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   state.mobileOfferingsOpen = false;
   introState.phase = "black";
+  introState.musicFreed = false;
   introState.guideSkipped = false;
   introState.guideRevealDone = false;
   introState.guideForecast = null;
@@ -19219,8 +19287,9 @@ function introPactReady() {
 }
 
 function introAfterRender() {
-  if (["pact", "victory", "tightwad", "deal", "finale"].includes(introState.phase)) introPlacePactBox();
+  if (["pact", "victory", "tightwad", "deal", "finale", "dealintro"].includes(introState.phase)) introPlacePactBox();
   jesusGuideAfterRender();
+  satanDealIntroAfterRender();
   satanVictoryAfterRender();
   judgementTalkAfterRender();
   satanTightwadAfterRender();
@@ -19416,10 +19485,12 @@ function introGuideOpen(lines, who = "jesus", onDone = null) {
   document.querySelector("#floatingTooltip")?.classList.remove("visible");
   const layer = document.createElement("div");
   layer.className = `intro-guide-layer intro-guide-${who}`;
+  // Jesus at the table looks as he does before Final Judgment: "Candlelight" (intro-jesus-yellow.webp), the same
+  // size and glow, his box in the same yellow (.intro-guide-jesus in styles.css); the opening judgement keeps its own
   const figure =
     who === "satan"
       ? `<div class="intro-satan" aria-hidden="true"><img src="assets/ui/intro/intro-satan.webp" alt="" draggable="false" /></div>`
-      : `<div class="intro-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus.webp" alt="" draggable="false" /></div>`;
+      : `<div class="intro-jesus" aria-hidden="true"><img src="assets/ui/intro/intro-jesus-yellow.webp" alt="" draggable="false" /></div>`;
   layer.innerHTML = `
     <div class="intro-guide-spot intro-guide-spot-none" aria-hidden="true"></div>
     ${figure}
@@ -19463,11 +19534,14 @@ function introGuideOverlap(a, b) {
 }
 
 // over the hidden SEAL bar when it has room and is clear of the lit part (desktop);
-// otherwise (phones) the larger free band above or below the lit part, on the left of him
+// otherwise (phones) the larger free band above or below the lit part, on the left of him.
+// Jesus's box is the size of his box before Final Judgment (the SEAL slots, introPactRect); Satan's is widened
+// along the SEAL bar
 function introGuideBoxRect(focus) {
   const slots = introPactRect();
   const bar = document.querySelector(".passive-bar")?.getBoundingClientRect();
-  const base = slots && bar && bar.width ? { left: slots.left, top: slots.top, height: slots.height, width: Math.max(slots.width, Math.min(bar.right - slots.left - 10, 980)) } : slots;
+  const widen = introState.guideWho === "satan" && slots && bar && bar.width;
+  const base = widen ? { left: slots.left, top: slots.top, height: slots.height, width: Math.max(slots.width, Math.min(bar.right - slots.left - 10, 980)) } : slots;
   if (base && base.height >= 140 && (!focus || !introGuideOverlap(base, focus))) return base;
   const margin = 6;
   const vw = window.innerWidth;
@@ -19566,6 +19640,7 @@ function introGuideLeave() {
 function satanVictoryReady() {
   return (
     state.satanVictoryDue &&
+    !state.satanDealIntroDue &&
     introState.phase === "off" &&
     state.mode === "arcade" &&
     (state.stage === "summary" || state.satanVictorySkipped) &&
@@ -19577,7 +19652,7 @@ function satanVictoryReady() {
 }
 
 function satanVictoryHoldsSummary() {
-  return Boolean(state.satanVictoryDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+  return Boolean(state.satanVictoryDue && !state.satanDealIntroDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
 }
 
 function satanVictoryAfterRender() {
@@ -19633,8 +19708,8 @@ function satanVictoryLeave() {
   satanLeaveScene("victory");
 }
 
-// he laughs and goes; the run carries on
-function satanLeaveScene(phase) {
+// he laughs and goes; the run carries on (onGone runs once he has gone)
+function satanLeaveScene(phase, onGone = null) {
   if (introState.phase !== phase) return;
   introSetWaiting(false);
   introState.phase = `${phase}-leave`;
@@ -19648,7 +19723,80 @@ function satanLeaveScene(phase) {
     introClearTimers();
     introState.phase = "off";
     render();
+    if (onGone) onGone();
   }, 1300);
+}
+
+/* ---- the first BOSS ever beaten: Satan names the DEAL ----
+   The DEAL button stays hidden (satanDealUnlocked, 09-satan-pact.js) until the player beats a BOSS for the first
+   time: state.satanDealIntroDue is set then (06-round-resolution.js), and the round's results wait for him like
+   for the victory speech (Next Round brings him in at once; the victory and tightwad scenes wait for this one).
+   Same entrance and box as the pact. He says SATAN_DEAL_INTRO_LINES, laughs and goes, and the DEAL button burns
+   in like the panels after the pact; it stays for the rest of this run and every run after. Ending or skipping
+   him unlocks it; a game closed in the middle of it brings him back at the next BOSS. Pause > DEV > Unlock DEAL
+   opens it without him. */
+function satanDealIntroHoldsSummary() {
+  return Boolean(state.satanDealIntroDue && introState.phase === "off" && state.mode === "arcade" && state.stage === "summary" && !state.gameOver);
+}
+
+function satanDealIntroReady() {
+  return satanDealIntroHoldsSummary() && !state.pauseOpen && !roundRevealAnimationActive() && !(activeMoment && activeMoment.until > performance.now());
+}
+
+function satanDealIntroAfterRender() {
+  if (!satanDealIntroHoldsSummary() || introState.pactTimer) return;
+  const check = () => {
+    introState.pactTimer = null;
+    if (satanDealIntroReady()) startSatanDealIntro();
+    else if (satanDealIntroHoldsSummary()) introState.pactTimer = setTimeout(check, 400);
+  };
+  introState.pactTimer = setTimeout(check, INTRO_PACT_DELAY_MS);
+}
+
+function startSatanDealIntroNow() {
+  if (!satanDealIntroHoldsSummary() || roundRevealAnimationActive() || state.pauseOpen) return;
+  clearTimeout(introState.pactTimer);
+  introState.pactTimer = null;
+  startSatanDealIntro();
+}
+
+function startSatanDealIntro() {
+  state.satanDealIntroDue = false;
+  // already open (Pause > DEV > Unlock DEAL in the meantime): nothing to say
+  if (satanDealUnlocked()) {
+    render();
+    return;
+  }
+  satanOpenScene("dealintro", SATAN_DEAL_INTRO_LINES, "satan-deal-intro-layer");
+  saveArcadeRun();
+}
+
+function satanDealIntroLeave() {
+  if (introState.phase !== "dealintro") return;
+  unlockSatanDeal();
+  satanLeaveScene("dealintro", satanDealBurnIn);
+}
+
+// the DEAL button comes in like the panels after the pact: a burnt sheet played backwards
+function satanDealBurnIn() {
+  const button = typeof document !== "undefined" ? document.querySelector("#dealButton") : null;
+  const cover = button ? introMakeBurnCover(button) : null;
+  if (!cover) return;
+  introPlaySfx("introBurn");
+  // drawn at once, so the button never shows before its cover
+  introDrawBurn(cover, 0, performance.now());
+  const start = performance.now();
+  const frame = (now) => {
+    if (state.mode !== "arcade" || !cover.canvas.isConnected) {
+      cover.canvas.remove();
+      return;
+    }
+    const progress = Math.min(1, (now - start) / INTRO_BURN_MS);
+    introDrawBurn(cover, progress, now);
+    if (progress < 1) requestAnimationFrame(frame);
+    else cover.canvas.remove();
+  };
+  requestAnimationFrame(frame);
 }
 
 /* ---- before Final Judgment: the 72 Goetic demons have fallen ----
@@ -19775,6 +19923,7 @@ function satanTightwadHoldsSummary() {
   return Boolean(
     state.satanTightwadDue &&
       !state.satanVictoryDue &&
+      !state.satanDealIntroDue &&
       introState.phase === "off" &&
       state.mode === "arcade" &&
       state.stage === "summary" &&
@@ -19906,37 +20055,10 @@ function introPlacePactBox() {
   box.style.width = `${rect.width}px`;
   box.style.height = `${rect.height}px`;
   introFitText();
-  introPlaceDealSpot();
-}
-
-// Satan names the DEAL button: it appears under Pause, pulsing, and the veil opens a gap around it
-function introShowDealButton() {
-  if (introState.phase !== "pact" || introState.dealShownAt) return;
-  introState.dealShownAt = Date.now();
-  render();
-  introPlaceDealSpot();
-}
-
-function introPlaceDealSpot() {
-  const layer = introState.layer;
-  if (!layer || introState.phase !== "pact" || !introState.dealShownAt) return;
-  const rect = document.querySelector("#dealButton")?.getBoundingClientRect();
-  if (!rect || !rect.width || !rect.height) {
-    layer.classList.remove("intro-deal-spot");
-    return;
-  }
-  const width = Math.round(rect.width * 1.8 + 36);
-  const height = Math.round(rect.height * 2.2 + 36);
-  layer.style.setProperty("--deal-spot-x", `${Math.round(rect.left + rect.width / 2 - width / 2)}px`);
-  layer.style.setProperty("--deal-spot-y", `${Math.round(rect.top + rect.height / 2 - height / 2)}px`);
-  layer.style.setProperty("--deal-spot-w", `${width}px`);
-  layer.style.setProperty("--deal-spot-h", `${height}px`);
-  layer.classList.add("intro-deal-spot");
 }
 
 function introStartPact() {
   introState.phase = "pact";
-  introState.dealShownAt = 0;
   introState.lines = INTRO_PACT_LINES;
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
   const floatingTooltip = document.querySelector("#floatingTooltip");
@@ -19971,10 +20093,11 @@ function introPactEvil(nextIndex) {
   }, 2000);
 }
 
+// "Great. Let me show you around the place": he steps aside (no laugh, that comes at the end of his lesson)
+// and the panels burn in
 function introSealPact() {
   introSetWaiting(false);
   introState.phase = "reveal";
-  introPlaySfx("introLaugh");
   introState.box.classList.add("intro-box-leave");
   introState.layer?.classList.add("intro-pact-leaving");
   introLater(() => {
@@ -19999,6 +20122,9 @@ function introBurnIn() {
   const covers = targets.map((element) => introMakeBurnCover(element)).filter(Boolean);
   document.body.classList.remove("intro-tutorial");
   introPlaySfx("introBurn");
+  // the music starts with the burn-in and plays under his lesson
+  introState.musicFreed = true;
+  playSoundtrack();
   const start = performance.now();
   const frame = (now) => {
     if (introState.phase !== "reveal") return;
@@ -20156,11 +20282,6 @@ function introFinish() {
   markIntroSeen();
   playSoundtrack();
   saveArcadeRun();
-  // the DEAL button shown since Satan named it settles into its usual look
-  if (introState.dealShownAt) {
-    introState.dealShownAt = 0;
-    render();
-  }
 }
 
 /* ---------- Main menu figures: hover lights their eyes (Jesus yellow, Satan red) ----------
@@ -20860,6 +20981,22 @@ function collectionLifetimeDeals() {
 function sealUnlockMet(id) {
   const result = sealUnlockProgress(id);
   return Boolean(result && result.value >= result.goal);
+}
+
+// Records > Challenges: every locked SEAL's achievement, in SEAL_UNLOCKS order, without naming the SEAL.
+// done = the achievement itself is met; a SEAL opened by Jesus' Gifts (or DEV) does not complete it.
+function sealChallenges() {
+  return Object.keys(SEAL_UNLOCKS)
+    .filter((id) => ITEMS[id])
+    .map((id) => {
+      const result = sealUnlockProgress(id) || { value: 0, goal: 1 };
+      return {
+        text: SEAL_UNLOCKS[id].text,
+        value: Math.min(result.value, result.goal),
+        goal: result.goal,
+        done: result.value >= result.goal
+      };
+    });
 }
 
 /* ---- recording (called from the game) ---- */
@@ -22589,6 +22726,39 @@ function satanPact() {
   return state.pact;
 }
 
+/* ---- the DEAL unlock ----
+   The DEAL (button, Satan's Pact, the deal mission) is closed until the player beats a BOSS for the first time and
+   Satan names it (SATAN_DEAL_INTRO_LINES, 09-intro-story.js), or Pause > DEV > Unlock DEAL; then it stays open
+   for every run on this device. */
+const SATAN_DEAL_UNLOCK_STORAGE_KEY = "dearthDealUnlockedV1";
+
+function satanDealStorage() {
+  try {
+    return typeof window !== "undefined" ? window.localStorage || null : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function satanDealUnlocked() {
+  try {
+    return satanDealStorage()?.getItem(SATAN_DEAL_UNLOCK_STORAGE_KEY) === "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+// true when this call unlocked it, false when it already was (or storage is unavailable)
+function unlockSatanDeal() {
+  const wasUnlocked = satanDealUnlocked();
+  try {
+    satanDealStorage()?.setItem(SATAN_DEAL_UNLOCK_STORAGE_KEY, "1");
+  } catch (error) {
+    return false;
+  }
+  return !wasUnlocked && satanDealUnlocked();
+}
+
 /* ---- availability ---- */
 function satanPactLocked() {
   const pact = satanPact();
@@ -22597,7 +22767,7 @@ function satanPactLocked() {
 
 function satanPactAvailable() {
   const pact = satanPact();
-  return state.mode === "arcade" && !state.gameOver && !pact.used && !satanPactLocked();
+  return state.mode === "arcade" && !state.gameOver && satanDealUnlocked() && !pact.used && !satanPactLocked();
 }
 
 function satanPactCanOpenNow() {
@@ -23400,7 +23570,9 @@ function satanPactPay(part) {
     }
     case "sin": {
       const before = Math.max(0, Math.ceil(state.player.credits || 0));
-      state.player.credits = before - Math.min(before, part.n);
+      const paid = Math.min(before, part.n);
+      state.player.credits = before - paid;
+      if (typeof missionsNoteSpend === "function") missionsNoteSpend(paid);
       break;
     }
     case "useCap":
@@ -23726,11 +23898,11 @@ function satanDealBoxRect(rect) {
 }
 
 /* ---- the DEAL button, under the Pause button ---- */
-// hidden in the story's tutorial; greyed out once the deal is made, refused or locked
+// not there until Satan has named it (satanDealUnlocked) and never in the story's tutorial; greyed out once the
+// deal is made, refused or locked
 function satanDealButtonHtml() {
-  if (state.mode !== "arcade") return "";
-  if (["pact", "reveal"].includes(introState.phase) && introState.dealShownAt) return satanDealIntroButtonHtml();
-  if (["black", "judgement", "booting", "tutorial", "pact", "reveal"].includes(introState.phase)) return "";
+  if (state.mode !== "arcade" || !satanDealUnlocked()) return "";
+  if (["black", "judgement", "booting", "tutorial", "guide-wait", "guide", "guide-leave", "pact", "reveal"].includes(introState.phase)) return "";
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
@@ -23749,13 +23921,6 @@ function satanDealButtonHtml() {
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
   return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
-}
-
-// in the story, from the line where Satan names the button: it fades in and pulses red (.deal-intro-show in styles.css);
-// the delay keeps the fade and the pulse running through renders. It can't be pressed until the story is over.
-function satanDealIntroButtonHtml() {
-  const delay = `-${Math.max(0, Date.now() - introState.dealShownAt)}ms`;
-  return `<button class="pause-button deal-button deal-contract deal-intro-show" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="Make a deal with Satan. Once per run." style="animation-delay: ${delay}, ${delay}" disabled>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
@@ -24190,12 +24355,13 @@ document.addEventListener("keydown", (event) => {
 /* ---------- Missions and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
-   mission pays its FAVOR (1, 2, 3 or 6) at once. The slot machine left of the guess area is always available:
+   mission pays its FAVOR (1, 2, 3, 4, 6 or 8) at once. The slot machine left of the guess area is always available:
    a spin costs SLOT_SPIN_COST FAVOR, three reels each land on one icon, and the reward depends on how many
    of each icon came up (SLOT_PAYOUTS). Arcade only: no PvP, not in the story's tutorial rounds.
    Run state: state.missions (saved with the run); free rerolls won here: state.slotFreeRerolls (they last
-   until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, applyPenalties (READY and the
-   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells, consumeActive, resolveEliminatedBots
+   until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, submitGuess (missionsNoteReveal),
+   applyPenalties (READY and the results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells,
+   consumeActive, spendCredits and satanPactPay (missionsNoteSpend), resolveEliminatedBots
    (missionsNoteElimination) and satanPactSign (missionsNoteDeal). */
 
 const SLOT_SPIN_COST = 3;
@@ -24235,14 +24401,19 @@ function slotSfx(key) {
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
 const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
 
-/* ---- the missions: 13 worth 1 FAVOR, 14 worth 2, 8 worth 3 or more ----
-   Each round MISSION_TIER_ODDS decides how much the mission is worth (45% 1 FAVOR, 40% 2, 15% 3 or more), then a
-   mission of that worth is drawn by its weight (1 unless set). Only missions that can be done right now are drawn.
-   when: "event"   checked after every action (shop, ARTIFACT, spin, deal) and after the results
+/* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
+   The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission
+   is worth (45% 1 FAVOR, 40% 2, 15% 3 or more; the 3, 4, 6 and 8 ones share that 15%), then a mission of that worth
+   is drawn, every one as likely as the next. Only missions that can be done right now are drawn.
+   when: "event"   checked after every action (shop, ARTIFACT, spin, deal, GUESS) and after the results
          "resolve" checked once the round's results are in (and after any later action that round)
          "leave"   checked when you move on to the next round (NEXT ROUND)
    can(): may this mission be drawn now? param(): a value drawn with it (shown in the text).
-   failed(): it can no longer be done this round (the box says Missed). */
+   failed(): it can no longer be done this round (the box says Missed).
+   "at reveal" = the moment the TARGET first shows, right after GUESS (missionsNoteReveal): the guesses then against
+   that TARGET, before any ARTIFACT or SEAL moves them. The others read the round as it is scored at READY
+   (missionsNoteReady). Bets that compare you with the DAMNED are paid after READY even when they read the reveal,
+   so the box never gives away a hidden guess. */
 const MISSION_TIER_ODDS = { 1: 45, 2: 40, 3: 15 };
 
 // living DAMNED a mission can name (no BOSSES)
@@ -24267,6 +24438,11 @@ function missionShopOpen() {
   return typeof shopDisabledBySatan !== "function" || !shopDisabledBySatan();
 }
 
+// different SEALS in your slots (ELITE copies count once)
+function missionSealKinds() {
+  return new Set((state.player?.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).map((item) => item.id)).size;
+}
+
 const missionTargets = (f, param) => (param ? f.targetCounts.get(param.id) || 0 : 0);
 
 function missionIsPrime(n) {
@@ -24275,61 +24451,47 @@ function missionIsPrime(n) {
   return true;
 }
 
-// mission texts read exactly as the list they were written from: "Use a Spirit Board", "Use two Spirit Boards"
+// mission texts read exactly as the list they were written from: "Use a Spirit Board", "Eliminate an Anchor damned"
+function missionWithArticle(word) {
+  return `${/^[aeiou]/i.test(word) ? "an" : "a"} ${word}`;
+}
+
 function missionArtifactWithArticle(name) {
   if (!name) return "an artifact";
   if (/^the\s/i.test(name)) return name;
-  return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+  return missionWithArticle(name);
 }
 
-function missionArtifactPlural(name) {
-  if (!name) return "artifacts";
-  const base = name.replace(/^the\s+/i, "");
-  const of = base.match(/^(.+?)( of .+)$/);
-  if (of) return `${missionArtifactPlural(of[1])}${of[2]}`;
-  if (/fe$/i.test(base)) return base.replace(/fe$/i, "ves");
-  if (/(s|x|z|ch|sh)$/i.test(base)) return `${base}es`;
-  return `${base}s`;
+// "3/12" while it is still open
+const missionCount = (value, goal) => `${Math.min(goal, Math.max(0, value))}/${goal}`;
+
+// your guess against the DAMNED's, from a snapshot ({ guess, distance, bots: [{ id, guess, distance }] })
+const missionClosest = (snap) => Boolean(snap && snap.bots.length && snap.bots.every((bot) => snap.distance <= bot.distance));
+function missionWorst(snap) {
+  if (!snap) return false;
+  const worst = Math.max(snap.distance, ...snap.bots.map((bot) => bot.distance));
+  return worst > 0 && snap.distance === worst;
+}
+
+// a bet on one of the ARTIFACTS you hold
+const missionHeldArtifactParam = () => {
+  const ids = [...new Set(missionHeldArtifactIds())];
+  return ids.length ? randomFrom(ids) : null;
+};
+const missionNamedBotParam = () => {
+  const bots = missionNameableBots();
+  return bots.length ? missionBotParam(randomFrom(bots)) : null;
+};
+
+// counted ones: { id, value, text, goal, count(f), when, can }
+function missionCounted(id, value, text, goal, count, extra = {}) {
+  return { id, value, when: "event", text, check: (f) => count(f) >= goal, progress: (f) => missionCount(count(f), goal), ...extra };
 }
 
 const MISSIONS = [
-  // ---- 1 FAVOR ----
-  {
-    id: "useItem",
-    value: 1,
-    weight: 4,
-    when: "event",
-    text: (param) => `Use ${missionArtifactWithArticle(ITEMS[param]?.name)}`,
-    can: () => activeUseLimit() >= 1,
-    param: () => {
-      const ids = [...new Set(missionHeldArtifactIds())];
-      return ids.length ? randomFrom(ids) : null;
-    },
-    check: (f, param) => (f.itemCounts.get(param) || 0) >= 1,
-    failed: (f) => f.resolved
-  },
-  { id: "noArtifacts", value: 1, when: "resolve", text: "Don't use artifacts this round", can: () => missionHeldArtifactIds().length >= 1, check: (f) => f.artifactsUsed === 0, failed: (f) => f.artifactsUsed > 0 },
-  { id: "gain6", value: 1, when: "event", text: "Gain 6 or more sin this round", check: (f) => f.earned >= 6, progress: (f) => `${Math.min(6, f.earned)}/6` },
-  { id: "kill2", value: 1, when: "resolve", text: "Eliminate two Damned", check: (f) => f.eliminations >= 2, progress: (f) => `${Math.min(2, f.eliminations)}/2` },
-  { id: "reroll5", value: 1, when: "event", text: "Reroll 5 times", can: missionShopOpen, check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
+  // ---- 1 FAVOR (23) ----
   { id: "noBuy", value: 1, when: "leave", text: "Don't buy any Devil's Offerings", can: missionShopOpen, check: (f) => f.buys === 0, failed: (f) => f.buys > 0 },
-  {
-    id: "killName",
-    value: 1,
-    weight: 5,
-    when: "resolve",
-    text: (param) => `Eliminate ${param?.name || "a Damned"}`,
-    param: () => {
-      const bots = missionNameableBots();
-      return bots.length ? missionBotParam(randomFrom(bots)) : null;
-    },
-    check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
-  },
   { id: "noKill", value: 1, when: "resolve", text: "Don't eliminate any Damned", check: (f) => f.eliminations === 0, failed: (f) => f.eliminations > 0 },
-  { id: "hurt4", value: 1, when: "resolve", text: "Take 4 or less damage this round", check: (f) => f.guessed && f.damageTaken <= 4 },
-  { id: "sell1", value: 1, when: "event", text: "Sell 1 seal", can: () => ownedSealCount() >= 1, check: (f) => f.sealSells >= 1 },
-  { id: "sameGuess", value: 1, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.guessed && f.matchesRevealed },
-  { id: "guessPrime", value: 1, when: "resolve", text: "Guess a prime number", check: (f) => f.guessed && missionIsPrime(f.guess) },
   {
     id: "noArtifactsHeld",
     value: 1,
@@ -24341,79 +24503,101 @@ const MISSIONS = [
   {
     id: "useOn",
     value: 1,
-    weight: 2,
     when: "event",
     text: (param) => `Use an artifact on ${param?.name || "a Damned"}`,
     can: () => missionTargetedArtifactsHeld() >= 1 && activeUseLimit() >= 1,
-    param: () => {
-      const bots = missionNameableBots();
-      return bots.length ? missionBotParam(randomFrom(bots)) : null;
-    },
+    param: missionNamedBotParam,
     check: (f, param) => missionTargets(f, param) >= 1,
     failed: (f) => f.resolved
   },
-
-  // ---- 2 FAVOR ----
-  { id: "critical", value: 3, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
+  // your final guess against the round's final TARGET (an exact hit is neither)
+  { id: "guessAbove", value: 1, when: "resolve", text: "Guess above the round target", check: (f) => f.guessed && Number.isFinite(f.target) && f.guess > f.target },
+  { id: "guessBelow", value: 1, when: "resolve", text: "Guess below the round target", check: (f) => f.guessed && Number.isFinite(f.target) && f.guess < f.target },
+  // 0 is a multiple of both
+  { id: "guessMultiple3", value: 1, when: "resolve", text: "Guess a multiple of 3", check: (f) => f.guessed && f.guess % 3 === 0 },
+  { id: "guessMultiple5", value: 1, when: "resolve", text: "Guess a multiple of 5", check: (f) => f.guessed && f.guess % 5 === 0 },
+  { id: "kill1", value: 1, when: "resolve", text: "Eliminate a Damned", check: (f) => f.eliminations >= 1 },
+  // buying a SEAL you own is its ELITE upgrade
+  { id: "buySeal", value: 1, when: "event", text: "Buy or upgrade a seal", can: missionShopOpen, check: (f) => f.sealsBought >= 1 },
+  missionCounted("buyArtifacts2", 1, "Buy two artifacts", 2, (f) => f.artifactsBought, { can: missionShopOpen }),
   {
-    id: "useItemTwice",
-    value: 2,
-    weight: 4,
+    id: "guessDigit",
+    value: 1,
+    when: "resolve",
+    text: (param) => `Guess a number containing the digit ${param?.digit ?? 0}`,
+    param: () => ({ digit: Math.floor(Math.random() * 10) }),
+    check: (f, param) => f.guessed && Boolean(param) && String(f.guess).includes(String(param.digit))
+  },
+  missionCounted("reroll2", 1, "Reroll Devil's Offerings 2 times", 2, (f) => f.rerolls, { can: missionShopOpen }),
+  // every SIN you pay: the Devil's Offerings, paid rerolls, the deal's SIN
+  missionCounted("spend12", 1, "Spend at least 12 SIN", 12, (f) => f.spent),
+  {
+    id: "revealWithin10",
+    value: 1,
     when: "event",
-    text: (param) => `Use two ${missionArtifactPlural(ITEMS[param]?.name)}`,
-    can: () => activeUseLimit() >= 2,
-    param: () => {
-      const held = missionHeldArtifactIds();
-      const pairs = [...new Set(held.filter((id) => held.filter((other) => other === id).length >= 2))];
-      return pairs.length ? randomFrom(pairs) : null;
-    },
-    check: (f, param) => (f.itemCounts.get(param) || 0) >= 2,
-    progress: (f, param) => `${Math.min(2, f.itemCounts.get(param) || 0)}/2`,
+    text: "Guess within 10 of the TARGET at reveal",
+    check: (f) => Boolean(f.reveal) && f.reveal.distance <= 10,
+    failed: (f) => Boolean(f.reveal) && f.reveal.distance > 10
+  },
+  // a tie for the worst guess is the worst guess (as for its penalty)
+  { id: "notWorstReveal", value: 1, when: "resolve", text: "Don't have the worst Guess at reveal", check: (f) => Boolean(f.reveal) && !missionWorst(f.reveal) },
+  {
+    id: "closerThan3",
+    value: 1,
+    when: "resolve",
+    text: "Guess closer than 3 DAMNED",
+    check: (f) => Boolean(f.ready) && f.ready.bots.filter((bot) => bot.distance > f.ready.distance).length >= 3
+  },
+  { id: "hurtMax11", value: 1, when: "resolve", text: "Take 11 damage or less", check: (f) => f.guessed && f.damageTaken <= 11 },
+  // SIN from sales is not earned
+  missionCounted("earn5", 1, "Earn 5 SIN this round", 5, (f) => f.earned),
+  // everyone at the table this round, a BOSS too, damage from anything
+  missionCounted("damnedTake40", 1, "The DAMNED take at least 40 damage in total", 40, (f) => f.botDamageTotal, { when: "resolve" }),
+  missionCounted("useTwo", 1, "Use two ARTIFACTS", 2, (f) => f.artifactsUsed, {
+    can: () => missionHeldArtifactIds().length >= 2 && activeUseLimit() >= 2,
+    failed: (f) => f.resolved
+  }),
+  { id: "sellSeal", value: 1, when: "event", text: "Sell a SEAL", can: () => missionSealKinds() >= 1, check: (f) => f.sealSells >= 1 },
+  { id: "nextRound12Sin", value: 1, when: "leave", text: "Go into the next round with 12 sin or more", check: (f) => f.sin >= 12 },
+
+  // ---- 2 FAVOR (23) ----
+  {
+    id: "useItem",
+    value: 2,
+    when: "event",
+    text: (param) => `Use ${missionArtifactWithArticle(ITEMS[param]?.name)}`,
+    can: () => activeUseLimit() >= 1,
+    param: missionHeldArtifactParam,
+    check: (f, param) => (f.itemCounts.get(param) || 0) >= 1,
     failed: (f) => f.resolved
   },
-  { id: "gain12", value: 2, when: "event", text: "Gain 12 or more sin this round", check: (f) => f.earned >= 12, progress: (f) => `${Math.min(12, f.earned)}/12` },
-  { id: "buy6", value: 2, when: "event", text: "Buy six seals or artifacts", can: missionShopOpen, check: (f) => f.buys >= 6, progress: (f) => `${Math.min(6, f.buys)}/6` },
-  { id: "over66", value: 2, when: "resolve", text: "Guess over 66", check: (f) => f.guessed && f.guess > 66 },
-  { id: "under12", value: 2, when: "resolve", text: "Guess under 12", check: (f) => f.guessed && f.guess < 12 },
-  { id: "guess50", value: 2, when: "resolve", text: "Guess 50", check: (f) => f.guessed && f.guess === 50 },
-  // your guess is the lowest on the table: no DAMNED guessed less (a tie counts)
-  { id: "guessLowest", value: 2, when: "resolve", text: "Guess the lowest number amongst the DAMNED", check: (f) => f.guessed && f.lowestGuess },
+  { id: "noArtifacts", value: 2, when: "resolve", text: "Don't use artifacts this round", can: () => missionHeldArtifactIds().length >= 1, check: (f) => f.artifactsUsed === 0, failed: (f) => f.artifactsUsed > 0 },
+  { id: "kill2", value: 2, when: "resolve", text: "Eliminate two Damned", check: (f) => f.eliminations >= 2, progress: (f) => missionCount(f.eliminations, 2) },
+  missionCounted("buy3", 2, "Buy three seals or artifacts", 3, (f) => f.buys, { can: missionShopOpen }),
+  { id: "killRevealed", value: 2, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
   {
-    id: "killMemory",
+    id: "killName",
     value: 2,
     when: "resolve",
-    text: "Eliminate a Damned with 10 or more memory",
-    can: () => activeBots().some((bot) => !bot.immortal && (bot.memory || []).length >= 10),
-    check: (f) => f.kills.some((kill) => kill.memory >= 10)
+    text: (param) => `Eliminate ${param?.name || "a Damned"}`,
+    param: missionNamedBotParam,
+    check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
   },
-  {
-    id: "killBounty",
-    value: 2,
-    when: "resolve",
-    text: "Eliminate a Damned with 10 or more bounty",
-    can: () => activeBots().some((bot) => !bot.immortal && missionBountyOf(bot) >= 10),
-    check: (f) => f.kills.some((kill) => kill.bounty >= 10)
-  },
-  { id: "killRevealed", value: 1, when: "resolve", text: "Eliminate a revealed Damned", check: (f) => f.kills.some((kill) => kill.revealed) },
+  { id: "sameGuess", value: 2, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.guessed && f.matchesRevealed },
   {
     id: "useOn2",
     value: 2,
-    weight: 2,
     when: "event",
     text: (param) => `Use two artifacts on ${param?.name || "a Damned"}`,
     can: () => missionTargetedArtifactsHeld() >= 2 && activeUseLimit() >= 2,
-    param: () => {
-      const bots = missionNameableBots();
-      return bots.length ? missionBotParam(randomFrom(bots)) : null;
-    },
+    param: missionNamedBotParam,
     check: (f, param) => missionTargets(f, param) >= 2,
-    progress: (f, param) => `${Math.min(2, missionTargets(f, param))}/2`,
+    progress: (f, param) => missionCount(missionTargets(f, param), 2),
     failed: (f) => f.resolved
   },
   {
     id: "useOnBoth",
     value: 2,
-    weight: 2,
     when: "event",
     text: (param) => `Use one artifact on ${param?.first?.name || "a Damned"} and one on ${param?.second?.name || "another"}`,
     can: () => missionTargetedArtifactsHeld() >= 2 && activeUseLimit() >= 2,
@@ -24425,9 +24609,82 @@ const MISSIONS = [
     progress: (f, param) => `${(missionTargets(f, param?.first) >= 1 ? 1 : 0) + (missionTargets(f, param?.second) >= 1 ? 1 : 0)}/2`,
     failed: (f) => f.resolved
   },
+  { id: "guessPrime", value: 2, when: "resolve", text: "Guess a prime number", check: (f) => f.guessed && missionIsPrime(f.guess) },
+  // only when you guessed last round (missions.lastGuess)
+  {
+    id: "sameAsLastRound",
+    value: 2,
+    when: "resolve",
+    text: "Guess the same number as last round",
+    param: () => {
+      const last = missionsState().lastGuess;
+      return last && last.round === state.round - 1 && Number.isFinite(last.guess) ? { guess: last.guess } : null;
+    },
+    check: (f, param) => f.guessed && Boolean(param) && f.guess === param.guess
+  },
+  { id: "within3", value: 2, when: "resolve", text: "Guess within 3 of the TARGET", check: (f) => Boolean(f.ready) && f.ready.distance <= 3 },
+  // a tie for the closest guess counts
+  { id: "closest", value: 2, when: "resolve", text: "Have the closest guess amongst the other Damned", check: (f) => missionClosest(f.ready) },
+  { id: "lowerThanAll", value: 2, when: "resolve", text: "Guess lower than every DAMNED", check: (f) => Boolean(f.ready) && f.ready.bots.length > 0 && f.ready.bots.every((bot) => f.ready.guess < bot.guess) },
+  { id: "hurtMax5", value: 2, when: "resolve", text: "Take 5 damage or less", check: (f) => f.guessed && f.damageTaken <= 5 },
+  missionCounted("reroll3", 2, "Reroll Devil's Offerings 3 times", 3, (f) => f.rerolls, { can: missionShopOpen }),
+  missionCounted("earn12", 2, "Earn 12 SIN this round", 12, (f) => f.earned),
+  missionCounted("spend16", 2, "Spend at least 16 SIN", 16, (f) => f.spent),
+  {
+    id: "everyTakes10",
+    value: 2,
+    when: "resolve",
+    text: "Every DAMNED takes 10 damage or more",
+    check: (f) => f.botDamages.length > 0 && f.botDamages.every((damage) => damage >= 10)
+  },
+  {
+    id: "nextRound5Artifacts",
+    value: 2,
+    when: "leave",
+    text: "Go into the next round holding 5 ARTIFACTS",
+    can: () => missionHeldArtifactIds().length >= 5 || missionShopOpen(),
+    check: (f) => f.artifactsHeld >= 5
+  },
+  // a personality one of the DAMNED at the table has (a STUBBORN BOSS counts as Stubborn)
+  {
+    id: "killPersonality",
+    value: 2,
+    when: "resolve",
+    text: (param) => `Eliminate ${missionWithArticle(param?.type || "Stubborn")} damned`,
+    param: () => {
+      const types = [...new Set(activeBots().filter((bot) => !bot.immortal).flatMap((bot) => personalityTypes(bot)))];
+      return types.length ? { type: randomFrom(types) } : null;
+    },
+    check: (f, param) => Boolean(param) && f.kills.some((kill) => (kill.types || []).includes(param.type))
+  },
+  // different SEALS acting this round; only when you have that many in your slots
+  { id: "seals3", value: 2, when: "resolve", text: "Have 3 seals trigger this round", can: () => missionSealKinds() >= 3, check: (f) => f.sealsTriggered >= 3 },
+  { id: "closestReveal", value: 2, when: "resolve", text: "Have the closest Guess at reveal", check: (f) => missionClosest(f.reveal) },
+
+  // ---- 3 FAVOR or more (22) ----
+  { id: "critical", value: 3, when: "resolve", text: "Get a critical hit", check: (f) => f.critical },
+  { id: "zeroSin", value: 3, when: "leave", text: "Have 0 sin at the end of the round", check: (f) => f.sin === 0 },
+  missionCounted("reroll6", 3, "Reroll 6 times", 6, (f) => f.rerolls, { can: missionShopOpen }),
+  { id: "under11", value: 3, when: "resolve", text: "Guess under 11", check: (f) => f.guessed && f.guess < 11 },
+  {
+    id: "killMemory",
+    value: 3,
+    when: "resolve",
+    text: "Eliminate a Damned with 12 or more memory",
+    can: () => activeBots().some((bot) => !bot.immortal && (bot.memory || []).length >= 12),
+    check: (f) => f.kills.some((kill) => kill.memory >= 12)
+  },
+  {
+    id: "killBounty",
+    value: 3,
+    when: "resolve",
+    text: "Eliminate a Damned with 12 or more bounty",
+    can: () => activeBots().some((bot) => !bot.immortal && missionBountyOf(bot) >= 12),
+    check: (f) => f.kills.some((kill) => kill.bounty >= 12)
+  },
   {
     id: "keepWeakest",
-    value: 2,
+    value: 3,
     when: "resolve",
     text: (param) => `Keep ${param?.name || "the weakest Damned"} alive`,
     param: () => {
@@ -24441,7 +24698,7 @@ const MISSIONS = [
   },
   {
     id: "killStrongest",
-    value: 2,
+    value: 3,
     when: "resolve",
     text: (param) => `Eliminate ${param?.name || "the strongest Damned"}`,
     param: () => {
@@ -24452,23 +24709,33 @@ const MISSIONS = [
     },
     check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
   },
-
-  // ---- 3 FAVOR or more ----
-  { id: "kill3", value: 3, when: "resolve", text: "Eliminate three Damned", check: (f) => f.eliminations >= 3, progress: (f) => `${Math.min(3, f.eliminations)}/3` },
-  { id: "zeroSin", value: 3, when: "leave", text: "Have 0 sin at the end of the round", check: (f) => f.sin === 0 },
-  { id: "hurt12", value: 3, when: "resolve", text: "Take 12 or more damage", check: (f) => f.guessed && f.damageTaken >= 12 },
-  { id: "guess0", value: 3, when: "resolve", text: "Guess 0", check: (f) => f.guessed && f.guess === 0 },
-  { id: "guess100", value: 3, when: "resolve", text: "Guess 100", can: () => playerGuessLimit() >= 100, check: (f) => f.guessed && f.guess === 100 },
-  { id: "sellStartSeal", value: 3, when: "event", text: "Sell one of the seals you had at the start of the round", can: () => ownedSealCount() >= 1, check: (f) => f.startSealSold },
+  // your SOUL when you press NEXT ROUND against your SOUL when the round began
+  { id: "keepSoul", value: 3, when: "leave", text: "Have the same or more SOUL at the end of the round", check: (f) => f.hp >= f.startHp },
+  {
+    id: "killBoss",
+    value: 3,
+    when: "resolve",
+    text: "Defeat a Boss",
+    can: () => activeBots().some((bot) => bot.isBoss && !bot.immortal),
+    check: (f) => f.kills.some((kill) => kill.boss)
+  },
+  missionCounted("earn25", 3, "Earn 25 SIN this round", 25, (f) => f.earned),
+  { id: "seals5", value: 3, when: "resolve", text: "Have 5 seals trigger this round", can: () => missionSealKinds() >= 5, check: (f) => f.sealsTriggered >= 5 },
+  missionCounted("spend33", 3, "Spend at least 33 SIN", 33, (f) => f.spent),
+  { id: "kill3", value: 4, when: "resolve", text: "Eliminate three Damned", check: (f) => f.eliminations >= 3, progress: (f) => missionCount(f.eliminations, 3) },
+  missionCounted("buy6", 4, "Buy six seals or artifacts", 6, (f) => f.buys, { can: missionShopOpen }),
+  { id: "hurt12", value: 4, when: "resolve", text: "Take 12 or more damage", check: (f) => f.guessed && f.damageTaken >= 12 },
+  { id: "guess0", value: 6, when: "resolve", text: "Guess 0", check: (f) => f.guessed && f.guess === 0 },
+  { id: "guess100", value: 6, when: "resolve", text: "Guess 100", can: () => playerGuessLimit() >= 100, check: (f) => f.guessed && f.guess === 100 },
+  { id: "sellStartSeal", value: 4, when: "event", text: "Sell one of the seals you had at the start of the round", can: () => missionSealKinds() >= 1, check: (f) => f.startSealSold },
+  { id: "kill4", value: 6, when: "resolve", text: "Eliminate four Damned", check: (f) => f.eliminations >= 4, progress: (f) => missionCount(f.eliminations, 4) },
   // only while the run's one deal is still to be made
-  { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned }
+  { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned },
+  // all five DAMNED in one round (checkRoundPentakillBonus)
+  { id: "pentakill", value: 8, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill }
 ];
 
 const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));
-
-function ownedSealCount() {
-  return (state.player?.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
-}
 
 // the BOUNTY on a DAMNED's card (a BOSS's BOSS BOUNTY counts too)
 function missionBountyOf(bot) {
@@ -24486,6 +24753,7 @@ function missionsFresh() {
     spin: null, // { icons, at, resolved }
     lastIcons: null,
     lastText: "",
+    lastGuess: null, // { round, guess }: your guess last round (Guess the same number as last round)
     completed: 0,
     earned: 0,
     spins: 0,
@@ -24499,16 +24767,20 @@ function missionsRoundFresh() {
     rerolls: 0,
     buys: 0,
     sealsBought: 0,
+    artifactsBought: 0,
+    spent: 0, // SIN paid this round (missionsNoteSpend)
     sells: 0,
     sealSells: 0,
     soldSin: 0, // SIN from sales (not "gained" for the SIN missions)
     startSealIds: (state.player?.passives || []).filter(Boolean).map((item) => item.id),
     startSealSold: false,
-    kills: [], // { id, memory, bounty, revealed } as each DAMNED fell
+    kills: [], // { id, memory, bounty, revealed, boss, types } as each DAMNED fell
     dealSigned: false,
     startHp: state.player?.hp ?? 0,
     botStart: {},
     readyIds: null,
+    reveal: null, // the guesses when the TARGET first showed (missionsNoteReveal)
+    ready: null, // the guesses as scored at READY (missionsNoteReady)
     resolved: false
   };
 }
@@ -24577,7 +24849,7 @@ function normalizeMissionsState() {
   const counters = missions.round;
   if (!Array.isArray(counters.kills)) counters.kills = [];
   if (!Array.isArray(counters.startSealIds)) counters.startSealIds = [];
-  ["sealSells", "soldSin"].forEach((key) => {
+  ["sealSells", "soldSin", "artifactsBought", "spent"].forEach((key) => {
     if (!Number.isFinite(counters[key])) counters[key] = 0;
   });
   if (!Number.isFinite(state.slotFreeRerolls)) state.slotFreeRerolls = 0;
@@ -24641,7 +24913,9 @@ function drawMission() {
 function missionsEnsureRound() {
   if (!missionsEnabled()) return null;
   const missions = missionsState();
-  if (!missions.current || missions.current.round !== state.round) {
+  // a mission saved before it was removed or its worth changed (the list of Nov 17 2026) is drawn again
+  const saved = missions.current;
+  if (!saved || saved.round !== state.round || !MISSION_BY_ID[saved.id] || MISSION_BY_ID[saved.id].value !== saved.value) {
     missions.current = drawMission();
     if (missions.current) missions.lastId = missions.current.id;
   }
@@ -24659,17 +24933,19 @@ function missionFacts() {
   const killedBots = startedBots.filter((bot) => bot.eliminated && !bot.immortal);
   const killedIds = new Set(killedBots.map((bot) => bot.id));
   // each fallen DAMNED as it was when it fell (missionsNoteElimination), or as it is now
-  const kills = killedBots.map((bot) => counters.kills.find((kill) => kill.id === bot.id) || { id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+  const kills = killedBots.map((bot) => counters.kills.find((kill) => kill.id === bot.id) || missionKillRecord(bot));
   const revealedIds = new Set(round.revealedBotIds instanceof Set ? round.revealedBotIds : []);
   state.bots.forEach((bot) => {
     if (bot.revealedByPassive && counters.botStart[bot.id]) revealedIds.add(bot.id);
   });
   const botGuesses = round.botSubmittedGuesses instanceof Map ? round.botSubmittedGuesses : new Map();
-  const damnedGuesses = startedBots.map((bot) => botGuesses.get(bot.id)).filter(Number.isFinite);
+  const botDamages = startedBots.filter((bot) => !bot.immortal).map((bot) => Math.max(0, Math.ceil(bot.lastDamage || 0)));
+  const triggered = round.triggeredPassiveIds instanceof Set ? round.triggeredPassiveIds : new Set();
   return {
     resolved: Boolean(counters.resolved),
     guessed,
     guess,
+    target: round.target,
     critical: Boolean(counters.resolved && round.criticalHitKeys instanceof Set && round.criticalHitKeys.has("player")),
     pentakill: Boolean(round.pentakillAwarded),
     damageTaken: Math.max(0, Math.ceil(state.playerLastDamage || 0)),
@@ -24677,18 +24953,27 @@ function missionFacts() {
     killedIds,
     kills,
     matchesRevealed: guessed && [...revealedIds].some((id) => botGuesses.get(id) === guess),
-    lowestGuess: guessed && damnedGuesses.length > 0 && guess <= Math.min(...damnedGuesses),
+    reveal: counters.reveal || null,
+    ready: counters.resolved ? counters.ready || null : null,
     artifactsUsed: Math.max(0, round.activeUses || 0),
     itemCounts: round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map(),
     targetCounts: round.artifactTargetCountsByBotId instanceof Map ? round.artifactTargetCountsByBotId : new Map(),
     artifactsHeld: (state.player.actives || []).length,
     buys: counters.buys,
+    sealsBought: counters.sealsBought || 0,
+    artifactsBought: counters.artifactsBought || 0,
+    spent: counters.spent || 0,
     rerolls: counters.rerolls,
     sealSells: counters.sealSells || 0,
     startSealSold: Boolean(counters.startSealSold),
     dealSigned: Boolean(counters.dealSigned),
     earned: Math.max(0, Math.ceil((round.earnedSinThisRound || 0) - (counters.soldSin || 0))),
-    sin: Math.max(0, Math.ceil(state.player.credits || 0))
+    sin: Math.max(0, Math.ceil(state.player.credits || 0)),
+    botDamages,
+    botDamageTotal: botDamages.reduce((sum, damage) => sum + damage, 0),
+    sealsTriggered: [...triggered].filter((id) => typeof id === "string" && /^p\d+$/.test(id)).length,
+    hp: Math.max(0, Math.ceil(state.player.hp || 0)),
+    startHp: Math.max(0, Math.ceil(counters.startHp || 0))
   };
 }
 
@@ -24720,17 +25005,57 @@ function missionsComplete(current, mission) {
 }
 
 /* ---- hooks ---- */
-// READY: who is at the table for this guess
-function missionsNoteReady() {
-  if (!missionsEnabled()) return;
-  missionsState().round.readyIds = activeBots().map((bot) => bot.id);
+// your guess and the DAMNED's against a TARGET: { target, guess, distance, bots: [{ id, guess, distance }] }
+function missionGuessSnapshot(target, playerGuess, botGuessOf) {
+  if (!Number.isFinite(target) || !Number.isFinite(playerGuess)) return null;
+  const distance = (guess) => Math.ceil(Math.abs(guess - target));
+  const bots = activeBots()
+    .filter((bot) => !bot.immortal)
+    .map((bot) => ({ id: bot.id, guess: botGuessOf(bot) }))
+    .filter((bot) => Number.isFinite(bot.guess))
+    .map((bot) => ({ ...bot, distance: distance(bot.guess) }));
+  return { target, guess: playerGuess, distance: distance(playerGuess), bots };
 }
 
-// the results are in (end of applyPenalties)
+// GUESS: the TARGET has just been shown (submitGuess), before any ARTIFACT or SEAL moves it
+function missionsNoteReveal() {
+  if (!missionsEnabled()) return;
+  const round = state.roundState;
+  if (!round) return;
+  const guesses = round.botEffectiveGuesses instanceof Map ? round.botEffectiveGuesses : new Map();
+  const target = Number.isFinite(round.revealedTarget) ? round.revealedTarget : round.target;
+  const missions = missionsState();
+  missions.round.reveal = missionGuessSnapshot(target, round.playerEffectiveGuess, (bot) => guesses.get(bot.id));
+  // the round's mission is drawn on the first render; a logic test without one keeps its random numbers
+  if (missions.current && missions.current.round === state.round) missionsCheck("event");
+}
+
+// READY: who is at the table for this guess, and the guesses as they are scored (the final TARGET)
+function missionsNoteReady() {
+  if (!missionsEnabled()) return;
+  const counters = missionsState().round;
+  counters.readyIds = activeBots().map((bot) => bot.id);
+  const round = state.roundState;
+  if (!round) return;
+  const guesses = round.botEffectiveGuesses instanceof Map ? round.botEffectiveGuesses : new Map();
+  counters.ready = missionGuessSnapshot(round.target, round.playerEffectiveGuess, (bot) => guesses.get(bot.id));
+}
+
+// the results are in (end of applyPenalties); your guess is kept for next round's "same number" bet
 function missionsAfterResolution() {
   if (!missionsEnabled()) return;
-  missionsState().round.resolved = true;
+  const missions = missionsState();
+  missions.round.resolved = true;
+  const guess = state.roundState?.playerSubmittedGuess;
+  if (Number.isFinite(guess)) missions.lastGuess = { round: state.round, guess };
   missionsCheck("resolve");
+}
+
+// SIN you paid: spendCredits (the Devil's Offerings, paid rerolls) and the deal's SIN price (satanPactPay)
+function missionsNoteSpend(amount) {
+  if (!missionsEnabled()) return;
+  const cost = Math.max(0, Math.ceil(amount || 0));
+  if (cost > 0) missionsState().round.spent += cost;
 }
 
 // NEXT ROUND: the "go into the next round" missions, before the round changes
@@ -24739,12 +25064,24 @@ function missionsBeforeNextRound() {
   missionsCheck("leave");
 }
 
-// a DAMNED falls (resolveEliminatedBots): its MEMORY, BOUNTY and whether its guess was revealed, as it fell
+// a DAMNED as it falls: its MEMORY, BOUNTY, whether its guess was revealed, BOSS or not, its personalities
+function missionKillRecord(bot) {
+  return {
+    id: bot.id,
+    memory: (bot.memory || []).length,
+    bounty: missionBountyOf(bot),
+    revealed: Boolean(bot.revealedByPassive),
+    boss: Boolean(bot.isBoss),
+    types: personalityTypes(bot)
+  };
+}
+
+// a DAMNED falls (resolveEliminatedBots)
 function missionsNoteElimination(bot) {
   if (!missionsEnabled() || !bot) return;
   const counters = missionsState().round;
   if (counters.kills.some((kill) => kill.id === bot.id)) return;
-  counters.kills.push({ id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+  counters.kills.push(missionKillRecord(bot));
 }
 
 // the deal was signed (satanPactSign)
@@ -24761,6 +25098,7 @@ function missionsNoteShop(kind, info = {}) {
   const counters = missionsState().round;
   if (kind === "buySeal" || kind === "buyArtifact") counters.buys += 1;
   if (kind === "buySeal") counters.sealsBought += 1;
+  if (kind === "buyArtifact") counters.artifactsBought += 1;
   if (kind === "reroll") counters.rerolls += 1;
   if (kind === "sell") {
     counters.sells += 1;
@@ -24988,6 +25326,11 @@ function slotPaytableHtml() {
   `;
 }
 
+// Settings > Display > Slot machine: 0 Default, 1 Fancy (state.display.slotMachine)
+function slotMachineFancy() {
+  return state.display?.slotMachine === 1;
+}
+
 function slotMachineHtml() {
   if (!missionsEnabled()) return "";
   const missions = missionsState();
@@ -25015,14 +25358,39 @@ function slotMachineHtml() {
   const result = spin ? "" : missions.lastRound === state.round ? missions.lastText : pendingText || missions.lastText;
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
-  return `
-    <div class="slot-machine${triple && missions.lastText ? " slot-triple" : ""}" data-tooltip-html="${escapeAttr(tooltip)}">
+  const tripleClass = triple && missions.lastText ? " slot-triple" : "";
+  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Missions pay FAVOR.")}</div>`;
+  // Settings > Display > Slot machine: Default (the framed box with SPIN) or Fancy (the old machine below)
+  if (!slotMachineFancy()) {
+    return `
+    <div class="slot-machine${tripleClass}" data-tooltip-html="${escapeAttr(tooltip)}">
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
         <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
         <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
-      <div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Missions pay FAVOR.")}</div>
+      ${resultHtml}
+    </div>
+  `;
+  }
+  // Fancy: FAVOR on a little mechanical counter (three digits, more if it ever gets that far)
+  const favorDigits = String(Math.max(0, Math.floor(missions.doubloons || 0)))
+    .padStart(3, "0")
+    .split("")
+    .map((digit) => `<b>${digit}</b>`)
+    .join("");
+  // the lever swings down and back on a pull: the spin's first render adds the class, which starts the animation
+  const pulling = spin && Date.now() - spin.at < 400;
+  const rivets = ["tl", "tr", "bl", "br"].map((corner) => `<i class="slot-rivet slot-rivet-${corner}" aria-hidden="true"></i>`).join("");
+  return `
+    <div class="slot-machine slot-fancy${tripleClass}" data-tooltip-html="${escapeAttr(tooltip)}">
+      ${rivets}
+      <div class="slot-reels">${reels}</div>
+      <div class="slot-side">
+        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR"><span class="slot-counter" aria-hidden="true">${favorDigits}</span>${FAVOR_MARK}</span>
+      </div>
+      ${resultHtml}
+      <button type="button" id="slotSpin" class="slot-lever${pulling ? " pulling" : ""}" aria-label="Pull the lever: spin for ${SLOT_SPIN_COST} FAVOR" ${disabled}><span class="slot-lever-hub"></span><span class="slot-lever-rod"></span><span class="slot-lever-knob"></span></button>
     </div>
   `;
 }
@@ -25044,7 +25412,7 @@ function missionBoxHtml() {
   return `
     <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
-        <span class="mission-title">Mission</span>
+        <span class="mission-title">Satan's Bet</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
