@@ -48,6 +48,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - `styles.css` — all styling. `controller.html/js` — phone controller. `server.js` — zero-dependency Node HTTP/API server for PvP.
 - `assets/` (artifacts, audio, bots, seals, ui), `fonts/`.
 - `android/`, `ios/` — Capacitor 8 projects (app id `com.aenao.dearth`), arcade-only, landscape.
+  - Android: Quit closes the app through the app's own plugin `DearthAppPlugin` (`exitApp`, registered in `MainActivity`; the page calls `Capacitor.nativePromise("DearthApp", "exitApp", {})` in `quitNativeApp`). Start-up is black (launch theme in `res/values/styles.xml`, `backgroundColor` in `capacitor.config.json`, inline background in `app.html`), not Capacitor's white splash.
 
 ## Working with the owner
 - Design choices with several reasonable answers: present them as an interactive option page (an HTML artifact the owner can click through) rather than a wall of text. Small calls (an ELITE bonus, a price) can be decided; say what you picked in the reply so it can be changed.

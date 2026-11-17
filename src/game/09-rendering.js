@@ -2972,6 +2972,14 @@ function confirmRunRemoval(slotId) {
   render();
 }
 
+// the Android app closes itself on Quit (DearthAppPlugin in android/.../MainActivity); elsewhere Quit shows
+// "Close the tab" (a browser page cannot close itself). The iPhone app has no Quit.
+function quitNativeApp() {
+  if (!NATIVE_ARCADE_APP || NATIVE_IOS_APP || typeof window.Capacitor?.nativePromise !== "function") return false;
+  window.Capacitor.nativePromise("DearthApp", "exitApp", {}).catch(() => {});
+  return true;
+}
+
 function handleMenuAction(action) {
   resumeSoundtrack();
   if (String(action).startsWith("records-tab:")) {
@@ -3055,6 +3063,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    if (quitNativeApp()) return;
     state.menuScreen = "quit";
     render();
     window.close();
