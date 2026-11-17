@@ -14294,12 +14294,16 @@ body.native-arcade .gifts-screen .gifts-cards {
   max-height: calc(100% - clamp(52px, 15vh, 80px) - 8px);
   gap: 8px;
 }
+/* the hover state is listed too: a tap leaves the card hovered on a phone, and the game's hover rule would put the
+   desktop frame and padding back, growing that card and, through the shared row, the other two */
 body.mobile-arcade .gifts-screen button.gift-card,
-body.native-arcade .gifts-screen button.gift-card {
+body.mobile-arcade .gifts-screen button.gift-card:hover:not(:disabled),
+body.native-arcade .gifts-screen button.gift-card,
+body.native-arcade .gifts-screen button.gift-card:hover:not(:disabled) {
   border-width: 10px !important;
   border-image-width: 10px !important;
   padding: 2px 4px !important;
-  gap: 1px;
+  gap: 1px !important;
 }
 body.mobile-arcade .gifts-screen .gift-card-art,
 body.native-arcade .gifts-screen .gift-card-art {
