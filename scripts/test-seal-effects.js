@@ -4015,20 +4015,23 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
   `);
 });
 
-test("Missions: 36 missions (15 worth 1 FAVOR, 13 worth 2, 8 worth 3 or more, the deal 6; no pentakill); one per round, replaced at the start of the next round", () => {
+test("Satan's bets: 49 (16 worth 1 FAVOR, 18 worth 2, 15 worth 3), the Nov 13 list plus four; one per round, replaced at the start of the next round", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    assert.equal(MISSIONS.length, 36);
+    assert.equal(MISSIONS.length, 49);
     assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
-    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[15,13,8]");
-    assert.equal(MISSION_BY_ID.pentakill, undefined);
+    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[16,18,15]");
+    // the four kept from the Nov 14 list
+    assert.equal(MISSION_BY_ID.useItem.value, 1);
+    assert.equal(MISSION_BY_ID.noArtifacts.value, 2);
+    assert.equal(MISSION_BY_ID.killName.value, 2);
+    assert.equal(MISSION_BY_ID.sameGuess.value, 2);
+    // the Nov 13 worths
+    assert.equal(MISSION_BY_ID.kill2.value, 2);
+    assert.equal(MISSION_BY_ID.reroll5.value, 3);
     assert.equal(MISSION_BY_ID.critical.value, 3);
-    assert.equal(MISSION_BY_ID.guessPrime.value, 1);
-    assert.equal(MISSION_BY_ID.guessLowest.value, 2);
-    assert.equal(MISSION_BY_ID.kill3.value, 3);
-    assert.equal(MISSION_BY_ID.killRevealed.value, 1);
-    assert.equal(MISSION_BY_ID.deal.value, 6);
+    ["deal", "guessPrime", "gain6", "noBuy", "zeroSin", "pentakill"].forEach((id) => assert.equal(MISSION_BY_ID[id], undefined, id));
     assert.equal(JSON.stringify(MISSION_TIER_ODDS), JSON.stringify({ 1: 45, 2: 40, 3: 15 }));
     const first = missionsEnsureRound();
     assert.ok(first && MISSION_BY_ID[first.id]);
@@ -4042,16 +4045,16 @@ test("Missions: 36 missions (15 worth 1 FAVOR, 13 worth 2, 8 worth 3 or more, th
   `);
 });
 
-test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked kinds come 4x, 5x and 2x as often", () => {
+test("Satan's bets: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3; a named ARTIFACT comes 4x and a named DAMNED 5x as often", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    state.player.actives = ["a6", "a6", "a15", "a15"].map((id) => freeActiveCopy(id));
+    state.player.actives = ["a6", "a15"].map((id) => freeActiveCopy(id));
     let seed = 7;
     Math.random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
     const counts = {};
     const tiers = { 1: 0, 2: 0, 3: 0 };
-    const draws = 8000;
+    const draws = 12000;
     for (let i = 0; i < draws; i += 1) {
       state.missions.lastId = null;
       const drawn = drawMission();
@@ -4061,56 +4064,32 @@ test("Missions: 45% worth 1 FAVOR, 40% worth 2, 15% worth 3 or more; the marked 
     const near = (value, expected, slack) => Math.abs(value - expected) <= slack;
     assert.ok(near(tiers[1] / draws, 0.45, 0.03), "1 FAVOR " + tiers[1] / draws);
     assert.ok(near(tiers[2] / draws, 0.4, 0.03), "2 FAVOR " + tiers[2] / draws);
-    assert.ok(near(tiers[3] / draws, 0.15, 0.03), "3+ FAVOR " + tiers[3] / draws);
+    assert.ok(near(tiers[3] / draws, 0.15, 0.03), "3 FAVOR " + tiers[3] / draws);
     const ratio = (a, b) => counts[a] / counts[b];
-    assert.ok(near(ratio("useItem", "noArtifacts"), 4, 1.2), "useItem x4 " + ratio("useItem", "noArtifacts"));
-    assert.ok(near(ratio("killName", "noKill"), 5, 1.4), "killName x5 " + ratio("killName", "noKill"));
-    assert.ok(near(ratio("useOn", "noKill"), 2, 0.7), "useOn x2 " + ratio("useOn", "noKill"));
-    assert.ok(near(ratio("useItemTwice", "critical"), 4, 1.2), "useItemTwice x4 " + ratio("useItemTwice", "critical"));
-    assert.ok(near(ratio("useOn2", "critical"), 2, 0.7) && near(ratio("useOnBoth", "critical"), 2, 0.7), "two on one / one on two x2");
+    assert.ok(near(ratio("useItem", "use1"), 4, 1.2), "useItem x4 " + ratio("useItem", "use1"));
+    assert.ok(near(ratio("killName", "kill2"), 5, 1.5), "killName x5 " + ratio("killName", "kill2"));
   `);
 });
 
-test("Missions: only missions that can be done now are drawn (the deal only before the run's deal, ARTIFACT ones only with the ARTIFACTS)", () => {
+test("Satan's bets: only bets that can be won now are drawn (ARTIFACT ones need the ARTIFACTS, SEAL ones the SEALS, the BOSS one a BOSS)", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
     state.player.actives = [];
     assert.equal(MISSION_BY_ID.useItem.param(), null);
     assert.equal(MISSION_BY_ID.noArtifacts.can(), false);
-    assert.equal(MISSION_BY_ID.noArtifactsHeld.can(), false);
-    assert.equal(MISSION_BY_ID.useOn.can(), false);
     state.player.actives = ["a6", "a15"].map((id) => freeActiveCopy(id));
     assert.ok(["a6", "a15"].includes(MISSION_BY_ID.useItem.param()));
-    assert.equal(MISSION_BY_ID.useItemTwice.param(), null, "twice needs two of the same");
-    assert.equal(MISSION_BY_ID.useOn.can(), true, "Sacrificial Dagger is aimed at a DAMNED");
-    assert.equal(MISSION_BY_ID.useOn2.can(), false, "two aimed ARTIFACTS needed");
-    state.player.actives.push(freeActiveCopy("a6"));
-    assert.equal(MISSION_BY_ID.useItemTwice.param(), "a6");
-    // the deal: only while the run's one deal is still to be made
-    assert.equal(MISSION_BY_ID.deal.can(), true);
-    satanPact().used = true;
-    assert.equal(MISSION_BY_ID.deal.can(), false);
-    // MEMORY / BOUNTY 10: only when a DAMNED at the table has that much
-    assert.equal(MISSION_BY_ID.killMemory.can(), false);
-    state.bots[2].memory = new Array(10).fill(state.bots[2].memory[0] || { guess: 50, target: 50 });
-    assert.equal(MISSION_BY_ID.killMemory.can(), true);
-    state.bots.forEach((bot) => { bot.reward = 3; });
-    assert.equal(MISSION_BY_ID.killBounty.can(), false);
-    state.bots[1].reward = 10;
-    assert.equal(MISSION_BY_ID.killBounty.can(), true);
-    // the weakest / strongest DAMNED by SOUL right now
-    state.bots[3].hp = 200;
-    state.bots[4].hp = 900;
-    assert.equal(MISSION_BY_ID.keepWeakest.param().id, state.bots[3].id);
-    state.bots[0].hp = 1000;
-    state.bots[0].maxHp = 1200;
-    state.bots[0].hp = 1100;
-    assert.equal(MISSION_BY_ID.killStrongest.param().id, state.bots[0].id);
+    assert.equal(MISSION_BY_ID.noArtifacts.can(), true);
+    assert.equal(MISSION_BY_ID.seal1.can(), false);
+    assert.equal(MISSION_BY_ID.seals3.can(), false);
+    assert.equal(MISSION_BY_ID.boss.can(), false);
+    const named = MISSION_BY_ID.killName.param();
+    assert.ok(named && state.bots.some((bot) => bot.id === named.id && bot.name === named.name));
   `);
 });
 
-test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROUND ones, SIN without sales, SEALS you started with, the deal)", () => {
+test("Satan's bets: what each one counts (named ARTIFACT, no ARTIFACTS, same guess as a revealed DAMNED, SIN without sales, any sale, NEXT ROUND ones)", () => {
   game()(`
     unlockSlotsForTest();
     fixture([["p1"]], [10, 20, 30, 40, 50]);
@@ -4125,67 +4104,95 @@ test("Missions: what each one counts (named ARTIFACT, your typed guess, NEXT ROU
     state.roundState.activeUseItemCounts.set("a6", 1);
     missionsCheck("event");
     paid(1);
-    // a guess mission reads the guess you typed, once the results are in
-    set("guess50");
-    state.roundState.playerSubmittedGuess = 50;
+    // no ARTIFACTS: paid at the results, lost as soon as one is used
+    state.roundState.activeUses = 0;
+    set("noArtifacts");
     missionsCheck("event");
     paid(0);
     state.missions.round.resolved = true;
     missionsCheck("resolve");
     paid(2);
-    // no buying: decided at NEXT ROUND, missed as soon as you buy
-    set("noBuy");
-    missionsCheck("event");
+    set("noArtifacts");
+    state.roundState.activeUses = 1;
+    assert.ok(MISSION_BY_ID.noArtifacts.failed(missionFacts()));
+    missionsCheck("resolve");
     paid(0);
-    missionsNoteShop("buyArtifact");
-    assert.ok(MISSION_BY_ID.noBuy.failed(missionFacts()));
-    missionsCheck("leave");
+    // the number you typed against a revealed DAMNED's typed guess
+    state.roundState.revealedBotIds = new Set();
+    state.bots.forEach((bot) => { bot.revealedByPassive = false; });
+    state.roundState.botSubmittedGuesses = new Map(state.bots.map((bot, i) => [bot.id, [10, 20, 30, 40, 50][i]]));
+    state.roundState.playerSubmittedGuess = 30;
+    set("sameGuess");
+    missionsCheck("resolve");
     paid(0);
-    // 0 SIN when you go into the next round
-    set("zeroSin");
-    state.player.credits = 0;
-    missionsCheck("event");
-    paid(0);
-    missionsCheck("leave");
-    paid(3);
-    // SIN from a sale is not "gained"
-    set("gain6");
+    state.bots[2].revealedByPassive = true;
+    missionsCheck("resolve");
+    paid(2);
+    // SIN from a sale is not earned
+    state.missions.round.resolved = false;
+    set("earn5");
     state.roundState.earnedSinThisRound = 0;
     gainCredits(10, false, "Sold Ceremonial Altar");
     missionsNoteShop("sell", { sin: 10 });
+    state.missions.round.resolved = true;
+    missionsCheck("resolve");
     paid(0);
-    gainCredits(6, false, "Test");
-    missionsCheck("event");
+    gainCredits(5, false, "Test");
+    missionsCheck("resolve");
     paid(1);
-    // a SEAL you had when the round began (p1), not one bought since
-    set("sellStartSeal");
-    missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
-    paid(0);
-    missionsNoteShop("sell", { sin: 4, sealIds: ["p1"] });
-    paid(3);
-    // the deal: 6 FAVOR when it is signed
-    set("deal");
+    // any sale counts, an ARTIFACT too
+    set("sell1");
+    missionsNoteShop("sell", { sin: 2 });
+    paid(1);
+    // 10 SIN or more: decided at NEXT ROUND
+    set("keep10");
+    state.player.credits = 12;
     missionsCheck("event");
     paid(0);
-    missionsNoteDeal();
-    paid(6);
+    missionsCheck("leave");
+    paid(1);
   `);
 });
 
-test("Missions: eliminations are counted as each DAMNED fell (MEMORY, BOUNTY, revealed), named DAMNED, kept alive, ARTIFACTS aimed at them", () => {
+test("Satan's bets: the guess bets read your guess after ARTIFACTS against the final TARGET (closest, lowest, worst, under, within N)", () => {
+  game()(`
+    unlockSlotsForTest();
+    fixture([], [10, 20, 30, 40, 50]);
+    state.missions.round.readyIds = state.bots.map((bot) => bot.id);
+    state.roundState.target = 40;
+    state.roundState.botEffectiveGuesses = new Map(state.bots.map((bot, i) => [bot.id, [10, 20, 30, 45, 60][i]]));
+    state.missions.round.resolved = true;
+    const check = (id, guess) => {
+      state.roundState.playerEffectiveGuess = guess;
+      return MISSION_BY_ID[id].check(missionFacts());
+    };
+    assert.equal(check("closest", 41), true);
+    assert.equal(check("closest", 46), false);
+    assert.equal(check("near3", 43), true);
+    assert.equal(check("near3", 44), false);
+    assert.equal(check("near10", 50), true);
+    assert.equal(check("lowest", 5), true);
+    assert.equal(check("lowest", 10), false, "a tie is not lower");
+    assert.equal(check("notWorst", 80), false);
+    assert.equal(check("notWorst", 69), true, "30 off is as bad as the worst DAMNED");
+    assert.equal(check("under", 39), true);
+    assert.equal(check("over", 39), false);
+    assert.equal(check("beat3", 33), true, "closer than 10, 20 and 60");
+    // not before the results are in
+    state.missions.round.resolved = false;
+    assert.equal(check("closest", 41), false);
+  `);
+});
+
+test("Satan's bets: eliminations (named DAMNED, how many, from full SOUL)", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
     const set = (id, param = null) => { state.missions.current = { id, value: MISSION_BY_ID[id].value, param, round: state.round, done: false }; };
-    const [a, b, c] = state.bots;
+    const [a, b] = state.bots;
     const named = (bot) => ({ id: bot.id, name: bot.name });
-    // a falls with 10 MEMORY, a BOUNTY of 12 and its guess revealed
-    a.memory = new Array(10).fill(a.memory[0] || { guess: 50, target: 50 });
-    a.reward = 12;
-    a.revealedByPassive = true;
     a.hp = 0;
     resolveEliminatedBots([a]);
-    assert.equal(JSON.stringify(state.missions.round.kills[0]), JSON.stringify({ id: a.id, memory: 10, bounty: 12, revealed: true }));
     state.missions.round.resolved = true;
     let favor = 0;
     const done = (id, param, value) => {
@@ -4194,26 +4201,11 @@ test("Missions: eliminations are counted as each DAMNED fell (MEMORY, BOUNTY, re
       favor += value;
       assert.equal(state.missions.doubloons, favor, id);
     };
-    done("killMemory", null, 2);
-    done("killBounty", null, 2);
-    done("killRevealed", null, 1);
-    done("killName", named(a), 1);
-    done("killStrongest", named(b), 0);
-    done("keepWeakest", named(b), 2);
-    done("keepWeakest", named(a), 0);
-    assert.ok(MISSION_BY_ID.keepWeakest.failed(missionFacts(), named(a)));
-    done("noKill", null, 0);
+    done("killName", named(b), 0);
+    done("killName", named(a), 2);
+    done("kill1", null, 1);
     done("kill2", null, 0);
-    // ARTIFACTS aimed at named DAMNED (counted per target)
-    state.missions.round.resolved = false;
-    set("useOnBoth", { first: named(b), second: named(c) });
-    state.roundState.artifactTargetCountsByBotId.set(b.id, 1);
-    missionsCheck("event");
-    assert.equal(MISSION_BY_ID.useOnBoth.progress(missionFacts(), state.missions.current.param), "1/2");
-    assert.equal(state.missions.doubloons, favor);
-    state.roundState.artifactTargetCountsByBotId.set(c.id, 1);
-    missionsCheck("event");
-    assert.equal(state.missions.doubloons, favor + 2);
+    done("killFull", null, 3);
   `);
 });
 
@@ -4492,56 +4484,25 @@ test("Slot machine: hidden until the first-win speech has been heard; Pause > DE
   `);
 });
 
-test("Missions read as they were written", () => {
+test("Satan's bets read as they were written", () => {
   game()(`
     const text = (id, param = null) => missionText(MISSION_BY_ID[id], param);
     const bot = { id: "x", name: "Lilith" };
-    const other = { id: "y", name: "Azazel" };
-    assert.equal(text("critical"), "Get a critical hit");
-    assert.equal(text("guessPrime"), "Guess a prime number");
-    assert.equal(text("guessLowest"), "Guess the lowest number amongst the DAMNED");
+    assert.equal(text("near10"), "Guess within 10 of the TARGET.");
+    assert.equal(text("critical"), "Hit a CRITICAL.");
+    assert.equal(text("kill2"), "Eliminate 2 DAMNED.");
+    assert.equal(text("killType", "stubborn"), "Eliminate a STUBBORN DAMNED.");
+    assert.equal(text("keepSoul"), "Go into the next round with as much SOUL as you started this one.");
     assert.equal(text("useItem", "a14"), "Use a Spirit Board");
     assert.equal(text("useItem", "a28"), "Use an Engraved Skull");
     assert.equal(text("useItem", "a13"), "Use The White-Hilted Knife");
-    assert.equal(text("useItemTwice", "a14"), "Use two Spirit Boards");
-    assert.equal(text("useItemTwice", "a11"), "Use two Vials of Blood");
-    assert.equal(text("useItemTwice", "a9"), "Use two Inverted Crosses");
-    assert.equal(text("useItemTwice", "a13"), "Use two White-Hilted Knives");
     assert.equal(text("noArtifacts"), "Don't use artifacts this round");
-    assert.equal(text("gain6"), "Gain 6 or more sin this round");
-    assert.equal(text("gain12"), "Gain 12 or more sin this round");
-    assert.equal(text("kill2"), "Eliminate two Damned");
-    assert.equal(text("kill3"), "Eliminate three Damned");
-    assert.equal(text("zeroSin"), "Have 0 sin at the end of the round");
-    assert.equal(text("reroll5"), "Reroll 5 times");
-    assert.equal(text("buy6"), "Buy six seals or artifacts");
-    assert.equal(text("hurt12"), "Take 12 or more damage");
-    assert.equal(text("over66"), "Guess over 66");
-    assert.equal(text("under12"), "Guess under 12");
-    assert.equal(text("guess0"), "Guess 0");
-    assert.equal(text("guess100"), "Guess 100");
-    assert.equal(text("noBuy"), "Don't buy any Devil's Offerings");
-    assert.equal(text("guess50"), "Guess 50");
-    assert.equal(text("killMemory"), "Eliminate a Damned with 10 or more memory");
-    assert.equal(text("killBounty"), "Eliminate a Damned with 10 or more bounty");
-    assert.equal(text("killRevealed"), "Eliminate a revealed Damned");
     assert.equal(text("killName", bot), "Eliminate Lilith");
-    assert.equal(text("noKill"), "Don't eliminate any Damned");
-    assert.equal(text("sellStartSeal"), "Sell one of the seals you had at the start of the round");
-    assert.equal(text("hurt4"), "Take 4 or less damage this round");
-    assert.equal(text("deal"), "Complete a Deal");
-    assert.equal(text("sell1"), "Sell 1 seal");
     assert.equal(text("sameGuess"), "Guess the same number as a revealed damned");
-    assert.equal(text("noArtifactsHeld"), "Have 0 artifacts in your inventory at the end of the round");
-    assert.equal(text("useOn", bot), "Use an artifact on Lilith");
-    assert.equal(text("useOn2", bot), "Use two artifacts on Lilith");
-    assert.equal(text("useOnBoth", { first: bot, second: other }), "Use one artifact on Lilith and one on Azazel");
-    assert.equal(text("keepWeakest", bot), "Keep Lilith alive");
-    assert.equal(text("killStrongest", other), "Eliminate Azazel");
   `);
 });
 
-test("Settings > Display > Guide text hides the Pick a number hint and Missions pay FAVOR., and nothing else", () => {
+test("Settings > Display > Guide text hides the Pick a number hint and Satan's bets pay FAVOR., and nothing else", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
@@ -4549,7 +4510,7 @@ test("Settings > Display > Guide text hides the Pick a number hint and Missions 
     assert.equal(state.display.guideText, 1);
     assert.equal(consoleActionState().guideHint, true);
     assert.ok(renderConsole().includes('class="console-hint guide-text"'));
-    assert.ok(slotMachineHtml().includes('class="slot-result guide-text">Missions pay FAVOR.'));
+    assert.ok(slotMachineHtml().includes('class="slot-result guide-text">' + escapeHtml("Satan's bets pay FAVOR.")));
     // a real result line on the slot machine is not guide text
     state.missions.lastText = "+5 SIN";
     state.missions.lastRound = state.round;
@@ -5111,36 +5072,6 @@ test("Satan's Pact: KARMA is Jesus' business; FAVOR up to six once the slot mach
     assert.equal(satanPactSign(), true);
     assert.equal(missionsState().doubloons, before + 3);
     assert.equal(state.player.credits, 100 - cost);
-  `);
-});
-
-test("Missions: a prime guess; the lowest guess on the table (a tie counts); the critical hit pays 3", () => {
-  game()(`
-    unlockSlotsForTest();
-    fixture([], [10, 20, 30, 40, 50]);
-    const check = (id, guess) => {
-      state.roundState.playerSubmittedGuess = guess;
-      state.missions.round.resolved = true;
-      return MISSION_BY_ID[id].check(missionFacts());
-    };
-    assert.deepEqual([0, 1, 2, 3, 4, 9, 13, 49, 89, 97, 100].map((n) => missionIsPrime(n)), [false, false, true, true, false, false, true, false, true, true, false]);
-    assert.equal(check("guessPrime", 13), true);
-    assert.equal(check("guessPrime", 15), false);
-    // not before the results are in
-    state.roundState.playerSubmittedGuess = 13;
-    state.missions.round.resolved = false;
-    assert.equal(MISSION_BY_ID.guessPrime.check(missionFacts()), false);
-    // the DAMNED's typed guesses this round
-    state.roundState.botSubmittedGuesses = new Map(state.bots.map((bot, i) => [bot.id, [10, 20, 30, 40, 50][i]]));
-    assert.equal(check("guessLowest", 9), true);
-    assert.equal(check("guessLowest", 10), true);
-    assert.equal(check("guessLowest", 11), false);
-    // paid when it is the round's mission
-    state.missions.current = { id: "critical", value: MISSION_BY_ID.critical.value, param: null, round: state.round, done: false };
-    state.roundState.criticalHitKeys = new Set(["player"]);
-    const before = state.missions.doubloons;
-    missionsCheck("resolve");
-    assert.equal(state.missions.doubloons, before + 3);
   `);
 });
 

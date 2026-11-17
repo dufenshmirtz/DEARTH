@@ -2223,7 +2223,7 @@ const state = {
     screenShake: 2,
     flashes: 1,
     textSize: 0,
-    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Missions pay FAVOR." (body.hide-guide-text)
+    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Satan's bets pay FAVOR." (body.hide-guide-text)
   },
   settingsTab: "audio",
   pauseOpen: false,
