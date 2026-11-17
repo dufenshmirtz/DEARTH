@@ -5155,3 +5155,129 @@ test("Jesus' tutorial guess: the guess he writes in lands on the TARGET it makes
     });
   `);
 });
+
+// ---------- Satan's Pact: tricks, and the Faustian Codex (09-satan-pact.js, 09-codex.js) ----------
+test("Satan's tricks: he hears flattery, contract words, Latin, the Name, blood and the traps, and still finds what you asked for", () => {
+  game()(`
+    ${PACT_SETUP}
+    const heard = satanPactHearTricks("Morning star, I hereby ask for 2 " + ITEMS.a14.name + " please");
+    assert.equal(JSON.stringify([...heard.found].sort()), JSON.stringify(["clerk", "please", "silver"]));
+    assert.equal(heard.words.silver, "morning star");
+    assert.equal(satanPactParse(heard.cleaned).id, "a14");
+    assert.equal(satanPactParse(heard.cleaned).count, 2);
+    assert.ok(satanPactHearTricks("Mefistofeles, heal me").found.includes("name"));
+    assert.ok(satanPactHearTricks("rogo, da mihi 10 sin").found.includes("latin"));
+    assert.ok(satanPactHearTricks("signed in blood: heal 3").found.includes("blood"));
+    assert.ok(!satanPactHearTricks("a " + ITEMS.a14.name).found.length);
+    // the holy words stay in the request: they name SEALS too
+    assert.ok(satanPactHearTricks("seal of the holy spirit").found.includes("holy"));
+    assert.equal(satanPactAnswer("seal of the holy spirit").refuse, "trinity");
+    // "Vial of Blood" is not a blood oath
+    assert.ok(!satanPactHearTricks("a vial of blood").found.includes("blood"));
+  `);
+});
+
+test("Satan's tricks: a trick that works lowers every number, a caught one raises it, traps always cost, three at once are all caught", () => {
+  game()(`
+    ${PACT_SETUP}
+    Math.random = () => 0.1; // under every trick's chance
+    const base = satanPactAnswer("heal 5").price[0].pct;
+    const pct = (text) => satanPactAnswer(text).price[0].pct;
+    assert.equal(pct("my lord, heal 5"), Math.max(1, Math.round(base * 0.7)));
+    assert.equal(pct("rogo heal 5"), Math.max(1, Math.round(base * 0.5)));
+    assert.equal(pct("mephisto heal 5"), Math.max(1, Math.round(base * 0.7)));
+    assert.equal(pct("please heal 5"), Math.round(base * 1.1));
+    assert.equal(pct("god heal 5"), Math.round(base * 1.5));
+    assert.equal(pct("take my soul and heal 5"), Math.round(base * 1.3));
+    // three helping tricks: all caught, whatever the roll
+    assert.equal(pct("my lord, I hereby, rogo, heal 5"), Math.round(base * 1.2 * 1.2 * 1.3));
+    const confessed = satanPactAnswer("my lord, I hereby, rogo, heal 5");
+    assert.equal(confessed.reactions[0][1], SATAN_DEAL_LINES.trickConfession[0][1]);
+    assert.equal(confessed.trickWins.length, 0);
+    Math.random = () => 0.9; // over every trick's chance: caught
+    const baseHigh = satanPactAnswer("heal 5").price[0].pct;
+    assert.equal(satanPactAnswer("my lord, heal 5").price[0].pct, Math.round(baseHigh * 1.2));
+    assert.equal(satanPactAnswer("rogo heal 5").price[0].pct, Math.round(baseHigh * 1.3));
+    // never under x0.4
+    Math.random = () => 0.1;
+    assert.ok(pct("rogo mephisto heal 5") >= Math.max(1, Math.round(base * 0.4)));
+  `);
+});
+
+test("Satan's tricks: the Clerk strikes a clause, blood costs SOUL, the Name makes a SEAL a sure yes and an ELITE land where you asked", () => {
+  game()(`
+    ${PACT_SETUP}
+    state.player.credits = 0;
+    Math.random = () => 0.1;
+    const plain = satanPactAnswer("30 sin");
+    assert.equal(plain.price.length, 2); // a BOSS debt and SOUL past 20
+    const struck = satanPactAnswer("hereby 30 sin");
+    assert.equal(struck.price.length, 1);
+    assert.equal(struck.reactions[0][1], SATAN_DEAL_LINES.trickClerkWin[0][1]);
+    // blood: +3 SOUL on any price; it buys nothing on a heal
+    const blood = satanPactAnswer("in blood, heal 5");
+    assert.equal(blood.price.find((part) => part.type === "hp").n, 3);
+    assert.ok(blood.reactions[0][1].includes("blood buys favours"));
+    // the Name: a sure yes even when the roll would say no
+    state.bossKills = 6;
+    state.player.passives = [itemCopy("p16"), itemCopy("p8")];
+    Math.random = () => 0.3; // the Name works (under 50%), then the demon's own roll
+    assert.equal(satanPactSealOffer("p2", { grant: true, sealAdd: 0, sealMul: 1 }).gain.id, "p2");
+    Math.random = () => 0.9;
+    assert.equal(satanPactSealOffer("p2", { grant: false, sealAdd: 0, sealMul: 1 }).refuse, "sealRefused");
+    // blood: 50% + 30% = 80%, so a 0.7 roll is a yes
+    Math.random = () => 0.7;
+    assert.equal(satanPactSealOffer("p2", { grant: false, sealAdd: 0.3, sealMul: 1 }).gain.id, "p2");
+    // the Name on an ELITE: lands on the SEAL you named even when the roll picks another
+    state.player.passives = [itemCopy("p2"), itemCopy("p8"), itemCopy("p16")];
+    Math.random = () => 0.99;
+    assert.equal(satanPactEliteOffer("p2").gain.id, "p16");
+    assert.equal(satanPactEliteOffer("p2", { grant: true, eliteWeight: 1 }).gain.id, "p2");
+  `);
+});
+
+test("Faustian Codex: drops the first time Satan turns you away; every new kind of answer tears in a page; tricks write in the margin", () => {
+  game()(`
+    globalThis.window = { localStorage, innerWidth: 1600 };
+    ${PACT_SETUP}
+    satanPactRequest("heal 5"); // an offer: no book yet
+    assert.equal(codexOwned(), false);
+    satanPactRequest("banana"); // turned away
+    assert.equal(codexOwned(), true);
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES);
+    satanPactRequest("banana"); // heard before: no page
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES);
+    satanPactRequest("seal of michael"); // a new refusal
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES + 1);
+    satanPactRequest("heal 5"); // heard before the book: no page
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES + 1);
+    Math.random = () => 0.1;
+    satanPactRequest("my lord, 10 sin"); // a new offer; the trick reaction doesn't count
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES + 2);
+    assert.equal(codexState().margins.silver, "my lord");
+    satanPactSign(); // "signed" is new
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES + 3);
+    // kept between runs, and never more pages than the book has
+    collectionProgressCache = null;
+    assert.equal(codexPagesFound(), CODEX_FIRST_PAGES + 3);
+    codexState().pages = 99;
+    saveCollectionProgress();
+    collectionProgressCache = null;
+    assert.equal(codexPagesFound(), CODEX_PAGES.length);
+  `);
+});
+
+test("Faustian Codex: NO to his price drops it too; nothing counts outside a real arcade run", () => {
+  game()(`
+    globalThis.window = { localStorage, innerWidth: 1600 };
+    ${PACT_SETUP}
+    state.mode = "pvp";
+    codexNoteResponses(["gibberish"], true);
+    assert.equal(codexOwned(), false);
+    state.mode = "arcade";
+    satanPactRequest("heal 5");
+    satanPactRefuse();
+    assert.equal(codexOwned(), true);
+    assert.ok(codexState().seen.includes("refused"));
+  `);
+});

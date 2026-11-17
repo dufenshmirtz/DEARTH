@@ -11092,6 +11092,331 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   .collection-demon-number { font-size: 10px !important; }
 }
 
+/* ---- Collection: the Faustian Codex (09-codex.js), the "Black Page" look picked on the "DEARTH Faustian Codex" page:
+   black pages in the frantic frames, bone text in Alegreya, Razor Keen titles, red rubrics and drop capitals.
+   Two pages side by side (one on the phone); pages not found yet are a burnt scrap. Red scribbles are the
+   previous owner's notes; white ones are the player's (a trick that worked). */
+.collection-screen .collection-tab.has-new::before {
+  content: "";
+  position: absolute;
+  top: 0.18em;
+  right: -0.08em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2a2f;
+  box-shadow: 0 0 8px rgba(220, 42, 47, 0.8);
+}
+
+.collection-screen .codex-legend {
+  min-height: clamp(30px, 4.6vh, 44px);
+}
+
+.collection-screen .codex-body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: clamp(6px, 1.4vh, 14px);
+}
+
+.codex-book {
+  width: min(1240px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+}
+
+.codex-spread {
+  display: grid;
+  grid-template-columns: repeat(var(--codex-per, 2), minmax(0, 1fr));
+  gap: clamp(6px, 1vw, 14px);
+}
+
+.collection-screen .codex-leaf {
+  position: relative;
+  box-sizing: border-box;
+  min-height: clamp(300px, calc(100vh - 250px), 680px);
+  padding: clamp(24px, 4.4vh, 46px) clamp(24px, 3vw, 54px) clamp(34px, 5.4vh, 56px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+  background: #000;
+}
+
+.collection-screen .codex-leaf::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 26px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 26px stretch;
+  opacity: 0.85;
+}
+
+body.outline-boil .collection-screen .codex-leaf::before {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+.collection-screen .codex-leaf.codex-empty::before {
+  display: none;
+}
+
+.collection-screen .codex-title,
+.collection-screen .codex-cover-title,
+.collection-screen .codex-verse-title {
+  margin: 0;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #ece6d8 !important;
+}
+
+.collection-screen .codex-title {
+  font-size: clamp(22px, 3.6vh, 36px) !important;
+}
+
+.collection-screen .codex-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 1.2vh, 12px);
+}
+
+.collection-screen .codex-leaf .codex-p,
+.collection-screen .codex-leaf .codex-p *,
+.collection-screen .codex-cover-text,
+.collection-screen .codex-torn-text {
+  margin: 0;
+  font-family: var(--font-book) !important;
+  font-size: clamp(14px, 2vh, 18.5px) !important;
+  line-height: 1.5;
+  color: #e9e3d6 !important;
+}
+
+.collection-screen .codex-leaf .codex-p .codex-rub {
+  font-style: italic;
+  color: #e0383d !important;
+}
+
+/* a drop capital on the first paragraph of each page */
+.collection-screen .codex-text > .codex-p:first-child::first-letter {
+  float: left;
+  padding: 0.12em 0.14em 0 0;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 3.3em;
+  line-height: 0.8;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-verse {
+  display: flow-root;
+}
+
+.collection-screen .codex-verse-title {
+  margin-bottom: 2px;
+  font-size: clamp(16px, 2.4vh, 22px) !important;
+  color: #e0383d !important;
+}
+
+/* marginalia: the player's own scribble (white), the previous owner's note (red) */
+.collection-screen .codex-scribble,
+.collection-screen .codex-note {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(13px, 1.9vh, 18px) !important;
+  line-height: 1.15;
+  transform: rotate(-4deg);
+}
+
+.collection-screen .codex-scribble {
+  float: right;
+  max-width: 48%;
+  margin: -2px 0 4px 14px;
+  color: #fff !important;
+  text-align: right;
+}
+
+.collection-screen .codex-note {
+  margin: auto 0 0 auto;
+  max-width: 62%;
+  padding-top: 10px;
+  text-align: right;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-folio-num {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(12px, 2.2vh, 22px);
+  text-align: center;
+  font-size: clamp(12px, 1.6vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+.collection-screen .codex-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(10px, 2.2vh, 22px);
+}
+
+.collection-screen .codex-sigil {
+  width: clamp(70px, 13vh, 124px);
+  height: clamp(70px, 13vh, 124px);
+  color: #e9e3d6;
+}
+
+.collection-screen .codex-sigil * {
+  stroke: #e9e3d6 !important;
+}
+
+.collection-screen .codex-cover-title {
+  font-size: clamp(36px, 7vh, 66px) !important;
+  max-width: 9em;
+}
+
+.collection-screen .codex-cover-text {
+  max-width: 24em;
+  font-style: italic;
+}
+
+.collection-screen .codex-small,
+.collection-screen .codex-small * {
+  margin: 0;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(12px, 1.7vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+.collection-screen .codex-cover .codex-note {
+  margin: 0;
+  position: absolute;
+  right: clamp(30px, 3vw, 54px);
+  bottom: clamp(30px, 5vh, 56px);
+  max-width: 44%;
+}
+
+.collection-screen .codex-fragment {
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-screen .codex-fragment-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 24em;
+  text-align: center;
+}
+
+.collection-screen .codex-fragment-text .codex-p .codex-rub {
+  font-size: 1.25em !important;
+}
+
+/* a page not found yet: a burnt scrap */
+.collection-screen .codex-torn {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.collection-screen .codex-scrap {
+  width: 70%;
+  height: clamp(90px, 22vh, 200px);
+  background: radial-gradient(circle at 50% 50%, #1c1615 0, #0b0908 60%, #000 100%);
+  box-shadow: 0 0 0 1px #2c2422, 0 0 18px rgba(160, 30, 20, 0.18);
+  clip-path: polygon(4% 8%, 22% 0, 41% 6%, 60% 1%, 83% 7%, 97% 3%, 100% 32%, 93% 55%, 99% 78%, 85% 96%, 62% 90%, 40% 100%, 18% 92%, 3% 97%, 0 70%, 6% 44%);
+}
+
+.collection-screen .codex-torn .codex-torn-text {
+  font-style: italic;
+  color: #8d877c !important;
+}
+
+.codex-nav {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: clamp(14px, 3vw, 40px);
+  padding-bottom: 6px;
+}
+
+.collection-screen .codex-turn {
+  min-height: 0 !important;
+  padding: 0 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(18px, 2.8vh, 26px) !important;
+  color: #e9e3d6 !important;
+  cursor: pointer;
+}
+
+.collection-screen .codex-turn:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-turn:disabled {
+  color: #3b3533 !important;
+  cursor: default;
+}
+
+.collection-screen .codex-folio {
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(12px, 1.7vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+/* the phone: one page, smaller frame, and the page scrolls on its own */
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-leaf {
+  min-height: 0;
+  padding: 20px 24px 30px;
+}
+
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-leaf::before {
+  border-width: 18px;
+  border-image-width: 18px;
+}
+
+/* on the phone a page is taller than the screen: the page turns sit above it, always in reach */
+body:is(.mobile-arcade, .native-arcade) .codex-book {
+  flex-direction: column-reverse;
+}
+
+body:is(.mobile-arcade, .native-arcade) .codex-nav {
+  padding-bottom: 0;
+}
+
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-note {
+  position: static;
+  max-width: none;
+  margin-top: 4px;
+}
+
+/* the book's mark in its toasts */
+.collection-toast-codex {
+  position: relative;
+  width: 46px;
+  display: grid;
+  place-items: center;
+  color: #e0383d;
+}
+
+.collection-toast-codex .codex-mark {
+  width: 34px;
+  height: 38px;
+}
+
+.collection-toast-codex .codex-mark * {
+  stroke: #e0383d !important;
+}
+
 /* "Seal unlocked" toast */
 .collection-toast {
   position: fixed;

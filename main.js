@@ -209,6 +209,10 @@ const GAME_SFX = {
   // with it in the Collection (the pact sound from the story)
   karmaGain: { srcs: ["assets/audio/sfx/karma-gain.mp3"], tier: "accent" },
   karmaUnlock: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
+  // the Faustian Codex (09-codex.js): turning a page is a scratch of the story's pencil; a new page burns in
+  // (its toast); the book itself arrives with the pact sound (karmaUnlock)
+  codexPage: { srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`), tier: "ui", pitch: 0.1 },
+  codexNewPage: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
   menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
 };
 
@@ -15992,6 +15996,10 @@ function renderSelfStackingDevPanel() {
       <div class="dev-summon-row">
         <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
       </div>
+      <h2>Faustian Codex (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${codexDevWhole() ? " active" : ""}" data-pause-action="codex-whole" data-tooltip="${codexDevWhole() ? "On: the Codex tab shows every page. Click to go back to the pages really found" : "Show the Codex tab in the Collection with every page, found or not (kept on this device until turned off)"}">Whole Codex${codexDevWhole() ? ": on" : ""}</button>
+      </div>
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
@@ -17940,6 +17948,12 @@ function handlePauseAction(action) {
     // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
+    render();
+    return;
+  }
+  if (action === "codex-whole") {
+    // testing: the Codex tab with every page (the real pages found are kept for when it is off)
+    addLog(toggleDevWholeCodex() ? "Testing: the whole Faustian Codex shows in the Collection." : "Testing: the Codex shows only the pages really found.");
     render();
     return;
   }
@@ -20700,6 +20714,10 @@ function defaultCollectionProgress() {
     devAllDemons: false,
     // testing only (DEV button on Jesus' Gifts): KARMA never runs out while it is on
     devInfiniteKarma: false,
+    // the Faustian Codex (09-codex.js): found or not, its pages, the answers heard, the margins
+    codex: codexFresh(),
+    // testing only (Pause > DEV > Whole Codex, or the Codex tab's DEV button): every page shows
+    devWholeCodex: false,
     // KARMA, the currency kept between runs (see the KARMA section at the end of this file)
     karma: 0,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
@@ -20722,6 +20740,8 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       progress.devAllDemons = saved.devAllDemons === true;
       progress.devInfiniteKarma = saved.devInfiniteKarma === true;
+      progress.devWholeCodex = saved.devWholeCodex === true;
+      progress.codex = normalizeCodex(saved.codex);
       if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
       if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
@@ -21354,7 +21374,8 @@ function collectionDemonBindHtml(key, seal, pinned) {
 
 // switches tabs in place, so the screen does not replay its entrance
 function applyCollectionTab(screen, tab) {
-  collectionTab = ["goetia", "angels"].includes(tab) ? tab : "seals";
+  collectionTab = ["goetia", "angels"].includes(tab) || (tab === "codex" && codexOwned()) ? tab : "seals";
+  if (collectionTab === "codex") codexOpenAtUnread();
   if (!screen) return;
   screen.querySelectorAll("[data-collection-tab]").forEach((button) => {
     const active = button.dataset.collectionTab === collectionTab;
@@ -21366,6 +21387,7 @@ function applyCollectionTab(screen, tab) {
   });
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   hideCollectionInfo(screen);
+  if (collectionTab === "codex") codexRefresh(screen);
 }
 
 const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.selected";
@@ -21430,7 +21452,14 @@ function showNextCollectionToast() {
   toast.setAttribute("role", "status");
   // a KARMA drop ({ kind: "karma" }) or a SEAL whose achievement was met (its id)
   const item = id && typeof id === "object" ? id : null;
-  toast.innerHTML = item?.kind === "karma"
+  toast.innerHTML = item?.kind === "codex"
+    ? `
+    <span class="collection-toast-codex" aria-hidden="true">${CODEX_MARK}</span>
+    <span class="collection-toast-text">
+      <span class="collection-toast-kicker">${item.first ? "Something was left in the ashes" : "A page of the Codex"}</span>
+      <span class="collection-toast-name">${escapeHtml(item.first ? "The Faustian Codex" : item.title || "")}</span>
+    </span>`
+    : item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
@@ -21444,7 +21473,7 @@ function showNextCollectionToast() {
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
-  playGameSfx(item?.kind === "karma" ? "karmaGain" : "sealUnlock");
+  playGameSfx(item?.kind === "codex" ? (item.first ? "karmaUnlock" : "codexNewPage") : item?.kind === "karma" ? "karmaGain" : "sealUnlock");
   setTimeout(() => {
     toast.classList.add("leaving");
     setTimeout(() => {
@@ -21552,18 +21581,24 @@ function renderCollectionScreen(from) {
   const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
   const filter = collectionFilter();
   const slain = GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length;
+  if (collectionTab === "codex" && !codexOwned()) collectionTab = "seals";
   const goetia = collectionTab === "goetia";
   const angels = collectionTab === "angels";
+  const codex = collectionTab === "codex";
+  if (codex) codexOpenAtUnread();
   const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
   const devButton = () =>
     `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
   const tabs = [
     { key: "seals", label: "Seals" },
     { key: "goetia", label: "Ars Goetia" },
-    { key: "angels", label: "Archangels" }
+    { key: "angels", label: "Archangels" },
+    // the Faustian Codex: no tab at all until the book is found (09-codex.js)
+    ...(codexOwned() ? [{ key: "codex", label: "Codex" }] : [])
   ].map((tab) => {
     const active = tab.key === collectionTab;
-    return `<button class="collection-tab${active ? " active" : ""}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
+    const unread = tab.key === "codex" && codexHasUnread() ? " has-new" : "";
+    return `<button class="collection-tab${active ? " active" : ""}${unread}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
   });
   const sections = collectionSections()
     .map(
@@ -21592,7 +21627,7 @@ function renderCollectionScreen(from) {
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
         <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
-        <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
+        <div class="collection-counts" data-collection-for="seals"${goetia || angels || codex ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
@@ -21604,8 +21639,9 @@ function renderCollectionScreen(from) {
           <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
+        ${codexOwned() ? `<div class="collection-counts" data-collection-for="codex"${codex ? "" : " hidden"}>${codexCountsHtml()}</div>` : ""}
       </header>
-      <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
+      <div class="collection-panel" data-collection-panel="seals"${goetia || angels || codex ? " hidden" : ""}>
         ${collectionFiltersHtml(all)}
         <div class="collection-legend">
           ${collectionSearchHtml("seals")}
@@ -21636,6 +21672,14 @@ function renderCollectionScreen(from) {
         </div>
         <div class="collection-body">${collectionArchangelsHtml()}</div>
       </div>
+      ${
+        codexOwned()
+          ? `<div class="collection-panel codex-panel" data-collection-panel="codex"${codex ? "" : " hidden"}>
+        ${codexLegendHtml()}
+        <div class="collection-body codex-body">${codexBookHtml()}</div>
+      </div>`
+          : ""
+      }
       <div class="collection-info" aria-live="polite"></div>
     </div>`;
 }
@@ -21785,6 +21829,8 @@ function bindCollectionEvents() {
   });
   const screen = document.querySelector(".collection-screen");
   applyCollectionVisibility(screen);
+  bindCodexEvents(screen);
+  if (collectionTab === "codex") codexMarkRead();
   const info = screen?.querySelector(".collection-info");
   if (info) {
     bindOn(info, "click", (event) => {
@@ -22306,7 +22352,7 @@ document.addEventListener("keydown", (event) => {
 
    WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT(_FOR) right below. Edit them
    freely. The first word of each line is who speaks (satan / you). Words in {CAPS} are filled in by the
-   game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q}. {SIN} draws the SIN icon.
+   game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q} {WORD}. {SIN} draws the SIN icon.
    Each key holds a list of lines said one after another.
 
    The rules and prices (decided Nov 2026, see the "Satan's Pact Prices" page):
@@ -22331,7 +22377,18 @@ document.addEventListener("keydown", (event) => {
    - KARMA (or Jesus' Gifts): never; he sends you to Jesus.
    Every number is x0.8 to x1.25 (most often near x1). 4+ SEALS sharing a build with the SEAL asked
    for (ELITE / SEAL) make the price x1.5. A SOUL price never takes you below 1 SOUL.
-   "This round" means the current round during guess / ARTIFACTS, the next round from the results on. */
+   "This round" means the current round during guess / ARTIFACTS, the next round from the results on.
+
+   TRICKS (SATAN_TRICKS below; the Faustian Codex in 09-codex.js hints at them): words in what you type. Each family
+   found rolls once when he makes an offer (refusals and free deals ignore them) and he reacts before the offer
+   (trick... lines). Silver Tongue (flattery) 50%: price x0.7, caught x1.2. Clerk's Tongue (contract words) 50%:
+   strikes one part of a two-part price (one part: x0.7), caught x1.2. Stolen Tongue (Latin) 40%: x0.5, caught x1.3.
+   The Name (Mephistopheles) 50%: a SEAL is a sure yes, an ELITE lands on the SEAL you named, anything else x0.7;
+   caught x1.3 and a SEAL's yes-chance halved. The Ink (in blood): always believed: a SEAL's yes-chance +30%, an
+   ELITE 3x likelier on yours; always +3 SOUL on the price. Traps, always: God's name x1.5, offering your soul x1.3,
+   please x1.1. Three or more helping families at once: all of them are caught (trickConfession). Every number of the
+   price is scaled (SOUL, SIN, rounds, BOSS SOUL %), in all between x0.4 and x3. The words are taken out before he
+   reads the request (not the holy ones, which name SEALS too). The book: codexNoteResponses / codexNoteTrick. */
 
 const SATAN_DEAL_LINES = {
   // first time you open the deal in a run
@@ -22412,7 +22469,28 @@ const SATAN_DEAL_LINES = {
   // after YES
   signed: [["satan", "Pleasure doing business with you."]],
   // after NO: the chance is gone for this run
-  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]]
+  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]],
+
+  // TRICKS (SATAN_TRICKS below): said before his offer. Win = the trick worked, Lose = he caught you.
+  // {N} in the blood lines is the SOUL the blood adds to the price.
+  // {WORD} is the trick's words as you typed them, with a capital letter
+  trickSilverWin: [["satan", "\"{WORD}\"... nobody has called me that since the fall. Fine. A discount, for the poet."]],
+  trickSilverLose: [["satan", "Flattery? From a worm? That's going on your bill."]],
+  trickClerkWin: [["satan", "Hereby, herewith... somebody read the fine print. I'll strike a clause, counsellor."]],
+  trickClerkWinSmall: [["satan", "Hereby, herewith... somebody read the fine print. There's only the one clause, counsellor, so I'll shave a little off it."]],
+  trickClerkLose: [["satan", "Lawyering me? I wrote the law you're quoting. Fees apply."]],
+  trickLatinWin: [["satan", "Ah, the old tongue. Just like the bishops used to beg. Half price, for nostalgia."]],
+  trickLatinLose: [["satan", "Your Latin is an insult to every priest I have ever eaten."]],
+  trickNameWin: [["satan", "...That name. Fine. You get exactly what you asked for, curse you."]],
+  trickNameWinPrice: [["satan", "...That name. Fine, fine, I'll go easy on you, curse you."]],
+  trickNameLose: [["satan", "Mephistopheles was a colleague, not a leash. Nice try."]],
+  trickBlood: [["satan", "In blood? Now you're speaking my language. {N} drops of your SOUL go on the bill, for the ink."]],
+  trickBloodWasted: [["satan", "Blood, for this? I'll gladly take {N} drops of your SOUL, but blood buys favours, not discounts."]],
+  trickHoly: [["satan", "Don't. You. Dare. Not in my house. The price just went up."]],
+  trickSoul: [["satan", "Your soul? Darling, I already own that. Paying me with my own coin costs extra."]],
+  trickPlease: [["satan", "Please? How quaint. Manners are a luxury down here, and luxuries cost extra."]],
+  // three or more tricks in one request: every one of them fails
+  trickConfession: [["satan", "Three tricks in one breath? I was doing this before your god said 'light'. None of it works, and you pay for the attempt."]]
 };
 
 // how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name).
@@ -22766,6 +22844,206 @@ function satanPactParse(text) {
   return { intent: "gibberish" };
 }
 
+/* ---- tricks: words in what you type (rules in the comment at the top of the file) ----
+   words: what he listens for, after satanPactNormalize (lower case, no punctuation, ' dropped). Longer phrases are
+   found first. keep: the words stay in the request (the holy ones also name SEALS). fuzzy: one word close to it. */
+const SATAN_TRICKS = {
+  silver: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.2,
+    words: ["morning star", "son of the morning", "light bringer", "lightbringer", "bringer of light", "my lord", "my king", "my liege", "my master", "dark lord", "dark one", "prince of darkness", "prince of hell", "king of hell", "lord of hell", "lord of the flies", "your majesty", "your highness", "your excellency", "your grace", "your lordship", "master", "great one"]
+  },
+  clerk: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.2, strike: true,
+    words: ["hereby", "herewith", "herein", "hereunder", "heretofore", "whereas", "henceforth", "pursuant", "binding", "legally binding", "witness", "witnessed", "witnesses", "clause", "terms", "terms and conditions", "notarized", "notarised", "notary", "sworn", "under oath", "party of the first part", "in accordance with", "stipulate", "stipulated"]
+  },
+  latin: {
+    help: true, chance: 0.4, win: 0.5, lose: 1.3,
+    words: ["rogo", "te rogo", "peto", "quaeso", "obsecro", "precor", "da mihi", "domine", "dominus", "pactum", "per ignem", "sanguis", "volo"]
+  },
+  name: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.3, loseSealChance: 0.5,
+    words: ["mephistopheles", "mephisto", "mephistophilis", "mephostophiles", "mefistofele", "mefisto"],
+    fuzzy: "mephistopheles",
+    fuzzyStart: /^me(ph|f)/ // any spelling of Faust's devil: Mephistophilis, Mefistofeles...
+  },
+  blood: {
+    help: true, always: true, sealChance: 0.3, eliteWeight: 3, soul: 3,
+    words: ["in blood", "my blood", "in my blood", "with blood", "with my blood", "blood oath", "blood pact", "sign in blood", "signed in blood", "written in blood", "sign it in blood"]
+  },
+  holy: {
+    trap: true, factor: 1.5, keep: true,
+    words: ["god", "gods", "lord god", "jesus", "christ", "holy", "heaven", "heavenly", "amen", "pray", "prayer", "praying", "angel", "angels", "bless", "blessed", "blessing", "hallelujah", "messiah", "lamb of god"]
+  },
+  soul: {
+    trap: true, factor: 1.3,
+    words: ["take my soul", "my soul for", "for my soul", "sell my soul", "sell you my soul", "offer my soul", "offer you my soul", "give you my soul", "trade my soul", "my soul is yours", "have my soul", "in exchange for my soul"]
+  },
+  please: {
+    trap: true, factor: 1.1,
+    words: ["please", "pretty please", "pls", "plz", "i beg you", "i beg", "begging", "thank you", "thanks", "kindly"]
+  }
+};
+const SATAN_TRICK_CONFESSION = 3; // this many helping families in one request: all caught
+const SATAN_TRICK_MIN_FACTOR = 0.4;
+const SATAN_TRICK_MAX_FACTOR = 3;
+const SATAN_TRICK_LINE_NAMES = { silver: "Silver", clerk: "Clerk", latin: "Latin", name: "Name", holy: "Holy", soul: "Soul", please: "Please" };
+
+// which trick families a request holds, the words that did it, and the request without them
+function satanPactHearTricks(text) {
+  let padded = ` ${satanPactNormalize(text)} `;
+  const found = [];
+  const words = {};
+  Object.entries(SATAN_TRICKS).forEach(([id, spec]) => {
+    let hit = null;
+    [...spec.words]
+      .sort((a, b) => b.length - a.length)
+      .forEach((phrase) => {
+        if (!padded.includes(` ${phrase} `)) return;
+        if (!hit) hit = phrase;
+        if (!spec.keep) while (padded.includes(` ${phrase} `)) padded = padded.replace(` ${phrase} `, " ");
+      });
+    if (!hit && spec.fuzzy) {
+      const word = padded
+        .trim()
+        .split(" ")
+        .find((entry) => entry.length >= 6 && (spec.fuzzyStart.test(entry) || satanPactSimilarity(entry, spec.fuzzy) >= 0.75));
+      if (word) {
+        hit = word;
+        padded = padded.replace(` ${word} `, " ");
+      }
+    }
+    if (hit) {
+      found.push(id);
+      words[id] = hit;
+    }
+  });
+  return { found, words, cleaned: padded.replace(/\s+/g, " ").trim() };
+}
+
+// rolls every family found; chanceKind: a SEAL or an ELITE, where he could say no or choose another SEAL
+function satanPactRollTricks(heard, chanceKind) {
+  const helping = heard.found.filter((id) => SATAN_TRICKS[id].help);
+  const confession = helping.length >= SATAN_TRICK_CONFESSION;
+  const t = { found: heard.found, words: heard.words, chanceKind, confession, results: [], traps: [], factor: 1, strike: false, grant: false, sealAdd: 0, sealMul: 1, eliteWeight: 1, soul: 0 };
+  helping.forEach((id) => {
+    const spec = SATAN_TRICKS[id];
+    const ok = !confession && (spec.always || Math.random() < spec.chance);
+    t.results.push({ id, ok });
+    if (id === "blood") {
+      t.soul += spec.soul;
+      if (ok && chanceKind) {
+        t.sealAdd += spec.sealChance;
+        t.eliteWeight *= spec.eliteWeight;
+      }
+      return;
+    }
+    if (!ok) {
+      t.factor *= spec.lose;
+      if (spec.loseSealChance) t.sealMul *= spec.loseSealChance;
+    } else if (id === "name" && chanceKind) t.grant = true;
+    else if (spec.strike) t.strike = true;
+    else t.factor *= spec.win;
+  });
+  heard.found
+    .filter((id) => SATAN_TRICKS[id].trap)
+    .forEach((id) => {
+      t.traps.push(id);
+      t.factor *= SATAN_TRICKS[id].factor;
+    });
+  return t;
+}
+
+// one part of a price with every number scaled (rounds keep their first round)
+function satanPactScalePart(part, factor) {
+  const scale = (value) => Math.max(1, Math.round(value * factor));
+  switch (part.type) {
+    case "hp":
+    case "sin":
+      return { ...part, n: scale(part.n) };
+    case "bossHealth":
+      return { ...part, pct: scale(part.pct) };
+    case "useCap":
+    case "shopClosed": {
+      const rounds = scale(part.rounds);
+      return { ...part, rounds, to: part.from + rounds - 1 };
+    }
+    case "damageTaken": {
+      const rounds = scale(part.rounds);
+      return { ...part, pct: scale(part.pct), rounds, to: part.from + rounds - 1 };
+    }
+    default:
+      return { ...part };
+  }
+}
+
+// what he says about the tricks (before his offer, or before a SEAL he turns down)
+function satanPactTrickReactions(t, info = {}, refusal = false) {
+  const word = (id) => {
+    const typed = String(t.words[id] || "");
+    return typed.charAt(0).toUpperCase() + typed.slice(1);
+  };
+  const say = (key, vars = {}) => (SATAN_DEAL_LINES[key] || []).map(([who, text]) => [who, satanPactFill(text, vars)]);
+  const lines = [];
+  if (t.confession) lines.push(...say("trickConfession"));
+  else {
+    t.results.forEach(({ id, ok }) => {
+      if (refusal) {
+        if (id === "name" && !ok) lines.push(...say("trickNameLose"));
+        return;
+      }
+      if (id === "blood") lines.push(...say(t.chanceKind ? "trickBlood" : "trickBloodWasted", { N: info.soul ?? SATAN_TRICKS.blood.soul }));
+      else if (!ok) lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}Lose`, { WORD: word(id) }));
+      else if (id === "name") lines.push(...say(t.chanceKind ? "trickNameWin" : "trickNameWinPrice", { WORD: word(id) }));
+      else if (id === "clerk") lines.push(...say(info.struck ? "trickClerkWin" : "trickClerkWinSmall", { WORD: word(id) }));
+      else lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}Win`, { WORD: word(id) }));
+    });
+  }
+  if (!refusal) t.traps.forEach((id) => lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}`, { WORD: word(id) })));
+  return lines;
+}
+
+// an answer after the tricks: its price changed, his reactions in front, and the tricks that worked (for the book)
+function satanPactApplyTricks(answer, t) {
+  if (!t || !t.found.length || !answer) return answer;
+  if (answer.refuse) {
+    if (answer.refuse === "sealRefused") answer.reactions = satanPactTrickReactions(t, {}, true);
+    return answer;
+  }
+  if (!answer.price.length) return answer; // free deals: his own SEAL, cheat death
+  let price = answer.price.map((part) => ({ ...part }));
+  let factor = t.factor;
+  let struck = false;
+  if (t.strike) {
+    if (price.length > 1) {
+      price.splice(Math.floor(Math.random() * price.length), 1);
+      struck = true;
+    } else factor *= SATAN_TRICKS.clerk.win;
+  }
+  factor = Math.min(SATAN_TRICK_MAX_FACTOR, Math.max(SATAN_TRICK_MIN_FACTOR, factor));
+  if (Math.abs(factor - 1) > 1e-9) price = price.map((part) => satanPactScalePart(part, factor));
+  // a SOUL price never kills, a SIN price never asks for more than you hold
+  const soulRoom = Math.max(0, Math.ceil(state.player.hp) - 1);
+  const sinHeld = Math.max(0, Math.ceil(state.player.credits || 0));
+  price.forEach((part) => {
+    if (part.type === "hp") part.n = Math.min(part.n, soulRoom);
+    if (part.type === "sin") part.n = Math.min(part.n, sinHeld);
+  });
+  let soul = 0;
+  if (t.soul > 0) {
+    let hp = price.find((part) => part.type === "hp");
+    if (!hp) {
+      hp = { type: "hp", n: 0 };
+      price.push(hp);
+    }
+    soul = Math.max(0, Math.min(t.soul, soulRoom - hp.n));
+    hp.n += soul;
+  }
+  answer.price = price.filter((part) => !((part.type === "hp" || part.type === "sin") && part.n < 1));
+  answer.reactions = satanPactTrickReactions(t, { struck, soul });
+  answer.trickWins = t.confession ? [] : t.results.filter((result) => result.ok).map((result) => ({ id: result.id, word: t.words[result.id] }));
+  return answer;
+}
+
 /* ---- prices ---- */
 function satanPactFill(text, vars = {}) {
   return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
@@ -22862,7 +23140,7 @@ function satanPactArtifactOffer(id, askedCount) {
   return { gain: { type: "artifact", id, count }, price, lines, vars, request: count === 1 ? item.name : `${count}x ${item.name}` };
 }
 
-function satanPactEliteOffer(sealId) {
+function satanPactEliteOffer(sealId, tricks = null) {
   if (!satanPactAllSlotsOpen()) return { refuse: "tooEarly" };
   if (!sealId) return { refuse: "eliteWhich" };
   const owned = satanPactOwnedSeals();
@@ -22870,7 +23148,7 @@ function satanPactEliteOffer(sealId) {
   if (!requested) return { refuse: "eliteNotOwned" };
   if (isNonUpgradableSeal(sealId)) return { refuse: "eliteCannot", vars: { SEAL: ITEMS[sealId].name } };
   const pool = owned.filter((item) => !isNonUpgradableSeal(item.id));
-  const weights = pool.map((item) => (item === requested ? 4 : 1));
+  const weights = pool.map((item) => (item === requested ? 4 * (tricks?.eliteWeight || 1) : 1));
   let roll = Math.random() * weights.reduce((sum, weight) => sum + weight, 0);
   let target = pool[pool.length - 1];
   for (let i = 0; i < pool.length; i += 1) {
@@ -22880,6 +23158,7 @@ function satanPactEliteOffer(sealId) {
       break;
     }
   }
+  if (tricks?.grant) target = requested; // The Name: what you asked for, not what he prefers
   const factor = satanPactBuildFactor(target.id, owned);
   const vars = { SEAL: ITEMS[sealId].name, OTHER: ITEMS[target.id].name };
   if (target === requested) {
@@ -22897,7 +23176,7 @@ function satanPactEliteOffer(sealId) {
   };
 }
 
-function satanPactSealOffer(id) {
+function satanPactSealOffer(id, tricks = null) {
   const section = satanPactSealSection(id);
   if (SELF_STACKING_SEAL_IDS.has(id) || section === "archangel") return { refuse: "angel" };
   if (section === "trinity") return { refuse: "trinity" };
@@ -22917,7 +23196,8 @@ function satanPactSealOffer(id) {
   const lose = satanPactRandomSealToLose();
   const slotsAfter = ownedSealSlotCount() - (lose ? sealSlotCost(lose) : 0) + sealSlotCost(id);
   if (slotsAfter > passiveLimit()) return { refuse: "noRoomSeal", vars };
-  const acceptChance = demon && isDemonSlain(demon.key) ? SATAN_DEAL_SEAL_ACCEPT_SLAIN : SATAN_DEAL_SEAL_ACCEPT;
+  let acceptChance = demon && isDemonSlain(demon.key) ? SATAN_DEAL_SEAL_ACCEPT_SLAIN : SATAN_DEAL_SEAL_ACCEPT;
+  if (tricks) acceptChance = tricks.grant ? 1 : Math.min(1, (acceptChance + tricks.sealAdd) * tricks.sealMul);
   if (Math.random() >= acceptChance) return { refuse: "sealRefused", vars, lock: true };
   const factor = satanPactBuildFactor(id, owned);
   const price = [];
@@ -23021,16 +23301,22 @@ function satanPactCheatDeathOffer() {
   return { gain: { type: "cheatDeath" }, price: [], lines: SATAN_DEAL_LINES.cheatDeath, vars: {}, request: "a second life" };
 }
 
-// what Satan answers to a request: { refuse, vars, lock } or an offer
+// what Satan answers to a request: { refuse, vars, lock } or an offer; tricks change it (satanPactApplyTricks)
 function satanPactAnswer(text) {
-  const asked = satanPactParse(text);
+  const heard = satanPactHearTricks(text);
+  const asked = satanPactParse(heard.found.length ? heard.cleaned : text);
+  const tricks = heard.found.length ? satanPactRollTricks(heard, asked.intent === "seal" || asked.intent === "elite") : null;
+  return satanPactApplyTricks(satanPactAnswerFor(asked, text, tricks), tricks);
+}
+
+function satanPactAnswerFor(asked, text, tricks) {
   switch (asked.intent) {
     case "artifact":
       return satanPactArtifactOffer(asked.id, asked.count);
     case "elite":
-      return satanPactEliteOffer(asked.sealId);
+      return satanPactEliteOffer(asked.sealId, tricks);
     case "seal":
-      return satanPactSealOffer(asked.id);
+      return satanPactSealOffer(asked.id, tricks);
     case "satanSeal":
       return satanPactSatanSealOffer();
     case "heal":
@@ -23064,11 +23350,13 @@ function satanPactLineKey(lines) {
 // the lines Satan says for an answer (offers end with the question)
 function satanPactAnswerLines(answer) {
   const vars = { ...(answer.vars || {}) };
+  // his reactions to your tricks come first (already filled in)
+  const reactions = answer.reactions || [];
   if (answer.refuse) {
-    return (SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
+    return [...reactions, ...(SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   }
   vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
-  const lines = answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
+  const lines = [...reactions, ...answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   // the question goes on the same line as the price, so YES / NO sit right under it
   const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
   const last = lines[lines.length - 1];
@@ -23205,6 +23493,7 @@ function satanPactSign() {
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
   // the "sign a deal" mission
   if (typeof missionsNoteDeal === "function") missionsNoteDeal();
+  codexNoteResponses(["signed"], false);
   return true;
 }
 
@@ -23215,12 +23504,24 @@ function satanPactRefuse() {
   pact.outcome = "refused";
   pact.offer = null;
   addLog("You refused Satan's deal. He shall not offer a deal again this run.");
+  codexNoteResponses(["refused"], true);
+}
+
+// the Faustian Codex (09-codex.js): the first time he turns you away it drops; every new kind of answer tears in a
+// page (his reactions to tricks don't count); a trick that worked writes its words in the margin
+function satanPactNoteCodex(answer) {
+  const keys = answer.refuse
+    ? [answer.refuse]
+    : Object.keys(SATAN_DEAL_LINES).filter((key) => Array.isArray(SATAN_DEAL_LINES[key]) && answer.lines.some((line) => SATAN_DEAL_LINES[key].includes(line)));
+  codexNoteResponses(keys, Boolean(answer.refuse));
+  (answer.trickWins || []).forEach((win) => codexNoteTrick(win.id, win.word));
 }
 
 // a request: an offer waits for YES / NO; a refusal maybe locks the deal; returns the lines to say
 function satanPactRequest(text) {
   const pact = satanPact();
   const answer = satanPactAnswer(text);
+  satanPactNoteCodex(answer);
   if (!answer.refuse) {
     pact.offer = { gain: answer.gain, price: answer.price, request: answer.request, lines: satanPactAnswerLines(answer) };
     return { lines: pact.offer.lines, next: "offer" };
@@ -23462,6 +23763,392 @@ function dealContractSvg() {
   }
   return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }
+/* ---------- The Faustian Codex: Satan's deal, written down by those who lost ----------
+   A book kept between runs (in the collection storage, progress.codex). It drops the first time Satan turns you
+   away in a real arcade run: any refusal of his (gibberish, things he never gives, a SEAL he won't hand over) or
+   your NO to his price. Then the Collection gets a fourth tab, "Codex", holding the cover and chapter I
+   (CODEX_FIRST_PAGES). Every new kind of answer you get from him after that (an offer of a kind you never had, a
+   refusal you never heard, signing, refusing; his reactions to tricks don't count) tears in the next page, in the
+   order of CODEX_PAGES, so the pages on tricks come last. Answers heard before you own the book don't count later.
+   Marginalia: the first time a trick works for you, the words you used are scribbled beside its verse (white); the
+   red scribbles are the previous owner's (note). The tricks themselves are in 09-satan-pact.js (SATAN_TRICKS): they
+   work whether you own the book or not; the book only hints at them.
+
+   WHAT IT SAYS: CODEX_PAGES. Edit freely; pages are found in this order. In a paragraph, *words* are written in the
+   red of the rubrics. A verse { trick, title, text } is where that trick's marginalia goes.
+   Testing: Pause > DEV > Whole Codex (devWholeCodex in the collection storage) shows every page until turned off. */
+
+const CODEX_PAGES = [
+  {
+    kind: "cover",
+    title: "The Faustian Codex",
+    text: "being a true and terrible account of how one bargains with the Adversary, set down by those who bargained and lost, for those who will.",
+    small: "found in the ashes where your deal burned",
+    note: "he will say he wrote none of this. he is lying. he wrote the cover."
+  },
+  {
+    title: "I. Of the Calling",
+    paras: [
+      "There is a parchment that waits at the edge of every life, just beneath the place where you would rest. Touch it and He comes.",
+      "He comes to the fat and the starving alike, but the starving He hears sooner. When your SOUL runs thin the parchment warms, and smoulders, and calls.",
+      "He will hear you once in each life. Not twice. *Never twice.*",
+      "Say what you want plainly. He has no patience for the riddles of the living, only for His own. If He does not understand you He laughs, and the laugh is free. If He names a price and you refuse it, the door is shut until you die again.",
+      "Should He deny you a servant of His, do not plead. Go and kill something crowned. His moods follow the blood of BOSSES."
+    ]
+  },
+  {
+    title: "II. Of What May Be Asked",
+    paras: [
+      "*Whatever the hand can carry.* Name the instrument and He fetches it, up to four of a kind if your hands have room. Ask for five and He calls you greedy.",
+      "*A breath of SOUL,* never more than the fingers of one hand.",
+      "*The red coin,* as much as you like. Past a score of it, He takes the difference out of you.",
+      "*The end of another at your table,* so long as it wears no crown.",
+      "*More hands in a single round.* Two more at the most.",
+      "*A second waking,* for the day you fall. The price of that one is named at the graveside, never before."
+    ]
+  },
+  {
+    title: "II. (continued)",
+    paras: [
+      "*A sigil you bear, burning brighter.* He decides which. He usually decides yours.",
+      "*A demon of the seventy-two, on a leash,* but only when every chamber of your seals stands open, and only if the demon consents. Those you have already put down are more willing. Those still hunting you are, as He says, busy.",
+      "*His tokens,* for the gambler's machine, once He has errands for you.",
+      "*His own sigil,* for nothing at all, to one who stands before Him with every chamber open and every chamber empty."
+    ]
+  },
+  {
+    title: "III. Of What He Will Not Give",
+    paras: [
+      "Feathers. They were never His.",
+      "The seals the Lamb breaks. The Old Man's toys upstairs. The pentacles Solomon used to chain His own.",
+      "Anything the Nazarene hands out on the other side of the table.",
+      "Ask if you must. Asking costs only breath, and breath is the one thing down here that is still free."
+    ]
+  },
+  {
+    title: "IV. Of the Price",
+    paras: [
+      "Every price He names is a coin with two faces, and the faces change each time you look: your SOUL, your SIN, the shutters on His Offerings, the strength of the next crowned thing that comes for you.",
+      "He trims nothing for pity. Pity is not in His stock.",
+      "Wear many sigils of one craft and ask for another of it, and you pay half again. He knows what you are building. He is not building it for you.",
+      "A price in SOUL will never kill you. He prefers His debtors breathing."
+    ]
+  },
+  {
+    title: "V. Of Deceiving the Deceiver",
+    paras: [
+      "He is old, and proud, and bored. All three can be used. None of them can be trusted.",
+      { trick: "silver", title: "The Silver Tongue", text: "He fell from very high and has never stopped thinking about it. Call Him by the light He carried before the fall, or by the crown He wears now, and His bill grows lighter. Grovel too low and He smells it." },
+      { trick: "clerk", title: "The Clerk's Tongue", text: "He was a lawyer long before He was a fiend. Word your wish the way notaries do, dry and binding and witnessed, and sometimes a whole clause falls out of the price." },
+      { trick: "latin", title: "The Stolen Tongue", text: "The Church's old language was His before they took it. Ask in it, and He remembers being begged by bishops." }
+    ]
+  },
+  {
+    title: "V. (continued)",
+    paras: [
+      { trick: "name", title: "The Name", text: "A name is a leash, and He has worn many. The one the Doctor used is the tightest. Speak it, and He must give you what you asked for, not what He would prefer. But a leash pulls both ways." },
+      { trick: "blood", title: "The Ink", text: "Ink fades. Promise to sign in what runs through your veins and He will believe you, every time. Belief is not free, and it buys nothing He was going to give you anyway." }
+    ],
+    note: "the doctor = ? ask the old man in the 3rd circle"
+  },
+  {
+    title: "VI. Of What Must Never Be Said",
+    paras: [
+      "Never let the Name of the Other cross your lips in His presence, nor His Son's, nor any word you learned in church. The price climbs before you finish the sentence.",
+      "Do not offer Him your soul. He laughs at paupers who try to pay Him in His own coin.",
+      "Do not say please. Courtesy is the currency of the living. Down here it is counterfeit.",
+      "And never use too many tricks at once. One sweet word opens a lock. *Three is a confession.*"
+    ]
+  },
+  {
+    kind: "fragment",
+    title: "The last page",
+    paras: [
+      "…the one who owned this book before you signed in blood, in the old tongue, by the Doctor's name, with a courtier's bow and a notary's care.",
+      "*He is still paying.*"
+    ],
+    small: "(the rest of the page is burnt away)"
+  }
+];
+
+const CODEX_FIRST_PAGES = 2; // the cover and chapter I come with the book
+const CODEX_TORN_TEXT = "This page has not been found yet.";
+
+// the book's mark (toasts): a closed book with an inverted cross, drawn in the text colour
+const CODEX_MARK = `<svg class="codex-mark" viewBox="0 0 30 34" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 3 H24 V31 H6 C4 31 3 30 3 28 V5 C3 4 3.5 3 4 3 Z"/><path d="M7 3 V31"/><path d="M15 9 V22 M11 18 H19"/><path d="M24 31 L27 33 V5 L24 3"/></g></svg>`;
+
+/* ---- the book's state (lifetime) ---- */
+function codexFresh() {
+  return { owned: false, pages: 0, read: 0, seen: [], margins: {} };
+}
+
+// a saved book, cleaned (loadCollectionProgress)
+function normalizeCodex(saved) {
+  const codex = codexFresh();
+  if (!saved || typeof saved !== "object") return codex;
+  codex.owned = saved.owned === true;
+  codex.pages = Math.max(0, Math.min(CODEX_PAGES.length, Math.floor(Number(saved.pages) || 0)));
+  codex.read = Math.max(0, Math.min(CODEX_PAGES.length, Math.floor(Number(saved.read) || 0)));
+  if (Array.isArray(saved.seen)) codex.seen = saved.seen.filter((key) => typeof key === "string").slice(0, 200);
+  if (saved.margins && typeof saved.margins === "object") {
+    Object.entries(saved.margins).forEach(([id, word]) => {
+      if (typeof word === "string" && word) codex.margins[id] = word.slice(0, 40);
+    });
+  }
+  return codex;
+}
+
+function codexState() {
+  const progress = loadCollectionProgress();
+  if (!progress.codex || typeof progress.codex !== "object") progress.codex = codexFresh();
+  return progress.codex;
+}
+
+function codexDevWhole() {
+  return loadCollectionProgress().devWholeCodex === true;
+}
+
+function toggleDevWholeCodex() {
+  const progress = loadCollectionProgress();
+  progress.devWholeCodex = !progress.devWholeCodex;
+  saveCollectionProgress();
+  return progress.devWholeCodex;
+}
+
+function codexOwned() {
+  return codexDevWhole() || codexState().owned;
+}
+
+function codexPagesFound() {
+  return codexDevWhole() ? CODEX_PAGES.length : Math.min(CODEX_PAGES.length, codexState().owned ? codexState().pages : 0);
+}
+
+function codexHasUnread() {
+  return !codexDevWhole() && codexState().owned && codexPagesFound() > (codexState().read || 0);
+}
+
+function codexPageTitle(index) {
+  const page = CODEX_PAGES[index];
+  return page?.title || "";
+}
+
+/* ---- what Satan's deal tells the book (09-satan-pact.js) ---- */
+// keys: the kinds of answer he just gave (SATAN_DEAL_LINES keys); turnedAway: he refused you or you said NO
+function codexNoteResponses(keys, turnedAway) {
+  if (!collectionCounts()) return;
+  const codex = codexState();
+  const fresh = (keys || []).filter((key) => typeof key === "string" && key && !codex.seen.includes(key));
+  fresh.forEach((key) => codex.seen.push(key));
+  if (!codex.owned) {
+    if (turnedAway) codexObtain();
+  } else {
+    fresh.forEach(() => codexTearPage());
+  }
+  saveCollectionProgress();
+}
+
+function codexObtain() {
+  const codex = codexState();
+  if (codex.owned) return;
+  codex.owned = true;
+  codex.pages = Math.max(codex.pages, CODEX_FIRST_PAGES);
+  addLog("Something was left in the ashes: the Faustian Codex. It is in your Collection.");
+  collectionToastQueue.push({ kind: "codex", first: true });
+  showNextCollectionToast();
+}
+
+function codexTearPage() {
+  const codex = codexState();
+  if (codex.pages >= CODEX_PAGES.length) return;
+  codex.pages += 1;
+  const title = codexPageTitle(codex.pages - 1);
+  addLog(`A page of the Faustian Codex: ${title}.`);
+  collectionToastQueue.push({ kind: "codex", title });
+  showNextCollectionToast();
+}
+
+// a trick worked for the first time: its words go in the margin (kept even before the book is found)
+function codexNoteTrick(id, word) {
+  if (!collectionCounts() || !id || !word) return;
+  const codex = codexState();
+  if (codex.margins[id]) return;
+  codex.margins[id] = String(word).slice(0, 40);
+  saveCollectionProgress();
+}
+
+/* ---- the Codex tab in the Collection (09-collection.js) ---- */
+let codexPageIndex = 0; // the first page of the spread on show
+
+// two pages side by side on a wide screen, one on the phone
+function codexPerView() {
+  if (typeof window === "undefined" || typeof document === "undefined" || !document.body) return 2;
+  const phone = document.body.classList.contains("native-arcade") || document.body.classList.contains("mobile-arcade");
+  return !phone && window.innerWidth >= 900 ? 2 : 1;
+}
+
+function codexAlign(index, per = codexPerView()) {
+  const clamped = Math.max(0, Math.min(CODEX_PAGES.length - 1, index));
+  return clamped - (clamped % per);
+}
+
+// the Codex tab opens on the first page you haven't read yet
+function codexOpenAtUnread() {
+  const read = codexDevWhole() ? 0 : codexState().read || 0;
+  codexPageIndex = codexAlign(codexHasUnread() ? read : codexPageIndex);
+}
+
+function codexMarkRead() {
+  if (codexDevWhole() || !codexState().owned) return;
+  const codex = codexState();
+  const shown = Math.min(codexPagesFound(), codexPageIndex + codexPerView());
+  if (shown > (codex.read || 0)) {
+    codex.read = shown;
+    saveCollectionProgress();
+  }
+}
+
+function codexRich(text) {
+  return escapeHtml(text).replace(/\*(.+?)\*/g, '<span class="codex-rub">$1</span>');
+}
+
+function codexRoman(n) {
+  const table = [[10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let out = "";
+  let left = n;
+  table.forEach(([value, mark]) => {
+    while (left >= value) {
+      out += mark;
+      left -= value;
+    }
+  });
+  return out;
+}
+
+function codexLeafHtml(index) {
+  const page = CODEX_PAGES[index];
+  if (!page) return `<article class="codex-leaf codex-empty" aria-hidden="true"></article>`;
+  const folio = index === 0 ? "" : `<span class="codex-folio-num">${codexRoman(index + 1)}</span>`;
+  if (index >= codexPagesFound()) {
+    return `<article class="codex-leaf codex-torn"><div class="codex-scrap" aria-hidden="true"></div><p class="codex-torn-text">${escapeHtml(CODEX_TORN_TEXT)}</p>${folio}</article>`;
+  }
+  const note = page.note ? `<p class="codex-note">${escapeHtml(page.note)}</p>` : "";
+  if (page.kind === "cover") {
+    return `
+      <article class="codex-leaf codex-cover">
+        <svg class="codex-sigil" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="60" cy="60" r="54"/><circle cx="60" cy="60" r="46" stroke-width="1" opacity="0.6"/>
+          <path d="M60 14 V106 M38 30 H82 M60 106 l-12 -10 M60 106 l12 -10"/>
+          <path d="M38 30 c-6 -10 -2 -18 6 -18 M82 30 c6 -10 2 -18 -6 -18"/>
+          <path d="M30 70 Q60 50 90 70" opacity="0.8"/><circle cx="60" cy="70" r="6"/>
+          <path d="M24 46 l8 4 M96 46 l-8 4 M28 86 l7 -3 M92 86 l-7 -3" opacity="0.7"/></g></svg>
+        <h3 class="codex-cover-title">${escapeHtml(page.title)}</h3>
+        <p class="codex-cover-text">${escapeHtml(page.text)}</p>
+        <p class="codex-small">${escapeHtml(page.small)}</p>
+        ${note}
+      </article>`;
+  }
+  const margins = codexState().margins || {};
+  const paras = (page.paras || [])
+    .map((para) => {
+      if (typeof para === "string") return `<p class="codex-p">${codexRich(para)}</p>`;
+      const word = margins[para.trick];
+      const scribble = word ? `<span class="codex-scribble">“${escapeHtml(word)}” ✓</span>` : "";
+      return `<div class="codex-verse">${scribble}<h4 class="codex-verse-title">${escapeHtml(para.title)}</h4><p class="codex-p">${codexRich(para.text)}</p></div>`;
+    })
+    .join("");
+  const small = page.small ? `<p class="codex-small">${escapeHtml(page.small)}</p>` : "";
+  if (page.kind === "fragment") {
+    return `<article class="codex-leaf codex-fragment"><div class="codex-fragment-text">${paras}${small}</div>${folio}</article>`;
+  }
+  return `<article class="codex-leaf"><h3 class="codex-title">${escapeHtml(page.title)}</h3><div class="codex-text">${paras}</div>${note}${folio}</article>`;
+}
+
+function codexBookHtml() {
+  const per = codexPerView();
+  codexPageIndex = codexAlign(codexPageIndex, per);
+  const last = Math.min(CODEX_PAGES.length, codexPageIndex + per);
+  const folio = per === 2 && last - codexPageIndex === 2 ? `${codexPageIndex + 1}–${last}` : `${codexPageIndex + 1}`;
+  const leaves = [];
+  for (let i = codexPageIndex; i < codexPageIndex + per; i += 1) leaves.push(codexLeafHtml(i));
+  return `
+    <div class="codex-book" style="--codex-per: ${per}">
+      <div class="codex-spread">${leaves.join("")}</div>
+      <nav class="codex-nav" aria-label="Pages">
+        <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>Previous</button>
+        <span class="codex-folio">${per === 2 ? "pages" : "page"} ${folio} of ${CODEX_PAGES.length}</span>
+        <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>Next</button>
+      </nav>
+    </div>`;
+}
+
+// the panel's legend row: the KARMA counter as on every tab, and the DEV switch
+function codexLegendHtml() {
+  const on = codexDevWhole();
+  return `
+    <div class="collection-legend codex-legend">
+      ${collectionKarmaLine()}
+      <button type="button" class="collection-dev-button${on ? " active" : ""}" data-collection-dev-codex data-tooltip="Testing: every page of the Codex shows, found or not">${on ? "DEV: whole Codex" : "DEV: found pages"}</button>
+    </div>`;
+}
+
+function codexCountsHtml() {
+  return `<span><strong>${codexPagesFound()}</strong> / ${CODEX_PAGES.length} pages</span>`;
+}
+
+// turns the pages in place (no full render, so the screen doesn't play its entrance again)
+function codexTurn(screen, dir) {
+  const per = codexPerView();
+  const next = codexAlign(codexPageIndex + dir * per, per);
+  if (next === codexPageIndex) return;
+  codexPageIndex = next;
+  codexRefresh(screen);
+  playGameSfx("codexPage");
+}
+
+function codexRefresh(screen) {
+  const body = screen?.querySelector('[data-collection-panel="codex"] .collection-body');
+  if (body) {
+    body.innerHTML = codexBookHtml();
+    body.scrollTop = 0;
+  }
+  codexMarkRead();
+  const tab = screen?.querySelector('[data-collection-tab="codex"]');
+  if (tab) tab.classList.toggle("has-new", codexHasUnread());
+  bindCodexEvents(screen);
+}
+
+function bindCodexEvents(screen) {
+  const panel = screen?.querySelector('[data-collection-panel="codex"]');
+  if (!panel) return;
+  bindOn(panel, "click", (event) => {
+    const turn = event.target.closest?.("[data-codex-turn]");
+    if (turn && !turn.disabled) {
+      event.stopPropagation();
+      codexTurn(screen, Number(turn.dataset.codexTurn) || 1);
+      return;
+    }
+    const dev = event.target.closest?.("[data-collection-dev-codex]");
+    if (dev) {
+      event.stopPropagation();
+      const on = toggleDevWholeCodex();
+      dev.classList.toggle("active", on);
+      dev.textContent = on ? "DEV: whole Codex" : "DEV: found pages";
+      const count = screen.querySelector('[data-collection-for="codex"] strong');
+      if (count) count.textContent = String(codexPagesFound());
+      codexRefresh(screen);
+    }
+  });
+}
+
+// ← → turn the pages while the Codex tab is open
+document.addEventListener("keydown", (event) => {
+  if (!["ArrowLeft", "ArrowRight"].includes(event.key) || typeof collectionOpen !== "function" || !collectionOpen()) return;
+  if (collectionTab !== "codex" || event.target?.closest?.("input, textarea")) return;
+  const screen = document.querySelector(".collection-screen");
+  if (!screen) return;
+  event.preventDefault();
+  codexTurn(screen, event.key === "ArrowRight" ? 1 : -1);
+});
 /* ---------- Missions and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished

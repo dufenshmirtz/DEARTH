@@ -1187,6 +1187,10 @@ function renderSelfStackingDevPanel() {
       <div class="dev-summon-row">
         <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and the missions now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
       </div>
+      <h2>Faustian Codex (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${codexDevWhole() ? " active" : ""}" data-pause-action="codex-whole" data-tooltip="${codexDevWhole() ? "On: the Codex tab shows every page. Click to go back to the pages really found" : "Show the Codex tab in the Collection with every page, found or not (kept on this device until turned off)"}">Whole Codex${codexDevWhole() ? ": on" : ""}</button>
+      </div>
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
@@ -3135,6 +3139,12 @@ function handlePauseAction(action) {
     // testing only: locked SEALS can be offered for the rest of this run (nothing is saved to the collection)
     state.devUnlockAllSeals = true;
     addLog("Testing: all SEALS unlocked for this run.");
+    render();
+    return;
+  }
+  if (action === "codex-whole") {
+    // testing: the Codex tab with every page (the real pages found are kept for when it is off)
+    addLog(toggleDevWholeCodex() ? "Testing: the whole Faustian Codex shows in the Collection." : "Testing: the Codex shows only the pages really found.");
     render();
     return;
   }

@@ -430,6 +430,10 @@ function defaultCollectionProgress() {
     devAllDemons: false,
     // testing only (DEV button on Jesus' Gifts): KARMA never runs out while it is on
     devInfiniteKarma: false,
+    // the Faustian Codex (09-codex.js): found or not, its pages, the answers heard, the margins
+    codex: codexFresh(),
+    // testing only (Pause > DEV > Whole Codex, or the Codex tab's DEV button): every page shows
+    devWholeCodex: false,
     // KARMA, the currency kept between runs (see the KARMA section at the end of this file)
     karma: 0,
     stats: Object.fromEntries(Object.keys(COLLECTION_STAT_LABELS).map((key) => [key, 0])),
@@ -452,6 +456,8 @@ function loadCollectionProgress() {
       if (Array.isArray(saved.slain)) progress.slain = saved.slain.filter((key) => typeof key === "string" && GOETIC_BOSS_BY_KEY[key]);
       progress.devAllDemons = saved.devAllDemons === true;
       progress.devInfiniteKarma = saved.devInfiniteKarma === true;
+      progress.devWholeCodex = saved.devWholeCodex === true;
+      progress.codex = normalizeCodex(saved.codex);
       if (Array.isArray(saved.archangels)) progress.archangels = saved.archangels.filter((key) => typeof key === "string" && ARCHANGEL_BY_KEY[key]);
       if (typeof saved.boundDemon === "string" && (GOETIC_BOSS_BY_KEY[saved.boundDemon] || ARCHANGEL_BY_KEY[saved.boundDemon])) progress.boundDemon = saved.boundDemon;
       if (saved.flags && typeof saved.flags === "object") progress.flags = { ...saved.flags };
@@ -1084,7 +1090,8 @@ function collectionDemonBindHtml(key, seal, pinned) {
 
 // switches tabs in place, so the screen does not replay its entrance
 function applyCollectionTab(screen, tab) {
-  collectionTab = ["goetia", "angels"].includes(tab) ? tab : "seals";
+  collectionTab = ["goetia", "angels"].includes(tab) || (tab === "codex" && codexOwned()) ? tab : "seals";
+  if (collectionTab === "codex") codexOpenAtUnread();
   if (!screen) return;
   screen.querySelectorAll("[data-collection-tab]").forEach((button) => {
     const active = button.dataset.collectionTab === collectionTab;
@@ -1096,6 +1103,7 @@ function applyCollectionTab(screen, tab) {
   });
   screen.querySelectorAll(COLLECTION_SELECTED).forEach((el) => el.classList.remove("selected"));
   hideCollectionInfo(screen);
+  if (collectionTab === "codex") codexRefresh(screen);
 }
 
 const COLLECTION_SELECTED = ".collection-seal.selected, .collection-demon.selected";
@@ -1160,7 +1168,14 @@ function showNextCollectionToast() {
   toast.setAttribute("role", "status");
   // a KARMA drop ({ kind: "karma" }) or a SEAL whose achievement was met (its id)
   const item = id && typeof id === "object" ? id : null;
-  toast.innerHTML = item?.kind === "karma"
+  toast.innerHTML = item?.kind === "codex"
+    ? `
+    <span class="collection-toast-codex" aria-hidden="true">${CODEX_MARK}</span>
+    <span class="collection-toast-text">
+      <span class="collection-toast-kicker">${item.first ? "Something was left in the ashes" : "A page of the Codex"}</span>
+      <span class="collection-toast-name">${escapeHtml(item.first ? "The Faustian Codex" : item.title || "")}</span>
+    </span>`
+    : item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
@@ -1174,7 +1189,7 @@ function showNextCollectionToast() {
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
-  playGameSfx(item?.kind === "karma" ? "karmaGain" : "sealUnlock");
+  playGameSfx(item?.kind === "codex" ? (item.first ? "karmaUnlock" : "codexNewPage") : item?.kind === "karma" ? "karmaGain" : "sealUnlock");
   setTimeout(() => {
     toast.classList.add("leaving");
     setTimeout(() => {
@@ -1282,18 +1297,24 @@ function renderCollectionScreen(from) {
   const discovered = all.filter((id) => isSealUnlocked(id) && isSealDiscovered(id)).length;
   const filter = collectionFilter();
   const slain = GOETIC_BOSS_KEYS.filter((key) => isDemonSlain(key)).length;
+  if (collectionTab === "codex" && !codexOwned()) collectionTab = "seals";
   const goetia = collectionTab === "goetia";
   const angels = collectionTab === "angels";
+  const codex = collectionTab === "codex";
+  if (codex) codexOpenAtUnread();
   const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
   const devButton = () =>
     `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
   const tabs = [
     { key: "seals", label: "Seals" },
     { key: "goetia", label: "Ars Goetia" },
-    { key: "angels", label: "Archangels" }
+    { key: "angels", label: "Archangels" },
+    // the Faustian Codex: no tab at all until the book is found (09-codex.js)
+    ...(codexOwned() ? [{ key: "codex", label: "Codex" }] : [])
   ].map((tab) => {
     const active = tab.key === collectionTab;
-    return `<button class="collection-tab${active ? " active" : ""}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
+    const unread = tab.key === "codex" && codexHasUnread() ? " has-new" : "";
+    return `<button class="collection-tab${active ? " active" : ""}${unread}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
   });
   const sections = collectionSections()
     .map(
@@ -1322,7 +1343,7 @@ function renderCollectionScreen(from) {
       <header class="collection-header">
         <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
         <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
-        <div class="collection-counts" data-collection-for="seals"${goetia || angels ? " hidden" : ""}>
+        <div class="collection-counts" data-collection-for="seals"${goetia || angels || codex ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
         </div>
@@ -1334,8 +1355,9 @@ function renderCollectionScreen(from) {
           <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
+        ${codexOwned() ? `<div class="collection-counts" data-collection-for="codex"${codex ? "" : " hidden"}>${codexCountsHtml()}</div>` : ""}
       </header>
-      <div class="collection-panel" data-collection-panel="seals"${goetia || angels ? " hidden" : ""}>
+      <div class="collection-panel" data-collection-panel="seals"${goetia || angels || codex ? " hidden" : ""}>
         ${collectionFiltersHtml(all)}
         <div class="collection-legend">
           ${collectionSearchHtml("seals")}
@@ -1366,6 +1388,14 @@ function renderCollectionScreen(from) {
         </div>
         <div class="collection-body">${collectionArchangelsHtml()}</div>
       </div>
+      ${
+        codexOwned()
+          ? `<div class="collection-panel codex-panel" data-collection-panel="codex"${codex ? "" : " hidden"}>
+        ${codexLegendHtml()}
+        <div class="collection-body codex-body">${codexBookHtml()}</div>
+      </div>`
+          : ""
+      }
       <div class="collection-info" aria-live="polite"></div>
     </div>`;
 }
@@ -1515,6 +1545,8 @@ function bindCollectionEvents() {
   });
   const screen = document.querySelector(".collection-screen");
   applyCollectionVisibility(screen);
+  bindCodexEvents(screen);
+  if (collectionTab === "codex") codexMarkRead();
   const info = screen?.querySelector(".collection-info");
   if (info) {
     bindOn(info, "click", (event) => {
