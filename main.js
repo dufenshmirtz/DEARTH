@@ -23395,8 +23395,9 @@ function satanDealIntroButtonHtml() {
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
    A sheet with a folded corner, DEAL written on it and an X with a line to sign. Hover: a signature writes itself in
    blood on the line. Signed: the signature stays. Under 25% SOUL while he calls: the folded corner smoulders. The
-   phone app draws the same sheet, smaller, with no button frame. The lines tremble
-   with the outlines setting (three rough filters swapped by CSS, like the frames' boil). */
+   phone app has only a button's height for it, so it gets the same contract drawn as a long strip: folded corner,
+   DEAL on the left, the X, the line and the signature on the right. The lines tremble with the outlines setting
+   (three rough filters swapped by CSS, like the frames' boil). */
 function dealContractSvg() {
   const rough = [3, 11, 19]
     .map(
@@ -23413,6 +23414,18 @@ function dealContractSvg() {
       <path d="M11 49 l8 8 M19 49 l-8 8"/>
     </g>
     <path class="deal-sign" d="M28 56 c4-9 7 3 11-2 s4-7 7-1 5 3 8-3 4-2 7 2 5 1 8-3 4 4 7 0 5-4 8 1 4 3 7-1"/>`;
+  if (isNativeArcadeApp()) {
+    const strip = `
+    <path class="deal-burn" d="M163 3 L177 17"/>
+    <g class="deal-ink">
+      <path d="M3 3 H163 L177 17 V37 H3 Z"/>
+      <path d="M163 3 V17 H177"/>
+      <path class="deal-line" d="M120 31 H156"/>
+      <path d="M110 25 l6 6 M116 25 l-6 6"/>
+    </g>
+    <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
+  }
   return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }
 /* ---------- Missions and the slot machine ----------
