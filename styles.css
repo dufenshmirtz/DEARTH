@@ -11332,7 +11332,8 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   margin: 6px 0 0 4px;
 }
 
-/* the TARGET: a big blood-red number, its history beside it */
+/* the TARGET: a big blood-red number on the left, its history spread over the rest of the box
+   (one row of columns; two rows when the box is narrow) */
 #app .arena.pvp-arena .pvp-target {
   position: relative !important;
   inset: auto !important;
@@ -11340,14 +11341,14 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   max-width: none !important;
   height: auto !important;
   margin: 0 !important;
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  justify-content: center;
   align-items: center;
-  column-gap: 54px;
+  column-gap: clamp(20px, 5cqw, 44px);
   min-width: 0;
-  padding: 14px 30px 16px 32px;
+  padding: 10px 26px 12px clamp(24px, 6cqw, 44px);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -11366,53 +11367,99 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   grid-column: 1;
   grid-row: 2;
   justify-self: center;
-  min-width: 1.6em;
+  min-width: 1.4em;
   font-family: var(--font-display);
-  font-size: 84px;
+  font-size: 104px;
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 0.84;
   text-align: center;
   color: var(--blood-bright) !important;
+  text-shadow: 0 0 22px rgba(220, 42, 47, 0.28);
+}
+
+/* no TARGET yet: the "?" hangs below the line, so it sits smaller and higher */
+#app .arena.pvp-arena .pvp-target-number.pvp-target-unknown {
+  font-size: 80px;
+  line-height: 1;
 }
 
 #app .arena.pvp-arena .pvp-target-side {
   grid-column: 2;
   grid-row: 1 / span 2;
-  align-self: center;
+  align-self: stretch;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, max-content));
-  align-content: center;
-  gap: 8px 44px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: center;
   min-width: 0;
+  margin: 4px 0;
+  border-left: 1px solid rgba(233, 227, 214, 0.16);
 }
 
 #app .arena.pvp-arena .pvp-target-line {
   display: grid;
-  gap: 2px;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
   min-width: 0;
+  height: 100%;
   white-space: nowrap;
+}
+
+#app .arena.pvp-arena .pvp-target-line + .pvp-target-line {
+  border-left: 1px solid rgba(233, 227, 214, 0.08);
 }
 
 #app .arena.pvp-arena .pvp-target-line span {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 17px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ash);
+  color: var(--ash) !important;
 }
 
 #app .arena.pvp-arena .pvp-target-line strong {
   font-family: var(--font-display);
-  font-size: 29px;
+  font-size: 46px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 0.9;
   color: var(--bone);
 }
 
+/* a narrow TARGET box: the history goes back to two rows */
+@container (max-width: 470px) {
+  #app .arena.pvp-arena .pvp-target-side {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 6px;
+  }
+  #app .arena.pvp-arena .pvp-target-line {
+    gap: 2px;
+    height: auto;
+  }
+  #app .arena.pvp-arena .pvp-target-line + .pvp-target-line { border-left: 0; }
+  #app .arena.pvp-arena .pvp-target-line span { font-size: 14px; }
+  #app .arena.pvp-arena .pvp-target-line strong { font-size: 30px; }
+}
+
+/* the TARGET before ARTIFACTS moved it: greyed and slashed (the font hides a plain line-through) */
 #app .arena.pvp-arena .pvp-target-first strong {
-  color: var(--ash);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
+  position: relative;
+  color: var(--ash) !important;
+}
+
+#app .arena.pvp-arena .pvp-target-first strong::after {
+  content: "";
+  position: absolute;
+  left: -14%;
+  right: -14%;
+  top: 50%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--blood-bright);
+  opacity: 0.9;
+  transform: rotate(-12deg);
+  pointer-events: none;
 }
 
 /* ---------- the players ---------- */
@@ -11829,10 +11876,16 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
 @media (max-height: 820px) {
   #app .arena.pvp-arena { gap: 12px; padding-top: 14px; padding-bottom: 14px; }
   #app .arena.pvp-arena .pvp-top { height: 112px; }
-  #app .arena.pvp-arena .pvp-target-number { font-size: 66px; }
-  #app .arena.pvp-arena .pvp-target-line strong { font-size: 23px; }
-  #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
-  #app .arena.pvp-arena .pvp-target-side { gap: 4px 34px; }
+  #app .arena.pvp-arena .pvp-target-head { font-size: 19px !important; }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 84px; }
+  #app .arena.pvp-arena .pvp-target-number.pvp-target-unknown { font-size: 64px; }
+  #app .arena.pvp-arena .pvp-target-line strong { font-size: 38px; }
+  #app .arena.pvp-arena .pvp-target-line span { font-size: 15px; }
+  @container (max-width: 470px) {
+    #app .arena.pvp-arena .pvp-target-side { row-gap: 2px; }
+    #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
+    #app .arena.pvp-arena .pvp-target-line strong { font-size: 26px; }
+  }
   #app .arena.pvp-arena .pvp-stat .stat-value { height: 42px; }
   #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
   #app .arena.pvp-arena .pvp-phase-stat .stat-value { font-size: 30px !important; }
@@ -11850,7 +11903,7 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
     grid-template-columns: minmax(360px, 1.6fr) repeat(3, minmax(100px, 0.6fr)) auto;
     height: 124px;
   }
-  #app .arena.pvp-arena .pvp-target-number { font-size: 70px; }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 88px; }
   #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
   #app .arena.pvp-arena .pvp-join-url { font-size: 26px; }
 }

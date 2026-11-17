@@ -1240,13 +1240,14 @@ function renderPvpTopbar() {
 function renderPvpTargetPanel() {
   const pvp = state.pvp;
   const shown = pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
+  const known = shown !== null && shown !== undefined;
   const moved = pvp.finalTarget !== null && pvp.baseTarget !== null && pvp.finalTarget !== pvp.baseTarget;
   const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
   const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
   return `
     <section class="target-panel pvp-target" aria-label="Target">
       <span class="stat-label pvp-target-head">Target</span>
-      <strong class="pvp-target-number">${shown !== null && shown !== undefined ? formatNumber(shown) : "?"}</strong>
+      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"}">${known ? formatNumber(shown) : "?"}</strong>
       <div class="pvp-target-side">
         ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
         ${line("Modifier", formatModifier(pvp.modifier))}
