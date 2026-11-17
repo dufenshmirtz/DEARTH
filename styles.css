@@ -11269,6 +11269,15 @@ body.outline-boil .collection-screen .codex-leaf::before {
   stroke: #e9e3d6 !important;
 }
 
+.collection-screen .codex-sigil .codex-sigil-solid {
+  fill: #e9e3d6 !important;
+}
+
+.collection-screen .codex-sigil .codex-sigil-eye {
+  fill: #dc2a2f !important;
+  stroke: none !important;
+}
+
 .collection-screen .codex-cover-title {
   font-size: clamp(36px, 7vh, 66px) !important;
   max-width: 9em;

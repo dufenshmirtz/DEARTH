@@ -23871,6 +23871,18 @@ const CODEX_PAGES = [
   }
 ];
 
+// the cover's sigil, "The Horned Cross" (picked on the "DEARTH Codex Sigil" page; clean lines, red accents):
+// a horned head on an inverted cross, an eye held in a crescent, Goetic circles at the ends; the pupil is blood red
+const CODEX_SIGIL = `<svg class="codex-sigil" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="60" cy="60" r="54" stroke-width="3.2"/><circle cx="60" cy="60" r="48" stroke-width="1.1"/>
+  <circle cx="60" cy="34" r="5"/><path d="M60 39 V96"/>
+  <path class="codex-sigil-solid" d="M55.5 32.5 C47 31 42 25 42 15 C46 23 50 25.5 56.5 27.5 Z"/>
+  <path class="codex-sigil-solid" d="M64.5 32.5 C73 31 78 25 78 15 C74 23 70 25.5 63.5 27.5 Z"/>
+  <path d="M46 80 H74"/><circle cx="42.5" cy="80" r="3"/><circle cx="77.5" cy="80" r="3"/><circle cx="60" cy="99.5" r="3"/>
+  <path d="M34 50 Q60 74 86 50"/><circle cx="31" cy="48.5" r="2.6"/><circle cx="89" cy="48.5" r="2.6"/>
+  <circle cx="60" cy="56" r="6"/><circle class="codex-sigil-eye" cx="60" cy="56" r="2"/>
+  <path d="M26 72 l6 -2 M94 72 l-6 -2 M38 26 l4 4 M82 26 l-4 4" stroke-width="1.6"/></g></svg>`;
+
 const CODEX_FIRST_PAGES = 2; // the cover and chapter I come with the book
 const CODEX_TORN_TEXT = "This page has not been found yet.";
 
@@ -24035,12 +24047,7 @@ function codexLeafHtml(index) {
   if (page.kind === "cover") {
     return `
       <article class="codex-leaf codex-cover">
-        <svg class="codex-sigil" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="60" cy="60" r="54"/><circle cx="60" cy="60" r="46" stroke-width="1" opacity="0.6"/>
-          <path d="M60 14 V106 M38 30 H82 M60 106 l-12 -10 M60 106 l12 -10"/>
-          <path d="M38 30 c-6 -10 -2 -18 6 -18 M82 30 c6 -10 2 -18 -6 -18"/>
-          <path d="M30 70 Q60 50 90 70" opacity="0.8"/><circle cx="60" cy="70" r="6"/>
-          <path d="M24 46 l8 4 M96 46 l-8 4 M28 86 l7 -3 M92 86 l-7 -3" opacity="0.7"/></g></svg>
+        ${CODEX_SIGIL}
         <h3 class="codex-cover-title">${escapeHtml(page.title)}</h3>
         <p class="codex-cover-text">${escapeHtml(page.text)}</p>
         <p class="codex-small">${escapeHtml(page.small)}</p>
