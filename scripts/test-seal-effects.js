@@ -1053,6 +1053,19 @@ test("Kalha upgrades a random upgradable SEAL on every PENTAKILL and cannot be u
   `);
 });
 
+test("a PENTAKILL heals you 3 SOUL and pays 8 SIN", () => {
+  game()(`
+    fixture([], [50, 50, 50, 50, 50]);
+    state.player.hp = 50;
+    const sin = state.player.credits;
+    state.roundState.eliminationsThisRound = BOT_COUNT;
+    checkRoundPentakillBonus();
+    assert.equal(state.player.hp, 53);
+    assert.equal(state.player.credits, sin + 8);
+    assert.ok(state.roundState.roundEvents.some(line => line.includes("Healed 3")));
+  `);
+});
+
 test("Pyros reveals a DAMNED at round start and lets reveals stack, which multiplies reveal effects", () => {
   game()(`
     fixture([["p123"]], [10, 20, 30, 40, 50]);
