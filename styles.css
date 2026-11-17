@@ -11427,7 +11427,7 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
 }
 
 /* a narrow TARGET box: the history goes back to two rows */
-@container (max-width: 470px) {
+@container (max-width: 400px) {
   #app .arena.pvp-arena .pvp-target-side {
     grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -11440,26 +11440,6 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   #app .arena.pvp-arena .pvp-target-line + .pvp-target-line { border-left: 0; }
   #app .arena.pvp-arena .pvp-target-line span { font-size: 14px; }
   #app .arena.pvp-arena .pvp-target-line strong { font-size: 30px; }
-}
-
-/* the TARGET before ARTIFACTS moved it: greyed and slashed (the font hides a plain line-through) */
-#app .arena.pvp-arena .pvp-target-first strong {
-  position: relative;
-  color: var(--ash) !important;
-}
-
-#app .arena.pvp-arena .pvp-target-first strong::after {
-  content: "";
-  position: absolute;
-  left: -14%;
-  right: -14%;
-  top: 50%;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--blood-bright);
-  opacity: 0.9;
-  transform: rotate(-12deg);
-  pointer-events: none;
 }
 
 /* ---------- the players ---------- */
@@ -11881,7 +11861,7 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
   #app .arena.pvp-arena .pvp-target-number.pvp-target-unknown { font-size: 64px; }
   #app .arena.pvp-arena .pvp-target-line strong { font-size: 38px; }
   #app .arena.pvp-arena .pvp-target-line span { font-size: 15px; }
-  @container (max-width: 470px) {
+  @container (max-width: 400px) {
     #app .arena.pvp-arena .pvp-target-side { row-gap: 2px; }
     #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
     #app .arena.pvp-arena .pvp-target-line strong { font-size: 26px; }

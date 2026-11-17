@@ -16046,7 +16046,6 @@ function renderPvpTargetPanel() {
   const pvp = state.pvp;
   const shown = pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
   const known = shown !== null && shown !== undefined;
-  const moved = pvp.finalTarget !== null && pvp.baseTarget !== null && pvp.finalTarget !== pvp.baseTarget;
   const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
   const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
   return `
@@ -16057,7 +16056,6 @@ function renderPvpTargetPanel() {
         ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
         ${line("Modifier", formatModifier(pvp.modifier))}
         ${average !== null && average !== undefined ? line("Average", formatNumber(average)) : ""}
-        ${moved ? line("First", formatNumber(pvp.baseTarget), "pvp-target-first") : ""}
       </div>
     </section>
   `;
