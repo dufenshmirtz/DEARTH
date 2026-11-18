@@ -4065,13 +4065,13 @@ test("a DAMNED that falls before READY shows dead at once; its KO notice waits f
   `);
 });
 
-test("Satan's Bets: the list of Nov 17 2026: 68 bets (23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more: 13 at 3, 4 at 4, 4 at 6, the pentakill 8); one per round, replaced at the start of the next round", () => {
+test("Satan's Bets: the list of Nov 17 2026: 67 bets (22 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more: 13 at 3, 4 at 4, 4 at 6, the pentakill 8); one per round, replaced at the start of the next round", () => {
   game()(`
     unlockSlotsForTest();
     fixture([], [10, 20, 30, 40, 50]);
-    assert.equal(MISSIONS.length, 68);
+    assert.equal(MISSIONS.length, 67);
     assert.equal(new Set(MISSIONS.map((mission) => mission.id)).size, MISSIONS.length);
-    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[23,23,22]");
+    assert.equal(JSON.stringify([1, 2, 3].map((tier) => MISSIONS.filter((mission) => missionTier(mission) === tier).length)), "[22,23,22]");
     assert.equal(JSON.stringify([3, 4, 6, 8].map((value) => MISSIONS.filter((mission) => mission.value === value).length)), "[13,4,4,1]");
     // every bet as likely as the next one of its worth
     assert.equal(MISSIONS.filter((mission) => mission.weight).length, 0);
@@ -4098,7 +4098,7 @@ test("Satan's Bets: the list of Nov 17 2026: 68 bets (23 worth 1 FAVOR, 23 worth
     assert.equal(worth.killStrongest, 3);
     assert.equal(worth.deal, 6);
     assert.equal(worth.closestReveal, 2);
-    ["gain6", "gain12", "reroll5", "hurt4", "sell1", "over66", "under12", "guess50", "guessLowest", "useItemTwice", "buy4", "buy7"].forEach((id) => assert.equal(MISSION_BY_ID[id], undefined, id));
+    ["gain6", "gain12", "reroll5", "hurt4", "sell1", "sellSeal", "over66", "under12", "guess50", "guessLowest", "useItemTwice", "buy4", "buy7"].forEach((id) => assert.equal(MISSION_BY_ID[id], undefined, id));
     const first = missionsEnsureRound();
     assert.ok(first && MISSION_BY_ID[first.id]);
     assert.equal(missionsEnsureRound(), first);
@@ -4250,7 +4250,6 @@ test("Satan's Bets read as they were written", () => {
       earn5: "Earn 5 SIN this round",
       damnedTake40: "The DAMNED take at least 40 damage in total",
       useTwo: "Use two ARTIFACTS",
-      sellSeal: "Sell a SEAL",
       nextRound12Sin: "Go into the next round with 12 sin or more",
       within3: "Guess within 3 of the TARGET",
       closest: "Have the closest guess amongst the other Damned",
@@ -4430,12 +4429,7 @@ test("Satan's Bets: the shop and SIN ones (buys, rerolls, SIN earned without sal
     state.player.hp = 70;
     missionsCheck("leave");
     paid(3);
-    // selling a SEAL; one you had when the round began (p1), not one bought since
-    set("sellSeal");
-    missionsNoteShop("sell", { sin: 4 });
-    paid(0);
-    missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
-    paid(1);
+    // selling one of the SEALS you had when the round began (p1), not one bought since
     set("sellStartSeal");
     missionsNoteShop("sell", { sin: 4, sealIds: ["p2"] });
     paid(0);
