@@ -60,6 +60,7 @@ const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
 const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
+const SLOT_MACHINE_LOOK_LABELS = ["Default", "Fancy"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -2223,7 +2224,8 @@ const state = {
     screenShake: 2,
     flashes: 1,
     textSize: 0,
-    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Satan's bets pay FAVOR." (body.hide-guide-text)
+    guideText: 1, // 0 hides the guide lines: "Pick a number...", "Ready applies penalties.", "Penalties are locked in..." and "Satan's bets pay FAVOR." (body.hide-guide-text)
+    slotMachine: 0 // the slot machine's look: 0 Default, 1 Fancy (old machine with a lever)
   },
   settingsTab: "audio",
   pauseOpen: false,
@@ -2293,6 +2295,7 @@ const state = {
   // Satanic Bible: rolls left for each cast still active (old saves kept a count in eliteBoostedNextReroll)
   eliteBoostRolls: [],
   eliteBoostedNextReroll: 0,
+  satanDealIntroDue: false, // the first BOSS ever beaten: Satan names the DEAL once the results are on screen
   satanVictoryDue: false,
   satanVictoryPlayed: false,
   satanVictorySkipped: false, // SKIP past the 8 BOSSES: the victory speech may play outside the results

@@ -54,6 +54,7 @@ function loadDisplaySettings() {
       if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
       if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
       if (Number.isFinite(saved.guideText)) state.display.guideText = clamp(Math.round(saved.guideText), 0, 1);
+      if (Number.isFinite(saved.slotMachine)) state.display.slotMachine = clamp(Math.round(saved.slotMachine), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();

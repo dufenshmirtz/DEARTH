@@ -559,6 +559,22 @@ function sealUnlockMet(id) {
   return Boolean(result && result.value >= result.goal);
 }
 
+// Records > Challenges: every locked SEAL's achievement, in SEAL_UNLOCKS order, without naming the SEAL.
+// done = the achievement itself is met; a SEAL opened by Jesus' Gifts (or DEV) does not complete it.
+function sealChallenges() {
+  return Object.keys(SEAL_UNLOCKS)
+    .filter((id) => ITEMS[id])
+    .map((id) => {
+      const result = sealUnlockProgress(id) || { value: 0, goal: 1 };
+      return {
+        text: SEAL_UNLOCKS[id].text,
+        value: Math.min(result.value, result.goal),
+        goal: result.goal,
+        done: result.value >= result.goal
+      };
+    });
+}
+
 /* ---- recording (called from the game) ---- */
 function collectionCounts() {
   // only real arcade runs count: not PvP, not the story's tutorial rounds, not infinite-SIN testing

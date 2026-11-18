@@ -535,6 +535,7 @@ function spendCredits(amount) {
   if (!canSpendCredits(cost)) return false;
   state.player.credits -= cost;
   collectionNoteSpend(cost);
+  if (typeof missionsNoteSpend === "function") missionsNoteSpend(cost);
   applyCreditLashSpent(cost);
   return true;
 }
@@ -826,6 +827,7 @@ function startGame(options = {}) {
   state.currentRunSlotId = restartingSlotId;
   state.runStartedAt = Date.now();
   snapshotRecordsAtRunStart();
+  state.satanDealIntroDue = false;
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
   state.satanVictorySkipped = false;
@@ -2291,6 +2293,7 @@ function submitGuess() {
   recalculateTarget();
   // Guess quality compares the number you typed with this TARGET, before ARTIFACTS or reveal SEALS move it
   round.revealedTarget = round.target;
+  if (typeof missionsNoteReveal === "function") missionsNoteReveal();
   applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
