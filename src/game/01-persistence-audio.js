@@ -53,6 +53,7 @@ function loadDisplaySettings() {
       if (Number.isFinite(saved.screenShake)) state.display.screenShake = clamp(Math.round(saved.screenShake), 0, 2);
       if (Number.isFinite(saved.flashes)) state.display.flashes = clamp(Math.round(saved.flashes), 0, 1);
       if (Number.isFinite(saved.textSize)) state.display.textSize = clamp(Math.round(saved.textSize), 0, 1);
+      if (Number.isFinite(saved.guideText)) state.display.guideText = clamp(Math.round(saved.guideText), 0, 1);
     }
   } catch (error) {}
   applyDisplaySettings();
@@ -72,6 +73,7 @@ function applyDisplaySettings() {
   else document.body.style.removeProperty("--boil-duration");
   document.body.classList.toggle("reduce-flashes", !state.display.flashes);
   document.body.classList.toggle("text-large", Boolean(state.display.textSize));
+  document.body.classList.toggle("hide-guide-text", state.display.guideText === 0);
   document.body.dataset.animSpeed = String(animSpeed());
 }
 
@@ -540,24 +542,36 @@ function readLegacyArcadeRunSlot() {
   }
 }
 
+// Older builds kept one run under ARCADE_RUN_STORAGE_KEY. It used to be read as a fallback whenever the slot list
+// was empty, so removing it from the Load Run menu never took: it came back on the next read. It is now moved into
+// the slot list once (the old key is removed only after the slot list is written), and is removed like any run.
+function migrateLegacyArcadeRunSlot() {
+  const legacy = readLegacyArcadeRunSlot();
+  if (!legacy) return [];
+  try {
+    const slots = sortArcadeRunSlots([legacy]);
+    window.localStorage?.setItem(
+      ARCADE_RUN_SLOTS_STORAGE_KEY,
+      JSON.stringify({ version: ARCADE_RUN_SAVE_VERSION, slots }, encodeArcadeSaveValue)
+    );
+    window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    return slots;
+  } catch (error) {
+    return [legacy];
+  }
+}
+
 function readArcadeRunSlots() {
   try {
     const raw = window.localStorage?.getItem(ARCADE_RUN_SLOTS_STORAGE_KEY);
-    if (!raw) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!raw) return migrateLegacyArcadeRunSlot();
     const parsed = JSON.parse(raw, decodeArcadeSaveValue);
     const slots = Array.isArray(parsed?.slots) ? parsed.slots : Array.isArray(parsed) ? parsed : [];
     const normalized = sortArcadeRunSlots(slots);
-    if (!normalized.length) {
-      const legacy = readLegacyArcadeRunSlot();
-      return legacy ? [legacy] : [];
-    }
+    if (!normalized.length) return migrateLegacyArcadeRunSlot();
     return normalized;
   } catch (error) {
-    const legacy = readLegacyArcadeRunSlot();
-    return legacy ? [legacy] : [];
+    return migrateLegacyArcadeRunSlot();
   }
 }
 
@@ -583,6 +597,12 @@ function upsertArcadeRunPayload(payload) {
 function removeArcadeRunSlot(slotId) {
   if (!slotId) return;
   writeArcadeRunSlots(readArcadeRunSlots().filter((slot) => slot.slotId !== slotId));
+  // the same run may still sit under the old single-run key (written by older builds)
+  if (readLegacyArcadeRunSlot()?.slotId === slotId) {
+    try {
+      window.localStorage?.removeItem(ARCADE_RUN_STORAGE_KEY);
+    } catch (error) {}
+  }
 }
 
 // Saving copies the whole run into localStorage, and the run grows (MEMORY, game memory) the
@@ -604,7 +624,7 @@ function saveArcadeRun() {
     arcadeRunSaveTimer = null;
   }
   if (state.mode !== "arcade") return;
-  // the story's two tutorial rounds are not a saved run until the pact is made
+  // the story's tutorial rounds are not a saved run until the pact is made
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return;
   if (state.gameOver) {
     removeArcadeRunSlot(state.currentRunSlotId);
@@ -723,9 +743,10 @@ function normalizeLoadedArcadeRun() {
   state.trinityEliteNextShop = Boolean(state.trinityEliteNextShop);
   if (!Array.isArray(state.trinityShopSealsNextShop)) state.trinityShopSealsNextShop = [];
   state.exactGuessCritCharged = Boolean(state.exactGuessCritCharged);
-  // SEALS keep their current name and text after a rename (older saves hold a copy of both)
-  [...state.player.passives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
-    if (item?.type === "passive" && ITEMS[item.id]) {
+  // SEALS and ARTIFACTS keep their current name and text after a rename (older saves hold a copy of both;
+  // the Black Candle became the Spirit Board)
+  [...state.player.passives, ...state.player.actives, ...state.shop.map((slot) => slot?.item)].forEach((item) => {
+    if ((item?.type === "passive" || item?.type === "active") && ITEMS[item.id]) {
       item.name = ITEMS[item.id].name;
       item.description = ITEMS[item.id].description;
     }

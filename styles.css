@@ -5305,28 +5305,40 @@ body.native-arcade .main-menu {
   }
 }
 
-/* the dark doorway behind the buttons stays fixed while the background turns */
-.menu-door {
-  left: 696px;
-  top: 476px;
-  width: 283px;
-  height: 452px;
-  transform-origin: 50% 12%;
-  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
+@property --door-arch {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 115px;
 }
 
-/* Options and Settings: the doorway opens wider (scale Y matches MENU_DOOR_WIDE_SCALE_Y in 09-rendering.js) */
-.menu-door.door-wide {
-  transform: scale(1.7, 1.14);
+/* the dark doorway behind the buttons: a soft black arch that stays still while the background turns.
+   fitMenuDoor (09-rendering.js) sets its box (art px) and --door-arch to fit the current screen */
+.menu-door {
+  left: 727px;
+  top: 520px;
+  width: 230px;
+  height: 330px;
+  background: #000;
+  border-radius: 50% 50% 46px 46px / var(--door-arch, 115px) var(--door-arch, 115px) 46px 46px;
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.menu-door.door-fitted {
+  transition:
+    left 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    top 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    width 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    height 0.55s cubic-bezier(0.22, 0.8, 0.3, 1),
+    --door-arch 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu-door {
+  .menu-door.door-fitted {
     transition: none;
   }
 }
 
-.menu-door,
 .menu-logo img {
   user-select: none;
   -webkit-user-drag: none;
@@ -5372,7 +5384,7 @@ body.native-arcade .main-menu {
   }
 }
 
-/* Menu buttons sit centred in the fixed dark doorway (position set by layoutMenuBackdrop) */
+/* Menu buttons sit centred on the menu anchor, with the doorway fitted around them (layoutMenuBackdrop) */
 .main-menu-panel.door-anchored {
   position: absolute;
   z-index: 2;
@@ -9078,12 +9090,15 @@ body.native-arcade #app .mobile-offerings-header {
   padding-top: 8px !important;
 }
 
-/* the figure grows with the card on taller screens */
+/* the figure grows with the card on taller screens, and shrinks to its row on short ones so it never
+   pokes out of the card's top */
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face,
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face.boss-face,
 body.native-arcade #app .arena:not(.pvp-arena) .bot-face.empty-face {
-  width: clamp(46px, 13.5vh, 120px) !important;
-  height: clamp(46px, 13.5vh, 120px) !important;
+  width: auto !important;
+  height: min(clamp(46px, 13.5vh, 120px), 100%) !important;
+  min-height: 0 !important;
+  aspect-ratio: 1 / 1;
 }
 
 /* desktop: SIN gained sits bottom-right inside the SIN box, clear of the outline */
@@ -9836,6 +9851,221 @@ body.mobile-arcade .intro-choice {
 body.mobile-arcade .intro-satan {
   height: 98vh;
   max-width: 40vw;
+}
+
+/* Jesus at the tutorial table (09-intro-story.js, jesusGuideOpen): he stands on the right, mirrored to face
+   the table; the veil is the huge shadow of .intro-guide-spot, a hole that moves to what he talks about;
+   his box sits over the hidden SEAL slots (on a phone: the larger free band above or below the hole) */
+.intro-guide-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.intro-guide-spot {
+  position: fixed;
+  border-radius: 18px;
+  pointer-events: none;
+  box-shadow: 0 0 26px 4px rgba(255, 210, 63, 0.12), 0 0 46px 200vmax rgba(0, 0, 0, 0.7);
+  transition:
+    left 0.6s cubic-bezier(0.3, 0.6, 0.3, 1),
+    top 0.6s cubic-bezier(0.3, 0.6, 0.3, 1),
+    width 0.6s cubic-bezier(0.3, 0.6, 0.3, 1),
+    height 0.6s cubic-bezier(0.3, 0.6, 0.3, 1),
+    border-radius 0.6s ease,
+    opacity 0.9s ease;
+  animation: intro-guide-veil 0.9s ease-out both;
+}
+
+.intro-guide-spot.intro-guide-spot-none {
+  border-radius: 50%;
+}
+
+@keyframes intro-guide-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.intro-guide-leaving .intro-guide-spot {
+  opacity: 0;
+  animation: none;
+}
+
+.intro-jesus {
+  position: fixed;
+  right: max(0.5vw, 4px);
+  bottom: 0;
+  height: min(94vh, 1216px);
+  aspect-ratio: 886 / 1216;
+  max-width: 24vw;
+  pointer-events: none;
+  animation: intro-satan-in 2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
+}
+
+/* a pool of darkness behind him so the table does not show through */
+.intro-jesus::before {
+  content: "";
+  position: absolute;
+  inset: -4% -18% -2% -18%;
+  background: radial-gradient(ellipse at 50% 58%, rgba(0, 0, 0, 0.88) 0, rgba(0, 0, 0, 0.7) 42%, rgba(0, 0, 0, 0) 70%);
+}
+
+.intro-jesus img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 0 20px rgba(255, 200, 40, 0.3));
+  /* he rises like Satan does, with a soft edge sweeping up from his feet */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 38%, #000 62%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 38%, #000 62%, #000 100%);
+  -webkit-mask-size: 100% 260%;
+  mask-size: 100% 260%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 100%;
+  mask-position: 0 100%;
+  transform: scaleX(-1);
+  animation: intro-jesus-rise 2s cubic-bezier(0.3, 0.55, 0.25, 1) both;
+}
+
+@keyframes intro-jesus-rise {
+  0% { -webkit-mask-position: 0 0%; mask-position: 0 0%; transform: scaleX(-1) translateY(22px); }
+  100% { -webkit-mask-position: 0 100%; mask-position: 0 100%; transform: scaleX(-1); }
+}
+
+/* what he points at is behind him: he steps back (on the img and the pool: the container's own
+   entrance animation holds its opacity) */
+.intro-jesus::before {
+  transition: opacity 0.5s ease;
+}
+
+.intro-jesus img {
+  transition: opacity 0.5s ease;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-jesus img {
+  opacity: 0.14;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-jesus::before {
+  opacity: 0;
+}
+
+.intro-guide-leaving .intro-jesus {
+  animation: intro-jesus-out 0.9s ease-in both;
+}
+
+@keyframes intro-jesus-out {
+  0% { opacity: 1; filter: none; }
+  30% { opacity: 1; filter: brightness(1.4); }
+  100% { opacity: 0; filter: brightness(0.5) blur(4px); }
+}
+
+body.mobile-arcade .intro-jesus {
+  height: 96vh;
+  max-width: 30vw;
+}
+
+.intro-guide-layer .intro-box {
+  opacity: 1;
+}
+
+.intro-box-guide {
+  position: fixed;
+  max-height: none;
+  padding: 22px 26px;
+  background: rgba(0, 0, 0, 0.86);
+  animation: intro-pact-in 1.1s ease-out both;
+}
+
+.intro-box-guide::before {
+  filter: sepia(1) saturate(3.2) hue-rotate(2deg) brightness(0.92);
+  opacity: 1;
+}
+
+.intro-box-guide::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  box-shadow: 0 0 30px rgba(255, 200, 40, 0.16), inset 0 0 36px rgba(255, 190, 30, 0.1);
+}
+
+.intro-box-guide .intro-text {
+  max-height: 100%;
+  font-size: clamp(14px, 1.5vw, 25px) !important;
+}
+
+.intro-box-guide.intro-box-leave {
+  animation: intro-pact-out 0.9s ease-in both;
+}
+
+body.mobile-arcade .intro-box-guide {
+  padding: 22px 20px 18px;
+}
+
+body.mobile-arcade .intro-box-guide::before {
+  border-width: 18px;
+  border-image-width: 18px;
+}
+
+/* Satan's lesson after the pact (satanLessonBegin): the same scene in his colours */
+.intro-guide-satan .intro-guide-spot {
+  box-shadow: 0 0 26px 4px rgba(220, 30, 30, 0.14), 0 0 46px 200vmax rgba(0, 0, 0, 0.7);
+}
+
+.intro-guide-satan .intro-satan img {
+  filter: brightness(1) drop-shadow(0 0 22px rgba(220, 25, 25, 0.45));
+}
+
+.intro-guide-satan .intro-satan::before,
+.intro-guide-satan .intro-satan img {
+  transition: opacity 0.5s ease, filter 0.7s ease;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-satan img {
+  opacity: 0.14;
+}
+
+.intro-guide-layer.intro-guide-aside .intro-satan::before {
+  opacity: 0;
+}
+
+.intro-guide-leaving .intro-satan {
+  animation: intro-satan-out 1.3s ease-in both;
+}
+
+.intro-guide-satan .intro-box-guide::before {
+  filter: brightness(0.5) sepia(1) saturate(10) hue-rotate(-48deg);
+}
+
+.intro-guide-satan .intro-box-guide::after {
+  box-shadow: 0 0 34px rgba(190, 18, 18, 0.28), inset 0 0 40px rgba(150, 10, 10, 0.25);
+}
+
+.intro-guide-satan .intro-box-guide.intro-box-leave {
+  animation: intro-pact-out 1.3s ease-in both;
+}
+
+.intro-guide-satan .intro-skip {
+  color: #b5545a !important;
+}
+
+.intro-guide-satan .intro-skip:hover {
+  color: #ff5a5f !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-guide-spot { transition: opacity 0.9s ease; }
+  .intro-jesus img { animation: none; -webkit-mask-image: none; mask-image: none; }
 }
 
 /* ==========================================================================
@@ -10870,6 +11100,340 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   .collection-demon-number { font-size: 10px !important; }
 }
 
+/* ---- Collection: the Faustian Codex (09-codex.js), the "Black Page" look picked on the "DEARTH Faustian Codex" page:
+   black pages in the frantic frames, bone text in Alegreya, Razor Keen titles, red rubrics and drop capitals.
+   Two pages side by side (one on the phone); pages not found yet are a burnt scrap. Red scribbles are the
+   previous owner's notes; white ones are the player's (a trick that worked). */
+.collection-screen .collection-tab.has-new::before {
+  content: "";
+  position: absolute;
+  top: 0.18em;
+  right: -0.08em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2a2f;
+  box-shadow: 0 0 8px rgba(220, 42, 47, 0.8);
+}
+
+.collection-screen .codex-legend {
+  min-height: clamp(30px, 4.6vh, 44px);
+}
+
+.collection-screen .codex-body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: clamp(6px, 1.4vh, 14px);
+}
+
+.codex-book {
+  width: min(1240px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+}
+
+.codex-spread {
+  display: grid;
+  grid-template-columns: repeat(var(--codex-per, 2), minmax(0, 1fr));
+  gap: clamp(6px, 1vw, 14px);
+}
+
+.collection-screen .codex-leaf {
+  position: relative;
+  box-sizing: border-box;
+  min-height: clamp(300px, calc(100vh - 250px), 680px);
+  padding: clamp(24px, 4.4vh, 46px) clamp(24px, 3vw, 54px) clamp(34px, 5.4vh, 56px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+  background: #000;
+}
+
+.collection-screen .codex-leaf::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 26px solid transparent;
+  border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 26px stretch;
+  opacity: 0.85;
+}
+
+body.outline-boil .collection-screen .codex-leaf::before {
+  animation: outline-boil var(--boil-duration, 375ms) steps(1) infinite;
+}
+
+.collection-screen .codex-leaf.codex-empty::before {
+  display: none;
+}
+
+.collection-screen .codex-title,
+.collection-screen .codex-cover-title,
+.collection-screen .codex-verse-title {
+  margin: 0;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #ece6d8 !important;
+}
+
+.collection-screen .codex-title {
+  font-size: clamp(22px, 3.6vh, 36px) !important;
+}
+
+.collection-screen .codex-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 1.2vh, 12px);
+}
+
+.collection-screen .codex-leaf .codex-p,
+.collection-screen .codex-leaf .codex-p *,
+.collection-screen .codex-cover-text,
+.collection-screen .codex-torn-text {
+  margin: 0;
+  font-family: var(--font-book) !important;
+  font-size: clamp(14px, 2vh, 18.5px) !important;
+  line-height: 1.5;
+  color: #e9e3d6 !important;
+}
+
+.collection-screen .codex-leaf .codex-p .codex-rub {
+  font-style: italic;
+  color: #e0383d !important;
+}
+
+/* a drop capital on the first paragraph of each page */
+.collection-screen .codex-text > .codex-p:first-child::first-letter {
+  float: left;
+  padding: 0.12em 0.14em 0 0;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 3.3em;
+  line-height: 0.8;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-verse {
+  display: flow-root;
+}
+
+.collection-screen .codex-verse-title {
+  margin-bottom: 2px;
+  font-size: clamp(16px, 2.4vh, 22px) !important;
+  color: #e0383d !important;
+}
+
+/* marginalia: the player's own scribble (white), the previous owner's note (red) */
+.collection-screen .codex-scribble,
+.collection-screen .codex-note {
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(13px, 1.9vh, 18px) !important;
+  line-height: 1.15;
+  transform: rotate(-4deg);
+}
+
+.collection-screen .codex-scribble {
+  float: right;
+  max-width: 48%;
+  margin: -2px 0 4px 14px;
+  color: #fff !important;
+  text-align: right;
+}
+
+.collection-screen .codex-note {
+  margin: auto 0 0 auto;
+  max-width: 62%;
+  padding-top: 10px;
+  text-align: right;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-folio-num {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(12px, 2.2vh, 22px);
+  text-align: center;
+  font-size: clamp(12px, 1.6vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+.collection-screen .codex-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(10px, 2.2vh, 22px);
+}
+
+.collection-screen .codex-sigil {
+  width: clamp(70px, 13vh, 124px);
+  height: clamp(70px, 13vh, 124px);
+  color: #e9e3d6;
+}
+
+.collection-screen .codex-sigil * {
+  stroke: #e9e3d6 !important;
+}
+
+.collection-screen .codex-sigil .codex-sigil-solid {
+  fill: #e9e3d6 !important;
+}
+
+.collection-screen .codex-sigil .codex-sigil-eye {
+  fill: #dc2a2f !important;
+  stroke: none !important;
+}
+
+.collection-screen .codex-cover-title {
+  font-size: clamp(36px, 7vh, 66px) !important;
+  max-width: 9em;
+}
+
+.collection-screen .codex-cover-text {
+  max-width: 24em;
+  font-style: italic;
+}
+
+.collection-screen .codex-small,
+.collection-screen .codex-small * {
+  margin: 0;
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(12px, 1.7vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+.collection-screen .codex-cover .codex-note {
+  margin: 0;
+  position: absolute;
+  right: clamp(30px, 3vw, 54px);
+  bottom: clamp(30px, 5vh, 56px);
+  max-width: 44%;
+}
+
+.collection-screen .codex-fragment {
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-screen .codex-fragment-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 24em;
+  text-align: center;
+}
+
+.collection-screen .codex-fragment-text .codex-p .codex-rub {
+  font-size: 1.25em !important;
+}
+
+/* a page not found yet: a burnt scrap */
+.collection-screen .codex-torn {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.collection-screen .codex-scrap {
+  width: 70%;
+  height: clamp(90px, 22vh, 200px);
+  background: radial-gradient(circle at 50% 50%, #1c1615 0, #0b0908 60%, #000 100%);
+  box-shadow: 0 0 0 1px #2c2422, 0 0 18px rgba(160, 30, 20, 0.18);
+  clip-path: polygon(4% 8%, 22% 0, 41% 6%, 60% 1%, 83% 7%, 97% 3%, 100% 32%, 93% 55%, 99% 78%, 85% 96%, 62% 90%, 40% 100%, 18% 92%, 3% 97%, 0 70%, 6% 44%);
+}
+
+.collection-screen .codex-torn .codex-torn-text {
+  font-style: italic;
+  color: #8d877c !important;
+}
+
+.codex-nav {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: clamp(14px, 3vw, 40px);
+  padding-bottom: 6px;
+}
+
+.collection-screen .codex-turn {
+  min-height: 0 !important;
+  padding: 0 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Razor Keen", Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(18px, 2.8vh, 26px) !important;
+  color: #e9e3d6 !important;
+  cursor: pointer;
+}
+
+.collection-screen .codex-turn:hover:not(:disabled) {
+  transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #dc2a2f !important;
+}
+
+.collection-screen .codex-turn:disabled {
+  color: #3b3533 !important;
+  cursor: default;
+}
+
+.collection-screen .codex-folio {
+  font-family: var(--font-book) !important;
+  font-style: italic;
+  font-size: clamp(12px, 1.7vh, 15px) !important;
+  color: #8d877c !important;
+}
+
+/* the phone: one page, smaller frame, and the page scrolls on its own */
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-leaf {
+  min-height: 0;
+  padding: 20px 24px 30px;
+}
+
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-leaf::before {
+  border-width: 18px;
+  border-image-width: 18px;
+}
+
+/* on the phone a page is taller than the screen: the page turns sit above it, always in reach */
+body:is(.mobile-arcade, .native-arcade) .codex-book {
+  flex-direction: column-reverse;
+}
+
+body:is(.mobile-arcade, .native-arcade) .codex-nav {
+  padding-bottom: 0;
+}
+
+body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-note {
+  position: static;
+  max-width: none;
+  margin-top: 4px;
+}
+
+/* the book's mark in its toasts */
+.collection-toast-codex {
+  position: relative;
+  width: 46px;
+  display: grid;
+  place-items: center;
+  color: #e0383d;
+}
+
+.collection-toast-codex .codex-mark {
+  width: 34px;
+  height: 38px;
+}
+
+.collection-toast-codex .codex-mark * {
+  stroke: #e0383d !important;
+}
+
 /* "Seal unlocked" toast */
 .collection-toast {
   position: fixed;
@@ -11122,7 +11686,8 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   margin: 6px 0 0 4px;
 }
 
-/* the TARGET: a big blood-red number, its history beside it */
+/* the TARGET: a big blood-red number on the left, its history spread over the rest of the box
+   (one row of columns; two rows when the box is narrow) */
 #app .arena.pvp-arena .pvp-target {
   position: relative !important;
   inset: auto !important;
@@ -11130,14 +11695,14 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   max-width: none !important;
   height: auto !important;
   margin: 0 !important;
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  justify-content: center;
   align-items: center;
-  column-gap: 54px;
+  column-gap: clamp(20px, 5cqw, 44px);
   min-width: 0;
-  padding: 14px 30px 16px 32px;
+  padding: 10px 26px 12px clamp(24px, 6cqw, 44px);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -11156,53 +11721,79 @@ body.mobile-arcade .collection-screen .collection-angel-grid {
   grid-column: 1;
   grid-row: 2;
   justify-self: center;
-  min-width: 1.6em;
+  min-width: 1.4em;
   font-family: var(--font-display);
-  font-size: 84px;
+  font-size: 104px;
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 0.84;
   text-align: center;
   color: var(--blood-bright) !important;
+  text-shadow: 0 0 22px rgba(220, 42, 47, 0.28);
+}
+
+/* no TARGET yet: the "?" hangs below the line, so it sits smaller and higher */
+#app .arena.pvp-arena .pvp-target-number.pvp-target-unknown {
+  font-size: 80px;
+  line-height: 1;
 }
 
 #app .arena.pvp-arena .pvp-target-side {
   grid-column: 2;
   grid-row: 1 / span 2;
-  align-self: center;
+  align-self: stretch;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, max-content));
-  align-content: center;
-  gap: 8px 44px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: center;
   min-width: 0;
+  margin: 4px 0;
+  border-left: 1px solid rgba(233, 227, 214, 0.16);
 }
 
 #app .arena.pvp-arena .pvp-target-line {
   display: grid;
-  gap: 2px;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
   min-width: 0;
+  height: 100%;
   white-space: nowrap;
+}
+
+#app .arena.pvp-arena .pvp-target-line + .pvp-target-line {
+  border-left: 1px solid rgba(233, 227, 214, 0.08);
 }
 
 #app .arena.pvp-arena .pvp-target-line span {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 17px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ash);
+  color: var(--ash) !important;
 }
 
 #app .arena.pvp-arena .pvp-target-line strong {
   font-family: var(--font-display);
-  font-size: 29px;
+  font-size: 46px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 0.9;
   color: var(--bone);
 }
 
-#app .arena.pvp-arena .pvp-target-first strong {
-  color: var(--ash);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
+/* a narrow TARGET box: the history goes back to two rows */
+@container (max-width: 400px) {
+  #app .arena.pvp-arena .pvp-target-side {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 6px;
+  }
+  #app .arena.pvp-arena .pvp-target-line {
+    gap: 2px;
+    height: auto;
+  }
+  #app .arena.pvp-arena .pvp-target-line + .pvp-target-line { border-left: 0; }
+  #app .arena.pvp-arena .pvp-target-line span { font-size: 14px; }
+  #app .arena.pvp-arena .pvp-target-line strong { font-size: 30px; }
 }
 
 /* ---------- the players ---------- */
@@ -11619,10 +12210,16 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
 @media (max-height: 820px) {
   #app .arena.pvp-arena { gap: 12px; padding-top: 14px; padding-bottom: 14px; }
   #app .arena.pvp-arena .pvp-top { height: 112px; }
-  #app .arena.pvp-arena .pvp-target-number { font-size: 66px; }
-  #app .arena.pvp-arena .pvp-target-line strong { font-size: 23px; }
-  #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
-  #app .arena.pvp-arena .pvp-target-side { gap: 4px 34px; }
+  #app .arena.pvp-arena .pvp-target-head { font-size: 19px !important; }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 84px; }
+  #app .arena.pvp-arena .pvp-target-number.pvp-target-unknown { font-size: 64px; }
+  #app .arena.pvp-arena .pvp-target-line strong { font-size: 38px; }
+  #app .arena.pvp-arena .pvp-target-line span { font-size: 15px; }
+  @container (max-width: 400px) {
+    #app .arena.pvp-arena .pvp-target-side { row-gap: 2px; }
+    #app .arena.pvp-arena .pvp-target-line span { font-size: 13px; }
+    #app .arena.pvp-arena .pvp-target-line strong { font-size: 26px; }
+  }
   #app .arena.pvp-arena .pvp-stat .stat-value { height: 42px; }
   #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
   #app .arena.pvp-arena .pvp-phase-stat .stat-value { font-size: 30px !important; }
@@ -11640,7 +12237,7 @@ body.outline-boil #app .arena.pvp-arena .pvp-console-head {
     grid-template-columns: minmax(360px, 1.6fr) repeat(3, minmax(100px, 0.6fr)) auto;
     height: 124px;
   }
-  #app .arena.pvp-arena .pvp-target-number { font-size: 70px; }
+  #app .arena.pvp-arena .pvp-target-number { font-size: 88px; }
   #app .arena.pvp-arena .pvp-stat .stat-value { font-size: 38px !important; }
   #app .arena.pvp-arena .pvp-join-url { font-size: 26px; }
 }
@@ -13012,6 +13609,68 @@ body.reduce-flashes .deal-button.pact-calling {
   cursor: default;
 }
 
+/* the story: Satan names DEAL and it appears under Pause, fading in, then pulsing white to blood red and a little
+   bigger (introShowDealButton); his veil opens a soft gap around it (.intro-deal-spot) */
+@keyframes deal-intro-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes deal-intro-pulse {
+  0%, 100% { --pact-call: #ffffff; scale: 1; }
+  50% { --pact-call: #dc2a2f; scale: 1.14; }
+}
+
+#app .deal-button.deal-intro-show {
+  color: var(--pact-call) !important;
+  animation: deal-intro-in 0.7s ease-out both, deal-intro-pulse 1.4s ease-in-out infinite;
+}
+
+#app .deal-button.deal-intro-show:disabled {
+  opacity: 1;
+}
+
+body.reduce-flashes #app .deal-button.deal-intro-show {
+  animation: deal-intro-in 0.7s ease-out both;
+  --pact-call: #dc2a2f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .deal-button.deal-intro-show {
+    animation: deal-intro-in 0.7s ease-out both;
+    --pact-call: #dc2a2f;
+  }
+}
+
+/* the veil moves to ::before so the gap in it does not cut Satan or his box */
+.intro-pact-layer.intro-deal-spot {
+  background: transparent;
+  animation: none;
+}
+
+.intro-pact-layer.intro-deal-spot::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000, #000), radial-gradient(closest-side, #000 72%, transparent 100%);
+  -webkit-mask-size: 100% 100%, var(--deal-spot-w) var(--deal-spot-h);
+  -webkit-mask-position: 0 0, var(--deal-spot-x) var(--deal-spot-y);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-image: linear-gradient(#000, #000), radial-gradient(closest-side, #000 72%, transparent 100%);
+  mask-size: 100% 100%, var(--deal-spot-w) var(--deal-spot-h);
+  mask-position: 0 0, var(--deal-spot-x) var(--deal-spot-y);
+  mask-repeat: no-repeat;
+  mask-composite: exclude;
+  transition: opacity 1.3s ease;
+}
+
+.intro-pact-layer.intro-deal-spot.intro-pact-leaving::before {
+  opacity: 0;
+}
+
 /* where DEAL sits: desktop under Pause, between it and the testing buttons */
 body:not(.mobile-arcade) #app .arena:not(.pvp-arena) > .pause-button.deal-button {
   top: 66px !important;
@@ -13226,6 +13885,16 @@ body.mobile-arcade .intro-box .pact-ask .pact-ask-input {
   grid-column: span 2;
   grid-row: span 2;
 }
+/* Guess / Submit quality: the last guesses across two columns, one row high */
+#app .record-plaque-wide {
+  grid-column: span 2;
+}
+#app .record-plaque-wide .record-value {
+  font-size: 40px !important;
+}
+#app .record-plaque-wide .record-label {
+  color: var(--bone) !important;
+}
 #app .record-value {
   font-family: var(--font-display) !important;
   font-size: 28px !important;
@@ -13413,6 +14082,31 @@ body.native-arcade #app .record-build-artifact .record-artifact {
 body.mobile-arcade #app .record-guess-strip,
 body.native-arcade #app .record-guess-strip {
   height: 30px;
+}
+/* phones: the wide quality plaque is one row high, so the number sits beside its strip */
+body.mobile-arcade #app .record-plaque-wide,
+body.native-arcade #app .record-plaque-wide {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+}
+body.mobile-arcade #app .record-plaque-wide .record-value,
+body.native-arcade #app .record-plaque-wide .record-value {
+  grid-row: 1 / span 3;
+  font-size: 28px !important;
+}
+body.mobile-arcade #app .record-plaque-wide .record-guess-strip,
+body.native-arcade #app .record-plaque-wide .record-guess-strip {
+  grid-column: 2;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+}
+body.mobile-arcade #app .record-plaque-wide .record-label,
+body.native-arcade #app .record-plaque-wide .record-label,
+body.mobile-arcade #app .record-plaque-wide .record-sub,
+body.native-arcade #app .record-plaque-wide .record-sub {
+  grid-column: 2;
 }
 body.mobile-arcade #app .record-label,
 body.native-arcade #app .record-label,
@@ -13817,6 +14511,10 @@ body:not(.mobile-arcade):not(.native-arcade) #app .arena:not(.pvp-arena) .topbar
 .gifts-screen .gift-card.gift-card-away {
   visibility: hidden;
 }
+/* an affordable card keeps the "You need ... more" line's room, so opening a gift never resizes the cards */
+.gifts-screen .gift-card-open.gift-card-open-spacer {
+  visibility: hidden;
+}
 /* 1. turn: the shop card turns over where it stands (edge-on, faces swap, back) */
 .gifts-screen .gift-opening.phase-turn .gift-flip-card {
   animation: gift-card-turn 0.44s ease-in-out both;
@@ -13980,12 +14678,16 @@ body.native-arcade .gifts-screen .gifts-cards {
   max-height: calc(100% - clamp(52px, 15vh, 80px) - 8px);
   gap: 8px;
 }
+/* the hover state is listed too: a tap leaves the card hovered on a phone, and the game's hover rule would put the
+   desktop frame and padding back, growing that card and, through the shared row, the other two */
 body.mobile-arcade .gifts-screen button.gift-card,
-body.native-arcade .gifts-screen button.gift-card {
+body.mobile-arcade .gifts-screen button.gift-card:hover:not(:disabled),
+body.native-arcade .gifts-screen button.gift-card,
+body.native-arcade .gifts-screen button.gift-card:hover:not(:disabled) {
   border-width: 10px !important;
   border-image-width: 10px !important;
   padding: 2px 4px !important;
-  gap: 1px;
+  gap: 1px !important;
 }
 body.mobile-arcade .gifts-screen .gift-card-art,
 body.native-arcade .gifts-screen .gift-card-art {
@@ -14226,6 +14928,8 @@ body.outline-boil #app .slot-reel:nth-child(3)::after {
 
 #app .slot-icon {
   display: grid;
+  /* one fixed column: a symbol wider than the cell stays centred instead of growing the column to the right */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   justify-items: center;
   align-items: center;
@@ -14649,52 +15353,94 @@ body.mobile-arcade #app .mission-text {
   font-size: 12px;
 }
 
-/* ---- phone app: one band between the DAMNED and the SEALS ---- */
-body.native-arcade .native-arcade-frame.has-slot-band {
-  grid-template-rows: minmax(0, 1fr) 44px var(--native-seal-row-height) !important;
+/* phone web: the reels' frame at their small size */
+body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+  border-width: 6px;
+  border-image-width: 11px;
 }
 
-body.native-arcade .native-arcade-frame.has-slot-band > .native-console-panel,
-body.native-arcade .native-arcade-frame.has-slot-band > .mobile-numpad,
-body.native-arcade .native-arcade-frame.has-slot-band > .passive-bar {
-  grid-row: 3 !important;
+body.mobile-arcade #app .center-console.has-slot .slot-reel {
+  --slot-window-inset: 4px;
 }
 
-body.native-arcade .native-slot-band {
+/* ---- phone app: a rail on the left of the DAMNED, under the TARGET box ----
+   The slot machine on top (reels, SPIN centred under them, your FAVOR under SPIN), the round's mission under it,
+   only as tall as its text. The rail is laid over the board's grid area, so the board and the SEALS keep their
+   size; the DAMNED move right to make room. It is only as tall as the two boxes, so the SEALS under it stay
+   free to tap. */
+body.native-arcade {
+  --native-slot-rail-width: 116px;
+}
+
+body.native-arcade #app .native-arcade-frame.has-slot-band .arena:not(.pvp-arena) .bot-grid {
+  left: calc(var(--native-slot-rail-width) + 8px) !important;
+}
+
+body.native-arcade #app .native-slot-band {
+  position: absolute;
+  z-index: 4;
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 1;
+  top: 72px;
+  left: 6px;
+  width: var(--native-slot-rail-width);
   box-sizing: border-box;
-  padding-left: var(--slot-edge-left, 0px);
-  padding-right: var(--slot-edge-right, 0px);
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
   min-height: 0;
-  --slot-reel-size: 26px;
+  overflow: hidden;
+  --slot-reel-size: 30px;
 }
 
 body.native-arcade #app .native-slot-band .slot-machine,
 body.native-arcade #app .native-slot-band .mission-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
+  flex: 0 0 auto;
+  width: 100%;
   min-height: 0;
-  padding: 0 6px;
   border-width: 8px;
   border-image-width: 12px;
   overflow: hidden;
+}
+
+body.native-arcade #app .native-slot-band .slot-machine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  justify-items: center;
+  row-gap: 5px;
+  padding: 4px 0 3px;
+}
+
+body.native-arcade #app .native-slot-band .slot-reels {
+  gap: 4px;
+}
+
+/* SPIN centred under the reels, your FAVOR centred under SPIN */
+body.native-arcade #app .native-slot-band .slot-side {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+body.native-arcade #app .native-slot-band .slot-spin {
+  min-height: 22px;
+  padding: 1px 10px !important;
+  font-size: 12px !important;
+}
+
+body.native-arcade #app .native-slot-band .slot-favor {
+  font-size: 12px;
 }
 
 body.native-arcade #app .native-slot-band .slot-result {
   display: none;
 }
 
-body.native-arcade #app .native-slot-band .slot-side {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+body.native-arcade #app .native-slot-band .slot-icon {
+  padding: 0;
 }
 
 body.native-arcade #app .native-slot-band .slot-glyph svg,
@@ -14703,48 +15449,53 @@ body.native-arcade #app .native-slot-band .slot-glyph-mask {
   height: 18px;
 }
 
-body.native-arcade #app .native-slot-band .slot-icon {
-  padding: 2px;
-}
-
-body.native-arcade #app .native-slot-band .slot-reel::after,
-body.mobile-arcade #app .center-console.has-slot .slot-reel::after {
+body.native-arcade #app .native-slot-band .slot-reel::after {
   border-width: 6px;
   border-image-width: 11px;
 }
 
-body.native-arcade #app .native-slot-band .slot-reel,
-body.mobile-arcade #app .center-console.has-slot .slot-reel {
+body.native-arcade #app .native-slot-band .slot-reel {
   --slot-window-inset: 4px;
 }
 
-body.native-arcade #app .native-slot-band .slot-spin {
-  min-height: 24px;
-  padding: 2px 10px !important;
-  font-size: 12px !important;
+/* the mission: a small box, text at its normal size, wrapped between words */
+body.native-arcade #app .native-slot-band .mission-box {
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  gap: 2px;
+  padding: 0 1px 2px;
+  text-align: center;
 }
 
 body.native-arcade #app .native-slot-band .mission-head {
-  flex: 0 0 auto;
-  gap: 6px;
-}
-
-body.native-arcade #app .native-slot-band .mission-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 1.1;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-body.native-arcade #app .native-slot-band .mission-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1px 4px;
   font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
 body.native-arcade #app .native-slot-band .mission-reward {
-  margin-left: 2px;
+  margin-left: 0;
+  font-size: 12px;
+}
+
+body.native-arcade #app .native-slot-band .mission-status {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+body.native-arcade #app .native-slot-band .mission-text {
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -14922,30 +15673,235 @@ body.mobile-arcade #app .arena:not(.pvp-arena) > .pause-button.deal-button.deal-
   min-height: 30px !important;
 }
 
-/* phone app: a small contract mark beside the word, inside the Pause / Items column, with the usual frame */
+/* phone app: the contract as a long strip (dealContractSvg), no button frame, filling its row of the
+   Pause / Items column */
 body.native-arcade #app .deal-button.deal-contract {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-body.native-arcade #app .deal-paper-mark {
-  width: 26px;
-  height: 16px;
-  flex: 0 0 auto;
-}
-
-body.native-arcade #app .deal-paper-mark .deal-ink path,
-body.native-arcade #app .deal-paper-mark .deal-sign {
-  stroke-width: 5;
-}
-
-body.native-arcade #app .deal-word-inline {
-  font-family: var(--font-display);
-  line-height: 1;
-}
-
-body.native-arcade #app .deal-button.deal-contract::after {
   display: block !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+body.native-arcade #app .deal-button.deal-contract .deal-paper {
+  width: 100%;
+  height: 100%;
+}
+
+body.native-arcade #app .deal-button.deal-contract .deal-ink path {
+  stroke-width: 2.2;
+}
+
+body.native-arcade #app .deal-button.deal-contract .deal-word {
+  font-size: 25px;
+}
+
+/* Settings > Display > Guide text: Hidden takes the "Pick a number" hint and the slot machine's
+   "Satan's bets pay FAVOR." off the game screen; their space is kept so nothing moves */
+body.hide-guide-text #app .guide-text {
+  visibility: hidden !important;
+}
+
+/* Jesus and Satan before Final Judgment (09-intro-story.js, phase "finale"): the speaker stands where Satan
+   stands in his scenes, Jesus drawn in candlelight cream (intro-jesus-yellow.webp) and mirrored to face the table; on your
+   line you stand on the right as in the story's judgement. The box takes the speaker's colour. */
+.finale-figure {
+  position: fixed;
+  right: max(0.5vw, 4px);
+  bottom: 0;
+  height: min(96vh, 1216px);
+  max-width: 34vw;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(4px) brightness(0.5);
+  transition: opacity 0.75s ease, transform 0.95s cubic-bezier(0.25, 0.6, 0.3, 1), filter 0.75s ease;
+}
+
+.finale-figure-jesus { aspect-ratio: 886 / 1216; }
+.finale-figure-satan { aspect-ratio: 768 / 1195; }
+
+/* the same pool of darkness Satan stands in, so the table does not show through */
+.finale-figure::before {
+  content: "";
+  position: absolute;
+  inset: -6% -14% -2% -22%;
+  background: radial-gradient(ellipse at 55% 55%, rgba(0, 0, 0, 0.92) 0, rgba(0, 0, 0, 0.8) 42%, rgba(0, 0, 0, 0) 70%);
+}
+
+.finale-figure img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right bottom;
+  -webkit-user-drag: none;
+}
+
+/* "Candlelight": cream lines (#fff0bc, baked into the image) in a warm gold glow; his box and text keep the
+   story's yellow */
+.finale-figure-jesus img {
+  transform: scaleX(-1);
+  filter: drop-shadow(0 0 7px rgba(255, 236, 170, 0.45)) drop-shadow(0 0 26px rgba(255, 200, 80, 0.5));
+}
+
+/* you: where the story's judgement puts you (.intro-portrait-sinner), a little narrower so you stay clear of
+   the box */
+.finale-figure-you {
+  right: max(1vw, 6px);
+  bottom: 4vh;
+  height: min(58vh, 640px);
+  max-width: 26vw;
+  aspect-ratio: 1038 / 1028;
+}
+
+.finale-figure-satan img {
+  filter: drop-shadow(0 0 22px rgba(220, 25, 25, 0.45));
+}
+
+.finale-layer[data-speaker="jesus"] .finale-figure-jesus,
+.finale-layer[data-speaker="satan"] .finale-figure-satan,
+.finale-layer[data-speaker="you"] .finale-figure-you {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.finale-layer[data-speaker="you"] .finale-figure-you {
+  transform: translateY(-4px);
+}
+
+/* the box in the speaker's colour: Satan red (as in his scenes), Jesus yellow, you white */
+.finale-layer .intro-box-pact::before,
+.finale-layer .intro-box-pact::after {
+  transition: filter 0.5s ease, box-shadow 0.5s ease, opacity 0.5s ease;
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus::before {
+  filter: brightness(0.9) sepia(1) saturate(7) hue-rotate(8deg);
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus::after {
+  box-shadow: 0 0 34px rgba(255, 190, 30, 0.26), inset 0 0 40px rgba(220, 160, 20, 0.22);
+}
+
+.finale-layer .intro-box-pact.intro-says-you::before {
+  filter: none;
+  opacity: 0.92;
+}
+
+.finale-layer .intro-box-pact.intro-says-you::after {
+  box-shadow: 0 0 30px rgba(236, 230, 216, 0.12), inset 0 0 36px rgba(236, 230, 216, 0.08);
+}
+
+.finale-layer .intro-box-pact.intro-says-jesus .intro-skip { color: #b89a45 !important; }
+.finale-layer .intro-box-pact.intro-says-jesus .intro-skip:hover { color: #ffd23f !important; }
+.finale-layer .intro-box-pact.intro-says-you .intro-skip { color: #8d877c !important; }
+.finale-layer .intro-box-pact.intro-says-you .intro-skip:hover { color: #ece6d8 !important; }
+
+.finale-layer.intro-pact-leaving .finale-figure {
+  opacity: 0;
+  filter: brightness(0.4) blur(4px);
+  transform: translateY(16px);
+  transition: opacity 0.85s ease-in, transform 0.85s ease-in, filter 0.85s ease-in;
+}
+
+body.mobile-arcade .finale-figure {
+  height: 98vh;
+  max-width: 40vw;
+}
+
+body.mobile-arcade .finale-figure-you {
+  height: 58vh;
+  max-width: 30vw;
+}
+
+/* ==========================================================================
+   Credits (Options > Credits, renderCreditsMenu in 09-credits.js): a framed card
+   like the Records, centred on the screen; the list scrolls when it is too tall.
+   ========================================================================== */
+#app .main-menu-panel.menu-screen-credits {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(560px, 92vw) !important;
+  z-index: 5;
+}
+#app .credits-menu {
+  gap: 10px;
+  justify-items: center;
+  padding: 24px 30px 18px;
+}
+#app .credits-scroll {
+  width: 100%;
+  max-height: min(62vh, 560px);
+  overflow-y: auto;
+  padding: 14px 6px 6px;
+  background: url("assets/occult-ui-border-kit/assets/divider-horizontal-a.png") top center / 100% 8px no-repeat;
+  text-align: center;
+}
+#app .credits-section {
+  margin: 0 0 18px;
+}
+#app .credits-heading {
+  margin: 0 0 6px;
+  font-family: "Razor Keen", serif !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+#app .credits-lines {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#app .credits-line {
+  display: grid;
+  gap: 1px;
+}
+#app .credits-name {
+  font-family: "Razor Keen", serif !important;
+  font-size: 20px !important;
+  color: var(--bone) !important;
+}
+#app .credits-team .credits-name {
+  font-size: 26px !important;
+}
+#app .credits-note {
+  font-family: var(--font-book) !important;
+  font-size: 15px !important;
+  color: rgba(233, 227, 214, 0.62) !important;
+}
+#app .credits-closing {
+  margin: 6px 0 4px;
+  font-family: var(--font-book) !important;
+  font-style: italic !important;
+  font-size: 16px !important;
+  color: var(--blood-bright) !important;
+}
+#app .credits-menu > .secondary-menu-button {
+  justify-self: center;
+}
+
+/* phone: landscape, little height */
+body.mobile-arcade #app .credits-menu,
+body.native-arcade #app .credits-menu {
+  gap: 6px;
+  padding: 12px 18px 10px;
+}
+body.mobile-arcade #app .credits-scroll,
+body.native-arcade #app .credits-scroll {
+  max-height: 56vh;
+}
+body.mobile-arcade #app .credits-section,
+body.native-arcade #app .credits-section {
+  margin-bottom: 10px;
+}
+body.mobile-arcade #app .credits-team .credits-name,
+body.native-arcade #app .credits-team .credits-name {
+  font-size: 20px !important;
 }

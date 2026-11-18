@@ -30,7 +30,9 @@ const SOURCE_FILES = [
   "09-gifts.js",
   "09-satan-pact.js",
   "09-playtest-feedback.js",
+  "09-codex.js",
   "09-slot-missions.js",
+  "09-credits.js",
   "10-events-bootstrap.js",
 ];
 

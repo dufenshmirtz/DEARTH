@@ -781,7 +781,6 @@ function addBotMemory(bot, count, reason = "", options = {}) {
   applyBathinMemoryDamage(bot, bathinEntries);
   if (reason) state.roundState?.roundEvents.push(reason);
   applySelfStackingMemoryOverTen(bot, beforeMemory, bot.memory?.length || 0);
-  checkBalamMemoryBountyEliminations();
   return actualIncrease;
 }
 
@@ -843,26 +842,32 @@ function stubbornArtifactChance(idOrItem) {
   return Math.min(1, 0.5 + Math.max(0, stack - 1) * 0.1);
 }
 
+// MEMORY and BOUNTY a non-boss DAMNED needs (both) for the Seal of Balam to eliminate it
+const BALAM_THRESHOLD = 15;
+
 function balamCollapseTargets(sourceBot) {
   const bosses = activeBots().filter((bot) => bot.id !== sourceBot?.id && bot.isBoss);
   if (bosses.length) return bosses;
   return activeBots().filter((bot) => bot.id !== sourceBot?.id);
 }
 
-function checkBalamMemoryBountyEliminations() {
+// Seal of Balam acts only when you press READY: a DAMNED that reaches BALAM_THRESHOLD MEMORY and BOUNTY earlier
+// keeps playing until then (called from applyPenalties, 06)
+function applyBalamAtReady() {
   const round = state.roundState;
   const entries = orderedPassiveEffectEntries("p57");
   if (!round || round.balamResolving || !entries.length) return;
   round.balamResolving = true;
   try {
-    let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+    let target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     while (target) {
       entries.forEach((entry) => markPassiveEntryTriggered(entry));
-      const damagePool = passiveEntryFlatDamage(entries[0], target.maxHp || 0);
+      // half its max SOUL (rounded up), then ELITE x1.5 per level
+      const damagePool = passiveEntryFlatDamage(entries[0], Math.ceil((target.maxHp || 0) / 2));
       target.hp = 0;
       target.deathCause = "memory-bounty";
       target.deathNotice = "BALAM";
-      round.roundEvents.push(`Seal of Balam eliminated ${target.name} for reaching 10 memory and 10 bounty.`);
+      round.roundEvents.push(`${ITEMS.p57.name} eliminated ${target.name} for reaching ${BALAM_THRESHOLD} MEMORY and ${BALAM_THRESHOLD} BOUNTY.`);
 
       const damageTargets = balamCollapseTargets(target);
       if (damagePool > 0 && damageTargets.length) {
@@ -870,13 +875,13 @@ function checkBalamMemoryBountyEliminations() {
         damageBots(
           damageTargets,
           (bot) => allocations.get(bot.id) || 0,
-          (bot, damage) => `Seal of Balam dealt ${damage} collapse damage to ${bot.name}.`,
-          "Seal of Balam"
+          (bot, damage) => `${ITEMS.p57.name} dealt ${damage} collapse damage to ${bot.name}.`,
+          ITEMS.p57.name
         );
       }
 
       resolveEliminatedBots([target]);
-      target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= 10 && botRegularBounty(bot) >= 10);
+      target = activeBots().find((bot) => !bot.isBoss && !bot.immortal && (bot.memory?.length || 0) >= BALAM_THRESHOLD && botRegularBounty(bot) >= BALAM_THRESHOLD);
     }
   } finally {
     round.balamResolving = false;
@@ -904,7 +909,6 @@ function changeBotSin(bot, delta, reason = "", options = {}) {
     applyBountyToMemoryMirror(bot, gained, options);
     applyBountyPoison(bot);
   }
-  checkBalamMemoryBountyEliminations();
   return { changed, lost, gained };
 }
 

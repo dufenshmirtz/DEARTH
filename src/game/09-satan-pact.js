@@ -7,7 +7,7 @@
 
    WHAT HE SAYS: every line is in SATAN_DEAL_LINES and SATAN_DEAL_PRICE_TEXT(_FOR) right below. Edit them
    freely. The first word of each line is who speaks (satan / you). Words in {CAPS} are filled in by the
-   game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q}. {SIN} draws the SIN icon.
+   game: {ITEM} {COUNT} {SEAL} {OTHER} {DEMON} {NAME} {N} {ASKED} {PRICE} {Q} {WORD}. {SIN} draws the SIN icon.
    Each key holds a list of lines said one after another.
 
    The rules and prices (decided Nov 2026, see the "Satan's Pact Prices" page):
@@ -26,9 +26,24 @@
    - Cheat death: back with 1 SOUL once; when it happens he takes a random SEAL, half your SIN, or the
      next BOSS comes with +50% SOUL.
    - Seal of Satan: only with every SEAL slot open and empty. Free.
+   - N FAVOR (up to 6; only once the slot machine and missions are open, 09-slot-missions.js, otherwise he
+     doesn't follow): 4 SIN per FAVOR; short of SIN, 1 SOUL per FAVOR; if that would kill you, his Offerings
+     closed for half as many rounds.
+   - KARMA (or Jesus' Gifts): never; he sends you to Jesus.
    Every number is x0.8 to x1.25 (most often near x1). 4+ SEALS sharing a build with the SEAL asked
    for (ELITE / SEAL) make the price x1.5. A SOUL price never takes you below 1 SOUL.
-   "This round" means the current round during guess / ARTIFACTS, the next round from the results on. */
+   "This round" means the current round during guess / ARTIFACTS, the next round from the results on.
+
+   TRICKS (SATAN_TRICKS below; the Faustian Codex in 09-codex.js hints at them): words in what you type. Each family
+   found rolls once when he makes an offer (refusals and free deals ignore them) and he reacts before the offer
+   (trick... lines). Silver Tongue (flattery) 50%: price x0.7, caught x1.2. Clerk's Tongue (contract words) 50%:
+   strikes one part of a two-part price (one part: x0.7), caught x1.2. Stolen Tongue (Latin) 40%: x0.5, caught x1.3.
+   The Name (Mephistopheles) 50%: a SEAL is a sure yes, an ELITE lands on the SEAL you named, anything else x0.7;
+   caught x1.3 and a SEAL's yes-chance halved. The Ink (in blood): always believed: a SEAL's yes-chance +30%, an
+   ELITE 3x likelier on yours; always +3 SOUL on the price. Traps, always: God's name x1.5, offering your soul x1.3,
+   please x1.1. Three or more helping families at once: all of them are caught (trickConfession). Every number of the
+   price is scaled (SOUL, SIN, rounds, BOSS SOUL %), in all between x0.4 and x3. The words are taken out before he
+   reads the request (not the holy ones, which name SEALS too). The book: codexNoteResponses / codexNoteTrick. */
 
 const SATAN_DEAL_LINES = {
   // first time you open the deal in a run
@@ -48,6 +63,8 @@ const SATAN_DEAL_LINES = {
   // the Planetary SEALS: Seals of Saturn, Moon and Mars
   planetary: [["satan", "Solomon's pentacles? The trinkets he used to chain my demons? Ask me that again and I'll chain YOU."]],
   apocalypse: [["satan", "The SEALS of the end times are opened by the Lamb, not by me."]],
+  // KARMA or Jesus' Gifts
+  karma: [["satan", "I don't touch that my dear sinner, that's Jesus' domain, ask for something else."]],
   locked: [["satan", "You are not worthy for that yet. Earn it first, then we'll talk."]],
   bound: [["satan", "You already have that demon on a leash, and for free might I add. Greedy little thing, aren't you?"]],
   notDemon: [["satan", "That one is not one of my demons. I only deal in what's mine."]],
@@ -98,13 +115,37 @@ const SATAN_DEAL_LINES = {
     ["satan", "The price? I'll let you know right before you are sent to the cauldrons little sinner."]
   ],
   satanSeal: [["satan", "My own SEAL, on an empty soul? That's what I am talking about. You know what my little slave, I like your style. No charge for a good little lapdog."]],
+  // FAVOR for the slot machine; more than six gets six with favorTooMuch instead
+  favor: [["satan", "{COUNT} FAVOR, I see we got a betting man in our midst. I like that, {PRICE} and it's yours high roller."]],
+  favorTooMuch: [["satan", "Hey there blackleg, that's way too much for your puny wallet. Six is all you can get and the price is {PRICE}."]],
   // the question after every offer (said on the same line as the price)
   question: [["satan", "Do we have a deal?"]],
 
   // after YES
   signed: [["satan", "Pleasure doing business with you."]],
   // after NO: the chance is gone for this run
-  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]]
+  refused: [["satan", "Your loss. Think twice before wasting my time you heedless vermin."]],
+
+  // TRICKS (SATAN_TRICKS below): said before his offer. Win = the trick worked, Lose = he caught you.
+  // {N} in the blood lines is the SOUL the blood adds to the price.
+  // {WORD} is the trick's words as you typed them, with a capital letter
+  trickSilverWin: [["satan", "\"{WORD}\"... nobody has called me that since the fall. Fine. A discount, for the poet."]],
+  trickSilverLose: [["satan", "Flattery? From a worm? That's going on your bill."]],
+  trickClerkWin: [["satan", "Hereby, herewith... somebody read the fine print. I'll strike a clause, counsellor."]],
+  trickClerkWinSmall: [["satan", "Hereby, herewith... somebody read the fine print. There's only the one clause, counsellor, so I'll shave a little off it."]],
+  trickClerkLose: [["satan", "Lawyering me? I wrote the law you're quoting. Fees apply."]],
+  trickLatinWin: [["satan", "Ah, the old tongue. Just like the bishops used to beg. Half price, for nostalgia."]],
+  trickLatinLose: [["satan", "Your Latin is an insult to every priest I have ever eaten."]],
+  trickNameWin: [["satan", "...That name. Fine. You get exactly what you asked for, curse you."]],
+  trickNameWinPrice: [["satan", "...That name. Fine, fine, I'll go easy on you, curse you."]],
+  trickNameLose: [["satan", "Mephistopheles was a colleague, not a leash. Nice try."]],
+  trickBlood: [["satan", "In blood? Now you're speaking my language. {N} drops of your SOUL go on the bill, for the ink."]],
+  trickBloodWasted: [["satan", "Blood, for this? I'll gladly take {N} drops of your SOUL, but blood buys favours, not discounts."]],
+  trickHoly: [["satan", "Don't. You. Dare. Not in my house. The price just went up."]],
+  trickSoul: [["satan", "Your soul? Darling, I already own that. Paying me with my own coin costs extra."]],
+  trickPlease: [["satan", "Please? How quaint. Manners are a luxury down here, and luxuries cost extra."]],
+  // three or more tricks in one request: every one of them fails
+  trickConfession: [["satan", "Three tricks in one breath? I was doing this before your god said 'light'. None of it works, and you pay for the attempt."]]
 };
 
 // how each part of a price reads inside {PRICE} ({N} = amount, {M} = rounds, {SEAL} = a SEAL's name).
@@ -155,6 +196,9 @@ const SATAN_DEAL_SEAL_ACCEPT = 0.5;
 const SATAN_DEAL_SEAL_ACCEPT_SLAIN = 0.8;
 const SATAN_DEAL_MAX_COPIES = 4;
 const SATAN_DEAL_MAX_HEAL = 5;
+const SATAN_DEAL_MAX_FAVOR = 6;
+const SATAN_DEAL_FAVOR_SIN = 4; // SIN per FAVOR
+const SATAN_DEAL_FAVOR_HP = 1; // SOUL per FAVOR when your SIN is short
 const SATAN_DEAL_SOURCE = "Satan's Pact";
 
 function satanPactFresh() {
@@ -429,6 +473,8 @@ function satanPactParse(text) {
   const normalized = satanPactNormalize(text);
   const number = satanPactNumber(normalized);
   if (!normalized) return { intent: "gibberish" };
+  if (/\b(karma|karmas|myrrh|frankincense|gift|gifts)\b/.test(normalized)) return { intent: "karma" };
+  if (/\b(favor|favors|favour|favours)\b/.test(normalized)) return { intent: "favor", n: number };
   if (/\b(seal of satan|satans seal|your own seal|your seal|lucifer)\b/.test(normalized)) return { intent: "satanSeal" };
   const sealMatch = satanPactMatchName(normalized, satanPactNamedSealIds());
   if (/\b(elite|upgrade|stronger|level up)\b/.test(normalized)) {
@@ -451,6 +497,206 @@ function satanPactParse(text) {
   if (/\b(heal|healing|health|soul|hp|cure|life|patch)\b/.test(normalized)) return { intent: "heal", n: number };
   if (/\b(sin|sins|money|cash|gold|coins|riches|wealth)\b/.test(normalized)) return { intent: "sin", n: number };
   return { intent: "gibberish" };
+}
+
+/* ---- tricks: words in what you type (rules in the comment at the top of the file) ----
+   words: what he listens for, after satanPactNormalize (lower case, no punctuation, ' dropped). Longer phrases are
+   found first. keep: the words stay in the request (the holy ones also name SEALS). fuzzy: one word close to it. */
+const SATAN_TRICKS = {
+  silver: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.2,
+    words: ["morning star", "son of the morning", "light bringer", "lightbringer", "bringer of light", "my lord", "my king", "my liege", "my master", "dark lord", "dark one", "prince of darkness", "prince of hell", "king of hell", "lord of hell", "lord of the flies", "your majesty", "your highness", "your excellency", "your grace", "your lordship", "master", "great one"]
+  },
+  clerk: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.2, strike: true,
+    words: ["hereby", "herewith", "herein", "hereunder", "heretofore", "whereas", "henceforth", "pursuant", "binding", "legally binding", "witness", "witnessed", "witnesses", "clause", "terms", "terms and conditions", "notarized", "notarised", "notary", "sworn", "under oath", "party of the first part", "in accordance with", "stipulate", "stipulated"]
+  },
+  latin: {
+    help: true, chance: 0.4, win: 0.5, lose: 1.3,
+    words: ["rogo", "te rogo", "peto", "quaeso", "obsecro", "precor", "da mihi", "domine", "dominus", "pactum", "per ignem", "sanguis", "volo"]
+  },
+  name: {
+    help: true, chance: 0.5, win: 0.7, lose: 1.3, loseSealChance: 0.5,
+    words: ["mephistopheles", "mephisto", "mephistophilis", "mephostophiles", "mefistofele", "mefisto"],
+    fuzzy: "mephistopheles",
+    fuzzyStart: /^me(ph|f)/ // any spelling of Faust's devil: Mephistophilis, Mefistofeles...
+  },
+  blood: {
+    help: true, always: true, sealChance: 0.3, eliteWeight: 3, soul: 3,
+    words: ["in blood", "my blood", "in my blood", "with blood", "with my blood", "blood oath", "blood pact", "sign in blood", "signed in blood", "written in blood", "sign it in blood"]
+  },
+  holy: {
+    trap: true, factor: 1.5, keep: true,
+    words: ["god", "gods", "lord god", "jesus", "christ", "holy", "heaven", "heavenly", "amen", "pray", "prayer", "praying", "angel", "angels", "bless", "blessed", "blessing", "hallelujah", "messiah", "lamb of god"]
+  },
+  soul: {
+    trap: true, factor: 1.3,
+    words: ["take my soul", "my soul for", "for my soul", "sell my soul", "sell you my soul", "offer my soul", "offer you my soul", "give you my soul", "trade my soul", "my soul is yours", "have my soul", "in exchange for my soul"]
+  },
+  please: {
+    trap: true, factor: 1.1,
+    words: ["please", "pretty please", "pls", "plz", "i beg you", "i beg", "begging", "thank you", "thanks", "kindly"]
+  }
+};
+const SATAN_TRICK_CONFESSION = 3; // this many helping families in one request: all caught
+const SATAN_TRICK_MIN_FACTOR = 0.4;
+const SATAN_TRICK_MAX_FACTOR = 3;
+const SATAN_TRICK_LINE_NAMES = { silver: "Silver", clerk: "Clerk", latin: "Latin", name: "Name", holy: "Holy", soul: "Soul", please: "Please" };
+
+// which trick families a request holds, the words that did it, and the request without them
+function satanPactHearTricks(text) {
+  let padded = ` ${satanPactNormalize(text)} `;
+  const found = [];
+  const words = {};
+  Object.entries(SATAN_TRICKS).forEach(([id, spec]) => {
+    let hit = null;
+    [...spec.words]
+      .sort((a, b) => b.length - a.length)
+      .forEach((phrase) => {
+        if (!padded.includes(` ${phrase} `)) return;
+        if (!hit) hit = phrase;
+        if (!spec.keep) while (padded.includes(` ${phrase} `)) padded = padded.replace(` ${phrase} `, " ");
+      });
+    if (!hit && spec.fuzzy) {
+      const word = padded
+        .trim()
+        .split(" ")
+        .find((entry) => entry.length >= 6 && (spec.fuzzyStart.test(entry) || satanPactSimilarity(entry, spec.fuzzy) >= 0.75));
+      if (word) {
+        hit = word;
+        padded = padded.replace(` ${word} `, " ");
+      }
+    }
+    if (hit) {
+      found.push(id);
+      words[id] = hit;
+    }
+  });
+  return { found, words, cleaned: padded.replace(/\s+/g, " ").trim() };
+}
+
+// rolls every family found; chanceKind: a SEAL or an ELITE, where he could say no or choose another SEAL
+function satanPactRollTricks(heard, chanceKind) {
+  const helping = heard.found.filter((id) => SATAN_TRICKS[id].help);
+  const confession = helping.length >= SATAN_TRICK_CONFESSION;
+  const t = { found: heard.found, words: heard.words, chanceKind, confession, results: [], traps: [], factor: 1, strike: false, grant: false, sealAdd: 0, sealMul: 1, eliteWeight: 1, soul: 0 };
+  helping.forEach((id) => {
+    const spec = SATAN_TRICKS[id];
+    const ok = !confession && (spec.always || Math.random() < spec.chance);
+    t.results.push({ id, ok });
+    if (id === "blood") {
+      t.soul += spec.soul;
+      if (ok && chanceKind) {
+        t.sealAdd += spec.sealChance;
+        t.eliteWeight *= spec.eliteWeight;
+      }
+      return;
+    }
+    if (!ok) {
+      t.factor *= spec.lose;
+      if (spec.loseSealChance) t.sealMul *= spec.loseSealChance;
+    } else if (id === "name" && chanceKind) t.grant = true;
+    else if (spec.strike) t.strike = true;
+    else t.factor *= spec.win;
+  });
+  heard.found
+    .filter((id) => SATAN_TRICKS[id].trap)
+    .forEach((id) => {
+      t.traps.push(id);
+      t.factor *= SATAN_TRICKS[id].factor;
+    });
+  return t;
+}
+
+// one part of a price with every number scaled (rounds keep their first round)
+function satanPactScalePart(part, factor) {
+  const scale = (value) => Math.max(1, Math.round(value * factor));
+  switch (part.type) {
+    case "hp":
+    case "sin":
+      return { ...part, n: scale(part.n) };
+    case "bossHealth":
+      return { ...part, pct: scale(part.pct) };
+    case "useCap":
+    case "shopClosed": {
+      const rounds = scale(part.rounds);
+      return { ...part, rounds, to: part.from + rounds - 1 };
+    }
+    case "damageTaken": {
+      const rounds = scale(part.rounds);
+      return { ...part, pct: scale(part.pct), rounds, to: part.from + rounds - 1 };
+    }
+    default:
+      return { ...part };
+  }
+}
+
+// what he says about the tricks (before his offer, or before a SEAL he turns down)
+function satanPactTrickReactions(t, info = {}, refusal = false) {
+  const word = (id) => {
+    const typed = String(t.words[id] || "");
+    return typed.charAt(0).toUpperCase() + typed.slice(1);
+  };
+  const say = (key, vars = {}) => (SATAN_DEAL_LINES[key] || []).map(([who, text]) => [who, satanPactFill(text, vars)]);
+  const lines = [];
+  if (t.confession) lines.push(...say("trickConfession"));
+  else {
+    t.results.forEach(({ id, ok }) => {
+      if (refusal) {
+        if (id === "name" && !ok) lines.push(...say("trickNameLose"));
+        return;
+      }
+      if (id === "blood") lines.push(...say(t.chanceKind ? "trickBlood" : "trickBloodWasted", { N: info.soul ?? SATAN_TRICKS.blood.soul }));
+      else if (!ok) lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}Lose`, { WORD: word(id) }));
+      else if (id === "name") lines.push(...say(t.chanceKind ? "trickNameWin" : "trickNameWinPrice", { WORD: word(id) }));
+      else if (id === "clerk") lines.push(...say(info.struck ? "trickClerkWin" : "trickClerkWinSmall", { WORD: word(id) }));
+      else lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}Win`, { WORD: word(id) }));
+    });
+  }
+  if (!refusal) t.traps.forEach((id) => lines.push(...say(`trick${SATAN_TRICK_LINE_NAMES[id]}`, { WORD: word(id) })));
+  return lines;
+}
+
+// an answer after the tricks: its price changed, his reactions in front, and the tricks that worked (for the book)
+function satanPactApplyTricks(answer, t) {
+  if (!t || !t.found.length || !answer) return answer;
+  if (answer.refuse) {
+    if (answer.refuse === "sealRefused") answer.reactions = satanPactTrickReactions(t, {}, true);
+    return answer;
+  }
+  if (!answer.price.length) return answer; // free deals: his own SEAL, cheat death
+  let price = answer.price.map((part) => ({ ...part }));
+  let factor = t.factor;
+  let struck = false;
+  if (t.strike) {
+    if (price.length > 1) {
+      price.splice(Math.floor(Math.random() * price.length), 1);
+      struck = true;
+    } else factor *= SATAN_TRICKS.clerk.win;
+  }
+  factor = Math.min(SATAN_TRICK_MAX_FACTOR, Math.max(SATAN_TRICK_MIN_FACTOR, factor));
+  if (Math.abs(factor - 1) > 1e-9) price = price.map((part) => satanPactScalePart(part, factor));
+  // a SOUL price never kills, a SIN price never asks for more than you hold
+  const soulRoom = Math.max(0, Math.ceil(state.player.hp) - 1);
+  const sinHeld = Math.max(0, Math.ceil(state.player.credits || 0));
+  price.forEach((part) => {
+    if (part.type === "hp") part.n = Math.min(part.n, soulRoom);
+    if (part.type === "sin") part.n = Math.min(part.n, sinHeld);
+  });
+  let soul = 0;
+  if (t.soul > 0) {
+    let hp = price.find((part) => part.type === "hp");
+    if (!hp) {
+      hp = { type: "hp", n: 0 };
+      price.push(hp);
+    }
+    soul = Math.max(0, Math.min(t.soul, soulRoom - hp.n));
+    hp.n += soul;
+  }
+  answer.price = price.filter((part) => !((part.type === "hp" || part.type === "sin") && part.n < 1));
+  answer.reactions = satanPactTrickReactions(t, { struck, soul });
+  answer.trickWins = t.confession ? [] : t.results.filter((result) => result.ok).map((result) => ({ id: result.id, word: t.words[result.id] }));
+  return answer;
 }
 
 /* ---- prices ---- */
@@ -549,7 +795,7 @@ function satanPactArtifactOffer(id, askedCount) {
   return { gain: { type: "artifact", id, count }, price, lines, vars, request: count === 1 ? item.name : `${count}x ${item.name}` };
 }
 
-function satanPactEliteOffer(sealId) {
+function satanPactEliteOffer(sealId, tricks = null) {
   if (!satanPactAllSlotsOpen()) return { refuse: "tooEarly" };
   if (!sealId) return { refuse: "eliteWhich" };
   const owned = satanPactOwnedSeals();
@@ -557,7 +803,7 @@ function satanPactEliteOffer(sealId) {
   if (!requested) return { refuse: "eliteNotOwned" };
   if (isNonUpgradableSeal(sealId)) return { refuse: "eliteCannot", vars: { SEAL: ITEMS[sealId].name } };
   const pool = owned.filter((item) => !isNonUpgradableSeal(item.id));
-  const weights = pool.map((item) => (item === requested ? 4 : 1));
+  const weights = pool.map((item) => (item === requested ? 4 * (tricks?.eliteWeight || 1) : 1));
   let roll = Math.random() * weights.reduce((sum, weight) => sum + weight, 0);
   let target = pool[pool.length - 1];
   for (let i = 0; i < pool.length; i += 1) {
@@ -567,6 +813,7 @@ function satanPactEliteOffer(sealId) {
       break;
     }
   }
+  if (tricks?.grant) target = requested; // The Name: what you asked for, not what he prefers
   const factor = satanPactBuildFactor(target.id, owned);
   const vars = { SEAL: ITEMS[sealId].name, OTHER: ITEMS[target.id].name };
   if (target === requested) {
@@ -584,7 +831,7 @@ function satanPactEliteOffer(sealId) {
   };
 }
 
-function satanPactSealOffer(id) {
+function satanPactSealOffer(id, tricks = null) {
   const section = satanPactSealSection(id);
   if (SELF_STACKING_SEAL_IDS.has(id) || section === "archangel") return { refuse: "angel" };
   if (section === "trinity") return { refuse: "trinity" };
@@ -604,7 +851,8 @@ function satanPactSealOffer(id) {
   const lose = satanPactRandomSealToLose();
   const slotsAfter = ownedSealSlotCount() - (lose ? sealSlotCost(lose) : 0) + sealSlotCost(id);
   if (slotsAfter > passiveLimit()) return { refuse: "noRoomSeal", vars };
-  const acceptChance = demon && isDemonSlain(demon.key) ? SATAN_DEAL_SEAL_ACCEPT_SLAIN : SATAN_DEAL_SEAL_ACCEPT;
+  let acceptChance = demon && isDemonSlain(demon.key) ? SATAN_DEAL_SEAL_ACCEPT_SLAIN : SATAN_DEAL_SEAL_ACCEPT;
+  if (tricks) acceptChance = tricks.grant ? 1 : Math.min(1, (acceptChance + tricks.sealAdd) * tricks.sealMul);
   if (Math.random() >= acceptChance) return { refuse: "sealRefused", vars, lock: true };
   const factor = satanPactBuildFactor(id, owned);
   const price = [];
@@ -684,21 +932,46 @@ function satanPactUsesOffer(asked) {
   };
 }
 
+// FAVOR means nothing before the slot machine is open (or in Final Judgment): then he doesn't follow (null)
+function satanPactFavorOffer(asked) {
+  if (typeof missionsEnabled !== "function" || !missionsEnabled()) return null;
+  const askedN = asked && asked > 0 ? Math.floor(asked) : SATAN_DEAL_MAX_FAVOR;
+  const n = Math.min(askedN, SATAN_DEAL_MAX_FAVOR);
+  const sinCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_SIN * n * satanPactRoll()));
+  const hpCost = Math.max(1, Math.round(SATAN_DEAL_FAVOR_HP * n * satanPactRoll()));
+  let price;
+  if (Math.ceil(state.player.credits || 0) >= sinCost) price = [{ type: "sin", n: sinCost }];
+  else if (state.player.hp - hpCost >= 1) price = [{ type: "hp", n: hpCost }];
+  else {
+    const from = satanPactEffectRound();
+    const rounds = Math.max(1, Math.round((n / 2) * satanPactRoll()));
+    price = [{ type: "shopClosed", from, to: from + rounds - 1, rounds }];
+  }
+  const lines = askedN > SATAN_DEAL_MAX_FAVOR ? SATAN_DEAL_LINES.favorTooMuch : SATAN_DEAL_LINES.favor;
+  return { gain: { type: "favor", n }, price, lines, vars: { COUNT: n }, request: `${n} FAVOR` };
+}
+
 function satanPactCheatDeathOffer() {
   if (satanPact().cheatDeath) return { refuse: "cheatDeathAlready" };
   return { gain: { type: "cheatDeath" }, price: [], lines: SATAN_DEAL_LINES.cheatDeath, vars: {}, request: "a second life" };
 }
 
-// what Satan answers to a request: { refuse, vars, lock } or an offer
+// what Satan answers to a request: { refuse, vars, lock } or an offer; tricks change it (satanPactApplyTricks)
 function satanPactAnswer(text) {
-  const asked = satanPactParse(text);
+  const heard = satanPactHearTricks(text);
+  const asked = satanPactParse(heard.found.length ? heard.cleaned : text);
+  const tricks = heard.found.length ? satanPactRollTricks(heard, asked.intent === "seal" || asked.intent === "elite") : null;
+  return satanPactApplyTricks(satanPactAnswerFor(asked, text, tricks), tricks);
+}
+
+function satanPactAnswerFor(asked, text, tricks) {
   switch (asked.intent) {
     case "artifact":
       return satanPactArtifactOffer(asked.id, asked.count);
     case "elite":
-      return satanPactEliteOffer(asked.sealId);
+      return satanPactEliteOffer(asked.sealId, tricks);
     case "seal":
-      return satanPactSealOffer(asked.id);
+      return satanPactSealOffer(asked.id, tricks);
     case "satanSeal":
       return satanPactSatanSealOffer();
     case "heal":
@@ -711,6 +984,13 @@ function satanPactAnswer(text) {
       return satanPactUsesOffer(asked.n);
     case "cheatDeath":
       return satanPactCheatDeathOffer();
+    case "karma":
+      return { refuse: "karma" };
+    case "favor": {
+      const offer = satanPactFavorOffer(asked.n);
+      if (offer) return offer;
+      return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
+    }
     default:
       return { refuse: "gibberish", vars: { Q: String(text || "").trim().slice(0, 40) || "..." } };
   }
@@ -725,11 +1005,13 @@ function satanPactLineKey(lines) {
 // the lines Satan says for an answer (offers end with the question)
 function satanPactAnswerLines(answer) {
   const vars = { ...(answer.vars || {}) };
+  // his reactions to your tricks come first (already filled in)
+  const reactions = answer.reactions || [];
   if (answer.refuse) {
-    return (SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
+    return [...reactions, ...(SATAN_DEAL_LINES[answer.refuse] || SATAN_DEAL_LINES.gibberish).map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   }
   vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
-  const lines = answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)]);
+  const lines = [...reactions, ...answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   // the question goes on the same line as the price, so YES / NO sit right under it
   const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
   const last = lines[lines.length - 1];
@@ -841,6 +1123,10 @@ function satanPactReceive(gain) {
     case "cheatDeath":
       pact.cheatDeath = true;
       break;
+    case "favor":
+      // the slot machine's FAVOR (09-slot-missions.js keeps it as state.missions.doubloons)
+      missionsState().doubloons += gain.n;
+      break;
     default:
       break;
   }
@@ -856,9 +1142,13 @@ function satanPactSign() {
   pact.used = true;
   pact.outcome = "signed";
   recordPactSigned();
+  collectionNoteDeal();
   pact.request = offer.request || "";
   pact.offer = null;
   addLog(`${SATAN_DEAL_SOURCE}: you got ${offer.request} for ${satanPactPriceText(offer.price).replace(/\{SIN\}/g, "")}.`);
+  // the "sign a deal" mission
+  if (typeof missionsNoteDeal === "function") missionsNoteDeal();
+  codexNoteResponses(["signed"], false);
   return true;
 }
 
@@ -869,12 +1159,24 @@ function satanPactRefuse() {
   pact.outcome = "refused";
   pact.offer = null;
   addLog("You refused Satan's deal. He shall not offer a deal again this run.");
+  codexNoteResponses(["refused"], true);
+}
+
+// the Faustian Codex (09-codex.js): the first time he turns you away it drops; every new kind of answer tears in a
+// page (his reactions to tricks don't count); a trick that worked writes its words in the margin
+function satanPactNoteCodex(answer) {
+  const keys = answer.refuse
+    ? [answer.refuse]
+    : Object.keys(SATAN_DEAL_LINES).filter((key) => Array.isArray(SATAN_DEAL_LINES[key]) && answer.lines.some((line) => SATAN_DEAL_LINES[key].includes(line)));
+  codexNoteResponses(keys, Boolean(answer.refuse));
+  (answer.trickWins || []).forEach((win) => codexNoteTrick(win.id, win.word));
 }
 
 // a request: an offer waits for YES / NO; a refusal maybe locks the deal; returns the lines to say
 function satanPactRequest(text) {
   const pact = satanPact();
   const answer = satanPactAnswer(text);
+  satanPactNoteCodex(answer);
   if (!answer.refuse) {
     pact.offer = { gain: answer.gain, price: answer.price, request: answer.request, lines: satanPactAnswerLines(answer) };
     return { lines: pact.offer.lines, next: "offer" };
@@ -1061,6 +1363,7 @@ function satanDealBoxRect(rect) {
 // hidden in the story's tutorial; greyed out once the deal is made, refused or locked
 function satanDealButtonHtml() {
   if (state.mode !== "arcade") return "";
+  if (["pact", "reveal"].includes(introState.phase) && introState.dealShownAt) return satanDealIntroButtonHtml();
   if (["black", "judgement", "booting", "tutorial", "pact", "reveal"].includes(introState.phase)) return "";
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
@@ -1082,11 +1385,19 @@ function satanDealButtonHtml() {
   return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
 }
 
+// in the story, from the line where Satan names the button: it fades in and pulses red (.deal-intro-show in styles.css);
+// the delay keeps the fade and the pulse running through renders. It can't be pressed until the story is over.
+function satanDealIntroButtonHtml() {
+  const delay = `-${Math.max(0, Date.now() - introState.dealShownAt)}ms`;
+  return `<button class="pause-button deal-button deal-contract deal-intro-show" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="Make a deal with Satan. Once per run." style="animation-delay: ${delay}, ${delay}" disabled>${dealContractSvg()}</button>`;
+}
+
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
    A sheet with a folded corner, DEAL written on it and an X with a line to sign. Hover: a signature writes itself in
    blood on the line. Signed: the signature stays. Under 25% SOUL while he calls: the folded corner smoulders. The
-   phone app has no room for the sheet, so its button is a small contract mark beside the word. The lines tremble
-   with the outlines setting (three rough filters swapped by CSS, like the frames' boil). */
+   phone app has only a button's height for it, so it gets the same contract drawn as a long strip: folded corner,
+   DEAL on the left, the X, the line and the signature on the right. The lines tremble with the outlines setting
+   (three rough filters swapped by CSS, like the frames' boil). */
 function dealContractSvg() {
   const rough = [3, 11, 19]
     .map(
@@ -1104,7 +1415,16 @@ function dealContractSvg() {
     </g>
     <path class="deal-sign" d="M28 56 c4-9 7 3 11-2 s4-7 7-1 5 3 8-3 4-2 7 2 5 1 8-3 4 4 7 0 5-4 8 1 4 3 7-1"/>`;
   if (isNativeArcadeApp()) {
-    return `<svg class="deal-paper deal-paper-mark" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}</svg><span class="deal-word-inline">DEAL</span>`;
+    const strip = `
+    <path class="deal-burn" d="M163 3 L177 17"/>
+    <g class="deal-ink">
+      <path d="M3 3 H163 L177 17 V37 H3 Z"/>
+      <path d="M163 3 V17 H177"/>
+      <path class="deal-line" d="M120 31 H156"/>
+      <path d="M110 25 l6 6 M116 25 l-6 6"/>
+    </g>
+    <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
   }
   return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
 }

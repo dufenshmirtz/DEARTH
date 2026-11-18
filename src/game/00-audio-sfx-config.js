@@ -64,7 +64,7 @@ const ARTIFACT_SFX = {
   a10: { src: "assets/audio/artifacts/coinDrop.mp3", tier: "item" },
   a11: { src: "assets/audio/artifacts/VialofBlood.mp3", tier: "item" },
   a12: { src: "assets/audio/artifacts/invertedCross.mp3", tier: "item" },
-  a14: { src: "assets/audio/artifacts/candle.mp3", tier: "item" },
+  a14: { src: "assets/audio/artifacts/spiritBoard.mp3", tier: "item" }, // the planchette sliding (freesound_community "wood chest slid3")
   a15: { src: "assets/audio/artifacts/Dagger.mp3", tier: "item" },
   a18: { src: "assets/audio/artifacts/Crystal.mp3", tier: "item" },
   a21: { src: "assets/audio/artifacts/pentakill.mp3", tier: "item" },
@@ -134,6 +134,10 @@ const GAME_SFX = {
   // with it in the Collection (the pact sound from the story)
   karmaGain: { srcs: ["assets/audio/sfx/karma-gain.mp3"], tier: "accent" },
   karmaUnlock: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger" },
+  // the Faustian Codex (09-codex.js): turning a page is a scratch of the story's pencil; a new page burns in
+  // (its toast); the book itself arrives with the pact sound (karmaUnlock)
+  codexPage: { srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`), tier: "ui", pitch: 0.1 },
+  codexNewPage: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
   menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
 };
 

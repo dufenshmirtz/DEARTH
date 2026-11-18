@@ -1,0 +1,29 @@
+Razor Keen (fonts/razor-keen.regular.otf)
+Designer: Raymond Larabie (Typodermic Fonts)
+Version in this repo: 3.001
+License: CC0 1.0 Universal (public domain dedication), released 2022
+
+The font file itself carries this notice (name table, IDs 0, 10, 14):
+
+  Released in 2022 under CC0 license. No rights reserved.
+
+  This font has been released under a no rights reserved Creative Commons
+  Zero license. Please do not ask permission to do anything with these fonts.
+  Whatever you want to do with this font, the answer will be yes. Please read
+  about the CC0 Public Domain license before contacting me.
+  https://creativecommons.org/publicdomain/zero/1.0/
+  To the extent possible under law, Raymond Larabie has waived all copyright
+  and related or neighboring rights to this font. This work is published from
+  Japan.
+
+Typodermic lists Razor Keen (1997) in its public-domain collection:
+https://typodermicfonts.com/public-domain/
+That page states the fonts may be used commercially, modified, embedded in
+software, redistributed or sold.
+
+Typodermic's free desktop EULA (which forbids embedding in apps and games)
+applies to its "free for commercial use" fonts, not to this CC0 release.
+Keep this exact file (v3.001, CC0 notice inside); do not swap it for an older
+copy from a font site, which may carry the old freeware/desktop terms.
+
+Checked 2026-11-16.

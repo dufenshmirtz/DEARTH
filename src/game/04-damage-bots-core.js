@@ -361,6 +361,7 @@ function damagePlayer(amount, reason, echo = true, respectReduction = true, sour
   // Satan's Pact "cheat death": back with 1 SOUL, and he collects
   if (nextHp <= 0 && satanPactCheatDeathArmed()) nextHp = satanPactCheatDeath();
   state.player.hp = Math.max(introPlayerHpFloor(), nextHp);
+  if (typeof collectionNotePlayerHp === "function") collectionNotePlayerHp();
   state.playerLastDamage = (state.playerLastDamage || 0) + damage;
   const sourceLabel = source === null ? "" : source || sourceLabelFromReason(reason, "Damage");
   recordPlayerDamageSource(sourceDamage, sourceLabel);
@@ -478,12 +479,25 @@ function botHealthBonus() {
 }
 
 function bossHealthBonus() {
-  return scalingBonus(
-    state.bossSpawnCount,
+  const spawned = state.bossSpawnCount || 0;
+  const bonus = scalingBonus(
+    spawned,
     BOSS_HP_BONUS_PER_SPAWN,
     BOSS_HP_BONUS_PER_SPAWN_LATE,
     BOSS_HP_BONUS_PER_SPAWN_ENDLESS
   );
+  return spawned >= ENDLESS_SCALING_BREAKPOINT_BOSSES ? bonus + endlessBossHealthJump() : bonus;
+}
+
+// one-time step after the main game, so the first Goetic BOSS starts at ENDLESS_FIRST_BOSS_HP base SOUL
+function endlessBossHealthJump() {
+  const atFirstDemon = 80 + scalingBonus(
+    ENDLESS_SCALING_BREAKPOINT_BOSSES,
+    BOSS_HP_BONUS_PER_SPAWN,
+    BOSS_HP_BONUS_PER_SPAWN_LATE,
+    BOSS_HP_BONUS_PER_SPAWN_ENDLESS
+  );
+  return Math.max(0, ENDLESS_FIRST_BOSS_HP - atFirstDemon);
 }
 
 function hpExponentialFactor(progressAfterFirstEight) {
@@ -573,7 +587,7 @@ function eliteShopChance(eliteBoosted = activeEliteBoostCount()) {
   let multiplier = 1;
   multiplier *= 2 ** eliteRerollBoostCount(eliteBoosted);
   if (sealSlotsFull()) multiplier *= 2;
-  return Math.min(1, SHOP_ELITE_CHANCE * multiplier);
+  return Math.min(SHOP_ELITE_CHANCE_MAX, SHOP_ELITE_CHANCE * multiplier);
 }
 
 function activeInventoryLimit() {

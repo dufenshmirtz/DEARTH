@@ -518,3 +518,9 @@ if (!resumeNativeArcadeOnForeground()) {
     showMainMenu();
   }
 }
+// SEALS whose achievement is already met open now: progress from before the achievements changed, and
+// value rules (demons, Archangels, discoveries, Records) that grew outside a run
+try {
+  evaluateSealUnlocks(true);
+  saveCollectionProgress();
+} catch (error) {}

@@ -162,6 +162,8 @@ function renderMenuApp() {
                 ? renderSoundOptionsMenu()
                 : screen === "records"
                   ? renderRecordsMenu()
+                  : screen === "credits"
+                    ? renderCreditsMenu()
                   : screen === "quit"
                     ? renderQuitMenu()
                     : renderMainMenu()
@@ -280,6 +282,7 @@ function renderOptionsMenu() {
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button" data-menu-action="gifts">Shop</button>
+      <button class="menu-button" data-menu-action="credits">Credits</button>
       <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
     </div>
   `;
@@ -327,6 +330,7 @@ const RECORDS_TABS = [
 
 // which tab shows each run record (for the NEW marks)
 const RECORD_TAB_OF_KEY = {
+  bestRunFirstGuessQuality: "guess",
   bestRunGuessQuality: "guess",
   mostCriticals: "guess",
   deepestDescent: "descent",
@@ -393,35 +397,43 @@ function renderRecordsMenu() {
 
   let plaques = "";
   if (tab === "guess") {
-    const recent = lifetime.recentGuesses;
-    const recentQuality = guessQualityValue(recent.reduce((sum, score) => sum + score, 0), recent.length);
-    const allQuality = guessQualityValue(lifetime.guessSum, lifetime.guessRounds);
-    const best = records.bestRunGuessQuality;
-    const strip = recent.length
-      ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
-      : "";
+    // the same three plaques for Guess quality (what you typed vs the TARGET as revealed) and
+    // Submit quality (your final guess vs the final TARGET, after ARTIFACTS)
+    const qualityPlaques = (name, recent, sum, rounds, recordKey, size) => {
+      const recentQuality = guessQualityValue(recent.reduce((total, score) => total + score, 0), recent.length);
+      const allQuality = guessQualityValue(sum, rounds);
+      const best = records[recordKey];
+      const strip = recent.length
+        ? `<div class="record-guess-strip" aria-hidden="true">${recent.map((score) => `<i class="${score >= 100 ? "crit" : ""}" style="height:${Math.max(6, score)}%"></i>`).join("")}</div>`
+        : "";
+      return [
+        renderRecordPlaque({
+          label: name,
+          value: recentQuality ?? "--",
+          sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+          size,
+          empty: recentQuality === null,
+          extra: strip
+        }),
+        renderRecordPlaque({
+          label: name,
+          value: allQuality ?? "--",
+          sub: rounds ? `all time · ${recordCountText(rounds, "guess", "guesses")}` : "all time",
+          empty: allQuality === null
+        }),
+        renderRecordPlaque({
+          label: `Best run ${name}`,
+          value: best.value > 0 ? formatNumber(best.value) : "None",
+          sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+          isNew: unseen.has(recordKey),
+          empty: !(best.value > 0)
+        })
+      ];
+    };
     plaques = [
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: recentQuality ?? "--",
-        sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
-        size: "hero",
-        empty: recentQuality === null,
-        extra: strip
-      }),
-      renderRecordPlaque({
-        label: "Guess quality",
-        value: allQuality ?? "--",
-        sub: lifetime.guessRounds ? `all time · ${recordCountText(lifetime.guessRounds, "guess", "guesses")}` : "all time",
-        empty: allQuality === null
-      }),
-      renderRecordPlaque({
-        label: "Best run Guess quality",
-        value: best.value > 0 ? formatNumber(best.value) : "None",
-        sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
-        isNew: unseen.has("bestRunGuessQuality"),
-        empty: !(best.value > 0)
-      }),
+      // one row each: the last guesses (wide, with the strip), all time, best run
+      ...qualityPlaques("Guess quality", lifetime.recentFirstGuesses, lifetime.firstGuessSum, lifetime.firstGuessRounds, "bestRunFirstGuessQuality", "wide"),
+      ...qualityPlaques("Submit quality", lifetime.recentGuesses, lifetime.guessSum, lifetime.guessRounds, "bestRunGuessQuality", "wide"),
       lifetimePlaque("CRITICALS in a row", progress.best.critStreak || 0, "in one run"),
       runPlaque("mostCriticals", "Most CRITICALS")
     ].join("");
@@ -586,6 +598,14 @@ const SETTING_CHOICES = {
     set: (value) => { state.display.textSize = value; },
     text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
   },
+  // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Satan's bets pay FAVOR."
+  guideText: {
+    label: "Guide text",
+    values: () => [1, 0],
+    get: () => (state.display.guideText === 0 ? 0 : 1),
+    set: (value) => { state.display.guideText = value; },
+    text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+  },
   fullscreen: {
     label: "Window",
     values: () => [0, 1],
@@ -686,7 +706,8 @@ function renderSettingsPanel(prefix) {
       settingChoiceRow("outlineBoil"),
       settingChoiceRow("screenShake"),
       settingChoiceRow("flashes"),
-      settingChoiceRow("textSize")
+      settingChoiceRow("textSize"),
+      settingChoiceRow("guideText")
     ].join("");
   } else {
     const controls = isNativeArcadeApp()
@@ -1163,6 +1184,14 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
+      <h2>Slot machine (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
+      </div>
+      <h2>Faustian Codex (testing)</h2>
+      <div class="dev-summon-row">
+        <button class="small-button${codexDevWhole() ? " active" : ""}" data-pause-action="codex-whole" data-tooltip="${codexDevWhole() ? "On: the Codex tab shows every page. Click to go back to the pages really found" : "Show the Codex tab in the Collection with every page, found or not (kept on this device until turned off)"}">Whole Codex${codexDevWhole() ? ": on" : ""}</button>
+      </div>
       <h2>Self-stacking conditions this game</h2>
       ${rows}
       <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
@@ -1219,18 +1248,17 @@ function renderPvpTopbar() {
 function renderPvpTargetPanel() {
   const pvp = state.pvp;
   const shown = pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
-  const moved = pvp.finalTarget !== null && pvp.baseTarget !== null && pvp.finalTarget !== pvp.baseTarget;
+  const known = shown !== null && shown !== undefined;
   const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
   const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
   return `
     <section class="target-panel pvp-target" aria-label="Target">
       <span class="stat-label pvp-target-head">Target</span>
-      <strong class="pvp-target-number">${shown !== null && shown !== undefined ? formatNumber(shown) : "?"}</strong>
+      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"}">${known ? formatNumber(shown) : "?"}</strong>
       <div class="pvp-target-side">
         ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
         ${line("Modifier", formatModifier(pvp.modifier))}
         ${average !== null && average !== undefined ? line("Average", formatNumber(average)) : ""}
-        ${moved ? line("First", formatNumber(pvp.baseTarget), "pvp-target-first") : ""}
       </div>
     </section>
   `;
@@ -2472,6 +2500,7 @@ function consoleActionState() {
   const round = state.roundState;
   let buttonText = "Guess";
   let hint = "";
+  let guideHint = false; // the "Pick a number" line, which Settings > Display > Guide text can hide
   let disabled = "";
   let inputDisabled = "";
   const maxGuess = playerGuessLimit();
@@ -2498,18 +2527,20 @@ function consoleActionState() {
       ? "Penalties are locked in. Satan has sealed Devil's Offerings."
       : "Penalties are locked in. Devil's Offerings is still available before you advance.";
   } else if (state.stage === "ended") {
-    buttonText = "Restart";
+    // inspecting the death screen's round: the button goes back to the death screen
+    buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
     inputDisabled = "disabled";
     hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
   } else {
     hint = `Pick a number between 0 and ${maxGuess}`;
+    guideHint = true;
   }
 
-  return { buttonText, disabled, hint, inputDisabled, maxGuess, round };
+  return { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round };
 }
 
 function renderConsole() {
-  const { buttonText, disabled, hint, inputDisabled, maxGuess, round } = consoleActionState();
+  const { buttonText, disabled, hint, guideHint, inputDisabled, maxGuess, round } = consoleActionState();
   // the guess that counts: a BOSS's Deceit (corruption) can shift it away from what was typed
   const value = round?.playerEffectiveGuess ?? round?.playerSubmittedGuess ?? "";
   const corruption = round?.playerCorruption && round.playerEffectiveGuess === round.playerCorruption.to ? round.playerCorruption : null;
@@ -2543,7 +2574,7 @@ function renderConsole() {
   return `
     <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
       ${sideParts.slot}
-      ${hint ? `<div class="console-hint">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
+      ${hint ? `<div class="console-hint${guideHint ? " guide-text" : ""}">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
         ${corruptionNote}
         <input
@@ -2865,7 +2896,8 @@ function renderOverlay() {
         <p class="end-copy">Welcome to Hell...</p>
         <div class="end-body">
         <div class="end-stats">
-          <div class="end-stat end-stat-wide end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runFirstGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>Submit quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
@@ -2942,6 +2974,14 @@ function confirmRunRemoval(slotId) {
   render();
 }
 
+// the Android app closes itself on Quit (DearthAppPlugin in android/.../MainActivity); elsewhere Quit shows
+// "Close the tab" (a browser page cannot close itself). The iPhone app has no Quit.
+function quitNativeApp() {
+  if (!NATIVE_ARCADE_APP || NATIVE_IOS_APP || typeof window.Capacitor?.nativePromise !== "function") return false;
+  window.Capacitor.nativePromise("DearthApp", "exitApp", {}).catch(() => {});
+  return true;
+}
+
 function handleMenuAction(action) {
   resumeSoundtrack();
   if (String(action).startsWith("records-tab:")) {
@@ -2988,6 +3028,11 @@ function handleMenuAction(action) {
     render();
     return;
   }
+  if (action === "credits") {
+    state.menuScreen = "credits";
+    render();
+    return;
+  }
   if (action === "back") {
     state.menuScreen = "main";
     state.pendingRunDeleteSlotId = null;
@@ -3020,6 +3065,7 @@ function handleMenuAction(action) {
     return;
   }
   if (action === "quit") {
+    if (quitNativeApp()) return;
     // the playtest build keeps the button (the menu looks the same) but it does nothing
     if (PLAYTEST_BUILD) return;
     state.menuScreen = "quit";
@@ -3054,6 +3100,7 @@ function resetSettings() {
   state.display.screenShake = prefersReducedMotion ? 0 : 2;
   state.display.flashes = 1;
   state.display.textSize = 0;
+  state.display.guideText = 1;
   saveSoundSettings();
   applySoundSettings();
   saveDisplaySettings();
@@ -3087,7 +3134,7 @@ function updateSoundSetting(key, value, renderAfter = true) {
 
 function handlePauseAction(action) {
   // the playtest build has no DEV / Unlock under Pause
-  if (PLAYTEST_BUILD && (action === "dev" || action === "unlock-all" || (typeof action === "string" && action.startsWith("summon:")))) return;
+  if (PLAYTEST_BUILD && (action === "dev" || action === "unlock-all" || action === "codex-whole" || action === "unlock-slot" || (typeof action === "string" && action.startsWith("summon:")))) return;
   if (typeof action === "string" && action.startsWith("summon:")) {
     devSummonArchangel(action.slice("summon:".length));
     return;
@@ -3111,6 +3158,19 @@ function handlePauseAction(action) {
   }
   if (action === "feedback") {
     openPlaytestFeedbackFromRun(true);
+    return;
+  }
+  if (action === "codex-whole") {
+    // testing: the Codex tab with every page (the real pages found are kept for when it is off)
+    addLog(toggleDevWholeCodex() ? "Testing: the whole Faustian Codex shows in the Collection." : "Testing: the Codex shows only the pages really found.");
+    render();
+    return;
+  }
+  if (action === "unlock-slot") {
+    // testing: open the slot machine and the missions without a first win; nothing happens if they're open already
+    if (!unlockSlotMachine()) return;
+    addLog("Testing: slot machine and Satan's bets unlocked.");
+    render();
     return;
   }
   if (action === "dev") {
@@ -3153,26 +3213,85 @@ const MENU_BG_SPIN_MS = 240000;
 // node: the live backdrop (background, doorway, figures, logo). It is built once and moved into each
 // re-rendered menu so clicking buttons never reloads or restarts it.
 const menuBackdropState = { startedAt: 0, resizeBound: false, glitchStarted: false, node: null };
-// fixed dark doorway behind the buttons (art pixels): matches .menu-door in styles.css
-const MENU_DOOR = { cx: 696 + 283 / 2, top: 476, solidTop: 55, solidBottom: 388 };
-// Options and its Settings widen the doorway (.menu-door.door-wide in styles.css): it grows around
-// the top of its solid part, so the buttons are centred lower by the extra height
-const MENU_DOOR_WIDE_SCREENS = ["options", "sound"];
-const MENU_DOOR_WIDE_SCALE_Y = 1.14;
+// the menu buttons are centred on this point (art pixels); the dark doorway (.menu-door, a black arch
+// drawn in CSS) is then fitted around whatever the screen shows: its width follows the widest button,
+// its height the number of buttons, and its visual centre sits on the buttons' centre
+const MENU_DOOR_ANCHOR = { cx: 837.5, cy: 697.5 };
+const MENU_DOOR_FIT = { padX: 60, padY: 58, minWidth: 230, maxArch: 150, footRadius: 46 };
 
-function menuDoorIsWide() {
-  return MENU_DOOR_WIDE_SCREENS.includes(state.menuScreen || "main");
+// visible part of the menu content in viewport px: text width for plain buttons and lines,
+// the element box for framed things (save slots, the Settings card, Records)
+function menuDoorContentRect(panel) {
+  const root = panel.firstElementChild;
+  if (!root) return null;
+  const parts = root.matches(".main-menu-actions") ? [...root.children] : [root];
+  const rects = parts
+    .map((el) => {
+      const box = el.getBoundingClientRect();
+      if (!el.matches(".menu-button, .quit-copy")) return box;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const text = range.getBoundingClientRect();
+      return { left: text.left, right: text.right, top: box.top, bottom: box.bottom, width: text.width, height: box.height };
+    })
+    .filter((r) => r.width > 0 && r.height > 0);
+  if (!rects.length) return null;
+  return {
+    left: Math.min(...rects.map((r) => r.left)),
+    right: Math.max(...rects.map((r) => r.right)),
+    top: Math.min(...rects.map((r) => r.top)),
+    bottom: Math.max(...rects.map((r) => r.bottom))
+  };
 }
 
-// the backdrop node is moved into every re-rendered menu, which drops CSS transitions; it keeps its
-// classes, so flush the old look first and then switch, and the doorway animates between screens
-function updateMenuDoorWidth() {
+// distance from the top of the arch to its centre of mass (rounded top, small rounded foot)
+function menuDoorCentroidFromTop(width, height, arch, foot) {
+  let sum = 0;
+  let weighted = 0;
+  for (let y = 0.5; y < height; y += 1) {
+    let w = width;
+    if (y < arch) w = width * Math.sqrt(Math.max(0, 1 - ((arch - y) / arch) ** 2));
+    else if (y > height - foot) {
+      const dy = (y - (height - foot)) / foot;
+      w = width - 2 * foot * (1 - Math.sqrt(Math.max(0, 1 - dy * dy)));
+    }
+    sum += w;
+    weighted += w * y;
+  }
+  return sum ? weighted / sum : height / 2;
+}
+
+// ox, oy, s: the stage transform (viewport px = art px * s + offset)
+function fitMenuDoor(panel, ox, oy, s) {
   const door = document.querySelector(".menu-door");
-  if (!door) return;
-  const wide = menuDoorIsWide();
-  if (door.classList.contains("door-wide") === wide) return;
-  void getComputedStyle(door).transform;
-  door.classList.toggle("door-wide", wide);
+  const content = panel && menuDoorContentRect(panel);
+  if (!door || !content) return;
+  const fit = MENU_DOOR_FIT;
+  const left = (content.left - ox) / s;
+  const right = (content.right - ox) / s;
+  const top = (content.top - oy) / s;
+  const bottom = (content.bottom - oy) / s;
+  const width = Math.max(right - left + fit.padX * 2, fit.minWidth);
+  const arch = Math.min(width / 2, fit.maxArch);
+  const height = bottom - top + fit.padY * 2 + arch * 0.55;
+  const centreY = (top + bottom) / 2;
+  const doorTop = centreY - menuDoorCentroidFromTop(width, height, arch, fit.footRadius);
+  const next = {
+    left: `${((left + right) / 2 - width / 2).toFixed(1)}px`,
+    top: `${doorTop.toFixed(1)}px`,
+    width: `${width.toFixed(1)}px`,
+    height: `${height.toFixed(1)}px`,
+    "--door-arch": `${arch.toFixed(1)}px`
+  };
+  // the backdrop node is moved into every re-rendered menu, which drops CSS transitions:
+  // flush the old box first so the doorway animates between screens (the first fit just appears)
+  const first = !door.classList.contains("door-fitted");
+  if (!first) void getComputedStyle(door).width;
+  for (const [key, value] of Object.entries(next)) door.style.setProperty(key, value);
+  if (first) {
+    void getComputedStyle(door).width;
+    door.classList.add("door-fitted");
+  }
 }
 
 function menuReducedMotion() {
@@ -3202,7 +3321,7 @@ function renderMenuBackdrop() {
         </svg>
         <div class="menu-stage">
           <div class="menu-bg-spin"><img class="menu-bg-img" src="assets/ui/menu/menu-bg-spin.jpg" alt=""></div>
-          <img class="menu-door" src="assets/ui/menu/menu-door.webp" alt="">
+          <div class="menu-door"></div>
           <div class="menu-logo-glow"></div>
           ${renderMenuFigure("jesus")}
           ${renderMenuFigure("satan")}
@@ -3233,7 +3352,6 @@ function initMenuBackdrop() {
   const crown = document.querySelector(".menu-fig .fig-crown-shimmer");
   if (crown) crown.style.animationDelay = `-${(Date.now() - menuBackdropState.startedAt) % 7500}ms`;
   layoutMenuBackdrop();
-  updateMenuDoorWidth();
   initMenuFigures(menuReducedMotion());
   bindMenuFigureTriggers();
   if (!menuBackdropState.resizeBound) {
@@ -3270,18 +3388,18 @@ function layoutMenuBackdrop() {
   const zoom = Math.max(1, (far + 2) / MENU_BG_COVER);
   const spin = stage.querySelector(".menu-bg-spin");
   if (spin) spin.style.transform = `scale(${zoom.toFixed(4)})`;
-  // centre the menu buttons inside the solid part of the fixed dark doorway
+  // centre the menu buttons on the anchor point, then fit the dark doorway around them
   const panel = document.querySelector(".main-menu-panel");
   const menu = document.querySelector(".main-menu");
   if (panel && menu) {
-    const doorX = ox + MENU_DOOR.cx * s;
-    const solidHeight = (MENU_DOOR.solidBottom - MENU_DOOR.solidTop) * (menuDoorIsWide() ? MENU_DOOR_WIDE_SCALE_Y : 1);
-    const doorMid = oy + (MENU_DOOR.top + MENU_DOOR.solidTop + solidHeight / 2) * s;
+    const anchorX = ox + MENU_DOOR_ANCHOR.cx * s;
+    const anchorY = oy + MENU_DOOR_ANCHOR.cy * s;
     const h = panel.offsetHeight;
-    const top = Math.max(8, Math.min(doorMid - h / 2, vh - h - 12));
+    const top = Math.max(8, Math.min(anchorY - h / 2, vh - h - 12));
     panel.classList.add("door-anchored");
-    panel.style.left = `${doorX}px`;
+    panel.style.left = `${anchorX}px`;
     panel.style.top = `${top}px`;
+    fitMenuDoor(panel, ox, oy, s);
   }
 }
 

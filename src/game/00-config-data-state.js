@@ -21,6 +21,9 @@ const BOT_HP_BONUS_PER_BOSS_ENDLESS = 50;
 const BOSS_HP_BONUS_PER_SPAWN = 50;
 const BOSS_HP_BONUS_PER_SPAWN_LATE = 55;
 const BOSS_HP_BONUS_PER_SPAWN_ENDLESS = 150;
+// the first Goetic BOSS arrives with this much SOUL, a hard step up from the main game (the twins hold ~445 together);
+// every BOSS after it adds BOSS_HP_BONUS_PER_SPAWN_ENDLESS and the endless factor below, as before
+const ENDLESS_FIRST_BOSS_HP = 888;
 const HP_EXPONENTIAL_RATE = 1.2;
 // After the main game each Goetic BOSS multiplies BOSS SOUL by 1 + RATE + RATE_STEP x depth
 // (depth = Goetic BOSSES spawned before it), so growth speeds up the deeper the run goes:
@@ -56,6 +59,7 @@ const ANIM_SPEED_VALUES = [1, 2, 4];
 const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
 const FLASH_LABELS = ["Reduced", "Full"];
 const TEXT_SIZE_LABELS = ["Normal", "Large"];
+const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -70,7 +74,9 @@ const FINAL_BOSS_JESUS_SRC = "assets/bots/final-bosses/jesusboss.png";
 const FINAL_BOSS_SATAN_SRC = "assets/bots/final-bosses/satanboss.png";
 const SHOP_ELITE_CHANCE = 0.04;
 // Satanic Bible: each cast doubles the Seal slot's ELITE chance for this many Devil's Offerings rolls (rerolls and new offerings)
-const SATANIC_BIBLE_ROLLS = 5;
+const SATANIC_BIBLE_ROLLS = 3;
+// the Seal slot's ELITE chance never goes above this, however many Satanic Bibles are cast
+const SHOP_ELITE_CHANCE_MAX = 0.5;
 const PVP_ACTIVES = [
   {
     id: "pulse",
@@ -88,8 +94,8 @@ const PVP_ACTIVES = [
   },
   {
     id: "sink",
-    name: "Black Candle",
-    icon: "assets/artifacts/occult-items-17/02 BLACK CANDLE.png",
+    name: "Spirit Board",
+    icon: "assets/artifacts/occult-items-17/13 SPIRIT BOARD.png",
     description: "Change the final TARGET by -5.",
     needsTarget: false
   },
@@ -221,7 +227,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Leraje",
     price: 12,
-    description: "At the start of each round, deal 20 damage to a random DAMNED and change their personality to STUBBORN. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
+    description: "At the start of each round, change a random DAMNED's personality to STUBBORN. When you press READY, deal 20 damage to that DAMNED. If that damage eliminates them, gain 8 SIN. ELITE multiplies the damage by x1.5 each level, rounded up, and increases the SIN payout by +20%."
   },
   p15: {
     id: "p15",
@@ -527,7 +533,7 @@ const ITEMS = {
     name: "Seal of Balam",
     price: 14,
     description:
-      "If a non-boss DAMNED has 10+ MEMORY and 10+ BOUNTY, it is instantly eliminated. Its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
+      "When you press READY, every non-boss DAMNED with 15+ MEMORY and 15+ BOUNTY is eliminated. Half its max SOUL becomes damage spread to other DAMNED; if BOSSES are active, BOSSES take the damage. ELITE multiplies the collapse damage by x1.5 each level, rounded up."
   },
   p58: {
     id: "p58",
@@ -1184,7 +1190,7 @@ const ITEMS = {
   a14: {
     id: "a14",
     type: "active",
-    name: "Black Candle",
+    name: "Spirit Board", // was the Black Candle (same effect; only the name, picture and sound changed)
     price: 3,
     description: "During reveal, reduce the TARGET by 10."
   },
@@ -1291,7 +1297,7 @@ const ITEMS = {
     type: "active",
     name: "Satanic Bible",
     price: 2,
-    description: "Double the ELITE chance for the SEAL slot for the next 5 Devil's Offerings rolls. Every cast doubles it again and counts its own 5 rolls."
+    description: "Double the ELITE chance for the SEAL slot for the next 3 Devil's Offerings rolls. Every cast doubles it again and counts its own 3 rolls, up to 50%."
   },
   a25: {
     id: "a25",
@@ -1560,7 +1566,7 @@ const ARTIFACT_ICONS = {
   a11: "occult-items-17/05 VIAL OF BLOOD.png",
   a12: "occult-items-17/16 DARK TALISMAN.png",
   a13: "a13.png",
-  a14: "occult-items-17/02 BLACK CANDLE.png",
+  a14: "occult-items-17/13 SPIRIT BOARD.png",
   a15: "occult-items-17/01 SACRIFICIAL DAGGER.png",
   a16: "a16.png",
   a18: "occult-items-17/14 CORRUPTED CRYSTAL.png",
@@ -2216,7 +2222,8 @@ const state = {
     animSpeed: 1,
     screenShake: 2,
     flashes: 1,
-    textSize: 0
+    textSize: 0,
+    guideText: 1 // 0 hides "Pick a number between 0 and 100" and "Satan's bets pay FAVOR." (body.hide-guide-text)
   },
   settingsTab: "audio",
   pauseOpen: false,
@@ -2288,6 +2295,9 @@ const state = {
   eliteBoostedNextReroll: 0,
   satanVictoryDue: false,
   satanVictoryPlayed: false,
+  satanVictorySkipped: false, // SKIP past the 8 BOSSES: the victory speech may play outside the results
+  judgementTalkDue: false, // the 72 demons have fallen: Jesus and Satan talk before Final Judgment
+  judgementTalkPlayed: false,
   satanTightwadDue: false,
   satanTightwadAbove: false,
   satanTightwadOffers: 0,

@@ -204,6 +204,12 @@ function skipToFirstGoeticBoss() {
   rerollShop();
   beginRound();
   addLog("SKIP: jumped past the eight special bosses to the first Goetic Seal boss.");
+  // it counts as beating them: Satan's victory speech (the first-win one if it is still to come) plays as soon
+  // as the new round is on the table (09-intro-story.js)
+  if (!state.satanVictoryPlayed && state.mode === "arcade") {
+    state.satanVictoryDue = true;
+    state.satanVictorySkipped = true;
+  }
   render();
 }
 
@@ -214,10 +220,23 @@ function skipToFinalBosses() {
   state.bossKills = Math.max(state.bossKills, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.bossSpawnCount = Math.max(state.bossSpawnCount, UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL);
   state.eliminations = Math.max(state.eliminations, UNIQUE_BOSS_INTERVAL * (UNIQUE_BOSS_KEYS.length + GOETIC_BOSS_TOTAL));
+  addLog("SKIP: jumped to the Jesus and Satan phase.");
+  // Jesus and Satan have their say first, as after the 72nd demon (09-intro-story.js); their end calls
+  // finishSkipToFinalBosses. Queued meanwhile, so a run reloaded in the middle still reaches Final Judgment.
+  if (!state.judgementTalkPlayed && state.mode === "arcade" && introState.phase === "off") {
+    state.finalBossQueued = true;
+    state.judgementTalkDue = false;
+    render();
+    startJudgementTalk({ fromSkip: true });
+    return;
+  }
+  finishSkipToFinalBosses();
+}
+
+function finishSkipToFinalBosses() {
   enterFinalBossPhase();
   rerollShop();
   beginRound();
-  addLog("SKIP: jumped to the Jesus and Satan phase.");
   render();
 }
 
@@ -548,6 +567,7 @@ function gainCreditsFromSourceEntries(entries, applyRoundMultiplier = true) {
     // lifetime SIN earned (Records); money from sales does not count
     const soldBase = normalizedEntries.filter((entry) => String(entry.source || "").startsWith("Sold ")).reduce((sum, entry) => sum + Math.max(0, entry.amount || 0), 0);
     recordSinEarned(gained - Math.ceil(soldBase * multiplier));
+    collectionNoteSinEarned(gained - Math.ceil(soldBase * multiplier));
     if (state.roundState) state.roundState.earnedSinThisRound = (state.roundState.earnedSinThisRound || 0) + gained;
     state.playerLastCredits = (state.playerLastCredits || 0) + gained;
     normalizedEntries.forEach((entry) => recordPlayerCreditSource(entry.amount, entry.source || "SIN"));
@@ -808,6 +828,9 @@ function startGame(options = {}) {
   snapshotRecordsAtRunStart();
   state.satanVictoryDue = false;
   state.satanVictoryPlayed = false;
+  state.satanVictorySkipped = false;
+  state.judgementTalkDue = false;
+  state.judgementTalkPlayed = false;
   state.satanTightwadDue = false;
   state.satanTightwadAbove = false;
   state.satanTightwadOffers = 0;
@@ -1217,24 +1240,42 @@ function applyStartOfRoundSinRedistribution() {
 function applyStartOfRoundPassives() {
   applyStartOfRoundSinRedistribution();
 
+  // Seal of Leraje picks its DAMNED now and turns it STUBBORN at once; the damage waits for READY
+  // (applyLerajeAtReady, called from applyPenalties)
+  state.roundState.lerajeMarks = [];
   orderedPassiveEffectEntries("p14").forEach((entry) => {
     const targets = activeBots();
     if (!targets.length) return;
     const target = randomFrom(targets);
+    state.roundState.lerajeMarks.push({ index: entry.index, botId: target.id });
+    setBotPersonality(target, "Stubborn", ITEMS.p14.name);
+  });
+}
+
+// Seal of Leraje: when you press READY, the DAMNED it picked at the start of the round takes the damage (a random
+// living DAMNED if that one has already fallen, which also turns STUBBORN); a kill pays SIN
+function applyLerajeAtReady() {
+  const round = state.roundState;
+  if (!round) return;
+  const marks = Array.isArray(round.lerajeMarks) ? round.lerajeMarks : [];
+  round.lerajeMarks = [];
+  const name = ITEMS.p14.name;
+  orderedPassiveEffectEntries("p14").forEach((entry) => {
+    const mark = marks.find((candidate) => candidate.index === entry.index);
+    const marked = mark ? state.bots.find((bot) => bot.id === mark.botId && bot.hp > 0 && !bot.eliminated) : null;
+    const living = activeBots();
+    const target = marked || (living.length ? randomFrom(living) : null);
+    if (!target) return;
     const damage = passiveEntryFlatDamage(entry, 20);
     if (damage <= 0) return;
     markPassiveEntryTriggered(entry);
-    const wasAlive = target.hp > 0 && !target.eliminated;
-    damageBot(target, damage, `Seal of Leraje dealt ${damage} damage to ${target.name}.`, "Seal of Leraje");
-    if (wasAlive && target.eliminated) {
-      const credits = passiveEntryScaledValue(entry, 8);
-      const gained = gainCredits(credits, true, "Seal of Leraje");
-      state.roundState.roundEvents.push(`Seal of Leraje paid ${gained} SIN for eliminating ${target.name}.`);
+    damageBot(target, damage, `${name} dealt ${damage} damage to ${target.name}.`, name);
+    if (target.eliminated) {
+      const gained = gainCredits(passiveEntryScaledValue(entry, 8), true, name);
+      round.roundEvents.push(`${name} paid ${gained} SIN for eliminating ${target.name}.`);
       return;
     }
-    if (!target.eliminated) {
-      setBotPersonality(target, "Stubborn", "Seal of Leraje");
-    }
+    if (!marked) setBotPersonality(target, "Stubborn", name);
   });
 }
 
@@ -2248,6 +2289,8 @@ function submitGuess() {
   round.edgeGambitStacks = 0;
 
   recalculateTarget();
+  // Guess quality compares the number you typed with this TARGET, before ARTIFACTS or reveal SEALS move it
+  round.revealedTarget = round.target;
   applyEligosExactGuess();
   // seals acting at reveal get their seal animation now; while Dantre's plays, the old TARGET stays on screen
   const beforeReveal = captureRoundRevealSnapshot();
@@ -2347,7 +2390,13 @@ function performMainAction() {
     playNextRoundSfx();
     advanceAfterSummary();
   } else if (state.stage === "ended") {
-    startGame();
+    if (state.gameOver && state.inspectingGameOver) {
+      // Inspect on the death screen: back to the death screen, not a new run
+      state.inspectingGameOver = false;
+      render();
+    } else {
+      startGame();
+    }
   }
 }
 

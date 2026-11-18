@@ -1,12 +1,13 @@
-/* ---------- Missions and the slot machine ----------
+/* ---------- Satan's bets (missions in the code) and the slot machine ----------
    Every round one random mission appears (drawn when the round starts, lazily on the first render so logic
    tests keep their random numbers). It is replaced at the start of the next round, done or not. A finished
-   mission pays 1, 2 or 3 FAVOR at once. The slot machine left of the guess area is always available:
+   mission pays its FAVOR (1, 2 or 3) at once. The slot machine left of the guess area is always available:
    a spin costs SLOT_SPIN_COST FAVOR, three reels each land on one icon, and the reward depends on how many
    of each icon came up (SLOT_PAYOUTS). Arcade only: no PvP, not in the story's tutorial rounds.
    Run state: state.missions (saved with the run); free rerolls won here: state.slotFreeRerolls (they last
    until used, unlike the Seal of the Son's). Hooks: startGame, beginRound, applyPenalties (READY and the
-   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells and consumeActive. */
+   results), advanceAfterSummary, buyShopItem, rerollShopClick, the sells, consumeActive, resolveEliminatedBots
+   (missionsNoteElimination) and satanPactSign (missionsNoteDeal). */
 
 const SLOT_SPIN_COST = 3;
 
@@ -45,11 +46,42 @@ function slotSfx(key) {
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
 const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
 
-/* ---- the missions: 15 worth 1, 15 worth 2, 15 worth 3 FAVOR ----
-   when: "event"   checked after every action (shop, ARTIFACT, spin) and after the results
+/* ---- the missions (the player sees them as Satan's bets): 16 worth 1 FAVOR, 18 worth 2, 15 worth 3 ----
+   The Nov 13 list (texts as written then), plus four from the Nov 14 list: a named ARTIFACT (1 FAVOR), no
+   ARTIFACTS this round (2), a named DAMNED (2) and the same guess as a revealed DAMNED (2).
+   Each round MISSION_TIER_ODDS decides how much the mission is worth (45% 1 FAVOR, 40% 2, 15% 3), then a
+   mission of that worth is drawn by its weight (1 unless set). Only missions that can be done right now are drawn.
+   when: "event"   checked after every action (shop, ARTIFACT, spin, deal) and after the results
          "resolve" checked once the round's results are in (and after any later action that round)
-         "leave"   checked when you move on to the next round
-   can(): may this mission be drawn now? param(): a value drawn with it (shown in the text). */
+         "leave"   checked when you move on to the next round (NEXT ROUND)
+   can(): may this mission be drawn now? param(): a value drawn with it (shown in the text).
+   failed(): it can no longer be done this round (the box says Lost). */
+const MISSION_TIER_ODDS = { 1: 45, 2: 40, 3: 15 };
+
+// living DAMNED a mission can name (no BOSSES)
+function missionNameableBots() {
+  return activeBots().filter((bot) => !bot.isBoss && !bot.immortal);
+}
+
+function missionBotParam(bot) {
+  return bot ? { id: bot.id, name: bot.name } : null;
+}
+
+function missionHeldArtifactIds() {
+  return (state.player?.actives || []).filter((item) => item && !item.devTemporary).map((item) => item.id);
+}
+
+function missionShopOpen() {
+  return typeof shopDisabledBySatan !== "function" || !shopDisabledBySatan();
+}
+
+// mission texts read exactly as the list they were written from: "Use a Spirit Board"
+function missionArtifactWithArticle(name) {
+  if (!name) return "an artifact";
+  if (/^the\s/i.test(name)) return name;
+  return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+}
+
 const MISSIONS = [
   // ---- 1 FAVOR ----
   { id: "near10", value: 1, when: "resolve", text: "Guess within 10 of the TARGET.", check: (f) => f.guessed && f.dist <= 10 },
@@ -63,8 +95,22 @@ const MISSIONS = [
   { id: "pain40", value: 1, when: "resolve", text: "The DAMNED take 40 damage in total.", check: (f) => f.botDamage >= 40 },
   { id: "seal1", value: 1, when: "resolve", text: "Have a SEAL trigger.", can: () => ownedSealCount() >= 1, check: (f) => f.sealsTriggered >= 1 },
   { id: "use1", value: 1, when: "event", text: "Use an ARTIFACT.", check: (f) => f.artifactsUsed >= 1 },
-  { id: "buy1", value: 1, when: "event", text: "Buy something in Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.buys >= 1 },
-  { id: "reroll1", value: 1, when: "event", text: "Reroll Devil's Offerings.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 1 },
+  {
+    id: "useItem",
+    value: 1,
+    weight: 4,
+    when: "event",
+    text: (param) => `Use ${missionArtifactWithArticle(ITEMS[param]?.name)}`,
+    can: () => activeUseLimit() >= 1,
+    param: () => {
+      const ids = [...new Set(missionHeldArtifactIds())];
+      return ids.length ? randomFrom(ids) : null;
+    },
+    check: (f, param) => (f.itemCounts.get(param) || 0) >= 1,
+    failed: (f) => f.resolved
+  },
+  { id: "buy1", value: 1, when: "event", text: "Buy something in Devil's Offerings.", can: missionShopOpen, check: (f) => f.buys >= 1 },
+  { id: "reroll1", value: 1, when: "event", text: "Reroll Devil's Offerings.", can: missionShopOpen, check: (f) => f.rerolls >= 1 },
   { id: "sell1", value: 1, when: "event", text: "Sell a SEAL or an ARTIFACT.", can: () => ownedSealCount() + (state.player.actives || []).length >= 1, check: (f) => f.sells >= 1 },
   { id: "keep10", value: 1, when: "leave", text: "Go into the next round with 10 SIN or more.", check: (f) => f.sin >= 10 },
 
@@ -85,15 +131,29 @@ const MISSIONS = [
     },
     check: (f, param) => f.eliminatedTypes.includes(param)
   },
+  {
+    id: "killName",
+    value: 2,
+    weight: 5,
+    when: "resolve",
+    text: (param) => `Eliminate ${param?.name || "a Damned"}`,
+    param: () => {
+      const bots = missionNameableBots();
+      return bots.length ? missionBotParam(randomFrom(bots)) : null;
+    },
+    check: (f, param) => Boolean(param) && f.killedIds.has(param.id)
+  },
   { id: "bounty4", value: 2, when: "resolve", text: "Collect a BOUNTY of 4 SIN or more.", check: (f) => f.bestBounty >= 4 },
   { id: "use2", value: 2, when: "event", text: "Use 2 ARTIFACTS.", check: (f) => f.artifactsUsed >= 2, progress: (f) => `${Math.min(2, f.artifactsUsed)}/2` },
-  { id: "buySeal", value: 2, when: "event", text: "Buy a SEAL or an ELITE level.", can: () => !shopDisabledBySatan(), check: (f) => f.sealsBought >= 1 },
-  { id: "reroll3", value: 2, when: "event", text: "Reroll Devil's Offerings 3 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 3, progress: (f) => `${Math.min(3, f.rerolls)}/3` },
+  { id: "noArtifacts", value: 2, when: "resolve", text: "Don't use artifacts this round", can: () => missionHeldArtifactIds().length >= 1, check: (f) => f.artifactsUsed === 0, failed: (f) => f.artifactsUsed > 0 },
+  { id: "buySeal", value: 2, when: "event", text: "Buy a SEAL or an ELITE level.", can: missionShopOpen, check: (f) => f.sealsBought >= 1 },
+  { id: "reroll3", value: 2, when: "event", text: "Reroll Devil's Offerings 3 times.", can: missionShopOpen, check: (f) => f.rerolls >= 3, progress: (f) => `${Math.min(3, f.rerolls)}/3` },
   { id: "seals3", value: 2, when: "resolve", text: "Have 3 different SEALS trigger.", can: () => ownedSealCount() >= 3, check: (f) => f.sealsTriggered >= 3, progress: (f) => `${Math.min(3, f.sealsTriggered)}/3` },
   { id: "earn10", value: 2, when: "resolve", text: "Earn 10 SIN this round.", check: (f) => f.earned >= 10, progress: (f) => `${Math.min(10, f.earned)}/10` },
   { id: "spend15", value: 2, when: "event", text: "Spend 15 SIN this round.", check: (f) => f.spent >= 15, progress: (f) => `${Math.min(15, f.spent)}/15` },
   { id: "pain10each", value: 2, when: "resolve", text: "Every DAMNED takes 10 damage or more.", check: (f) => f.everyBotHit10 },
   { id: "hold4", value: 2, when: "leave", text: "Go into the next round holding 4 ARTIFACTS.", check: (f) => f.artifactsHeld >= 4, progress: (f) => `${Math.min(4, f.artifactsHeld)}/4` },
+  { id: "sameGuess", value: 2, when: "resolve", text: "Guess the same number as a revealed damned", check: (f) => f.matchesRevealed },
 
   // ---- 3 FAVOR ----
   { id: "critical", value: 3, when: "resolve", text: "Hit a CRITICAL.", check: (f) => f.critical },
@@ -103,7 +163,7 @@ const MISSIONS = [
   { id: "killFull", value: 3, when: "resolve", text: "Eliminate a DAMNED that started the round at full SOUL.", check: (f) => f.fullKills >= 1 },
   { id: "earn25", value: 3, when: "resolve", text: "Earn 25 SIN this round.", check: (f) => f.earned >= 25, progress: (f) => `${Math.min(25, f.earned)}/25` },
   { id: "seals5", value: 3, when: "resolve", text: "Have 5 different SEALS trigger.", can: () => ownedSealCount() >= 5, check: (f) => f.sealsTriggered >= 5, progress: (f) => `${Math.min(5, f.sealsTriggered)}/5` },
-  { id: "reroll5", value: 3, when: "event", text: "Reroll Devil's Offerings 5 times.", can: () => !shopDisabledBySatan(), check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
+  { id: "reroll5", value: 3, when: "event", text: "Reroll Devil's Offerings 5 times.", can: missionShopOpen, check: (f) => f.rerolls >= 5, progress: (f) => `${Math.min(5, f.rerolls)}/5` },
   { id: "spend30", value: 3, when: "event", text: "Spend 30 SIN this round.", check: (f) => f.spent >= 30, progress: (f) => `${Math.min(30, f.spent)}/30` },
   { id: "critBare", value: 3, when: "resolve", text: "Hit a CRITICAL without using an ARTIFACT.", check: (f) => f.critical && f.artifactsUsed === 0 },
   { id: "near2safe", value: 3, when: "resolve", text: "Guess within 2 of the TARGET and take 5 damage or less.", check: (f) => f.guessed && f.dist <= 2 && f.damageTaken <= 5 },
@@ -117,6 +177,12 @@ const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, 
 
 function ownedSealCount() {
   return (state.player?.passives || []).filter((item) => item && !REMOVED_PASSIVE_IDS.has(item.id)).length;
+}
+
+// the BOUNTY on a DAMNED's card (a BOSS's BOSS BOUNTY counts too)
+function missionBountyOf(bot) {
+  if (!bot || bot.immortal) return 0;
+  return Math.max(0, Math.ceil(botRegularBounty(bot) || 0)) + (bot.isBoss ? Math.max(0, Math.ceil(botBossBounty(bot) || 0)) : 0);
 }
 
 /* ---- state ---- */
@@ -143,6 +209,8 @@ function missionsRoundFresh() {
     buys: 0,
     sealsBought: 0,
     sells: 0,
+    soldSin: 0, // SIN from sales (not "earned" for the SIN missions)
+    kills: [], // { id, memory, bounty, revealed } as each DAMNED fell
     startHp: state.player?.hp ?? 0,
     botStart: {},
     readyIds: null,
@@ -158,8 +226,46 @@ function missionsState() {
   return missions;
 }
 
+/* the slot machine and the missions stay hidden until the player has won once and left Satan's first-win
+   speech (09-intro-story.js, dearthFirstVictorySeenV1), or until Pause > DEV > Unlock slot machine */
+const SLOT_MACHINE_UNLOCK_STORAGE_KEY = "dearthSlotMachineUnlockedV1";
+
+function slotMachineStorage() {
+  try {
+    return typeof window !== "undefined" ? window.localStorage || null : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function slotMachineUnlocked() {
+  try {
+    const storage = slotMachineStorage();
+    if (!storage) return false;
+    if (storage.getItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY) === "1") return true;
+    const firstWinKey = typeof SATAN_FIRST_VICTORY_STORAGE_KEY === "string" ? SATAN_FIRST_VICTORY_STORAGE_KEY : "dearthFirstVictorySeenV1";
+    return storage.getItem(firstWinKey) === "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+// true when this call unlocked it, false when it already was (or storage is unavailable)
+function unlockSlotMachine() {
+  const wasUnlocked = slotMachineUnlocked();
+  try {
+    slotMachineStorage()?.setItem(SLOT_MACHINE_UNLOCK_STORAGE_KEY, "1");
+  } catch (error) {
+    return false;
+  }
+  return !wasUnlocked && slotMachineUnlocked();
+}
+
 function missionsEnabled() {
   if (state.mode !== "arcade" || state.gameOver) return false;
+  // Final Judgment closes them like the Devil's Offerings
+  if (state.finalBossPhase) return false;
+  if (!slotMachineUnlocked()) return false;
   if (typeof introBlocksRunSave === "function" && introBlocksRunSave()) return false;
   return true;
 }
@@ -173,6 +279,9 @@ function resetMissionsForRun() {
 function normalizeMissionsState() {
   const missions = missionsState();
   if (missions.current && !MISSION_BY_ID[missions.current.id]) missions.current = null;
+  const counters = missions.round;
+  if (!Array.isArray(counters.kills)) counters.kills = [];
+  if (!Number.isFinite(counters.soldSin)) counters.soldSin = 0;
   if (!Number.isFinite(state.slotFreeRerolls)) state.slotFreeRerolls = 0;
   if (!Array.isArray(state.slotPendingDamage)) state.slotPendingDamage = [];
   // a spin that was still turning when the run was saved pays out now
@@ -192,15 +301,42 @@ function missionText(mission, param) {
   return typeof mission.text === "function" ? mission.text(param) : mission.text;
 }
 
+function missionTier(mission) {
+  return Math.min(3, mission.value);
+}
+
+function missionWeightedPick(entries, weightOf) {
+  const total = entries.reduce((sum, entry) => sum + Math.max(0, weightOf(entry)), 0);
+  let roll = Math.random() * total;
+  for (const entry of entries) {
+    roll -= Math.max(0, weightOf(entry));
+    if (roll < 0) return entry;
+  }
+  return entries[entries.length - 1];
+}
+
+// the worth first (MISSION_TIER_ODDS, among the worths that have a mission that can be done now), then a mission
+// of that worth by its weight; never the same mission twice in a row
 function drawMission() {
   const missions = missionsState();
-  const options = MISSIONS.filter((mission) => mission.id !== missions.lastId && (!mission.can || mission.can()));
-  for (const mission of shuffled(options)) {
+  const options = [];
+  MISSIONS.forEach((mission) => {
+    if (mission.id === missions.lastId) return;
+    if (mission.can && !mission.can()) return;
     const param = mission.param ? mission.param() : null;
-    if (mission.param && !param) continue;
-    return { id: mission.id, value: mission.value, param, round: state.round, done: false };
-  }
-  return null;
+    if (mission.param && !param) return;
+    options.push({ mission, param });
+  });
+  if (!options.length) return null;
+  const tiers = Object.keys(MISSION_TIER_ODDS)
+    .map(Number)
+    .filter((tier) => options.some((option) => missionTier(option.mission) === tier));
+  const tier = missionWeightedPick(tiers, (value) => MISSION_TIER_ODDS[value]);
+  const pick = missionWeightedPick(
+    options.filter((option) => missionTier(option.mission) === tier),
+    (option) => option.mission.weight || 1
+  );
+  return { id: pick.mission.id, value: pick.mission.value, param: pick.param, round: state.round, done: false };
 }
 
 // the round's mission: drawn the first time it is needed in a round
@@ -219,9 +355,11 @@ function missionFacts() {
   const missions = missionsState();
   const counters = missions.round;
   const round = state.roundState || {};
+  const resolved = Boolean(counters.resolved);
+  // your guess after ARTIFACTS against the final TARGET
   const guess = round.playerEffectiveGuess;
   const target = round.target;
-  const guessed = counters.resolved && Number.isFinite(guess) && Number.isFinite(target);
+  const guessed = resolved && Number.isFinite(guess) && Number.isFinite(target);
   const dist = guessed ? Math.abs(guess - target) : Infinity;
   const readyIds = counters.readyIds || Object.keys(counters.botStart).map(Number);
   const removed = round.removedBotIds instanceof Set ? round.removedBotIds : new Set();
@@ -233,22 +371,36 @@ function missionFacts() {
   const botDists = botGuesses.map((value) => Math.abs(value - target));
   const startedBots = state.bots.filter((bot) => counters.botStart[bot.id]);
   const killedBots = startedBots.filter((bot) => bot.eliminated && !bot.immortal);
+  const killedIds = new Set(killedBots.map((bot) => bot.id));
+  // each fallen DAMNED as it was when it fell (missionsNoteElimination), or as it is now
+  const kills = killedBots.map((bot) => counters.kills.find((kill) => kill.id === bot.id) || { id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+  // the number you typed against a revealed DAMNED's typed guess
+  const typed = round.playerSubmittedGuess;
+  const revealedIds = new Set(round.revealedBotIds instanceof Set ? round.revealedBotIds : []);
+  state.bots.forEach((bot) => {
+    if (bot.revealedByPassive && counters.botStart[bot.id]) revealedIds.add(bot.id);
+  });
+  const typedGuesses = round.botSubmittedGuesses instanceof Map ? round.botSubmittedGuesses : new Map();
   const triggered = round.triggeredPassiveIds instanceof Set ? round.triggeredPassiveIds.size : 0;
   const itemCounts = round.activeUseItemCounts instanceof Map ? round.activeUseItemCounts : new Map();
   return {
+    resolved,
     guessed,
     guess,
     target,
     dist,
-    critical: Boolean(counters.resolved && round.criticalHitKeys instanceof Set && round.criticalHitKeys.has("player")),
+    critical: Boolean(resolved && round.criticalHitKeys instanceof Set && round.criticalHitKeys.has("player")),
     worst: guessed && botDists.length > 0 && dist > 0 && botDists.every((other) => dist >= other),
     closest: guessed && botDists.every((other) => dist <= other),
     lowest: guessed && botGuesses.length > 0 && botGuesses.every((other) => guess < other),
     botsFarther: guessed ? botDists.filter((other) => other > dist).length : 0,
+    matchesRevealed: resolved && Number.isFinite(typed) && [...revealedIds].some((id) => typedGuesses.get(id) === typed),
     damageTaken: Math.max(0, Math.ceil(state.playerLastDamage || 0)),
     hp: state.player.hp,
     startHp: counters.startHp,
     eliminations: killedBots.length,
+    killedIds,
+    kills,
     eliminatedTypes: Array.isArray(round.eliminatedPersonalities) ? round.eliminatedPersonalities : [],
     bestBounty: killedBots.reduce((best, bot) => Math.max(best, Number(bot.eliminationReward) || 0), 0),
     bossesKilled: killedBots.filter((bot) => bot.isBoss).length,
@@ -258,7 +410,7 @@ function missionFacts() {
     }).length,
     botDamage: startedBots.reduce((sum, bot) => sum + Math.max(0, Number(bot.lastDamage) || 0), 0),
     everyBotHit10:
-      counters.resolved &&
+      resolved &&
       readyIds.length > 0 &&
       readyIds.every((id) => {
         const bot = state.bots.find((entry) => entry.id === id);
@@ -267,12 +419,14 @@ function missionFacts() {
     sealsTriggered: triggered,
     artifactsUsed: Math.max(0, round.activeUses || 0),
     distinctArtifacts: itemCounts.size,
+    itemCounts,
     artifactsHeld: (state.player.actives || []).length,
     buys: counters.buys,
     sealsBought: counters.sealsBought,
     rerolls: counters.rerolls,
     sells: counters.sells,
-    earned: Math.max(0, Math.ceil(round.earnedSinThisRound || 0)),
+    // SIN from sales does not count as earned
+    earned: Math.max(0, Math.ceil((round.earnedSinThisRound || 0) - (counters.soldSin || 0))),
     spent: Math.max(0, Math.ceil(round.creditsSpentThisRound || 0)),
     sin: Math.max(0, Math.ceil(state.player.credits || 0))
   };
@@ -300,8 +454,8 @@ function missionsComplete(current, mission) {
   missions.completed += 1;
   missions.earned += current.value;
   const text = missionText(mission, current.param);
-  addLog(`Mission done: ${text} +${current.value} FAVOR.`);
-  if (state.roundState) addRoundEvent(`Mission done: +${current.value} FAVOR.`);
+  addLog(`Satan's bet won: ${text} (+${current.value} FAVOR).`);
+  if (state.roundState) addRoundEvent(`Satan's bet won: +${current.value} FAVOR.`);
   slotSfx("bountyUp");
 }
 
@@ -325,14 +479,32 @@ function missionsBeforeNextRound() {
   missionsCheck("leave");
 }
 
+// a DAMNED falls (resolveEliminatedBots): its MEMORY, BOUNTY and whether its guess was revealed, as it fell
+function missionsNoteElimination(bot) {
+  if (!missionsEnabled() || !bot) return;
+  const counters = missionsState().round;
+  if (counters.kills.some((kill) => kill.id === bot.id)) return;
+  counters.kills.push({ id: bot.id, memory: (bot.memory || []).length, bounty: missionBountyOf(bot), revealed: Boolean(bot.revealedByPassive) });
+}
+
+// the deal was signed (satanPactSign)
+function missionsNoteDeal() {
+  if (!missionsEnabled()) return;
+  missionsCheck("event");
+}
+
 // kind: "buySeal" | "buyArtifact" | "reroll" | "sell" | "artifact"
-function missionsNoteShop(kind) {
+// a sale: info = { sin: SIN it paid, sealIds: the SEALS sold (none for an ARTIFACT) }
+function missionsNoteShop(kind, info = {}) {
   if (!missionsEnabled()) return;
   const counters = missionsState().round;
   if (kind === "buySeal" || kind === "buyArtifact") counters.buys += 1;
   if (kind === "buySeal") counters.sealsBought += 1;
   if (kind === "reroll") counters.rerolls += 1;
-  if (kind === "sell") counters.sells += 1;
+  if (kind === "sell") {
+    counters.sells += 1;
+    counters.soldSin = (counters.soldSin || 0) + Math.max(0, Math.ceil(info.sin || 0));
+  }
   missionsCheck("event");
 }
 
@@ -584,7 +756,7 @@ function slotMachineHtml() {
         <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
         <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
-      <div class="slot-result">${escapeHtml(result || "Missions pay FAVOR.")}</div>
+      <div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Satan's bets pay FAVOR.")}</div>
     </div>
   `;
 }
@@ -595,16 +767,18 @@ function missionBoxHtml() {
   if (!current) return "";
   const mission = MISSION_BY_ID[current.id];
   const counters = missionsState().round;
+  const facts = missionFacts();
   let status = "";
-  if (current.done) status = "Done";
-  else if (mission.when === "resolve" && counters.resolved && !mission.progress) status = "Missed";
-  else if (mission.progress) status = mission.progress(missionFacts(), current.param);
+  if (current.done) status = "Won";
+  else if (mission.failed && mission.failed(facts, current.param)) status = "Lost";
+  else if (mission.when === "resolve" && counters.resolved) status = "Lost";
+  else if (mission.progress) status = mission.progress(facts, current.param);
   else if (mission.when === "leave") status = "At NEXT ROUND";
-  const statusClass = current.done ? "done" : status === "Missed" ? "missed" : "";
+  const statusClass = current.done ? "done" : status === "Lost" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="A new mission every round. Finish it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
-        <span class="mission-title">Mission</span>
+        <span class="mission-title">Satan's bet</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
@@ -613,10 +787,10 @@ function missionBoxHtml() {
   `;
 }
 
-// the phone app: one band between the DAMNED and the SEALS
+// the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and mission">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----

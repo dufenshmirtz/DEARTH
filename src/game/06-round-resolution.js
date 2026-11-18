@@ -269,6 +269,8 @@ function applyPenalties() {
   applyDevSealsAfterReady();
   applyBifronsTargetSevenSin();
   applyTrinityAtReady();
+  applyBalamAtReady();
+  applyLerajeAtReady();
   missionsNoteReady();
 
   const botDamages = new Map();
@@ -353,8 +355,14 @@ function applyPenalties() {
   applyBarbatosSharedGuessDamage(activeBots, botDamages, botDamageSources);
   const criticals = findCriticalHits();
   round.criticalHitKeys = new Set(criticals.map((hitter) => hitter.key));
-  // Guess quality: your final guess against the final TARGET (02-run-records.js)
+  // Guess quality: your final guess against the final TARGET, after every ARTIFACT (02-run-records.js); the CRITICAL
+  // only feeds the CRITICAL records, the score is the distance alone
   recordRoundGuess(participants.find((participant) => participant.kind === "player")?.distance, criticals.some((hitter) => hitter.key === "player"));
+  // Guess quality: the number you typed against the TARGET as first revealed
+  const revealedTarget = Number.isFinite(round.revealedTarget) ? round.revealedTarget : round.target;
+  if (Number.isFinite(round.playerSubmittedGuess) && Number.isFinite(revealedTarget)) {
+    recordRoundFirstGuess(Math.abs(round.playerSubmittedGuess - revealedTarget));
+  }
   const playerCritThisRound = criticals.some((hitter) => hitter.key === "player");
   // Seal of Orias reads this at the next round start
   state.playerCritLastRound = playerCritThisRound;
@@ -865,6 +873,7 @@ function resolveEliminatedBots(eliminated) {
     recordRunRoundEliminations(state.roundState.eliminationsThisRound);
     if (bot.revealedByPassive) state.roundState.revealedEliminationsThisRound = (state.roundState.revealedEliminationsThisRound || 0) + 1;
     personalityTypes(bot).forEach((type) => state.roundState.eliminatedPersonalities.push(type));
+    missionsNoteElimination(bot);
     bot.eliminated = true;
     bot.deathCause = bot.deathCause || "ko";
     bot.deathNotice = bot.deathNotice || `${bot.name} -${bot.lastDamage || 0} KO`;
@@ -892,6 +901,8 @@ function resolveEliminatedBots(eliminated) {
         state.goeticBossKills += 1;
         if (state.goeticBossKills >= GOETIC_BOSS_TOTAL) {
           state.finalBossQueued = true;
+          // Jesus and Satan talk once the results are on screen, then Final Judgment (09-intro-story.js)
+          if (!state.judgementTalkPlayed && state.mode === "arcade") state.judgementTalkDue = true;
           state.roundState.roundEvents.push("The seventy-two Goetic Seals are broken. Jesus and Satan approach.");
         }
       }
@@ -1026,7 +1037,7 @@ function checkRoundPentakillBonus() {
   round.pentakillPopup = true;
   // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
-  const healed = healPlayer(5, null, "PENTAKILL");
+  const healed = healPlayer(3, null, "PENTAKILL");
   const gained = gainCredits(8, false, "PENTAKILL");
   queueSelfStackingPentakillDamage();
   round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
@@ -2110,7 +2121,7 @@ function clearMarkedProspects() {
 
 function advanceAfterSummary() {
   if (state.stage !== "summary") return;
-  // first-launch story: from round 2 the results wait for Satan; moving on brings him in now
+  // first-launch story: from round INTRO_PACT_ROUND the results wait for Satan; moving on brings him in now
   if (introHoldsSummary()) {
     introStartPactNow();
     return;
@@ -2119,6 +2130,12 @@ function advanceAfterSummary() {
   if (introState.phase === "victory" || introState.phase === "victory-leave") return;
   if (satanVictoryHoldsSummary()) {
     startSatanVictoryNow();
+    return;
+  }
+  // the 72 demons have fallen: the results wait for Jesus and Satan; moving on brings them in now
+  if (introState.phase === "finale" || introState.phase === "finale-leave") return;
+  if (judgementTalkHoldsSummary()) {
+    startJudgementTalkNow();
     return;
   }
   // too much SIN held: the results wait for Satan's offer; moving on brings him in now
