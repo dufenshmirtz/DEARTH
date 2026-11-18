@@ -23,7 +23,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - `index.html` can be opened directly for single-player only.
 - Mobile: `pnpm run mobile:android` / `mobile:ios` (builds `native-www/` then `cap sync`). Android needs JDK 21 + SDK 36 (portable copy in `.android-toolchain/`, git-ignored). See README.md and MOBILE_BUILD.md.
 
-- itch.io playtest: `pnpm run playtest:zip` builds `dist/playtest/DEARTH-playtest-itch-<version>.zip` (demo.html as index.html). Every push to `main` runs `.github/workflows/itch-deploy.yml`: tests, the zip, then `butler push` to `koutaliaris/dearth:html5` (secret `BUTLER_API_KEY`). A failing test stops the upload.
+- itch.io playtest: `pnpm run playtest:zip` builds `dist/playtest/DEARTH-playtest-itch-<version>.zip` (demo.html as index.html). Pushing a tag `playtest-*` (e.g. `playtest-v0.2`) runs `.github/workflows/itch-deploy.yml`: tests, the zip, then `butler push` to `koutaliaris/dearth:html5` (secret `BUTLER_API_KEY`). A failing test stops the upload. Nothing uploads on ordinary pushes.
 
 ## Code layout
 - `src/game/` — ordered classic scripts (shared globals, no ES modules), concatenated by `scripts/build-game.js` in this order:

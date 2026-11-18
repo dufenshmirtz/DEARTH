@@ -1,20 +1,18 @@
-# Every push to main builds the playtest demo (demo.html as index.html) and uploads it to itch.io,
-# replacing the version testers play. It can also be started by hand: Actions > Deploy playtest to itch.io > Run workflow.
+# Uploads the playtest demo (demo.html as index.html) to itch.io, replacing the version testers play.
+# It runs only when you ask for it: push a tag that starts with "playtest-" (e.g. playtest-v0.2) on the commit to upload.
+# In GitHub Desktop: History > right-click the commit > Create Tag..., then Push (it pushes the tag too).
+# Once this file is also on main, Actions > Deploy playtest to itch.io > Run workflow works as well (pick the branch).
 # Needs the repository secret BUTLER_API_KEY: an itch.io API key (itch.io > Settings > API keys) from an account
 # that can upload to koutaliaris/dearth.
 name: Deploy playtest to itch.io
 
 on:
   push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "android/**"
-      - "ios/**"
-      - "desktop/**"
+    tags:
+      - "playtest-*"
   workflow_dispatch:
 
-# a newer push replaces a deploy that is still running
+# a newer upload replaces one that is still running
 concurrency:
   group: itch-deploy
   cancel-in-progress: true
@@ -60,5 +58,5 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          VERSION="$(node -p "require('./package.json').version")-${GITHUB_SHA::7}"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then VERSION="$GITHUB_REF_NAME"; else VERSION="$(node -p "require('./package.json').version")-${GITHUB_SHA::7}"; fi
           ./butler/butler push dist/playtest/itch koutaliaris/dearth:html5 --userversion "$VERSION"
