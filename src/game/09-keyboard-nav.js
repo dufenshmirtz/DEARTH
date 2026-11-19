@@ -7,6 +7,9 @@
    mouseenter / pointerenter so tooltips and the Collection's info box open. Moving the mouse hands control
    back to it. A selected Settings slider moves with left / right; Enter ticks a checkbox.
    A new screen starts on data-nav-start, else on its next step (data-nav-enter), else on its first button.
+   A question box marked data-nav-modal (Load Run's "Remove this run?") holds the keys until it is answered:
+   only its buttons can be selected, and once it closes the selection goes to its data-nav-return selector
+   (the run's X), or to the screen's start when that is gone (the run was removed).
    Only the top layer counts: Jesus' Gifts, then the Collection, then an open overlay card (Pause, the death
    card), then the menu. The run's table itself (no card open) is left alone.
    Screens with their own keys (the story and Satan's scenes, Pause's Esc, the Collection's and the Gifts'
@@ -29,7 +32,7 @@ const MENU_NAV_KEYS = {
   a: [-1, 0],
   d: [1, 0]
 };
-const menuNav = { active: false, el: null, key: "", frame: 0 };
+const menuNav = { active: false, el: null, key: "", frame: 0, modal: null, returnTo: "" };
 
 function menuKeysEnabled() {
   if (desktopApp()) return true;
@@ -44,7 +47,34 @@ function menuNavLayer() {
   if (typeof giftsOpen === "function" && giftsOpen()) return document.querySelector(".gifts-screen");
   if (typeof collectionOpen === "function" && collectionOpen()) return document.querySelector(".collection-screen");
   const overlays = [...document.querySelectorAll(".overlay.visible")].filter((el) => el.getClientRects().length);
-  return overlays[overlays.length - 1] || document;
+  const base = overlays[overlays.length - 1] || document;
+  // a question box on this layer holds the keys until it is answered
+  const modals = [...base.querySelectorAll("[data-nav-modal]")].filter((el) => el.getClientRects().length);
+  return modals[modals.length - 1] || base;
+}
+
+// notices a question box opening or closing; on closing returns where the selection should go back to
+function menuNavTrackModal(layer) {
+  const isModal = layer !== document && layer?.hasAttribute?.("data-nav-modal");
+  if (isModal) {
+    if (menuNav.modal !== layer) {
+      menuNav.modal = layer;
+      menuNav.returnTo = layer.getAttribute("data-nav-return") || "";
+    }
+    return null;
+  }
+  if (!menuNav.modal) return null;
+  const selector = menuNav.returnTo;
+  menuNav.modal = null;
+  menuNav.returnTo = "";
+  if (!selector || !layer) return null;
+  let back = null;
+  try {
+    back = layer.querySelector(selector);
+  } catch (error) {
+    back = null;
+  }
+  return back && menuNavVisible(back) && back.matches(MENU_NAV_ITEMS) ? back : null;
 }
 
 // the run's table (no card open) and the PvP screens keep their own controls
@@ -116,6 +146,8 @@ function menuNavClear(deactivate = true) {
   if (deactivate) {
     menuNav.active = false;
     menuNav.key = "";
+    menuNav.modal = null;
+    menuNav.returnTo = "";
   }
 }
 
@@ -218,6 +250,11 @@ function menuNavRefresh() {
     if (menuNav.el) menuNavClear(false);
     return;
   }
+  const back = menuNavTrackModal(layer);
+  if (back) {
+    menuNavSelect(back);
+    return;
+  }
   const el = menuNav.el;
   if (el && el.isConnected && layer.contains(el) && menuNavVisible(el)) {
     if (!el.classList.contains(NAV_HOVER_CLASS)) el.classList.add(NAV_HOVER_CLASS);
@@ -298,6 +335,11 @@ function installMenuKeyNavigation() {
     if (direction) {
       if (!menuNavAllowed(layer)) return;
       event.preventDefault();
+      const back = menuNavTrackModal(layer);
+      if (back) {
+        menuNavSelect(back);
+        return;
+      }
       const selected = menuNav.el;
       if (selected?.isConnected && layer.contains(selected) && selected.matches("input[type='range']") && !direction[1]) {
         menuNavStepRange(selected, direction[0]);

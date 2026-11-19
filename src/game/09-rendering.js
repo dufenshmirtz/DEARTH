@@ -259,12 +259,12 @@ function renderArcadeRunsMenu() {
       ${
         pendingDeleteSlot
           ? `
-            <div class="run-remove-confirm">
+            <div class="run-remove-confirm" data-nav-modal data-nav-return='[data-remove-run-slot-id="${escapeAttr(pendingDeleteSlot.slotId)}"]'>
               <div>Are You Sure You Want To Remove This Run?</div>
               <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
               <div class="run-remove-confirm-actions">
-                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}" data-nav-enter="2">Yes</button>
-                <button class="small-button" data-cancel-remove-run data-nav-back="2">No</button>
+                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">Yes</button>
+                <button class="small-button" data-cancel-remove-run data-nav-start data-nav-enter data-nav-back>No</button>
               </div>
             </div>
           `
