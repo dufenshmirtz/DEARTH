@@ -181,7 +181,7 @@ function renderMenuApp() {
 function renderMainMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="play">Play</button>
+      <button class="menu-button" data-menu-action="play" data-nav-enter>Play</button>
       <button class="menu-button" data-menu-action="options">Options</button>
       ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
     </div>
@@ -202,22 +202,22 @@ function formatRunStartedAt(timestamp) {
 function renderPlayMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="arcade">Arcade</button>
+      <button class="menu-button" data-menu-action="arcade" data-nav-enter>Arcade</button>
       ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">PvP</button>`}
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>Back</button>
     </div>
   `;
 }
 
 function renderArcadeOptionsMenu() {
   const primaryButton = hasSavedArcadeRun()
-    ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
-    : `<button class="menu-button" data-new-run="arcade-options">New Run</button>`;
+    ? `<button class="menu-button" data-menu-action="continue-arcade" data-nav-enter>Continue</button>`
+    : `<button class="menu-button" data-new-run="arcade-options" data-nav-enter>New Run</button>`;
   return `
     <div class="main-menu-actions">
       ${primaryButton}
       <button class="menu-button" data-menu-action="load-run">Load Run</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="${isNativeArcadeApp() ? "back" : "play"}">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="${isNativeArcadeApp() ? "back" : "play"}" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -228,9 +228,9 @@ function renderArcadeRunsMenu() {
   const pendingDeleteSlot = savedSlots.find((slot) => slot.slotId === state.pendingRunDeleteSlotId);
   const savedRows = savedSlots
     .map(
-      (slot) => `
+      (slot, index) => `
         <article class="run-slot-row">
-          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}">
+          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}"${index === 0 ? " data-nav-enter" : ""}>
             <span class="run-slot-label">Continue Run</span>
             <span class="run-slot-date">${escapeHtml(formatRunStartedAt(slot.startedAt))}</span>
           </button>
@@ -246,7 +246,7 @@ function renderArcadeRunsMenu() {
     .join("");
   const emptyRows = Array.from({ length: emptyCount }, (_, index) => {
     return `
-      <button class="run-slot-button empty-run-slot" data-new-run="${index}">
+      <button class="run-slot-button empty-run-slot" data-new-run="${index}"${!savedSlots.length && index === 0 ? " data-nav-enter" : ""}>
         <span class="run-slot-label">New Run</span>
       </button>
     `;
@@ -263,14 +263,14 @@ function renderArcadeRunsMenu() {
               <div>Are You Sure You Want To Remove This Run?</div>
               <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
               <div class="run-remove-confirm-actions">
-                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">Yes</button>
-                <button class="small-button" data-cancel-remove-run>No</button>
+                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}" data-nav-enter="2">Yes</button>
+                <button class="small-button" data-cancel-remove-run data-nav-back="2">No</button>
               </div>
             </div>
           `
           : ""
       }
-      <button class="menu-button secondary-menu-button" data-menu-action="arcade">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="arcade" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -278,12 +278,12 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">Settings</button>
+      <button class="menu-button" data-menu-action="sound-options" data-nav-enter>Settings</button>
       <button class="menu-button" data-menu-action="records">Records</button>
       <button class="menu-button" data-menu-action="collection">Collection</button>
       <button class="menu-button" data-menu-action="gifts">Shop</button>
       <button class="menu-button" data-menu-action="credits">Credits</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -299,7 +299,7 @@ function renderMobileMenuSettingsOverlay() {
         <h1 class="end-title">Settings</h1>
         <div class="pause-sound-settings">${renderSettingsPanel("menu")}</div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-menu-action="options">Back</button>
+          <button class="primary-button" data-menu-action="options" data-nav-back>Back</button>
         </div>
       </section>
     </div>
@@ -312,7 +312,7 @@ function renderSoundOptionsMenu() {
   return `
     <div class="options-menu menu-settings-card">
       ${renderSettingsPanel("menu")}
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -566,7 +566,7 @@ function renderRecordsMenu() {
       <h2 class="records-title">Records</h2>
       <nav class="records-tabs" aria-label="Record groups">${tabs}</nav>
       <div class="records-wall records-wall-${escapeAttr(tab)}">${plaques}</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -738,7 +738,7 @@ function renderSettingsPanel(prefix) {
   } else {
     const controls = isNativeArcadeApp()
       ? ""
-      : settingNote("<b>Enter</b> Guess, Ready, Next round &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> more on a tooltip");
+      : settingNote(`<b>Enter</b> Guess, Ready, Next round &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> more on a tooltip${menuKeysEnabled() ? " &nbsp;·&nbsp; In menus <b>arrows</b> move, <b>Enter</b> picks, <b>Esc</b> goes back" : ""}`);
     rows = [
       settingChoiceRow("animSpeed"),
       settingNote("Speeds up SEAL triggers and the READY reveal."),
@@ -761,7 +761,7 @@ function renderQuitMenu() {
   return `
     <div class="main-menu-actions">
       <div class="quit-copy">Close The Tab To Leave The Table.</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>Back</button>
     </div>
   `;
 }
@@ -1096,7 +1096,7 @@ function renderPauseMenu() {
           ${renderSettingsPanel("pause")}
         </div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-pause-action="back">Back</button>
+          <button class="primary-button" data-pause-action="back" data-nav-back>Back</button>
         </div>
       </section>
     </div>
@@ -1109,7 +1109,7 @@ function renderPauseMenu() {
         ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
         <h1 class="end-title">Paused</h1>
         <div class="pause-actions">
-          <button class="primary-button" data-pause-action="resume">Resume</button>
+          <button class="primary-button" data-pause-action="resume" data-nav-enter>Resume</button>
           <button class="primary-button" data-pause-action="restart">Restart</button>
           <button class="primary-button" data-pause-action="collection">Collection</button>
           <button class="primary-button" data-pause-action="settings">Settings</button>
@@ -1438,7 +1438,7 @@ function renderPvpLobbyConsole() {
   return renderPvpConsoleFrame(
     "Lobby",
     `${joined} of ${seats} seats taken. Open seats are played by the DAMNED.`,
-    `<button class="primary-button" id="pvpReadyLobby">Start</button>`,
+    `<button class="primary-button" id="pvpReadyLobby" data-nav-enter>Start</button>`,
     body
   );
 }
@@ -2943,8 +2943,8 @@ function renderOverlay() {
         </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">Inspect</button>
-          <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
-          <button class="primary-button end-restart" id="restartGame">Restart</button>
+          <button class="primary-button end-menu" id="gameOverMenu" data-nav-back>Main Menu</button>
+          <button class="primary-button end-restart" id="restartGame" data-nav-enter>Restart</button>
         </div>
       </section>
     </div>

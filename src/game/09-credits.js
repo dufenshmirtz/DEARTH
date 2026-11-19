@@ -66,7 +66,7 @@ function renderCreditsMenu() {
         ${sections}
         <p class="credits-closing">${escapeHtml(CREDITS_CLOSING_LINE)}</p>
       </div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>Back</button>
     </div>
   `;
 }
