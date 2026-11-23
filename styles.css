@@ -13443,6 +13443,31 @@ body.native-ios.native-arcade #app .shop-panel .shop-slots {
   padding: 6px 10px 12px !important;
   gap: 5px !important;
 }
+/* iPhone: the full-screen pages (Collection, Jesus' Gifts) keep their buttons, counters and cards clear of the Dynamic
+   Island and the home indicator; their dark background still fills the screen */
+body.native-ios .collection-screen {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body.native-ios .gifts-screen .gifts-back {
+  left: calc(clamp(14px, 3vw, 40px) + env(safe-area-inset-left));
+}
+/* Jesus moves in with the Back button, so it keeps the dark space above his head it has on Android */
+body.native-ios .gifts-screen .gifts-jesus {
+  left: calc(-9vh + env(safe-area-inset-left));
+}
+body.native-ios .gifts-screen .gifts-karma {
+  right: calc(clamp(14px, 4vw, 60px) + env(safe-area-inset-right));
+}
+/* the title steps left so the moved-in KARMA counter does not run into it */
+body.native-ios .gifts-screen .gifts-title {
+  right: calc(3% + env(safe-area-inset-right) + 100px);
+}
+body.native-ios.native-arcade .gifts-screen .gifts-cards {
+  right: calc(10px + env(safe-area-inset-right));
+}
+
 body.native-ios.native-arcade #app .shop-panel .shop-slots .item-card {
   height: auto !important;
   min-height: 0 !important;

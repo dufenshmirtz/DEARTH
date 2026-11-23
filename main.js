@@ -19592,15 +19592,30 @@ function introGuideBoxRect(focus) {
   const margin = 6;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+  // clear of the iPhone's Dynamic Island and home indicator (the same insets the game keeps around #app)
+  const safe = introSafeInsets();
+  const left = Math.max(margin, safe.left + 3);
+  const right = Math.max(margin, safe.right + 3);
+  const bottom = Math.max(margin, safe.bottom + 3);
+  const top = Math.max(margin, safe.top + 3);
   // about the size of the judgement's box; introGuidePlace shrinks it to the line it holds
-  const width = Math.min(vw - margin * 2, Math.max(320, vw * 0.46));
-  const above = focus ? focus.top - margin * 2 : 0;
-  const below = focus ? vh - focus.bottom - margin * 2 : vh;
+  const width = Math.min(vw - left - right, Math.max(320, vw * 0.46));
+  const above = focus ? focus.top - top - margin : 0;
+  const below = focus ? vh - focus.bottom - bottom - margin : vh;
   const maxHeight = Math.min(180, vh * 0.46);
   const minHeight = Math.min(100, vh * 0.28);
   const height = clamp(Math.max(above, below), minHeight, maxHeight);
   const atBottom = below >= above;
-  return { left: margin, top: atBottom ? vh - margin - height : margin, width, height, fit: atBottom ? "bottom" : "top" };
+  return { left, top: atBottom ? vh - bottom - height : top, width, height, fit: atBottom ? "bottom" : "top" };
+}
+
+// the screen edges the game keeps clear: #app's padding (on iPhone the safe-area insets, see styles.css)
+function introSafeInsets() {
+  const app = typeof document !== "undefined" ? document.querySelector("#app") : null;
+  if (!app || typeof getComputedStyle !== "function") return { left: 0, right: 0, top: 0, bottom: 0 };
+  const style = getComputedStyle(app);
+  const px = (value) => parseFloat(value) || 0;
+  return { left: px(style.paddingLeft), right: px(style.paddingRight), top: px(style.paddingTop), bottom: px(style.paddingBottom) };
 }
 
 // phones: the box only as tall as the line needs (the ghost keeps the whole line in the layout),
