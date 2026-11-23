@@ -47,8 +47,8 @@ function slotSfx(key) {
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
 const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
 
-/* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
-   The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission
+/* ---- the missions ("Satan's Bets"): 22 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
+   The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day; "Sell a SEAL" removed Nov 18). Each round MISSION_TIER_ODDS decides how much the mission
    is worth (45% 1 FAVOR, 40% 2, 15% 3 or more; the 3, 4, 6 and 8 ones share that 15%), then a mission of that worth
    is drawn, every one as likely as the next. Only missions that can be done right now are drawn.
    when: "event"   checked after every action (shop, ARTIFACT, spin, deal, GUESS) and after the results
@@ -135,7 +135,7 @@ function missionCounted(id, value, text, goal, count, extra = {}) {
 }
 
 const MISSIONS = [
-  // ---- 1 FAVOR (23) ----
+  // ---- 1 FAVOR (22) ----
   { id: "noBuy", value: 1, when: "leave", text: "Don't buy any Devil's Offerings", can: missionShopOpen, check: (f) => f.buys === 0, failed: (f) => f.buys > 0 },
   { id: "noKill", value: 1, when: "resolve", text: "Don't eliminate any Damned", check: (f) => f.eliminations === 0, failed: (f) => f.eliminations > 0 },
   {
@@ -203,7 +203,6 @@ const MISSIONS = [
     can: () => missionHeldArtifactIds().length >= 2 && activeUseLimit() >= 2,
     failed: (f) => f.resolved
   }),
-  { id: "sellSeal", value: 1, when: "event", text: "Sell a SEAL", can: () => missionSealKinds() >= 1, check: (f) => f.sealSells >= 1 },
   { id: "nextRound12Sin", value: 1, when: "leave", text: "Go into the next round with 12 sin or more", check: (f) => f.sin >= 12 },
 
   // ---- 2 FAVOR (23) ----
