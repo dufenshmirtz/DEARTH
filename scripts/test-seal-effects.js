@@ -5854,3 +5854,35 @@ test("DEAL: hidden until the first BOSS is beaten and Satan names it; then open 
   `);
 });
 
+test("a signed DEAL, FAVOR and a spin's queued DAMAGE survive Continue after a refresh", () => {
+  // the run as it is saved: the DEAL signed this run, 5 FAVOR, a slot DAMAGE waiting for the next round
+  const saving = game();
+  const saved = saving(`
+    unlockDealForTest();
+    state.mode = "arcade";
+    state.round = 4;
+    const pact = satanPact();
+    pact.used = true;
+    pact.outcome = "signed";
+    pact.request = "a SEAL";
+    missionsState().doubloons = 5;
+    state.slotFreeRerolls = 2;
+    state.slotPendingDamage = [{ round: 5, amount: 7 }];
+    JSON.stringify(
+      { version: ARCADE_RUN_SAVE_VERSION, slots: [{ version: ARCADE_RUN_SAVE_VERSION, slotId: "slot-test", startedAt: 1, savedAt: 1, lastPlayedAt: 1, state: arcadeRunSaveSnapshot() }] },
+      encodeArcadeSaveValue
+    );
+  `);
+  // a refreshed page: a fresh game, then Continue
+  const loading = game();
+  loading(`unlockDealForTest(); localStorage.setItem(ARCADE_RUN_SLOTS_STORAGE_KEY, ${JSON.stringify(saved)});`);
+  assert.equal(loading(`loadArcadeRun("slot-test")`), true);
+  loading(`
+    assert.equal(state.pact.used, true);
+    assert.equal(state.pact.outcome, "signed");
+    assert.equal(satanPactAvailable(), false);
+    assert.equal(missionsState().doubloons, 5);
+    assert.equal(state.slotFreeRerolls, 2);
+    assert.equal(state.slotPendingDamage.length, 1);
+  `);
+});

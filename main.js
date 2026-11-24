@@ -2526,6 +2526,12 @@ const state = {
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
   satanRerollToll: false,
+  // run state that is set up by startGame; it must be listed here, or loadArcadeRun skips it and Continue
+  // brings back a fresh one (a signed DEAL came back unused, FAVOR and a spin's queued DAMAGE were lost)
+  pact: null, // Satan's Pact (09-satan-pact.js)
+  missions: null, // Satan's bets and the slot machine's FAVOR (09-slot-missions.js)
+  slotFreeRerolls: 0,
+  slotPendingDamage: [],
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,
@@ -3379,6 +3385,11 @@ function loadArcadeRun(slotId = "") {
     // saves from before the Ars Goetia binding have none; saves from before the Archangels get all seven
     state.boundDemon = null;
     state.archangelQueue = ARCHANGEL_KEYS.slice();
+    // nothing of the run open before this one carries over when the save lacks it
+    state.pact = null;
+    state.missions = null;
+    state.slotFreeRerolls = 0;
+    state.slotPendingDamage = [];
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
