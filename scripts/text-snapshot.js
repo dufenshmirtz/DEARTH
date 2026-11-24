@@ -259,6 +259,10 @@ function tableScenes(game, label) {
 function screenTexts(layout, language = "en") {
   const game = createGame(1, layout);
   if (language !== "en") game.run(`setLanguage(${JSON.stringify(language)})`);
+  return screenTextsOn(game, layout);
+}
+
+function screenTextsOn(game, layout) {
   const out = menuScenes(game, layout);
   game.run("startGame()");
   Object.assign(out, tableScenes(game, `${layout}.round1.guess`));
@@ -380,7 +384,7 @@ function snapshotDifferences(expected, actual, limit = 30) {
   return lines;
 }
 
-module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame, screenTexts, tableScenes, htmlText };
+module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame, screenTexts, screenTextsOn, tableScenes, htmlText };
 
 if (require.main === module) {
   const actual = buildSnapshot();
