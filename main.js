@@ -22,6 +22,9 @@
    doesn't go through t() stays plain English and text that doesn't fit is easy to spot. */
 
 const LOCALES = {};
+// extra forms of the game's keywords a language uses (cases, plurals), so they get the keyword style too:
+// LOCALE_KEYWORDS.el = ["ΑΜΑΡΤΙΕΣ", ...] in locales/el.js (the plain translations of SIN, SOUL... are found already)
+const LOCALE_KEYWORDS = {};
 // ready: offered in Settings > Display > Language. Not ready: only in Pause > DEV (testing a translation in progress).
 const LANGUAGES = [
   { code: "en", name: "English", htmlLang: "en", ready: true },
@@ -224,6 +227,7 @@ function translateBuiltText(text) {
 function resetTranslationCaches() {
   Object.keys(translationPatternCache).forEach((key) => delete translationPatternCache[key]);
   Object.keys(builtTextCache).forEach((key) => delete builtTextCache[key]);
+  if (typeof translatedKeywordPatterns !== "undefined") Object.keys(translatedKeywordPatterns).forEach((key) => delete translatedKeywordPatterns[key]);
 }
 
 // a language's name in that language (the Language setting shows each one as its speakers write it)
@@ -7002,11 +7006,41 @@ function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+// the game's keywords in another language: their translations (t("SIN")...) plus the extra forms its locale file
+// lists in LOCALE_KEYWORDS (Greek cases, German plurals...). Letters of any alphabet count as a word's edge;
+// Chinese has no spaces, so there a keyword is found anywhere.
+const TOOLTIP_KEYWORDS = ["SIN", "DAMNED", "ARTIFACTS", "ARTIFACT", "SEALS", "SEAL", "BOSSES", "BOSS", "ELITE", "CRITICAL", "TARGET", "KOS", "KO", "SOUL", "MEMORY", "BOUNTY", "POISON"];
+const translatedKeywordPatterns = {};
+
+function translatedKeywordPattern() {
+  const code = currentLang();
+  if (translatedKeywordPatterns[code]) return translatedKeywordPatterns[code];
+  const forms = Array.from(new Set([...TOOLTIP_KEYWORDS.map((keyword) => t(keyword)), ...(LOCALE_KEYWORDS[code] || [])]))
+    .filter((form) => form && /\p{L}/u.test(form))
+    .sort((a, b) => b.length - a.length)
+    .map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!forms.length) forms.push("(?!)");
+  const pattern = code === "zh-Hans"
+    ? new RegExp(`(${forms.join("|")})`, "gu")
+    : new RegExp(`(?<![\\p{L}\\p{N}])(${forms.join("|")})(?![\\p{L}\\p{N}])`, "giu");
+  translatedKeywordPatterns[code] = pattern;
+  return pattern;
+}
+
+// a keyword in capitals; Greek capitals carry no accents
+function keywordCaps(word) {
+  const code = currentLang();
+  if (code === "zh-Hans") return word;
+  const caps = word.toLocaleUpperCase(code === "pseudo" ? "en" : code);
+  return code === "el" ? caps.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC") : caps;
+}
+
 // text shown on screen: in the player's language (t() translates English the code built, see 00-i18n.js),
 // then the keywords in the game's style
 function descriptionHtml(value) {
   const protectedPhrases = [];
   const plainTargetText = t(normalizeGameText(value));
+  if (currentLang() !== "en") return htmlWithLineBreaks(plainTargetText).replace(translatedKeywordPattern(), (keyword) => `<span class="tooltip-keyword">${keywordCaps(keyword)}</span>`);
   const protectedText = [
     /\bpick a target\b/gi,
     /\beach target\b/gi,
@@ -25860,7 +25894,10 @@ const CREDITS_SECTIONS = [
     heading: "Fonts",
     lines: [
       { name: "Razor Keen", note: "Ray Larabie, Typodermic Fonts · CC0" },
-      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" }
+      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" },
+      { name: "Mansalva", note: "The Mansalva Project Authors · SIL Open Font License 1.1" },
+      { name: "Long Cang", note: "The Long Cang Project Authors · SIL Open Font License 1.1" },
+      { name: "Noto Serif SC", note: "Google · SIL Open Font License 1.1" }
     ]
   }
 ];

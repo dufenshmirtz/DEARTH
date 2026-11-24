@@ -802,11 +802,41 @@ function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+// the game's keywords in another language: their translations (t("SIN")...) plus the extra forms its locale file
+// lists in LOCALE_KEYWORDS (Greek cases, German plurals...). Letters of any alphabet count as a word's edge;
+// Chinese has no spaces, so there a keyword is found anywhere.
+const TOOLTIP_KEYWORDS = ["SIN", "DAMNED", "ARTIFACTS", "ARTIFACT", "SEALS", "SEAL", "BOSSES", "BOSS", "ELITE", "CRITICAL", "TARGET", "KOS", "KO", "SOUL", "MEMORY", "BOUNTY", "POISON"];
+const translatedKeywordPatterns = {};
+
+function translatedKeywordPattern() {
+  const code = currentLang();
+  if (translatedKeywordPatterns[code]) return translatedKeywordPatterns[code];
+  const forms = Array.from(new Set([...TOOLTIP_KEYWORDS.map((keyword) => t(keyword)), ...(LOCALE_KEYWORDS[code] || [])]))
+    .filter((form) => form && /\p{L}/u.test(form))
+    .sort((a, b) => b.length - a.length)
+    .map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!forms.length) forms.push("(?!)");
+  const pattern = code === "zh-Hans"
+    ? new RegExp(`(${forms.join("|")})`, "gu")
+    : new RegExp(`(?<![\\p{L}\\p{N}])(${forms.join("|")})(?![\\p{L}\\p{N}])`, "giu");
+  translatedKeywordPatterns[code] = pattern;
+  return pattern;
+}
+
+// a keyword in capitals; Greek capitals carry no accents
+function keywordCaps(word) {
+  const code = currentLang();
+  if (code === "zh-Hans") return word;
+  const caps = word.toLocaleUpperCase(code === "pseudo" ? "en" : code);
+  return code === "el" ? caps.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC") : caps;
+}
+
 // text shown on screen: in the player's language (t() translates English the code built, see 00-i18n.js),
 // then the keywords in the game's style
 function descriptionHtml(value) {
   const protectedPhrases = [];
   const plainTargetText = t(normalizeGameText(value));
+  if (currentLang() !== "en") return htmlWithLineBreaks(plainTargetText).replace(translatedKeywordPattern(), (keyword) => `<span class="tooltip-keyword">${keywordCaps(keyword)}</span>`);
   const protectedText = [
     /\bpick a target\b/gi,
     /\beach target\b/gi,

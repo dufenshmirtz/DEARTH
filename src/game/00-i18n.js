@@ -22,6 +22,9 @@
    doesn't go through t() stays plain English and text that doesn't fit is easy to spot. */
 
 const LOCALES = {};
+// extra forms of the game's keywords a language uses (cases, plurals), so they get the keyword style too:
+// LOCALE_KEYWORDS.el = ["ΑΜΑΡΤΙΕΣ", ...] in locales/el.js (the plain translations of SIN, SOUL... are found already)
+const LOCALE_KEYWORDS = {};
 // ready: offered in Settings > Display > Language. Not ready: only in Pause > DEV (testing a translation in progress).
 const LANGUAGES = [
   { code: "en", name: "English", htmlLang: "en", ready: true },
@@ -224,6 +227,7 @@ function translateBuiltText(text) {
 function resetTranslationCaches() {
   Object.keys(translationPatternCache).forEach((key) => delete translationPatternCache[key]);
   Object.keys(builtTextCache).forEach((key) => delete builtTextCache[key]);
+  if (typeof translatedKeywordPatterns !== "undefined") Object.keys(translatedKeywordPatterns).forEach((key) => delete translatedKeywordPatterns[key]);
 }
 
 // a language's name in that language (the Language setting shows each one as its speakers write it)

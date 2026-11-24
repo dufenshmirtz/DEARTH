@@ -7325,6 +7325,67 @@ body.outline-boil::after {
   font-display: swap;
 }
 
+/* Letters Razor Keen and Alegreya don't have (made by scripts/subset-fonts.py). Same family names, so every
+   rule asking for Razor Keen or Alegreya gets them too: Greek labels in Mansalva and Greek text in Alegreya's
+   own Greek; Chinese labels in Long Cang and Chinese text in Noto Serif SC. unicode-range keeps the English
+   in the original faces. */
+@font-face {
+  font-family: "Razor Keen";
+  src: url("fonts/i18n/mansalva-greek.woff2") format("woff2");
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  size-adjust: 88%;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Razor Keen";
+  src: url("fonts/i18n/longcang-zh.woff2") format("woff2");
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/notoserifsc-zh.woff2") format("woff2");
+  font-weight: 400;
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+  font-display: swap;
+}
+/* Chinese reads badly with the wide letter-spacing of the English labels */
+:lang(zh-Hans) body * {
+  letter-spacing: 0 !important;
+}
+
 :root {
   --font-display: "Razor Keen", "Alegreya", Georgia, serif;
   --font-book: "Alegreya", Georgia, "Times New Roman", serif;

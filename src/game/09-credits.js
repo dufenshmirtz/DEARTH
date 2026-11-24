@@ -44,7 +44,10 @@ const CREDITS_SECTIONS = [
     heading: "Fonts",
     lines: [
       { name: "Razor Keen", note: "Ray Larabie, Typodermic Fonts · CC0" },
-      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" }
+      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" },
+      { name: "Mansalva", note: "The Mansalva Project Authors · SIL Open Font License 1.1" },
+      { name: "Long Cang", note: "The Long Cang Project Authors · SIL Open Font License 1.1" },
+      { name: "Noto Serif SC", note: "Google · SIL Open Font License 1.1" }
     ]
   }
 ];

@@ -138,3 +138,15 @@ test("Settings in the pseudo language: every text goes through t()", () => {
     assert.deepEqual(plain, [], `untranslated text in Settings > ${tab}`);
   }
 });
+
+test("the Chinese font files hold every Chinese character the game uses", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const root = path.resolve(__dirname, "..");
+  const inFonts = new Set(fs.readFileSync(path.join(root, "fonts/i18n/zh-chars.txt"), "utf8").trim());
+  const cjk = /[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/;
+  for (const file of ["src/game/locales/zh-Hans.js", "src/game/00-i18n.js", "src/game/09-satan-pact.js"]) {
+    const missing = [...new Set(fs.readFileSync(path.join(root, file), "utf8"))].filter((char) => cjk.test(char) && !inFonts.has(char));
+    assert.deepEqual(missing, [], `${file} uses Chinese characters the fonts lack: run python scripts/subset-fonts.py`);
+  }
+});

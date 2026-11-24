@@ -72,6 +72,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 
 ## Licensing
 No open-source license; all rights reserved. Third-party asset audit pending before release.
+- Other languages' letters (`fonts/i18n/`, made by `python scripts/subset-fonts.py`, OFL notices beside them): Mansalva (Greek labels), Alegreya's Greek, Long Cang and Noto Serif SC (Chinese). They are extra `@font-face` rules for the "Razor Keen" and "Alegreya" families with a `unicode-range`, so no CSS rule needs to change. The Chinese files hold only the characters the game uses: run the script again after the Chinese text changes (`test-i18n.js` checks it).
 - Fonts are cleared: Razor Keen v3.001 is CC0 (Larabie's 2022 public-domain release, notice inside the .otf, see `fonts/RAZOR-KEEN-LICENSE.txt`), so embedding it in the game is fine; Alegreya is OFL (`fonts/alegreya/OFL.txt`). Keep that exact Razor Keen file.
 
 ## SEALS: how they are organised
