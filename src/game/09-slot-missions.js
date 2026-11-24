@@ -45,7 +45,7 @@ function slotSfx(key) {
 }
 
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
-const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="${t("FAVOR")}"></span>`;
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`; // built once at load, before the language is known: stays English (screen readers only)
 
 /* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
    The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission

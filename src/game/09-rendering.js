@@ -171,7 +171,7 @@ function renderMenuApp() {
       </section>
     </main>
     ${renderMobileMenuSettingsOverlay()}
-    ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; early build</div>` : ""}
+    ${screen === "main" ? `<div class="menu-version">v${escapeHtml(GAME_VERSION)} &middot; ${t("early build")}</div>` : ""}
     ${state.menuCollectionOpen ? renderCollectionScreen("menu") : ""}
     ${state.menuGiftsOpen ? renderGiftsScreen() : ""}
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
@@ -2133,7 +2133,7 @@ const PERSONALITY_GLYPHS = {
 };
 
 // SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
-const SIN_MARK = `<span class="sin-mark" role="img" aria-label="${t("SIN")}"></span>`;
+const SIN_MARK = `<span class="sin-mark" role="img" aria-label="SIN"></span>`; // built once at load, before the language is known: stays English (screen readers only)
 
 function sinValueHtml(text) {
   return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;

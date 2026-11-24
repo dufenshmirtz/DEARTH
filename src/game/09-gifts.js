@@ -167,7 +167,7 @@ function giftOddsHtml(pack) {
   const rows = GIFT_KINDS.map((kind) => {
     const odds = Number(pack.odds[kind.key]) || 0;
     const text = Number.isInteger(odds) ? String(odds) : String(+odds.toFixed(3));
-    return `<span class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(kind.label)}</span><b>${text}%</b></span>`;
+    return `<span class="gift-odds-row${odds < GIFT_RARE_ODDS ? " rare" : ""}"><img src="${escapeAttr(giftKindIcon(kind.key))}" alt="" draggable="false" /><span>${escapeHtml(t(kind.label))}</span><b>${text}%</b></span>`;
   }).join("");
   return `<span class="gift-odds">${rows}</span>`;
 }
@@ -179,14 +179,14 @@ function renderGiftsScreen() {
   const cards = GIFT_PACKS.map((pack) => {
     const can = karmaCanPay(pack.price);
     return `
-      <button type="button" class="gift-card gift-${pack.key}${can ? "" : " cant"}" data-gift-open="${pack.key}" aria-label="Open ${escapeAttr(pack.name)} for ${pack.price} KARMA"${can ? "" : ' aria-disabled="true"'}>
+      <button type="button" class="gift-card gift-${pack.key}${can ? "" : " cant"}" data-gift-open="${pack.key}" aria-label="${escapeAttr(t("Open {pack} for {price} KARMA", { pack: t(pack.name), price: pack.price }))}"${can ? "" : ' aria-disabled="true"'}>
         <span class="gift-card-art">${giftVesselSvg(pack.key)}</span>
-        <span class="gift-name">${escapeHtml(pack.name)}</span>
+        <span class="gift-name">${escapeHtml(t(pack.name))}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
         ${giftOddsHtml(pack)}
         ${can
-          ? `<span class="gift-card-open gift-card-open-spacer" aria-hidden="true">You need ${formatNumber(pack.price)}${KARMA_MARK} more</span>`
-          : `<span class="gift-card-open">You need ${formatNumber(pack.price - balance)}${KARMA_MARK} more</span>`}
+          ? `<span class="gift-card-open gift-card-open-spacer" aria-hidden="true">${t("You need {karma} more", { karma: `${formatNumber(pack.price)}${KARMA_MARK}` })}</span>`
+          : `<span class="gift-card-open">${t("You need {karma} more", { karma: `${formatNumber(pack.price - balance)}${KARMA_MARK}` })}</span>`}
       </button>`;
   }).join("");
   return `
@@ -247,10 +247,10 @@ function startGiftOpening(packKey) {
       <div class="gift-face gift-shop-face"></div>
       <div class="gift-face gift-back">${GIFT_CARD_CROSS}</div>
       <div class="gift-face gift-front">
-        <span class="gift-reveal-kind">${escapeHtml(kind?.label || "")}</span>
+        <span class="gift-reveal-kind">${escapeHtml(kind?.label ? t(kind.label) : "")}</span>
         <img class="gift-reveal-art${result.kind === "goetia" ? " demon" : ""}" src="${escapeAttr(result.image)}" alt="" draggable="false" />
-        <span class="gift-reveal-name">${escapeHtml(result.name)}</span>
-        <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? `Owned · +${formatNumber(result.refund)}${KARMA_MARK}` : "Unlocked"}</span>
+        <span class="gift-reveal-name">${escapeHtml(t(result.name))}</span>
+        <span class="gift-reveal-status${result.duplicate ? " dup" : ""}">${result.duplicate ? t("Owned · +{karma}", { karma: `${formatNumber(result.refund)}${KARMA_MARK}` }) : t("Unlocked")}</span>
       </div>
     </div>`;
   // Again: the new opening takes over from the old one without fading the screen in again

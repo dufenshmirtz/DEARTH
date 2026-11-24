@@ -364,7 +364,7 @@ function archangelMatchesSearch(key, query = collectionSearch.angels) {
 
 function collectionSearchHtml(tab) {
   const value = collectionSearch[tab] || "";
-  const label = tab === "goetia" ? "Search demons" : tab === "angels" ? "Search Archangels" : "Search SEALS";
+  const label = t(tab === "goetia" ? "Search demons" : tab === "angels" ? "Search Archangels" : "Search SEALS");
   return `
     <label class="collection-search${value ? " has-value" : ""}">
       <img class="collection-search-icon" src="assets/ui/search-eye.png" alt="" aria-hidden="true" draggable="false" />
@@ -899,7 +899,7 @@ function collectionBeatenMarkHtml(mark = COLLECTION_BEATEN_MARK) {
 function sealRecordsHtml(id) {
   const record = sealRecord(id) || normalizeSealRecord();
   const row = (label, value, shown = value, extraClass = "") =>
-    `<div class="collection-record-row"><span>${escapeHtml(label)}</span><span class="collection-record-lead"></span><span class="collection-record-value${value > 0 ? "" : " zero"}${extraClass}">${escapeHtml(shown)}</span></div>`;
+    `<div class="collection-record-row"><span>${escapeHtml(t(label))}</span><span class="collection-record-lead"></span><span class="collection-record-value${value > 0 ? "" : " zero"}${extraClass}">${escapeHtml(shown)}</span></div>`;
   const rows = [
     row("Games beaten", record.wins, formatNumber(record.wins)),
     sealRecordShowsElite(id) ? row("Highest ELITE", record.elite, record.elite > 0 ? romanNumeral(record.elite) : "-", " roman") : "",
@@ -910,7 +910,7 @@ function sealRecordsHtml(id) {
     ? `<table class="collection-record-table">
         <thead><tr><th></th><th>${t("Total")}</th><th>${t("Best run")}</th><th>${t("Best round")}</th></tr></thead>
         <tbody>${kinds
-          .map(({ key, label }) => `<tr><th>${escapeHtml(label)}</th><td>${formatNumber(record.total[key] || 0)}</td><td>${formatNumber(record.run[key] || 0)}</td><td>${formatNumber(record.round[key] || 0)}</td></tr>`)
+          .map(({ key, label }) => `<tr><th>${escapeHtml(t(label))}</th><td>${formatNumber(record.total[key] || 0)}</td><td>${formatNumber(record.run[key] || 0)}</td><td>${formatNumber(record.round[key] || 0)}</td></tr>`)
           .join("")}</tbody>
       </table>`
     : "";
@@ -985,9 +985,9 @@ function toggleBoundDemon(key) {
 function collectionBoundLine() {
   const key = collectionBoundDemon();
   const runKey = state.mode === "arcade" ? state.boundDemon : null;
-  const name = (demonKey) => (demonKey ? (GOETIC_BOSS_BY_KEY[demonKey] || ARCHANGEL_BY_KEY[demonKey])?.name || "none" : "none");
-  const runNote = state.mode === "arcade" && runKey !== key ? `<span>this run: <strong>${escapeHtml(name(runKey))}</strong></span>` : "";
-  return `<span>bound: <strong>${escapeHtml(name(key))}</strong></span>${runNote}`;
+  const name = (demonKey) => t(demonKey ? (GOETIC_BOSS_BY_KEY[demonKey] || ARCHANGEL_BY_KEY[demonKey])?.name || "none" : "none");
+  const runNote = state.mode === "arcade" && runKey !== key ? `<span>${t("this run: {name}", { name: `<strong>${escapeHtml(name(runKey))}</strong>` })}</span>` : "";
+  return `<span>${t("bound: {name}", { name: `<strong>${escapeHtml(name(key))}</strong>` })}</span>${runNote}`;
 }
 
 function refreshCollectionBinding(screen) {
@@ -1014,7 +1014,7 @@ function collectionDemonsHtml() {
     const slain = isDemonSlain(spec.key);
     const number = romanNumeral(index + 1);
     return `
-      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
+      <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? t(spec.name) : t("{number}, not defeated", { number }))}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
@@ -1032,9 +1032,9 @@ function collectionArchangelsHtml() {
   const bound = collectionBoundDemon();
   const cells = ARCHANGEL_BOSS_SPECS.map((spec) => {
     const defeated = isArchangelDefeated(spec.key);
-    const planet = spec.planet.replace(/^the /, "");
+    const planet = t(spec.planet.replace(/^the /, ""));
     return `
-      <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? spec.name : `Archangel of ${spec.planet}, not defeated`)}">
+      <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? t(spec.name) : t("Archangel of {planet}, not defeated", { planet: t(spec.planet) }))}">
         <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
         <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
@@ -1050,14 +1050,14 @@ function collectionArchangelInfoHtml(key, pinned = false) {
     return `
       <div class="collection-info-status unslain">${t("Not defeated")}</div>
       <div class="collection-info-name">???</div>
-      <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+      <div class="collection-info-number">${escapeHtml(t("Archangel of {planet}", { planet: t(spec.planet) }))}</div>
       <div class="collection-info-note">${t("Not discovered yet: defeat this Archangel in a run.")}</div>`;
   }
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
-    <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
+    <div class="collection-info-number">${escapeHtml(t("Archangel of {planet}", { planet: t(spec.planet) }))}</div>
     <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
     ${collectionDemonBindHtml(key, seal, pinned)}`;
 }
@@ -1270,7 +1270,7 @@ function collectionInfoHtml(id, pinned = false) {
 
 function collectionBuildsHtml(id) {
   const labels = sealBuilds(id).map((key) => SEAL_BUILDS.find((build) => build.key === key)?.label).filter(Boolean);
-  return `<div class="collection-info-builds">${labels.map((label) => `<span>${escapeHtml(label)}</span>`).join("")}</div>`;
+  return `<div class="collection-info-builds">${labels.map((label) => `<span>${escapeHtml(t(label))}</span>`).join("")}</div>`;
 }
 
 function collectionFiltersHtml(all) {
@@ -1278,7 +1278,7 @@ function collectionFiltersHtml(all) {
   const tabs = [{ key: "all", label: "All" }, ...SEAL_BUILDS].map((build) => {
     const count = build.key === "all" ? all.length : all.filter((id) => sealBuilds(id).includes(build.key)).length;
     const active = build.key === filter;
-    return `<button class="collection-filter${active ? " active" : ""}" type="button" data-collection-filter="${build.key}" aria-pressed="${active}">${escapeHtml(build.label)}<span class="collection-filter-count">${count}</span></button>`;
+    return `<button class="collection-filter${active ? " active" : ""}" type="button" data-collection-filter="${build.key}" aria-pressed="${active}">${escapeHtml(t(build.label))}<span class="collection-filter-count">${count}</span></button>`;
   });
   return `<nav class="collection-filters" aria-label="${t("Filter SEALS by build")}">${tabs.join("")}</nav>`;
 }
@@ -1330,13 +1330,13 @@ function renderCollectionScreen(from) {
   ].map((tab) => {
     const active = tab.key === collectionTab;
     const unread = tab.key === "codex" && codexHasUnread() ? " has-new" : "";
-    return `<button class="collection-tab${active ? " active" : ""}${unread}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(tab.label)}</button>`;
+    return `<button class="collection-tab${active ? " active" : ""}${unread}" type="button" role="tab" data-collection-tab="${tab.key}" aria-selected="${active}">${escapeHtml(t(tab.label))}</button>`;
   });
   const sections = collectionSections()
     .map(
       (section) => `
         <section class="collection-section collection-section-${section.key}"${section.ids.some((id) => collectionSealVisible(id)) ? "" : " hidden"}>
-          <h2 class="collection-section-title">${escapeHtml(section.title)}</h2>
+          <h2 class="collection-section-title">${escapeHtml(t(section.title))}</h2>
           <div class="collection-grid">
             ${section.ids
               .map((id) => {
@@ -1344,7 +1344,7 @@ function renderCollectionScreen(from) {
                 const wide = SATAN_SEAL_IDS.has(id) ? " wide" : "";
                 const beaten = status !== "locked" && isSealBeaten(id) ? " beaten" : "";
                 return `
-                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? `Locked SEAL` : ITEMS[id].name)}">
+                  <button class="collection-seal ${status}${wide}${beaten}" type="button" data-collection-seal="${id}"${collectionSealVisible(id) ? "" : " hidden"} aria-label="${escapeAttr(status === "locked" ? t("Locked SEAL") : t(ITEMS[id].name))}">
                     <img class="collection-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" loading="lazy" draggable="false" />
                     ${status === "locked" ? `<span class="collection-lock" aria-hidden="true"></span>` : ""}
                   </button>`;
@@ -1360,15 +1360,15 @@ function renderCollectionScreen(from) {
         <button class="collection-back" type="button" data-collection-back="${from}">${t("Back")}</button>
         <nav class="collection-tabs" role="tablist" aria-label="${t("Collection")}">${tabs.join("")}</nav>
         <div class="collection-counts" data-collection-for="seals"${goetia || angels || codex ? " hidden" : ""}>
-          <span><strong>${discovered}</strong> / ${all.length} discovered</span>
-          <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
+          <span>${t("{count} / {total} discovered", { count: `<strong>${discovered}</strong>`, total: all.length })}</span>
+          <span>${t("{count} / {total} unlocked", { count: `<strong data-collection-count="unlocked">${unlocked}</strong>`, total: all.length })}</span>
         </div>
         <div class="collection-counts" data-collection-for="goetia"${goetia ? "" : " hidden"}>
-          <span><strong data-collection-count="slain">${slain}</strong> / ${GOETIC_BOSS_TOTAL} defeated</span>
+          <span>${t("{count} / {total} defeated", { count: `<strong data-collection-count="slain">${slain}</strong>`, total: GOETIC_BOSS_TOTAL })}</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
         <div class="collection-counts" data-collection-for="angels"${angels ? "" : " hidden"}>
-          <span><strong>${angelsDefeated}</strong> / ${ARCHANGEL_KEYS.length} defeated</span>
+          <span>${t("{count} / {total} defeated", { count: `<strong>${angelsDefeated}</strong>`, total: ARCHANGEL_KEYS.length })}</span>
           <span class="collection-bound-line">${collectionBoundLine()}</span>
         </div>
         ${codexOwned() ? `<div class="collection-counts" data-collection-for="codex"${codex ? "" : " hidden"}>${codexCountsHtml()}</div>` : ""}
@@ -1655,7 +1655,7 @@ const KARMA_HONORABLE_DEATH = 1;
 const KARMA_HONORABLE_DEATH_BOSSES = 4; // any BOSSES: main ones (the twins are one), demons, Archangels
 
 // KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
-const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="${t("KARMA")}"></span>`;
+const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`; // built once at load, before the language is known: stays English (screen readers only)
 
 function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
