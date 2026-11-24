@@ -112,11 +112,105 @@ function render() {
   lastRenderedMode = state.mode;
   bindEvents();
   afterRenderEffects();
+  scheduleFitTexts();
   // the slot machine and the mission line up with the outer DAMNED cards
   if (state.mode === "arcade") syncSlotEdges();
   if (state.mode === "menu") initMenuBackdrop();
   focusGuessInputAfterRender();
   scheduleArcadeRunSave();
+}
+
+// ---------- other languages: text that does not fit gets smaller, the boxes keep their size ----------
+// Only outside English (the English layout is the reference). Each rule: elements, the lines they may take, how
+// small the text may get (scale of its own font size), and whether text sticking out at the top or bottom counts too. An element keeps shrinking in 5% steps until it takes no more
+// lines than allowed and nothing sticks out; at the smallest size it stays as it is.
+const FIT_TEXT_RULES = [
+  [".panel-title", 1, 0.6],
+  [".target-line", 1, 0.55],
+  [".target-calc-line", 1, 0.6],
+  [".item-name", 1, 0.7],
+  [".primary-button", 1, 0.6],
+  [".small-button", 1, 0.55],
+  [".settings-tab", 1, 0.6],
+  [".collection-tab", 1, 0.6],
+  [".setting-label", 1, 0.65],
+  [".settings-row > label", 1, 0.65],
+  [".mission-text", 2, 0.65],
+  [".end-title", 1, 0.4],
+  [".stat-label", 1, 0.6],
+  [".bot-personality", 1, 0.6],
+  [".menu-button", 1, 0.6],
+  [".pause-menu button", 1, 0.6],
+  [".mission-title", 1, 0.6],
+  [".mobile-numpad-action", 2, 0.55, true],
+  [".slot-result", 2, 0.6],
+  [".end-stat > span", 1, 0.65],
+  [".record-label", 1, 0.65]
+];
+
+// lines of text in an element: its text rectangles, grouped where they overlap vertically
+function textLineCount(el) {
+  const range = document.createRange();
+  const rects = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent.trim()) continue;
+    range.selectNodeContents(node);
+    for (const rect of range.getClientRects()) if (rect.width > 0.5) rects.push(rect);
+  }
+  rects.sort((a, b) => a.top - b.top);
+  let lines = 0;
+  let bottom = -Infinity;
+  for (const rect of rects) {
+    if (rect.top >= bottom - Math.min(4, rect.height / 2)) lines += 1;
+    bottom = Math.max(bottom, rect.bottom);
+  }
+  return Math.max(1, lines);
+}
+
+// text wider than its element's content box (buttons are a few px wider than their box even in English, so the
+// text itself is measured, not scrollWidth)
+function textSticksOut(el, vertical = false) {
+  const box = el.getBoundingClientRect();
+  const style = getComputedStyle(el);
+  const left = box.left + parseFloat(style.borderLeftWidth || 0) + parseFloat(style.paddingLeft || 0) / 2 - 2;
+  const right = box.right - parseFloat(style.borderRightWidth || 0) - parseFloat(style.paddingRight || 0) / 2 + 2;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const top = box.top + parseFloat(style.borderTopWidth || 0) - 2;
+  const bottom = box.bottom - parseFloat(style.borderBottomWidth || 0) + 2;
+  for (const rect of range.getClientRects()) {
+    if (rect.width > 0.5 && (rect.left < left || rect.right > right || (vertical && (rect.top < top || rect.bottom > bottom)))) return true;
+  }
+  return style.textOverflow === "ellipsis" && el.scrollWidth > el.clientWidth + 1;
+}
+
+// right after the render, and again once overlays that fade or slide in have their size
+let fitTextsTimer = null;
+function scheduleFitTexts() {
+  if (currentLang() === "en") return;
+  fitTextsToBoxes(document);
+  requestAnimationFrame(() => fitTextsToBoxes(document));
+  clearTimeout(fitTextsTimer);
+  fitTextsTimer = setTimeout(() => fitTextsToBoxes(document), 450);
+}
+
+function fitTextsToBoxes(root = document) {
+  if (currentLang() === "en" || !root) return;
+  for (const [selector, maxLines, minScale, vertical] of FIT_TEXT_RULES) {
+    root.querySelectorAll(selector).forEach((el) => {
+      if (el.dataset.fitBase) el.style.removeProperty("font-size");
+      if (!el.offsetParent && getComputedStyle(el).position !== "fixed") return;
+      const base = parseFloat(getComputedStyle(el).fontSize);
+      if (!base) return;
+      el.dataset.fitBase = String(base);
+      const fits = () => textLineCount(el) <= maxLines && !textSticksOut(el, vertical);
+      for (let scale = 1; !fits() && scale > minScale + 0.001; ) {
+        scale = Math.max(minScale, scale - 0.05);
+        el.style.setProperty("font-size", `${(base * scale).toFixed(2)}px`, "important"); // many sizes in styles.css are !important
+      }
+    });
+  }
 }
 
 function focusGuessInputAfterRender() {

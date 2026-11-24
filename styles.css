@@ -16083,7 +16083,7 @@ body.outline-boil #app .deal-ink {
 #app .deal-word {
   fill: currentColor;
   font-family: var(--font-display);
-  font-size: 29px;
+  font-size: calc(29px * var(--deal-word-scale, 1)); /* --deal-word-scale: a long translated word (dealWordFit) */
   letter-spacing: 1px;
   text-anchor: middle;
 }
@@ -16169,7 +16169,7 @@ body.native-arcade #app .deal-button.deal-contract .deal-ink path {
 }
 
 body.native-arcade #app .deal-button.deal-contract .deal-word {
-  font-size: 25px;
+  font-size: calc(25px * var(--deal-word-scale, 1));
 }
 
 /* Settings > Display > Guide text: Hidden takes the guide lines off the game screen (the "Pick a number" hint,

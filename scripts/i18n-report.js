@@ -76,6 +76,31 @@ function shownEnglish() {
     MISSIONS.forEach((mission) => { if (typeof mission.text === "string") __shown.add(mission.text); });
   `);
   collect();
+  // every t("...") written in the code, also those on screens the runs above never reach (PvP, toasts, the phone)
+  const files = fs.readdirSync(path.join(__dirname, "..", "src", "game")).filter((file) => file.endsWith(".js")).map((file) => path.join("src", "game", file));
+  for (const file of [...files, "controller.js"]) {
+    const source = fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+    // the text literals inside each t( ... ) call, also both sides of t(a ? "x" : "y")
+    for (const match of source.matchAll(/\bt\(/g)) {
+      let depth = 0;
+      let end = match.index;
+      for (let i = match.index + 1; i < source.length && i < match.index + 600; i += 1) {
+        if (source[i] === '"') {
+          for (i += 1; i < source.length && source[i] !== '"'; i += 1) if (source[i] === "\\") i += 1;
+          continue;
+        }
+        if (source[i] === "(") depth += 1;
+        if (source[i] === ")" && (depth -= 1) === 0) {
+          end = i;
+          break;
+        }
+      }
+      for (const literal of source.slice(match.index, end).matchAll(/"((?:[^"\\]|\\.)*)"/g)) {
+        const text = JSON.parse(`"${literal[1]}"`);
+        if (/[A-Za-z]{2}/.test(text) && !/^[a-z-]+$/.test(text) && !/^[\w-]+:/.test(text)) seen.add(text);
+      }
+    }
+  }
   return seen;
 }
 

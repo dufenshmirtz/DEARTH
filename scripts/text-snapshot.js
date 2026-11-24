@@ -157,7 +157,7 @@ function staticTables(game) {
       return;
     }
     if (name === "ITEMS") return; // recorded item by item below
-    if (name === "LOCALE_KEYWORDS") return; // keyword forms of the other languages
+    if (name === "LOCALE_KEYWORDS" || name === "FIT_TEXT_RULES") return; // keyword forms of the other languages; CSS selectors
     textStrings(onlyEnglish(name, value), name, out);
   });
   return Array.from(new Set(Object.values(out))).sort();

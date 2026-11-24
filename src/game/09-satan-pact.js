@@ -1645,6 +1645,12 @@ function satanDealButtonHtml() {
    phone app has only a button's height for it, so it gets the same contract drawn as a long strip: folded corner,
    DEAL on the left, the X, the line and the signature on the right. The lines tremble with the outlines setting
    (three rough filters swapped by CSS, like the frames' boil). */
+// the word on the contract: a word longer than DEAL (ΣΥΜΦΩΝΙΑ) gets smaller text, the paper keeps its size
+function dealWordFit() {
+  const length = Array.from(t("DEAL")).length;
+  return length > 5 ? ` style="--deal-word-scale: ${(5 / length).toFixed(3)}"` : "";
+}
+
 function dealContractSvg() {
   const rough = [3, 11, 19]
     .map(
@@ -1671,7 +1677,7 @@ function dealContractSvg() {
       <path d="M110 25 l6 6 M116 25 l-6 6"/>
     </g>
     <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
-    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">${t("DEAL")}</text></svg>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29"${dealWordFit()}>${t("DEAL")}</text></svg>`;
   }
-  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">${t("DEAL")}</text></svg>`;
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41"${dealWordFit()}>${t("DEAL")}</text></svg>`;
 }
