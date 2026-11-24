@@ -122,6 +122,23 @@ test("descriptionHtml shows SEAL texts in the player's language", () => {
   `);
 });
 
+test("the glossary terms and their other forms are styled as keywords", () => {
+  const { run, context } = createGame(1);
+  context.__assert = assert;
+  run(`
+    const styled = (html) => Array.from(html.matchAll(/<span class="tooltip-keyword">([^<]*)<\\/span>/g), (m) => m[1]);
+    setLanguage("el");
+    __assert.equal(t("SIN"), "ΑΜΑΡΤΙΑ");
+    __assert.deepEqual(styled(descriptionHtml("Οι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ χάνουν 3 ΑΜΑΡΤΙΕΣ και το ΦΟΡΤΙΟ τους.")), ["ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ", "ΑΜΑΡΤΙΕΣ", "ΦΟΡΤΙΟ"]);
+    setLanguage("de");
+    __assert.deepEqual(styled(descriptionHtml("Alle VERURTEILTEN verlieren 3 SÜNDEN.")), ["VERURTEILTEN", "SÜNDEN"]);
+    setLanguage("es");
+    __assert.deepEqual(styled(descriptionHtml("Cada CONDENADO pierde 3 PECADOS.")), ["CONDENADO", "PECADOS"]);
+    setLanguage("zh-Hans");
+    __assert.deepEqual(styled(descriptionHtml("每个罪人失去3罪孽。巴力之印。")), ["罪人", "罪孽"]);
+  `);
+});
+
 test("Settings in the pseudo language: every text goes through t()", () => {
   const { run } = createGame(1);
   run(`setLanguage("pseudo")`);
