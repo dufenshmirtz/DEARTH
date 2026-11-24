@@ -181,17 +181,23 @@ function screenTexts(game, label) {
   const out = {};
   names.forEach((name) => {
     if (name === "render") return;
-    for (const arg of name === "renderSettingsPanel" ? ["menu", "pause"] : [undefined]) {
+    // the Settings panel: every tab, from the menu and from Pause
+    const calls = name === "renderSettingsPanel"
+      ? ["audio", "display", "gameplay"].flatMap((tab) => ["menu", "pause"].map((prefix) => ({ arg: prefix, tab, id: `(${prefix}, ${tab})` })))
+      : [{ arg: undefined, id: "" }];
+    for (const call of calls) {
       let html;
       try {
-        html = game.run(`${name}(${arg === undefined ? "" : JSON.stringify(arg)})`);
+        if (call.tab) game.run(`state.settingsTab = ${JSON.stringify(call.tab)}`);
+        html = game.run(`${name}(${call.arg === undefined ? "" : JSON.stringify(call.arg)})`);
       } catch {
         continue;
       }
       if (typeof html !== "string" || !html.trim()) continue;
       const lines = htmlText(html);
-      if (lines.length) out[`${label}.${name}${arg ? `(${arg})` : ""}`] = lines;
+      if (lines.length) out[`${label}.${name}${call.id}`] = lines;
     }
+    if (name === "renderSettingsPanel") game.run(`state.settingsTab = "audio"`);
   });
   return out;
 }
