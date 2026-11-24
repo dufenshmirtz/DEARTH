@@ -45,7 +45,7 @@ function slotSfx(key) {
 }
 
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
-const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="${t("FAVOR")}"></span>`;
 
 /* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
    The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission
@@ -1058,7 +1058,7 @@ function missionBoxHtml() {
   return `
     <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
-        <span class="mission-title">Satan's Bet</span>
+        <span class="mission-title">${t("Satan's Bet")}</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
@@ -1070,7 +1070,7 @@ function missionBoxHtml() {
 // the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="${t("Slot machine and Satan's bet")}">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----

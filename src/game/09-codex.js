@@ -315,7 +315,7 @@ function codexBookHtml() {
   return `
     <div class="codex-book" style="--codex-per: ${per}">
       <div class="codex-spread">${leaves.join("")}</div>
-      <nav class="codex-nav" aria-label="Pages">
+      <nav class="codex-nav" aria-label="${t("Pages")}">
         <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>Previous</button>
         <span class="codex-folio">${per === 2 ? "pages" : "page"} ${folio} of ${CODEX_PAGES.length}</span>
         <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>Next</button>
@@ -329,7 +329,7 @@ function codexLegendHtml() {
   return `
     <div class="collection-legend codex-legend">
       ${collectionKarmaLine()}
-      <button type="button" class="collection-dev-button${on ? " active" : ""}" data-collection-dev-codex data-tooltip="Testing: every page of the Codex shows, found or not">${on ? "DEV: whole Codex" : "DEV: found pages"}</button>
+      <button type="button" class="collection-dev-button${on ? " active" : ""}" data-collection-dev-codex data-tooltip="${t("Testing: every page of the Codex shows, found or not")}">${on ? "DEV: whole Codex" : "DEV: found pages"}</button>
     </div>`;
 }
 

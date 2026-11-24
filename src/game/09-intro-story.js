@@ -602,7 +602,7 @@ function introBoxHtml(kind) {
     <div class="intro-box intro-box-${kind}" role="dialog" aria-live="polite">
       <div class="intro-text"></div>
       <span class="intro-next" aria-hidden="true"></span>
-      <button class="intro-skip" type="button" aria-label="Skip the conversation">skip</button>
+      <button class="intro-skip" type="button" aria-label="${t("Skip the conversation")}">${t("skip")}</button>
     </div>`;
 }
 
@@ -1438,8 +1438,8 @@ function satanTightwadAsk() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">Yes</button>
-    <button class="intro-choice-button" type="button" data-choice="no">No</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${t("Yes")}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${t("No")}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");

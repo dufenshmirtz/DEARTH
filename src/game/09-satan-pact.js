@@ -1267,7 +1267,7 @@ function satanDealShowAsk() {
   form.className = "intro-choice pact-ask";
   form.setAttribute("autocomplete", "off");
   form.innerHTML = `
-    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="What do you want from Satan?" />
+    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="${t("What do you want from Satan?")}" />
     <button class="intro-choice-button" type="submit">${escapeHtml(SATAN_DEAL_BUTTONS.ask)}</button>
     <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(SATAN_DEAL_BUTTONS.leave)}</button>`;
   const input = form.querySelector("input");
@@ -1417,7 +1417,7 @@ function satanDealButtonHtml() {
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
-  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="${t("Make a deal with Satan")}" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
@@ -1452,7 +1452,7 @@ function dealContractSvg() {
       <path d="M110 25 l6 6 M116 25 l-6 6"/>
     </g>
     <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
-    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">${t("DEAL")}</text></svg>`;
   }
-  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">${t("DEAL")}</text></svg>`;
 }

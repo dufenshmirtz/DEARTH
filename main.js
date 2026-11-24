@@ -112,6 +112,7 @@ const PSEUDO_LETTERS = {
 
 // accented and 35% longer; {params}, HTML tags and entities are left alone
 function pseudoTranslation(text) {
+  if (!/[A-Za-z]/.test(String(text))) return String(text);
   let letters = 0;
   const body = String(text).replace(/(\{\w+\}|<[^>]*>|&[#\w]+;)|([A-Za-z])/g, (match, keep, letter) => {
     if (keep) return keep;
@@ -4193,10 +4194,10 @@ const NEW_RECORD_LABELS = {
 // a record's value as the player reads it
 function recordValueDisplay(key, record) {
   const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
-  if (value <= 0) return "None";
+  if (value <= 0) return t("None");
   if (key === "deepestDescent") return deepestDescentText(record);
   if (key === "highestEliteLevel") return eliteLevelText(value);
-  if (key === "fastestWin") return `Round ${formatNumber(value)}`;
+  if (key === "fastestWin") return t("Round {round}", { round: formatNumber(value) });
   return formatNumber(value);
 }
 
@@ -4204,8 +4205,8 @@ function recordValueDisplay(key, record) {
 function deepestDescentText(record) {
   const depth = Math.max(0, Math.floor(Number(record?.depth) || 0));
   const demons = Math.max(0, Math.floor(Number(record?.demons) || 0));
-  if (demons > 0) return `Demon ${formatNumber(demons)}`;
-  return `${formatNumber(Math.min(depth, UNIQUE_BOSS_KEYS.length))} of ${UNIQUE_BOSS_KEYS.length} BOSSES`;
+  if (demons > 0) return t("Demon {count}", { count: formatNumber(demons) });
+  return t("{depth} of {total} BOSSES", { depth: formatNumber(Math.min(depth, UNIQUE_BOSS_KEYS.length)), total: UNIQUE_BOSS_KEYS.length });
 }
 
 // records this run beat. A record that was still 0 before the run (a first run) does not count;
@@ -6967,8 +6968,8 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(displayName)}</div>
-      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
-      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
+      <div class="tooltip-shift-hint seal-shift-hint">${t("press shift for more")}</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>
     </div>
     <div class="tooltip-body">${descriptionHtml(bodyText)}</div>
     ${eliteDescription ? `<div class="tooltip-elite-line">${descriptionHtml(eliteDescription)}</div>` : ""}
@@ -15205,7 +15206,7 @@ function focusGuessInputAfterRender() {
 function renderMenuApp() {
   const screen = state.menuScreen || "main";
   return `
-    <main class="main-menu" aria-label="main menu">
+    <main class="main-menu" aria-label="${t("main menu")}">
       ${menuBackdropState.node ? `<div class="menu-backdrop-slot"></div>` : renderMenuBackdrop()}
       <section class="main-menu-panel menu-screen-${escapeAttr(screen)}">
         ${
@@ -15240,9 +15241,9 @@ function renderMenuApp() {
 function renderMainMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="play">Play</button>
-      <button class="menu-button" data-menu-action="options">Options</button>
-      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">Quit</button>`}
+      <button class="menu-button" data-menu-action="play">${t("Play")}</button>
+      <button class="menu-button" data-menu-action="options">${t("Options")}</button>
+      ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">${t("Quit")}</button>`}
     </div>
   `;
 }
@@ -15261,22 +15262,22 @@ function formatRunStartedAt(timestamp) {
 function renderPlayMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="arcade">Arcade</button>
-      ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">PvP</button>`}
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button" data-menu-action="arcade">${t("Arcade")}</button>
+      ${isNativeArcadeApp() ? "" : `<button class="menu-button" data-menu-action="pvp">${t("PvP")}</button>`}
+      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
     </div>
   `;
 }
 
 function renderArcadeOptionsMenu() {
   const primaryButton = hasSavedArcadeRun()
-    ? `<button class="menu-button" data-menu-action="continue-arcade">Continue</button>`
-    : `<button class="menu-button" data-new-run="arcade-options">New Run</button>`;
+    ? `<button class="menu-button" data-menu-action="continue-arcade">${t("Continue")}</button>`
+    : `<button class="menu-button" data-new-run="arcade-options">${t("New Run")}</button>`;
   return `
     <div class="main-menu-actions">
       ${primaryButton}
-      <button class="menu-button" data-menu-action="load-run">Load Run</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="${isNativeArcadeApp() ? "back" : "play"}">Back</button>
+      <button class="menu-button" data-menu-action="load-run">${t("Load Run")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="${isNativeArcadeApp() ? "back" : "play"}">${t("Back")}</button>
     </div>
   `;
 }
@@ -15290,7 +15291,7 @@ function renderArcadeRunsMenu() {
       (slot) => `
         <article class="run-slot-row">
           <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}">
-            <span class="run-slot-label">Continue Run</span>
+            <span class="run-slot-label">${t("Continue Run")}</span>
             <span class="run-slot-date">${escapeHtml(formatRunStartedAt(slot.startedAt))}</span>
           </button>
           <button
@@ -15306,30 +15307,30 @@ function renderArcadeRunsMenu() {
   const emptyRows = Array.from({ length: emptyCount }, (_, index) => {
     return `
       <button class="run-slot-button empty-run-slot" data-new-run="${index}">
-        <span class="run-slot-label">New Run</span>
+        <span class="run-slot-label">${t("New Run")}</span>
       </button>
     `;
   }).join("");
   return `
     <div class="run-menu">
-      <div class="run-slot-list" aria-label="Saved runs">
+      <div class="run-slot-list" aria-label="${t("Saved runs")}">
         ${savedRows}${emptyRows}
       </div>
       ${
         pendingDeleteSlot
           ? `
             <div class="run-remove-confirm">
-              <div>Are You Sure You Want To Remove This Run?</div>
+              <div>${t("Are You Sure You Want To Remove This Run?")}</div>
               <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
               <div class="run-remove-confirm-actions">
-                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">Yes</button>
-                <button class="small-button" data-cancel-remove-run>No</button>
+                <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">${t("Yes")}</button>
+                <button class="small-button" data-cancel-remove-run>${t("No")}</button>
               </div>
             </div>
           `
           : ""
       }
-      <button class="menu-button secondary-menu-button" data-menu-action="arcade">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="arcade">${t("Back")}</button>
     </div>
   `;
 }
@@ -15337,12 +15338,12 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">Settings</button>
-      <button class="menu-button" data-menu-action="records">Records</button>
-      <button class="menu-button" data-menu-action="collection">Collection</button>
-      <button class="menu-button" data-menu-action="gifts">Shop</button>
-      <button class="menu-button" data-menu-action="credits">Credits</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <button class="menu-button" data-menu-action="sound-options">${t("Settings")}</button>
+      <button class="menu-button" data-menu-action="records">${t("Records")}</button>
+      <button class="menu-button" data-menu-action="collection">${t("Collection")}</button>
+      <button class="menu-button" data-menu-action="gifts">${t("Shop")}</button>
+      <button class="menu-button" data-menu-action="credits">${t("Credits")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
     </div>
   `;
 }
@@ -15355,10 +15356,10 @@ function renderMobileMenuSettingsOverlay() {
     return `
     <div class="overlay visible pause-overlay menu-settings-overlay">
       <section class="end-card pause-card pause-settings-card">
-        <h1 class="end-title">Settings</h1>
+        <h1 class="end-title">${t("Settings")}</h1>
         <div class="pause-sound-settings">${renderSettingsPanel("menu")}</div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-menu-action="options">Back</button>
+          <button class="primary-button" data-menu-action="options">${t("Back")}</button>
         </div>
       </section>
     </div>
@@ -15371,7 +15372,7 @@ function renderSoundOptionsMenu() {
   return `
     <div class="options-menu menu-settings-card">
       ${renderSettingsPanel("menu")}
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
     </div>
   `;
 }
@@ -15419,7 +15420,7 @@ function renderRecordPlaque({ label, value, sub = "", art = "", size = "", isNew
   const classes = ["record-plaque", size ? `record-plaque-${size}` : "", isNew ? "is-new" : "", empty ? "is-empty" : ""].filter(Boolean).join(" ");
   return `
     <div class="${classes}">
-      ${isNew ? `<span class="record-new">NEW</span>` : ""}
+      ${isNew ? `<span class="record-new">${t("NEW")}</span>` : ""}
       ${art ? `<div class="record-art">${art}</div>` : ""}
       <strong class="record-value">${escapeHtml(String(value))}</strong>
       ${extra}
@@ -15429,7 +15430,7 @@ function renderRecordPlaque({ label, value, sub = "", art = "", size = "", isNew
   `;
 }
 
-const recordCountText = (value, one, many) => `${formatNumber(value)} ${value === 1 ? one : many}`;
+const recordCountText = (value, one, many) => `${formatNumber(value)} ${t(value === 1 ? one : many)}`;
 
 function renderRecordsMenu() {
   const records = loadArcadeRecords();
@@ -15439,15 +15440,15 @@ function renderRecordsMenu() {
   const tab = recordsTab();
   const sigil = (id) => (id && ITEMS[id] ? renderSealSigil(id, "record-sigil") : "");
   const lifetimePlaque = (label, value, sub, options = {}) =>
-    renderRecordPlaque({ label, value: value > 0 ? formatNumber(value) : "None", sub, empty: !(value > 0), ...options });
+    renderRecordPlaque({ label: t(label), value: value > 0 ? formatNumber(value) : t("None"), sub: t(sub), empty: !(value > 0), ...options });
   // a best-of-one-run record
   const runPlaque = (key, label, sub = "in one run", options = {}) => {
     const record = records[key] || emptyRecord();
     const empty = !(record.value > 0);
     return renderRecordPlaque({
-      label,
+      label: t(label),
       value: recordValueDisplay(key, record),
-      sub: !empty && record.name ? record.name : sub,
+      sub: t(!empty && record.name ? record.name : sub),
       art: !empty && record.id ? sigil(record.id) : "",
       isNew: unseen.has(key),
       empty,
@@ -15468,23 +15469,23 @@ function renderRecordsMenu() {
         : "";
       return [
         renderRecordPlaque({
-          label: name,
+          label: t(name),
           value: recentQuality ?? "--",
-          sub: recent.length ? `last ${recent.length} guesses` : "no guesses yet",
+          sub: recent.length ? t("last {count} guesses", { count: recent.length }) : t("no guesses yet"),
           size,
           empty: recentQuality === null,
           extra: strip
         }),
         renderRecordPlaque({
-          label: name,
+          label: t(name),
           value: allQuality ?? "--",
-          sub: rounds ? `all time · ${recordCountText(rounds, "guess", "guesses")}` : "all time",
+          sub: rounds ? t("all time · {guesses}", { guesses: recordCountText(rounds, "guess", "guesses") }) : t("all time"),
           empty: allQuality === null
         }),
         renderRecordPlaque({
-          label: `Best run ${name}`,
-          value: best.value > 0 ? formatNumber(best.value) : "None",
-          sub: best.value > 0 ? `one run · ${recordCountText(best.guesses || 0, "guess", "guesses")}` : `a run of ${GUESS_QUALITY_MIN_RUN_GUESSES}+ guesses`,
+          label: t("Best run {name}", { name: t(name) }),
+          value: best.value > 0 ? formatNumber(best.value) : t("None"),
+          sub: best.value > 0 ? t("one run · {guesses}", { guesses: recordCountText(best.guesses || 0, "guess", "guesses") }) : t("a run of {count}+ guesses", { count: GUESS_QUALITY_MIN_RUN_GUESSES }),
           isNew: unseen.has(recordKey),
           empty: !(best.value > 0)
         })
@@ -15506,9 +15507,9 @@ function renderRecordsMenu() {
     const nemesisEntry = nemesis ? lifetime.deaths[nemesis.key] : null;
     plaques = [
       renderRecordPlaque({
-        label: "Deepest descent",
-        value: deepest.value > 0 ? deepestDescentText(deepest) : "None",
-        sub: deepest.value > 0 ? `round ${formatNumber(deepest.round || 0)}` : "",
+        label: t("Deepest descent"),
+        value: deepest.value > 0 ? deepestDescentText(deepest) : t("None"),
+        sub: deepest.value > 0 ? t("round {round}", { round: formatNumber(deepest.round || 0) }) : "",
         size: "hero",
         isNew: unseen.has("deepestDescent"),
         empty: !(deepest.value > 0)
@@ -15520,9 +15521,9 @@ function renderRecordsMenu() {
       runPlaque("mostBossEliminations", "Most BOSS kills"),
       lifetimePlaque("BOSSES at once", progress.best.bossesAtOnce || 0, "on the table"),
       renderRecordPlaque({
-        label: "Nemesis",
-        value: nemesisEntry ? nemesisEntry.name : "None",
-        sub: nemesisEntry ? `claimed you ${recordCountText(nemesisEntry.count, "time", "times")}` : "who claims you most",
+        label: t("Nemesis"),
+        value: nemesisEntry ? t(nemesisEntry.name) : t("None"),
+        sub: nemesisEntry ? t("claimed you {times}", { times: recordCountText(nemesisEntry.count, "time", "times") }) : t("who claims you most"),
         art: nemesisEntry?.image ? `<img class="record-nemesis-art" src="${escapeAttr(nemesisEntry.image)}" alt="" loading="lazy" />` : "",
         empty: !nemesisEntry
       })
@@ -15552,37 +15553,37 @@ function renderRecordsMenu() {
     const topSeal = topEntry(known(lifetime.sealRuns));
     const topArtifact = topEntry(known(lifetime.artifactUses));
     const topBuild = topEntry(Object.fromEntries(Object.entries(lifetime.builds).map(([key, entry]) => [key, entry.runs])));
-    const buildLabel = (key) => SEAL_BUILDS.find((entry) => entry.key === key)?.label || key;
+    const buildLabel = (key) => t(SEAL_BUILDS.find((entry) => entry.key === key)?.label || key);
     const topBuildDepth = topBuild ? lifetime.builds[topBuild.key].depth || 0 : 0;
     plaques = [
       renderRecordPlaque({
-        label: "Best build",
-        value: build.length || artifacts.length ? deepestDescentText(deepest) : "None",
-        sub: build.length || artifacts.length ? "what you held at your deepest descent" : "",
+        label: t("Best build"),
+        value: build.length || artifacts.length ? deepestDescentText(deepest) : t("None"),
+        sub: build.length || artifacts.length ? t("what you held at your deepest descent") : "",
         size: "hero",
         extra: buildArt,
         isNew: unseen.has("deepestDescent"),
         empty: !(build.length || artifacts.length)
       }),
       renderRecordPlaque({
-        label: "Most played SEAL",
-        value: topSeal ? recordCountText(topSeal.value, "run", "runs") : "None",
-        sub: topSeal ? ITEMS[topSeal.key].name : "all time",
+        label: t("Most played SEAL"),
+        value: topSeal ? recordCountText(topSeal.value, "run", "runs") : t("None"),
+        sub: topSeal ? t(ITEMS[topSeal.key].name) : t("all time"),
         art: topSeal ? sigil(topSeal.key) : "",
         empty: !topSeal
       }),
       renderRecordPlaque({
-        label: "Most played build",
-        value: topBuild ? buildLabel(topBuild.key) : "None",
+        label: t("Most played build"),
+        value: topBuild ? buildLabel(topBuild.key) : t("None"),
         sub: topBuild
-          ? `${recordCountText(topBuild.value, "run", "runs")} · deepest ${deepestDescentText({ depth: topBuildDepth, demons: Math.max(0, topBuildDepth - UNIQUE_BOSS_KEYS.length) })}`
-          : "all time",
+          ? t("{runs} · deepest {depth}", { runs: recordCountText(topBuild.value, "run", "runs"), depth: deepestDescentText({ depth: topBuildDepth, demons: Math.max(0, topBuildDepth - UNIQUE_BOSS_KEYS.length) }) })
+          : t("all time"),
         empty: !topBuild
       }),
       renderRecordPlaque({
-        label: "Most played ARTIFACT",
-        value: topArtifact ? recordCountText(topArtifact.value, "use", "uses") : "None",
-        sub: topArtifact ? ITEMS[topArtifact.key].name : "all time",
+        label: t("Most played ARTIFACT"),
+        value: topArtifact ? recordCountText(topArtifact.value, "use", "uses") : t("None"),
+        sub: topArtifact ? t(ITEMS[topArtifact.key].name) : t("all time"),
         art: topArtifact ? renderArtifactIcon(topArtifact.key, "record-artifact") : "",
         empty: !topArtifact
       }),
@@ -15596,12 +15597,12 @@ function renderRecordsMenu() {
     const challenges = sealChallenges();
     const done = challenges.filter((challenge) => challenge.done).length;
     plaques = `
-      <p class="challenges-summary">${formatNumber(done)} / ${formatNumber(challenges.length)} completed</p>
+      <p class="challenges-summary">${t("{done} / {total} completed", { done: formatNumber(done), total: formatNumber(challenges.length) })}</p>
       <ol class="challenges-list">${challenges
         .map((challenge) => `
         <li class="challenge${challenge.done ? " done" : ""}">
-          <span class="challenge-mark"${challenge.done ? ` aria-label="Completed"` : ` aria-hidden="true"`}>${challenge.done ? BOSS_GLYPH_SVG : ""}</span>
-          <span class="challenge-text">${descriptionHtml(challenge.text)}</span>
+          <span class="challenge-mark"${challenge.done ? ` aria-label="${t("Completed")}"` : ` aria-hidden="true"`}>${challenge.done ? BOSS_GLYPH_SVG : ""}</span>
+          <span class="challenge-text">${descriptionHtml(t(challenge.text))}</span>
           ${!challenge.done && challenge.goal > 1 ? `<span class="challenge-progress">${formatNumber(challenge.value)} / ${formatNumber(challenge.goal)}</span>` : ""}
         </li>`)
         .join("")}
@@ -15618,14 +15619,14 @@ function renderRecordsMenu() {
   const tabs = RECORDS_TABS.map((entry) => {
     const active = entry.key === tab;
     const hasNew = [...unseen].some((key) => RECORD_TAB_OF_KEY[key] === entry.key);
-    return `<button class="records-tab${active ? " active" : ""}" data-menu-action="records-tab:${entry.key}" aria-pressed="${active}">${escapeHtml(entry.label)}${hasNew ? `<i class="records-tab-new" aria-label="new record"></i>` : ""}</button>`;
+    return `<button class="records-tab${active ? " active" : ""}" data-menu-action="records-tab:${entry.key}" aria-pressed="${active}">${escapeHtml(t(entry.label))}${hasNew ? `<i class="records-tab-new" aria-label="${t("new record")}"></i>` : ""}</button>`;
   }).join("");
   return `
     <div class="records-menu relic-wall">
-      <h2 class="records-title">Records</h2>
-      <nav class="records-tabs" aria-label="Record groups">${tabs}</nav>
+      <h2 class="records-title">${t("Records")}</h2>
+      <nav class="records-tabs" aria-label="${t("Record groups")}">${tabs}</nav>
       <div class="records-wall records-wall-${escapeAttr(tab)}">${plaques}</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
     </div>
   `;
 }
@@ -15827,8 +15828,8 @@ function renderSettingsPanel(prefix) {
 function renderQuitMenu() {
   return `
     <div class="main-menu-actions">
-      <div class="quit-copy">Close The Tab To Leave The Table.</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">Back</button>
+      <div class="quit-copy">${t("Close The Tab To Leave The Table.")}</div>
+      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
     </div>
   `;
 }
@@ -15863,12 +15864,12 @@ function renderArcadeApp() {
           ${renderPentakillPopup()}
         </main>
         ${slotBand}
-        <div class="native-seal-actions" aria-label="Menu controls">
+        <div class="native-seal-actions" aria-label="${t("Menu controls")}">
           ${renderPauseButton()}
           ${satanDealButtonHtml()}
           ${renderMobileOfferingsButton()}
         </div>
-        <section class="native-console-panel ${playerGuessCritical ? "critical-guess-panel" : ""}" aria-label="Player guess">
+        <section class="native-console-panel ${playerGuessCritical ? "critical-guess-panel" : ""}" aria-label="${t("Player guess")}">
           ${renderConsole()}
         </section>
         ${renderNativeInputPanel()}
@@ -15919,7 +15920,7 @@ function closeMobileOfferingsForTargetPick() {
 
 function renderMobileOfferingsButton() {
   if (!isMobileArcadeView()) return "";
-  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="Open items">Items</button>`;
+  return `<button class="mobile-offerings-button" id="mobileOfferingsToggle" aria-label="${t("Open items")}">${t("Items")}</button>`;
 }
 
 function renderMobileOfferingsHeader() {
@@ -15928,10 +15929,10 @@ function renderMobileOfferingsHeader() {
   return `
     <div class="mobile-offerings-header">
       <div class="shop-title-wrap">
-        <div class="panel-title">Items</div>
+        <div class="panel-title">${t("Items")}</div>
       </div>
       <div class="mobile-offerings-sin">${formatNumber(playerSin)}${SIN_MARK}</div>
-      <button class="small-button" id="mobileOfferingsClose">Close</button>
+      <button class="small-button" id="mobileOfferingsClose">${t("Close")}</button>
     </div>
   `;
 }
@@ -15942,7 +15943,7 @@ function renderMobileOfferingsBackdrop() {
 }
 
 function renderPauseButton() {
-  return `<button class="pause-button" id="pauseButton" aria-label="Pause">Pause</button>`;
+  return `<button class="pause-button" id="pauseButton" aria-label="${t("Pause")}">${t("Pause")}</button>`;
 }
 
 function currentRoundRevealStep() {
@@ -16107,10 +16108,10 @@ function renderNativeInputPanel() {
 function renderNativeTargetPickPanel() {
   const pendingText = renderPendingText();
   return `
-    <section class="native-target-pick-panel" aria-label="Pick target">
-      <div class="native-target-pick-title">Pick a DAMNED</div>
+    <section class="native-target-pick-panel" aria-label="${t("Pick target")}">
+      <div class="native-target-pick-title">${t("Pick a DAMNED")}</div>
       <div class="native-target-pick-copy">${escapeHtml(normalizeGameText(pendingText))}</div>
-      <button id="cancelPendingActive" class="small-button pending-cancel native-target-cancel">Cancel</button>
+      <button id="cancelPendingActive" class="small-button pending-cancel native-target-cancel">${t("Cancel")}</button>
     </section>
   `;
 }
@@ -16138,7 +16139,7 @@ function renderMobileNumpad() {
     ["backspace", "DEL"]
   ];
   return `
-    <section class="mobile-numpad" aria-label="Number pad">
+    <section class="mobile-numpad" aria-label="${t("Number pad")}">
       ${keys
         .map(([key, label]) =>
           key === "action"
@@ -16158,12 +16159,12 @@ function renderPauseMenu() {
     return `
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card pause-settings-card">
-        <h1 class="end-title">Settings</h1>
+        <h1 class="end-title">${t("Settings")}</h1>
         <div class="pause-sound-settings">
           ${renderSettingsPanel("pause")}
         </div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-pause-action="back">Back</button>
+          <button class="primary-button" data-pause-action="back">${t("Back")}</button>
         </div>
       </section>
     </div>
@@ -16172,15 +16173,15 @@ function renderPauseMenu() {
   return `
     <div class="overlay visible pause-overlay">
       <section class="end-card pause-card">
-        ${state.mode === "arcade" ? `<button class="small-button pause-dev-button" data-pause-action="dev">DEV</button>` : ""}
-        ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="Testing: every locked SEAL can be offered for the rest of this run">${state.devUnlockAllSeals ? "Unlocked" : "Unlock"}</button>` : ""}
-        <h1 class="end-title">Paused</h1>
+        ${state.mode === "arcade" ? `<button class="small-button pause-dev-button" data-pause-action="dev">${t("DEV")}</button>` : ""}
+        ${state.mode === "arcade" ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="${t("Testing: every locked SEAL can be offered for the rest of this run")}">${state.devUnlockAllSeals ? t("Unlocked") : t("Unlock")}</button>` : ""}
+        <h1 class="end-title">${t("Paused")}</h1>
         <div class="pause-actions">
-          <button class="primary-button" data-pause-action="resume">Resume</button>
-          <button class="primary-button" data-pause-action="restart">Restart</button>
-          <button class="primary-button" data-pause-action="collection">Collection</button>
-          <button class="primary-button" data-pause-action="settings">Settings</button>
-          <button class="primary-button" data-pause-action="menu">Main Menu</button>
+          <button class="primary-button" data-pause-action="resume">${t("Resume")}</button>
+          <button class="primary-button" data-pause-action="restart">${t("Restart")}</button>
+          <button class="primary-button" data-pause-action="collection">${t("Collection")}</button>
+          <button class="primary-button" data-pause-action="settings">${t("Settings")}</button>
+          <button class="primary-button" data-pause-action="menu">${t("Main Menu")}</button>
           ${state.mode === "arcade" && isNativeArcadeApp() ? renderPauseBoundPlate("in-actions") : ""}
         </div>
         ${state.mode === "arcade" && !isNativeArcadeApp() ? renderPauseBoundPlate() : ""}
@@ -16199,14 +16200,14 @@ function pauseBoundInfo() {
   const archangel = key && !demon ? ARCHANGEL_BY_KEY[key] : null;
   if (demon) {
     return { bound: true, name: demon.name, art: demonThumbPath(demon), sealId: demon.passiveId,
-      note: "Its SEAL is free in Devil's Offerings. YOU comes in its place." };
+      note: t("Its SEAL is free in Devil's Offerings. YOU comes in its place.") };
   }
   if (archangel) {
     return { bound: true, name: archangel.name, art: archangelThumbPath(archangel), sealId: archangel.sealId,
-      note: "You started with its SEAL. YOU comes in its place." };
+      note: t("You started with its SEAL. YOU comes in its place.") };
   }
-  return { bound: false, name: "The Sinner", art: "assets/ui/intro/intro-sinner.webp", sealId: null,
-    note: "Nothing bound. Bind a defeated demon in the Collection." };
+  return { bound: false, name: t("The Sinner"), art: "assets/ui/intro/intro-sinner.webp", sealId: null,
+    note: t("Nothing bound. Bind a defeated demon in the Collection.") };
 }
 
 // placement "in-actions" (native app): the empty grid cell under Settings, beside Main Menu, centred
@@ -16221,7 +16222,7 @@ function renderPauseBoundPlate(placement = "") {
       <div class="pause-bound-row">
         <img class="pause-bound-art" src="${escapeAttr(info.art)}" alt="" draggable="false" />
         <div class="pause-bound-text">
-          <div class="pause-bound-label">${info.bound ? "Bound" : "Unbound"}</div>
+          <div class="pause-bound-label">${info.bound ? t("Bound") : t("Unbound")}</div>
           <div class="pause-bound-name">${escapeHtml(info.name)}${sigil}</div>
           <div class="pause-bound-note">${escapeHtml(info.note)}</div>
         </div>
@@ -16239,8 +16240,8 @@ function renderDevSealGrant() {
     <div class="dev-seal-grant">
       <div class="dev-seal-search-wrap">
         <div class="dev-seal-search-row">
-          <input id="devSealSearch" class="dev-seal-search" type="text" placeholder="SEAL name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="SEAL name" aria-controls="devSealSuggestions" value="${escapeAttr(query)}" />
-          <button type="button" id="devSealGive" class="dev-seal-give" aria-label="Give or upgrade this SEAL" data-tooltip="Give this SEAL if you have an empty slot, or upgrade it once if you already have it">${DEV_PENTAGRAM_SVG}</button>
+          <input id="devSealSearch" class="dev-seal-search" type="text" placeholder="${t("SEAL name")}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${t("SEAL name")}" aria-controls="devSealSuggestions" value="${escapeAttr(query)}" />
+          <button type="button" id="devSealGive" class="dev-seal-give" aria-label="${t("Give or upgrade this SEAL")}" data-tooltip="${t("Give this SEAL if you have an empty slot, or upgrade it once if you already have it")}">${DEV_PENTAGRAM_SVG}</button>
         </div>
         <div id="devSealSuggestions" class="dev-seal-suggestions" role="listbox"></div>
       </div>
@@ -16276,23 +16277,23 @@ function renderSelfStackingDevPanel() {
     .join("");
   return `
     <div class="pause-dev-panel">
-      <h2>Unlocks (testing)</h2>
+      <h2>${t("Unlocks (testing)")}</h2>
       <div class="dev-summon-row">
-        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
-        <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
+        <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">${t("Unlock slot machine")}</button>
+        <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">${t("Unlock DEAL")}</button>
       </div>
-      <h2>Language (testing)</h2>
+      <h2>${t("Language (testing)")}</h2>
       <div class="dev-summon-row">
-        ${testingLanguageCodes().map((code) => `<button class="small-button${code === currentLang() ? " active" : ""}" data-pause-action="lang:${code}" data-tooltip="Show the game in this language, finished or not (missing text shows in English; Pseudo marks text that is not translatable yet)">${escapeHtml(languageName(code))}</button>`).join("")}
+        ${testingLanguageCodes().map((code) => `<button class="small-button${code === currentLang() ? " active" : ""}" data-pause-action="lang:${code}" data-tooltip="${t("Show the game in this language, finished or not (missing text shows in English; Pseudo marks text that is not translatable yet)")}">${escapeHtml(languageName(code))}</button>`).join("")}
       </div>
-      <h2>Faustian Codex (testing)</h2>
+      <h2>${t("Faustian Codex (testing)")}</h2>
       <div class="dev-summon-row">
         <button class="small-button${codexDevWhole() ? " active" : ""}" data-pause-action="codex-whole" data-tooltip="${codexDevWhole() ? "On: the Codex tab shows every page. Click to go back to the pages really found" : "Show the Codex tab in the Collection with every page, found or not (kept on this device until turned off)"}">Whole Codex${codexDevWhole() ? ": on" : ""}</button>
       </div>
-      <h2>Self-stacking conditions this game</h2>
+      <h2>${t("Self-stacking conditions this game")}</h2>
       ${rows}
-      <div class="dev-counter-row muted"><span>Total ARTIFACTS used</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
-      <h2>Summon an Archangel (testing)</h2>
+      <div class="dev-counter-row muted"><span>${t("Total ARTIFACTS used")}</span><strong>${Math.max(0, Math.floor(state.totalArtifactsUsed || 0))}</strong></div>
+      <h2>${t("Summon an Archangel (testing)")}</h2>
       <div class="dev-summon-row">
         ${ARCHANGEL_BOSS_SPECS.map((spec) => `<button class="small-button" data-pause-action="summon:${spec.key}">${escapeHtml(spec.name)}</button>`).join("")}
       </div>
@@ -16328,7 +16329,7 @@ function renderPvpTopbar() {
   const joined = pvp.slots.filter(Boolean).length;
   return `
     <div class="stat-card pvp-stat">
-      <span class="stat-label">Round</span>
+      <span class="stat-label">${t("Round")}</span>
       <span class="stat-value">${pvp.round || "-"}</span>
     </div>
     <div class="stat-card pvp-stat">
@@ -16336,7 +16337,7 @@ function renderPvpTopbar() {
       <span class="stat-value">${lobby ? `${joined}/${seats}` : `${alive}/${seats}`}</span>
     </div>
     <div class="stat-card pvp-stat pvp-phase-stat">
-      <span class="stat-label">Phase</span>
+      <span class="stat-label">${t("Phase")}</span>
       <span class="stat-value">${PVP_PHASE_NAMES[pvp.stage] || ""}</span>
     </div>
   `;
@@ -16349,8 +16350,8 @@ function renderPvpTargetPanel() {
   const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
   const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
   return `
-    <section class="target-panel pvp-target" aria-label="Target">
-      <span class="stat-label pvp-target-head">Target</span>
+    <section class="target-panel pvp-target" aria-label="${t("Target")}">
+      <span class="stat-label pvp-target-head">${t("Target")}</span>
       <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"}">${known ? formatNumber(shown) : "?"}</strong>
       <div class="pvp-target-side">
         ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
@@ -16369,7 +16370,7 @@ function pvpGridColumns() {
 
 function renderPvpSlots() {
   return `
-    <section class="bot-grid pvp-grid" aria-label="Players" style="--pvp-cols: ${pvpGridColumns()}">
+    <section class="bot-grid pvp-grid" aria-label="${t("Players")}" style="--pvp-cols: ${pvpGridColumns()}">
       ${state.pvp.slots.map((participant, slot) => renderPvpSlot(participant, slot)).join("")}
     </section>
   `;
@@ -16382,15 +16383,15 @@ function renderPvpSlot(participant, slot) {
       <article class="bot-card pvp-slot empty-pvp-slot">
         <div class="pvp-empty-seat">
           <div class="pvp-seat-number">${slot + 1}</div>
-          <div class="bot-name">Open Seat</div>
-          <div class="bot-type">Join from your phone</div>
-          <div class="pvp-seat-note">A DAMNED takes it when the game starts</div>
+          <div class="bot-name">${t("Open Seat")}</div>
+          <div class="bot-type">${t("Join from your phone")}</div>
+          <div class="pvp-seat-note">${t("A DAMNED takes it when the game starts")}</div>
         </div>
       </article>
     `;
   }
   const kickButton = lobby
-    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="Remove ${escapeAttr(participant.name)}">Remove</button>`
+    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="Remove ${escapeAttr(participant.name)}">${t("Remove")}</button>`
     : "";
   const downClass = participant.eliminated ? "eliminated" : "";
   const damageTooltip = sourceTooltip(participant.damageSources, "damage");
@@ -16438,14 +16439,14 @@ function renderPvpSlot(participant, slot) {
       <div class="bot-title">
         <div class="bot-name" title="${escapeAttr(participant.name)}">${escapeHtml(participant.name)}</div>
       </div>
-      <div class="bot-type">${participant.human ? "Player" : "DAMNED"}</div>
+      <div class="bot-type">${participant.human ? t("Player") : t("DAMNED")}</div>
       <div class="bot-stats">
         <div class="mini-stat">
           <span>${guessLabel}</span>
           <strong class="${guessClass}"${guessCloseness.style}>${guessText}</strong>
         </div>
         <div class="mini-stat">
-          <span>ARTIFACT</span>
+          <span>${t("ARTIFACT")}</span>
           <strong class="${activeClass}">${activeText}</strong>
         </div>
         <div class="mini-stat bot-health">
@@ -16494,29 +16495,29 @@ function renderPvpLobbyConsole() {
   const body = `
     <div class="pvp-lobby">
       <div class="pvp-join">
-        <span class="pvp-join-label">Join from your phone</span>
+        <span class="pvp-join-label">${t("Join from your phone")}</span>
         <strong class="pvp-join-url">${escapeHtml(joinUrl)}</strong>
-        <span class="pvp-join-note">Same Wi-Fi as this screen. Open the link and enter a name.</span>
+        <span class="pvp-join-note">${t("Same Wi-Fi as this screen. Open the link and enter a name.")}</span>
       </div>
-      <div class="pvp-seats" aria-label="Seats">
-        <span class="pvp-seats-label">Seats</span>
-        <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="One seat less" ${canRemove ? "" : "disabled"}>&minus;</button>
+      <div class="pvp-seats" aria-label="${t("Seats")}">
+        <span class="pvp-seats-label">${t("Seats")}</span>
+        <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="${t("One seat less")}" ${canRemove ? "" : "disabled"}>&minus;</button>
         <strong class="pvp-seats-count">${seats}</strong>
-        <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="One seat more" ${canAdd ? "" : "disabled"}>+</button>
+        <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="${t("One seat more")}" ${canAdd ? "" : "disabled"}>+</button>
       </div>
     </div>
   `;
   return renderPvpConsoleFrame(
     "Lobby",
     `${joined} of ${seats} seats taken. Open seats are played by the DAMNED.`,
-    `<button class="primary-button" id="pvpReadyLobby">Start</button>`,
+    `<button class="primary-button" id="pvpReadyLobby">${t("Start")}</button>`,
     body
   );
 }
 
 function renderPvpPlayerChips(isReady, readyText, waitingText) {
   const players = pvpHumanParticipants();
-  if (!players.length) return `<div class="pvp-chips-empty">Only the DAMNED are playing.</div>`;
+  if (!players.length) return `<div class="pvp-chips-empty">${t("Only the DAMNED are playing.")}</div>`;
   return `
     <div class="pvp-chips">
       ${players
@@ -16556,7 +16557,7 @@ function renderPvpSummaryConsole() {
   return renderPvpConsoleFrame(
     `Round ${state.pvp.round}`,
     `Final TARGET ${formatNumber(state.pvp.finalTarget)}. The next round starts on its own.`,
-    `<button class="primary-button" id="pvpNextRound">Next Round</button>`,
+    `<button class="primary-button" id="pvpNextRound">${t("Next Round")}</button>`,
     `${renderPvpResults()}`
   );
 }
@@ -16565,7 +16566,7 @@ function renderPvpEndedConsole() {
   return renderPvpConsoleFrame(
     "Winner",
     "",
-    `<button class="primary-button" id="pvpRestart">Play Again</button>`,
+    `<button class="primary-button" id="pvpRestart">${t("Play Again")}</button>`,
     `<div class="pvp-winner">${escapeHtml(state.pvp.winner || "No one")}</div>${renderPvpResults()}`
   );
 }
@@ -16716,8 +16717,8 @@ function renderTrinityTooltipHtml(pieces, sale) {
   return `
     <div class="tooltip-heading">
       <div class="tooltip-title">${escapeHtml(trinitySlotName(pieces))}</div>
-      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
-      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
+      <div class="tooltip-shift-hint seal-shift-hint">${t("press shift for more")}</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>
     </div>
     ${blocks.join("")}
     <div class="seal-tooltip-footer">
@@ -17086,19 +17087,19 @@ function renderTopbar() {
   const healthPercent = maxHp > 0 ? clamp((playerDisplay.hp / maxHp) * 100, 0, 100) : 0;
   const playtestButtonClass = playtestMoneyModeActive() ? "active" : "";
   const skipTitle = state.finalBossPhase
-    ? "Final phase is already active"
+    ? t("Final phase is already active")
     : activeGoeticBoss() || state.goeticBossKills > 0
-      ? "Skip to Jesus and Satan"
-      : "Skip past the eight special bosses";
+      ? t("Skip to Jesus and Satan")
+      : t("Skip past the eight special bosses");
   const arcadeLocked = arcadeActionLocked();
   return `
-    <section class="topbar" aria-label="Run status">
+    <section class="topbar" aria-label="${t("Run status")}">
       ${renderTargetPanel()}
       <div class="stat-card health-wrap">
         ${playerDamageBadge}
         ${playerHealBadge}
         <div class="health-row">
-          <span class="stat-label">Soul</span>
+          <span class="stat-label">${t("Soul")}</span>
           <strong>${playerDisplay.hp}/${maxHp}</strong>
         </div>
         <div class="health-bar">
@@ -17109,23 +17110,23 @@ function renderTopbar() {
       <div class="stat-card round-wrap">
         <div class="round-kos-grid">
           <div class="round-kos-cell">
-            <span class="stat-label">Round</span>
+            <span class="stat-label">${t("Round")}</span>
             <span class="stat-value">${state.round}</span>
           </div>
           <div class="round-kos-cell">
-            <span class="stat-label">KOs / BOSS</span>
+            <span class="stat-label">${t("KOs / BOSS")}</span>
             <span class="stat-value">${state.eliminations - deathsAwaitingReady().count}/${state.bossKills}</span>
           </div>
         </div>
       </div>
       <div class="stat-card credit-wrap">
         ${playerCreditBadge}
-        <span class="stat-label">SIN${SIN_MARK}</span>
+        <span class="stat-label">${t("SIN")}${SIN_MARK}</span>
         <span class="stat-value">${playerDisplay.credits}</span>
       </div>
-      <div class="dev-quick" aria-label="Test controls">
-        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>SKIP</button>
-        <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>INF</button>
+      <div class="dev-quick" aria-label="${t("Test controls")}">
+        <button class="small-button round-skip-button" id="skipProgression" title="${escapeAttr(normalizeGameText(skipTitle))}" ${state.finalBossPhase || arcadeLocked ? "disabled" : ""}>${t("SKIP")}</button>
+        <button class="small-button ${playtestButtonClass}" id="playtestMoney" ${arcadeLocked ? "disabled" : ""}>${t("INF")}</button>
       </div>
     </section>
   `;
@@ -17150,7 +17151,7 @@ function renderTargetPanel() {
   const held = targetHeldBySealAnimation(round);
   const target = round && round.target !== null ? formatNumber(held ? held.target : round.target) : "?";
   const previousTarget = state.previousTarget !== null ? formatNumber(state.previousTarget) : "?";
-  const avg = round && round.tableAverage !== null ? formatNumber(round.tableAverage) : "average";
+  const avg = round && round.tableAverage !== null ? formatNumber(round.tableAverage) : t("average");
   const modifier = round ? formatModifier(round.targetModifier) : formatModifier(BASE_TARGET_MODIFIER);
   const offset = round ? (held ? held.offset : round.targetOffset) : 0;
   const calcAverage = `<span class="target-calc-average">${escapeHtml(avg)}</span>`;
@@ -17163,13 +17164,13 @@ function renderTargetPanel() {
 
   // One box: TARGET on top, the number beneath it, Previous / Modifier (and the calc) on the right
   return `
-    <section class="target-panel target-combined" aria-label="Target">
-      <span class="stat-label target-head">Target</span>
+    <section class="target-panel target-combined" aria-label="${t("Target")}">
+      <span class="stat-label target-head">${t("Target")}</span>
       <strong class="target-big">${target}</strong>
       <div class="target-side">
-        <div class="target-line target-previous">Previous: <strong>${previousTarget}</strong></div>
-        <div class="target-line target-modifier">Modifier: <strong>${modifier}</strong></div>
-        <div class="target-calc-line">Calc: ${calculation}</div>
+        <div class="target-line target-previous">${t("Previous:")} <strong>${previousTarget}</strong></div>
+        <div class="target-line target-modifier">${t("Modifier:")} <strong>${modifier}</strong></div>
+        <div class="target-calc-line">${t("Calc:")} ${calculation}</div>
       </div>
     </section>
   `;
@@ -17192,7 +17193,7 @@ const PERSONALITY_GLYPHS = {
 };
 
 // SIN is shown as its mark after the value ("4" + mark) everywhere except in sentences
-const SIN_MARK = `<span class="sin-mark" role="img" aria-label="SIN"></span>`;
+const SIN_MARK = `<span class="sin-mark" role="img" aria-label="${t("SIN")}"></span>`;
 
 function sinValueHtml(text) {
   return `${escapeHtml(String(text).replace(/\s*SIN$/, ""))}${SIN_MARK}`;
@@ -17209,12 +17210,12 @@ function bossAbilityText(bot) {
 function glyphTooltipHtml(title, label, body, note = "", extraHtml = "") {
   return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${escapeHtml(title)}</div>
-      <div class="tooltip-shift-hint">${escapeHtml(label)}</div>
+      <div class="tooltip-title">${escapeHtml(t(title))}</div>
+      <div class="tooltip-shift-hint">${escapeHtml(t(label))}</div>
     </div>
-    <div class="tooltip-body">${descriptionHtml(body)}</div>
+    <div class="tooltip-body">${descriptionHtml(t(body))}</div>
     ${extraHtml}
-    ${note ? `<div class="tooltip-glyph-note">${escapeHtml(note)}</div>` : ""}
+    ${note ? `<div class="tooltip-glyph-note">${escapeHtml(t(note))}</div>` : ""}
   `;
 }
 
@@ -17233,7 +17234,7 @@ function bossStolenTagHtml(bot) {
   const borrowed = bossBorrowedPower(bot);
   if (!borrowed) return "";
   const tooltip = glyphTooltipHtml(`${bot.name} stole ${borrowed.name}'s power`, "STOLEN", borrowed.text);
-  return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>Stole</span> ${escapeHtml(borrowed.name)}</div>`;
+  return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>${t("Stole")}</span> ${escapeHtml(borrowed.name)}</div>`;
 }
 
 // late-game (Goetic) bosses are titled by their ability; the named bosses by their name
@@ -17410,7 +17411,7 @@ function personalityGlyphHtml(type) {
 function renderBots() {
   const pendingPick = state.pendingActive && state.pendingActive.mode === "bot";
   return `
-    <section class="bot-grid ${pendingPick ? "picking" : ""} ${state.finalBossPhase ? "final-boss-grid" : ""}" aria-label="DAMNED">
+    <section class="bot-grid ${pendingPick ? "picking" : ""} ${state.finalBossPhase ? "final-boss-grid" : ""}" aria-label="${t("DAMNED")}">
       ${state.bots.map((bot) => renderBot(bot, pendingPick)).join("")}
     </section>
   `;
@@ -17445,16 +17446,21 @@ function renderBot(bot, pendingPick) {
         ? bot.plannedGuess
         : "--";
   const rawNote =
-    state.stage !== "guess" && submitted !== effective ? `Raw ${submitted}` : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? `Revealed x${bot.revealStacks}` : "Revealed") : "Guess";
+    state.stage !== "guess" && submitted !== effective ? t("Raw {guess}", { guess: submitted }) : bot.revealedByPassive ? ((bot.revealStacks || 0) > 1 ? t("Revealed x{count}", { count: bot.revealStacks }) : t("Revealed")) : t("Guess");
   // excess MEMORY is only shown while Seal of Threon is active
   const memoryOverflow = orderedPassiveEffectEntries("p127").length ? Math.max(0, Math.ceil(bot.memoryOverflow || 0)) : 0;
   const memoryTotal = bot.memory.length + memoryOverflow;
   const memoryText = memoryTotal
-    ? `${bot.memory.length} ${bot.memory.length === 1 ? "round" : "rounds"}`
-    : "No memory";
+    ? `${bot.memory.length} ${t(bot.memory.length === 1 ? "round" : "rounds")}`
+    : t("No memory");
   // Seal of Threon: MEMORY past the limit sits to the right of the MEMORY value as +x
   // hovering it explains it is excess, not part of the MEMORY value
-  const memoryOverflowTooltip = `Excess MEMORY: +${memoryOverflow} past the ${memoryRoundLimit()} ${memoryRoundLimit() === 1 ? "round" : "rounds"} finished. ${ITEMS.p127.name} removes it at the end of the round and deals damage for each.`;
+  const memoryOverflowTooltip = t("Excess MEMORY: +{excess} past the {limit} {rounds} finished. {seal} removes it at the end of the round and deals damage for each.", {
+    excess: memoryOverflow,
+    limit: memoryRoundLimit(),
+    rounds: t(memoryRoundLimit() === 1 ? "round" : "rounds"),
+    seal: t(ITEMS.p127.name)
+  });
   const memoryOverflowHtml = memoryOverflow
     ? `<span class="memory-overflow" data-tooltip="${escapeAttr(memoryOverflowTooltip)}">+${memoryOverflow}</span>`
     : "";
@@ -17468,9 +17474,9 @@ function renderBot(bot, pendingPick) {
   const passiveSummary = botPassiveSummary(bot);
   const hasVisiblePassive = passiveSummary && passiveSummary !== "No Seal";
   // a DAMNED's PYROS-TECH abilities float left of the name row (any other ability is the diamond), not in the personality line
-  const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? "Stubborn Boss" : "Boss") : normalizeGameText(displayedBotTypes(bot).join(" / "));
+  const typeLabel = bot.isBoss ? (displayedBossStubborn(bot) ? t("Stubborn Boss") : t("Boss")) : normalizeGameText(displayedBotTypes(bot).map((type) => t(type)).join(" / "));
   const passiveDescription = "";
-  const removed = round?.removedBotIds.has(bot.id) ? "Jammed" : rawNote;
+  const removed = round?.removedBotIds.has(bot.id) ? t("Jammed") : rawNote;
   const isConfirmedCritical = Boolean(round?.criticalHitKeys?.has(`bot-${bot.id}`));
   const isCriticalGuess = isConfirmedCritical || criticalKeysForDisplay(round).has(`bot-${bot.id}`);
   // before READY only the number turns red; the full CRITICAL look comes once it is decided
@@ -17521,22 +17527,22 @@ function renderBot(bot, pendingPick) {
   // Seal of Sitri's host: double SOUL until it dies
   const sitriHostBadge =
     bot.sitriHost && !isDown
-      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double SOUL, gains MEMORY every round.`)}">Host x2</span>`
+      ? `<span class="poison-stack-label sitri-host-label ${damageBadge && !poisonStackBadge ? "has-damage-badge" : ""}" data-tooltip="${escapeAttr(`${ITEMS.p120.name}'s host: double SOUL, gains MEMORY every round.`)}">${t("Host x2")}</span>`
       : "";
   const deathBadgeClass = bot.deathCause === "contract" ? "contract-badge" : "";
   const deathBadge = isDown && !deathAwaitsReady && bot.deathNotice ? `<div class="death-badge ${deathBadgeClass}">${bot.deathNotice}</div>` : "";
-  const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">MARKED</div>` : "";
+  const markBadge = bot.markedByPlayer && !isDown ? `<div class="mark-badge">${t("MARKED")}</div>` : "";
   const rewardLabel = botSinDisplay(bot);
   const flagHtml = bot.isBoss ? bossGlyphHtml(bot) : `${hasVisiblePassive ? giftGlyphHtml(bot) : ""}${displayedBotTypes(bot).map((type) => personalityGlyphHtml(type)).join("")}`;
   const safeDisplayMaxHp = Math.max(1, displayMaxHp || 1);
   const displayDamageTaken = display?.damageTakenTotal ?? (bot.damageTakenTotal || 0);
-  const healthLabel = bot.immortal ? `Damage ${displayDamageTaken}` : `SOUL ${displayHp}/${displayMaxHp}`;
+  const healthLabel = bot.immortal ? t("Damage {damage}", { damage: displayDamageTaken }) : t("SOUL {hp}/{max}", { hp: displayHp, max: displayMaxHp });
   const healthPercent = bot.immortal ? 100 : clamp((displayHp / safeDisplayMaxHp) * 100, 0, 100);
   const identitySwapBlocked = state.pendingActive?.id === "a7" && bot.isBoss;
   const shieldBlocked = pendingPick && botHasPassive(bot, "shield");
   const pickDisabled = isDown || bot.eliminated || identitySwapBlocked || shieldBlocked;
   const pickButton = pendingPick
-    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${isDown || bot.eliminated ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick"}</button>`
+    ? `<button class="pick-button" data-pick-bot="${bot.id}" ${pickDisabled ? "disabled" : ""}>${t(isDown || bot.eliminated ? "Down" : identitySwapBlocked ? "BOSS" : shieldBlocked ? "SEAL" : "Pick")}</button>`
     : "";
   const tooltipAttr = passiveDescription ? ` data-tooltip="${escapeAttr(passiveDescription)}"` : "";
   const hit = bot.immortal
@@ -17544,7 +17550,7 @@ function renderBot(bot, pendingPick) {
     : hitShakeAttrs(`bot-${bot.id}`, displayHp, safeDisplayMaxHp);
   const faceInner = isDown
     ? bot.deathCause === "contract"
-      ? `<span class="contract-mark">PC</span>`
+      ? `<span class="contract-mark">${t("PC")}</span>`
       : `<span class="ko-x">X</span>`
     : `<img class="bot-image" src="${escapeAttr(botImagePath(bot))}" alt="" loading="lazy" />`;
 
@@ -17558,8 +17564,8 @@ function renderBot(bot, pendingPick) {
       <div class="bot-face ${faceClass}">${faceInner}</div>
       <div class="bot-title">
         ${flagHtml}
-        <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${bot.country})`))}">${bot.name}</div>
-        <div class="bot-reward" title="SIN">${sinValueHtml(rewardLabel)}</div>
+        <div class="bot-name" title="${escapeAttr(normalizeGameText(`${bot.name} (${t(bot.country)})`))}">${bot.name}</div>
+        <div class="bot-reward" title="${t("SIN")}">${sinValueHtml(rewardLabel)}</div>
         ${sinBadge}
       </div>
       <div class="bot-type ${bot.isBoss ? "boss-type" : ""}" title="${typeLabel}">${typeLabel}</div>
@@ -17570,7 +17576,7 @@ function renderBot(bot, pendingPick) {
         </div>
         <div class="mini-stat memory-stat">
           ${memoryBadge}
-          <span>Memory</span>
+          <span>${t("Memory")}</span>
           <strong>${memoryText}</strong>
           ${memoryOverflowHtml}
         </div>
@@ -17595,7 +17601,7 @@ function renderBot(bot, pendingPick) {
 
 function consoleActionState() {
   const round = state.roundState;
-  let buttonText = "Guess";
+  let buttonText = t("Guess");
   let hint = "";
   // the lines Settings > Display > Guide text can hide: "Pick a number", "Ready applies penalties." and
   // "Penalties are locked in. Devil's Offerings is still available..." (Satan's sealed Offerings stay shown)
@@ -17610,31 +17616,31 @@ function consoleActionState() {
     inputDisabled = "disabled";
     hint = step
       ? roundRevealEffectActive()
-        ? `${step.name} resolves.`
-        : `${step.name} is triggering.`
-      : "Revealing SEAL effects.";
+        ? t("{name} resolves.", { name: t(step.name) })
+        : t("{name} is triggering.", { name: t(step.name) })
+      : t("Revealing SEAL effects.");
   } else if (state.stage === "active") {
-    buttonText = "Ready";
+    buttonText = t("Ready");
     inputDisabled = "disabled";
     disabled = state.pendingActive ? "disabled" : "";
     // the ARTIFACTS used this round are counted in the ARTIFACTS panel
-    hint = "Ready applies penalties.";
+    hint = t("Ready applies penalties.");
     guideHint = true;
   } else if (state.stage === "summary") {
-    buttonText = "Next Round";
+    buttonText = t("Next Round");
     inputDisabled = "disabled";
     const sealed = shopDisabledBySatan();
     hint = sealed
-      ? "Penalties are locked in. Satan has sealed Devil's Offerings."
-      : "Penalties are locked in. Devil's Offerings is still available before you advance.";
+      ? t("Penalties are locked in. Satan has sealed Devil's Offerings.")
+      : t("Penalties are locked in. Devil's Offerings is still available before you advance.");
     guideHint = !sealed;
   } else if (state.stage === "ended") {
     // inspecting the death screen's round: the button goes back to the death screen
-    buttonText = state.gameOver && state.inspectingGameOver ? "Back" : "Restart";
+    buttonText = state.gameOver && state.inspectingGameOver ? t("Back") : t("Restart");
     inputDisabled = "disabled";
-    hint = state.inspectingGameOver ? "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round." : "Run ended.";
+    hint = state.inspectingGameOver ? t("Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round.") : t("Run ended.");
   } else {
-    hint = `Pick a number between 0 and ${maxGuess}`;
+    hint = t("Pick a number between 0 and {max}", { max: maxGuess });
     guideHint = true;
   }
 
@@ -17669,12 +17675,12 @@ function renderConsole() {
     : "";
   const pendingText = renderPendingText();
   const nativeTargetPick = isNativeArcadeApp() && state.pendingActive?.mode === "bot";
-  const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">Cancel</button>` : "";
+  const pendingCancel = state.pendingActive && !nativeTargetPick ? `<button id="cancelPendingActive" class="small-button pending-cancel">${t("Cancel")}</button>` : "";
 
   // the slot machine (left) and the round's mission (right); the phone app has them in its own band
   const sideParts = isNativeArcadeApp() ? { slot: "", mission: "" } : { slot: slotMachineHtml(), mission: missionBoxHtml() };
   return `
-    <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="Player action">
+    <section class="center-console${sideParts.slot ? " has-slot" : ""}" aria-label="${t("Player action")}">
       ${sideParts.slot}
       ${hint ? `<div class="console-hint${guideHint ? " guide-text" : ""}">${escapeHtml(normalizeGameText(hint))}</div>` : ""}
       <div class="console-row${corruption ? " has-corruption" : ""}">
@@ -17775,18 +17781,18 @@ function renderShop() {
   const eliteChance = Math.round(eliteShopChance() * 100);
   const bibleBoosts = activeEliteBoostCount() ? `${activeName("a23")}: ${eliteBoostSummary()}` : "";
   return `
-    <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="Devil's Offerings">
+    <section class="panel shop-panel ${locked ? "shop-locked" : ""}" aria-label="${t("Devil's Offerings")}">
       <div class="panel-header">
         <div class="shop-title-wrap">
-          <div class="panel-title">Devil's Offerings</div>
-          <div class="elite-chance-label ${bibleBoosts ? "elite-chance-boosted" : ""}" ${bibleBoosts ? `title="${bibleBoosts}"` : ""}>${eliteChance}% ELITE</div>
+          <div class="panel-title">${t("Devil's Offerings")}</div>
+          <div class="elite-chance-label ${bibleBoosts ? "elite-chance-boosted" : ""}" ${bibleBoosts ? `title="${bibleBoosts}"` : ""}>${t("{chance}% ELITE", { chance: eliteChance })}</div>
         </div>
         <div class="reroll-control">
-          <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="Satan's toll: this reroll takes all your SIN"` : ""}>Reroll <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? `Free x${freeRerollsLeft()}` : `${currentRerollCost()}${SIN_MARK}`}</span></button>
+          <button class="small-button reroll-button ${satanRerollTollActive() ? "satan-toll" : ""}" id="rerollShop" ${locked || actionsLocked ? "disabled" : ""} ${satanRerollTollActive() ? `title="${t("Satan's toll: this reroll takes all your SIN")}"` : ""}>${t("Reroll")} <span class="reroll-cost">${!satanRerollTollActive() && freeRerollsLeft() > 0 ? t("Free x{count}", { count: freeRerollsLeft() }) : `${currentRerollCost()}${SIN_MARK}`}</span></button>
         </div>
       </div>
       <div class="shop-slots">
-        ${locked ? `<div class="shop-lock-message"><img class="shop-lock-sigil" src="assets/seals/satan/lucifer-wide.png" alt="" /><span>Satan has sealed Devil's Offerings.</span></div>` : state.shop.map((slot, index) => renderShopSlot(slot, index)).join("")}
+        ${locked ? `<div class="shop-lock-message"><img class="shop-lock-sigil" src="assets/seals/satan/lucifer-wide.png" alt="" /><span>${t("Satan has sealed Devil's Offerings.")}</span></div>` : state.shop.map((slot, index) => renderShopSlot(slot, index)).join("")}
       </div>
     </section>
   `;
@@ -17794,7 +17800,7 @@ function renderShop() {
 
 function renderShopSlot(slot, index) {
   if (!slot || slot.sold || (slot.item?.type === "passive" && REMOVED_PASSIVE_IDS.has(slot.item.id))) {
-    return `<div class="item-card"><div class="empty-state">Sold out until reroll</div></div>`;
+    return `<div class="item-card"><div class="empty-state">${t("Sold out until reroll")}</div></div>`;
   }
 
   const item = slot.item;
@@ -17810,7 +17816,7 @@ function renderShopSlot(slot, index) {
   const free = isFreeBoundSealOffer(item) && cost <= 0;
   const priceText = free ? "free" : `${cost}${SIN_MARK}`;
   // no free SEAL slot / a full ARTIFACT bag shows the price struck through, like an unaffordable offer
-  const buttonText = ownedSelfStackingSeal ? "Owned" : passiveCopies ? `Upgrade ${priceText}` : free ? "Take free" : `Buy ${priceText}`;
+  const buttonText = ownedSelfStackingSeal ? t("Owned") : passiveCopies ? t("Upgrade {price}", { price: priceText }) : free ? t("Take free") : t("Buy {price}", { price: priceText });
   const previewItem = ownedSelfStackingSeal ? passiveEntry(item.id) || item : passiveCopies ? { ...item, stack: passiveCopies + 1 } : item;
   const displayName = passiveCopies ? passiveDisplayName(previewItem) : item.name;
   // an ELITE upgrade offer shows the plain SEAL text: the ELITE numbers only appear on the equipped SEAL (Shift)
@@ -17822,7 +17828,7 @@ function renderShopSlot(slot, index) {
     item.type === "passive" ? renderSealSigil(previewItem, "shop-seal-sigil") : renderArtifactIcon(previewItem, "shop-artifact-icon");
   const imageClass = itemImage ? `has-item-icon ${item.type === "passive" ? "has-seal-sigil" : "has-artifact-icon"}` : "";
   const kindLabel =
-    item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : free ? "BOUND SEAL" : "SEAL") : "ARTIFACT";
+    t(item.type === "passive" ? (SATAN_SEAL_IDS.has(item.id) ? "SATAN SEAL" : isTrinitySeal(item) ? "TRINITY SEAL" : free ? "BOUND SEAL" : "SEAL") : "ARTIFACT");
 
   return `
     <article class="item-card ${item.type} ${imageClass} ${passiveCopies && !ownedSelfStackingSeal ? "elite-offer" : ""} ${SATAN_SEAL_IDS.has(item.id) ? "satan-offer" : ""} ${free ? "bound-offer" : ""}" data-tooltip="${escapeAttr(description)}">
@@ -17845,7 +17851,7 @@ function renderActives() {
   const round = state.roundState;
   const usesLine =
     state.stage === "active" && round
-      ? `<div class="artifact-uses-line">${Math.max(0, round.activeUses || 0)}/${activeUseLimit()} used this round</div>`
+      ? `<div class="artifact-uses-line">${t("{used}/{limit} used this round", { used: Math.max(0, round.activeUses || 0), limit: activeUseLimit() })}</div>`
       : "";
   const count = state.player.actives.length;
   const limit = activeInventoryLimit();
@@ -17853,13 +17859,13 @@ function renderActives() {
   const readyClass = state.player.actives.some((item, index) => canUseActive(index)) && !state.pendingActive ? "artifact-panel-ready" : "";
   const activeCards = count
     ? state.player.actives.map((item, index) => renderActiveItem(item, index)).join("")
-    : `<div class="empty-state">No ARTIFACTS</div>`;
+    : `<div class="empty-state">${t("No ARTIFACTS")}</div>`;
 
   return `
-    <section class="panel active-panel ${readyClass}" aria-label="ARTIFACTS">
+    <section class="panel active-panel ${readyClass}" aria-label="${t("ARTIFACTS")}">
       <div class="panel-header">
         <div>
-          <div class="panel-title">ARTIFACTS</div>
+          <div class="panel-title">${t("ARTIFACTS")}</div>
           <div class="panel-subtitle">${subtitle}</div>
         </div>
         ${usesLine}
@@ -17902,15 +17908,15 @@ function renderActiveItem(item, index) {
           ${memoryLine}
           ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
         </div>
-        <span class="item-kind">ARTIFACT</span>
+        <span class="item-kind">${t("ARTIFACT")}</span>
       </div>
       ${pendingHere ? `<div class="artifact-pending-text">${escapeHtml(normalizeGameText(renderPendingText().replace(`${item.name}: `, "").replace(/^./, (c) => c.toUpperCase())))}</div>` : ""}
       <div class="item-actions">
         ${
           pendingHere
-            ? `<button class="small-button artifact-cancel-button" data-cancel-pending>Cancel</button>`
-            : `<button class="small-button" data-use-active="${index}" ${useDisabled}>Use</button>
-        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>Sell</button>`
+            ? `<button class="small-button artifact-cancel-button" data-cancel-pending>${t("Cancel")}</button>`
+            : `<button class="small-button" data-use-active="${index}" ${useDisabled}>${t("Use")}</button>
+        <button class="small-button sell-button" data-sell-active="${index}" ${sellDisabled}>${t("Sell")}</button>`
         }
       </div>
     </article>
@@ -17967,20 +17973,20 @@ function renderPassives() {
       <article class="passive-slot ${wideClass} ${trinityClass} ${triggeredClass} ${revealClass} ${suppressedClass} ${summon.className}"${summon.style} data-tooltip-html="${escapeAttr(tooltip)}">
         ${sealImage}
         ${counterBadge}
-        <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>Sell</button>
+        <button class="small-button sell-button seal-sell-button" data-sell-passive="${index}" aria-label="Sell ${escapeAttr(displayName)}" ${sellDisabled}>${t("Sell")}</button>
       </article>
     `);
   });
   const emptyCount = Math.max(0, limit - occupiedSlots);
   for (let index = 0; index < emptyCount; index += 1) {
     slots.push(`
-      <div class="passive-slot empty" data-tooltip="Empty SEAL slot" aria-label="Empty SEAL slot">
+      <div class="passive-slot empty" data-tooltip="${t("Empty SEAL slot")}" aria-label="${t("Empty SEAL slot")}">
         <img class="empty-seal-slot-image" src="assets/ui/empty-seal-slot-x.png" alt="" />
       </div>
     `);
   }
 
-  return `<footer class="passive-bar" aria-label="SEALS">${slots.join("")}</footer>`;
+  return `<footer class="passive-bar" aria-label="${t("SEALS")}">${slots.join("")}</footer>`;
 }
 
 function renderOverlay() {
@@ -17994,28 +18000,28 @@ function renderOverlay() {
       <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
       <img class="end-figure end-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
       <section class="end-card game-over-card">
-        <h1 class="end-title">Game Over</h1>
-        <p class="end-copy">Welcome to Hell...</p>
+        <h1 class="end-title">${t("Game Over")}</h1>
+        <p class="end-copy">${t("Welcome to Hell...")}</p>
         <div class="end-body">
         <div class="end-stats">
-          <div class="end-stat end-stat-guess"><span>Guess quality</span><strong>${escapeHtml(String(runFirstGuessQuality() ?? "--"))}</strong></div>
-          <div class="end-stat end-stat-guess"><span>Submit quality</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>${t("Guess quality")}</span><strong>${escapeHtml(String(runFirstGuessQuality() ?? "--"))}</strong></div>
+          <div class="end-stat end-stat-guess"><span>${t("Submit quality")}</span><strong>${escapeHtml(String(runGuessQuality() ?? "--"))}</strong></div>
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
           ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
-          <div class="end-stat end-stat-wide"><span>Strongest SEAL in one round</span><strong>${escapeHtml(bestSeal)}</strong></div>
+          <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
           ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned"}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
-          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>Pact signed</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         </div>
         <div class="end-actions">
-          <button class="primary-button" id="inspectGame">Inspect</button>
-          <button class="primary-button end-menu" id="gameOverMenu">Main Menu</button>
-          <button class="primary-button end-restart" id="restartGame">Restart</button>
+          <button class="primary-button" id="inspectGame">${t("Inspect")}</button>
+          <button class="primary-button end-menu" id="gameOverMenu">${t("Main Menu")}</button>
+          <button class="primary-button end-restart" id="restartGame">${t("Restart")}</button>
         </div>
       </section>
     </div>
@@ -19397,7 +19403,7 @@ function introBoxHtml(kind) {
     <div class="intro-box intro-box-${kind}" role="dialog" aria-live="polite">
       <div class="intro-text"></div>
       <span class="intro-next" aria-hidden="true"></span>
-      <button class="intro-skip" type="button" aria-label="Skip the conversation">skip</button>
+      <button class="intro-skip" type="button" aria-label="${t("Skip the conversation")}">${t("skip")}</button>
     </div>`;
 }
 
@@ -20233,8 +20239,8 @@ function satanTightwadAsk() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">Yes</button>
-    <button class="intro-choice-button" type="button" data-choice="no">No</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${t("Yes")}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${t("No")}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");
@@ -21054,13 +21060,13 @@ function collectionSearchHtml(tab) {
   return `
     <label class="collection-search${value ? " has-value" : ""}">
       <img class="collection-search-icon" src="assets/ui/search-eye.png" alt="" aria-hidden="true" draggable="false" />
-      <input class="collection-search-input" type="text" data-collection-search="${tab}" value="${escapeAttr(value)}" placeholder="Search" aria-label="${label}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
-      <button type="button" class="collection-search-clear" data-collection-search-clear="${tab}" aria-label="Clear the search">&times;</button>
+      <input class="collection-search-input" type="text" data-collection-search="${tab}" value="${escapeAttr(value)}" placeholder="${t("Search")}" aria-label="${label}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
+      <button type="button" class="collection-search-clear" data-collection-search-clear="${tab}" aria-label="${t("Clear the search")}">&times;</button>
     </label>`;
 }
 
 function collectionEmptyHtml(tab) {
-  return `<div class="collection-empty" data-collection-empty="${tab}" hidden>Nothing matches your search.</div>`;
+  return `<div class="collection-empty" data-collection-empty="${tab}" hidden>${t("Nothing matches your search.")}</div>`;
 }
 
 // shows and hides SEALS, sections and demons in place for the build filter and both searches
@@ -21578,7 +21584,7 @@ const COLLECTION_BEATEN_MARK = "pentagram";
 
 function collectionBeatenMarkHtml(mark = COLLECTION_BEATEN_MARK) {
   const shape = COLLECTION_BEATEN_MARKS[mark] || COLLECTION_BEATEN_MARKS.pentagram;
-  return `<svg class="collection-beaten-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Game beaten with this SEAL"><title>Game beaten with this SEAL</title>${shape}</svg>`;
+  return `<svg class="collection-beaten-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${t("Game beaten with this SEAL")}"><title>${t("Game beaten with this SEAL")}</title>${shape}</svg>`;
 }
 
 // the records block: wins / ELITE / triggers, then a small table with total, best run and best round
@@ -21594,7 +21600,7 @@ function sealRecordsHtml(id) {
   const kinds = SEAL_RECORD_KINDS.filter(({ key }) => (record.total[key] || 0) > 0);
   const table = kinds.length
     ? `<table class="collection-record-table">
-        <thead><tr><th></th><th>Total</th><th>Best run</th><th>Best round</th></tr></thead>
+        <thead><tr><th></th><th>${t("Total")}</th><th>${t("Best run")}</th><th>${t("Best round")}</th></tr></thead>
         <tbody>${kinds
           .map(({ key, label }) => `<tr><th>${escapeHtml(label)}</th><td>${formatNumber(record.total[key] || 0)}</td><td>${formatNumber(record.run[key] || 0)}</td><td>${formatNumber(record.round[key] || 0)}</td></tr>`)
           .join("")}</tbody>
@@ -21702,7 +21708,7 @@ function collectionDemonsHtml() {
     return `
       <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? spec.name : `${number}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
-        <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
+        <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
         <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
       </button>`;
   });
@@ -21722,7 +21728,7 @@ function collectionArchangelsHtml() {
     return `
       <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? spec.name : `Archangel of ${spec.planet}, not defeated`)}">
         <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
-        <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> · Bound</span>` : ""}</span>
+        <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
         <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
       </button>`;
   });
@@ -21734,14 +21740,14 @@ function collectionArchangelInfoHtml(key, pinned = false) {
   if (!spec) return "";
   if (!isArchangelDefeated(key)) {
     return `
-      <div class="collection-info-status unslain">Not defeated</div>
+      <div class="collection-info-status unslain">${t("Not defeated")}</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
-      <div class="collection-info-note">Not discovered yet: defeat this Archangel in a run.</div>`;
+      <div class="collection-info-note">${t("Not discovered yet: defeat this Archangel in a run.")}</div>`;
   }
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
-    <div class="collection-info-status slain">Defeated</div>
+    <div class="collection-info-status slain">${t("Defeated")}</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Archangel of ${escapeHtml(spec.planet)}</div>
     <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
@@ -21756,14 +21762,14 @@ function collectionDemonInfoHtml(key, pinned = false) {
   const number = romanNumeral(index + 1);
   if (!isDemonSlain(key)) {
     return `
-      <div class="collection-info-status unslain">Not defeated</div>
+      <div class="collection-info-status unslain">${t("Not defeated")}</div>
       <div class="collection-info-name">???</div>
       <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-      <div class="collection-info-note">Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.</div>`;
+      <div class="collection-info-note">${t("Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.")}</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
-    <div class="collection-info-status slain">Defeated</div>
+    <div class="collection-info-status slain">${t("Defeated")}</div>
     <div class="collection-info-name">${escapeHtml(spec.name)}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
     ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
@@ -21778,7 +21784,7 @@ function collectionDemonBindHtml(key, seal, pinned) {
   const text = bound
     ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
     : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
-  const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">Bound in this run.</div>` : "";
+  const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">${t("Bound in this run.")}</div>` : "";
   const control = pinned
     ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
     : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
@@ -21881,13 +21887,13 @@ function showNextCollectionToast() {
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
-      <span class="collection-toast-kicker">Karma</span>
+      <span class="collection-toast-kicker">${t("Karma")}</span>
       <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
     <span class="collection-toast-text">
-      <span class="collection-toast-kicker">Seal unlocked</span>
+      <span class="collection-toast-kicker">${t("Seal unlocked")}</span>
       <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
     </span>`;
   document.body.appendChild(toast);
@@ -21929,14 +21935,14 @@ function collectionInfoHtml(id, pinned = false) {
     const result = sealUnlockProgress(id);
     const progressText = result && result.goal > 1 ? `<div class="collection-info-progress">${formatNumber(Math.min(result.value, result.goal))} / ${formatNumber(result.goal)}</div>` : "";
     return `
-      <div class="collection-info-status locked">Locked</div>
+      <div class="collection-info-status locked">${t("Locked")}</div>
       <div class="collection-info-name">${escapeHtml(item.name)}</div>
       ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}
-      ${rule.gift ? "" : `<div class="collection-info-note">Or find it in one of Jesus' Gifts.</div>`}`;
+      ${rule.gift ? "" : `<div class="collection-info-note">${t("Or find it in one of Jesus' Gifts.")}</div>`}`;
   }
-  const note = status === "undiscovered" ? `<div class="collection-info-note">Not discovered yet: make it trigger in a run.</div>` : "";
+  const note = status === "undiscovered" ? `<div class="collection-info-note">${t("Not discovered yet: make it trigger in a run.")}</div>` : "";
   // hold Shift for the ELITE rule and the SEAL's records, like an equipped SEAL's tooltip
   const elite = splitEliteDescription(item.description || "").elite;
   const records = status === "discovered" ? sealRecordsHtml(id) : "";
@@ -21944,7 +21950,7 @@ function collectionInfoHtml(id, pinned = false) {
   return `
     <div class="collection-info-top">
       <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}${isSealBeaten(id) ? collectionBeatenMarkHtml() : ""}</div>
-      ${more ? `<div class="collection-info-shift-hint">press shift for more</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>` : ""}
+      ${more ? `<div class="collection-info-shift-hint">${t("press shift for more")}</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>` : ""}
     </div>
     <div class="collection-info-name">${escapeHtml(item.name)}</div>
     ${collectionBuildsHtml(id)}
@@ -21966,7 +21972,7 @@ function collectionFiltersHtml(all) {
     const active = build.key === filter;
     return `<button class="collection-filter${active ? " active" : ""}" type="button" data-collection-filter="${build.key}" aria-pressed="${active}">${escapeHtml(build.label)}<span class="collection-filter-count">${count}</span></button>`;
   });
-  return `<nav class="collection-filters" aria-label="Filter SEALS by build">${tabs.join("")}</nav>`;
+  return `<nav class="collection-filters" aria-label="${t("Filter SEALS by build")}">${tabs.join("")}</nav>`;
 }
 
 // filters in place, so the screen does not replay its entrance
@@ -22006,7 +22012,7 @@ function renderCollectionScreen(from) {
   if (codex) codexOpenAtUnread();
   const angelsDefeated = ARCHANGEL_KEYS.filter((key) => isArchangelDefeated(key)).length;
   const devButton = () =>
-    `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="Testing: every demon and Archangel counts as defeated, so any of them can be bound">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
+    `<button type="button" class="collection-dev-button${loadCollectionProgress().devAllDemons ? " active" : ""}" data-collection-dev-demons data-tooltip="${t("Testing: every demon and Archangel counts as defeated, so any of them can be bound")}">${loadCollectionProgress().devAllDemons ? "DEV: all unlocked" : "DEV: unlock all"}</button>`;
   const tabs = [
     { key: "seals", label: "Seals" },
     { key: "goetia", label: "Ars Goetia" },
@@ -22041,10 +22047,10 @@ function renderCollectionScreen(from) {
     )
     .join("");
   return `
-    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="Collection">
+    <div class="collection-screen collection-from-${from}" role="dialog" aria-label="${t("Collection")}">
       <header class="collection-header">
-        <button class="collection-back" type="button" data-collection-back="${from}">Back</button>
-        <nav class="collection-tabs" role="tablist" aria-label="Collection">${tabs.join("")}</nav>
+        <button class="collection-back" type="button" data-collection-back="${from}">${t("Back")}</button>
+        <nav class="collection-tabs" role="tablist" aria-label="${t("Collection")}">${tabs.join("")}</nav>
         <div class="collection-counts" data-collection-for="seals"${goetia || angels || codex ? " hidden" : ""}>
           <span><strong>${discovered}</strong> / ${all.length} discovered</span>
           <span><strong data-collection-count="unlocked">${unlocked}</strong> / ${all.length} unlocked</span>
@@ -22064,9 +22070,9 @@ function renderCollectionScreen(from) {
         <div class="collection-legend">
           ${collectionSearchHtml("seals")}
           ${collectionKarmaLine()}
-          <span class="legend discovered" aria-hidden="true">discovered</span>
-          <span class="legend undiscovered" aria-hidden="true">undiscovered</span>
-          <span class="legend locked" aria-hidden="true">locked</span>
+          <span class="legend discovered" aria-hidden="true">${t("discovered")}</span>
+          <span class="legend undiscovered" aria-hidden="true">${t("undiscovered")}</span>
+          <span class="legend locked" aria-hidden="true">${t("locked")}</span>
         </div>
         <div class="collection-body">${sections}${collectionEmptyHtml("seals")}</div>
       </div>
@@ -22074,8 +22080,8 @@ function renderCollectionScreen(from) {
         <div class="collection-legend">
           ${collectionSearchHtml("goetia")}
           ${collectionKarmaLine()}
-          <span class="legend slain" aria-hidden="true">defeated</span>
-          <span class="legend unslain" aria-hidden="true">not defeated</span>
+          <span class="legend slain" aria-hidden="true">${t("defeated")}</span>
+          <span class="legend unslain" aria-hidden="true">${t("not defeated")}</span>
           ${devButton()}
         </div>
         <div class="collection-body">${collectionDemonsHtml()}</div>
@@ -22084,8 +22090,8 @@ function renderCollectionScreen(from) {
         <div class="collection-legend">
           ${collectionSearchHtml("angels")}
           ${collectionKarmaLine()}
-          <span class="legend slain" aria-hidden="true">defeated</span>
-          <span class="legend unslain" aria-hidden="true">not defeated</span>
+          <span class="legend slain" aria-hidden="true">${t("defeated")}</span>
+          <span class="legend unslain" aria-hidden="true">${t("not defeated")}</span>
           ${devButton()}
         </div>
         <div class="collection-body">${collectionArchangelsHtml()}</div>
@@ -22341,7 +22347,7 @@ const KARMA_HONORABLE_DEATH = 1;
 const KARMA_HONORABLE_DEATH_BOSSES = 4; // any BOSSES: main ones (the twins are one), demons, Archangels
 
 // KARMA's mark (the Spiral of Return, --karma-spiral in styles.css), drawn after a number like the SIN coin
-const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="KARMA"></span>`;
+const KARMA_MARK = `<span class="karma-mark" role="img" aria-label="${t("KARMA")}"></span>`;
 
 function karmaBalance() {
   return Math.max(0, Math.floor(Number(loadCollectionProgress().karma) || 0));
@@ -22409,7 +22415,7 @@ function collectionNoteHonorableDeath() {
 
 function collectionKarmaLine() {
   // the big counter at the right end of the search row, on every tab
-  return `<div class="collection-karma-line" data-tooltip="KARMA: earned by beating BOSSES and the game, and by an Honorable Death (dying after 4 BOSSES); spent on Jesus' Gifts"><span class="collection-karma-word">Karma</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
+  return `<div class="collection-karma-line" data-tooltip="${t("KARMA: earned by beating BOSSES and the game, and by an Honorable Death (dying after 4 BOSSES); spent on Jesus' Gifts")}"><span class="collection-karma-word">${t("Karma")}</span><strong>${karmaInfinite() ? "∞" : formatNumber(karmaBalance())}</strong>${KARMA_MARK}</div>`;
 }
 "use strict";
 
@@ -22603,12 +22609,12 @@ function renderGiftsScreen() {
       </button>`;
   }).join("");
   return `
-    <div class="gifts-screen" role="dialog" aria-label="Jesus' Gifts">
+    <div class="gifts-screen" role="dialog" aria-label="${t("Jesus' Gifts")}">
       <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="giftRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter></defs></svg>
       <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
-      <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
-      <h1 class="gifts-title">Jesus' Gifts</h1>
-      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
+      <button class="collection-back gifts-back" type="button" data-gifts-back>${t("Back")}</button>
+      <h1 class="gifts-title">${t("Jesus' Gifts")}</h1>
+      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="${t("Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA")}">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
       <div class="gifts-cards">${cards}</div>
     </div>`;
 }
@@ -22653,7 +22659,7 @@ function startGiftOpening(packKey) {
       <div class="gift-flip-slot"></div>
       <div class="gift-reveal-actions">
         <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
-        <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
+        <button type="button" class="collection-bind-button" data-gift-continue>${t("Continue")}</button>
       </div>
     </div>
     <div class="gift-flip-card">
@@ -24032,7 +24038,7 @@ function satanDealShowAsk() {
   form.className = "intro-choice pact-ask";
   form.setAttribute("autocomplete", "off");
   form.innerHTML = `
-    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="What do you want from Satan?" />
+    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="${t("What do you want from Satan?")}" />
     <button class="intro-choice-button" type="submit">${escapeHtml(SATAN_DEAL_BUTTONS.ask)}</button>
     <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(SATAN_DEAL_BUTTONS.leave)}</button>`;
   const input = form.querySelector("input");
@@ -24182,7 +24188,7 @@ function satanDealButtonHtml() {
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
-  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="${t("Make a deal with Satan")}" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
@@ -24217,9 +24223,9 @@ function dealContractSvg() {
       <path d="M110 25 l6 6 M116 25 l-6 6"/>
     </g>
     <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
-    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">${t("DEAL")}</text></svg>`;
   }
-  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">${t("DEAL")}</text></svg>`;
 }
 /* ---------- The Faustian Codex: Satan's deal, written down by those who lost ----------
    A book kept between runs (in the collection storage, progress.codex). It drops the first time Satan turns you
@@ -24538,7 +24544,7 @@ function codexBookHtml() {
   return `
     <div class="codex-book" style="--codex-per: ${per}">
       <div class="codex-spread">${leaves.join("")}</div>
-      <nav class="codex-nav" aria-label="Pages">
+      <nav class="codex-nav" aria-label="${t("Pages")}">
         <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>Previous</button>
         <span class="codex-folio">${per === 2 ? "pages" : "page"} ${folio} of ${CODEX_PAGES.length}</span>
         <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>Next</button>
@@ -24552,7 +24558,7 @@ function codexLegendHtml() {
   return `
     <div class="collection-legend codex-legend">
       ${collectionKarmaLine()}
-      <button type="button" class="collection-dev-button${on ? " active" : ""}" data-collection-dev-codex data-tooltip="Testing: every page of the Codex shows, found or not">${on ? "DEV: whole Codex" : "DEV: found pages"}</button>
+      <button type="button" class="collection-dev-button${on ? " active" : ""}" data-collection-dev-codex data-tooltip="${t("Testing: every page of the Codex shows, found or not")}">${on ? "DEV: whole Codex" : "DEV: found pages"}</button>
     </div>`;
 }
 
@@ -24661,7 +24667,7 @@ function slotSfx(key) {
 }
 
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
-const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="${t("FAVOR")}"></span>`;
 
 /* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
    The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission
@@ -25674,7 +25680,7 @@ function missionBoxHtml() {
   return `
     <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
       <div class="mission-head">
-        <span class="mission-title">Satan's Bet</span>
+        <span class="mission-title">${t("Satan's Bet")}</span>
         ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
@@ -25686,7 +25692,7 @@ function missionBoxHtml() {
 // the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="${t("Slot machine and Satan's bet")}">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----
@@ -25714,7 +25720,8 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
 }
 // ---------- Credits (main menu: Options > Credits) ----------
 // Everything the screen lists. Each section has a heading and its lines; a line is either plain text
-// or { name, note } (name in the display face, note under it in the book face).
+// or { name, note } (name in the display face, note under it in the book face). Headings, notes and the
+// closing line are translated by their English text (t()); people's names are not.
 // Before release: replace the placeholder soundtrack line with the composer, and add any asset the
 // third-party audit turns up (every Pixabay sound that needs a name, art, etc.).
 const CREDITS_SECTIONS = [
@@ -25766,21 +25773,21 @@ const CREDITS_CLOSING_LINE = "Thank you for playing, sinner.";
 
 function renderCreditsMenu() {
   const line = (entry) => typeof entry === "string"
-    ? `<li class="credits-line"><span class="credits-note">${escapeHtml(entry)}</span></li>`
-    : `<li class="credits-line"><span class="credits-name">${escapeHtml(entry.name)}</span>${entry.note ? `<span class="credits-note">${escapeHtml(entry.note)}</span>` : ""}</li>`;
+    ? `<li class="credits-line"><span class="credits-note">${escapeHtml(t(entry))}</span></li>`
+    : `<li class="credits-line"><span class="credits-name">${escapeHtml(entry.name === "Additional sound effects" ? t(entry.name) : entry.name)}</span>${entry.note ? `<span class="credits-note">${escapeHtml(t(entry.note))}</span>` : ""}</li>`;
   const sections = CREDITS_SECTIONS.map((section) => `
       <section class="credits-section${section.team ? " credits-team" : ""}">
-        <h3 class="credits-heading">${escapeHtml(section.heading)}</h3>
+        <h3 class="credits-heading">${escapeHtml(t(section.heading))}</h3>
         <ul class="credits-lines">${section.lines.map(line).join("")}</ul>
       </section>`).join("");
   return `
     <div class="records-menu credits-menu">
-      <h2 class="records-title credits-title">Credits</h2>
+      <h2 class="records-title credits-title">${t("Credits")}</h2>
       <div class="credits-scroll">
         ${sections}
-        <p class="credits-closing">${escapeHtml(CREDITS_CLOSING_LINE)}</p>
+        <p class="credits-closing">${escapeHtml(t(CREDITS_CLOSING_LINE))}</p>
       </div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
     </div>
   `;
 }

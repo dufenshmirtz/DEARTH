@@ -190,12 +190,12 @@ function renderGiftsScreen() {
       </button>`;
   }).join("");
   return `
-    <div class="gifts-screen" role="dialog" aria-label="Jesus' Gifts">
+    <div class="gifts-screen" role="dialog" aria-label="${t("Jesus' Gifts")}">
       <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="giftRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter></defs></svg>
       <img class="gifts-jesus" src="assets/ui/jesus.png" alt="" draggable="false" />
-      <button class="collection-back gifts-back" type="button" data-gifts-back>Back</button>
-      <h1 class="gifts-title">Jesus' Gifts</h1>
-      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
+      <button class="collection-back gifts-back" type="button" data-gifts-back>${t("Back")}</button>
+      <h1 class="gifts-title">${t("Jesus' Gifts")}</h1>
+      <div class="gifts-karma">${collectionKarmaLine()}<button type="button" class="collection-dev-button gifts-dev${infinite ? " active" : ""}" data-gifts-dev-karma data-tooltip="${t("Testing: KARMA never runs out and gifts cost nothing; off again shows your real KARMA")}">${infinite ? "DEV: ∞ Karma on" : "DEV: ∞ Karma"}</button></div>
       <div class="gifts-cards">${cards}</div>
     </div>`;
 }
@@ -240,7 +240,7 @@ function startGiftOpening(packKey) {
       <div class="gift-flip-slot"></div>
       <div class="gift-reveal-actions">
         <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
-        <button type="button" class="collection-bind-button" data-gift-continue>Continue</button>
+        <button type="button" class="collection-bind-button" data-gift-continue>${t("Continue")}</button>
       </div>
     </div>
     <div class="gift-flip-card">

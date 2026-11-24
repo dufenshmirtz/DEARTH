@@ -254,8 +254,9 @@ function tableScenes(game, label) {
 }
 
 // the screens of a fresh game: menus, then the first round at each stage
-function screenTexts(layout) {
+function screenTexts(layout, language = "en") {
   const game = createGame(1, layout);
+  if (language !== "en") game.run(`setLanguage(${JSON.stringify(language)})`);
   const out = menuScenes(game, layout);
   game.run("startGame()");
   Object.assign(out, tableScenes(game, `${layout}.round1.guess`));

@@ -112,6 +112,7 @@ const PSEUDO_LETTERS = {
 
 // accented and 35% longer; {params}, HTML tags and entities are left alone
 function pseudoTranslation(text) {
+  if (!/[A-Za-z]/.test(String(text))) return String(text);
   let letters = 0;
   const body = String(text).replace(/(\{\w+\}|<[^>]*>|&[#\w]+;)|([A-Za-z])/g, (match, keep, letter) => {
     if (keep) return keep;
