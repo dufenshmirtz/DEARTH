@@ -15,6 +15,7 @@ Release targets: Steam/desktop and Android/iOS equally. Web is only the dev/runt
 - Sounds are balanced by loudness tier, not raw volume. After adding or replacing any file in `assets/audio/`, run `pnpm run audio:levels` (needs ffmpeg; writes `src/game/00-audio-loudness.js` and rebuilds) and give the sound a tier in `SFX_LEVELS` (`00-audio-sfx-config.js`). Per-sound tweaks are a `trim` in dB.
 - Shell is Windows (PowerShell / cmd). Use `pnpm`. Files use CRLF line endings; the repo has `core.autocrlf=true`.
 - Tests: `node --test scripts/test-seal-effects.js` (`pnpm run check` does not run them). Add a test for every SEAL/BOSS rule you add or change.
+- Text snapshot (safety net for the translation): `pnpm run text:check` (or `node --test scripts/test-text-snapshot.js`) compares every English text the game produces, plus the SEAL stats of 20 seeded simulated runs, with `scripts/text-snapshot.en.json`. Run it after every change during the translation work: it must say unchanged. After a change you meant (new or changed text, balance), run `pnpm run text:update` and commit the snapshot with that change. The plan is in the Project doc `claude/localization-plan.md`.
 - After a change that ships: `pnpm run build:game`, `pnpm run check`, tests, commit; then `pnpm run mobile:build`, `git checkout -- main.js` (the mobile build rewrites it), and copy the changed `native-www/` files into `android/app/src/main/assets/public/` so the phone app matches.
 
 ## Running

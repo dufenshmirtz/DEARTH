@@ -15,7 +15,9 @@
     "mobile:ios": "pnpm run mobile:build && cap sync ios",
     "desktop": "electron desktop/main.cjs",
     "desktop:build": "node scripts/build-desktop.js",
-    "desktop:dist": "node scripts/build-desktop.js && electron-builder --win"
+    "desktop:dist": "node scripts/build-desktop.js && electron-builder --win",
+    "text:check": "node scripts/text-snapshot.js",
+    "text:update": "node scripts/text-snapshot.js --update"
   },
   "engines": {
     "node": ">=18"
