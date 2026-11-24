@@ -25,6 +25,13 @@ const list = process.argv.includes("--list");
 function shownEnglish() {
   const seen = new Set();
   const original = require("./text-snapshot");
+  // tooltips are translated when they show (descriptionHtml on hover), so read them from the rendered pages
+  const tooltips = (screens) => {
+    const decode = (value) => value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    Object.values(screens).forEach((lines) => (Array.isArray(lines) ? lines : Object.values(lines || {}).flat()).forEach((line) => {
+      if (typeof line === "string" && line.startsWith("[data-tooltip] ")) seen.add(decode(line.slice(15)));
+    }));
+  };
   const record = (game) => {
     game.run(`
       globalThis.__shown = globalThis.__shown || new Set();
@@ -37,9 +44,11 @@ function shownEnglish() {
   for (const layout of ["desktop", "mobile", "native"]) {
     const game = createGame(1, layout);
     const collect = record(game);
-    original.screenTextsOn(game, layout);
+    tooltips(original.screenTextsOn(game, layout));
     collect();
   }
+  // a few simulated runs, for the tooltips their tables show (damage sources, BOSSES, later rounds)
+  [[1, ["p16", "p20"]], [2, ["p30", "p45"]], [3, ["p101", "p5"]]].forEach(([seed, seals]) => tooltips({ end: original.simulatedRun(seed, seals, true).screens }));
   // every SEAL / ARTIFACT text at every ELITE level, as the tooltips show them
   const game = createGame(1);
   const collect = record(game);
@@ -92,8 +101,10 @@ for (const text of shown) {
     english.add(text);
     continue;
   }
-  if (isTranslated(text)) continue;
-  pieces(text).forEach((piece) => english.add(piece));
+  if (game.run(`LOCALES[${JSON.stringify(code)}]?.[${JSON.stringify(text)}] !== undefined`)) continue;
+  // a long text counts as translated only when every line and sentence of it is
+  if (isTranslated(text) && !/[.!?]\s|\n/.test(text)) continue;
+  pieces(text).filter((piece) => !isTranslated(piece)).forEach((piece) => english.add(piece));
 }
 // group texts that differ only in their numbers
 const groups = new Map();

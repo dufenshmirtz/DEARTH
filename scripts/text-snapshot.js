@@ -385,7 +385,7 @@ function snapshotDifferences(expected, actual, limit = 30) {
   return lines;
 }
 
-module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame, screenTexts, screenTextsOn, tableScenes, htmlText };
+module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame, screenTexts, screenTextsOn, tableScenes, htmlText, simulatedRun };
 
 if (require.main === module) {
   const actual = buildSnapshot();

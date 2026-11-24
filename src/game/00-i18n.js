@@ -156,11 +156,14 @@ const translationPatternCache = {};
 const builtTextCache = {};
 const BUILT_TEXT_CACHE_LIMIT = 4000;
 
-// a language's patterns: its entries with {placeholders}, longest fixed text first (the most specific wins)
+// a language's patterns: its entries with {placeholders}, longest fixed text first (the most specific wins).
+// {n1}, {n2}... (the numbers the worklist found) match only a number; any other {name} matches text within one
+// sentence. No pattern: an entry whose fixed text has no letter ("{ITEM}?", it would match any question), and one with
+// a {CAPITALS} placeholder (Satan's and Jesus' lines: their values always come as params, never built into the text).
 function translationPatterns(code) {
   if (translationPatternCache[code]) return translationPatternCache[code];
   const patterns = Object.keys(LOCALES[code] || {})
-    .filter((key) => /\{\w+\}/.test(key) && typeof LOCALES[code][key] === "string")
+    .filter((key) => /\{\w+\}/.test(key) && typeof LOCALES[code][key] === "string" && /\p{L}/u.test(key.replace(/\{\w+\}/g, "")) && !/\{[A-Z][A-Z0-9_]*\}/.test(key))
     .map((key) => {
       const names = [];
       const source = key
@@ -169,7 +172,7 @@ function translationPatterns(code) {
           const name = part.match(/^\{(\w+)\}$/);
           if (!name) return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           names.push(name[1]);
-          return "(.+?)";
+          return /^n\d+$/.test(name[1]) ? "(-?\\d+(?:\\.\\d+)?)" : "((?:(?![.!?]\\s)[^\\n])+?)";
         })
         .join("");
       return { key, names, regex: new RegExp(`^${source}$`), fixed: key.replace(/\{\w+\}/g, "").length };

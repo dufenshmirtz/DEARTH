@@ -28,6 +28,8 @@ test("another language falls back to English for a key it lacks, and uses its ow
   run(`
     LOCALES.en["test.seals"] = { one: "{count} SEAL", other: "{count} SEALS" };
     LOCALES["zh-Hans"]["test.seals"] = { other: "{count} 印" };
+    for (const key of Object.keys(LOCALES.el)) delete LOCALES.el[key]; // these tests bring their own Greek
+    resetTranslationCaches();
     LOCALES.el["settings.reset"] = "Επαναφορά";
     setLanguage("el");
     __assert.equal(t("settings.reset"), "Επαναφορά");
@@ -95,6 +97,8 @@ test("English the code built is translated by patterns, line by line and sentenc
   const { run, context } = createGame(1);
   context.__assert = assert;
   run(`
+    for (const key of Object.keys(LOCALES.el)) delete LOCALES.el[key]; // these tests bring their own Greek
+    resetTranslationCaches();
     LOCALES.el["Gain {sin} SIN whenever this happens."] = "Κέρδισε {sin} SIN κάθε φορά.";
     LOCALES.el["Seal of Bael"] = "Σφραγίδα του Βάαλ";
     LOCALES.el["ELITE {level} {name}"] = "ΕΛΙΤ {level} {name}";
