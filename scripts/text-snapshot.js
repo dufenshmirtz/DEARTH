@@ -5,7 +5,8 @@
    - every text in the tables (UPPERCASE constants: Satan, Jesus, Codex, missions, unlocks, BOSSES, and the
      locale files' LOCALES), as one sorted list: moving a text from a table into locales/en.js leaves it unchanged
    - every SEAL and ARTIFACT: name, description, the text shown at stack 1-6, the tooltip HTML
-   - the text of the screens built by the render* functions (menu, settings, collection...)
+   - the text of every screen (main menu and its pages, Collection tabs, Jesus' Gifts, the table at each stage,
+     Pause, DEV, game over), on the desktop, the phone web view and the phone app
    - simulated arcade runs (fixed random seeds): every log line and round event, plus the SEAL stats,
      so text that game logic reads (damage sources, discovery, unlocks) is checked too.
    node scripts/text-snapshot.js            compare with scripts/text-snapshot.en.json (exit 1 if different)
@@ -37,9 +38,25 @@ function seededRandom(seed) {
   };
 }
 
-// a document/window that accepts anything: rendering code runs, nothing is drawn
-function permissiveStub(read) {
+const LAYOUT_BODY_CLASSES = { desktop: [], mobile: ["mobile-arcade"], native: ["native-arcade"] };
+
+// a document/window that accepts anything: rendering code runs, nothing is drawn.
+// document.body has a real class list, so the layout checks (phone web view, phone app) answer truly.
+function permissiveStub(read, bodyClasses = []) {
   const target = function stub() {};
+  const classes = new Set(bodyClasses);
+  const classList = {
+    contains: (name) => classes.has(name),
+    add: (...names) => names.forEach((name) => classes.add(name)),
+    remove: (...names) => names.forEach((name) => classes.delete(name)),
+    toggle: (name, force) => {
+      const on = force === undefined ? !classes.has(name) : Boolean(force);
+      if (on) classes.add(name);
+      else classes.delete(name);
+      return on;
+    }
+  };
+  let body = null;
   const proxy = new Proxy(target, {
     get(_t, key) {
       if (key === Symbol.toPrimitive) return () => "";
@@ -48,6 +65,13 @@ function permissiveStub(read) {
       if (key === "value") return read();
       if (key === "innerWidth") return 1600;
       if (key === "innerHeight") return 900;
+      if (key === "body") {
+        body = body || new Proxy(function body() {}, {
+          get: (_b, bodyKey) => (bodyKey === "classList" ? classList : bodyKey === Symbol.toPrimitive ? () => "" : bodyKey === "then" ? undefined : proxy),
+          set: () => true
+        });
+        return body;
+      }
       return proxy;
     },
     set: () => true,
@@ -57,10 +81,10 @@ function permissiveStub(read) {
   return proxy;
 }
 
-function createGame(seed) {
+function createGame(seed, layout = "desktop") {
   const storage = new Map();
   const io = { guess: "" };
-  const stub = permissiveStub(() => io.guess);
+  const stub = permissiveStub(() => io.guess, LAYOUT_BODY_CLASSES[layout] || []);
   const random = seededRandom(seed);
   const math = Object.create(Math);
   math.random = random;
@@ -176,29 +200,70 @@ function htmlText(html) {
   return [...text, ...attrs];
 }
 
-function screenTexts(game, label) {
-  const names = Array.from(new Set(Array.from(sources.matchAll(/^function (render[A-Za-z0-9_]*)\(/gm), (m) => m[1]))).sort();
+// every screen a player can reach, as the visible text of the whole page (render's HTML)
+const MENU_SCREENS = ["main", "play", "arcade-options", "arcade-runs", "options", "sound", "records", "credits", "quit"];
+
+function pageText(game, code) {
+  try {
+    const html = game.run(code);
+    return typeof html === "string" ? htmlText(html) : [];
+  } catch (error) {
+    return [`ERROR ${error.message}`];
+  }
+}
+
+function menuScenes(game, label) {
   const out = {};
-  names.forEach((name) => {
-    if (name === "render") return;
-    // the Settings panel: every tab, from the menu and from Pause
-    const calls = name === "renderSettingsPanel"
-      ? ["audio", "display", "gameplay"].flatMap((tab) => ["menu", "pause"].map((prefix) => ({ arg: prefix, tab, id: `(${prefix}, ${tab})` })))
-      : [{ arg: undefined, id: "" }];
-    for (const call of calls) {
-      let html;
-      try {
-        if (call.tab) game.run(`state.settingsTab = ${JSON.stringify(call.tab)}`);
-        html = game.run(`${name}(${call.arg === undefined ? "" : JSON.stringify(call.arg)})`);
-      } catch {
-        continue;
-      }
-      if (typeof html !== "string" || !html.trim()) continue;
-      const lines = htmlText(html);
-      if (lines.length) out[`${label}.${name}${call.id}`] = lines;
+  MENU_SCREENS.forEach((screen) => {
+    if (screen === "records") {
+      const tabs = JSON.parse(game.run("JSON.stringify(RECORDS_TABS.map((tab) => tab.key))"));
+      tabs.forEach((tab) => {
+        out[`${label}.menu.records.${tab}`] = pageText(game, `state.menuScreen = "records"; state.recordsTab = ${JSON.stringify(tab)}; renderMenuApp()`);
+      });
+      return;
     }
-    if (name === "renderSettingsPanel") game.run(`state.settingsTab = "audio"`);
+    out[`${label}.menu.${screen}`] = pageText(game, `state.menuScreen = ${JSON.stringify(screen)}; renderMenuApp()`);
   });
+  ["audio", "display", "gameplay"].forEach((tab) => {
+    out[`${label}.menu.settings.${tab}`] = pageText(game, `state.settingsTab = ${JSON.stringify(tab)}; renderSettingsPanel("menu")`);
+  });
+  game.run(`state.menuScreen = "main"; state.settingsTab = "audio"`);
+  ["seals", "goetia", "angels", "codex"].forEach((tab) => {
+    out[`${label}.collection.${tab}`] = pageText(
+      game,
+      `state.menuCollectionOpen = true; ${tab === "codex" ? "if (!codexDevWhole()) toggleDevWholeCodex();" : ""} collectionTab = ${JSON.stringify(tab)}; renderMenuApp()`
+    );
+  });
+  game.run(`state.menuCollectionOpen = false; collectionTab = "seals"`);
+  out[`${label}.gifts`] = pageText(game, "state.menuGiftsOpen = true; renderMenuApp()");
+  game.run("state.menuGiftsOpen = false");
+  return out;
+}
+
+// the table: whatever the run's state is now, then Pause, its Settings and DEV
+function tableScenes(game, label) {
+  const out = {};
+  out[`${label}.table`] = pageText(game, "renderArcadeApp()");
+  out[`${label}.pause`] = pageText(game, `state.pauseOpen = true; state.pauseScreen = "main"; state.pauseDevOpen = false; renderArcadeApp()`);
+  out[`${label}.pause.dev`] = pageText(game, "state.pauseDevOpen = true; renderArcadeApp()");
+  ["audio", "display", "gameplay"].forEach((tab) => {
+    out[`${label}.pause.settings.${tab}`] = pageText(game, `state.pauseScreen = "settings"; state.settingsTab = ${JSON.stringify(tab)}; renderArcadeApp()`);
+  });
+  game.run(`state.pauseOpen = false; state.pauseScreen = "main"; state.pauseDevOpen = false; state.settingsTab = "audio"`);
+  return out;
+}
+
+// the screens of a fresh game: menus, then the first round at each stage
+function screenTexts(layout) {
+  const game = createGame(1, layout);
+  const out = menuScenes(game, layout);
+  game.run("startGame()");
+  Object.assign(out, tableScenes(game, `${layout}.round1.guess`));
+  game.io.guess = "40";
+  game.run("submitGuess()");
+  Object.assign(out, tableScenes(game, `${layout}.round1.active`));
+  game.run("readyRound(); finishRoundRevealAnimation();");
+  Object.assign(out, tableScenes(game, `${layout}.round1.summary`));
   return out;
 }
 
@@ -255,7 +320,7 @@ function simulatedRun(seed, sealIds, withScreens) {
     log: JSON.parse(game.run("JSON.stringify(__snapLog)")),
     rounds,
     sealStats: JSON.parse(game.run("JSON.stringify(state.sealStats || {})")),
-    screens: withScreens ? screenTexts(game, "run") : {}
+    screens: withScreens ? tableScenes(game, "end") : {}
   };
 }
 
@@ -264,7 +329,7 @@ function buildSnapshot() {
   const snapshot = {
     tables: staticTables(base),
     items: itemTexts(base),
-    screens: screenTexts(base, "menu")
+    screens: Object.assign({}, ...["desktop", "mobile", "native"].map((layout) => screenTexts(layout)))
   };
   const sealIds = JSON.parse(base.run(`JSON.stringify(PASSIVE_IDS.filter((id) => !REMOVED_PASSIVE_IDS.has(id) && ITEMS[id]))`));
   snapshot.runs = [];
@@ -305,7 +370,7 @@ function snapshotDifferences(expected, actual, limit = 30) {
   return lines;
 }
 
-module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame };
+module.exports = { buildSnapshot, stableJson, snapshotDifferences, SNAPSHOT_FILE, createGame, screenTexts, tableScenes, htmlText };
 
 if (require.main === module) {
   const actual = buildSnapshot();

@@ -2,8 +2,13 @@
    Plan and decisions: Project doc claude/localization-plan.md.
    English is the game's internal language: ITEMS names, BOSS names and the log sentences that the code reads
    (damage sources, SEAL discovery, the READY animations) stay English for good. Text is translated only where
-   it is shown: t("key", { param }) looks the key up in the player's language, then in English.
-   Locale files: src/game/locales/<code>.js, each one fills LOCALES[<code>] = { "key": "Text with {param}" }.
+   it is shown, with t():
+   - t("settings.reset"): a key of locales/en.js (short labels whose English word could mean two things);
+   - t("Resume"), t("Gain {sin} SIN.", { sin }): the English text itself. The text tables (Satan, Jesus, Codex,
+     missions...) and ITEMS stay where the designers write them, and are translated by their English text.
+     Change the English and the old translation no longer matches: that text shows in English until retranslated
+     (node scripts/i18n-report.js lists what each language still lacks).
+   Locale files: src/game/locales/<code>.js, each one fills LOCALES[<code>] = { "key or English text": "translation" }.
    A value can also be a plural set, { one: "{count} SEAL", other: "{count} SEALS" }, picked by params.count
    (Intl.PluralRules: Chinese has only "other", Greek / German / Spanish / English have "one" and "other").
    A key ending in "Html" holds HTML (keep its tags); every other value is plain text and is escaped where shown.
@@ -116,12 +121,12 @@ function pseudoTranslation(text) {
   return `[${body}${"~".repeat(Math.ceil(letters * 0.35))}]`;
 }
 
-/* The text for a key in the player's language (English if that language has no text for it yet).
-   params fill {name} placeholders; params.count also picks the plural form. A key English lacks
-   shows as the key itself, so a typo is visible on screen rather than an empty space. */
+/* The text in the player's language (English if that language has no text for it yet).
+   key: a key of locales/en.js, or the English text itself. params fill {name} placeholders;
+   params.count also picks the plural form. */
 function t(key, params) {
   let entry = translationEntry(key);
-  if (entry === undefined) return key;
+  if (entry === undefined) entry = key;
   if (entry && typeof entry === "object") {
     const count = params && params.count !== undefined ? params.count : 0;
     entry = entry[pluralCategory(count)] ?? entry.other ?? Object.values(entry)[0] ?? "";
