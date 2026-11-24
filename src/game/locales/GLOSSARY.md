@@ -6,7 +6,8 @@ Change a term here and in every locale file at once, and check Satan's Pact lexi
 
 ## The logic
 - Stay as close to the English as the language allows. Words the English uses as loanwords for gamers stay English:
-  BOSS, CRITICAL, KO, Reroll (in every language, also Chinese).
+  BOSS, CRITICAL, KO (in every language, also Chinese). Reroll stays English only in Greek; German, Spanish and Chinese
+  have a word gamers know (owner's call, Nov 24).
 - Keywords are written in capitals in the translated texts, as in English (Greek capitals without accents), so they get the keyword style.
 - BOUNTY is the burden a DAMNED carries (Greek Φορτίο), not a reward: LADUNG / CARGA / 负担.
 - DAMNED are the condemned (Greek ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ): VERURTEILTE / CONDENADOS / 罪人.
@@ -40,7 +41,7 @@ Change a term here and in every locale file at once, and check Satan's Pact lexi
 | Jesus' Gifts | Τα Δώρα του Ιησού | Jesu Gaben | Dones de Jesús | 耶稣的恩赐 |
 | DEAL / Satan's Pact | ΣΥΜΦΩΝΙΑ | PAKT | PACTO | 契约 |
 | Modifier | Συντελεστής | Modifikator | Modificador | 修正值 |
-| Reroll | Reroll | Reroll | Reroll | Reroll |
+| Reroll | Reroll | Neu würfeln (Neuwurf) | Renovar (renovación) | 刷新 |
 | Anchor | Αγκυρωμένος | Verankert | Anclado | 锚定者 |
 | Analyst | Αναλυτής | Analytiker | Analista | 分析者 |
 | Follower | Ακόλουθος | Mitläufer | Seguidor | 跟随者 |

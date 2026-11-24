@@ -239,7 +239,7 @@ function startGiftOpening(packKey) {
     <div class="gift-flip">
       <div class="gift-flip-slot"></div>
       <div class="gift-reveal-actions">
-        <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
+        <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>${t("Again")} · ${formatNumber(pack.price)}${KARMA_MARK}</button>
         <button type="button" class="collection-bind-button" data-gift-continue>${t("Continue")}</button>
       </div>
     </div>

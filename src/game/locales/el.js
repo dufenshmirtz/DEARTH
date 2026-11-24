@@ -1427,7 +1427,7 @@ LOCALES["el"] = {
   "the BOUNTY on their head": "το ΦΟΡΤΙΟ που κουβαλάει",
   "the Moon": "Σελήνη",
   "the Sun": "Ήλιος",
-  "the next BOSS joining the game with {N}% more SOUL": "να μπει το επόμενο BOSS στο παιχνίδι με {N}% περισσότερη ΨΥΧΗ",
+  "the next BOSS joining the game with {N}% more SOUL": "το επόμενο BOSS να μπαίνει στο παιχνίδι με {N}% περισσότερη ΨΥΧΗ",
   "undiscovered": "δεν ανακαλύφθηκε",
   "who claims you most": "ποιος σε διεκδικεί περισσότερο",
   "with Satan": "με τον Σατανά",
@@ -1652,7 +1652,44 @@ LOCALES["el"] = {
   "Next round starts automatically after 10 seconds.": "Ο επόμενος γύρος ξεκινά αυτόματα σε 10 δευτερόλεπτα.",
 
   // every other text, in the order of the worklist (node scripts/i18n-report.js el)
-  "ARTIFACTS resolve automatically when everyone is ready.": "Τα ΚΕΙΜΗΛΙΑ επιλύονται μόνα τους όταν είναι όλοι έτοιμοι."
+  "ARTIFACTS resolve automatically when everyone is ready.": "Τα ΚΕΙΜΗΛΙΑ επιλύονται μόνα τους όταν είναι όλοι έτοιμοι.",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js el)
+  "{list} and {last}": "{list} και {last}",
+  "\"{Q}\"?": "«{Q}»;",
+  "Again": "Ξανά",
+  "Deal signed: {request}.": "Η συμφωνία υπογράφηκε: {request}.",
+  "You refused Satan.": "Αρνήθηκες τον Σατανά.",
+  "He shall not offer a deal again this run.": "Δεν θα προσφέρει ξανά συμφωνία σε αυτό το run.",
+  "Satan is busy.": "Ο Σατανάς είναι απασχολημένος.",
+  "Kill another BOSS.": "Σκότωσε άλλο ένα BOSS.",
+  "{n1} SOUL": "{n1} ΨΥΧΗ",
+  "{n1} SIN": "{n1} ΑΜΑΡΤΙΑ",
+  "{n1} FAVOR": "{n1} ΕΥΝΟΙΑ",
+  "+{n1} ARTIFACT use": "+{n1} χρήση ΚΕΙΜΗΛΙΟΥ",
+  "+{n1} ARTIFACT uses": "+{n1} χρήσεις ΚΕΙΜΗΛΙΩΝ",
+  "{n1}x {name}": "{n1}x {name}",
+  "ELITE {name}": "ΕΛΙΤ {name}",
+  "the death of {name}": "ο θάνατος του {name}",
+  "a second life": "μια δεύτερη ζωή",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js el)
+  "Bind": "Δέσε",
+  "Unbind": "Λύσε",
+  "Click to bind.": "Πάτα για να τον δέσεις.",
+  "Click to unbind.": "Πάτα για να τον λύσεις.",
+  "Remove run": "Σβήσε το run",
+  "Sell all": "Πούλα όλες",
+  "Spirit {number} of the Ars Goetia": "Πνεύμα {number} της Ars Goetia",
+  "Stacks": "Στοίβες",
+  "Stolen from {name}": "Κλεμμένη από {name}",
+  "While it lives, {seal} is silenced.": "Όσο ζει, η {seal} σωπαίνει.",
+  "its SEAL": "τη ΣΦΡΑΓΙΔΑ του",
+  "{count} of 3 in one slot": "{count} από 3 σε μία θέση",
+  "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩΝ", "ΨΥΧΗΣ", "ΨΥΧΕΣ", "ΨΥΧΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟ", "ΚΑΤΑΔΙΚΑΣΜΕΝΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗΣ", "ΣΦΡΑΓΙΔΑΣ", "ΣΦΡΑΓΙΔΩΝ", "ΚΕΙΜΗΛΙΟΥ", "ΚΕΙΜΗΛΙΩΝ", "ΣΤΟΧΟΥ", "ΣΤΟΧΟ", "ΜΝΗΜΗΣ", "ΜΝΗΜΕΣ", "ΦΟΡΤΙΟΥ", "ΦΟΡΤΙΑ", "ΦΟΡΤΙΩΝ", "ΔΗΛΗΤΗΡΙΟΥ", "ΔΗΛΗΤΗΡΙΑ", "ΕΥΝΟΙΑΣ", "ΜΑΚΕΛΕΙΟΥ", "ΜΑΚΕΛΕΙΑ"];

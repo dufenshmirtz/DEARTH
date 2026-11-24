@@ -1072,30 +1072,36 @@ function collectionDemonInfoHtml(key, pinned = false) {
     return `
       <div class="collection-info-status unslain">${t("Not defeated")}</div>
       <div class="collection-info-name">???</div>
-      <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+      <div class="collection-info-number">${t("Spirit {number} of the Ars Goetia", { number })}</div>
       <div class="collection-info-note">${t("Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.")}</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
     <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
-    <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
+    <div class="collection-info-number">${t("Spirit {number} of the Ars Goetia", { number })}</div>
+    ${seal ? `<div class="collection-info-text">${t("While it lives, {seal} is silenced.", { seal: escapeHtml(t(seal)) })}</div>` : ""}
     ${collectionDemonBindHtml(key, seal, pinned)}`;
 }
 
 function collectionDemonBindHtml(key, seal, pinned) {
   const bound = collectionBoundDemon() === key;
   const archangel = Boolean(ARCHANGEL_BY_KEY[key]);
-  const sealName = seal ? escapeHtml(seal) : "its SEAL";
-  const sealText = archangel ? `you start with ${sealName}` : `${sealName} costs nothing in Devil's Offerings`;
-  const text = bound
-    ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
-    : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
+  const sealName = seal ? escapeHtml(t(seal)) : t("its SEAL");
+  const text = t(
+    bound
+      ? archangel
+        ? "Bound. From your next run, you start with {seal}, and you will face yourself in its place."
+        : "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place."
+      : archangel
+        ? "Bind it, and from your next run you start with {seal}, and you will face yourself in its place."
+        : "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.",
+    { seal: sealName }
+  );
   const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">${t("Bound in this run.")}</div>` : "";
   const control = pinned
-    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
-    : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
+    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${t(bound ? "Unbind" : "Bind")}</button>`
+    : `<div class="collection-info-note">${t(bound ? "Click to unbind." : "Click to bind.")}</div>`;
   return `
     <div class="collection-info-bind">
       <div class="collection-info-text">${text}</div>

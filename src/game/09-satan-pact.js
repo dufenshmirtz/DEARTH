@@ -952,15 +952,30 @@ function satanPactApplyTricks(answer, t) {
 }
 
 /* ---- prices ---- */
+// one of his lines with its {VALUES} filled in, in the player's language: the line, and the names put into it
 function satanPactFill(text, vars = {}) {
-  return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
+  return String(t(text)).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? satanPactFillValue(vars[key]) : whole));
+}
+
+function satanPactFillValue(value) {
+  return typeof value === "string" && /[A-Za-z]/.test(value) ? t(value) : String(value);
+}
+
+// price words in the player's language ("t" is the price table inside the functions below), and a list of them
+function satanPactText(text) {
+  return t(text);
+}
+
+function satanPactJoin(texts) {
+  if (texts.length <= 1) return texts[0] || "";
+  return t("{list} and {last}", { list: texts.slice(0, -1).join(t(", ")), last: texts[texts.length - 1] });
 }
 
 // the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
 function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
   if (part.type === "bossHealth") {
     const health = satanPactFill(t.bossHealth, { N: part.pct });
-    return part.zeroBounty ? [health, t.bossBounty] : [health];
+    return part.zeroBounty ? [health, satanPactText(t.bossBounty)] : [health];
   }
   return [satanPactPartText(part, t)];
 }
@@ -976,15 +991,15 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactPartTexts(part, t).join(" and ");
+      return satanPactJoin(satanPactPartTexts(part, t));
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
       return satanPactFill(t.damageTaken, { N: part.pct, M: part.rounds });
     case "noArtifacts":
-      return t.noArtifacts;
+      return satanPactText(t.noArtifacts);
     case "keepBounty":
-      return t.keepBounty;
+      return satanPactText(t.keepBounty);
     default:
       return "";
   }
@@ -994,9 +1009,8 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
 function satanPactPriceText(parts, lineKey = null) {
   const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
   const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
-  if (!texts.length) return t.nothing;
-  if (texts.length === 1) return texts[0];
-  return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
+  if (!texts.length) return satanPactText(t.nothing);
+  return satanPactJoin(texts);
 }
 
 function satanPactRandomOf(options) {
@@ -1265,7 +1279,7 @@ function satanPactAnswerLines(answer) {
   vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = [...reactions, ...answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   // the question goes on the same line as the price, so YES / NO sit right under it
-  const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
+  const question = SATAN_DEAL_LINES.question.map(([, text]) => t(text)).join(" ");
   const last = lines[lines.length - 1];
   lines[lines.length - 1] = [last[0], `${last[1]} ${question}`];
   return lines;
@@ -1490,7 +1504,7 @@ function satanDealShowAsk() {
     <button class="intro-choice-button" type="submit">${escapeHtml(t(SATAN_DEAL_BUTTONS.ask))}</button>
     <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(t(SATAN_DEAL_BUTTONS.leave))}</button>`;
   const input = form.querySelector("input");
-  input.placeholder = SATAN_DEAL_LINES.askPlaceholder;
+  input.placeholder = t(SATAN_DEAL_LINES.askPlaceholder);
   form.addEventListener("click", (event) => event.stopPropagation());
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1622,7 +1636,7 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
+    tooltip = pact.outcome === "signed" ? t("Deal signed: {request}.", { request: t(pact.request) }) : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
     tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {

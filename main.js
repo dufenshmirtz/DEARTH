@@ -1712,7 +1712,7 @@ LOCALES["el"] = {
   "the BOUNTY on their head": "το ΦΟΡΤΙΟ που κουβαλάει",
   "the Moon": "Σελήνη",
   "the Sun": "Ήλιος",
-  "the next BOSS joining the game with {N}% more SOUL": "να μπει το επόμενο BOSS στο παιχνίδι με {N}% περισσότερη ΨΥΧΗ",
+  "the next BOSS joining the game with {N}% more SOUL": "το επόμενο BOSS να μπαίνει στο παιχνίδι με {N}% περισσότερη ΨΥΧΗ",
   "undiscovered": "δεν ανακαλύφθηκε",
   "who claims you most": "ποιος σε διεκδικεί περισσότερο",
   "with Satan": "με τον Σατανά",
@@ -1937,7 +1937,44 @@ LOCALES["el"] = {
   "Next round starts automatically after 10 seconds.": "Ο επόμενος γύρος ξεκινά αυτόματα σε 10 δευτερόλεπτα.",
 
   // every other text, in the order of the worklist (node scripts/i18n-report.js el)
-  "ARTIFACTS resolve automatically when everyone is ready.": "Τα ΚΕΙΜΗΛΙΑ επιλύονται μόνα τους όταν είναι όλοι έτοιμοι."
+  "ARTIFACTS resolve automatically when everyone is ready.": "Τα ΚΕΙΜΗΛΙΑ επιλύονται μόνα τους όταν είναι όλοι έτοιμοι.",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js el)
+  "{list} and {last}": "{list} και {last}",
+  "\"{Q}\"?": "«{Q}»;",
+  "Again": "Ξανά",
+  "Deal signed: {request}.": "Η συμφωνία υπογράφηκε: {request}.",
+  "You refused Satan.": "Αρνήθηκες τον Σατανά.",
+  "He shall not offer a deal again this run.": "Δεν θα προσφέρει ξανά συμφωνία σε αυτό το run.",
+  "Satan is busy.": "Ο Σατανάς είναι απασχολημένος.",
+  "Kill another BOSS.": "Σκότωσε άλλο ένα BOSS.",
+  "{n1} SOUL": "{n1} ΨΥΧΗ",
+  "{n1} SIN": "{n1} ΑΜΑΡΤΙΑ",
+  "{n1} FAVOR": "{n1} ΕΥΝΟΙΑ",
+  "+{n1} ARTIFACT use": "+{n1} χρήση ΚΕΙΜΗΛΙΟΥ",
+  "+{n1} ARTIFACT uses": "+{n1} χρήσεις ΚΕΙΜΗΛΙΩΝ",
+  "{n1}x {name}": "{n1}x {name}",
+  "ELITE {name}": "ΕΛΙΤ {name}",
+  "the death of {name}": "ο θάνατος του {name}",
+  "a second life": "μια δεύτερη ζωή",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js el)
+  "Bind": "Δέσε",
+  "Unbind": "Λύσε",
+  "Click to bind.": "Πάτα για να τον δέσεις.",
+  "Click to unbind.": "Πάτα για να τον λύσεις.",
+  "Remove run": "Σβήσε το run",
+  "Sell all": "Πούλα όλες",
+  "Spirit {number} of the Ars Goetia": "Πνεύμα {number} της Ars Goetia",
+  "Stacks": "Στοίβες",
+  "Stolen from {name}": "Κλεμμένη από {name}",
+  "While it lives, {seal} is silenced.": "Όσο ζει, η {seal} σωπαίνει.",
+  "its SEAL": "τη ΣΦΡΑΓΙΔΑ του",
+  "{count} of 3 in one slot": "{count} από 3 σε μία θέση",
+  "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩΝ", "ΨΥΧΗΣ", "ΨΥΧΕΣ", "ΨΥΧΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟ", "ΚΑΤΑΔΙΚΑΣΜΕΝΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗΣ", "ΣΦΡΑΓΙΔΑΣ", "ΣΦΡΑΓΙΔΩΝ", "ΚΕΙΜΗΛΙΟΥ", "ΚΕΙΜΗΛΙΩΝ", "ΣΤΟΧΟΥ", "ΣΤΟΧΟ", "ΜΝΗΜΗΣ", "ΜΝΗΜΕΣ", "ΦΟΡΤΙΟΥ", "ΦΟΡΤΙΑ", "ΦΟΡΤΙΩΝ", "ΔΗΛΗΤΗΡΙΟΥ", "ΔΗΛΗΤΗΡΙΑ", "ΕΥΝΟΙΑΣ", "ΜΑΚΕΛΕΙΟΥ", "ΜΑΚΕΛΕΙΑ"];
@@ -1973,7 +2010,7 @@ LOCALES["de"] = {
   "DEAL": "PAKT",
   "Satan's Pact": "Satans Pakt",
   "Modifier": "Modifikator",
-  "Reroll": "Reroll",
+  "Reroll": "Neu würfeln",
   "Anchor": "Verankert",
   "Analyst": "Analytiker",
   "Follower": "Mitläufer",
@@ -2128,7 +2165,7 @@ LOCALES["de"] = {
   "Beat the game without buying a SEAL": "Schlag das Spiel, ohne ein SIEGEL zu kaufen",
   "Beat the game without buying a seal": "Schlag das Spiel, ohne ein Siegel zu kaufen",
   "Beat the game without falling below {n1} SOUL": "Schlag das Spiel, ohne unter {n1} SEELE zu fallen",
-  "Beat the game without using sin to reroll Devil's Offerings": "Schlag das Spiel, ohne Sünde für ein Reroll der Teufelsgaben auszugeben",
+  "Beat the game without using sin to reroll Devil's Offerings": "Schlag das Spiel, ohne Sünde für Neuwürfe der Teufelsgaben auszugeben",
   "Beat the game {n1} times (beat the {n2} BOSSES)": "Schlag das Spiel {n1}-mal (besiege die {n2} BOSSE)",
   "Beat the game {n1} times (beat the {n2} bosses)": "Schlag das Spiel {n1}-mal (besiege die {n2} Bosse)",
   "Beat the game {n1} times (defeat the {n2} BOSSES)": "Schlag das Spiel {n1}-mal (bezwinge die {n2} BOSSE)",
@@ -2369,7 +2406,7 @@ LOCALES["de"] = {
   "Every one of those points comes out of your SOUL.": "Jeder einzelne dieser Punkte geht von deiner SEELE ab.",
   "Every other soul at the table loses a tenth of their max SOUL.": "Jede andere Seele am Tisch verliert ein Zehntel ihrer maximalen SEELE.",
   "Every point between your guess and the TARGET is torn out of your SOUL.": "Jeder Punkt zwischen deinem Tipp und dem ZIEL wird dir aus der SEELE gerissen.",
-  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "Jedes Reroll lässt alle VERURTEILTEN am Rundenende {n1} Schaden pro ausgegebener SÜNDE erleiden.",
+  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "Jeder Neuwurf lässt alle VERURTEILTEN am Rundenende {n1} Schaden pro ausgegebener SÜNDE erleiden.",
   "Every round each of them guesses a number from {n1} to {n2}, and so do you.": "Jede Runde tippt jeder von ihnen eine Zahl von {n1} bis {n2}, und du auch.",
   "Every round, if the previous TARGET was below {n1}, one random non-boss DAMNED guess becomes {n2}.": "Jede Runde: War das vorherige ZIEL unter {n1}, wird der Tipp eines zufälligen VERURTEILTEN, der kein BOSS ist, zu {n2}.",
   "Every time a DAMNED dies, all other DAMNED gain +{n1} or +{n2} BOUNTY.": "Jedes Mal, wenn ein VERURTEILTER stirbt, erhalten alle anderen VERURTEILTEN +{n1} oder +{n2} LADUNG.",
@@ -2381,7 +2418,7 @@ LOCALES["de"] = {
   "Exactly on it.": "Genau drauf.",
   "Excess MEMORY that would be added to a DAMNED becomes {n1} damage per excess MEMORY to that DAMNED.": "Überschüssiges GEDÄCHTNIS, das ein VERURTEILTER erhalten würde, wird zu {n1} Schaden pro überschüssigem GEDÄCHTNIS an diesem VERURTEILTEN.",
   "Excess MEMORY: +{excess} past the {limit} {rounds} finished.": "Überschüssiges GEDÄCHTNIS: +{excess} über dem Limit ({limit} {rounds}).",
-  "FREE REROLLS": "GRATIS-REROLLS",
+  "FREE REROLLS": "GRATIS-NEUWÜRFE",
   "FUCK YEAH, ready to go home and be the best chr-": "JA, VERDAMMT, bereit, nach Hause zu gehen und der beste Chri-",
   "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet...": "Lebwohl für jetzt, und sei sicher, ich behalte dich gut im Auge, meine liebe Fleischpuppe...",
   "Fastest win": "Schnellster Sieg",
@@ -2402,7 +2439,7 @@ LOCALES["de"] = {
   "Fourth Pentacle of Saturn": "Viertes Pentakel des Saturn",
   "France": "Frankreich",
   "Frankincense": "Weihrauch",
-  "Free rerolls are kept until used.": "Gratis-Rerolls bleiben, bis du sie nutzt.",
+  "Free rerolls are kept until used.": "Gratis-Neuwürfe bleiben, bis du sie nutzt.",
   "Fresh stock every round.": "Frische Ware jede Runde.",
   "From a worm?": "Von einem Wurm?",
   "Fuck you both.": "Fickt euch beide.",
@@ -2771,7 +2808,7 @@ LOCALES["de"] = {
   "Reroll Devil's Offerings {n1} times": "Würfle die Teufelsgaben {n1}-mal neu",
   "Reroll it.": "Würfle es neu.",
   "Reroll the Devil's Offerings {n1} times": "Würfle die Teufelsgaben {n1}-mal neu",
-  "Reroll {n1} times": "Mach {n1} Rerolls",
+  "Reroll {n1} times": "Würfle {n1}-mal neu",
   "Reserved for a future ARTIFACT.": "Reserviert für ein zukünftiges ARTEFAKT.",
   "Restart": "Neustart",
   "Resume": "Fortsetzen",
@@ -3126,7 +3163,7 @@ LOCALES["de"] = {
   "When you press READY, every other soul at the table pays a tenth of their max SOUL for it.": "Wenn du BEREIT drückst, zahlt jede andere Seele am Tisch dafür ein Zehntel ihrer maximalen SEELE.",
   "When you press READY, one of ten is cast at random: +{n1} MEMORY to every DAMNED; double {n2} random BOUNTIES; reveal {n3} DAMNED guesses next round; {n4} copies of one ARTIFACT; your guess is CRITICAL; {n5} DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a {n6}% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal {n7} SOUL).": "Wenn du BEREIT drückst, wird zufällig eins von zehn gewirkt: +{n1} GEDÄCHTNIS für jeden VERURTEILTEN; doppelte LADUNG bei {n2} zufälligen; {n3} Tipps von VERURTEILTEN werden nächste Runde aufgedeckt; {n4} Kopien eines ARTEFAKTS; dein Tipp ist CRITICAL; {n5} VERURTEILTE werden STUR; das nächste SIEGEL-Angebot ist ELITE; ein zufälliger VERURTEILTER scheidet aus; du erleidest diese Runde keinen ZIEL-Abstandsschaden; oder {n6}% Chance, dass die nächsten Gaben eins der dir fehlenden SIEGEL der Dreifaltigkeit enthalten (mit allen drei: heile {n7} SEELE).",
   "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max SOUL instead of flat damage; or a random DAMNED takes {n1}% max-SOUL damage at end of round; or you deal double damage.": "Wenn du BEREIT drückst, wird für die Runde zufällig eins von dreien gewirkt: Jeder VERURTEILTE erleidet seinen ZIEL-Abstand als % seiner maximalen SEELE statt festen Schaden; oder ein zufälliger VERURTEILTER erleidet am Rundenende {n1}% seiner maximalen SEELE als Schaden; oder du verursachst doppelten Schaden.",
-  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "Wenn du BEREIT drückst, wird zufällig eins von dreien gewirkt: doppelte SÜNDE aus jeder Quelle diese Runde; oder +{n1} SÜNDE; oder {n2} Gratis-Rerolls bis zum Ende der nächsten Runde.",
+  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "Wenn du BEREIT drückst, wird zufällig eins von dreien gewirkt: doppelte SÜNDE aus jeder Quelle diese Runde; oder +{n1} SÜNDE; oder {n2} Gratis-Neuwürfe bis zum Ende der nächsten Runde.",
   "When you press READY, {n1}% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.": "Wenn du BEREIT drückst, {n1}% Chance, dass alle VERURTEILTEN bis zum GEDÄCHTNIS des lebenden VERURTEILTEN (kein BOSS) mit dem meisten GEDÄCHTNIS aufsteigen und Schaden in Höhe ihres ursprünglichen GEDÄCHTNISSES erleiden.",
   "When you press READY, {n1}% chance that every revealed DAMNED deals {n2} damage to every other revealed DAMNED.": "Wenn du BEREIT drückst, {n1}% Chance, dass jeder aufgedeckte VERURTEILTE jedem anderen aufgedeckten VERURTEILTEN {n2} Schaden zufügt.",
   "When you press READY, {n1}% chance to make every personality STUBBORN.": "Wenn du BEREIT drückst, {n1}% Chance, jede Persönlichkeit STUR zu machen.",
@@ -3277,7 +3314,7 @@ LOCALES["de"] = {
   "the BOUNTY on their head": "die LADUNG auf seinem Kopf",
   "the Moon": "Mond",
   "the Sun": "Sonne",
-  "the next BOSS joining the game with {N}% more SOUL": "dass der nächste BOSS mit {N}% mehr SEELE ins Spiel kommt",
+  "the next BOSS joining the game with {N}% more SOUL": "den nächsten BOSS mit {N}% mehr SEELE im Spiel",
   "undiscovered": "unentdeckt",
   "who claims you most": "wer dich am meisten beansprucht",
   "with Satan": "mit Satan",
@@ -3309,7 +3346,7 @@ LOCALES["de"] = {
   "{count} / {total} unlocked": "{count} / {total} freigeschaltet",
   "{done} / {total} completed": "{done} / {total} abgeschlossen",
   "{n1} ARTIFACTS": "{n1} ARTEFAKTE",
-  "{n1} rerolls": "{n1} Rerolls",
+  "{n1} rerolls": "{n1} Neuwürfe",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "{n1}% der BOSS-LADUNG eines BOSSES wird zu normaler LADUNG auf diesem BOSS, und der Rest wird zufällig als LADUNG auf die anderen VERURTEILTEN verteilt.",
   "{n1}nd Pentacle of Mars": "{n1}. Pentakel des Mars",
   "{n1}nd Pentacle of the Moon": "{n1}. Pentakel des Mondes",
@@ -3436,10 +3473,10 @@ LOCALES["de"] = {
   "{name} is triggering.": "{name} löst aus.",
   "Revealing SEAL effects.": "SIEGEL-Effekte werden aufgedeckt.",
   "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round.": "Spielende-Ansicht. Fahr über die Blasen für Schaden, Heilung, SÜNDE und Gedächtnis, um die Runde zu untersuchen.",
-  "Satan's toll: this reroll takes all your SIN": "Satans Zoll: Dieses Reroll kostet deine ganze SÜNDE",
+  "Satan's toll: this reroll takes all your SIN": "Satans Zoll: Dieser Neuwurf kostet deine ganze SÜNDE",
   "Free x{count}": "Gratis x{count}",
   "Satan has sealed Devil's Offerings.": "Satan hat die Teufelsgaben versiegelt.",
-  "Sold out until reroll": "Ausverkauft bis zum Reroll",
+  "Sold out until reroll": "Ausverkauft bis zum Neuwurf",
   "Owned": "Besessen",
   "Upgrade {price}": "Verbessern {price}",
   "Take free": "Gratis nehmen",
@@ -3448,7 +3485,7 @@ LOCALES["de"] = {
   "Pact signed": "Pakt unterschrieben",
   "previous: {value}": "vorher: {value}",
   "What do you want from Satan?": "Was willst du von Satan?",
-  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "Jedes Symbol zahlt danach, wie oft es erschienen ist. SCHADEN ist % der maximalen SEELE an jedem VERURTEILTEN, zugefügt am Ende der nächsten Runde. SEELE kann nicht geblockt werden. Drei ELITES geben jedem deiner SIEGEL eine ELITE-Stufe. Gratis-Rerolls bleiben, bis du sie nutzt. Satans Wetten zahlen GUNST{favor}.",
+  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "Jedes Symbol zahlt danach, wie oft es erschienen ist. SCHADEN ist % der maximalen SEELE an jedem VERURTEILTEN, zugefügt am Ende der nächsten Runde. SEELE kann nicht geblockt werden. Drei ELITES geben jedem deiner SIEGEL eine ELITE-Stufe. Gratis-Neuwürfe bleiben, bis du sie nutzt. Satans Wetten zahlen GUNST{favor}.",
   "Pull the lever: spin for {cost} FAVOR": "Zieh den Hebel: Dreh für {cost} GUNST",
   "Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine ({cost} a spin).": "Satan wettet, dass du das nicht schaffst. Jede Runde eine neue Wette; gewinn sie, um GUNST für den Spielautomaten zu verdienen ({cost} pro Dreh).",
   "ARTIFACT SKIPPED": "ARTEFAKT ÜBERSPRUNGEN",
@@ -3502,7 +3539,44 @@ LOCALES["de"] = {
   "Next round starts automatically after 10 seconds.": "Die nächste Runde beginnt automatisch nach 10 Sekunden.",
 
   // every other text, in the order of the worklist (node scripts/i18n-report.js de)
-  "ARTIFACTS resolve automatically when everyone is ready.": "ARTEFAKTE werden automatisch aufgelöst, wenn alle bereit sind."
+  "ARTIFACTS resolve automatically when everyone is ready.": "ARTEFAKTE werden automatisch aufgelöst, wenn alle bereit sind.",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js de)
+  "{list} and {last}": "{list} und {last}",
+  "\"{Q}\"?": "„{Q}“?",
+  "Again": "Nochmal",
+  "Deal signed: {request}.": "Pakt unterschrieben: {request}.",
+  "You refused Satan.": "Du hast Satan abgewiesen.",
+  "He shall not offer a deal again this run.": "In diesem Run bietet er keinen Pakt mehr an.",
+  "Satan is busy.": "Satan ist beschäftigt.",
+  "Kill another BOSS.": "Töte noch einen BOSS.",
+  "{n1} SOUL": "{n1} SEELE",
+  "{n1} SIN": "{n1} SÜNDE",
+  "{n1} FAVOR": "{n1} GUNST",
+  "+{n1} ARTIFACT use": "+{n1} ARTEFAKT-Einsatz",
+  "+{n1} ARTIFACT uses": "+{n1} ARTEFAKT-Einsätze",
+  "{n1}x {name}": "{n1}x {name}",
+  "ELITE {name}": "ELITE {name}",
+  "the death of {name}": "der Tod von {name}",
+  "a second life": "ein zweites Leben",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js de)
+  "Bind": "Binden",
+  "Unbind": "Lösen",
+  "Click to bind.": "Klicke zum Binden.",
+  "Click to unbind.": "Klicke zum Lösen.",
+  "Remove run": "Run löschen",
+  "Sell all": "Alle verkaufen",
+  "Spirit {number} of the Ars Goetia": "Geist {number} der Ars Goetia",
+  "Stacks": "Stapel",
+  "Stolen from {name}": "Gestohlen von {name}",
+  "While it lives, {seal} is silenced.": "Solange er lebt, schweigt {seal}.",
+  "its SEAL": "sein SIEGEL",
+  "{count} of 3 in one slot": "{count} von 3 in einem Platz",
+  "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Gebunden. Ab deinem nächsten Run beginnst du mit {seal}, und an seiner Stelle trittst du dir selbst gegenüber.",
+  "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Gebunden. Ab deinem nächsten Run kostet {seal} in den Teufelsgaben nichts, und an seiner Stelle trittst du dir selbst gegenüber.",
+  "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Binde ihn, und ab deinem nächsten Run beginnst du mit {seal}, und an seiner Stelle trittst du dir selbst gegenüber.",
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Binde ihn, und ab deinem nächsten Run kostet {seal} in den Teufelsgaben nichts, und an seiner Stelle trittst du dir selbst gegenüber."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["de"] = ["SÜNDEN", "SEELEN", "VERURTEILTEN", "VERURTEILTER", "VERURTEILTEM", "SIEGELS", "ARTEFAKTEN", "ARTEFAKTS", "BOSSEN", "BOSSES", "ZIELS", "ZIELE", "LADUNGEN", "GIFTS", "STURE", "STUREN", "STURER", "STUREM"];
@@ -3538,7 +3612,7 @@ LOCALES["es"] = {
   "DEAL": "PACTO",
   "Satan's Pact": "El Pacto de Satanás",
   "Modifier": "Modificador",
-  "Reroll": "Reroll",
+  "Reroll": "Renovar",
   "Anchor": "Anclado",
   "Analyst": "Analista",
   "Follower": "Seguidor",
@@ -3694,7 +3768,7 @@ LOCALES["es"] = {
   "Beat the game without buying a SEAL": "Supera el juego sin comprar un SELLO",
   "Beat the game without buying a seal": "Supera el juego sin comprar un sello",
   "Beat the game without falling below {n1} SOUL": "Supera el juego sin bajar de {n1} de ALMA",
-  "Beat the game without using sin to reroll Devil's Offerings": "Supera el juego sin gastar pecado en rerolls de las Ofrendas del Diablo",
+  "Beat the game without using sin to reroll Devil's Offerings": "Supera el juego sin gastar pecado en renovar las Ofrendas del Diablo",
   "Beat the game {n1} times (beat the {n2} BOSSES)": "Supera el juego {n1} veces (vence a los {n2} BOSS)",
   "Beat the game {n1} times (beat the {n2} bosses)": "Supera el juego {n1} veces (vence a los {n2} bosses)",
   "Beat the game {n1} times (defeat the {n2} BOSSES)": "Supera el juego {n1} veces (derrota a los {n2} BOSS)",
@@ -3935,19 +4009,19 @@ LOCALES["es"] = {
   "Every one of those points comes out of your SOUL.": "Cada uno de esos puntos sale de tu ALMA.",
   "Every other soul at the table loses a tenth of their max SOUL.": "Cada otra alma de la mesa pierde una décima parte de su ALMA máxima.",
   "Every point between your guess and the TARGET is torn out of your SOUL.": "Cada punto entre tu intento y el OBJETIVO se arranca de tu ALMA.",
-  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "Cada reroll hace que todos los CONDENADOS reciban {n1} de daño por PECADO gastado al final de la ronda.",
+  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "Cada renovación hace que todos los CONDENADOS reciban {n1} de daño por PECADO gastado al final de la ronda.",
   "Every round each of them guesses a number from {n1} to {n2}, and so do you.": "Cada ronda cada uno de ellos elige un número de {n1} a {n2}, y tú también.",
   "Every round, if the previous TARGET was below {n1}, one random non-boss DAMNED guess becomes {n2}.": "Cada ronda, si el OBJETIVO anterior estuvo por debajo de {n1}, el intento de un CONDENADO al azar que no sea BOSS pasa a ser {n2}.",
   "Every time a DAMNED dies, all other DAMNED gain +{n1} or +{n2} BOUNTY.": "Cada vez que muere un CONDENADO, todos los demás CONDENADOS ganan +{n1} o +{n2} de CARGA.",
   "Every time a DAMNED dies, deal {n1} damage to every other DAMNED.": "Cada vez que muere un CONDENADO, inflige {n1} de daño a cada otro CONDENADO.",
   "Every time a DAMNED is eliminated, all other DAMNED take damage equal to that DAMNED's BOUNTY.": "Cada vez que se elimina a un CONDENADO, todos los demás CONDENADOS reciben un daño igual a su CARGA.",
   "Every time a DAMNED is eliminated, deal {n1} damage to the DAMNED on its left and right.": "Cada vez que se elimina a un CONDENADO, inflige {n1} de daño a los CONDENADOS a su izquierda y derecha.",
-  "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round.": "Cada vez que haces reroll en las Ofrendas del Diablo, todos los CONDENADOS reciben un daño igual al doble del PECADO gastado al final de la ronda.",
+  "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round.": "Cada vez que renuevas las Ofrendas del Diablo, todos los CONDENADOS reciben un daño igual al doble del PECADO gastado al final de la ronda.",
   "Every {n1} ARTIFACTS used, this SEAL gains +{n2} damage.": "Cada {n1} ARTEFACTOS usados, este SELLO gana +{n2} de daño.",
   "Exactly on it.": "Justo encima.",
   "Excess MEMORY that would be added to a DAMNED becomes {n1} damage per excess MEMORY to that DAMNED.": "La MEMORIA sobrante que se añadiría a un CONDENADO se convierte en {n1} de daño por cada MEMORIA sobrante a ese CONDENADO.",
   "Excess MEMORY: +{excess} past the {limit} {rounds} finished.": "MEMORIA sobrante: +{excess} por encima del límite ({limit} {rounds}).",
-  "FREE REROLLS": "REROLLS GRATIS",
+  "FREE REROLLS": "RENOVACIONES GRATIS",
   "FUCK YEAH, ready to go home and be the best chr-": "SÍ, JODER, listo para volver a casa y ser el mejor cris-",
   "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet...": "Adiós por ahora, y ten por seguro que no te quitaré el ojo de encima, mi querida marioneta de carne...",
   "Fastest win": "Victoria más rápida",
@@ -3968,7 +4042,7 @@ LOCALES["es"] = {
   "Fourth Pentacle of Saturn": "Cuarto Pentáculo de Saturno",
   "France": "Francia",
   "Frankincense": "Incienso",
-  "Free rerolls are kept until used.": "Los rerolls gratis se guardan hasta que los uses.",
+  "Free rerolls are kept until used.": "Las renovaciones gratis se guardan hasta que las uses.",
   "Fresh stock every round.": "Mercancía fresca cada ronda.",
   "From a worm?": "¿De un gusano?",
   "Fuck you both.": "Que os jodan a los dos.",
@@ -4334,10 +4408,10 @@ LOCALES["es"] = {
   "Regardless, this display of defiance can't go any longer.": "En cualquier caso, esta muestra de rebeldía no puede durar más.",
   "Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right?": "Recuerda las reglas, tienes que derrotar a TODOS los demás Condenados, y si mis ojos no me engañan, veo que quedan muchos más, ¿no es así?",
   "Removed.": "Retirado.",
-  "Reroll Devil's Offerings {n1} times": "Haz reroll de las Ofrendas del Diablo {n1} veces",
-  "Reroll it.": "Hazle reroll.",
-  "Reroll the Devil's Offerings {n1} times": "Haz reroll de las Ofrendas del Diablo {n1} veces",
-  "Reroll {n1} times": "Haz {n1} rerolls",
+  "Reroll Devil's Offerings {n1} times": "Renueva las Ofrendas del Diablo {n1} veces",
+  "Reroll it.": "Renuévalo.",
+  "Reroll the Devil's Offerings {n1} times": "Renueva las Ofrendas del Diablo {n1} veces",
+  "Reroll {n1} times": "Renueva {n1} veces",
   "Reserved for a future ARTIFACT.": "Reservado para un ARTEFACTO futuro.",
   "Restart": "Reiniciar",
   "Resume": "Continuar",
@@ -4692,7 +4766,7 @@ LOCALES["es"] = {
   "When you press READY, every other soul at the table pays a tenth of their max SOUL for it.": "Cuando pulsas LISTO, cada otra alma de la mesa lo paga con una décima parte de su ALMA máxima.",
   "When you press READY, one of ten is cast at random: +{n1} MEMORY to every DAMNED; double {n2} random BOUNTIES; reveal {n3} DAMNED guesses next round; {n4} copies of one ARTIFACT; your guess is CRITICAL; {n5} DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a {n6}% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal {n7} SOUL).": "Cuando pulsas LISTO, se lanza al azar uno de diez: +{n1} de MEMORIA a cada CONDENADO; doble CARGA a {n2} al azar; se revelan {n3} intentos de CONDENADOS la siguiente ronda; {n4} copias de un ARTEFACTO; tu intento es CRITICAL; {n5} CONDENADOS se vuelven TERCOS; la siguiente oferta de SELLO es ÉLITE; un CONDENADO al azar es eliminado; no recibes daño por distancia al OBJETIVO esta ronda; o un {n6}% de probabilidad de que las siguientes ofrendas tengan uno de los SELLOS de la Trinidad que te faltan (con los tres: cura {n7} de ALMA).",
   "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max SOUL instead of flat damage; or a random DAMNED takes {n1}% max-SOUL damage at end of round; or you deal double damage.": "Cuando pulsas LISTO, se lanza al azar uno de tres para la ronda: cada CONDENADO recibe su distancia al OBJETIVO como % de su ALMA máxima en vez de daño fijo; o un CONDENADO al azar recibe un {n1}% de su ALMA máxima como daño al final de la ronda; o infliges el doble de daño.",
-  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "Cuando pulsas LISTO, se lanza al azar uno de tres: doble PECADO de todas las fuentes esta ronda; o +{n1} de PECADO; o {n2} rerolls gratis hasta el final de la siguiente ronda.",
+  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "Cuando pulsas LISTO, se lanza al azar uno de tres: doble PECADO de todas las fuentes esta ronda; o +{n1} de PECADO; o {n2} renovaciones gratis hasta el final de la siguiente ronda.",
   "When you press READY, {n1}% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.": "Cuando pulsas LISTO, {n1}% de probabilidad de que todos los CONDENADOS suban hasta la MEMORIA del CONDENADO vivo (no BOSS) con más MEMORIA y reciban un daño igual a su MEMORIA original.",
   "When you press READY, {n1}% chance that every revealed DAMNED deals {n2} damage to every other revealed DAMNED.": "Cuando pulsas LISTO, {n1}% de probabilidad de que cada CONDENADO revelado inflija {n2} de daño a cada otro CONDENADO revelado.",
   "When you press READY, {n1}% chance to make every personality STUBBORN.": "Cuando pulsas LISTO, {n1}% de probabilidad de volver TERCAS todas las personalidades.",
@@ -4843,7 +4917,7 @@ LOCALES["es"] = {
   "the BOUNTY on their head": "la CARGA que lleva encima",
   "the Moon": "Luna",
   "the Sun": "Sol",
-  "the next BOSS joining the game with {N}% more SOUL": "que el siguiente BOSS entre en la partida con un {N}% más de ALMA",
+  "the next BOSS joining the game with {N}% more SOUL": "al siguiente BOSS entrar en la partida con un {N}% más de ALMA",
   "undiscovered": "sin descubrir",
   "who claims you most": "quién te reclama más",
   "with Satan": "con Satanás",
@@ -4875,7 +4949,7 @@ LOCALES["es"] = {
   "{count} / {total} unlocked": "{count} / {total} desbloqueados",
   "{done} / {total} completed": "{done} / {total} completados",
   "{n1} ARTIFACTS": "{n1} ARTEFACTOS",
-  "{n1} rerolls": "{n1} rerolls",
+  "{n1} rerolls": "{n1} renovaciones",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "El {n1}% de la CARGA de BOSS de un BOSS se convierte en CARGA normal sobre ese BOSS, y el resto se reparte al azar entre los demás CONDENADOS como CARGA.",
   "{n1}nd Pentacle of Mars": "{n1}.º Pentáculo de Marte",
   "{n1}nd Pentacle of the Moon": "{n1}.º Pentáculo de la Luna",
@@ -5002,10 +5076,10 @@ LOCALES["es"] = {
   "{name} is triggering.": "{name} se está activando.",
   "Revealing SEAL effects.": "Revelando los efectos de los SELLOS.",
   "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round.": "Revisión de fin de partida. Pasa el cursor por las burbujas de daño, curación, PECADO y memoria para revisar la ronda.",
-  "Satan's toll: this reroll takes all your SIN": "El peaje de Satanás: este reroll se lleva todo tu PECADO",
+  "Satan's toll: this reroll takes all your SIN": "El peaje de Satanás: esta renovación se lleva todo tu PECADO",
   "Free x{count}": "Gratis x{count}",
   "Satan has sealed Devil's Offerings.": "Satanás ha sellado las Ofrendas del Diablo.",
-  "Sold out until reroll": "Agotado hasta el reroll",
+  "Sold out until reroll": "Agotado hasta renovar",
   "Owned": "Ya lo tienes",
   "Upgrade {price}": "Mejorar {price}",
   "Take free": "Llévatelo gratis",
@@ -5014,7 +5088,7 @@ LOCALES["es"] = {
   "Pact signed": "Pacto firmado",
   "previous: {value}": "anterior: {value}",
   "What do you want from Satan?": "¿Qué quieres de Satanás?",
-  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "Cada símbolo paga según cuántas veces salió. El DAÑO es un % del ALMA máxima a cada CONDENADO, infligido al final de la siguiente ronda. El ALMA no se puede bloquear. Tres ÉLITES dan a cada SELLO tuyo un nivel de ÉLITE. Los rerolls gratis se guardan hasta que los uses. Las apuestas de Satanás pagan FAVOR{favor}.",
+  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "Cada símbolo paga según cuántas veces salió. El DAÑO es un % del ALMA máxima a cada CONDENADO, infligido al final de la siguiente ronda. El ALMA no se puede bloquear. Tres ÉLITES dan a cada SELLO tuyo un nivel de ÉLITE. Las renovaciones gratis se guardan hasta que las uses. Las apuestas de Satanás pagan FAVOR{favor}.",
   "Pull the lever: spin for {cost} FAVOR": "Tira de la palanca: tirada por {cost} de FAVOR",
   "Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine ({cost} a spin).": "Satanás apuesta a que no puedes hacer esto. Una apuesta nueva cada ronda; gánala para ganar FAVOR para la tragaperras ({cost} por tirada).",
   "ARTIFACT SKIPPED": "ARTEFACTO OMITIDO",
@@ -5068,7 +5142,44 @@ LOCALES["es"] = {
   "Next round starts automatically after 10 seconds.": "La siguiente ronda empieza sola en 10 segundos.",
 
   // every other text, in the order of the worklist (node scripts/i18n-report.js es)
-  "ARTIFACTS resolve automatically when everyone is ready.": "Los ARTEFACTOS se resuelven solos cuando todos están listos."
+  "ARTIFACTS resolve automatically when everyone is ready.": "Los ARTEFACTOS se resuelven solos cuando todos están listos.",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js es)
+  "{list} and {last}": "{list} y {last}",
+  "\"{Q}\"?": "¿«{Q}»?",
+  "Again": "Otra vez",
+  "Deal signed: {request}.": "Pacto firmado: {request}.",
+  "You refused Satan.": "Rechazaste a Satanás.",
+  "He shall not offer a deal again this run.": "No volverá a ofrecer un trato en esta partida.",
+  "Satan is busy.": "Satanás está ocupado.",
+  "Kill another BOSS.": "Mata a otro BOSS.",
+  "{n1} SOUL": "{n1} de ALMA",
+  "{n1} SIN": "{n1} de PECADO",
+  "{n1} FAVOR": "{n1} de FAVOR",
+  "+{n1} ARTIFACT use": "+{n1} uso de ARTEFACTO",
+  "+{n1} ARTIFACT uses": "+{n1} usos de ARTEFACTO",
+  "{n1}x {name}": "{n1}x {name}",
+  "ELITE {name}": "ÉLITE {name}",
+  "the death of {name}": "la muerte de {name}",
+  "a second life": "una segunda vida",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js es)
+  "Bind": "Atar",
+  "Unbind": "Desatar",
+  "Click to bind.": "Haz clic para atarlo.",
+  "Click to unbind.": "Haz clic para desatarlo.",
+  "Remove run": "Borrar partida",
+  "Sell all": "Vender todo",
+  "Spirit {number} of the Ars Goetia": "Espíritu {number} del Ars Goetia",
+  "Stacks": "Acumulados",
+  "Stolen from {name}": "Robado a {name}",
+  "While it lives, {seal} is silenced.": "Mientras vive, {seal} queda silenciado.",
+  "its SEAL": "su SELLO",
+  "{count} of 3 in one slot": "{count} de 3 en un hueco",
+  "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Atado. Desde tu próxima partida empiezas con {seal}, y te enfrentarás a ti mismo en su lugar.",
+  "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Atado. Desde tu próxima partida {seal} no cuesta nada en las Ofrendas del Diablo, y te enfrentarás a ti mismo en su lugar.",
+  "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Átalo, y desde tu próxima partida empiezas con {seal}, y te enfrentarás a ti mismo en su lugar.",
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Átalo, y desde tu próxima partida {seal} no cuesta nada en las Ofrendas del Diablo, y te enfrentarás a ti mismo en su lugar."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["es"] = ["PECADOS", "ALMAS", "CONDENADO", "CONDENADA", "CONDENADAS", "OBJETIVOS", "MEMORIAS", "CARGAS", "VENENOS", "MASACRES", "TERCOS", "TERCA", "TERCAS"];
@@ -5104,7 +5215,7 @@ LOCALES["zh-Hans"] = {
   "DEAL": "契约",
   "Satan's Pact": "撒旦的契约",
   "Modifier": "修正值",
-  "Reroll": "Reroll",
+  "Reroll": "刷新",
   "Anchor": "锚定者",
   "Analyst": "分析者",
   "Follower": "跟随者",
@@ -5352,7 +5463,7 @@ LOCALES["zh-Hans"] = {
   "Beat the game without buying a SEAL": "不购买印记通关",
   "Beat the game without buying a seal": "不购买印记通关",
   "Beat the game without falling below {n1} SOUL": "灵魂不低于{n1}通关",
-  "Beat the game without using sin to reroll Devil's Offerings": "不花罪孽Reroll恶魔献礼而通关",
+  "Beat the game without using sin to reroll Devil's Offerings": "不花罪孽刷新恶魔献礼而通关",
   "Beat the game {n1} times (beat the {n2} BOSSES)": "通关{n1}次（击败{n2}个BOSS）",
   "Beat the game {n1} times (beat the {n2} bosses)": "通关{n1}次（击败{n2}个boss）",
   "Beat the game {n1} times (defeat the {n2} BOSSES)": "通关{n1}次（打倒{n2}个BOSS）",
@@ -5593,19 +5704,19 @@ LOCALES["zh-Hans"] = {
   "Every one of those points comes out of your SOUL.": "那些点数每一点都要从你的灵魂里扣。",
   "Every other soul at the table loses a tenth of their max SOUL.": "桌上其他每个灵魂失去其最大灵魂的十分之一。",
   "Every point between your guess and the TARGET is torn out of your SOUL.": "你的猜测与目标之间的每一点，都会从你的灵魂里撕下来。",
-  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "每次Reroll都会使所有罪人在回合结束时，每花1罪孽受到{n1}点伤害。",
+  "Every reroll makes all DAMNED take {n1} damage per SIN spent at end of round.": "每次刷新都会使所有罪人在回合结束时，每花1罪孽受到{n1}点伤害。",
   "Every round each of them guesses a number from {n1} to {n2}, and so do you.": "每回合他们每人猜一个{n1}到{n2}的数字，你也一样。",
   "Every round, if the previous TARGET was below {n1}, one random non-boss DAMNED guess becomes {n2}.": "每回合，若上一个目标低于{n1}，一名随机非BOSS罪人的猜测变为{n2}。",
   "Every time a DAMNED dies, all other DAMNED gain +{n1} or +{n2} BOUNTY.": "每当一名罪人死亡，其他所有罪人获得+{n1}或+{n2}负担。",
   "Every time a DAMNED dies, deal {n1} damage to every other DAMNED.": "每当一名罪人死亡，对其他每个罪人造成{n1}点伤害。",
   "Every time a DAMNED is eliminated, all other DAMNED take damage equal to that DAMNED's BOUNTY.": "每当一名罪人被淘汰，其他所有罪人受到等同于其负担的伤害。",
   "Every time a DAMNED is eliminated, deal {n1} damage to the DAMNED on its left and right.": "每当一名罪人被淘汰，对其左右两侧的罪人造成{n1}点伤害。",
-  "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round.": "每次你Reroll恶魔献礼，所有罪人在回合结束时受到所花罪孽两倍的伤害。",
+  "Every time you reroll Devil's Offerings, all DAMNED take damage equal to double the SIN spent at end of round.": "每次你刷新恶魔献礼，所有罪人在回合结束时受到所花罪孽两倍的伤害。",
   "Every {n1} ARTIFACTS used, this SEAL gains +{n2} damage.": "每使用{n1}个法器，此印记获得+{n2}伤害。",
   "Exactly on it.": "正中。",
   "Excess MEMORY that would be added to a DAMNED becomes {n1} damage per excess MEMORY to that DAMNED.": "本应加给罪人的溢出记忆，每1点转为对该罪人的{n1}点伤害。",
   "Excess MEMORY: +{excess} past the {limit} {rounds} finished.": "溢出记忆：超过上限（{limit}{rounds}）+{excess}。",
-  "FREE REROLLS": "免费REROLL",
+  "FREE REROLLS": "免费刷新",
   "FUCK YEAH, ready to go home and be the best chr-": "太他妈好了，准备回家做最好的基督——",
   "Farewell for now, and be sure I'll be keeping a close eye on you my dear flesh puppet...": "暂时再见，你可以确定我会紧紧盯着你，我亲爱的血肉傀儡……",
   "Fastest win": "最快胜利",
@@ -5626,7 +5737,7 @@ LOCALES["zh-Hans"] = {
   "Fourth Pentacle of Saturn": "土星第四五芒符",
   "France": "法国",
   "Frankincense": "乳香",
-  "Free rerolls are kept until used.": "免费Reroll会一直保留到使用为止。",
+  "Free rerolls are kept until used.": "免费刷新会一直保留到使用为止。",
   "Fresh stock every round.": "每回合都有新货。",
   "From a worm?": "从一条虫子那里？",
   "Fuck you both.": "去你们俩的。",
@@ -5992,10 +6103,10 @@ LOCALES["zh-Hans"] = {
   "Regardless, this display of defiance can't go any longer.": "无论如何，这种反抗不能再继续下去了。",
   "Remember the rules, you have to defeat ALL other Damned, and if my eyes don't deceive me I can definitely see many more left, ain't that right?": "记住规则，你必须打败所有其他罪人，如果我没看错，我确实还看到剩下很多，不是吗？",
   "Removed.": "已移除。",
-  "Reroll Devil's Offerings {n1} times": "Reroll恶魔献礼{n1}次",
-  "Reroll it.": "Reroll一下。",
-  "Reroll the Devil's Offerings {n1} times": "Reroll恶魔献礼{n1}次",
-  "Reroll {n1} times": "Reroll {n1}次",
+  "Reroll Devil's Offerings {n1} times": "刷新恶魔献礼{n1}次",
+  "Reroll it.": "刷新一下。",
+  "Reroll the Devil's Offerings {n1} times": "刷新恶魔献礼{n1}次",
+  "Reroll {n1} times": "刷新{n1}次",
   "Reserved for a future ARTIFACT.": "为未来的法器保留。",
   "Restart": "重新开始",
   "Resume": "继续",
@@ -6350,7 +6461,7 @@ LOCALES["zh-Hans"] = {
   "When you press READY, every other soul at the table pays a tenth of their max SOUL for it.": "当你按下“就绪”时，桌上其他每个灵魂都要为此付出其最大灵魂的十分之一。",
   "When you press READY, one of ten is cast at random: +{n1} MEMORY to every DAMNED; double {n2} random BOUNTIES; reveal {n3} DAMNED guesses next round; {n4} copies of one ARTIFACT; your guess is CRITICAL; {n5} DAMNED turn STUBBORN; the next SEAL offer is ELITE; a random DAMNED is eliminated; you take no TARGET-difference damage this round; or a {n6}% chance the next offerings hold one of the Trinity SEALS you are missing (with all three: heal {n7} SOUL).": "当你按下“就绪”时，随机施放十种之一：每个罪人+{n1}记忆；{n2}名随机罪人的负担翻倍；下一回合揭示{n3}名罪人的猜测；某个法器的{n4}个复制品；你的猜测为CRITICAL；{n5}名罪人成为固执者；下一个印记报价为精英；淘汰一名随机罪人；本回合你不受目标差伤害；或{n6}%概率下一批献礼包含一个你缺少的三位一体印记（三个都有：恢复{n7}灵魂）。",
   "When you press READY, one of three is cast at random for the round: every DAMNED takes its TARGET difference as % of its max SOUL instead of flat damage; or a random DAMNED takes {n1}% max-SOUL damage at end of round; or you deal double damage.": "当你按下“就绪”时，本回合随机施放三种之一：每个罪人以其最大灵魂的%承受目标差，而不是固定伤害；或一名随机罪人在回合结束时受到其最大灵魂{n1}%的伤害；或你造成双倍伤害。",
-  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "当你按下“就绪”时，随机施放三种之一：本回合所有来源的罪孽翻倍；或+{n1}罪孽；或{n2}次免费Reroll，直到下一回合结束。",
+  "When you press READY, one of three is cast at random: double SIN from every source this round; or +{n1} SIN; or {n2} free rerolls until the end of next round.": "当你按下“就绪”时，随机施放三种之一：本回合所有来源的罪孽翻倍；或+{n1}罪孽；或{n2}次免费刷新，直到下一回合结束。",
   "When you press READY, {n1}% chance for all DAMNED to gain up to the highest living non-boss DAMNED MEMORY and take damage equal to their original MEMORY.": "当你按下“就绪”时，有{n1}%概率使所有罪人的记忆升到记忆最多的存活非BOSS罪人的水平，并受到等同其原有记忆的伤害。",
   "When you press READY, {n1}% chance that every revealed DAMNED deals {n2} damage to every other revealed DAMNED.": "当你按下“就绪”时，有{n1}%概率使每个已揭示的罪人对其他每个已揭示的罪人造成{n2}点伤害。",
   "When you press READY, {n1}% chance to make every personality STUBBORN.": "当你按下“就绪”时，有{n1}%概率把所有性格变为固执者。",
@@ -6533,7 +6644,7 @@ LOCALES["zh-Hans"] = {
   "{count} / {total} unlocked": "{count} / {total} 已解锁",
   "{done} / {total} completed": "{done} / {total} 已完成",
   "{n1} ARTIFACTS": "{n1}个法器",
-  "{n1} rerolls": "{n1}次Reroll",
+  "{n1} rerolls": "{n1}次刷新",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "BOSS的BOSS负担中有{n1}%变为该BOSS身上的普通负担，其余作为负担随机分给其他罪人。",
   "{n1}nd Pentacle of Mars": "火星第{n1}五芒符",
   "{n1}nd Pentacle of the Moon": "月亮第{n1}五芒符",
@@ -6660,10 +6771,10 @@ LOCALES["zh-Hans"] = {
   "{name} is triggering.": "{name}正在触发。",
   "Revealing SEAL effects.": "正在揭示印记效果。",
   "Game over inspection. Hover damage, healing, SIN, and memory bubbles to inspect the round.": "游戏结束检视。将鼠标悬停在伤害、治疗、罪孽和记忆气泡上查看本回合。",
-  "Satan's toll: this reroll takes all your SIN": "撒旦的过路费：这次Reroll会拿走你所有罪孽",
+  "Satan's toll: this reroll takes all your SIN": "撒旦的过路费：这次刷新会拿走你所有罪孽",
   "Free x{count}": "免费 x{count}",
   "Satan has sealed Devil's Offerings.": "撒旦封锁了恶魔献礼。",
-  "Sold out until reroll": "已售罄，Reroll后补货",
+  "Sold out until reroll": "已售罄，刷新后补货",
   "Owned": "已拥有",
   "Upgrade {price}": "升级 {price}",
   "Take free": "免费拿取",
@@ -6672,7 +6783,7 @@ LOCALES["zh-Hans"] = {
   "Pact signed": "契约已签",
   "previous: {value}": "上次：{value}",
   "What do you want from Satan?": "你想从撒旦那里得到什么？",
-  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "每个符号按出现的次数支付。伤害为每个罪人最大灵魂的%，在下一回合结束时造成。灵魂无法被格挡。三个精英使你的每个印记提升一个精英等级。免费Reroll会一直保留到使用为止。撒旦的赌约支付青睐{favor}。",
+  "Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.": "每个符号按出现的次数支付。伤害为每个罪人最大灵魂的%，在下一回合结束时造成。灵魂无法被格挡。三个精英使你的每个印记提升一个精英等级。免费刷新会一直保留到使用为止。撒旦的赌约支付青睐{favor}。",
   "Pull the lever: spin for {cost} FAVOR": "拉动拉杆：花{cost}青睐转一次",
   "Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine ({cost} a spin).": "撒旦赌你做不到。每回合一个新赌约；赢下它就能获得青睐，用于老虎机（每转{cost}）。",
   "ARTIFACT SKIPPED": "法器已跳过",
@@ -6726,7 +6837,45 @@ LOCALES["zh-Hans"] = {
   "Next round starts automatically after 10 seconds.": "下一回合将在10秒后自动开始。",
 
   // every other text, in the order of the worklist (node scripts/i18n-report.js zh-Hans)
-  "ARTIFACTS resolve automatically when everyone is ready.": "所有人就绪后法器会自动结算。"
+  "ARTIFACTS resolve automatically when everyone is ready.": "所有人就绪后法器会自动结算。",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js zh-Hans)
+  "{list} and {last}": "{list}和{last}",
+  ", ": "、",
+  "\"{Q}\"?": "“{Q}”？",
+  "Again": "再来",
+  "Deal signed: {request}.": "契约已签：{request}。",
+  "You refused Satan.": "你拒绝了撒旦。",
+  "He shall not offer a deal again this run.": "本局他不会再提出交易。",
+  "Satan is busy.": "撒旦正忙。",
+  "Kill another BOSS.": "再杀一个BOSS。",
+  "{n1} SOUL": "{n1}灵魂",
+  "{n1} SIN": "{n1}罪孽",
+  "{n1} FAVOR": "{n1}青睐",
+  "+{n1} ARTIFACT use": "+{n1}次法器使用",
+  "+{n1} ARTIFACT uses": "+{n1}次法器使用",
+  "{n1}x {name}": "{n1}个{name}",
+  "ELITE {name}": "精英 {name}",
+  "the death of {name}": "{name}之死",
+  "a second life": "第二条命",
+
+  // every other text, in the order of the worklist (node scripts/i18n-report.js zh-Hans)
+  "Bind": "束缚",
+  "Unbind": "解除束缚",
+  "Click to bind.": "点击束缚。",
+  "Click to unbind.": "点击解除束缚。",
+  "Remove run": "删除对局",
+  "Sell all": "全部出售",
+  "Spirit {number} of the Ars Goetia": "所罗门七十二柱第{number}柱",
+  "Stacks": "叠层",
+  "Stolen from {name}": "从{name}偷来",
+  "While it lives, {seal} is silenced.": "它存活时，{seal}会被封印。",
+  "its SEAL": "它的印记",
+  "{count} of 3 in one slot": "一个栏位中的{count}/3",
+  "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "已束缚。从下一局起你开局就带着{seal}，并将在它的位置面对你自己。",
+  "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "已束缚。从下一局起{seal}在恶魔献礼中免费，并且你将在它的位置面对你自己。",
+  "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "束缚它，从下一局起你开局就带着{seal}，并将在它的位置面对你自己。",
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "束缚它，从下一局起{seal}在恶魔献礼中免费，并且你将在它的位置面对你自己。"
 };
 "use strict";
 
@@ -21952,7 +22101,7 @@ function renderArcadeRunsMenu() {
             class="run-remove-button"
             data-remove-run-slot-id="${escapeAttr(slot.slotId)}"
             data-tooltip="REMOVE RUN"
-            aria-label="Remove run"
+            aria-label="${t("Remove run")}"
           >X</button>
         </article>
       `
@@ -23105,7 +23254,7 @@ function renderPvpSlot(participant, slot) {
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}
-          <div class="bot-health-heading"><span>SOUL ${participant.hp}/${participant.maxHp}</span></div>
+          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: participant.hp, max: participant.maxHp })}</span></div>
           <div class="health-bar">
             <div class="health-fill" style="width: ${hpPercent}%"></div>
           </div>
@@ -23376,8 +23525,8 @@ function renderTrinityTooltipHtml(pieces, sale) {
     </div>
     ${blocks.join("")}
     <div class="seal-tooltip-footer">
-      <span>${pieces.length} of 3 in one slot</span>
-      <span>Sell all ${sale}${SIN_MARK}</span>
+      <span>${t("{count} of 3 in one slot", { count: pieces.length })}</span>
+      <span>${t("Sell all")} ${sale}${SIN_MARK}</span>
     </div>
   `;
 }
@@ -23877,7 +24026,7 @@ function glyphTooltipHtml(title, label, body, note = "", extraHtml = "") {
 function bossStolenTooltipHtml(borrowed) {
   return `
     <div class="tooltip-stolen">
-      <div class="tooltip-stolen-title">Stolen from ${escapeHtml(borrowed.name)}</div>
+      <div class="tooltip-stolen-title">${t("Stolen from {name}", { name: escapeHtml(t(borrowed.name)) })}</div>
       <div class="tooltip-body">${descriptionHtml(borrowed.text)}</div>
     </div>
   `;
@@ -24560,7 +24709,7 @@ function renderActiveItem(item, index) {
         <div>
           <div class="item-name">${escapeHtml(t(item.name))}</div>
           ${memoryLine}
-          ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
+          ${pendingHere ? "" : `<div class="price">${t("Sell")} ${sale}${SIN_MARK}</div>`}
         </div>
         <span class="item-kind">${t("ARTIFACT")}</span>
       </div>
@@ -24613,7 +24762,7 @@ function renderPassives() {
         ? "triggered"
         : "";
     const suppressedClass = pieceIds.every((id) => isSealSuppressed(id)) ? "suppressed" : "";
-    const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
+    const counterBadge = item.id === "p39" ? `<div class="passive-counter">${t("Stacks")} ${item.counter || 0}</div>` : "";
     const sealImage = trinityHost
       ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil") +
         (revealClass ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil seal-fill-sigil") : "")
@@ -24668,7 +24817,7 @@ function renderOverlay() {
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
           ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${t(state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned")}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
-          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || t("Yes"))}</strong></div>` : ""}
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(t(state.pact.request || "Yes"))}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         </div>
@@ -28421,30 +28570,36 @@ function collectionDemonInfoHtml(key, pinned = false) {
     return `
       <div class="collection-info-status unslain">${t("Not defeated")}</div>
       <div class="collection-info-name">???</div>
-      <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
+      <div class="collection-info-number">${t("Spirit {number} of the Ars Goetia", { number })}</div>
       <div class="collection-info-note">${t("Not discovered yet: slay this BOSS in a run, or find it in one of Jesus' Gifts.")}</div>`;
   }
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
     <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
-    <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
-    ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
+    <div class="collection-info-number">${t("Spirit {number} of the Ars Goetia", { number })}</div>
+    ${seal ? `<div class="collection-info-text">${t("While it lives, {seal} is silenced.", { seal: escapeHtml(t(seal)) })}</div>` : ""}
     ${collectionDemonBindHtml(key, seal, pinned)}`;
 }
 
 function collectionDemonBindHtml(key, seal, pinned) {
   const bound = collectionBoundDemon() === key;
   const archangel = Boolean(ARCHANGEL_BY_KEY[key]);
-  const sealName = seal ? escapeHtml(seal) : "its SEAL";
-  const sealText = archangel ? `you start with ${sealName}` : `${sealName} costs nothing in Devil's Offerings`;
-  const text = bound
-    ? `Bound. From your next run, ${sealText}, and you will face yourself in its place.`
-    : `Bind it, and from your next run ${sealText}, and you will face yourself in its place.`;
+  const sealName = seal ? escapeHtml(t(seal)) : t("its SEAL");
+  const text = t(
+    bound
+      ? archangel
+        ? "Bound. From your next run, you start with {seal}, and you will face yourself in its place."
+        : "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place."
+      : archangel
+        ? "Bind it, and from your next run you start with {seal}, and you will face yourself in its place."
+        : "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.",
+    { seal: sealName }
+  );
   const runNote = state.mode === "arcade" && state.boundDemon === key ? `<div class="collection-info-note">${t("Bound in this run.")}</div>` : "";
   const control = pinned
-    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${bound ? "Unbind" : "Bind"}</button>`
-    : `<div class="collection-info-note">Click to ${bound ? "unbind" : "bind"}.</div>`;
+    ? `<button type="button" class="collection-bind-button" data-collection-bind="${escapeAttr(key)}">${t(bound ? "Unbind" : "Bind")}</button>`
+    : `<div class="collection-info-note">${t(bound ? "Click to unbind." : "Click to bind.")}</div>`;
   return `
     <div class="collection-info-bind">
       <div class="collection-info-text">${text}</div>
@@ -29315,7 +29470,7 @@ function startGiftOpening(packKey) {
     <div class="gift-flip">
       <div class="gift-flip-slot"></div>
       <div class="gift-reveal-actions">
-        <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>Again · ${formatNumber(pack.price)}${KARMA_MARK}</button>
+        <button type="button" class="collection-bind-button" data-gift-again${karmaCanPay(pack.price) ? "" : " disabled"}>${t("Again")} · ${formatNumber(pack.price)}${KARMA_MARK}</button>
         <button type="button" class="collection-bind-button" data-gift-continue>${t("Continue")}</button>
       </div>
     </div>
@@ -30380,15 +30535,30 @@ function satanPactApplyTricks(answer, t) {
 }
 
 /* ---- prices ---- */
+// one of his lines with its {VALUES} filled in, in the player's language: the line, and the names put into it
 function satanPactFill(text, vars = {}) {
-  return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
+  return String(t(text)).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? satanPactFillValue(vars[key]) : whole));
+}
+
+function satanPactFillValue(value) {
+  return typeof value === "string" && /[A-Za-z]/.test(value) ? t(value) : String(value);
+}
+
+// price words in the player's language ("t" is the price table inside the functions below), and a list of them
+function satanPactText(text) {
+  return t(text);
+}
+
+function satanPactJoin(texts) {
+  if (texts.length <= 1) return texts[0] || "";
+  return t("{list} and {last}", { list: texts.slice(0, -1).join(t(", ")), last: texts[texts.length - 1] });
 }
 
 // the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
 function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
   if (part.type === "bossHealth") {
     const health = satanPactFill(t.bossHealth, { N: part.pct });
-    return part.zeroBounty ? [health, t.bossBounty] : [health];
+    return part.zeroBounty ? [health, satanPactText(t.bossBounty)] : [health];
   }
   return [satanPactPartText(part, t)];
 }
@@ -30404,15 +30574,15 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactPartTexts(part, t).join(" and ");
+      return satanPactJoin(satanPactPartTexts(part, t));
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
       return satanPactFill(t.damageTaken, { N: part.pct, M: part.rounds });
     case "noArtifacts":
-      return t.noArtifacts;
+      return satanPactText(t.noArtifacts);
     case "keepBounty":
-      return t.keepBounty;
+      return satanPactText(t.keepBounty);
     default:
       return "";
   }
@@ -30422,9 +30592,8 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
 function satanPactPriceText(parts, lineKey = null) {
   const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
   const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
-  if (!texts.length) return t.nothing;
-  if (texts.length === 1) return texts[0];
-  return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
+  if (!texts.length) return satanPactText(t.nothing);
+  return satanPactJoin(texts);
 }
 
 function satanPactRandomOf(options) {
@@ -30693,7 +30862,7 @@ function satanPactAnswerLines(answer) {
   vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = [...reactions, ...answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   // the question goes on the same line as the price, so YES / NO sit right under it
-  const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
+  const question = SATAN_DEAL_LINES.question.map(([, text]) => t(text)).join(" ");
   const last = lines[lines.length - 1];
   lines[lines.length - 1] = [last[0], `${last[1]} ${question}`];
   return lines;
@@ -30918,7 +31087,7 @@ function satanDealShowAsk() {
     <button class="intro-choice-button" type="submit">${escapeHtml(t(SATAN_DEAL_BUTTONS.ask))}</button>
     <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(t(SATAN_DEAL_BUTTONS.leave))}</button>`;
   const input = form.querySelector("input");
-  input.placeholder = SATAN_DEAL_LINES.askPlaceholder;
+  input.placeholder = t(SATAN_DEAL_LINES.askPlaceholder);
   form.addEventListener("click", (event) => event.stopPropagation());
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -31050,7 +31219,7 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
+    tooltip = pact.outcome === "signed" ? t("Deal signed: {request}.", { request: t(pact.request) }) : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
     tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {

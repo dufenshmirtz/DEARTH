@@ -332,7 +332,7 @@ function renderArcadeRunsMenu() {
             class="run-remove-button"
             data-remove-run-slot-id="${escapeAttr(slot.slotId)}"
             data-tooltip="REMOVE RUN"
-            aria-label="Remove run"
+            aria-label="${t("Remove run")}"
           >X</button>
         </article>
       `
@@ -1485,7 +1485,7 @@ function renderPvpSlot(participant, slot) {
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}
-          <div class="bot-health-heading"><span>SOUL ${participant.hp}/${participant.maxHp}</span></div>
+          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: participant.hp, max: participant.maxHp })}</span></div>
           <div class="health-bar">
             <div class="health-fill" style="width: ${hpPercent}%"></div>
           </div>
@@ -1756,8 +1756,8 @@ function renderTrinityTooltipHtml(pieces, sale) {
     </div>
     ${blocks.join("")}
     <div class="seal-tooltip-footer">
-      <span>${pieces.length} of 3 in one slot</span>
-      <span>Sell all ${sale}${SIN_MARK}</span>
+      <span>${t("{count} of 3 in one slot", { count: pieces.length })}</span>
+      <span>${t("Sell all")} ${sale}${SIN_MARK}</span>
     </div>
   `;
 }
@@ -2257,7 +2257,7 @@ function glyphTooltipHtml(title, label, body, note = "", extraHtml = "") {
 function bossStolenTooltipHtml(borrowed) {
   return `
     <div class="tooltip-stolen">
-      <div class="tooltip-stolen-title">Stolen from ${escapeHtml(borrowed.name)}</div>
+      <div class="tooltip-stolen-title">${t("Stolen from {name}", { name: escapeHtml(t(borrowed.name)) })}</div>
       <div class="tooltip-body">${descriptionHtml(borrowed.text)}</div>
     </div>
   `;
@@ -2940,7 +2940,7 @@ function renderActiveItem(item, index) {
         <div>
           <div class="item-name">${escapeHtml(t(item.name))}</div>
           ${memoryLine}
-          ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
+          ${pendingHere ? "" : `<div class="price">${t("Sell")} ${sale}${SIN_MARK}</div>`}
         </div>
         <span class="item-kind">${t("ARTIFACT")}</span>
       </div>
@@ -2993,7 +2993,7 @@ function renderPassives() {
         ? "triggered"
         : "";
     const suppressedClass = pieceIds.every((id) => isSealSuppressed(id)) ? "suppressed" : "";
-    const counterBadge = item.id === "p39" ? `<div class="passive-counter">Stacks ${item.counter || 0}</div>` : "";
+    const counterBadge = item.id === "p39" ? `<div class="passive-counter">${t("Stacks")} ${item.counter || 0}</div>` : "";
     const sealImage = trinityHost
       ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil") +
         (revealClass ? renderTrinitySlotSigil(pieceIds, "equipped-seal-sigil seal-fill-sigil") : "")
@@ -3048,7 +3048,7 @@ function renderOverlay() {
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
           ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${t(state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned")}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
-          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || t("Yes"))}</strong></div>` : ""}
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(t(state.pact.request || "Yes"))}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         </div>
