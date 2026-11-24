@@ -8,6 +8,12 @@ const sourceDir = path.join(root, "src", "game");
 const outputFile = path.join(root, "main.js");
 
 const SOURCE_FILES = [
+  "00-i18n.js",
+  "locales/en.js",
+  "locales/el.js",
+  "locales/de.js",
+  "locales/es.js",
+  "locales/zh-Hans.js",
   "00-audio-loudness.js",
   "00-audio-sfx-config.js",
   "00-config-data-state.js",

@@ -572,71 +572,77 @@ function renderRecordsMenu() {
 }
 
 // ---------- Settings (main menu and Pause share it) ----------
-const SETTINGS_TABS = [
-  { key: "audio", label: "Audio" },
-  { key: "display", label: "Display" },
-  { key: "gameplay", label: "Gameplay" }
-];
+// tab names: settings.tab.<key> in locales/en.js
+const SETTINGS_TABS = [{ key: "audio" }, { key: "display" }, { key: "gameplay" }];
 
 // settings picked from a short list with ‹ ›
+// label: its settings.* key in locales/en.js; a value's name is settings.<key>.<value>
 const SETTING_CHOICES = {
   animSpeed: {
-    label: "Animation speed",
+    label: "settings.animSpeed",
     values: () => ANIM_SPEED_VALUES,
     get: () => animSpeed(),
     set: (value) => { state.display.animSpeed = value; },
-    text: (value) => `x${value}`
+    text: (value) => t("settings.animSpeed.value", { value })
   },
   outlineBoil: {
-    label: "Outline animation",
+    label: "settings.outlineBoil",
     values: () => [0, 1, 2, 3],
     get: () => clamp(Math.round(Number(state.display.outlineBoil) || 0), 0, 3),
     set: (value) => { state.display.outlineBoil = value; },
-    text: (value) => OUTLINE_BOIL_LABELS[value] || "Off"
+    text: (value) => t(`settings.outlineBoil.${value}`)
   },
   screenShake: {
-    label: "Screen shake",
+    label: "settings.screenShake",
     values: () => [0, 1, 2],
     get: () => (Number.isFinite(state.display.screenShake) ? state.display.screenShake : 2),
     set: (value) => { state.display.screenShake = value; },
-    text: (value) => SCREEN_SHAKE_LABELS[value] || "Full"
+    text: (value) => t(`settings.screenShake.${value}`)
   },
   flashes: {
-    label: "Flashes",
+    label: "settings.flashes",
     values: () => [1, 0],
     get: () => (state.display.flashes ? 1 : 0),
     set: (value) => { state.display.flashes = value; },
-    text: (value) => FLASH_LABELS[value] || "Full"
+    text: (value) => t(`settings.flashes.${value}`)
   },
   textSize: {
-    label: "Text size",
+    label: "settings.textSize",
     values: () => [0, 1],
     get: () => (state.display.textSize ? 1 : 0),
     set: (value) => { state.display.textSize = value; },
-    text: (value) => TEXT_SIZE_LABELS[value] || "Normal"
+    text: (value) => t(`settings.textSize.${value}`)
   },
   // the two guide lines on the game screen: the "Pick a number" hint and the slot machine's "Satan's bets pay FAVOR."
   guideText: {
-    label: "Guide text",
+    label: "settings.guideText",
     values: () => [1, 0],
     get: () => (state.display.guideText === 0 ? 0 : 1),
     set: (value) => { state.display.guideText = value; },
-    text: (value) => GUIDE_TEXT_LABELS[value] || "Shown"
+    text: (value) => t(`settings.guideText.${value}`)
   },
   // the slot machine's look: Default (framed box, SPIN button) or Fancy (old machine with a lever)
   slotMachine: {
-    label: "Slot machine",
+    label: "settings.slotMachine",
     values: () => [0, 1],
     get: () => (state.display.slotMachine === 1 ? 1 : 0),
     set: (value) => { state.display.slotMachine = value; },
-    text: (value) => SLOT_MACHINE_LOOK_LABELS[value] || "Default"
+    text: (value) => t(`settings.slotMachine.${value}`)
   },
   fullscreen: {
-    label: "Window",
+    label: "settings.window",
     values: () => [0, 1],
     get: () => (isGameFullscreen() ? 1 : 0),
     set: (value) => setFullscreen(Boolean(value)),
-    text: (value) => (value ? "Fullscreen" : "Windowed")
+    text: (value) => t(`settings.window.${value ? 1 : 0}`)
+  },
+  // only shown once a second language is ready (Pause > DEV > Language switches to any language for testing)
+  language: {
+    label: "settings.language",
+    values: () => settingsLanguageCodes(),
+    get: () => currentLang(),
+    set: (value) => setLanguage(value),
+    text: (value) => languageName(value)
   }
 };
 
@@ -674,7 +680,7 @@ function settingSliderRow(prefix, key, label) {
   const id = `${prefix}-${key}`;
   return `
     <div class="sound-setting setting-row">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${escapeHtml(label)}</label>
       <input id="${id}" class="sound-slider" data-sound-setting="${key}" type="range" min="0" max="100" step="1" value="${value}" />
       <strong data-sound-value="${key}">${value}%</strong>
     </div>
@@ -685,7 +691,7 @@ function settingToggleRow(prefix, key, label) {
   const id = `${prefix}-${key}`;
   return `
     <label class="sound-toggle setting-row setting-toggle-row" for="${id}">
-      <span class="setting-label">${label}</span>
+      <span class="setting-label">${escapeHtml(label)}</span>
       <input id="${id}" data-sound-setting="${key}" type="checkbox" ${state.sound[key] ? "checked" : ""} />
     </label>
   `;
@@ -694,13 +700,14 @@ function settingToggleRow(prefix, key, label) {
 function settingChoiceRow(key) {
   const choice = SETTING_CHOICES[key];
   const value = choice.get();
+  const label = t(choice.label);
   return `
     <div class="setting-row setting-choice-row">
-      <span class="setting-label">${choice.label}</span>
+      <span class="setting-label">${escapeHtml(label)}</span>
       <div class="setting-choice">
-        <button class="setting-arrow" data-setting-choice="${key}" data-step="-1" aria-label="Previous ${choice.label}">&lsaquo;</button>
+        <button class="setting-arrow" data-setting-choice="${key}" data-step="-1" aria-label="${escapeHtml(t("settings.previous", { setting: label }))}">&lsaquo;</button>
         <strong data-setting-value="${key}">${escapeHtml(choice.text(value))}</strong>
-        <button class="setting-arrow" data-setting-choice="${key}" data-step="1" aria-label="Next ${choice.label}">&rsaquo;</button>
+        <button class="setting-arrow" data-setting-choice="${key}" data-step="1" aria-label="${escapeHtml(t("settings.next", { setting: label }))}">&rsaquo;</button>
       </div>
     </div>
   `;
@@ -714,19 +721,20 @@ function renderSettingsPanel(prefix) {
   const tab = SETTINGS_TABS.some((entry) => entry.key === state.settingsTab) ? state.settingsTab : "audio";
   const tabs = SETTINGS_TABS.map(
     (entry) =>
-      `<button class="settings-tab ${entry.key === tab ? "active" : ""}" data-settings-tab="${entry.key}" role="tab" aria-selected="${entry.key === tab}">${entry.label}</button>`
+      `<button class="settings-tab ${entry.key === tab ? "active" : ""}" data-settings-tab="${entry.key}" role="tab" aria-selected="${entry.key === tab}">${escapeHtml(t(`settings.tab.${entry.key}`))}</button>`
   ).join("");
   let rows = "";
   if (tab === "audio") {
     rows = [
-      settingSliderRow(prefix, "masterVolume", "Master"),
-      settingSliderRow(prefix, "musicVolume", "Music"),
-      settingSliderRow(prefix, "sfxVolume", "Effects"),
-      settingToggleRow(prefix, "muted", "Mute all"),
-      settingToggleRow(prefix, "muteInBackground", "Mute in background")
+      settingSliderRow(prefix, "masterVolume", t("settings.master")),
+      settingSliderRow(prefix, "musicVolume", t("settings.music")),
+      settingSliderRow(prefix, "sfxVolume", t("settings.effects")),
+      settingToggleRow(prefix, "muted", t("settings.muteAll")),
+      settingToggleRow(prefix, "muteInBackground", t("settings.muteInBackground"))
     ].join("");
   } else if (tab === "display") {
     rows = [
+      settingsLanguageCodes().length > 1 ? settingChoiceRow("language") : "",
       fullscreenSupported() ? settingChoiceRow("fullscreen") : "",
       settingChoiceRow("outlineBoil"),
       settingChoiceRow("screenShake"),
@@ -738,12 +746,12 @@ function renderSettingsPanel(prefix) {
   } else {
     const controls = isNativeArcadeApp()
       ? ""
-      : settingNote("<b>Enter</b> Guess, Ready, Next round &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> more on a tooltip");
+      : settingNote(t("settings.controlsHtml"));
     rows = [
       settingChoiceRow("animSpeed"),
-      settingNote("Speeds up SEAL triggers and the READY reveal."),
+      settingNote(escapeHtml(t("settings.animSpeedNote"))),
       controls,
-      prefix === "menu" ? `<button class="small-button settings-wide-button" data-settings-replay-story>Replay the story</button>` : ""
+      prefix === "menu" ? `<button class="small-button settings-wide-button" data-settings-replay-story>${escapeHtml(t("settings.replayStory"))}</button>` : ""
     ].join("");
   }
   return `
@@ -751,7 +759,7 @@ function renderSettingsPanel(prefix) {
       <div class="settings-tabs" role="tablist">${tabs}</div>
       <div class="settings-rows" role="tabpanel">${rows}</div>
       <div class="settings-footer">
-        <button class="small-button settings-reset-button" data-settings-reset>Reset to defaults</button>
+        <button class="small-button settings-reset-button" data-settings-reset>${escapeHtml(t("settings.reset"))}</button>
       </div>
     </div>
   `;
@@ -1213,6 +1221,10 @@ function renderSelfStackingDevPanel() {
       <div class="dev-summon-row">
         <button class="small-button${slotMachineUnlocked() ? " active" : ""}" data-pause-action="unlock-slot" data-tooltip="${slotMachineUnlocked() ? "Already unlocked" : "Show the slot machine and Satan's bets now, as if Satan's first-win speech had been heard (kept on this device)"}">Unlock slot machine</button>
         <button class="small-button${satanDealUnlocked() ? " active" : ""}" data-pause-action="unlock-deal" data-tooltip="${satanDealUnlocked() ? "Already unlocked" : "Show the DEAL button now, as if Satan had named it after your first BOSS (kept on this device)"}">Unlock DEAL</button>
+      </div>
+      <h2>Language (testing)</h2>
+      <div class="dev-summon-row">
+        ${testingLanguageCodes().map((code) => `<button class="small-button${code === currentLang() ? " active" : ""}" data-pause-action="lang:${code}" data-tooltip="Show the game in this language, finished or not (missing text shows in English; Pseudo marks text that is not translatable yet)">${escapeHtml(languageName(code))}</button>`).join("")}
       </div>
       <h2>Faustian Codex (testing)</h2>
       <div class="dev-summon-row">
@@ -3143,7 +3155,7 @@ function updateDisplaySetting(key, value) {
   saveDisplaySettings();
   applyDisplaySettings();
   document.querySelectorAll(`[data-display-value="${key}"]`).forEach((label) => {
-    label.textContent = OUTLINE_BOIL_LABELS[state.display.outlineBoil] || "Off";
+    label.textContent = t(`settings.outlineBoil.${clamp(Math.round(Number(state.display.outlineBoil) || 0), 0, 3)}`);
   });
   document.querySelectorAll(`[data-display-setting="${key}"]`).forEach((control) => {
     if (Number(control.value) !== state.display.outlineBoil) control.value = String(state.display.outlineBoil);
@@ -3164,6 +3176,12 @@ function updateSoundSetting(key, value, renderAfter = true) {
 function handlePauseAction(action) {
   if (typeof action === "string" && action.startsWith("summon:")) {
     devSummonArchangel(action.slice("summon:".length));
+    return;
+  }
+  if (typeof action === "string" && action.startsWith("lang:")) {
+    // testing: any language, finished or not (kept on this device; Settings > Display offers only the ready ones)
+    setLanguage(action.slice("lang:".length));
+    render();
     return;
   }
   if (action === "settings" || action === "collection") {

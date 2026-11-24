@@ -52,15 +52,10 @@ const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
-const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
 const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
 // Settings that are a choice between a few values (Settings > Display / Gameplay)
 const ANIM_SPEED_VALUES = [1, 2, 4];
-const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
-const FLASH_LABELS = ["Reduced", "Full"];
-const TEXT_SIZE_LABELS = ["Normal", "Large"];
-const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
-const SLOT_MACHINE_LOOK_LABELS = ["Default", "Fancy"];
+// their names on screen are the settings.* keys in locales/en.js
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";

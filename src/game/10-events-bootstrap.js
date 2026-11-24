@@ -495,6 +495,7 @@ desktopApp()?.onFullscreenChange?.(() => {
   updateFullscreenLayoutClass();
 });
 
+loadLanguageSetting();
 loadSoundSettings();
 loadDisplaySettings();
 installAnimationSpeed();
