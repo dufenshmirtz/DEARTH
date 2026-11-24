@@ -258,7 +258,7 @@ const NEW_RECORD_LABELS = {
   mostBossEliminations: "Most BOSS kills",
   mostOverallDamage: "Most damage dealt",
   mostSingleRoundDamage: "Most damage in one round",
-  mostPentakills: "Most PENTAKILLS",
+  mostPentakills: "Most MASSACRES",
   mostRoundEliminations: "Most KOs in one round",
   mostOverallSealDamage: "Most damage by one SEAL",
   mostRoundSealDamage: "Most SEAL damage in one round",

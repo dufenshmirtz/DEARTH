@@ -1038,17 +1038,17 @@ function checkRoundPentakillBonus() {
   round.pentakillPopup = true;
   // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
-  const healed = healPlayer(3, null, "PENTAKILL");
-  const gained = gainCredits(8, false, "PENTAKILL");
+  const healed = healPlayer(3, null, "MASSACRE");
+  const gained = gainCredits(8, false, "MASSACRE");
   queueSelfStackingPentakillDamage();
-  round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
+  round.roundEvents.push(`MASSACRE! Healed ${healed} and gained ${gained} SIN.`);
   applyKalhaPentakillUpgrade();
   orderedPassiveEffectEntries("p130").forEach((entry) => {
     const levels = passiveEntryEliteLevels(entry);
     if (levels <= 0) return;
     const extra = gainCredits(2 * levels, true, ITEMS.p130.name);
     markPassiveEntryTriggered(entry);
-    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the PENTAKILL.`);
+    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the MASSACRE.`);
   });
 }
 

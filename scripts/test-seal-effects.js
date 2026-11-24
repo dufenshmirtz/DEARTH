@@ -765,7 +765,7 @@ test("Corruption shows the changed guess: the effective guess and what was typed
   `);
 });
 
-test("Seal of Satan costs 40 SIN and the Seal of Raphael (p101) stacks +20 per PENTAKILL", () => {
+test("Seal of Satan costs 40 SIN and the Seal of Raphael (p101) stacks +20 per MASSACRE", () => {
   game()(`
     assert.equal(ITEMS.p111.price, 40);
     assert.equal(SELF_STACKING_SEAL_SPECS.p101.increment, 20);
@@ -824,7 +824,7 @@ test("Seal of Sachiel (p100): counts only regular BOUNTY, of all 5 DAMNED in the
   `);
 });
 
-test("Seal of Raphael (p101): PENTAKILL damage waits for the NEXT end of round and hits the new DAMNED", () => {
+test("Seal of Raphael (p101): MASSACRE damage waits for the NEXT end of round and hits the new DAMNED", () => {
   const run = game();
   run(`
     fixture([["p101"]], [10, 20, 30, 40, 50]);
@@ -1044,7 +1044,7 @@ test("Zilon converts 40% of a BOSS BOUNTY to its BOUNTY (+5% per ELITE level) an
   }
 });
 
-test("Kalha upgrades a random upgradable SEAL on every PENTAKILL and cannot be upgraded itself", () => {
+test("Kalha upgrades a random upgradable SEAL on every MASSACRE and cannot be upgraded itself", () => {
   game()(`
     fixture([["p122"], ["p74"]], [50, 50, 50, 50, 50]);
     state.roundState.eliminationsThisRound = BOT_COUNT;
@@ -4210,7 +4210,7 @@ test("Satan's Bets read as they were written", () => {
     const other = { id: "y", name: "Azazel" };
     const expected = {
       critical: "Get a critical hit",
-      pentakill: "Get a pentakill",
+      pentakill: "Get a massacre",
       noArtifacts: "Don't use artifacts this round",
       kill2: "Eliminate two Damned",
       kill3: "Eliminate three Damned",
@@ -5001,8 +5001,8 @@ test("Unlocks: every locked SEAL has the designer's achievement, worded as writt
       p79: "Have 666 sin",
       p126: "Have Serafim steal 0 sin from you when he is first summoned",
       p125: "Have 5 bosses active at the same time",
-      p128: "Score 1 Pentakill while Dantre is active",
-      p80: "Score 3 Pentakills in a row",
+      p128: "Score 1 Massacre while Dantre is active",
+      p80: "Score 3 Massacres in a row",
       p109: "Score 3 critical hits in a row",
       p77: "Score 8 critical hits in a row",
       p101: "Be at 100 SOUL and eliminate a Damned",

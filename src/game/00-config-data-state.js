@@ -835,7 +835,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Kalha",
     price: 16,
-    description: "Every PENTAKILL gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
+    description: "Every MASSACRE gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
   },
   p123: {
     id: "p123",
@@ -891,7 +891,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Valac",
     price: 15,
-    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
+    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes MASSACRES give +2 SIN each level."
   },
   // the Trinity SEALS: sold apart, but every one you own shares a single SEAL slot (see TRINITY_SEAL_IDS)
   p131: {
@@ -1055,7 +1055,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Raphael",
     price: 15,
-    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+    description: "Whenever you make a MASSACRE, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
@@ -1529,7 +1529,7 @@ const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
-  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
+  p101: { key: "pentakill", label: "MASSACRE", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
   p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }

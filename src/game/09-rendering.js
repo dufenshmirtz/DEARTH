@@ -471,13 +471,13 @@ function renderRecordsMenu() {
   } else if (tab === "eliminations") {
     plaques = [
       runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
-      runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostPentakills", "Most MASSACRES"),
       runPlaque("mostRoundEliminations", "KOs in one round"),
       runPlaque("mostOverallDamage", "Most damage"),
       runPlaque("mostSingleRoundDamage", "Damage in one round"),
       lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
       lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
-      lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
+      lifetimePlaque("MASSACRES in a row", progress.best.pentakillStreak || 0, "in one run"),
       lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
     ].join("");
   } else if (tab === "seals") {
@@ -1925,7 +1925,7 @@ function watchMoments() {
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
 
   if (!before.pentakill && now.pentakill) {
-    startMoment("pentakill", "Pentakill");
+    startMoment("pentakill", "Massacre");
     playPentakillSfx();
     hitStop(80);
     screenShake(10, 460);
@@ -2949,7 +2949,7 @@ function renderOverlay() {
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
-          ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
+          ${statRow("Massacres", formatNumber(stats.pentakills || 0))}
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>

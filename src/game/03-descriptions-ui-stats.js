@@ -144,7 +144,7 @@ function itemDescription(item) {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
-  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
+  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. MASSACRES give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") {
     return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
   }
@@ -683,7 +683,7 @@ const ARCHANGEL_ABILITY_TEXT = {
   michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
   gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
   samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
-  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A MASSACRE spares you.",
   sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
   anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
   cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
@@ -1137,7 +1137,7 @@ function applyPendingSelfStackingPentakillDamage() {
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued PENTAKILL damage to ${bot.name}.`,
+    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued MASSACRE damage to ${bot.name}.`,
     ITEMS.p101.name
   );
 }

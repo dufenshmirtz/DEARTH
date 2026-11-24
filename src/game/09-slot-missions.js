@@ -378,7 +378,7 @@ const MISSIONS = [
   // only while the run's one deal is still to be made
   { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned },
   // all five DAMNED in one round (checkRoundPentakillBonus)
-  { id: "pentakill", value: 8, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill }
+  { id: "pentakill", value: 8, when: "resolve", text: "Get a massacre", check: (f) => f.pentakill }
 ];
 
 const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));

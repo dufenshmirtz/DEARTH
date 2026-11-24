@@ -1355,7 +1355,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Kalha",
     price: 16,
-    description: "Every PENTAKILL gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
+    description: "Every MASSACRE gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
   },
   p123: {
     id: "p123",
@@ -1411,7 +1411,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Valac",
     price: 15,
-    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
+    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes MASSACRES give +2 SIN each level."
   },
   // the Trinity SEALS: sold apart, but every one you own shares a single SEAL slot (see TRINITY_SEAL_IDS)
   p131: {
@@ -1575,7 +1575,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Raphael",
     price: 15,
-    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+    description: "Whenever you make a MASSACRE, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
@@ -2049,7 +2049,7 @@ const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
-  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
+  p101: { key: "pentakill", label: "MASSACRE", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
   p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
@@ -4278,7 +4278,7 @@ const NEW_RECORD_LABELS = {
   mostBossEliminations: "Most BOSS kills",
   mostOverallDamage: "Most damage dealt",
   mostSingleRoundDamage: "Most damage in one round",
-  mostPentakills: "Most PENTAKILLS",
+  mostPentakills: "Most MASSACRES",
   mostRoundEliminations: "Most KOs in one round",
   mostOverallSealDamage: "Most damage by one SEAL",
   mostRoundSealDamage: "Most SEAL damage in one round",
@@ -6348,7 +6348,7 @@ function itemDescription(item) {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
-  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
+  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. MASSACRES give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") {
     return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
   }
@@ -6887,7 +6887,7 @@ const ARCHANGEL_ABILITY_TEXT = {
   michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
   gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
   samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
-  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A MASSACRE spares you.",
   sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
   anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
   cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
@@ -7341,7 +7341,7 @@ function applyPendingSelfStackingPentakillDamage() {
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued PENTAKILL damage to ${bot.name}.`,
+    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued MASSACRE damage to ${bot.name}.`,
     ITEMS.p101.name
   );
 }
@@ -12203,17 +12203,17 @@ function checkRoundPentakillBonus() {
   round.pentakillPopup = true;
   // the sound plays with the PENTAKILL title card (watchMoments), not when the round resolves
   recordRunPentakill();
-  const healed = healPlayer(3, null, "PENTAKILL");
-  const gained = gainCredits(8, false, "PENTAKILL");
+  const healed = healPlayer(3, null, "MASSACRE");
+  const gained = gainCredits(8, false, "MASSACRE");
   queueSelfStackingPentakillDamage();
-  round.roundEvents.push(`PENTAKILL! Healed ${healed} and gained ${gained} SIN.`);
+  round.roundEvents.push(`MASSACRE! Healed ${healed} and gained ${gained} SIN.`);
   applyKalhaPentakillUpgrade();
   orderedPassiveEffectEntries("p130").forEach((entry) => {
     const levels = passiveEntryEliteLevels(entry);
     if (levels <= 0) return;
     const extra = gainCredits(2 * levels, true, ITEMS.p130.name);
     markPassiveEntryTriggered(entry);
-    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the PENTAKILL.`);
+    round.roundEvents.push(`${ITEMS.p130.name} paid ${extra} extra SIN for the MASSACRE.`);
   });
 }
 
@@ -15659,13 +15659,13 @@ function renderRecordsMenu() {
   } else if (tab === "eliminations") {
     plaques = [
       runPlaque("mostEliminations", "Most KOs", "in one run", { size: "hero" }),
-      runPlaque("mostPentakills", "Most PENTAKILLS"),
+      runPlaque("mostPentakills", "Most MASSACRES"),
       runPlaque("mostRoundEliminations", "KOs in one round"),
       runPlaque("mostOverallDamage", "Most damage"),
       runPlaque("mostSingleRoundDamage", "Damage in one round"),
       lifetimePlaque("DAMNED eliminated", progress.stats.eliminations || 0, "all time"),
       lifetimePlaque("Demons slain", progress.stats.goeticKills || 0, "all time"),
-      lifetimePlaque("PENTAKILLS in a row", progress.best.pentakillStreak || 0, "in one run"),
+      lifetimePlaque("MASSACRES in a row", progress.best.pentakillStreak || 0, "in one run"),
       lifetimePlaque("Rounds without a KO", progress.best.noKoStreak || 0, "in a row")
     ].join("");
   } else if (tab === "seals") {
@@ -17113,7 +17113,7 @@ function watchMoments() {
   if (now.credits > before.credits) momentSfx("sinGain", tier || newDowns.length ? beat + 380 : beat);
 
   if (!before.pentakill && now.pentakill) {
-    startMoment("pentakill", "Pentakill");
+    startMoment("pentakill", "Massacre");
     playPentakillSfx();
     hitStop(80);
     screenShake(10, 460);
@@ -18137,7 +18137,7 @@ function renderOverlay() {
           ${statRow("Round", state.round)}
           ${statRow("KOs", formatNumber(state.eliminations))}
           ${statRow("Bosses", formatNumber(state.bossKills))}
-          ${statRow("Pentakills", formatNumber(stats.pentakills || 0))}
+          ${statRow("Massacres", formatNumber(stats.pentakills || 0))}
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
@@ -20850,7 +20850,7 @@ const SEAL_UNLOCKS = {
   p77: { best: "critStreak", goal: 8, text: "Score 8 critical hits in a row" }, // Pale Horse
   p78: { best: "highestTarget", goal: 160, text: "Have the round target be 160 or above" }, // Souls of Martyrs
   p79: { best: "sinHeld", goal: 666, text: "Have 666 sin" }, // Creation Uncreated
-  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Pentakills in a row" }, // Silence in Heaven
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Massacres in a row" }, // Silence in Heaven
   // Boss Seals
   p121: { flag: "zilonBuyouts", text: "Buy out three entire shops while Zilon is active in one game" },
   p122: { flag: "sixEliteSeals", text: "Get six seals that are all level 1 elite or more" }, // Kalha
@@ -20859,7 +20859,7 @@ const SEAL_UNLOCKS = {
   p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 bosses active at the same time" }, // Petros-Pavlos
   p126: { flag: "serafimNoSteal", text: "Have Serafim steal 0 sin from you when he is first summoned" },
   p127: { flag: "threonArtifacts", text: "Use 4 artifacts in two consecutive rounds successfully while Threon is active" },
-  p128: { flag: "dantrePentakill", text: "Score 1 Pentakill while Dantre is active" },
+  p128: { flag: "dantrePentakill", text: "Score 1 Massacre while Dantre is active" },
   // Seal of Satan
   p111: { flag: "beatNoSealBought", text: "Beat the game without buying a seal" },
   // the Archangel Seals
@@ -20913,7 +20913,7 @@ const COLLECTION_BEST_LABELS = {
   roundGained: "most SIN gained in a round (sales not counted)",
   sinHeld: "most SIN held",
   critStreak: "CRITICALS in a row",
-  pentakillStreak: "PENTAKILLS in a row",
+  pentakillStreak: "MASSACRES in a row",
   noKoStreak: "rounds in a row without a KO",
   bossesAtOnce: "BOSSES active at once",
   eliteLevel: "highest ELITE level",
@@ -20929,7 +20929,7 @@ const COLLECTION_FLAG_LABELS = {
   oneHealth: "had exactly 1 SOUL",
   fullHealthBossKill: "one-shot a full-SOUL BOSS",
   fullHealthKill: "eliminated at 100 SOUL",
-  dantrePentakill: "PENTAKILL with Dantre active",
+  dantrePentakill: "MASSACRE with Dantre active",
   zilonBuyouts: "3 buyouts with Zilon active",
   serafimNoSteal: "Serafim stole nothing",
   threonArtifacts: "4 working ARTIFACTS over two rounds with Threon active",
@@ -25351,7 +25351,7 @@ const MISSIONS = [
   // only while the run's one deal is still to be made
   { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned },
   // all five DAMNED in one round (checkRoundPentakillBonus)
-  { id: "pentakill", value: 8, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill }
+  { id: "pentakill", value: 8, when: "resolve", text: "Get a massacre", check: (f) => f.pentakill }
 ];
 
 const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));

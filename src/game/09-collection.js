@@ -27,7 +27,7 @@ const SEAL_UNLOCKS = {
   p77: { best: "critStreak", goal: 8, text: "Score 8 critical hits in a row" }, // Pale Horse
   p78: { best: "highestTarget", goal: 160, text: "Have the round target be 160 or above" }, // Souls of Martyrs
   p79: { best: "sinHeld", goal: 666, text: "Have 666 sin" }, // Creation Uncreated
-  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Pentakills in a row" }, // Silence in Heaven
+  p80: { best: "pentakillStreak", goal: 3, text: "Score 3 Massacres in a row" }, // Silence in Heaven
   // Boss Seals
   p121: { flag: "zilonBuyouts", text: "Buy out three entire shops while Zilon is active in one game" },
   p122: { flag: "sixEliteSeals", text: "Get six seals that are all level 1 elite or more" }, // Kalha
@@ -36,7 +36,7 @@ const SEAL_UNLOCKS = {
   p125: { best: "bossesAtOnce", goal: 5, text: "Have 5 bosses active at the same time" }, // Petros-Pavlos
   p126: { flag: "serafimNoSteal", text: "Have Serafim steal 0 sin from you when he is first summoned" },
   p127: { flag: "threonArtifacts", text: "Use 4 artifacts in two consecutive rounds successfully while Threon is active" },
-  p128: { flag: "dantrePentakill", text: "Score 1 Pentakill while Dantre is active" },
+  p128: { flag: "dantrePentakill", text: "Score 1 Massacre while Dantre is active" },
   // Seal of Satan
   p111: { flag: "beatNoSealBought", text: "Beat the game without buying a seal" },
   // the Archangel Seals
@@ -90,7 +90,7 @@ const COLLECTION_BEST_LABELS = {
   roundGained: "most SIN gained in a round (sales not counted)",
   sinHeld: "most SIN held",
   critStreak: "CRITICALS in a row",
-  pentakillStreak: "PENTAKILLS in a row",
+  pentakillStreak: "MASSACRES in a row",
   noKoStreak: "rounds in a row without a KO",
   bossesAtOnce: "BOSSES active at once",
   eliteLevel: "highest ELITE level",
@@ -106,7 +106,7 @@ const COLLECTION_FLAG_LABELS = {
   oneHealth: "had exactly 1 SOUL",
   fullHealthBossKill: "one-shot a full-SOUL BOSS",
   fullHealthKill: "eliminated at 100 SOUL",
-  dantrePentakill: "PENTAKILL with Dantre active",
+  dantrePentakill: "MASSACRE with Dantre active",
   zilonBuyouts: "3 buyouts with Zilon active",
   serafimNoSteal: "Serafim stole nothing",
   threonArtifacts: "4 working ARTIFACTS over two rounds with Threon active",
