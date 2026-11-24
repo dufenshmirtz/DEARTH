@@ -2,7 +2,8 @@
 
 /* English text snapshot: the safety net for the translation work.
    It loads the whole game in a Node VM (no browser) and records every English text it can produce:
-   - every text table (UPPERCASE constants: Satan, Jesus, Codex, missions, unlocks, BOSSES...)
+   - every text in the tables (UPPERCASE constants: Satan, Jesus, Codex, missions, unlocks, BOSSES, and the
+     locale files' LOCALES), as one sorted list: moving a text from a table into locales/en.js leaves it unchanged
    - every SEAL and ARTIFACT: name, description, the text shown at stack 1-6, the tooltip HTML
    - the text of the screens built by the render* functions (menu, settings, collection...)
    - simulated arcade runs (fixed random seeds): every log line and round event, plus the SEAL stats,
@@ -119,6 +120,8 @@ function textStrings(value, prefix, out, seen = new Set()) {
 function staticTables(game) {
   const names = Array.from(new Set(Array.from(sources.matchAll(/^(?:const|let|var)\s+([A-Z][A-Z0-9_]+)\s*=/gm), (m) => m[1]))).sort();
   const out = {};
+  // only the English locale: the other languages are not part of the English text
+  const onlyEnglish = (name, value) => (name === "LOCALES" ? { en: value && value.en } : value);
   names.forEach((name) => {
     if (/^(AUDIO|SFX|MUSIC)_|LOUDNESS/.test(name)) return;
     let value;
@@ -128,9 +131,9 @@ function staticTables(game) {
       return;
     }
     if (name === "ITEMS") return; // recorded item by item below
-    textStrings(value, name, out);
+    textStrings(onlyEnglish(name, value), name, out);
   });
-  return out;
+  return Array.from(new Set(Object.values(out))).sort();
 }
 
 function itemTexts(game) {
@@ -280,9 +283,14 @@ function snapshotDifferences(expected, actual, limit = 30) {
     } else out.set(prefix, value);
     return out;
   };
-  const a = flat(expected);
-  const b = flat(actual);
   const lines = [];
+  // the tables are a sorted list of texts: report texts that went missing or are new
+  const before = new Set(expected.tables || []);
+  const after = new Set(actual.tables || []);
+  for (const text of before) if (!after.has(text) && lines.length < limit) lines.push(`tables: text no longer found\n    ${JSON.stringify(text)}`);
+  for (const text of after) if (!before.has(text) && lines.length < limit) lines.push(`tables: new text\n    ${JSON.stringify(text)}`);
+  const a = flat({ ...expected, tables: null });
+  const b = flat({ ...actual, tables: null });
   for (const key of new Set([...a.keys(), ...b.keys()])) {
     if (a.get(key) === b.get(key)) continue;
     lines.push(`${key}\n    was: ${JSON.stringify(a.get(key))}\n    now: ${JSON.stringify(b.get(key))}`);
