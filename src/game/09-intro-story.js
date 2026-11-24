@@ -405,7 +405,8 @@ function introPlaySoundMarks(from, to) {
   });
 }
 
-const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
+// Chinese ends its parts with its own full-width marks
+const INTRO_PUNCTUATION = new Set([".", ",", "!", "?", "。", "，", "！", "？"]);
 
 // a chunk ends after a run of . , ! ? (so "??", "!!" and "..." stay together); not inside numbers like 0.8
 function introChunkEnds(glyphs) {
@@ -459,7 +460,9 @@ function introSetWaiting(waiting) {
 }
 
 function introShowLine(index) {
-  const [speaker, text] = introState.lines[index];
+  const [speaker, englishText] = introState.lines[index];
+  // the line in the player's language (a translation keeps the sound marks of INTRO_MARKS where they belong)
+  const text = t(englishText);
   introState.lineIndex = index;
   introState.glyphs = introGlyphs(text);
   introState.ends = introChunkEnds(introState.glyphs);

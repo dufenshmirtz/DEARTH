@@ -802,9 +802,11 @@ function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+// text shown on screen: in the player's language (t() translates English the code built, see 00-i18n.js),
+// then the keywords in the game's style
 function descriptionHtml(value) {
   const protectedPhrases = [];
-  const plainTargetText = normalizeGameText(value);
+  const plainTargetText = t(normalizeGameText(value));
   const protectedText = [
     /\bpick a target\b/gi,
     /\beach target\b/gi,
@@ -857,7 +859,7 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   const bodyText = `${disabledNotice || ""}${mainDescription}`;
   return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${escapeHtml(displayName)}</div>
+      <div class="tooltip-title">${escapeHtml(t(displayName))}</div>
       <div class="tooltip-shift-hint seal-shift-hint">${t("press shift for more")}</div>
       <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>
     </div>
@@ -888,7 +890,7 @@ function renderSealSigil(item, extraClass = "") {
     extraClass
   ].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Seal" : item?.name || "Seal";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} sigil", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function passiveName(id, fallback = "Seal") {
@@ -906,7 +908,7 @@ function renderArtifactIcon(item, extraClass = "") {
   if (!src) return "";
   const className = ["artifact-icon", extraClass].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Artifact" : item?.name || "Artifact";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} icon`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} icon", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function formatNumber(value) {

@@ -6,8 +6,14 @@
    - t("settings.reset"): a key of locales/en.js (short labels whose English word could mean two things);
    - t("Resume"), t("Gain {sin} SIN.", { sin }): the English text itself. The text tables (Satan, Jesus, Codex,
      missions...) and ITEMS stay where the designers write them, and are translated by their English text.
-     Change the English and the old translation no longer matches: that text shows in English until retranslated
-     (node scripts/i18n-report.js lists what each language still lacks).
+   - t(englishBuiltByTheCode): text the code already built in English, numbers and names inside (SEAL texts,
+     the log, tooltips). A language file can hold it as a pattern, "Gain {sin} SIN whenever this happens.":
+     t() finds the pattern that fits, translates the names it captured (item names, the ELITE prefix) and
+     keeps the numbers. Longer text is translated line by line and sentence by sentence, so one sentence
+     without a translation shows in English and the rest is still translated.
+     descriptionHtml() (every SEAL / ARTIFACT text, tooltip and log line on screen) does this by itself.
+   Change the English and the old translation no longer matches: that text shows in English until it is
+   translated again (node scripts/i18n-report.js <code> lists what a language still lacks).
    Locale files: src/game/locales/<code>.js, each one fills LOCALES[<code>] = { "key or English text": "translation" }.
    A value can also be a plural set, { one: "{count} SEAL", other: "{count} SEALS" }, picked by params.count
    (Intl.PluralRules: Chinese has only "other", Greek / German / Spanish / English have "one" and "other").
@@ -123,17 +129,101 @@ function pseudoTranslation(text) {
 }
 
 /* The text in the player's language (English if that language has no text for it yet).
-   key: a key of locales/en.js, or the English text itself. params fill {name} placeholders;
-   params.count also picks the plural form. */
+   key: a key of locales/en.js, or the English text itself (with {placeholders} when params are given,
+   or as the code built it, numbers and names inside). params fill {name} placeholders; params.count
+   also picks the plural form. */
 function t(key, params) {
+  if (currentLanguageCode === "en" && !params && LOCALES.en?.[key] === undefined) return key;
   let entry = translationEntry(key);
-  if (entry === undefined) entry = key;
+  if (entry === undefined) {
+    // English the code built: a pattern of this language, or line by line, sentence by sentence
+    if (!params && typeof key === "string" && currentLanguageCode !== "en") return translateBuiltText(key);
+    entry = key;
+  }
   if (entry && typeof entry === "object") {
     const count = params && params.count !== undefined ? params.count : 0;
     entry = entry[pluralCategory(count)] ?? entry.other ?? Object.values(entry)[0] ?? "";
   }
   const text = currentLanguageCode === PSEUDO_LANGUAGE.code ? pseudoTranslation(String(entry)) : String(entry);
   return fillTranslation(text, params);
+}
+
+// ---- English built by the code (numbers and names inside) ----
+const translationPatternCache = {};
+const builtTextCache = {};
+const BUILT_TEXT_CACHE_LIMIT = 4000;
+
+// a language's patterns: its entries with {placeholders}, longest fixed text first (the most specific wins)
+function translationPatterns(code) {
+  if (translationPatternCache[code]) return translationPatternCache[code];
+  const patterns = Object.keys(LOCALES[code] || {})
+    .filter((key) => /\{\w+\}/.test(key) && typeof LOCALES[code][key] === "string")
+    .map((key) => {
+      const names = [];
+      const source = key
+        .split(/(\{\w+\})/)
+        .map((part) => {
+          const name = part.match(/^\{(\w+)\}$/);
+          if (!name) return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          names.push(name[1]);
+          return "(.+?)";
+        })
+        .join("");
+      return { key, names, regex: new RegExp(`^${source}$`), fixed: key.replace(/\{\w+\}/g, "").length };
+    })
+    .sort((a, b) => b.fixed - a.fixed);
+  translationPatternCache[code] = patterns;
+  return patterns;
+}
+
+// one piece of text: an exact entry, or a pattern whose captured names are translated in turn (numbers stay)
+function translateBuiltPiece(text, depth) {
+  const code = currentLanguageCode;
+  const own = LOCALES[code]?.[text];
+  if (typeof own === "string" && own !== "") return own;
+  if (code === PSEUDO_LANGUAGE.code) return pseudoTranslation(text);
+  for (const pattern of translationPatterns(code)) {
+    const match = text.match(pattern.regex);
+    if (!match) continue;
+    const params = {};
+    pattern.names.forEach((name, index) => {
+      const value = match[index + 1];
+      params[name] = depth < 2 && /[A-Za-z]/.test(value) ? translateBuiltPiece(value, depth + 1) ?? value : value;
+    });
+    return fillTranslation(LOCALES[code][pattern.key], params);
+  }
+  return null;
+}
+
+function translateBuiltText(text) {
+  const code = currentLanguageCode;
+  const cache = (builtTextCache[code] = builtTextCache[code] || new Map());
+  if (cache.has(text)) return cache.get(text);
+  let result = translateBuiltPiece(text, 0);
+  if (result === null) {
+    // line by line, then sentence by sentence; what has no translation stays English
+    const joiner = code === "zh-Hans" ? "" : " ";
+    result = String(text)
+      .split("\n")
+      .map((line) => {
+        const whole = translateBuiltPiece(line, 0);
+        if (whole !== null) return whole;
+        return line
+          .split(/(?<=[.!?])\s+/)
+          .map((sentence) => translateBuiltPiece(sentence, 0) ?? sentence)
+          .join(joiner);
+      })
+      .join("\n");
+  }
+  if (cache.size > BUILT_TEXT_CACHE_LIMIT) cache.clear();
+  cache.set(text, result);
+  return result;
+}
+
+// a language file changed (DEV, tests): forget the compiled patterns and the cached text
+function resetTranslationCaches() {
+  Object.keys(translationPatternCache).forEach((key) => delete translationPatternCache[key]);
+  Object.keys(builtTextCache).forEach((key) => delete builtTextCache[key]);
 }
 
 // a language's name in that language (the Language setting shows each one as its speakers write it)
@@ -6912,9 +7002,11 @@ function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+// text shown on screen: in the player's language (t() translates English the code built, see 00-i18n.js),
+// then the keywords in the game's style
 function descriptionHtml(value) {
   const protectedPhrases = [];
-  const plainTargetText = normalizeGameText(value);
+  const plainTargetText = t(normalizeGameText(value));
   const protectedText = [
     /\bpick a target\b/gi,
     /\beach target\b/gi,
@@ -6967,7 +7059,7 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   const bodyText = `${disabledNotice || ""}${mainDescription}`;
   return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${escapeHtml(displayName)}</div>
+      <div class="tooltip-title">${escapeHtml(t(displayName))}</div>
       <div class="tooltip-shift-hint seal-shift-hint">${t("press shift for more")}</div>
       <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>
     </div>
@@ -6998,7 +7090,7 @@ function renderSealSigil(item, extraClass = "") {
     extraClass
   ].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Seal" : item?.name || "Seal";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} sigil", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function passiveName(id, fallback = "Seal") {
@@ -7016,7 +7108,7 @@ function renderArtifactIcon(item, extraClass = "") {
   if (!src) return "";
   const className = ["artifact-icon", extraClass].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Artifact" : item?.name || "Artifact";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} icon`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} icon", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function formatNumber(value) {
@@ -15546,8 +15638,8 @@ function renderRecordsMenu() {
     const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
     const buildArt = build.length || artifacts.length
       ? `<div class="record-build${build.some((entry) => entry.elite > 0) ? " has-elite" : ""}">${build
-          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
-          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
+          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(t(ITEMS[entry.id].name))}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
+          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(t(ITEMS[id].name))}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
       : "";
     const known = (counts) => Object.fromEntries(Object.entries(counts).filter(([id]) => ITEMS[id]));
     const topSeal = topEntry(known(lifetime.sealRuns));
@@ -16214,7 +16306,7 @@ function pauseBoundInfo() {
 function renderPauseBoundPlate(placement = "") {
   const info = pauseBoundInfo();
   const sigil = info.sealId
-    ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(passiveName(info.sealId))}">${renderSealSigil(info.sealId)}</span>`
+    ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(t(passiveName(info.sealId)))}">${renderSealSigil(info.sealId)}</span>`
     : "";
   return `
     <div class="pause-bound ${info.bound ? "is-bound" : "is-unbound"} ${placement}" data-tooltip="${escapeAttr(info.note)}">
@@ -16223,7 +16315,7 @@ function renderPauseBoundPlate(placement = "") {
         <img class="pause-bound-art" src="${escapeAttr(info.art)}" alt="" draggable="false" />
         <div class="pause-bound-text">
           <div class="pause-bound-label">${info.bound ? t("Bound") : t("Unbound")}</div>
-          <div class="pause-bound-name">${escapeHtml(info.name)}${sigil}</div>
+          <div class="pause-bound-name">${escapeHtml(t(info.name))}${sigil}</div>
           <div class="pause-bound-note">${escapeHtml(info.note)}</div>
         </div>
       </div>
@@ -16579,7 +16671,7 @@ function renderPvpResults() {
 function renderPvpLog(limit = 8) {
   const entries = state.pvp.log.slice(0, limit);
   if (!entries.length) return "";
-  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(normalizeGameText(entry))}</div>`).join("")}</div>`;
+  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(t(normalizeGameText(entry)))}</div>`).join("")}</div>`;
 }
 
 // ---------- HUD change tracking: animate only when a value actually changes ----------
@@ -16695,7 +16787,7 @@ function renderTrinitySlotSigil(ids, extraClass = "") {
   const src = trinitySlotArtPath(ids);
   if (!src) return "";
   const name = ids.map((id) => ITEMS[id]?.name || "Seal").join(" + ");
-  return `<img class="seal-sigil trinity-seal-sigil ${extraClass}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+  return `<img class="seal-sigil trinity-seal-sigil ${extraClass}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} sigil", { name: t(name) }))}" loading="lazy" />`;
 }
 
 // one tooltip for the shared Trinity slot: every SEAL in it, with this round's blessing
@@ -17233,7 +17325,7 @@ function bossStolenTooltipHtml(borrowed) {
 function bossStolenTagHtml(bot) {
   const borrowed = bossBorrowedPower(bot);
   if (!borrowed) return "";
-  const tooltip = glyphTooltipHtml(`${bot.name} stole ${borrowed.name}'s power`, "STOLEN", borrowed.text);
+  const tooltip = glyphTooltipHtml(t("{name} stole {power}'s power", { name: t(bot.name), power: t(borrowed.name) }), "STOLEN", borrowed.text);
   return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>${t("Stole")}</span> ${escapeHtml(borrowed.name)}</div>`;
 }
 
@@ -17835,7 +17927,7 @@ function renderShopSlot(slot, index) {
       ${itemImage}
       <div class="item-top">
         <div>
-          <div class="item-name">${displayName}</div>
+          <div class="item-name">${escapeHtml(t(displayName))}</div>
         </div>
         <span class="item-kind">${kindLabel}</span>
       </div>
@@ -17904,7 +17996,7 @@ function renderActiveItem(item, index) {
       ${itemImage}
       <div class="item-top">
         <div>
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${escapeHtml(t(item.name))}</div>
           ${memoryLine}
           ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
         </div>
@@ -17993,8 +18085,8 @@ function renderOverlay() {
   if (roundRevealAnimationActive()) return `<div class="overlay"></div>`;
   if (!state.gameOver || state.inspectingGameOver) return `<div class="overlay"></div>`;
   const stats = ensureRunStats();
-  const bestSeal = stats.maxSealRoundDamage?.value > 0 ? `${stats.maxSealRoundDamage.name} (${formatNumber(stats.maxSealRoundDamage.value)})` : "None";
-  const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
+  const bestSeal = stats.maxSealRoundDamage?.value > 0 ? `${t(stats.maxSealRoundDamage.name)} (${formatNumber(stats.maxSealRoundDamage.value)})` : t("None");
+  const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(t(label))}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
       <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
@@ -18013,8 +18105,8 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
-          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned"}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
-          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${t(state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned")}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || t("Yes"))}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         </div>
@@ -18034,13 +18126,13 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
-      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>previous: ${escapeHtml(record.previousText)}</small></div>`;
+      const name = record.name ? ` <em>${escapeHtml(t(record.name))}</em>` : "";
+      return `<div class="new-record-row"><span>${escapeHtml(t(record.label))}${name}</span><strong>${escapeHtml(record.text)}</strong><small>${escapeHtml(t("previous: {value}", { value: record.previousText }))}</small></div>`;
     })
     .join("");
   return `
     <div class="new-records">
-      <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
+      <div class="new-records-title">${t(broken.length > 1 ? "New records" : "New record")}</div>
       <div class="new-records-list">${rows}</div>
     </div>
   `;
@@ -19206,7 +19298,8 @@ function introPlaySoundMarks(from, to) {
   });
 }
 
-const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
+// Chinese ends its parts with its own full-width marks
+const INTRO_PUNCTUATION = new Set([".", ",", "!", "?", "。", "，", "！", "？"]);
 
 // a chunk ends after a run of . , ! ? (so "??", "!!" and "..." stay together); not inside numbers like 0.8
 function introChunkEnds(glyphs) {
@@ -19260,7 +19353,9 @@ function introSetWaiting(waiting) {
 }
 
 function introShowLine(index) {
-  const [speaker, text] = introState.lines[index];
+  const [speaker, englishText] = introState.lines[index];
+  // the line in the player's language (a translation keeps the sound marks of INTRO_MARKS where they belong)
+  const text = t(englishText);
   introState.lineIndex = index;
   introState.glyphs = introGlyphs(text);
   introState.ends = introChunkEnds(introState.glyphs);
@@ -21709,7 +21804,7 @@ function collectionDemonsHtml() {
       <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? t(spec.name) : t("{number}, not defeated", { number }))}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
-        <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+        <span class="collection-demon-name">${slain ? escapeHtml(t(spec.name)) : "???"}</span>
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
@@ -21729,7 +21824,7 @@ function collectionArchangelsHtml() {
       <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? t(spec.name) : t("Archangel of {planet}, not defeated", { planet: t(spec.planet) }))}">
         <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
-        <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
+        <span class="collection-demon-name">${defeated ? escapeHtml(t(spec.name)) : "???"}</span>
       </button>`;
   });
   return `<div class="collection-demon-grid collection-angel-grid">${cells.join("")}</div>${collectionEmptyHtml("angels")}`;
@@ -21748,7 +21843,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
-    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
     <div class="collection-info-number">${escapeHtml(t("Archangel of {planet}", { planet: t(spec.planet) }))}</div>
     <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
     ${collectionDemonBindHtml(key, seal, pinned)}`;
@@ -21770,7 +21865,7 @@ function collectionDemonInfoHtml(key, pinned = false) {
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
-    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
     ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
     ${collectionDemonBindHtml(key, seal, pinned)}`;
@@ -21880,21 +21975,21 @@ function showNextCollectionToast() {
     ? `
     <span class="collection-toast-codex" aria-hidden="true">${CODEX_MARK}</span>
     <span class="collection-toast-text">
-      <span class="collection-toast-kicker">${item.first ? "Something was left in the ashes" : "A page of the Codex"}</span>
-      <span class="collection-toast-name">${escapeHtml(item.first ? "The Faustian Codex" : item.title || "")}</span>
+      <span class="collection-toast-kicker">${t(item.first ? "Something was left in the ashes" : "A page of the Codex")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(item.first ? "The Faustian Codex" : item.title || ""))}</span>
     </span>`
     : item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">${t("Karma")}</span>
-      <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(item.source || ""))}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">${t("Seal unlocked")}</span>
-      <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(ITEMS[id]?.name || "Seal"))}</span>
     </span>`;
   document.body.appendChild(toast);
   playGameSfx(item?.kind === "codex" ? (item.first ? "karmaUnlock" : "codexNewPage") : item?.kind === "karma" ? "karmaGain" : "sealUnlock");
@@ -21936,7 +22031,7 @@ function collectionInfoHtml(id, pinned = false) {
     const progressText = result && result.goal > 1 ? `<div class="collection-info-progress">${formatNumber(Math.min(result.value, result.goal))} / ${formatNumber(result.goal)}</div>` : "";
     return `
       <div class="collection-info-status locked">${t("Locked")}</div>
-      <div class="collection-info-name">${escapeHtml(item.name)}</div>
+      <div class="collection-info-name">${escapeHtml(t(item.name))}</div>
       ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}
@@ -21952,7 +22047,7 @@ function collectionInfoHtml(id, pinned = false) {
       <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}${isSealBeaten(id) ? collectionBeatenMarkHtml() : ""}</div>
       ${more ? `<div class="collection-info-shift-hint">${t("press shift for more")}</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>` : ""}
     </div>
-    <div class="collection-info-name">${escapeHtml(item.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(item.name))}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
     ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}
@@ -24039,8 +24134,8 @@ function satanDealShowAsk() {
   form.setAttribute("autocomplete", "off");
   form.innerHTML = `
     <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="${t("What do you want from Satan?")}" />
-    <button class="intro-choice-button" type="submit">${escapeHtml(SATAN_DEAL_BUTTONS.ask)}</button>
-    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(SATAN_DEAL_BUTTONS.leave)}</button>`;
+    <button class="intro-choice-button" type="submit">${escapeHtml(t(SATAN_DEAL_BUTTONS.ask))}</button>
+    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(t(SATAN_DEAL_BUTTONS.leave))}</button>`;
   const input = form.querySelector("input");
   input.placeholder = SATAN_DEAL_LINES.askPlaceholder;
   form.addEventListener("click", (event) => event.stopPropagation());
@@ -24084,8 +24179,8 @@ function satanDealShowChoice() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(SATAN_DEAL_BUTTONS.yes)}</button>
-    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(SATAN_DEAL_BUTTONS.no)}</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(t(SATAN_DEAL_BUTTONS.yes))}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(t(SATAN_DEAL_BUTTONS.no))}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");
@@ -24483,8 +24578,9 @@ function codexMarkRead() {
   }
 }
 
+// a page's text, in the player's language; *words* are the red rubrics (keep the stars in a translation)
 function codexRich(text) {
-  return escapeHtml(text).replace(/\*(.+?)\*/g, '<span class="codex-rub">$1</span>');
+  return escapeHtml(t(text)).replace(/\*(.+?)\*/g, '<span class="codex-rub">$1</span>');
 }
 
 function codexRoman(n) {
@@ -24505,16 +24601,16 @@ function codexLeafHtml(index) {
   if (!page) return `<article class="codex-leaf codex-empty" aria-hidden="true"></article>`;
   const folio = index === 0 ? "" : `<span class="codex-folio-num">${codexRoman(index + 1)}</span>`;
   if (index >= codexPagesFound()) {
-    return `<article class="codex-leaf codex-torn"><div class="codex-scrap" aria-hidden="true"></div><p class="codex-torn-text">${escapeHtml(CODEX_TORN_TEXT)}</p>${folio}</article>`;
+    return `<article class="codex-leaf codex-torn"><div class="codex-scrap" aria-hidden="true"></div><p class="codex-torn-text">${escapeHtml(t(CODEX_TORN_TEXT))}</p>${folio}</article>`;
   }
-  const note = page.note ? `<p class="codex-note">${escapeHtml(page.note)}</p>` : "";
+  const note = page.note ? `<p class="codex-note">${escapeHtml(t(page.note))}</p>` : "";
   if (page.kind === "cover") {
     return `
       <article class="codex-leaf codex-cover">
         ${CODEX_SIGIL}
-        <h3 class="codex-cover-title">${escapeHtml(page.title)}</h3>
-        <p class="codex-cover-text">${escapeHtml(page.text)}</p>
-        <p class="codex-small">${escapeHtml(page.small)}</p>
+        <h3 class="codex-cover-title">${escapeHtml(t(page.title))}</h3>
+        <p class="codex-cover-text">${escapeHtml(t(page.text))}</p>
+        <p class="codex-small">${escapeHtml(t(page.small))}</p>
         ${note}
       </article>`;
   }
@@ -24524,14 +24620,14 @@ function codexLeafHtml(index) {
       if (typeof para === "string") return `<p class="codex-p">${codexRich(para)}</p>`;
       const word = margins[para.trick];
       const scribble = word ? `<span class="codex-scribble">“${escapeHtml(word)}” ✓</span>` : "";
-      return `<div class="codex-verse">${scribble}<h4 class="codex-verse-title">${escapeHtml(para.title)}</h4><p class="codex-p">${codexRich(para.text)}</p></div>`;
+      return `<div class="codex-verse">${scribble}<h4 class="codex-verse-title">${escapeHtml(t(para.title))}</h4><p class="codex-p">${codexRich(para.text)}</p></div>`;
     })
     .join("");
-  const small = page.small ? `<p class="codex-small">${escapeHtml(page.small)}</p>` : "";
+  const small = page.small ? `<p class="codex-small">${escapeHtml(t(page.small))}</p>` : "";
   if (page.kind === "fragment") {
     return `<article class="codex-leaf codex-fragment"><div class="codex-fragment-text">${paras}${small}</div>${folio}</article>`;
   }
-  return `<article class="codex-leaf"><h3 class="codex-title">${escapeHtml(page.title)}</h3><div class="codex-text">${paras}</div>${note}${folio}</article>`;
+  return `<article class="codex-leaf"><h3 class="codex-title">${escapeHtml(t(page.title))}</h3><div class="codex-text">${paras}</div>${note}${folio}</article>`;
 }
 
 function codexBookHtml() {
@@ -24545,9 +24641,9 @@ function codexBookHtml() {
     <div class="codex-book" style="--codex-per: ${per}">
       <div class="codex-spread">${leaves.join("")}</div>
       <nav class="codex-nav" aria-label="${t("Pages")}">
-        <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>Previous</button>
-        <span class="codex-folio">${per === 2 ? "pages" : "page"} ${folio} of ${CODEX_PAGES.length}</span>
-        <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>Next</button>
+        <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>${t("Previous")}</button>
+        <span class="codex-folio">${t(per === 2 ? "pages {folio} of {total}" : "page {folio} of {total}", { folio, total: CODEX_PAGES.length })}</span>
+        <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>${t("Next")}</button>
       </nav>
     </div>`;
 }
@@ -24563,7 +24659,7 @@ function codexLegendHtml() {
 }
 
 function codexCountsHtml() {
-  return `<span><strong>${codexPagesFound()}</strong> / ${CODEX_PAGES.length} pages</span>`;
+  return `<span>${t("{count} / {total} pages", { count: `<strong>${codexPagesFound()}</strong>`, total: CODEX_PAGES.length })}</span>`;
 }
 
 // turns the pages in place (no full render, so the screen doesn't play its entrance again)
@@ -25571,17 +25667,17 @@ function slotGlyphHtml(key) {
 }
 
 function slotIconHtml(key) {
-  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
+  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(t(slotIconLabel(key)))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
 }
 
 // the slot machine's description: each symbol with what 1, 2 or 3 of it pay
 function slotPaytableHtml() {
-  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}">${slotGlyphHtml(key)}</span>`;
+  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(t(slotIconLabel(key)))}">${slotGlyphHtml(key)}</span>`;
   const row = (key, one, two, three) =>
-    `<div class="slot-pay-row">${symbol(key)}<span>${one}</span><span>${two}</span><span>${three}</span></div>`;
+    `<div class="slot-pay-row">${symbol(key)}<span>${t(one)}</span><span>${t(two)}</span><span>${t(three)}</span></div>`;
   return `
     <div class="slot-paytable">
-      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${FAVOR_MARK} a spin</div>
+      <div class="slot-pay-title">${t("Slot machine · {cost} a spin", { cost: `${SLOT_SPIN_COST}${FAVOR_MARK}` })}</div>
       <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
       ${row("sin", `+5${SIN_MARK}`, `+18${SIN_MARK}`, `+150${SIN_MARK}`)}
       ${row("soul", "+1 SOUL", "+4 SOUL", "+20 SOUL")}
@@ -25589,7 +25685,7 @@ function slotPaytableHtml() {
       ${row("elite", "–", "–", "ELITE on every SEAL")}
       ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
       ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR${FAVOR_MARK}.</div>
+      <div class="slot-pay-note">${t("Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.", { favor: FAVOR_MARK })}</div>
     </div>
   `;
 }
@@ -25627,15 +25723,15 @@ function slotMachineHtml() {
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
   const tripleClass = triple && missions.lastText ? " slot-triple" : "";
-  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Satan's bets pay FAVOR.")}</div>`;
+  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(t(result || "Satan's bets pay FAVOR."))}</div>`;
   // Settings > Display > Slot machine: Default (the framed box with SPIN) or Fancy (the old machine below)
   if (!slotMachineFancy()) {
     return `
     <div class="slot-machine${tripleClass}" data-tooltip-html="${escapeAttr(tooltip)}">
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
-        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
-        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
+        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>${t("Spin")} <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
+        <span class="slot-favor" aria-label="${t("You have {count} FAVOR", { count: missions.doubloons })}">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
       ${resultHtml}
     </div>
@@ -25655,10 +25751,10 @@ function slotMachineHtml() {
       ${rivets}
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
-        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR"><span class="slot-counter" aria-hidden="true">${favorDigits}</span>${FAVOR_MARK}</span>
+        <span class="slot-favor" aria-label="${t("You have {count} FAVOR", { count: missions.doubloons })}"><span class="slot-counter" aria-hidden="true">${favorDigits}</span>${FAVOR_MARK}</span>
       </div>
       ${resultHtml}
-      <button type="button" id="slotSpin" class="slot-lever${pulling ? " pulling" : ""}" aria-label="Pull the lever: spin for ${SLOT_SPIN_COST} FAVOR" ${disabled}><span class="slot-lever-hub"></span><span class="slot-lever-rod"></span><span class="slot-lever-knob"></span></button>
+      <button type="button" id="slotSpin" class="slot-lever${pulling ? " pulling" : ""}" aria-label="${t("Pull the lever: spin for {cost} FAVOR", { cost: SLOT_SPIN_COST })}" ${disabled}><span class="slot-lever-hub"></span><span class="slot-lever-rod"></span><span class="slot-lever-knob"></span></button>
     </div>
   `;
 }
@@ -25678,13 +25774,13 @@ function missionBoxHtml() {
   else if (mission.when === "leave") status = "At NEXT ROUND";
   const statusClass = current.done ? "done" : status === "Lost" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="${t("Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine ({cost} a spin).", { cost: SLOT_SPIN_COST })}">
       <div class="mission-head">
         <span class="mission-title">${t("Satan's Bet")}</span>
-        ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
+        ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(t(status))}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
-      <div class="mission-text">${escapeHtml(missionText(mission, current.param))}</div>
+      <div class="mission-text">${escapeHtml(t(missionText(mission, current.param)))}</div>
     </div>
   `;
 }

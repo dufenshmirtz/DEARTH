@@ -13,9 +13,11 @@ const layout = process.argv[2] || "desktop";
 const only = process.argv[3] || "";
 const screens = screenTexts(layout, "pseudo");
 
-// a line is translated when every run of letters sits inside a pseudo [ ... ] block
+// a line is translated when every run of letters sits inside a pseudo [ ... ] block.
+// data-tooltip text is translated when the tooltip opens (descriptionHtml), so it is not counted here.
 function untranslatedPart(line) {
-  const text = line.replace(/^\[(?:title|aria-label|placeholder|alt|data-tooltip|data-label)\] /, "");
+  if (line.startsWith("[data-tooltip] ")) return "";
+  const text = line.replace(/^\[(?:title|aria-label|placeholder|alt|data-label)\] /, "");
   let rest = "";
   let depth = 0;
   for (const char of text) {

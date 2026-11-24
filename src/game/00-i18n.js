@@ -6,8 +6,14 @@
    - t("settings.reset"): a key of locales/en.js (short labels whose English word could mean two things);
    - t("Resume"), t("Gain {sin} SIN.", { sin }): the English text itself. The text tables (Satan, Jesus, Codex,
      missions...) and ITEMS stay where the designers write them, and are translated by their English text.
-     Change the English and the old translation no longer matches: that text shows in English until retranslated
-     (node scripts/i18n-report.js lists what each language still lacks).
+   - t(englishBuiltByTheCode): text the code already built in English, numbers and names inside (SEAL texts,
+     the log, tooltips). A language file can hold it as a pattern, "Gain {sin} SIN whenever this happens.":
+     t() finds the pattern that fits, translates the names it captured (item names, the ELITE prefix) and
+     keeps the numbers. Longer text is translated line by line and sentence by sentence, so one sentence
+     without a translation shows in English and the rest is still translated.
+     descriptionHtml() (every SEAL / ARTIFACT text, tooltip and log line on screen) does this by itself.
+   Change the English and the old translation no longer matches: that text shows in English until it is
+   translated again (node scripts/i18n-report.js <code> lists what a language still lacks).
    Locale files: src/game/locales/<code>.js, each one fills LOCALES[<code>] = { "key or English text": "translation" }.
    A value can also be a plural set, { one: "{count} SEAL", other: "{count} SEALS" }, picked by params.count
    (Intl.PluralRules: Chinese has only "other", Greek / German / Spanish / English have "one" and "other").
@@ -123,17 +129,101 @@ function pseudoTranslation(text) {
 }
 
 /* The text in the player's language (English if that language has no text for it yet).
-   key: a key of locales/en.js, or the English text itself. params fill {name} placeholders;
-   params.count also picks the plural form. */
+   key: a key of locales/en.js, or the English text itself (with {placeholders} when params are given,
+   or as the code built it, numbers and names inside). params fill {name} placeholders; params.count
+   also picks the plural form. */
 function t(key, params) {
+  if (currentLanguageCode === "en" && !params && LOCALES.en?.[key] === undefined) return key;
   let entry = translationEntry(key);
-  if (entry === undefined) entry = key;
+  if (entry === undefined) {
+    // English the code built: a pattern of this language, or line by line, sentence by sentence
+    if (!params && typeof key === "string" && currentLanguageCode !== "en") return translateBuiltText(key);
+    entry = key;
+  }
   if (entry && typeof entry === "object") {
     const count = params && params.count !== undefined ? params.count : 0;
     entry = entry[pluralCategory(count)] ?? entry.other ?? Object.values(entry)[0] ?? "";
   }
   const text = currentLanguageCode === PSEUDO_LANGUAGE.code ? pseudoTranslation(String(entry)) : String(entry);
   return fillTranslation(text, params);
+}
+
+// ---- English built by the code (numbers and names inside) ----
+const translationPatternCache = {};
+const builtTextCache = {};
+const BUILT_TEXT_CACHE_LIMIT = 4000;
+
+// a language's patterns: its entries with {placeholders}, longest fixed text first (the most specific wins)
+function translationPatterns(code) {
+  if (translationPatternCache[code]) return translationPatternCache[code];
+  const patterns = Object.keys(LOCALES[code] || {})
+    .filter((key) => /\{\w+\}/.test(key) && typeof LOCALES[code][key] === "string")
+    .map((key) => {
+      const names = [];
+      const source = key
+        .split(/(\{\w+\})/)
+        .map((part) => {
+          const name = part.match(/^\{(\w+)\}$/);
+          if (!name) return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          names.push(name[1]);
+          return "(.+?)";
+        })
+        .join("");
+      return { key, names, regex: new RegExp(`^${source}$`), fixed: key.replace(/\{\w+\}/g, "").length };
+    })
+    .sort((a, b) => b.fixed - a.fixed);
+  translationPatternCache[code] = patterns;
+  return patterns;
+}
+
+// one piece of text: an exact entry, or a pattern whose captured names are translated in turn (numbers stay)
+function translateBuiltPiece(text, depth) {
+  const code = currentLanguageCode;
+  const own = LOCALES[code]?.[text];
+  if (typeof own === "string" && own !== "") return own;
+  if (code === PSEUDO_LANGUAGE.code) return pseudoTranslation(text);
+  for (const pattern of translationPatterns(code)) {
+    const match = text.match(pattern.regex);
+    if (!match) continue;
+    const params = {};
+    pattern.names.forEach((name, index) => {
+      const value = match[index + 1];
+      params[name] = depth < 2 && /[A-Za-z]/.test(value) ? translateBuiltPiece(value, depth + 1) ?? value : value;
+    });
+    return fillTranslation(LOCALES[code][pattern.key], params);
+  }
+  return null;
+}
+
+function translateBuiltText(text) {
+  const code = currentLanguageCode;
+  const cache = (builtTextCache[code] = builtTextCache[code] || new Map());
+  if (cache.has(text)) return cache.get(text);
+  let result = translateBuiltPiece(text, 0);
+  if (result === null) {
+    // line by line, then sentence by sentence; what has no translation stays English
+    const joiner = code === "zh-Hans" ? "" : " ";
+    result = String(text)
+      .split("\n")
+      .map((line) => {
+        const whole = translateBuiltPiece(line, 0);
+        if (whole !== null) return whole;
+        return line
+          .split(/(?<=[.!?])\s+/)
+          .map((sentence) => translateBuiltPiece(sentence, 0) ?? sentence)
+          .join(joiner);
+      })
+      .join("\n");
+  }
+  if (cache.size > BUILT_TEXT_CACHE_LIMIT) cache.clear();
+  cache.set(text, result);
+  return result;
+}
+
+// a language file changed (DEV, tests): forget the compiled patterns and the cached text
+function resetTranslationCaches() {
+  Object.keys(translationPatternCache).forEach((key) => delete translationPatternCache[key]);
+  Object.keys(builtTextCache).forEach((key) => delete builtTextCache[key]);
 }
 
 // a language's name in that language (the Language setting shows each one as its speakers write it)

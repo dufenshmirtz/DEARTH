@@ -486,8 +486,8 @@ function renderRecordsMenu() {
     const artifacts = Array.isArray(deepest.artifacts) ? deepest.artifacts.filter((id) => ITEMS[id]) : [];
     const buildArt = build.length || artifacts.length
       ? `<div class="record-build${build.some((entry) => entry.elite > 0) ? " has-elite" : ""}">${build
-          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(ITEMS[entry.id].name)}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
-          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(ITEMS[id].name)}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
+          .map((entry) => `<span class="record-build-seal${entry.elite > 0 ? " elite" : ""}" title="${escapeAttr(t(ITEMS[entry.id].name))}">${sigil(entry.id)}${entry.elite > 0 ? `<em>${escapeHtml(romanNumeral(entry.elite))}</em>` : ""}</span>`)
+          .join("")}${artifacts.map((id) => `<span class="record-build-artifact" title="${escapeAttr(t(ITEMS[id].name))}">${renderArtifactIcon(id, "record-artifact")}</span>`).join("")}</div>`
       : "";
     const known = (counts) => Object.fromEntries(Object.entries(counts).filter(([id]) => ITEMS[id]));
     const topSeal = topEntry(known(lifetime.sealRuns));
@@ -1154,7 +1154,7 @@ function pauseBoundInfo() {
 function renderPauseBoundPlate(placement = "") {
   const info = pauseBoundInfo();
   const sigil = info.sealId
-    ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(passiveName(info.sealId))}">${renderSealSigil(info.sealId)}</span>`
+    ? `<span class="pause-bound-sigil" data-tooltip="${escapeAttr(t(passiveName(info.sealId)))}">${renderSealSigil(info.sealId)}</span>`
     : "";
   return `
     <div class="pause-bound ${info.bound ? "is-bound" : "is-unbound"} ${placement}" data-tooltip="${escapeAttr(info.note)}">
@@ -1163,7 +1163,7 @@ function renderPauseBoundPlate(placement = "") {
         <img class="pause-bound-art" src="${escapeAttr(info.art)}" alt="" draggable="false" />
         <div class="pause-bound-text">
           <div class="pause-bound-label">${info.bound ? t("Bound") : t("Unbound")}</div>
-          <div class="pause-bound-name">${escapeHtml(info.name)}${sigil}</div>
+          <div class="pause-bound-name">${escapeHtml(t(info.name))}${sigil}</div>
           <div class="pause-bound-note">${escapeHtml(info.note)}</div>
         </div>
       </div>
@@ -1519,7 +1519,7 @@ function renderPvpResults() {
 function renderPvpLog(limit = 8) {
   const entries = state.pvp.log.slice(0, limit);
   if (!entries.length) return "";
-  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(normalizeGameText(entry))}</div>`).join("")}</div>`;
+  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(t(normalizeGameText(entry)))}</div>`).join("")}</div>`;
 }
 
 // ---------- HUD change tracking: animate only when a value actually changes ----------
@@ -1635,7 +1635,7 @@ function renderTrinitySlotSigil(ids, extraClass = "") {
   const src = trinitySlotArtPath(ids);
   if (!src) return "";
   const name = ids.map((id) => ITEMS[id]?.name || "Seal").join(" + ");
-  return `<img class="seal-sigil trinity-seal-sigil ${extraClass}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+  return `<img class="seal-sigil trinity-seal-sigil ${extraClass}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} sigil", { name: t(name) }))}" loading="lazy" />`;
 }
 
 // one tooltip for the shared Trinity slot: every SEAL in it, with this round's blessing
@@ -2173,7 +2173,7 @@ function bossStolenTooltipHtml(borrowed) {
 function bossStolenTagHtml(bot) {
   const borrowed = bossBorrowedPower(bot);
   if (!borrowed) return "";
-  const tooltip = glyphTooltipHtml(`${bot.name} stole ${borrowed.name}'s power`, "STOLEN", borrowed.text);
+  const tooltip = glyphTooltipHtml(t("{name} stole {power}'s power", { name: t(bot.name), power: t(borrowed.name) }), "STOLEN", borrowed.text);
   return `<div class="boss-stolen-tag" data-tooltip-html="${escapeAttr(tooltip)}"><span>${t("Stole")}</span> ${escapeHtml(borrowed.name)}</div>`;
 }
 
@@ -2775,7 +2775,7 @@ function renderShopSlot(slot, index) {
       ${itemImage}
       <div class="item-top">
         <div>
-          <div class="item-name">${displayName}</div>
+          <div class="item-name">${escapeHtml(t(displayName))}</div>
         </div>
         <span class="item-kind">${kindLabel}</span>
       </div>
@@ -2844,7 +2844,7 @@ function renderActiveItem(item, index) {
       ${itemImage}
       <div class="item-top">
         <div>
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${escapeHtml(t(item.name))}</div>
           ${memoryLine}
           ${pendingHere ? "" : `<div class="price">Sell ${sale}${SIN_MARK}</div>`}
         </div>
@@ -2933,8 +2933,8 @@ function renderOverlay() {
   if (roundRevealAnimationActive()) return `<div class="overlay"></div>`;
   if (!state.gameOver || state.inspectingGameOver) return `<div class="overlay"></div>`;
   const stats = ensureRunStats();
-  const bestSeal = stats.maxSealRoundDamage?.value > 0 ? `${stats.maxSealRoundDamage.name} (${formatNumber(stats.maxSealRoundDamage.value)})` : "None";
-  const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
+  const bestSeal = stats.maxSealRoundDamage?.value > 0 ? `${t(stats.maxSealRoundDamage.name)} (${formatNumber(stats.maxSealRoundDamage.value)})` : t("None");
+  const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(t(label))}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
       <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
@@ -2953,8 +2953,8 @@ function renderOverlay() {
           ${statRow("Damage dealt", formatNumber(stats.overallDamage || 0))}
           ${statRow("Best round damage", formatNumber(stats.singleRoundDamage || 0))}
           <div class="end-stat end-stat-wide"><span>${t("Strongest SEAL in one round")}</span><strong>${escapeHtml(bestSeal)}</strong></div>
-          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned"}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
-          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || "Yes")}</strong></div>` : ""}
+          ${state.collectionRun?.karma > 0 ? `<div class="end-stat end-stat-wide end-stat-karma"><span>${t(state.collectionRun?.honorableDeath ? "Karma earned · Honorable Death" : "Karma earned")}</span><strong>+${escapeHtml(String(state.collectionRun.karma))}${KARMA_MARK}</strong></div>` : ""}
+          ${state.pact?.outcome === "signed" ? `<div class="end-stat end-stat-wide end-stat-pact"><span>${t("Pact signed")}</span><strong>${escapeHtml(state.pact.request || t("Yes"))}</strong></div>` : ""}
         </div>
         ${renderNewRecordsHtml()}
         </div>
@@ -2974,13 +2974,13 @@ function renderNewRecordsHtml() {
   if (!broken.length) return "";
   const rows = broken
     .map((record) => {
-      const name = record.name ? ` <em>${escapeHtml(record.name)}</em>` : "";
-      return `<div class="new-record-row"><span>${escapeHtml(record.label)}${name}</span><strong>${escapeHtml(record.text)}</strong><small>previous: ${escapeHtml(record.previousText)}</small></div>`;
+      const name = record.name ? ` <em>${escapeHtml(t(record.name))}</em>` : "";
+      return `<div class="new-record-row"><span>${escapeHtml(t(record.label))}${name}</span><strong>${escapeHtml(record.text)}</strong><small>${escapeHtml(t("previous: {value}", { value: record.previousText }))}</small></div>`;
     })
     .join("");
   return `
     <div class="new-records">
-      <div class="new-records-title">New record${broken.length > 1 ? "s" : ""}</div>
+      <div class="new-records-title">${t(broken.length > 1 ? "New records" : "New record")}</div>
       <div class="new-records-list">${rows}</div>
     </div>
   `;

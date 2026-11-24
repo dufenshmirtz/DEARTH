@@ -1017,7 +1017,7 @@ function collectionDemonsHtml() {
       <button class="collection-demon ${slain ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(slain ? t(spec.name) : t("{number}, not defeated", { number }))}">
         <img class="collection-demon-art" src="${escapeAttr(demonThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${number}${slain ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
-        <span class="collection-demon-name">${slain ? escapeHtml(spec.name) : "???"}</span>
+        <span class="collection-demon-name">${slain ? escapeHtml(t(spec.name)) : "???"}</span>
       </button>`;
   });
   return `<div class="collection-demon-grid">${cells.join("")}</div>${collectionEmptyHtml("goetia")}`;
@@ -1037,7 +1037,7 @@ function collectionArchangelsHtml() {
       <button class="collection-demon collection-angel ${defeated ? "slain" : "unslain"}${spec.key === bound ? " bound" : ""}" type="button"${demonMatchesSearch(spec.key) ? "" : " hidden"} data-collection-demon="${escapeAttr(spec.key)}" aria-label="${escapeAttr(defeated ? t(spec.name) : t("Archangel of {planet}, not defeated", { planet: t(spec.planet) }))}">
         <img class="collection-demon-art" src="${escapeAttr(archangelThumbPath(spec))}" alt="" loading="lazy" draggable="false" />
         <span class="collection-demon-number">${escapeHtml(planet)}${defeated ? `<span class="collection-demon-bound"> ${t("· Bound")}</span>` : ""}</span>
-        <span class="collection-demon-name">${defeated ? escapeHtml(spec.name) : "???"}</span>
+        <span class="collection-demon-name">${defeated ? escapeHtml(t(spec.name)) : "???"}</span>
       </button>`;
   });
   return `<div class="collection-demon-grid collection-angel-grid">${cells.join("")}</div>${collectionEmptyHtml("angels")}`;
@@ -1056,7 +1056,7 @@ function collectionArchangelInfoHtml(key, pinned = false) {
   const seal = ITEMS[spec.sealId]?.name || "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
-    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
     <div class="collection-info-number">${escapeHtml(t("Archangel of {planet}", { planet: t(spec.planet) }))}</div>
     <div class="collection-info-text">${descriptionHtml(ARCHANGEL_ABILITY_TEXT[key])}</div>
     ${collectionDemonBindHtml(key, seal, pinned)}`;
@@ -1078,7 +1078,7 @@ function collectionDemonInfoHtml(key, pinned = false) {
   const seal = spec.passiveId && ITEMS[spec.passiveId] && !REMOVED_PASSIVE_IDS.has(spec.passiveId) ? ITEMS[spec.passiveId].name : "";
   return `
     <div class="collection-info-status slain">${t("Defeated")}</div>
-    <div class="collection-info-name">${escapeHtml(spec.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(spec.name))}</div>
     <div class="collection-info-number">Spirit ${number} of the Ars Goetia</div>
     ${seal ? `<div class="collection-info-text">While it lives, ${escapeHtml(seal)} is silenced.</div>` : ""}
     ${collectionDemonBindHtml(key, seal, pinned)}`;
@@ -1188,21 +1188,21 @@ function showNextCollectionToast() {
     ? `
     <span class="collection-toast-codex" aria-hidden="true">${CODEX_MARK}</span>
     <span class="collection-toast-text">
-      <span class="collection-toast-kicker">${item.first ? "Something was left in the ashes" : "A page of the Codex"}</span>
-      <span class="collection-toast-name">${escapeHtml(item.first ? "The Faustian Codex" : item.title || "")}</span>
+      <span class="collection-toast-kicker">${t(item.first ? "Something was left in the ashes" : "A page of the Codex")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(item.first ? "The Faustian Codex" : item.title || ""))}</span>
     </span>`
     : item?.kind === "karma"
     ? `
     <span class="collection-toast-karma" aria-hidden="true">+${escapeHtml(String(item.karma))}${KARMA_MARK}</span>
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">${t("Karma")}</span>
-      <span class="collection-toast-name">${escapeHtml(item.source || "")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(item.source || ""))}</span>
     </span>`
     : `
     <img class="collection-toast-sigil" src="${escapeAttr(sealSigilPath(id))}" alt="" />
     <span class="collection-toast-text">
       <span class="collection-toast-kicker">${t("Seal unlocked")}</span>
-      <span class="collection-toast-name">${escapeHtml(ITEMS[id]?.name || "Seal")}</span>
+      <span class="collection-toast-name">${escapeHtml(t(ITEMS[id]?.name || "Seal"))}</span>
     </span>`;
   document.body.appendChild(toast);
   playGameSfx(item?.kind === "codex" ? (item.first ? "karmaUnlock" : "codexNewPage") : item?.kind === "karma" ? "karmaGain" : "sealUnlock");
@@ -1244,7 +1244,7 @@ function collectionInfoHtml(id, pinned = false) {
     const progressText = result && result.goal > 1 ? `<div class="collection-info-progress">${formatNumber(Math.min(result.value, result.goal))} / ${formatNumber(result.goal)}</div>` : "";
     return `
       <div class="collection-info-status locked">${t("Locked")}</div>
-      <div class="collection-info-name">${escapeHtml(item.name)}</div>
+      <div class="collection-info-name">${escapeHtml(t(item.name))}</div>
       ${collectionBuildsHtml(id)}
       <div class="collection-info-text">${descriptionHtml(rule.text)}</div>
       ${progressText}
@@ -1260,7 +1260,7 @@ function collectionInfoHtml(id, pinned = false) {
       <div class="collection-info-status ${status}">${status === "discovered" ? "Discovered" : "Undiscovered"}${isSealBeaten(id) ? collectionBeatenMarkHtml() : ""}</div>
       ${more ? `<div class="collection-info-shift-hint">${t("press shift for more")}</div><button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>` : ""}
     </div>
-    <div class="collection-info-name">${escapeHtml(item.name)}</div>
+    <div class="collection-info-name">${escapeHtml(t(item.name))}</div>
     ${collectionBuildsHtml(id)}
     <div class="collection-info-text">${descriptionHtml(collectionDescription(item))}</div>
     ${elite ? `<div class="collection-info-elite">${descriptionHtml(elite)}</div>` : ""}

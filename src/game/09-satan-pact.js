@@ -1268,8 +1268,8 @@ function satanDealShowAsk() {
   form.setAttribute("autocomplete", "off");
   form.innerHTML = `
     <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="${t("What do you want from Satan?")}" />
-    <button class="intro-choice-button" type="submit">${escapeHtml(SATAN_DEAL_BUTTONS.ask)}</button>
-    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(SATAN_DEAL_BUTTONS.leave)}</button>`;
+    <button class="intro-choice-button" type="submit">${escapeHtml(t(SATAN_DEAL_BUTTONS.ask))}</button>
+    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(t(SATAN_DEAL_BUTTONS.leave))}</button>`;
   const input = form.querySelector("input");
   input.placeholder = SATAN_DEAL_LINES.askPlaceholder;
   form.addEventListener("click", (event) => event.stopPropagation());
@@ -1313,8 +1313,8 @@ function satanDealShowChoice() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(SATAN_DEAL_BUTTONS.yes)}</button>
-    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(SATAN_DEAL_BUTTONS.no)}</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(t(SATAN_DEAL_BUTTONS.yes))}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(t(SATAN_DEAL_BUTTONS.no))}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");

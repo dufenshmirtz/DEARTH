@@ -254,8 +254,9 @@ function codexMarkRead() {
   }
 }
 
+// a page's text, in the player's language; *words* are the red rubrics (keep the stars in a translation)
 function codexRich(text) {
-  return escapeHtml(text).replace(/\*(.+?)\*/g, '<span class="codex-rub">$1</span>');
+  return escapeHtml(t(text)).replace(/\*(.+?)\*/g, '<span class="codex-rub">$1</span>');
 }
 
 function codexRoman(n) {
@@ -276,16 +277,16 @@ function codexLeafHtml(index) {
   if (!page) return `<article class="codex-leaf codex-empty" aria-hidden="true"></article>`;
   const folio = index === 0 ? "" : `<span class="codex-folio-num">${codexRoman(index + 1)}</span>`;
   if (index >= codexPagesFound()) {
-    return `<article class="codex-leaf codex-torn"><div class="codex-scrap" aria-hidden="true"></div><p class="codex-torn-text">${escapeHtml(CODEX_TORN_TEXT)}</p>${folio}</article>`;
+    return `<article class="codex-leaf codex-torn"><div class="codex-scrap" aria-hidden="true"></div><p class="codex-torn-text">${escapeHtml(t(CODEX_TORN_TEXT))}</p>${folio}</article>`;
   }
-  const note = page.note ? `<p class="codex-note">${escapeHtml(page.note)}</p>` : "";
+  const note = page.note ? `<p class="codex-note">${escapeHtml(t(page.note))}</p>` : "";
   if (page.kind === "cover") {
     return `
       <article class="codex-leaf codex-cover">
         ${CODEX_SIGIL}
-        <h3 class="codex-cover-title">${escapeHtml(page.title)}</h3>
-        <p class="codex-cover-text">${escapeHtml(page.text)}</p>
-        <p class="codex-small">${escapeHtml(page.small)}</p>
+        <h3 class="codex-cover-title">${escapeHtml(t(page.title))}</h3>
+        <p class="codex-cover-text">${escapeHtml(t(page.text))}</p>
+        <p class="codex-small">${escapeHtml(t(page.small))}</p>
         ${note}
       </article>`;
   }
@@ -295,14 +296,14 @@ function codexLeafHtml(index) {
       if (typeof para === "string") return `<p class="codex-p">${codexRich(para)}</p>`;
       const word = margins[para.trick];
       const scribble = word ? `<span class="codex-scribble">“${escapeHtml(word)}” ✓</span>` : "";
-      return `<div class="codex-verse">${scribble}<h4 class="codex-verse-title">${escapeHtml(para.title)}</h4><p class="codex-p">${codexRich(para.text)}</p></div>`;
+      return `<div class="codex-verse">${scribble}<h4 class="codex-verse-title">${escapeHtml(t(para.title))}</h4><p class="codex-p">${codexRich(para.text)}</p></div>`;
     })
     .join("");
-  const small = page.small ? `<p class="codex-small">${escapeHtml(page.small)}</p>` : "";
+  const small = page.small ? `<p class="codex-small">${escapeHtml(t(page.small))}</p>` : "";
   if (page.kind === "fragment") {
     return `<article class="codex-leaf codex-fragment"><div class="codex-fragment-text">${paras}${small}</div>${folio}</article>`;
   }
-  return `<article class="codex-leaf"><h3 class="codex-title">${escapeHtml(page.title)}</h3><div class="codex-text">${paras}</div>${note}${folio}</article>`;
+  return `<article class="codex-leaf"><h3 class="codex-title">${escapeHtml(t(page.title))}</h3><div class="codex-text">${paras}</div>${note}${folio}</article>`;
 }
 
 function codexBookHtml() {
@@ -316,9 +317,9 @@ function codexBookHtml() {
     <div class="codex-book" style="--codex-per: ${per}">
       <div class="codex-spread">${leaves.join("")}</div>
       <nav class="codex-nav" aria-label="${t("Pages")}">
-        <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>Previous</button>
-        <span class="codex-folio">${per === 2 ? "pages" : "page"} ${folio} of ${CODEX_PAGES.length}</span>
-        <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>Next</button>
+        <button type="button" class="codex-turn" data-codex-turn="-1"${codexPageIndex <= 0 ? " disabled" : ""}>${t("Previous")}</button>
+        <span class="codex-folio">${t(per === 2 ? "pages {folio} of {total}" : "page {folio} of {total}", { folio, total: CODEX_PAGES.length })}</span>
+        <button type="button" class="codex-turn" data-codex-turn="1"${last >= CODEX_PAGES.length ? " disabled" : ""}>${t("Next")}</button>
       </nav>
     </div>`;
 }
@@ -334,7 +335,7 @@ function codexLegendHtml() {
 }
 
 function codexCountsHtml() {
-  return `<span><strong>${codexPagesFound()}</strong> / ${CODEX_PAGES.length} pages</span>`;
+  return `<span>${t("{count} / {total} pages", { count: `<strong>${codexPagesFound()}</strong>`, total: CODEX_PAGES.length })}</span>`;
 }
 
 // turns the pages in place (no full render, so the screen doesn't play its entrance again)

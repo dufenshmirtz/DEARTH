@@ -42,7 +42,7 @@ const LAYOUT_BODY_CLASSES = { desktop: [], mobile: ["mobile-arcade"], native: ["
 
 // a document/window that accepts anything: rendering code runs, nothing is drawn.
 // document.body has a real class list, so the layout checks (phone web view, phone app) answer truly.
-function permissiveStub(read, bodyClasses = []) {
+function permissiveStub(read, bodyClasses = [], storage = null) {
   const target = function stub() {};
   const classes = new Set(bodyClasses);
   const classList = {
@@ -65,6 +65,7 @@ function permissiveStub(read, bodyClasses = []) {
       if (key === "value") return read();
       if (key === "innerWidth") return 1600;
       if (key === "innerHeight") return 900;
+      if (key === "localStorage" && storage) return storage;
       if (key === "body") {
         body = body || new Proxy(function body() {}, {
           get: (_b, bodyKey) => (bodyKey === "classList" ? classList : bodyKey === Symbol.toPrimitive ? () => "" : bodyKey === "then" ? undefined : proxy),
@@ -84,7 +85,12 @@ function permissiveStub(read, bodyClasses = []) {
 function createGame(seed, layout = "desktop") {
   const storage = new Map();
   const io = { guess: "" };
-  const stub = permissiveStub(() => io.guess, LAYOUT_BODY_CLASSES[layout] || []);
+  const localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: (key) => storage.delete(key)
+  };
+  const stub = permissiveStub(() => io.guess, LAYOUT_BODY_CLASSES[layout] || [], localStorage);
   const random = seededRandom(seed);
   const math = Object.create(Math);
   math.random = random;
@@ -116,11 +122,7 @@ function createGame(seed, layout = "desktop") {
     Image: function Image() { return stub; },
     getComputedStyle: () => stub,
     matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
-    localStorage: {
-      getItem: (key) => storage.get(key) ?? null,
-      setItem: (key, value) => storage.set(key, String(value)),
-      removeItem: (key) => storage.delete(key)
-    }
+    localStorage
   });
   vm.runInContext(sources, context);
   const run = (code) => vm.runInContext(code, context);
@@ -265,6 +267,13 @@ function screenTexts(layout, language = "en") {
   Object.assign(out, tableScenes(game, `${layout}.round1.active`));
   game.run("readyRound(); finishRoundRevealAnimation();");
   Object.assign(out, tableScenes(game, `${layout}.round1.summary`));
+  // the slot machine, Satan's bet and the DEAL button, as after the first win and the first BOSS
+  game.run("unlockSlotMachine(); unlockSatanDeal(); advanceAfterSummary();");
+  Object.assign(out, tableScenes(game, `${layout}.round2.slots`));
+  // the death card
+  game.io.guess = "40";
+  game.run("submitGuess(); readyRound(); finishRoundRevealAnimation(); state.player.hp = 0; advanceAfterSummary();");
+  out[`${layout}.gameover`] = pageText(game, "renderArcadeApp()");
   return out;
 }
 

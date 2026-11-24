@@ -69,7 +69,7 @@ test("the system language is used on first launch only when the game is ready in
   `);
 });
 
-test("every language has only keys English has, with the same {placeholders}", () => {
+test("every translation keeps the {placeholders} of its English, and adds no quotes or tags", () => {
   const { run } = createGame(1);
   const locales = JSON.parse(run("JSON.stringify(LOCALES)"));
   const english = locales.en;
@@ -77,11 +77,49 @@ test("every language has only keys English has, with the same {placeholders}", (
   for (const [code, entries] of Object.entries(locales)) {
     if (code === "en") continue;
     for (const [key, value] of Object.entries(entries)) {
-      assert.ok(key in english, `${code}: "${key}" is not an English key`);
-      assert.equal(placeholders(value), placeholders(english[key]), `${code}: "${key}" has other {placeholders} than English`);
-      assert.equal(typeof value === "object", typeof english[key] === "object", `${code}: "${key}" must be a plural set exactly when English is`);
+      // a key of locales/en.js, or English text itself (its own placeholders)
+      const source = key in english ? english[key] : key;
+      assert.equal(placeholders(value), placeholders(source), `${code}: "${key}" has other {placeholders} than English`);
+      if (key in english) assert.equal(typeof value === "object", typeof source === "object", `${code}: "${key}" must be a plural set exactly when English is`);
+      // translations go into HTML as they are: no character that HTML or an attribute would read differently
+      for (const char of ['"', "<", ">"]) {
+        const text = typeof value === "object" ? Object.values(value).join(" ") : value;
+        const sourceText = typeof source === "object" ? Object.values(source).join(" ") : source;
+        if (!sourceText.includes(char)) assert.ok(!text.includes(char), `${code}: "${key}" adds ${char}`);
+      }
     }
   }
+});
+
+test("English the code built is translated by patterns, line by line and sentence by sentence", () => {
+  const { run, context } = createGame(1);
+  context.__assert = assert;
+  run(`
+    LOCALES.el["Gain {sin} SIN whenever this happens."] = "Κέρδισε {sin} SIN κάθε φορά.";
+    LOCALES.el["Seal of Bael"] = "Σφραγίδα του Βάαλ";
+    LOCALES.el["ELITE {level} {name}"] = "ΕΛΙΤ {level} {name}";
+    LOCALES.el["-{amount} SOUL from {source}"] = "-{amount} ΨΥΧΗ από {source}";
+    LOCALES.el["Run ended."] = "Τέλος.";
+    setLanguage("el");
+    __assert.equal(t("Gain 15 SIN whenever this happens."), "Κέρδισε 15 SIN κάθε φορά.");
+    __assert.equal(t("ELITE III Seal of Bael"), "ΕΛΙΤ III Σφραγίδα του Βάαλ");
+    __assert.equal(t("-12 SOUL from Seal of Bael"), "-12 ΨΥΧΗ από Σφραγίδα του Βάαλ");
+    __assert.equal(t("-4 SOUL from Hana-87\\nRun ended."), "-4 ΨΥΧΗ από Hana-87\\nΤέλος.");
+    __assert.equal(t("Run ended. Not translated yet."), "Τέλος. Not translated yet.");
+    setLanguage("en");
+    __assert.equal(t("Gain 15 SIN whenever this happens."), "Gain 15 SIN whenever this happens.");
+  `);
+});
+
+test("descriptionHtml shows SEAL texts in the player's language", () => {
+  const { run, context } = createGame(1);
+  context.__assert = assert;
+  run(`
+    const english = itemDescription({ ...ITEMS.p1, stack: 1 });
+    LOCALES.el[english] = "Μεταφρασμένο κείμενο.";
+    setLanguage("el");
+    __assert.equal(descriptionHtml(english), "Μεταφρασμένο κείμενο.");
+  `);
 });
 
 test("Settings in the pseudo language: every text goes through t()", () => {
