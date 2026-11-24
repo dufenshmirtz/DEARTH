@@ -2920,8 +2920,8 @@ function renderOverlay() {
   const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
-      <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
-      <img class="end-figure end-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
+      <img class="end-figure end-figure-left end-figure-satan" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
+      <img class="end-figure end-figure-right" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
@@ -3500,11 +3500,13 @@ const MENU_FIGURES = {
   },
   satan: {
     side: "right",
-    stage: { left: 1006, top: 78, width: 716, srcW: 747 },
-    files: ["base", "cloth", "head", "claw", "tailA", "tailB"],
-    meta: {"W": 779, "H": 1206, "pad": 16, "head": {"x": 222, "y": 16, "w": 247, "h": 229}, "claw": {"x": 271, "y": 216, "w": 115, "h": 128}, "tailA": {"x": 500, "y": 600, "w": 44, "h": 169}, "tailB": {"x": 528, "y": 754, "w": 115, "h": 172}, "head_pivot": [350, 205], "claw_pivot": [282, 312], "tailA_pivot": [500, 600], "tailB_pivot": [519, 745], "eyes": [[323, 106, 15, 10], [303, 143, 16, 11]]},
+    // the artist's ink Satan (Nov 2026): one full-resolution drawing, no cut-out parts and no cloth drift.
+    // head is only the box his glowing eyes sit in (satan-eyes.webp, same size), eyesMid the point between them
+    stage: { left: 1063, top: 200, width: 640, srcW: 2098 },
+    files: ["base"],
+    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 540, "y": 440, "w": 300, "h": 180}, "head_pivot": [665, 506], "eyesMid": [149, 90]},
     leanDeg: -0.4,
-    feet: [330, 1130],
+    feet: [1076, 3048],
     clothAmp: 1.1,
   },
 };
@@ -3540,11 +3542,11 @@ function renderMenuFigure(name) {
       <div class="fig-lean" style="transform-origin:${f.feet[0] + P}px ${f.feet[1] + P}px">
         <div class="fig-live">
           <img class="fig-base-img" src="${menuFigureSrc(name, "base")}" alt="">
-          <canvas class="fig-cloth" width="${m.W}" height="${m.H}"></canvas>
+          ${f.files.includes("cloth") ? `<canvas class="fig-cloth" width="${m.W}" height="${m.H}"></canvas>` : ""}
           ${tail}
           ${claw}
           <div class="fig-group fig-head-group" style="${origin(m.head_pivot)}">
-            ${part("head")}
+            ${f.files.includes("head") ? part("head") : ""}
             ${eyes}
             ${crown}
           </div>
@@ -3581,8 +3583,8 @@ function initMenuFigures(reduceMotion) {
       flick: prev ? prev.flick : { start: -1 },
       curl: prev ? prev.curl : { start: -1 },
     };
-    rig.gl = reduceMotion ? null : setupClothGL(rig);
-    if (!rig.gl) el.querySelector(".fig-cloth").style.display = "none";
+    rig.gl = reduceMotion || !rig.cfg.files.includes("cloth") ? null : setupClothGL(rig);
+    if (!rig.gl) el.querySelector(".fig-cloth")?.style.setProperty("display", "none");
     else el.querySelector(".fig-base-img").style.visibility = "hidden";
     menuFigState.rigs[name] = rig;
   }

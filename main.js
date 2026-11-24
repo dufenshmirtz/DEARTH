@@ -17781,8 +17781,8 @@ function renderOverlay() {
   const statRow = (label, value) => `<div class="end-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
   return `
     <div class="overlay visible game-over-overlay">
-      <img class="end-figure end-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
-      <img class="end-figure end-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
+      <img class="end-figure end-figure-left end-figure-satan" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
+      <img class="end-figure end-figure-right" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">Game Over</h1>
         <p class="end-copy">Welcome to Hell...</p>
@@ -18361,11 +18361,13 @@ const MENU_FIGURES = {
   },
   satan: {
     side: "right",
-    stage: { left: 1006, top: 78, width: 716, srcW: 747 },
-    files: ["base", "cloth", "head", "claw", "tailA", "tailB"],
-    meta: {"W": 779, "H": 1206, "pad": 16, "head": {"x": 222, "y": 16, "w": 247, "h": 229}, "claw": {"x": 271, "y": 216, "w": 115, "h": 128}, "tailA": {"x": 500, "y": 600, "w": 44, "h": 169}, "tailB": {"x": 528, "y": 754, "w": 115, "h": 172}, "head_pivot": [350, 205], "claw_pivot": [282, 312], "tailA_pivot": [500, 600], "tailB_pivot": [519, 745], "eyes": [[323, 106, 15, 10], [303, 143, 16, 11]]},
+    // the artist's ink Satan (Nov 2026): one full-resolution drawing, no cut-out parts and no cloth drift.
+    // head is only the box his glowing eyes sit in (satan-eyes.webp, same size), eyesMid the point between them
+    stage: { left: 1063, top: 200, width: 640, srcW: 2098 },
+    files: ["base"],
+    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 540, "y": 440, "w": 300, "h": 180}, "head_pivot": [665, 506], "eyesMid": [149, 90]},
     leanDeg: -0.4,
-    feet: [330, 1130],
+    feet: [1076, 3048],
     clothAmp: 1.1,
   },
 };
@@ -18401,11 +18403,11 @@ function renderMenuFigure(name) {
       <div class="fig-lean" style="transform-origin:${f.feet[0] + P}px ${f.feet[1] + P}px">
         <div class="fig-live">
           <img class="fig-base-img" src="${menuFigureSrc(name, "base")}" alt="">
-          <canvas class="fig-cloth" width="${m.W}" height="${m.H}"></canvas>
+          ${f.files.includes("cloth") ? `<canvas class="fig-cloth" width="${m.W}" height="${m.H}"></canvas>` : ""}
           ${tail}
           ${claw}
           <div class="fig-group fig-head-group" style="${origin(m.head_pivot)}">
-            ${part("head")}
+            ${f.files.includes("head") ? part("head") : ""}
             ${eyes}
             ${crown}
           </div>
@@ -18442,8 +18444,8 @@ function initMenuFigures(reduceMotion) {
       flick: prev ? prev.flick : { start: -1 },
       curl: prev ? prev.curl : { start: -1 },
     };
-    rig.gl = reduceMotion ? null : setupClothGL(rig);
-    if (!rig.gl) el.querySelector(".fig-cloth").style.display = "none";
+    rig.gl = reduceMotion || !rig.cfg.files.includes("cloth") ? null : setupClothGL(rig);
+    if (!rig.gl) el.querySelector(".fig-cloth")?.style.setProperty("display", "none");
     else el.querySelector(".fig-base-img").style.visibility = "hidden";
     menuFigState.rigs[name] = rig;
   }
@@ -20342,10 +20344,16 @@ const MENU_FIGURE_HIT = {
     [210, 560], [209, 560], [180, 560], [174, 560], [180, 560], [180, 560], [178, 560], [169, 560], 0
   ],
   satan: [
-    [260, 360], [278, 390], [222, 447], [232, 469], [268, 484], [275, 510], [304, 534], [381, 563], [381, 598], [380, 603],
-    [276, 598], [288, 591], [301, 587], [313, 583], [325, 578], [335, 587], [321, 603], [318, 638], [318, 651], [315, 639],
-    [312, 624], [306, 465], [304, 466], [298, 466], [294, 466], [309, 468], [320, 482], [327, 496], [322, 508], [323, 524],
-    [323, 503], [344, 493], [171, 604], [150, 650], [150, 650], [150, 650], [222, 650], 0
+    [708, 712], [687, 711], [673, 701], [663, 701], [655, 700], [377, 702], [367, 702], [361, 980], [358, 978], [359, 959],
+    [361, 933], [369, 926], [381, 918], [396, 918], [424, 919], [469, 1452], [548, 1500], [501, 1521], [501, 1546], [559, 1576],
+    [561, 1588], [564, 1613], [565, 1636], [567, 1656], [609, 1667], [609, 1696], [608, 1714], [607, 1721], [180, 1731], [44, 1745],
+    [34, 1756], [35, 1769], [52, 1781], [25, 1794], [25, 1805], [38, 1821], [49, 1832], [39, 1843], [48, 1870], [89, 1876],
+    [153, 1880], [193, 1880], [228, 1880], [253, 1878], [252, 1875], [268, 1871], [312, 1868], [326, 1871], [341, 1872], [354, 1875],
+    [371, 1875], [393, 1874], [429, 1877], [449, 1876], [979, 1896], [970, 1910], [938, 1911], [928, 1921], [909, 1936], [888, 1944],
+    [867, 1950], [855, 1963], [823, 1991], [793, 2009], [783, 2066], [760, 2074], [571, 2083], [536, 2086], [518, 2090], [507, 2127],
+    [503, 2121], [504, 2118], [507, 1940], [512, 1938], [524, 1924], [551, 1912], [582, 1918], [650, 1924], [642, 1924], [619, 1928],
+    [587, 1929], [577, 1941], [546, 1943], [525, 1944], [499, 1952], [478, 1951], [442, 1950], [419, 1954], [402, 1943], [392, 1950],
+    [388, 1953], [376, 1949], [364, 1956], [343, 1956], [333, 1953], [333, 625], [378, 579], 0, 0
   ]
 };
 const MENU_FIGURE_HIT_CELL = 32;
@@ -22080,9 +22088,10 @@ function triggerMenuSatan() {
   const eyes = fig.querySelector(".fig-eyes");
   const rect = (eyes || fig).getBoundingClientRect();
   const meta = MENU_FIGURES.satan.meta;
-  // between his two eyes (head-image pixels 104, 123)
-  const ex = eyes ? rect.left + (rect.width * 104) / meta.head.w : rect.left + rect.width * 0.4;
-  const ey = eyes ? rect.top + (rect.height * 123) / meta.head.h : rect.top + rect.height * 0.12;
+  // between his two eyes (head-box pixels, meta.eyesMid)
+  const [midX, midY] = meta.eyesMid || [104, 123];
+  const ex = eyes ? rect.left + (rect.width * midX) / meta.head.w : rect.left + rect.width * 0.4;
+  const ey = eyes ? rect.top + (rect.height * midY) / meta.head.h : rect.top + rect.height * 0.12;
   const veil = document.createElement("div");
   veil.className = "menu-satan-veil";
   veil.style.setProperty("--veil-x", `${Math.round(ex)}px`);
