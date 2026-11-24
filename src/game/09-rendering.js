@@ -1278,7 +1278,7 @@ function renderPvpTopbar() {
     </div>
     <div class="stat-card pvp-stat pvp-phase-stat">
       <span class="stat-label">${t("Phase")}</span>
-      <span class="stat-value">${PVP_PHASE_NAMES[pvp.stage] || ""}</span>
+      <span class="stat-value">${PVP_PHASE_NAMES[pvp.stage] ? t(PVP_PHASE_NAMES[pvp.stage]) : ""}</span>
     </div>
   `;
 }
@@ -1343,8 +1343,8 @@ function renderPvpSlot(participant, slot) {
   const isDown = participant.eliminated || participant.hp <= 0;
   const allActivesReady = state.pvp.stage !== "active" || pvpAllActivesReady();
   const hasGuess = Number.isFinite(participant.guess);
-  const guessText = isDown ? "X" : lobby ? "--" : isGuessPhase ? (hasGuess ? "Ready" : "...") : hasGuess ? participant.guess : "--";
-  const guessLabel = isGuessPhase ? "Status" : "Guess";
+  const guessText = isDown ? "X" : lobby ? "--" : isGuessPhase ? (hasGuess ? t("Ready") : "...") : hasGuess ? participant.guess : "--";
+  const guessLabel = isGuessPhase ? t("Status") : t("Guess");
   const pvpTargetForColor = state.pvp.finalTarget !== null ? state.pvp.finalTarget : state.pvp.baseTarget;
   const guessForColor = !isGuessPhase && !isDown && hasGuess ? participant.guess : null;
   const guessCloseness = guessClosenessAttrs(guessForColor, pvpTargetForColor, participant.critical);
@@ -1416,8 +1416,8 @@ function renderPvpConsoleFrame(title, subtitle, actions, body) {
     <section class="pvp-console">
       <div class="panel-header pvp-console-head">
         <div class="pvp-console-heading">
-          <div class="panel-title">${title}</div>
-          ${subtitle ? `<div class="panel-subtitle">${subtitle}</div>` : ""}
+          <div class="panel-title">${t(title)}</div>
+          ${subtitle ? `<div class="panel-subtitle">${t(subtitle)}</div>` : ""}
         </div>
         ${actions ? `<div class="pvp-console-actions">${actions}</div>` : ""}
       </div>
@@ -1463,7 +1463,7 @@ function renderPvpPlayerChips(isReady, readyText, waitingText) {
       ${players
         .map((participant) => {
           const ready = isReady(participant);
-          return `<div class="pvp-chip ${ready ? "ready" : ""}"><span class="pvp-chip-name">${escapeHtml(participant.name)}</span><span class="pvp-chip-state">${ready ? readyText : waitingText}</span></div>`;
+          return `<div class="pvp-chip ${ready ? "ready" : ""}"><span class="pvp-chip-name">${escapeHtml(participant.name)}</span><span class="pvp-chip-state">${t(ready ? readyText : waitingText)}</span></div>`;
         })
         .join("")}
     </div>
@@ -1507,13 +1507,13 @@ function renderPvpEndedConsole() {
     "Winner",
     "",
     `<button class="primary-button" id="pvpRestart">${t("Play Again")}</button>`,
-    `<div class="pvp-winner">${escapeHtml(state.pvp.winner || "No one")}</div>${renderPvpResults()}`
+    `<div class="pvp-winner">${escapeHtml(state.pvp.winner || t("No one"))}</div>${renderPvpResults()}`
   );
 }
 
 function renderPvpResults() {
   if (!state.pvp.activeResults.length) return "";
-  return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}</div>`;
+  return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(t(normalizeGameText(result)))}</div>`).join("")}</div>`;
 }
 
 function renderPvpLog(limit = 8) {

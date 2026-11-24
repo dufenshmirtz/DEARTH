@@ -609,6 +609,8 @@ function pvpPublicState() {
   if (!state.pvp) return null;
   const revealActiveChoices = state.pvp.stage !== "active" || pvpAllActivesReady();
   return {
+    // the phones show their text in the host's language
+    lang: currentLang(),
     stage: state.pvp.stage,
     round: state.pvp.round,
     modifier: state.pvp.modifier,

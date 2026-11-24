@@ -1,3 +1,7 @@
+// t() comes from controller-i18n.js (the game's translation layer); without that file the phone stays in English
+// eslint-disable-next-line no-var
+var t = typeof t === "function" ? t : (text, params) => String(text).replace(/\{(\w+)\}/g, (match, name) => (params && name in params ? String(params[name]) : match));
+
 const STORAGE_ID = "dearthPvpPlayerId";
 const STORAGE_NAME = "dearthPvpPlayerName";
 const GUESS_SFX_SRC = "assets/audio/Guess.mp3";
@@ -182,13 +186,13 @@ function myGuess() {
 function renderCastBanner(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
   if (player.activeChoiceId === "skip") {
-    return `<div class="cast-banner cast-banner-skip"><strong>ARTIFACT SKIPPED</strong><span>Your next ARTIFACT casts for sure.</span></div>`;
+    return `<div class="cast-banner cast-banner-skip"><strong>${t("ARTIFACT SKIPPED")}</strong><span>${t("Your next ARTIFACT casts for sure.")}</span></div>`;
   }
-  const name = escapeHtml(playerActiveName(player));
+  const name = escapeHtml(t(playerActiveName(player)));
   const icon = activeIconHtml(playerActiveOption(player), "artifact-icon banner-icon");
   return player.activeCast
-    ? `<div class="cast-banner cast-banner-success">${icon}<strong>ARTIFACT TRIGGERED</strong><span>${name}</span></div>`
-    : `<div class="cast-banner cast-banner-fail">${icon}<strong>ARTIFACT FAILED</strong><span>${name}</span></div>`;
+    ? `<div class="cast-banner cast-banner-success">${icon}<strong>${t("ARTIFACT TRIGGERED")}</strong><span>${name}</span></div>`
+    : `<div class="cast-banner cast-banner-fail">${icon}<strong>${t("ARTIFACT FAILED")}</strong><span>${name}</span></div>`;
 }
 
 function maybeVibrateCastResult() {
@@ -205,8 +209,8 @@ function maybeVibrateCastResult() {
 
 function activeCastText(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
-  if (player.activeChoiceId === "skip") return "skipped ARTIFACT use";
-  return player.activeCast ? `${playerActiveName(player)} cast` : `${playerActiveName(player)} failed`;
+  if (player.activeChoiceId === "skip") return t("skipped ARTIFACT use");
+  return player.activeCast ? t("{name} cast", { name: t(playerActiveName(player)) }) : t("{name} failed", { name: t(playerActiveName(player)) });
 }
 
 function mergeSourceEntries(sources) {
@@ -223,7 +227,7 @@ function mergeSourceEntries(sources) {
 function sourceTooltip(sources, kind = "damage") {
   const sign = kind === "heal" ? "+" : "-";
   return mergeSourceEntries(sources)
-    .map((entry) => normalizeGameText(`${sign}${entry.amount} SOUL from ${entry.source}`))
+    .map((entry) => t(normalizeGameText(`${sign}${entry.amount} SOUL from ${entry.source}`)))
     .join("\n");
 }
 
@@ -239,6 +243,9 @@ async function pollRoom() {
   try {
     const response = await fetch("/api/room", { cache: "no-store" });
     controllerState.room = await response.json();
+    // the phone shows its text in the host's language (controller-i18n.js)
+    const hostLanguage = controllerState.room?.hostState?.lang;
+    if (hostLanguage && typeof setLanguage === "function" && hostLanguage !== currentLang()) setLanguage(hostLanguage);
     if (controllerState.player && !remotePlayer()) {
       localStorage.removeItem(STORAGE_ID);
       localStorage.removeItem(STORAGE_NAME);
@@ -345,20 +352,20 @@ function renderHeader() {
       : "";
   return `
     <section class="panel">
-      <h1>DEARTH PvP</h1>
+      <h1>${t("DEARTH PvP")}</h1>
       <p class="muted">${escapeHtml(controllerState.player?.name || "Phone controller")}</p>
       <div class="stat-row">
-        <div class="stat"><span>Previous</span><strong>${host?.previousTarget ?? "?"}</strong></div>
-        <div class="stat health-stat">${damageBadge}<span>SOUL</span><strong>${player ? player.hp : "-"}</strong></div>
-        <div class="stat"><span>Modifier</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
-        <div class="stat"><span>TARGET</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
-        <div class="stat guess-stat"><span>Your Guess</span><strong>${guess ?? "-"}</strong></div>
+        <div class="stat"><span>${t("Previous")}</span><strong>${host?.previousTarget ?? "?"}</strong></div>
+        <div class="stat health-stat">${damageBadge}<span>${t("SOUL")}</span><strong>${player ? player.hp : "-"}</strong></div>
+        <div class="stat"><span>${t("Modifier")}</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
+        <div class="stat"><span>${t("TARGET")}</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
+        <div class="stat guess-stat"><span>${t("Your Guess")}</span><strong>${guess ?? "-"}</strong></div>
       </div>
       ${renderCastBanner(player)}
-      ${host?.waitForHost ? `<p class="warning">The host paused the game.</p>` : ""}
-      ${player?.activeGuaranteeThisRound ? `<p class="cast">Skip bonus ready: your ARTIFACT will cast for sure.</p>` : ""}
-      ${player?.activeGuaranteeNextRound ? `<p class="cast">Skip bonus armed for next round.</p>` : ""}
-      ${controllerState.message ? `<p class="cast">${escapeHtml(normalizeGameText(controllerState.message))}</p>` : ""}
+      ${host?.waitForHost ? `<p class="warning">${t("The host paused the game.")}</p>` : ""}
+      ${player?.activeGuaranteeThisRound ? `<p class="cast">${t("Skip bonus ready: your ARTIFACT will cast for sure.")}</p>` : ""}
+      ${player?.activeGuaranteeNextRound ? `<p class="cast">${t("Skip bonus armed for next round.")}</p>` : ""}
+      ${controllerState.message ? `<p class="cast">${escapeHtml(t(normalizeGameText(controllerState.message)))}</p>` : ""}
     </section>
   `;
 }
@@ -366,10 +373,10 @@ function renderHeader() {
 function renderJoin() {
   return `
     <section class="panel">
-      <h1>DEARTH PvP</h1>
-      <p class="muted">Enter your name to take a table slot.</p>
-      <input id="joinName" type="text" maxlength="16" placeholder="Your name" value="${escapeAttr(controllerState.draftName)}" />
-      <button id="joinButton">Join</button>
+      <h1>${t("DEARTH PvP")}</h1>
+      <p class="muted">${t("Enter your name to take a table slot.")}</p>
+      <input id="joinName" type="text" maxlength="16" placeholder="${t("Your name")}" value="${escapeAttr(controllerState.draftName)}" />
+      <button id="joinButton">${t("Join")}</button>
       ${controllerState.message ? `<p class="warning">${escapeHtml(controllerState.message)}</p>` : ""}
     </section>
   `;
@@ -380,8 +387,8 @@ function renderLobby() {
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>Lobby</h2>
-      <p class="muted">${player ? "You have a slot. Wait for the host to press Ready." : "Waiting for the host to import your phone slot."}</p>
+      <h2>${t("Lobby")}</h2>
+      <p class="muted">${t(player ? "You have a slot. Wait for the host to press Ready." : "Waiting for the host to import your phone slot.")}</p>
     </section>
   `;
 }
@@ -391,15 +398,15 @@ function renderGuess() {
   const remote = remotePlayer();
   const submitted = remote?.guessRound === host.round && Number.isFinite(remote.guess);
   const readyText = host.waitForHost
-    ? "Ready."
-    : "Ready. Guesses reveal automatically when everyone is ready.";
+    ? t("Ready.")
+    : t("Ready. Guesses reveal automatically when everyone is ready.");
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>Guess Phase</h2>
-      <p class="muted">${submitted ? readyText : "Submit a whole number from 0 to 100."}</p>
+      <h2>${t("Guess Phase")}</h2>
+      <p class="muted">${submitted ? readyText : t("Submit a whole number from 0 to 100.")}</p>
       <input id="guessValue" type="number" min="0" max="100" value="${submitted ? "" : escapeAttr(controllerState.draftGuess)}" ${submitted ? "disabled" : ""} />
-      <button id="guessButton" ${submitted ? "disabled" : ""}>${submitted ? "Ready" : "Send Guess"}</button>
+      <button id="guessButton" ${submitted ? "disabled" : ""}>${t(submitted ? "Ready" : "Send Guess")}</button>
     </section>
   `;
 }
@@ -413,10 +420,10 @@ function renderActiveChoice(active, submitted) {
   const targetSelect = active.needsTarget
     ? `
       <select id="target-${active.id}" ${submitted ? "disabled" : ""}>
-        <option value="">target</option>
+        <option value="">${t("target")}</option>
         ${targets
           .map((target) => {
-            const guess = Number.isFinite(target.guess) ? ` - Guess ${target.guess}` : "";
+            const guess = Number.isFinite(target.guess) ? ` - ${t("Guess {guess}", { guess: target.guess })}` : "";
             return `<option value="${target.id}" ${targetValue === target.id ? "selected" : ""}>${escapeHtml(target.name)}${guess}</option>`;
           })
           .join("")}
@@ -428,12 +435,12 @@ function renderActiveChoice(active, submitted) {
       <div class="choice-head">
         ${activeIconHtml(active)}
         <div>
-          <h2>${escapeHtml(active.name)}</h2>
-          <p class="muted">${escapeHtml(normalizeGameText(active.description))}</p>
+          <h2>${escapeHtml(t(active.name))}</h2>
+          <p class="muted">${escapeHtml(t(normalizeGameText(active.description)))}</p>
         </div>
       </div>
       ${targetSelect}
-      <button class="activeButton" data-active-id="${escapeAttr(active.id)}" ${submitted ? "disabled" : ""}>Choose</button>
+      <button class="activeButton" data-active-id="${escapeAttr(active.id)}" ${submitted ? "disabled" : ""}>${t("Choose")}</button>
     </div>
   `;
 }
@@ -453,19 +460,19 @@ function renderActive() {
     return `
       ${renderHeader()}
       <section class="panel">
-        <h2>ARTIFACT Phase</h2>
-        <p class="muted">${host.waitForHost ? "Ready." : "Ready. ARTIFACTS resolve automatically when everyone is ready."}</p>
-        <button disabled>Ready</button>
+        <h2>${t("ARTIFACT Phase")}</h2>
+        <p class="muted">${t(host.waitForHost ? "Ready." : "Ready. ARTIFACTS resolve automatically when everyone is ready.")}</p>
+        <button disabled>${t("Ready")}</button>
       </section>
     `;
   }
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>ARTIFACT Phase</h2>
-      <p class="muted">${host.waitForHost ? "Choose one ARTIFACT." : "Choose one ARTIFACT. The phase resolves automatically when everyone chooses."}</p>
+      <h2>${t("ARTIFACT Phase")}</h2>
+      <p class="muted">${t(host.waitForHost ? "Choose one ARTIFACT." : "Choose one ARTIFACT. The phase resolves automatically when everyone chooses.")}</p>
       ${player.activeOptions.map((active) => renderActiveChoice(active, submitted)).join("")}
-      ${submitted ? `<p class="cast">Choice sent. Watch the host screen to see if it casts.</p>` : ""}
+      ${submitted ? `<p class="cast">${t("Choice sent. Watch the host screen to see if it casts.")}</p>` : ""}
     </section>
   `;
 }
@@ -480,8 +487,8 @@ function renderResults() {
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>${host?.stage === "ended" ? "Game Over" : "Round Summary"}</h2>
-      ${host?.winner ? `<p class="cast">Winner: ${escapeHtml(host.winner)}</p>` : `<p class="muted">${host?.waitForHost ? "Waiting for the next round." : "Next round starts automatically after 10 seconds."}</p>`}
+      <h2>${t(host?.stage === "ended" ? "Game Over" : "Round Summary")}</h2>
+      ${host?.winner ? `<p class="cast">${escapeHtml(t("Winner: {name}", { name: host.winner }))}</p>` : `<p class="muted">${t(host?.waitForHost ? "Waiting for the next round." : "Next round starts automatically after 10 seconds.")}</p>`}
       <div class="results">
         ${castRows}
         ${results.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}
@@ -494,7 +501,7 @@ function renderMain() {
   if (!controllerState.player) return renderJoin();
   const host = hostState();
   if (!host || !hostPlayer()) return renderLobby();
-  if (hostPlayer()?.eliminated) return `${renderHeader()}<section class="panel"><h2>Eliminated</h2><p class="muted">You are out. Last player standing wins.</p></section>`;
+  if (hostPlayer()?.eliminated) return `${renderHeader()}<section class="panel"><h2>${t("Eliminated")}</h2><p class="muted">${t("You are out. Last player standing wins.")}</p></section>`;
   if (host.stage === "lobby") return renderLobby();
   if (host.stage === "guess") return renderGuess();
   if (host.stage === "active") return renderActive();

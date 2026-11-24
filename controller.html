@@ -10,6 +10,20 @@
         src: url("fonts/razor-keen.regular.otf") format("opentype");
         font-display: swap;
       }
+      /* Greek and Chinese letters (scripts/subset-fonts.py), as in styles.css */
+      @font-face {
+        font-family: "Razor Keen";
+        src: url("fonts/i18n/mansalva-greek.woff2") format("woff2");
+        unicode-range: U+0370-03FF, U+1F00-1FFF;
+        size-adjust: 88%;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Razor Keen";
+        src: url("fonts/i18n/longcang-zh.woff2") format("woff2");
+        unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+        font-display: swap;
+      }
 
       :root {
         color-scheme: dark;
@@ -330,6 +344,8 @@
   </head>
   <body>
     <main id="controller" class="phone-shell"></main>
+    <!-- t() and the language files (built by pnpm run build:game); the phone follows the host's language -->
+    <script src="controller-i18n.js"></script>
     <script src="controller.js"></script>
   </body>
 </html>
