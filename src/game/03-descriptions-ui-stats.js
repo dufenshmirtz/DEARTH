@@ -818,7 +818,7 @@ function translatedKeywordPattern() {
   if (!forms.length) forms.push("(?!)");
   const pattern = code === "zh-Hans"
     ? new RegExp(`(${forms.join("|")})`, "gu")
-    : new RegExp(`(?<![\\p{L}\\p{N}])(${forms.join("|")})(?![\\p{L}\\p{N}])`, "giu");
+    : new RegExp(`(?<![\\p{L}\\p{N}])(${forms.join("|")})(?![\\p{L}\\p{N}])`, "gu"); // capitals only, as in English: a plain "Seele" or "alma" in a sentence stays plain
   translatedKeywordPatterns[code] = pattern;
   return pattern;
 }

@@ -1496,7 +1496,6 @@ LOCALES["el"] = {
   "BOSS kill": "KO σε BOSS",
   "DAMNED kill": "KO σε ΚΑΤΑΔΙΚΑΣΜΕΝΟ",
   "Padma's Seal": "Σφραγίδα της Πάντμα",
-  "MASSACRE": "ΜΑΚΕΛΕΙΟ",
   "Already unlocked": "Ήδη ξεκλειδωμένο",
   "Gone fishing.": "Πήγε για ψάρεμα.",
   "Make a deal with Satan.": "Κάνε μια συμφωνία με τον Σατανά.",
