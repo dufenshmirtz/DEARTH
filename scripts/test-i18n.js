@@ -150,3 +150,74 @@ test("the Chinese font files hold every Chinese character the game uses", () => 
     assert.deepEqual(missing, [], `${file} uses Chinese characters the fonts lack: run python scripts/subset-fonts.py`);
   }
 });
+
+// Satan's Pact in every language: what each request asks for (the tricks are heard first, as in satanPactAnswer)
+const PACT_REQUESTS = {
+  el: [
+    ["θέλω να με θεραπεύσεις 20", "heal", { n: 20 }],
+    ["δώσε μου 30 αμαρτίες", "sin", { n: 30 }],
+    ["αναβάθμισε τη σφραγίδα", "elite"],
+    ["θέλω μια δεύτερη ζωή", "cheatDeath"],
+    ["δώσε μου τη σφραγίδα σου", "satanSeal"],
+    ["θέλω δύο χρήσεις", "uses", { n: 2 }],
+    ["δώσε μου χάρη", "favor"],
+    ["κάρμα", "karma"],
+    ["θέλω τη σφραγίδα του Βάαλ", "seal", { id: "p16" }],
+    ["άρχοντά μου, δώσε μου λεφτά σε παρακαλώ", "sin", {}, ["silver", "please"]],
+    ["Μεφιστοφελή, με το αίμα μου, θέλω ψυχή", "heal", {}, ["name", "blood"]]
+  ],
+  de: [
+    ["heile mich um 20", "heal", { n: 20 }],
+    ["gib mir 30 Sünden", "sin", { n: 30 }],
+    ["werte das Siegel auf", "elite"],
+    ["ich will ein zweites Leben", "cheatDeath"],
+    ["gib mir dein Siegel", "satanSeal"],
+    ["zwei Aktionen", "uses", { n: 2 }],
+    ["Karma", "karma"],
+    ["Mephisto, Seele", "heal", {}, ["name"]],
+    ["mein Herr, gib mir Geld, bitte", "sin", {}, ["silver", "please"]]
+  ],
+  es: [
+    ["cúrame 20", "heal", { n: 20 }],
+    ["dame 30 pecados", "sin", { n: 30 }],
+    ["mejora el sello", "elite"],
+    ["quiero otra vida", "cheatDeath"],
+    ["dame tu sello", "satanSeal"],
+    ["dos acciones", "uses", { n: 2 }],
+    ["un favor", "favor"],
+    ["mi señor, dame dinero por favor", "sin", {}, ["silver", "please"]],
+    ["con mi sangre, diez pecados", "sin", { n: 10 }, ["blood"]]
+  ],
+  "zh-Hans": [
+    ["给我治疗20", "heal", { n: 20 }],
+    ["给我30罪孽", "sin", { n: 30 }],
+    ["升级印记", "elite"],
+    ["我想要第二条命", "cheatDeath"],
+    ["给我撒旦之印", "satanSeal"],
+    ["两次行动", "uses", { n: 2 }],
+    ["业力", "karma"],
+    ["给我巴力", "seal", { id: "p16" }],
+    ["我的主人，请给我钱", "sin", {}, ["silver", "please"]],
+    ["梅菲斯特，用我的血，十个罪孽", "sin", { n: 10 }, ["name", "blood"]]
+  ]
+};
+
+test("Satan's Pact understands requests in every language, and English in all of them", () => {
+  const { run } = createGame(1);
+  run(`startGame(); LOCALES.el["Seal of Bael"] = "Σφραγίδα του Βάαλ"; LOCALES["zh-Hans"]["Seal of Bael"] = "巴力之印";`);
+  const ask = (text) => JSON.parse(run(`(() => { const heard = satanPactHearTricks(${JSON.stringify(text)}); return JSON.stringify({ tricks: heard.found, ...satanPactParse(heard.cleaned) }); })()`));
+  for (const [code, requests] of Object.entries(PACT_REQUESTS)) {
+    run(`setLanguage(${JSON.stringify(code)})`);
+    for (const [text, intent, fields = {}, tricks = []] of requests) {
+      const answer = ask(text);
+      assert.equal(answer.intent, intent, `${code}: "${text}"`);
+      for (const [key, value] of Object.entries(fields)) assert.equal(answer[key], value, `${code}: "${text}" ${key}`);
+      for (const trick of tricks) assert.ok(answer.tricks.includes(trick), `${code}: "${text}" should hear ${trick}`);
+    }
+    // English still works in every language
+    assert.equal(ask("heal me 20").intent, "heal");
+    assert.equal(ask("give me the seal of bael").id, "p16");
+    const bot = run("state.bots[0].name");
+    assert.equal(ask(code === "zh-Hans" ? `杀了${bot}` : code === "el" ? `σκότωσε τον ${bot}` : code === "de" ? `töte ${bot}` : `mata a ${bot}`).botId, run("state.bots[0].id"));
+  }
+});
