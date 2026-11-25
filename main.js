@@ -23740,7 +23740,7 @@ function renderMoment() {
   if (!moment || moment.until <= performance.now()) return "";
   const figures =
     moment.kind === "finals"
-      ? `<img class="moment-figure moment-figure-left" src="assets/ui/jesus.png" alt="" /><img class="moment-figure moment-figure-right" src="assets/ui/devil.png" alt="" />`
+      ? `<img class="moment-figure moment-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" /><img class="moment-figure moment-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />`
       : "";
   return `
     <div class="moment-card moment-${moment.kind}" style="--moment-ms: ${moment.duration || MOMENT_DURATIONS_MS[moment.kind] || 1600}ms" data-morph-keep data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
@@ -25491,7 +25491,7 @@ const MENU_FIGURES = {
     side: "left",
     // the artist's ink Jesus (Nov 2026): one drawing, no cut-out head and no cloth drift. head is only the box his
     // glowing eye sits in (jesus-eyes.webp, same size), eyesMid the point of the eye; crown is the shimmer layer
-    stage: { left: 40, top: 62, width: 527, srcW: 704 },
+    stage: { left: 80, top: 150, width: 452, srcW: 704 },
     files: ["base"],
     meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 500, "y": 100, "w": 140, "h": 100}, "head_pivot": [546, 168], "eyesMid": [59, 53], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
     leanDeg: 0.4,

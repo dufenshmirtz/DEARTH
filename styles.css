@@ -7948,6 +7948,14 @@ body .sound-slider:focus-visible {
   animation-delay: 120ms;
 }
 
+/* Jesus stands further right than the old figure: his arms reach wide */
+#app .game-over-overlay .end-figure-right.end-figure-jesus {
+  right: -11vw;
+}
+body.mobile-arcade #app .game-over-overlay .end-figure-right.end-figure-jesus {
+  right: -15vw;
+}
+
 /* both ink figures stand a little higher so their hooves and feet show whole */
 #app .game-over-overlay .end-figure-satan,
 #app .game-over-overlay .end-figure-jesus {
