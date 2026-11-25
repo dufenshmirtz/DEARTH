@@ -687,7 +687,7 @@ function startIntroSequence(options = {}) {
   const layer = document.createElement("div");
   layer.className = "intro-layer";
   layer.innerHTML = `
-    <img class="intro-portrait intro-portrait-jesus" src="assets/ui/intro/intro-jesus.webp" alt="" draggable="false" />
+    <img class="intro-portrait intro-portrait-jesus" src="assets/ui/intro/intro-jesus-yellow.webp" alt="" draggable="false" />
     <img class="intro-portrait intro-portrait-sinner" src="assets/ui/intro/intro-sinner.webp" alt="" draggable="false" />
     ${introBoxHtml("judgement")}
     <div class="intro-tap-hint" aria-hidden="true">${"ontouchstart" in window ? "tap" : "click"}</div>`;
