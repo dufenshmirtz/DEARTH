@@ -148,7 +148,7 @@ const FIT_TEXT_RULES = [
   [".record-label", 1, 0.65]
 ];
 
-// lines of text in an element: its text rectangles, grouped where they overlap vertically
+// lines of text in an element: its text rectangles, grouped by how far down they start
 function textLineCount(el) {
   const range = document.createRange();
   const rects = [];
@@ -158,12 +158,15 @@ function textLineCount(el) {
     range.selectNodeContents(node);
     for (const rect of range.getClientRects()) if (rect.width > 0.5) rects.push(rect);
   }
+  // a new line starts half a line or more below the last one (big display fonts overlap their line boxes)
   rects.sort((a, b) => a.top - b.top);
   let lines = 0;
-  let bottom = -Infinity;
+  let lastTop = -Infinity;
   for (const rect of rects) {
-    if (rect.top >= bottom - Math.min(4, rect.height / 2)) lines += 1;
-    bottom = Math.max(bottom, rect.bottom);
+    if (rect.top - lastTop >= rect.height / 2) {
+      lines += 1;
+      lastTop = rect.top;
+    }
   }
   return Math.max(1, lines);
 }
