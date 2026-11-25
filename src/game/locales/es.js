@@ -1310,6 +1310,7 @@ LOCALES["es"] = {
   "settings.animSpeed.value": "x{value}",
   "settings.animSpeedNote": "Acelera la activación de los SELLOS y la revelación tras LISTO.",
   "settings.controlsHtml": "<b>Enter</b> Intento, Listo, Siguiente ronda &nbsp;·&nbsp; <b>Esc</b> Pausa &nbsp;·&nbsp; <b>Shift</b> más en un tooltip",
+  "settings.menuKeysHtml": "En los menús las <b>flechas</b> mueven, <b>Enter</b> elige, <b>Esc</b> vuelve atrás",
   "settings.effects": "Efectos",
   "settings.flashes": "Destellos",
   "settings.flashes.1": "Completos",

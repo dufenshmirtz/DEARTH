@@ -47,6 +47,8 @@
 	<string>LaunchScreen</string>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>UIStatusBarHidden</key>
+	<true/>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>

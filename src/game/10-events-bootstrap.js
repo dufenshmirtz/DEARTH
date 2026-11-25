@@ -288,7 +288,8 @@ function bindEvents() {
   const guessInput = document.querySelector("#guessInput");
   if (guessInput) {
     bindOn(guessInput, "keydown", (event) => {
-      if (event.key === "Enter") {
+      // under an open Pause card Enter does not guess (with the menu keys it is the card's Resume)
+      if (event.key === "Enter" && !state.pauseOpen) {
         event.preventDefault();
         performMainAction();
       }
@@ -400,6 +401,12 @@ function installPauseEscapeShortcut() {
     if (introCapturesInput()) return;
     if (state.gameOver && !state.inspectingGameOver && !state.pauseOpen) return;
     event.preventDefault();
+    // menu keys (desktop app): Esc while inspecting the death screen goes back to the death card
+    if (state.gameOver && state.inspectingGameOver && !state.pauseOpen && menuKeysEnabled()) {
+      state.inspectingGameOver = false;
+      render();
+      return;
+    }
     if (state.pauseOpen) {
       handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
       return;
@@ -506,6 +513,7 @@ installAnimationSpeed();
 installSoundtrack();
 installArcadeEnterShortcut();
 installPauseEscapeShortcut();
+installMenuKeyNavigation();
 installShiftTooltipMore();
 installNativeSelectionGuards();
 installTabBlock();

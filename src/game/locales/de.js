@@ -1309,6 +1309,7 @@ LOCALES["de"] = {
   "settings.animSpeed.value": "x{value}",
   "settings.animSpeedNote": "Beschleunigt das Auslösen der SIEGEL und das Aufdecken nach BEREIT.",
   "settings.controlsHtml": "<b>Enter</b> Tipp, Bereit, Nächste Runde &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> mehr in einem Tooltip",
+  "settings.menuKeysHtml": "In Menüs bewegen die <b>Pfeiltasten</b>, <b>Enter</b> wählt, <b>Esc</b> geht zurück",
   "settings.effects": "Effekte",
   "settings.flashes": "Blitze",
   "settings.flashes.1": "Voll",

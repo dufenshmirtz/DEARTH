@@ -1402,6 +1402,7 @@ LOCALES["el"] = {
   "settings.animSpeed.value": "x{value}",
   "settings.animSpeedNote": "Επιταχύνει την ενεργοποίηση των ΣΦΡΑΓΙΔΩΝ και την αποκάλυψη του ΕΤΟΙΜΟΣ.",
   "settings.controlsHtml": "<b>Enter</b> Μαντεψιά, Έτοιμος, Επόμενος γύρος &nbsp;·&nbsp; <b>Esc</b> Παύση &nbsp;·&nbsp; <b>Shift</b> περισσότερα σε ένα tooltip",
+  "settings.menuKeysHtml": "Στα μενού τα <b>βελάκια</b> μετακινούν, το <b>Enter</b> επιλέγει, το <b>Esc</b> πάει πίσω",
   "settings.effects": "Εφέ",
   "settings.flashes": "Αναλαμπές",
   "settings.flashes.1": "Πλήρεις",

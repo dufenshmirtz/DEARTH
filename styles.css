@@ -7907,6 +7907,19 @@ body .sound-toggle input[type="checkbox"]:checked {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
 }
 
+/* hover (mouse, or the menu keys' selection): the box's frame turns blood red */
+body .sound-toggle:hover input[type="checkbox"],
+body .sound-toggle input[type="checkbox"]:hover {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
+body .sound-toggle:hover input[type="checkbox"]:checked,
+body .sound-toggle input[type="checkbox"]:checked:hover {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M4.5 4.8 15.2 15.4M15.6 4.4 4.8 15.6'/%3E%3C/svg%3E") center / 70% 70% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
 body .sound-toggle input[type="checkbox"]:focus-visible,
 body .sound-slider:focus-visible {
   outline: 1px dashed var(--ash);
@@ -13539,6 +13552,31 @@ body.native-ios.native-arcade #app .shop-panel .shop-slots {
   padding: 6px 10px 12px !important;
   gap: 5px !important;
 }
+/* iPhone: the full-screen pages (Collection, Jesus' Gifts) keep their buttons, counters and cards clear of the Dynamic
+   Island and the home indicator; their dark background still fills the screen */
+body.native-ios .collection-screen {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body.native-ios .gifts-screen .gifts-back {
+  left: calc(clamp(14px, 3vw, 40px) + env(safe-area-inset-left));
+}
+/* Jesus moves in with the Back button, so it keeps the dark space above his head it has on Android */
+body.native-ios .gifts-screen .gifts-jesus {
+  left: calc(-9vh + env(safe-area-inset-left));
+}
+body.native-ios .gifts-screen .gifts-karma {
+  right: calc(clamp(14px, 4vw, 60px) + env(safe-area-inset-right));
+}
+/* the title steps left so the moved-in KARMA counter does not run into it */
+body.native-ios .gifts-screen .gifts-title {
+  right: calc(3% + env(safe-area-inset-right) + 100px);
+}
+body.native-ios.native-arcade .gifts-screen .gifts-cards {
+  right: calc(10px + env(safe-area-inset-right));
+}
+
 body.native-ios.native-arcade #app .shop-panel .shop-slots .item-card {
   height: auto !important;
   min-height: 0 !important;
