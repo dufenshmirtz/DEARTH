@@ -11649,8 +11649,8 @@ body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-n
 
 /* main menu Satan: the eyes kindle on hover (with a breathing bloom), flare on click,
    then a dark red bloom swells from them and the collection surfaces.
-   satan-eyes.webp is traced from the whites of his eyes in satan-head.webp (2x size), so it
-   sits exactly in the head box. The bloom never scales (a scale would pull it off the eyes);
+   satan-eyes.webp (and jesus-eyes.webp) were painted by the owner on the "Eye glow painter" page;
+   each fills the figure's head box (meta.head, same size), so it sits exactly on the eyes. The bloom never scales (a scale would pull it off the eyes);
    it grows by blur instead, and it breathes by brightness so the hover fade stays smooth. */
 .menu-fig-satan .fig-eyes {
   filter: drop-shadow(0 0 1px rgba(255, 70, 40, 0.95)) drop-shadow(0 0 3px rgba(220, 20, 10, 0.55)) !important;

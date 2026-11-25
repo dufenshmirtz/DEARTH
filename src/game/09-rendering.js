@@ -3615,7 +3615,7 @@ const MENU_FIGURES = {
     // glowing eye sits in (jesus-eyes.webp, same size), eyesMid the point of the eye; crown is the shimmer layer
     stage: { left: 80, top: 150, width: 452, srcW: 704 },
     files: ["base"],
-    meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 500, "y": 100, "w": 140, "h": 100}, "head_pivot": [546, 168], "eyesMid": [59, 53], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
+    meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 554, "y": 143, "w": 30, "h": 22}, "head_pivot": [546, 168], "eyesMid": [16, 10], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
     leanDeg: 0.4,
     feet: [300, 1520],
     clothAmp: 1.3,
@@ -3626,7 +3626,7 @@ const MENU_FIGURES = {
     // head is only the box his glowing eyes sit in (satan-eyes.webp, same size), eyesMid the point between them
     stage: { left: 1063, top: 200, width: 640, srcW: 2098 },
     files: ["base"],
-    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 540, "y": 440, "w": 300, "h": 180}, "head_pivot": [665, 506], "eyesMid": [149, 90]},
+    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 596, "y": 449, "w": 181, "h": 120}, "head_pivot": [665, 506], "eyesMid": [95, 70]},
     leanDeg: -0.4,
     feet: [1076, 3048],
     clothAmp: 1.1,
