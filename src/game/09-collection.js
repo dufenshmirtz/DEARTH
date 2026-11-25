@@ -1616,9 +1616,10 @@ function triggerMenuSatan() {
   const eyes = fig.querySelector(".fig-eyes");
   const rect = (eyes || fig).getBoundingClientRect();
   const meta = MENU_FIGURES.satan.meta;
-  // between his two eyes (head-image pixels 104, 123)
-  const ex = eyes ? rect.left + (rect.width * 104) / meta.head.w : rect.left + rect.width * 0.4;
-  const ey = eyes ? rect.top + (rect.height * 123) / meta.head.h : rect.top + rect.height * 0.12;
+  // between his two eyes (head-box pixels, meta.eyesMid)
+  const [midX, midY] = meta.eyesMid || [104, 123];
+  const ex = eyes ? rect.left + (rect.width * midX) / meta.head.w : rect.left + rect.width * 0.4;
+  const ey = eyes ? rect.top + (rect.height * midY) / meta.head.h : rect.top + rect.height * 0.12;
   const veil = document.createElement("div");
   veil.className = "menu-satan-veil";
   veil.style.setProperty("--veil-x", `${Math.round(ex)}px`);

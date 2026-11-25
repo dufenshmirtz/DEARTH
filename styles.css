@@ -7948,9 +7948,14 @@ body .sound-slider:focus-visible {
   animation-delay: 120ms;
 }
 
+/* Satan stands a little higher than Jesus so his hooves show whole */
+#app .game-over-overlay .end-figure-satan {
+  bottom: 3vh;
+}
+
 #app .game-over-card {
-  width: min(560px, 92vw) !important;
-  padding: 34px 40px 30px !important;
+  width: min(480px, 92vw) !important;
+  padding: 34px 30px 30px !important;
   background: rgba(0, 0, 0, 0.82) !important;
 }
 
@@ -8009,13 +8014,13 @@ body .sound-slider:focus-visible {
 #app .game-over-card .end-actions {
   margin-top: 22px !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 
 /* Inspect, Main Menu and Restart share one row, so they are smaller than the usual primary button */
 #app .game-over-card .end-actions .primary-button {
   min-height: 38px;
-  padding: 6px 10px !important;
+  padding: 6px 6px !important;
   font-size: 14px !important;
   white-space: nowrap;
 }
@@ -9843,7 +9848,7 @@ body.mobile-arcade .intro-choice {
   right: max(0.5vw, 4px);
   bottom: 0;
   height: min(96vh, 1195px);
-  aspect-ratio: 768 / 1195;
+  aspect-ratio: 2146 / 3122;
   max-width: 34vw;
   pointer-events: none;
   animation: intro-satan-in 2.2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
@@ -13570,7 +13575,7 @@ body.native-arcade #app .active-panel .active-list::-webkit-scrollbar {
 /* Phone (web and app): the death screen box is narrower and Jesus and Satan stand further out, so
    both figures show clearly beside it. The text inside keeps its size. */
 body.mobile-arcade #app .game-over-card {
-  width: min(450px, 58vw) !important;
+  width: min(400px, 52vw) !important;
 }
 body.mobile-arcade #app .game-over-overlay .end-figure-left {
   left: -10vw;
@@ -16196,7 +16201,7 @@ body.hide-guide-text #app .guide-text {
 }
 
 .finale-figure-jesus { aspect-ratio: 886 / 1216; }
-.finale-figure-satan { aspect-ratio: 768 / 1195; }
+.finale-figure-satan { aspect-ratio: 2146 / 3122; }
 
 /* the same pool of darkness Satan stands in, so the table does not show through */
 .finale-figure::before {
