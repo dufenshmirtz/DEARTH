@@ -201,7 +201,7 @@ const SEAL_BUILD_TAGS = {
   p64: ["reveal"], // Vine (double SIN payout is not BOUNTY)
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
-  p68: ["memory"], // Vapula
+  p68: ["memory", "bounty"], // Vapula
   p134: ["general"], // Amy (a random Goetic SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas

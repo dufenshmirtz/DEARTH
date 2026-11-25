@@ -575,7 +575,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "15% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead. ELITE redirects +5% more each level."
   },
   p64: {
     id: "p64",
@@ -590,7 +590,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "At end of round, a revealed DAMNED with the same guess as you takes 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -612,7 +612,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
@@ -884,7 +884,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",
@@ -1300,7 +1300,7 @@ const ITEMS = {
     type: "active",
     name: "Mummified Lamb",
     price: 2,
-    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
+    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS."
   },
   a26: {
     id: "a26",

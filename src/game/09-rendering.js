@@ -2759,8 +2759,8 @@ function renderPendingText() {
   if (state.pendingActive.id === "a25") {
     const lamb = artifactSealEntry("a25");
     return lamb
-      ? `${item.name}: pick DAMNED to reveal next round and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
-      : `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+      ? `${item.name}: pick DAMNED to reveal next round (never a BOSS) and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
+      : `${item.name}: pick DAMNED to reveal next round (never a BOSS) and give +3 BOUNTY.`;
   }
   if (state.pendingActive.id === "a9" && artifactSealEntry("a9")) {
     return `${item.name}: pick DAMNED to remove from the average and push away from the TARGET by its MEMORY.`;

@@ -287,6 +287,11 @@ LOCALES.en = {
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["el"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Στο τέλος του γύρου, ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα δέχεται {n1} ζημιά.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Στο τέλος του γύρου, κάθε ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που δεν είναι BOSS και έχει περισσότερη από {n1} ΜΝΗΜΗ κερδίζει +{n2} ΦΟΡΤΙΟ και δέχεται {n3} ζημιά.",
+  "ELITE redirects +{n1}% more each level.": "Το ΕΛΙΤ μεταφέρει +{n1}% περισσότερο ανά επίπεδο.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Αν υπάρχει ενεργό BOSS, αποκαλυμμένο ή όχι, τη δέχεται όλη εκείνο.",
+  "It can't reveal a BOSS.": "Δεν μπορεί να αποκαλύψει BOSS.",
   "SIN": "ΑΜΑΡΤΙΑ",
   "SOUL": "ΨΥΧΗ",
   "DAMNED": "ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ",
@@ -1746,6 +1751,7 @@ LOCALES["el"] = {
   "{n1} ARTIFACTS": "{n1} ΚΕΙΜΗΛΙΑ",
   "{n1} rerolls": "{n1} reroll",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "Το {n1}% του ΦΟΡΤΙΟΥ BOSS ενός BOSS γίνεται κανονικό ΦΟΡΤΙΟ σε εκείνο το BOSS, και το υπόλοιπο μοιράζεται τυχαία στους άλλους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ ως ΦΟΡΤΙΟ.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "Το {n1}% της ζημιάς που δέχεται ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ μεταφέρεται στους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ που δεν είναι αποκαλυμμένοι, μοιρασμένο εξίσου.",
   "{n1}nd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",
   "{n1}nd Pentacle of the Moon": "{n1}ο Πεντάκλο της Σελήνης",
   "{n1}rd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",
@@ -1982,6 +1988,11 @@ LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩ
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["de"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Am Ende der Runde erleidet ein aufgedeckter VERURTEILTER mit demselben Tipp wie du {n1} Schaden.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Am Ende der Runde erhält jeder VERURTEILTE, der kein BOSS ist und mehr als {n1} GEDÄCHTNIS hat, +{n2} LADUNG und erleidet {n3} Schaden.",
+  "ELITE redirects +{n1}% more each level.": "ELITE leitet pro Stufe +{n1}% mehr um.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Ist ein BOSS aktiv, aufgedeckt oder nicht, erleidet stattdessen er alles.",
+  "It can't reveal a BOSS.": "Kann keinen BOSS aufdecken.",
   "SIN": "SÜNDE",
   "SOUL": "SEELE",
   "DAMNED": "VERURTEILTE",
@@ -3348,6 +3359,7 @@ LOCALES["de"] = {
   "{n1} ARTIFACTS": "{n1} ARTEFAKTE",
   "{n1} rerolls": "{n1} Neuwürfe",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "{n1}% der BOSS-LADUNG eines BOSSES wird zu normaler LADUNG auf diesem BOSS, und der Rest wird zufällig als LADUNG auf die anderen VERURTEILTEN verteilt.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "{n1}% des Schadens, den ein aufgedeckter VERURTEILTER erleidet, wird gleichmäßig auf die nicht aufgedeckten VERURTEILTEN umgeleitet.",
   "{n1}nd Pentacle of Mars": "{n1}. Pentakel des Mars",
   "{n1}nd Pentacle of the Moon": "{n1}. Pentakel des Mondes",
   "{n1}rd Pentacle of Mars": "{n1}. Pentakel des Mars",
@@ -3584,6 +3596,11 @@ LOCALE_KEYWORDS["de"] = ["SÜNDEN", "SEELEN", "VERURTEILTEN", "VERURTEILTER", "V
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["es"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Al final de la ronda, un CONDENADO revelado con el mismo intento que tú recibe {n1} de daño.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Al final de la ronda, cada CONDENADO que no sea BOSS y tenga más de {n1} de MEMORIA gana +{n2} de CARGA y recibe {n3} de daño.",
+  "ELITE redirects +{n1}% more each level.": "ÉLITE redirige un +{n1}% más por nivel.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Si hay un BOSS activo, revelado o no, lo recibe todo él en su lugar.",
+  "It can't reveal a BOSS.": "No puede revelar a un BOSS.",
   "SIN": "PECADO",
   "SOUL": "ALMA",
   "DAMNED": "CONDENADOS",
@@ -4951,6 +4968,7 @@ LOCALES["es"] = {
   "{n1} ARTIFACTS": "{n1} ARTEFACTOS",
   "{n1} rerolls": "{n1} renovaciones",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "El {n1}% de la CARGA de BOSS de un BOSS se convierte en CARGA normal sobre ese BOSS, y el resto se reparte al azar entre los demás CONDENADOS como CARGA.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "El {n1}% del daño que recibe un CONDENADO revelado se redirige a los CONDENADOS no revelados, repartido a partes iguales.",
   "{n1}nd Pentacle of Mars": "{n1}.º Pentáculo de Marte",
   "{n1}nd Pentacle of the Moon": "{n1}.º Pentáculo de la Luna",
   "{n1}rd Pentacle of Mars": "{n1}.º Pentáculo de Marte",
@@ -5187,6 +5205,11 @@ LOCALE_KEYWORDS["es"] = ["PECADOS", "ALMAS", "CONDENADO", "CONDENADA", "CONDENAD
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["zh-Hans"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "回合结束时，与你猜测相同的已揭示罪人受到{n1}点伤害。",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "回合结束时，每名记忆超过{n1}的非BOSS罪人获得+{n2}负担，并受到{n3}点伤害。",
+  "ELITE redirects +{n1}% more each level.": "精英每级多转+{n1}%。",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "若有BOSS在场，无论是否已揭示，改为全部由它承受。",
+  "It can't reveal a BOSS.": "无法揭示BOSS。",
   "SIN": "罪孽",
   "SOUL": "灵魂",
   "DAMNED": "罪人",
@@ -6646,6 +6669,7 @@ LOCALES["zh-Hans"] = {
   "{n1} ARTIFACTS": "{n1}个法器",
   "{n1} rerolls": "{n1}次刷新",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "BOSS的BOSS负担中有{n1}%变为该BOSS身上的普通负担，其余作为负担随机分给其他罪人。",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "已揭示的罪人所受伤害的{n1}%会平均转给未揭示的罪人。",
   "{n1}nd Pentacle of Mars": "火星第{n1}五芒符",
   "{n1}nd Pentacle of the Moon": "月亮第{n1}五芒符",
   "{n1}rd Pentacle of Mars": "火星第{n1}五芒符",

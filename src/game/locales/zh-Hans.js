@@ -2,6 +2,11 @@
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["zh-Hans"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "回合结束时，与你猜测相同的已揭示罪人受到{n1}点伤害。",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "回合结束时，每名记忆超过{n1}的非BOSS罪人获得+{n2}负担，并受到{n3}点伤害。",
+  "ELITE redirects +{n1}% more each level.": "精英每级多转+{n1}%。",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "若有BOSS在场，无论是否已揭示，改为全部由它承受。",
+  "It can't reveal a BOSS.": "无法揭示BOSS。",
   "SIN": "罪孽",
   "SOUL": "灵魂",
   "DAMNED": "罪人",
@@ -1461,6 +1466,7 @@ LOCALES["zh-Hans"] = {
   "{n1} ARTIFACTS": "{n1}个法器",
   "{n1} rerolls": "{n1}次刷新",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "BOSS的BOSS负担中有{n1}%变为该BOSS身上的普通负担，其余作为负担随机分给其他罪人。",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "已揭示的罪人所受伤害的{n1}%会平均转给未揭示的罪人。",
   "{n1}nd Pentacle of Mars": "火星第{n1}五芒符",
   "{n1}nd Pentacle of the Moon": "月亮第{n1}五芒符",
   "{n1}rd Pentacle of Mars": "火星第{n1}五芒符",

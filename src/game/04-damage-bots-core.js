@@ -210,11 +210,14 @@ function addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, 
   const damage = scaledDetails.damage;
   if (damage <= 0) return 0;
   botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
-  const sourceEntries = [
-    { amount: targetDetails.baseDamage, source: source || "Target difference" },
-    ...targetDetails.modifierEntries,
-    ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
-  ];
+  const sourceEntries = trimSourceEntries(
+    [
+      { amount: targetDetails.baseDamage, source: source || "Target difference" },
+      ...targetDetails.modifierEntries,
+      ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
+    ],
+    scaledDetails.redirectedAway
+  );
   if (botDamageSources) {
     const sources = botDamageSources.get(bot.id) || [];
     sources.push(...sourceEntries);

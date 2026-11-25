@@ -1589,7 +1589,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 30) * events;
+      const damage = passiveEntryFlatDamage(entry, 20) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;
@@ -1656,12 +1656,14 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
-    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    // Seal of Vapula: every non-BOSS DAMNED with more than 8 MEMORY gains 1 BOUNTY (first, so a kill pays it), then takes damage
     if (entry.id === "p68") {
-      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      const targets = activeBots().filter((bot) => !bot.isBoss && (bot.memory?.length || 0) > 8);
       if (!targets.length) return;
       const name = ITEMS.p68.name;
       markPassiveEntryTriggered(entry);
+      targets.forEach((bot) => changeBotSin(bot, 1, "", { source: name, triggerLossDamage: false }));
+      addRoundEvent(`${name} gave ${targets.length} DAMNED +1 BOUNTY.`);
       damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
@@ -1795,16 +1797,20 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Naberius: a revealed DAMNED with the same guess as you takes damage
     if (entry.id === "p65") {
       const round = state.roundState;
-      const targets = activeBots().filter((bot) => bot.revealedByPassive && Number.isFinite(round.botEffectiveGuesses.get(bot.id)));
+      const playerGuess = round?.playerEffectiveGuess;
+      if (!Number.isFinite(playerGuess)) return;
+      const targets = activeBots().filter((bot) => bot.revealedByPassive && round.botEffectiveGuesses.get(bot.id) === playerGuess);
       if (!targets.length) return;
       markPassiveEntryTriggered(entry);
+      const name = ITEMS.p65.name;
       damageBots(
         targets,
-        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)) * revealMultiplicity(bot),
-        (bot, dealt) => `Seal of Naberius dealt ${dealt} damage to ${bot.name}'s revealed guess.`,
-        "Seal of Naberius"
+        (bot) => passiveEntryFlatDamage(entry, 20) * revealMultiplicity(bot),
+        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for sharing your guess.`,
+        name
       );
       return;
     }

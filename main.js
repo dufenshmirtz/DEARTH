@@ -287,6 +287,11 @@ LOCALES.en = {
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["el"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Στο τέλος του γύρου, ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα δέχεται {n1} ζημιά.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Στο τέλος του γύρου, κάθε ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που δεν είναι BOSS και έχει περισσότερη από {n1} ΜΝΗΜΗ κερδίζει +{n2} ΦΟΡΤΙΟ και δέχεται {n3} ζημιά.",
+  "ELITE redirects +{n1}% more each level.": "Το ΕΛΙΤ μεταφέρει +{n1}% περισσότερο ανά επίπεδο.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Αν υπάρχει ενεργό BOSS, αποκαλυμμένο ή όχι, τη δέχεται όλη εκείνο.",
+  "It can't reveal a BOSS.": "Δεν μπορεί να αποκαλύψει BOSS.",
   "SIN": "ΑΜΑΡΤΙΑ",
   "SOUL": "ΨΥΧΗ",
   "DAMNED": "ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ",
@@ -1746,6 +1751,7 @@ LOCALES["el"] = {
   "{n1} ARTIFACTS": "{n1} ΚΕΙΜΗΛΙΑ",
   "{n1} rerolls": "{n1} reroll",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "Το {n1}% του ΦΟΡΤΙΟΥ BOSS ενός BOSS γίνεται κανονικό ΦΟΡΤΙΟ σε εκείνο το BOSS, και το υπόλοιπο μοιράζεται τυχαία στους άλλους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ ως ΦΟΡΤΙΟ.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "Το {n1}% της ζημιάς που δέχεται ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ μεταφέρεται στους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ που δεν είναι αποκαλυμμένοι, μοιρασμένο εξίσου.",
   "{n1}nd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",
   "{n1}nd Pentacle of the Moon": "{n1}ο Πεντάκλο της Σελήνης",
   "{n1}rd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",
@@ -1982,6 +1988,11 @@ LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩ
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["de"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Am Ende der Runde erleidet ein aufgedeckter VERURTEILTER mit demselben Tipp wie du {n1} Schaden.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Am Ende der Runde erhält jeder VERURTEILTE, der kein BOSS ist und mehr als {n1} GEDÄCHTNIS hat, +{n2} LADUNG und erleidet {n3} Schaden.",
+  "ELITE redirects +{n1}% more each level.": "ELITE leitet pro Stufe +{n1}% mehr um.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Ist ein BOSS aktiv, aufgedeckt oder nicht, erleidet stattdessen er alles.",
+  "It can't reveal a BOSS.": "Kann keinen BOSS aufdecken.",
   "SIN": "SÜNDE",
   "SOUL": "SEELE",
   "DAMNED": "VERURTEILTE",
@@ -3348,6 +3359,7 @@ LOCALES["de"] = {
   "{n1} ARTIFACTS": "{n1} ARTEFAKTE",
   "{n1} rerolls": "{n1} Neuwürfe",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "{n1}% der BOSS-LADUNG eines BOSSES wird zu normaler LADUNG auf diesem BOSS, und der Rest wird zufällig als LADUNG auf die anderen VERURTEILTEN verteilt.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "{n1}% des Schadens, den ein aufgedeckter VERURTEILTER erleidet, wird gleichmäßig auf die nicht aufgedeckten VERURTEILTEN umgeleitet.",
   "{n1}nd Pentacle of Mars": "{n1}. Pentakel des Mars",
   "{n1}nd Pentacle of the Moon": "{n1}. Pentakel des Mondes",
   "{n1}rd Pentacle of Mars": "{n1}. Pentakel des Mars",
@@ -3584,6 +3596,11 @@ LOCALE_KEYWORDS["de"] = ["SÜNDEN", "SEELEN", "VERURTEILTEN", "VERURTEILTER", "V
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["es"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Al final de la ronda, un CONDENADO revelado con el mismo intento que tú recibe {n1} de daño.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Al final de la ronda, cada CONDENADO que no sea BOSS y tenga más de {n1} de MEMORIA gana +{n2} de CARGA y recibe {n3} de daño.",
+  "ELITE redirects +{n1}% more each level.": "ÉLITE redirige un +{n1}% más por nivel.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Si hay un BOSS activo, revelado o no, lo recibe todo él en su lugar.",
+  "It can't reveal a BOSS.": "No puede revelar a un BOSS.",
   "SIN": "PECADO",
   "SOUL": "ALMA",
   "DAMNED": "CONDENADOS",
@@ -4951,6 +4968,7 @@ LOCALES["es"] = {
   "{n1} ARTIFACTS": "{n1} ARTEFACTOS",
   "{n1} rerolls": "{n1} renovaciones",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "El {n1}% de la CARGA de BOSS de un BOSS se convierte en CARGA normal sobre ese BOSS, y el resto se reparte al azar entre los demás CONDENADOS como CARGA.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "El {n1}% del daño que recibe un CONDENADO revelado se redirige a los CONDENADOS no revelados, repartido a partes iguales.",
   "{n1}nd Pentacle of Mars": "{n1}.º Pentáculo de Marte",
   "{n1}nd Pentacle of the Moon": "{n1}.º Pentáculo de la Luna",
   "{n1}rd Pentacle of Mars": "{n1}.º Pentáculo de Marte",
@@ -5187,6 +5205,11 @@ LOCALE_KEYWORDS["es"] = ["PECADOS", "ALMAS", "CONDENADO", "CONDENADA", "CONDENAD
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["zh-Hans"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "回合结束时，与你猜测相同的已揭示罪人受到{n1}点伤害。",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "回合结束时，每名记忆超过{n1}的非BOSS罪人获得+{n2}负担，并受到{n3}点伤害。",
+  "ELITE redirects +{n1}% more each level.": "精英每级多转+{n1}%。",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "若有BOSS在场，无论是否已揭示，改为全部由它承受。",
+  "It can't reveal a BOSS.": "无法揭示BOSS。",
   "SIN": "罪孽",
   "SOUL": "灵魂",
   "DAMNED": "罪人",
@@ -6646,6 +6669,7 @@ LOCALES["zh-Hans"] = {
   "{n1} ARTIFACTS": "{n1}个法器",
   "{n1} rerolls": "{n1}次刷新",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "BOSS的BOSS负担中有{n1}%变为该BOSS身上的普通负担，其余作为负担随机分给其他罪人。",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "已揭示的罪人所受伤害的{n1}%会平均转给未揭示的罪人。",
   "{n1}nd Pentacle of Mars": "火星第{n1}五芒符",
   "{n1}nd Pentacle of the Moon": "月亮第{n1}五芒符",
   "{n1}rd Pentacle of Mars": "火星第{n1}五芒符",
@@ -7676,7 +7700,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "15% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead. ELITE redirects +5% more each level."
   },
   p64: {
     id: "p64",
@@ -7691,7 +7715,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "At end of round, a revealed DAMNED with the same guess as you takes 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -7713,7 +7737,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
@@ -7985,7 +8009,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",
@@ -8401,7 +8425,7 @@ const ITEMS = {
     type: "active",
     name: "Mummified Lamb",
     price: 2,
-    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
+    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS."
   },
   a26: {
     id: "a26",
@@ -12319,15 +12343,31 @@ function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
 
-function revealedExtraDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 7);
+// Seal of Vual: the share (in %) of a revealed DAMNED's damage that goes to the others; ELITE +5% each level
+function vualRedirectPercent(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? 15 + 5 * Math.max(0, stack - 1) : 0;
+}
+
+// Seal of Vual: where the damage goes: every BOSS at the table (revealed or not; a BOSS's own damage goes to the
+// other BOSSES, or nowhere), otherwise the DAMNED that are not revealed
+function vualRedirectTargets(bot) {
+  const living = activeBots();
+  const others = living.filter((other) => other.id !== bot.id);
+  if (living.some((other) => other.isBoss)) return others.filter((other) => other.isBoss);
+  return others.filter((other) => !other.revealedByPassive);
+}
+
+// Seal of Naberius: a revealed DAMNED with your guess takes this at end of round
+function naberiusSameGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 20);
 }
 
 function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-// Seal of Vapula: end-of-round damage to every DAMNED with more than 8 MEMORY
+// Seal of Vapula: end-of-round damage to every non-BOSS DAMNED with more than 8 MEMORY
 function vapulaMemoryDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
@@ -12652,17 +12692,13 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p62", "p63"]).forEach((entry) => {
+    orderedPassiveEffectEntries("p62").forEach((entry) => {
       if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
         applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
         state.roundState?.belethTriggeredBotIds?.add(bot.id);
         return;
       }
 
-      if (entry.id === "p63" && bot.revealedByPassive) {
-        applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
-        return;
-      }
     });
 
     if (state.roundState?.padmaVulnerableBotIds?.has(bot.id)) {
@@ -12719,12 +12755,64 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
     applyMultiplier(2, ITEMS.p131.name, trinityEntry("p131"));
   }
 
+  // Seal of Vual: after every bonus and multiplier, part of what a revealed DAMNED takes goes to the others
+  // (damage that arrives through Vual is not passed on again)
+  let redirectedAway = 0;
+  if (bot && bot.revealedByPassive && vualRedirectDepth === 0) {
+    orderedPassiveEffectEntries("p63").forEach((entry) => {
+      if (roundedDamage <= 0) return;
+      const targets = vualRedirectTargets(bot);
+      if (!targets.length) return;
+      const percent = Math.min(100, vualRedirectPercent(entry) * revealMultiplicity(bot));
+      const total = Math.min(roundedDamage, Math.round((roundedDamage * percent) / 100));
+      if (total <= 0) return;
+      const share = Math.floor(total / targets.length);
+      let remainder = total - share * targets.length;
+      targets.forEach((target) => {
+        const amount = share + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder -= 1;
+        if (amount > 0) redirectEntries.push({ targetBotId: target.id, amount, source: ITEMS.p63.name, kind: "redirect", vual: true });
+      });
+      roundedDamage -= total;
+      exactDamage = roundedDamage;
+      redirectedAway += total;
+      markPassiveEntryTriggered(entry);
+    });
+  }
+
   return {
     damage: roundedDamage,
     baseDamage: damage,
     modifierEntries,
-    redirectEntries
+    redirectEntries,
+    redirectedAway
   };
+}
+
+let vualRedirectDepth = 0;
+
+// damage the Seal of Vual passes on is not passed on again by the DAMNED that receives it
+function withVualRedirect(entry, apply) {
+  if (!entry?.vual) return apply();
+  vualRedirectDepth += 1;
+  try {
+    return apply();
+  } finally {
+    vualRedirectDepth -= 1;
+  }
+}
+
+// takes damage that was redirected away off the first source entries, so the sources add up to what was taken
+function trimSourceEntries(entries, away) {
+  let left = Math.max(0, Math.ceil(away || 0));
+  return entries
+    .map((entry) => {
+      if (left <= 0) return entry;
+      const cut = Math.min(left, Math.max(0, Math.ceil(entry.amount || 0)));
+      left -= cut;
+      return { ...entry, amount: Math.max(0, Math.ceil(entry.amount || 0)) - cut };
+    })
+    .filter((entry) => entry.amount > 0);
 }
 
 function blackHorseRedirectBoss(sourceBot) {
@@ -12739,7 +12827,7 @@ function applyPendingRedirectDamage(entries, botDamages, botDamageSources) {
   (entries || []).forEach((entry) => {
     const target = state.bots.find((bot) => bot.id === entry.targetBotId);
     if (!target || target.eliminated) return;
-    addPendingBotDamage(botDamages, botDamageSources, target, entry.amount, entry.source || "Redirected damage");
+    withVualRedirect(entry, () => addPendingBotDamage(botDamages, botDamageSources, target, entry.amount, entry.source || "Redirected damage"));
   });
 }
 
@@ -12749,7 +12837,7 @@ function applyDirectRedirectDamage(entries) {
     const damage = Math.max(0, Math.ceil(entry.amount || 0));
     if (!target || target.eliminated || damage <= 0) return;
     const source = entry.source || "Redirected damage";
-    damageBot(target, damage, `${source} redirected ${damage} damage to ${target.name}.`, source);
+    withVualRedirect(entry, () => damageBot(target, damage, `${source} redirected ${damage} damage to ${target.name}.`, source));
   });
 }
 
@@ -12761,7 +12849,7 @@ function scaledBotDamageSourceEntries(details, source) {
     const amount = Math.max(0, Math.ceil(entry.amount || 0));
     if (amount > 0) entries.push({ amount, source: entry.source || "Damage modifier", kind: entry.kind || "bonus" });
   });
-  return entries;
+  return trimSourceEntries(entries, details?.redirectedAway);
 }
 
 function recordScaledBotDamageSources(bot, details, source) {
@@ -12845,10 +12933,10 @@ function artifactDescription(item) {
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls, up to ${Math.round(SHOP_ELITE_CHANCE_MAX * 100)}%.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
-    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS.";
     const levels = passiveEntryEliteLevels(lamb);
     const flat = levels ? ` +${5 * levels}` : "";
-    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can't reveal a BOSS. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
   }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
@@ -12939,7 +13027,7 @@ function itemDescription(item) {
   if (item.id === "p139") {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
   }
-  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. MASSACRES give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") {
     return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
@@ -13049,16 +13137,16 @@ function itemDescription(item) {
   }
   if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
-    return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
+    return `${vualRedirectPercent(item)}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead.`;
   }
   if (item.id === "p64") {
     return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `At end of round, a revealed DAMNED with the same guess as you takes ${naberiusSameGuessDamage(item)} damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
+    return `At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;
@@ -14520,11 +14608,14 @@ function addPendingTargetDifferenceBotDamage(botDamages, botDamageSources, bot, 
   const damage = scaledDetails.damage;
   if (damage <= 0) return 0;
   botDamages.set(bot.id, (botDamages.get(bot.id) || 0) + damage);
-  const sourceEntries = [
-    { amount: targetDetails.baseDamage, source: source || "Target difference" },
-    ...targetDetails.modifierEntries,
-    ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
-  ];
+  const sourceEntries = trimSourceEntries(
+    [
+      { amount: targetDetails.baseDamage, source: source || "Target difference" },
+      ...targetDetails.modifierEntries,
+      ...scaledDetails.modifierEntries.map((entry) => ({ ...entry, kind: entry.kind || "bonus" }))
+    ],
+    scaledDetails.redirectedAway
+  );
   if (botDamageSources) {
     const sources = botDamageSources.get(bot.id) || [];
     sources.push(...sourceEntries);
@@ -16540,7 +16631,8 @@ function applyPendingNextRoundLambReveals() {
       state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
       return;
     }
-    revealBotGuess(bot, source, null, { allowBoss: true });
+    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY)
+    if (!bot.isBoss) revealBotGuess(bot, source);
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
     const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));
@@ -17158,14 +17250,12 @@ function applyGuessReveals() {
 
 // SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
-// Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED died last round, the Seal of
-// Cassiel (p102) if any DAMNED died last round. (Seal of Vepar reveals from revealBotGuess, on an edge reveal.)
+// Vine on a 50% roll (rolled once per round), the Seal of Cassiel (p102) if any DAMNED died last round. (Seal of Vepar reveals from revealBotGuess, on an edge reveal.)
 function extraRevealEntries() {
-  return orderedPassiveEffectEntries(["p59", "p64", "p65", "p102"]).filter((entry) => {
+  return orderedPassiveEffectEntries(["p59", "p64", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
     let active = false;
     if (entry.id === "p64") active = vineRevealRoll(entry);
-    if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
     if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
     if (active) markExtraRevealTriggered(entry);
     return active;
@@ -19346,7 +19436,7 @@ function applyEndOfRoundPassiveDamageInOrder() {
     if (entry.id === "p129") {
       const events = Math.max(0, Math.ceil(state.roundState?.bossRevealEvents || 0));
       const targets = activeBots().filter((bot) => bot.revealedByPassive);
-      const damage = passiveEntryFlatDamage(entry, 30) * events;
+      const damage = passiveEntryFlatDamage(entry, 20) * events;
       if (!targets.length || damage <= 0) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p129.name;
@@ -19413,12 +19503,14 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
-    // Seal of Vapula: every DAMNED with more than 8 MEMORY takes damage
+    // Seal of Vapula: every non-BOSS DAMNED with more than 8 MEMORY gains 1 BOUNTY (first, so a kill pays it), then takes damage
     if (entry.id === "p68") {
-      const targets = activeBots().filter((bot) => (bot.memory?.length || 0) > 8);
+      const targets = activeBots().filter((bot) => !bot.isBoss && (bot.memory?.length || 0) > 8);
       if (!targets.length) return;
       const name = ITEMS.p68.name;
       markPassiveEntryTriggered(entry);
+      targets.forEach((bot) => changeBotSin(bot, 1, "", { source: name, triggerLossDamage: false }));
+      addRoundEvent(`${name} gave ${targets.length} DAMNED +1 BOUNTY.`);
       damageBots(targets, vapulaMemoryDamage(entry), (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} (${bot.memory.length} MEMORY).`, name);
       return;
     }
@@ -19552,16 +19644,20 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
+    // Seal of Naberius: a revealed DAMNED with the same guess as you takes damage
     if (entry.id === "p65") {
       const round = state.roundState;
-      const targets = activeBots().filter((bot) => bot.revealedByPassive && Number.isFinite(round.botEffectiveGuesses.get(bot.id)));
+      const playerGuess = round?.playerEffectiveGuess;
+      if (!Number.isFinite(playerGuess)) return;
+      const targets = activeBots().filter((bot) => bot.revealedByPassive && round.botEffectiveGuesses.get(bot.id) === playerGuess);
       if (!targets.length) return;
       markPassiveEntryTriggered(entry);
+      const name = ITEMS.p65.name;
       damageBots(
         targets,
-        (bot) => passiveEntryFlatDamage(entry, Math.ceil((round.botEffectiveGuesses.get(bot.id) || 0) / 2)) * revealMultiplicity(bot),
-        (bot, dealt) => `Seal of Naberius dealt ${dealt} damage to ${bot.name}'s revealed guess.`,
-        "Seal of Naberius"
+        (bot) => passiveEntryFlatDamage(entry, 20) * revealMultiplicity(bot),
+        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for sharing your guess.`,
+        name
       );
       return;
     }
@@ -20860,7 +20956,9 @@ function chooseBot(botId) {
     const uid = pending.uid;
     finishActiveResolution(
       index,
-      `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
+      bot.isBoss
+        ? `${itemName} marked ${bot.name}. Next round, it gains +${3 + sealBounty} BOUNTY (a BOSS's guess stays hidden).`
+        : `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
       uid,
       false
     );
@@ -24539,8 +24637,8 @@ function renderPendingText() {
   if (state.pendingActive.id === "a25") {
     const lamb = artifactSealEntry("a25");
     return lamb
-      ? `${item.name}: pick DAMNED to reveal next round and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
-      : `${item.name}: pick DAMNED to reveal next round and give +3 BOUNTY.`;
+      ? `${item.name}: pick DAMNED to reveal next round (never a BOSS) and give +${3 + moonLambBountyBonus(lamb)} BOUNTY. A revealed one also takes 30% max SOUL (15% BOSSES).`
+      : `${item.name}: pick DAMNED to reveal next round (never a BOSS) and give +3 BOUNTY.`;
   }
   if (state.pendingActive.id === "a9" && artifactSealEntry("a9")) {
     return `${item.name}: pick DAMNED to remove from the average and push away from the TARGET by its MEMORY.`;
@@ -27721,7 +27819,7 @@ const SEAL_BUILD_TAGS = {
   p64: ["reveal"], // Vine (double SIN payout is not BOUNTY)
   p65: ["reveal"], // Naberius
   p67: ["memory"], // Caim (double SIN payout is not BOUNTY)
-  p68: ["memory"], // Vapula
+  p68: ["memory", "bounty"], // Vapula
   p134: ["general"], // Amy (a random Goetic SEAL each round)
   p71: ["general"], // Sallos
   p72: ["general"], // Furcas

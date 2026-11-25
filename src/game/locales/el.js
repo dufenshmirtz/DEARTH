@@ -2,6 +2,11 @@
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["el"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
+  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Στο τέλος του γύρου, ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα δέχεται {n1} ζημιά.",
+  "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Στο τέλος του γύρου, κάθε ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που δεν είναι BOSS και έχει περισσότερη από {n1} ΜΝΗΜΗ κερδίζει +{n2} ΦΟΡΤΙΟ και δέχεται {n3} ζημιά.",
+  "ELITE redirects +{n1}% more each level.": "Το ΕΛΙΤ μεταφέρει +{n1}% περισσότερο ανά επίπεδο.",
+  "If a BOSS is active, revealed or not, it takes all of it instead.": "Αν υπάρχει ενεργό BOSS, αποκαλυμμένο ή όχι, τη δέχεται όλη εκείνο.",
+  "It can't reveal a BOSS.": "Δεν μπορεί να αποκαλύψει BOSS.",
   "SIN": "ΑΜΑΡΤΙΑ",
   "SOUL": "ΨΥΧΗ",
   "DAMNED": "ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ",
@@ -1461,6 +1466,7 @@ LOCALES["el"] = {
   "{n1} ARTIFACTS": "{n1} ΚΕΙΜΗΛΙΑ",
   "{n1} rerolls": "{n1} reroll",
   "{n1}% of a BOSS's BOSS BOUNTY becomes regular BOUNTY on that BOSS, and the rest is randomly distributed among the other DAMNED as BOUNTY.": "Το {n1}% του ΦΟΡΤΙΟΥ BOSS ενός BOSS γίνεται κανονικό ΦΟΡΤΙΟ σε εκείνο το BOSS, και το υπόλοιπο μοιράζεται τυχαία στους άλλους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ ως ΦΟΡΤΙΟ.",
+  "{n1}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally.": "Το {n1}% της ζημιάς που δέχεται ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ μεταφέρεται στους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ που δεν είναι αποκαλυμμένοι, μοιρασμένο εξίσου.",
   "{n1}nd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",
   "{n1}nd Pentacle of the Moon": "{n1}ο Πεντάκλο της Σελήνης",
   "{n1}rd Pentacle of Mars": "{n1}ο Πεντάκλο του Άρη",

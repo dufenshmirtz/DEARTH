@@ -57,7 +57,7 @@ function game() {
 }
 
 // puts every conditional reveal SEAL in its "reveal" state: a winning 50% roll (Vine),
-// a revealed DAMNED died last round (Naberius) and a DAMNED died last round (Seal of Cassiel (p102))
+// a DAMNED died last round (Seal of Cassiel (p102)); Naberius no longer reveals
 const REVEAL_CONDITIONS_MET = `
   state.player.hp = 40;
   state.previousRoundRevealedEliminations = 1;
@@ -66,7 +66,7 @@ const REVEAL_CONDITIONS_MET = `
 `;
 
 test("each reveal seal adds one reveal when its condition holds, independent of elite level, with a shared cap of four", () => {
-  for (const id of ["p59", "p64", "p65", "p102"]) {
+  for (const id of ["p59", "p64", "p102"]) {
     game()(`
       ${REVEAL_CONDITIONS_MET}
       fixture([["${id}", 4]], [10, 20, 30, 40, 50]);
@@ -77,7 +77,7 @@ test("each reveal seal adds one reveal when its condition holds, independent of 
   }
   game()(`
     ${REVEAL_CONDITIONS_MET}
-    fixture([["p59"], ["p64"], ["p65"], ["p102"]], [10, 20, 30, 40, 50]);
+    fixture([["p59"], ["p64"], ["p102"]], [10, 20, 30, 40, 50]);
     assert.equal(revealedDamnedCount(), 4);
     applyGuessReveals();
     assert.equal(revealedDamnedCount(), 4);
@@ -93,15 +93,26 @@ test("each reveal seal adds one reveal when its condition holds, independent of 
   `);
 });
 
-test("Lamb can reveal bosses below the cap and suppressed seals do not add reveals", () => {
+test("Lamb never reveals a BOSS (even with Gusion) but still gives it BOUNTY; suppressed seals do not add reveals", () => {
+  for (const seals of ["[]", '[["p129"]]']) {
+    game()(`
+      fixture(${seals}, [10, 20, 30, 40, 50]);
+      const hidden = state.bots.find(bot => !bot.revealedByPassive);
+      hidden.isBoss = true;
+      const before = botRegularBounty(hidden);
+      queueMummifiedLambNextRoundReveal(hidden);
+      applyPendingNextRoundLambReveals();
+      assert.equal(hidden.revealedByPassive, false);
+      assert.equal(revealedDamnedCount(), 1);
+      assert.equal(botRegularBounty(hidden) - before, 3);
+    `);
+  }
   game()(`
     fixture([], [10, 20, 30, 40, 50]);
     const hidden = state.bots.find(bot => !bot.revealedByPassive);
-    hidden.isBoss = true;
     queueMummifiedLambNextRoundReveal(hidden);
     applyPendingNextRoundLambReveals();
     assert.equal(hidden.revealedByPassive, true);
-    assert.equal(revealedDamnedCount(), 2);
   `);
   game()(`
     fixture([["p64"]], [10, 20, 30, 40, 50]);
@@ -118,7 +129,6 @@ test("new reveal text appears in saved-item and elite descriptions and the catal
   const prefixes = {
     p61: "The first time each round the leftmost or rightmost DAMNED is revealed, reveal one more DAMNED.",
     p64: "Each round, 50% chance to reveal one extra DAMNED.",
-    p65: "If a revealed DAMNED died last round, reveal one extra DAMNED.",
     p102: "If a DAMNED died last round, reveal one extra DAMNED."
   };
   for (const [id, prefix] of Object.entries(prefixes)) {
@@ -1251,7 +1261,7 @@ test("Dantre: when you hit CRITICAL, other CRITICALS can't hurt you; a DAMNED's 
 
 // ---- Gusion and Valac (new Goetic SEALS p129, p130) ----
 test("Gusion lets BOSSES be revealed and hits every revealed DAMNED when one is (x1.5 per ELITE level)", () => {
-  for (const [stack, damage] of [[1, 30], [2, 45]]) {
+  for (const [stack, damage] of [[1, 20], [2, 30]]) {
     game()(`
       fixture([["p129", ${stack}]], [10, 20, 30, 40, 50]);
       assert.equal(bossRevealAllowedBySeals(), true);
@@ -1275,8 +1285,8 @@ test("Gusion lets BOSSES be revealed and hits every revealed DAMNED when one is 
   `);
   const run = game();
   assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p129.description")));
-  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 1, description: "Old description" })`).includes("take 30 damage"));
-  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 2 })`).includes("take 45 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 1, description: "Old description" })`).includes("take 20 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p129, stack: 2 })`).includes("take 30 damage"));
 });
 
 test("Valac eliminates a lone non-BOSS survivor after 4 eliminations and pays +2 SIN per ELITE level on PENTAKILLS", () => {
@@ -1776,17 +1786,32 @@ test("Vine has a 50% chance to reveal one extra DAMNED, rolled once per round", 
   `);
 });
 
-test("Naberius reveals one extra DAMNED only if a revealed DAMNED died last round", () => {
-  game()(`
-    state.previousRoundEliminationsForMartyrs = 1;
-    fixture([["p65"]], [10, 20, 30, 40, 50]);
-    assert.equal(revealedDamnedCount(), 1, "a hidden DAMNED's death does not count");
-  `);
-  game()(`
-    state.previousRoundRevealedEliminations = 1;
-    fixture([["p65"]], [10, 20, 30, 40, 50]);
-    assert.equal(revealedDamnedCount(), 2);
-  `);
+test("Naberius: a revealed DAMNED with your guess takes 20 damage at end of round (ELITE x1.5); it adds no reveals", () => {
+  for (const [stack, damage] of [[1, 20], [2, 30]]) {
+    game()(`
+      state.previousRoundRevealedEliminations = 1;
+      fixture([["p65", ${stack}]], [10, 20, 30, 40, 50]);
+      assert.equal(revealedDamnedCount(), 1);
+      const round = state.roundState;
+      const [a, b, c] = state.bots;
+      state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
+      a.revealedByPassive = true;
+      b.revealedByPassive = true;
+      round.playerEffectiveGuess = 30;
+      round.botEffectiveGuesses.set(a.id, 30);
+      round.botEffectiveGuesses.set(b.id, 31);
+      round.botEffectiveGuesses.set(c.id, 30);
+      applyEndOfRoundPassiveDamageInOrder();
+      assert.equal(a.lastDamage, ${damage});
+      assert.equal(b.lastDamage || 0, 0, "a different guess is safe");
+      assert.equal(c.lastDamage || 0, 0, "a hidden DAMNED on your guess is safe");
+      assert.ok(round.triggeredPassiveIds.has("p65"));
+    `);
+  }
+  const run = game();
+  assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p65.description")));
+  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 1, description: "Old description" })`).includes("same guess as you takes 20 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 2 })`).includes("takes 30 damage"));
 });
 
 test("Seal of Cassiel (p102) reveals one extra DAMNED only if a DAMNED died last round", () => {
@@ -1820,23 +1845,51 @@ test("last round's deaths, revealed or not, carry into the next round", () => {
   `);
 });
 
-test("Vual: revealed DAMNED take 7 extra damage per hit (ELITE x1.5, rounded up)", () => {
-  for (const [stack, extra] of [[1, 7], [2, 11]]) {
-    game()(`
-      fixture([["p63", ${stack}]], [10, 20, 30, 40, 50]);
-      const revealed = state.bots.find(bot => bot.revealedByPassive);
-      const hidden = state.bots.find(bot => !bot.revealedByPassive);
-      damageBot(revealed, 10, "Test");
-      damageBot(hidden, 10, "Test");
-      assert.equal(revealed.maxHp - revealed.hp, 10 + ${extra});
-      assert.equal(hidden.maxHp - hidden.hp, 10);
-    `);
-  }
+test("Vual: 15% of a revealed DAMNED's damage goes to the hidden DAMNED split equally, or all to a BOSS (ELITE +5%)", () => {
+  game()(`
+    fixture([["p63"]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const hidden = state.bots.filter(bot => !bot.revealedByPassive);
+    assert.equal(hidden.length, 4);
+    damageBot(revealed, 40, "Test");
+    assert.equal(revealed.maxHp - revealed.hp, 34);
+    assert.deepEqual(hidden.map(bot => bot.maxHp - bot.hp), [2, 2, 1, 1]);
+    damageBot(hidden[0], 10, "Test");
+    assert.equal(hidden[0].maxHp - hidden[0].hp, 12, "a hidden DAMNED passes nothing on");
+    assert.ok(state.roundState.triggeredPassiveIds.has("p63"));
+    assert.equal(state.sealStats.p63.damage, 6);
+  `);
+  game()(`
+    fixture([["p63"]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const boss = state.bots.find(bot => !bot.revealedByPassive);
+    boss.isBoss = true;
+    damageBot(revealed, 40, "Test");
+    assert.equal(revealed.maxHp - revealed.hp, 34);
+    assert.equal(boss.maxHp - boss.hp, 6, "a hidden BOSS takes all of it");
+    assert.ok(state.bots.filter(bot => bot !== boss && bot !== revealed).every(bot => bot.hp === bot.maxHp));
+    boss.revealedByPassive = true;
+    damageBot(revealed, 20, "Test");
+    assert.equal(boss.maxHp - boss.hp, 9, "a revealed BOSS takes it too, and does not pass it on");
+    damageBot(boss, 20, "Test");
+    assert.equal(boss.maxHp - boss.hp, 29, "a BOSS's own damage is not sent back to itself");
+  `);
+  game()(`
+    fixture([["p63", 2]], [10, 20, 30, 40, 50]);
+    const revealed = state.bots.find(bot => bot.revealedByPassive);
+    const hidden = state.bots.filter(bot => !bot.revealedByPassive);
+    const damages = new Map();
+    const sources = new Map();
+    addPendingBotDamage(damages, sources, revealed, 40, "Test");
+    assert.equal(damages.get(revealed.id), 32);
+    assert.deepEqual(hidden.map(bot => damages.get(bot.id)), [2, 2, 2, 2]);
+    assert.equal(sources.get(revealed.id).reduce((sum, entry) => sum + entry.amount, 0), 32);
+  `);
   const run = game();
   const catalog = fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8");
   assert.ok(catalog.includes(run("ITEMS.p63.description")));
-  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).includes("7 extra damage"));
-  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).includes("11 extra damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 1, description: "Old description" })`).startsWith("15% of the damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p63, stack: 2 })`).startsWith("20% of the damage"));
 });
 
 test("Red Horse: each revealed DAMNED has a 50% chance per round to take x1.5 damage, and the roll holds all round", () => {
@@ -3373,12 +3426,12 @@ test("Seal of Amy acts as a random Player SEAL each round as ELITE, ELITE Amy as
     amy.stack = 3;
     assert.equal(passiveStack("p63"), 6);
     amy.stack = 1;
-    // the copied effect works and is counted for Amy: Vual's 7 extra damage, x1.5 as ELITE
+    // the copied effect works and is counted for Amy: Vual passes on 15% of the damage, 20% as ELITE
     const revealed = state.bots.find((bot) => bot.revealedByPassive);
     damageBot(revealed, 10, "test hit", "Test");
-    assert.equal(revealed.lastDamage, 10 + 11);
+    assert.equal(revealed.lastDamage, 8);
     assert.ok(state.roundState.triggeredPassiveIds.has("p134"));
-    assert.equal(state.sealStats.p134.damage, 11);
+    assert.equal(state.sealStats.p134.damage, 2);
     assert.ok(itemDescription(amy).includes("This round: ELITE I Seal of Vual."));
     // a living Goetic BOSS Vual switches the copy off
     const boss = state.bots.find((bot) => !bot.revealedByPassive);
@@ -3804,14 +3857,17 @@ test("Seal of Leraje: picks its DAMNED and turns it STUBBORN at round start, dea
   `);
 });
 
-test("Seal of Vapula deals 10 damage at end of round to every DAMNED with more than 8 MEMORY", () => {
+test("Seal of Vapula: every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes 10 damage at end of round", () => {
   game()(`
     fixture([["p68"]], [10, 20, 30, 40, 50]);
     state.round = 20;
     [8, 9, 12, 0, 15].forEach((count, index) => { state.bots[index].memory = initialMemoryEntries(count); });
+    state.bots[4].isBoss = true;
     const before = state.bots.map(bot => bot.hp);
+    const bounty = state.bots.map(bot => botRegularBounty(bot));
     applyEndOfRoundPassiveDamageInOrder();
-    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 0, 10]);
+    assert.deepEqual(state.bots.map((bot, index) => before[index] - bot.hp), [0, 10, 10, 0, 0]);
+    assert.deepEqual(state.bots.map((bot, index) => botRegularBounty(bot) - bounty[index]), [0, 1, 1, 0, 0]);
     assert.ok(state.roundState.triggeredPassiveIds.has("p68"));
   `);
   game()(`

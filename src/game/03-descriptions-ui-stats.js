@@ -49,10 +49,10 @@ function artifactDescription(item) {
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls, up to ${Math.round(SHOP_ELITE_CHANCE_MAX * 100)}%.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
-    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS.";
     const levels = passiveEntryEliteLevels(lamb);
     const flat = levels ? ` +${5 * levels}` : "";
-    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can't reveal a BOSS. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
   }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
@@ -143,7 +143,7 @@ function itemDescription(item) {
   if (item.id === "p139") {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
   }
-  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
   if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. MASSACRES give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") {
     return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
@@ -253,16 +253,16 @@ function itemDescription(item) {
   }
   if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
-    return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
+    return `${vualRedirectPercent(item)}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead.`;
   }
   if (item.id === "p64") {
     return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `At end of round, a revealed DAMNED with the same guess as you takes ${naberiusSameGuessDamage(item)} damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
+    return `At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;

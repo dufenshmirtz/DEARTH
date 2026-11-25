@@ -929,7 +929,9 @@ function chooseBot(botId) {
     const uid = pending.uid;
     finishActiveResolution(
       index,
-      `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
+      bot.isBoss
+        ? `${itemName} marked ${bot.name}. Next round, it gains +${3 + sealBounty} BOUNTY (a BOSS's guess stays hidden).`
+        : `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
       uid,
       false
     );
