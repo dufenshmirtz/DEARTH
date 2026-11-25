@@ -59,6 +59,7 @@ test("the system language is used on first launch only when the game is ready in
   const { run, context } = createGame(1);
   context.__assert = assert;
   run(`
+    LANGUAGES.forEach((entry) => { entry.ready = entry.code === "en"; }); // a language not ready yet is never picked
     navigator.languages = ["el-GR", "en-US"];
     __assert.equal(languageFromSystem(), "en");
     LANGUAGES.find((entry) => entry.code === "el").ready = true;

@@ -28,7 +28,7 @@ const LOCALE_KEYWORDS = {};
 // ready: offered in Settings > Display > Language. Not ready: only in Pause > DEV (testing a translation in progress).
 const LANGUAGES = [
   { code: "en", name: "English", htmlLang: "en", ready: true },
-  { code: "el", name: "Ελληνικά", htmlLang: "el", ready: false },
+  { code: "el", name: "Ελληνικά", htmlLang: "el", ready: true },
   { code: "de", name: "Deutsch", htmlLang: "de", ready: false },
   { code: "es", name: "Español", htmlLang: "es", ready: false },
   { code: "zh-Hans", name: "简体中文", htmlLang: "zh-Hans", ready: false }
