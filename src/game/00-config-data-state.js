@@ -2299,6 +2299,12 @@ const state = {
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
   satanRerollToll: false,
+  // run state that is set up by startGame; it must be listed here, or loadArcadeRun skips it and Continue
+  // brings back a fresh one (a signed DEAL came back unused, FAVOR and a spin's queued DAMAGE were lost)
+  pact: null, // Satan's Pact (09-satan-pact.js)
+  missions: null, // Satan's bets and the slot machine's FAVOR (09-slot-missions.js)
+  slotFreeRerolls: 0,
+  slotPendingDamage: [],
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,

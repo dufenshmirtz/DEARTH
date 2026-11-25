@@ -813,6 +813,11 @@ function loadArcadeRun(slotId = "") {
     // saves from before the Ars Goetia binding have none; saves from before the Archangels get all seven
     state.boundDemon = null;
     state.archangelQueue = ARCHANGEL_KEYS.slice();
+    // nothing of the run open before this one carries over when the save lacks it
+    state.pact = null;
+    state.missions = null;
+    state.slotFreeRerolls = 0;
+    state.slotPendingDamage = [];
     Object.keys(payload.state).forEach((key) => {
       if (key === "sound" || key === "pvp" || !(key in state)) return;
       state[key] = payload.state[key];
