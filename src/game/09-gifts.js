@@ -179,7 +179,7 @@ function renderGiftsScreen() {
   const cards = GIFT_PACKS.map((pack) => {
     const can = karmaCanPay(pack.price);
     return `
-      <button type="button" class="gift-card gift-${pack.key}${can ? "" : " cant"}" data-gift-open="${pack.key}" aria-label="${escapeAttr(t("Open {pack} for {price} KARMA", { pack: t(pack.name), price: pack.price }))}"${can ? "" : ' aria-disabled="true"'}>
+      <button type="button" class="gift-card gift-${pack.key}${can ? "" : " cant"}" data-gift-open="${pack.key}"${pack === GIFT_PACKS[0] ? " data-nav-start" : ""} aria-label="${escapeAttr(t("Open {pack} for {price} KARMA", { pack: t(pack.name), price: pack.price }))}"${can ? "" : ' aria-disabled="true"'}>
         <span class="gift-card-art">${giftVesselSvg(pack.key)}</span>
         <span class="gift-name">${escapeHtml(t(pack.name))}</span>
         <span class="gift-price${can ? "" : " cant"}">${formatNumber(pack.price)}${KARMA_MARK}</span>
@@ -340,9 +340,11 @@ function bindGiftsEvents() {
   });
 }
 
-// Esc: leaves the opening, then the screen
+// Esc: leaves the opening, then the screen. With the menu keys on (desktop app), Enter also ends an opening
+// once the drop shows.
 document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape" || !giftsOpen()) return;
+  if (!giftsOpen()) return;
+  if (event.key !== "Escape" && !(event.key === "Enter" && giftOpening && menuKeysEnabled())) return;
   event.preventDefault();
   if (giftOpening) {
     if (giftOpening.overlay.classList.contains("phase-reveal")) endGiftOpening(true);

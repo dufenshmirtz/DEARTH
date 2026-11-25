@@ -278,7 +278,7 @@ function renderMenuApp() {
 function renderMainMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="play">${t("Play")}</button>
+      <button class="menu-button" data-menu-action="play" data-nav-enter>${t("Play")}</button>
       <button class="menu-button" data-menu-action="options">${t("Options")}</button>
       ${NATIVE_IOS_APP ? "" : `<button class="menu-button" data-menu-action="quit">${t("Quit")}</button>`}
     </div>
@@ -299,22 +299,22 @@ function formatRunStartedAt(timestamp) {
 function renderPlayMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="arcade">${t("Arcade")}</button>
+      <button class="menu-button" data-menu-action="arcade" data-nav-enter>${t("Arcade")}</button>
       ${pvpAvailable() ? `<button class="menu-button" data-menu-action="pvp">${t("PvP")}</button>` : ""}
-      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
 
 function renderArcadeOptionsMenu() {
   const primaryButton = hasSavedArcadeRun()
-    ? `<button class="menu-button" data-menu-action="continue-arcade">${t("Continue")}</button>`
-    : `<button class="menu-button" data-new-run="arcade-options">${t("New Run")}</button>`;
+    ? `<button class="menu-button" data-menu-action="continue-arcade" data-nav-enter>${t("Continue")}</button>`
+    : `<button class="menu-button" data-new-run="arcade-options" data-nav-enter>${t("New Run")}</button>`;
   return `
     <div class="main-menu-actions">
       ${primaryButton}
       <button class="menu-button" data-menu-action="load-run">${t("Load Run")}</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="${pvpAvailable() ? "play" : "back"}">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="${pvpAvailable() ? "play" : "back"}" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -325,9 +325,9 @@ function renderArcadeRunsMenu() {
   const pendingDeleteSlot = savedSlots.find((slot) => slot.slotId === state.pendingRunDeleteSlotId);
   const savedRows = savedSlots
     .map(
-      (slot) => `
+      (slot, index) => `
         <article class="run-slot-row">
-          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}">
+          <button class="run-slot-button saved-run-slot" data-run-slot-id="${escapeAttr(slot.slotId)}"${index === 0 ? " data-nav-enter" : ""}>
             <span class="run-slot-label">${t("Continue Run")}</span>
             <span class="run-slot-date">${escapeHtml(formatRunStartedAt(slot.startedAt))}</span>
           </button>
@@ -343,7 +343,7 @@ function renderArcadeRunsMenu() {
     .join("");
   const emptyRows = Array.from({ length: emptyCount }, (_, index) => {
     return `
-      <button class="run-slot-button empty-run-slot" data-new-run="${index}">
+      <button class="run-slot-button empty-run-slot" data-new-run="${index}"${!savedSlots.length && index === 0 ? " data-nav-enter" : ""}>
         <span class="run-slot-label">${t("New Run")}</span>
       </button>
     `;
@@ -356,18 +356,18 @@ function renderArcadeRunsMenu() {
       ${
         pendingDeleteSlot
           ? `
-            <div class="run-remove-confirm">
+            <div class="run-remove-confirm" data-nav-modal data-nav-return='[data-remove-run-slot-id="${escapeAttr(pendingDeleteSlot.slotId)}"]'>
               <div>${t("Are You Sure You Want To Remove This Run?")}</div>
               <div class="run-remove-confirm-date">${escapeHtml(formatRunStartedAt(pendingDeleteSlot.startedAt))}</div>
               <div class="run-remove-confirm-actions">
                 <button class="small-button" data-confirm-remove-run="${escapeAttr(pendingDeleteSlot.slotId)}">${t("Yes")}</button>
-                <button class="small-button" data-cancel-remove-run>${t("No")}</button>
+                <button class="small-button" data-cancel-remove-run data-nav-start data-nav-enter data-nav-back>${t("No")}</button>
               </div>
             </div>
           `
           : ""
       }
-      <button class="menu-button secondary-menu-button" data-menu-action="arcade">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="arcade" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -375,12 +375,12 @@ function renderArcadeRunsMenu() {
 function renderOptionsMenu() {
   return `
     <div class="main-menu-actions">
-      <button class="menu-button" data-menu-action="sound-options">${t("Settings")}</button>
+      <button class="menu-button" data-menu-action="sound-options" data-nav-enter>${t("Settings")}</button>
       <button class="menu-button" data-menu-action="records">${t("Records")}</button>
       <button class="menu-button" data-menu-action="collection">${t("Collection")}</button>
       <button class="menu-button" data-menu-action="gifts">${t("Shop")}</button>
       <button class="menu-button" data-menu-action="credits">${t("Credits")}</button>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -396,7 +396,7 @@ function renderMobileMenuSettingsOverlay() {
         <h1 class="end-title">${t("Settings")}</h1>
         <div class="pause-sound-settings">${renderSettingsPanel("menu")}</div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-menu-action="options">${t("Back")}</button>
+          <button class="primary-button" data-menu-action="options" data-nav-back>${t("Back")}</button>
         </div>
       </section>
     </div>
@@ -409,7 +409,7 @@ function renderSoundOptionsMenu() {
   return `
     <div class="options-menu menu-settings-card">
       ${renderSettingsPanel("menu")}
-      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -663,7 +663,7 @@ function renderRecordsMenu() {
       <h2 class="records-title">${t("Records")}</h2>
       <nav class="records-tabs" aria-label="${t("Record groups")}">${tabs}</nav>
       <div class="records-wall records-wall-${escapeAttr(tab)}">${plaques}</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -843,7 +843,7 @@ function renderSettingsPanel(prefix) {
   } else {
     const controls = isNativeArcadeApp()
       ? ""
-      : settingNote(t("settings.controlsHtml"));
+      : settingNote(`${t("settings.controlsHtml")}${menuKeysEnabled() ? ` &nbsp;·&nbsp; ${t("settings.menuKeysHtml")}` : ""}`);
     rows = [
       settingChoiceRow("animSpeed"),
       settingNote(escapeHtml(t("settings.animSpeedNote"))),
@@ -866,7 +866,7 @@ function renderQuitMenu() {
   return `
     <div class="main-menu-actions">
       <div class="quit-copy">${t("Close The Tab To Leave The Table.")}</div>
-      <button class="menu-button secondary-menu-button" data-menu-action="back">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="back" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }
@@ -1201,7 +1201,7 @@ function renderPauseMenu() {
           ${renderSettingsPanel("pause")}
         </div>
         <div class="pause-actions pause-back-row">
-          <button class="primary-button" data-pause-action="back">${t("Back")}</button>
+          <button class="primary-button" data-pause-action="back" data-nav-back>${t("Back")}</button>
         </div>
       </section>
     </div>
@@ -1214,7 +1214,7 @@ function renderPauseMenu() {
         ${state.mode === "arcade" && !PLAYTEST_BUILD ? `<button class="small-button pause-unlock-button ${state.devUnlockAllSeals ? "active" : ""}" data-pause-action="unlock-all" ${state.devUnlockAllSeals ? "disabled" : ""} data-tooltip="${t("Testing: every locked SEAL can be offered for the rest of this run")}">${state.devUnlockAllSeals ? t("Unlocked") : t("Unlock")}</button>` : ""}
         <h1 class="end-title">${t("Paused")}</h1>
         <div class="pause-actions">
-          <button class="primary-button" data-pause-action="resume">${t("Resume")}</button>
+          <button class="primary-button" data-pause-action="resume" data-nav-enter>${t("Resume")}</button>
           <button class="primary-button" data-pause-action="restart">${t("Restart")}</button>
           <button class="primary-button" data-pause-action="collection">${t("Collection")}</button>
           <button class="primary-button" data-pause-action="settings">${t("Settings")}</button>
@@ -1548,7 +1548,7 @@ function renderPvpLobbyConsole() {
   return renderPvpConsoleFrame(
     "Lobby",
     `${joined} of ${seats} seats taken. Open seats are played by the DAMNED.`,
-    `<button class="primary-button" id="pvpReadyLobby">${t("Start")}</button>`,
+    `<button class="primary-button" id="pvpReadyLobby" data-nav-enter>${t("Start")}</button>`,
     body
   );
 }
@@ -1863,7 +1863,7 @@ function renderMoment() {
   if (!moment || moment.until <= performance.now()) return "";
   const figures =
     moment.kind === "finals"
-      ? `<img class="moment-figure moment-figure-left" src="assets/ui/jesus.png" alt="" /><img class="moment-figure moment-figure-right" src="assets/ui/devil.png" alt="" />`
+      ? `<img class="moment-figure moment-figure-left" src="${FINAL_BOSS_JESUS_SRC}" alt="" /><img class="moment-figure moment-figure-right" src="${FINAL_BOSS_SATAN_SRC}" alt="" />`
       : "";
   return `
     <div class="moment-card moment-${moment.kind}" style="--moment-ms: ${moment.duration || MOMENT_DURATIONS_MS[moment.kind] || 1600}ms" data-morph-keep data-morph-key="moment-${moment.id}" role="status" aria-live="assertive">
@@ -3058,8 +3058,8 @@ function renderOverlay() {
         </div>
         <div class="end-actions">
           <button class="primary-button" id="inspectGame">${t("Inspect")}</button>
-          <button class="primary-button end-menu" id="gameOverMenu">${t("Main Menu")}</button>
-          <button class="primary-button end-restart" id="restartGame">${t("Restart")}</button>
+          <button class="primary-button end-menu" id="gameOverMenu" data-nav-back>${t("Main Menu")}</button>
+          <button class="primary-button end-restart" id="restartGame" data-nav-enter>${t("Restart")}</button>
           ${renderPlaytestFeedbackButton("end")}
         </div>
       </section>
@@ -3623,9 +3623,9 @@ const MENU_FIGURES = {
     side: "left",
     // the artist's ink Jesus (Nov 2026): one drawing, no cut-out head and no cloth drift. head is only the box his
     // glowing eye sits in (jesus-eyes.webp, same size), eyesMid the point of the eye; crown is the shimmer layer
-    stage: { left: 40, top: 62, width: 527, srcW: 704 },
+    stage: { left: 80, top: 150, width: 452, srcW: 704 },
     files: ["base"],
-    meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 500, "y": 100, "w": 140, "h": 100}, "head_pivot": [546, 168], "eyesMid": [59, 53], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
+    meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 554, "y": 143, "w": 30, "h": 22}, "head_pivot": [546, 168], "eyesMid": [16, 10], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
     leanDeg: 0.4,
     feet: [300, 1520],
     clothAmp: 1.3,
@@ -3636,7 +3636,7 @@ const MENU_FIGURES = {
     // head is only the box his glowing eyes sit in (satan-eyes.webp, same size), eyesMid the point between them
     stage: { left: 1063, top: 200, width: 640, srcW: 2098 },
     files: ["base"],
-    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 540, "y": 440, "w": 300, "h": 180}, "head_pivot": [665, 506], "eyesMid": [149, 90]},
+    meta: {"W": 2146, "H": 3122, "pad": 24, "head": {"x": 596, "y": 449, "w": 181, "h": 120}, "head_pivot": [665, 506], "eyesMid": [95, 70]},
     leanDeg: -0.4,
     feet: [1076, 3048],
     clothAmp: 1.1,

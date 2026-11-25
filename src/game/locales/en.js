@@ -39,6 +39,7 @@ LOCALES.en = {
   "settings.animSpeed.value": "x{value}",
   "settings.animSpeedNote": "Speeds up SEAL triggers and the READY reveal.",
   "settings.controlsHtml": "<b>Enter</b> Guess, Ready, Next round &nbsp;·&nbsp; <b>Esc</b> Pause &nbsp;·&nbsp; <b>Shift</b> more on a tooltip",
+  "settings.menuKeysHtml": "In menus <b>arrows</b> move, <b>Enter</b> picks, <b>Esc</b> goes back",
   "settings.previous": "Previous {setting}",
   "settings.next": "Next {setting}",
   "settings.replayStory": "Replay the story",

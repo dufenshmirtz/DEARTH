@@ -7907,6 +7907,19 @@ body .sound-toggle input[type="checkbox"]:checked {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23e9e3d6' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
 }
 
+/* hover (mouse, or the menu keys' selection): the box's frame turns blood red */
+body .sound-toggle:hover input[type="checkbox"],
+body .sound-toggle input[type="checkbox"]:hover {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
+body .sound-toggle:hover input[type="checkbox"]:checked,
+body .sound-toggle input[type="checkbox"]:checked:hover {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M4.5 4.8 15.2 15.4M15.6 4.4 4.8 15.6'/%3E%3C/svg%3E") center / 70% 70% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23dc2a2f' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M2.2 2.6 17.6 2.1M17.9 2.4l-.4 15.4M17.7 17.6 2.4 17.9M2.1 17.5l.3-15.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat !important;
+}
+
 body .sound-toggle input[type="checkbox"]:focus-visible,
 body .sound-slider:focus-visible {
   outline: 1px dashed var(--ash);
@@ -7946,6 +7959,14 @@ body .sound-slider:focus-visible {
 #app .game-over-overlay .end-figure-right {
   right: -6vw;
   animation-delay: 120ms;
+}
+
+/* Jesus stands further right than the old figure: his arms reach wide */
+#app .game-over-overlay .end-figure-right.end-figure-jesus {
+  right: -11vw;
+}
+body.mobile-arcade #app .game-over-overlay .end-figure-right.end-figure-jesus {
+  right: -15vw;
 }
 
 /* both ink figures stand a little higher so their hooves and feet show whole */
@@ -9370,6 +9391,40 @@ body.mobile-arcade #app .mini-stat span.critical-guess-label {
   transform: translateY(-4px);
 }
 
+/* the opening judgement's Jesus looks as he does at the table: "Candlelight" (intro-jesus-yellow.webp) with
+   the gold glow, and his box turns the same yellow while he speaks (you keep the white box) */
+.intro-layer .intro-portrait-jesus {
+  filter: brightness(0.55) drop-shadow(0 0 7px rgba(255, 236, 170, 0.45)) drop-shadow(0 0 26px rgba(255, 200, 80, 0.5));
+}
+
+.intro-layer.intro-lit[data-speaker="jesus"] .intro-portrait-jesus {
+  filter: brightness(1) drop-shadow(0 0 7px rgba(255, 236, 170, 0.45)) drop-shadow(0 0 26px rgba(255, 200, 80, 0.5));
+}
+
+.intro-box-judgement::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+}
+
+.intro-box-judgement::before,
+.intro-box-judgement::after {
+  transition: filter 0.5s ease, box-shadow 0.5s ease, opacity 0.5s ease;
+}
+
+.intro-box-judgement.intro-says-jesus::before {
+  filter: brightness(0.9) sepia(1) saturate(7) hue-rotate(8deg);
+  opacity: 1;
+}
+
+.intro-box-judgement.intro-says-jesus::after {
+  box-shadow: 0 0 34px rgba(255, 190, 30, 0.26), inset 0 0 40px rgba(220, 160, 20, 0.22);
+}
+
+.intro-box-judgement.intro-says-jesus .intro-skip { color: #b89a45 !important; }
+.intro-box-judgement.intro-says-jesus .intro-skip:hover { color: #ffd23f !important; }
+
 .intro-layer.intro-shutting .intro-portrait,
 .intro-layer.intro-shutting .intro-box {
   opacity: 0 !important;
@@ -10086,7 +10141,7 @@ body.mobile-arcade .intro-box-guide::before {
 
 /* Jesus at the table looks as he does before Final Judgment (.finale-figure-jesus and his box in the
    .finale-layer, further down): "Candlelight" image, the same size, glow and pool of darkness, the box in the
-   same yellow with the same text size. The opening judgement (.intro-portrait-jesus) keeps its own look. */
+   same yellow with the same text size. The opening judgement (.intro-portrait-jesus) has the same look too. */
 .intro-guide-jesus .intro-jesus {
   height: min(96vh, 1216px);
   max-width: 34vw;
@@ -11612,8 +11667,8 @@ body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-n
 
 /* main menu Satan: the eyes kindle on hover (with a breathing bloom), flare on click,
    then a dark red bloom swells from them and the collection surfaces.
-   satan-eyes.webp is traced from the whites of his eyes in satan-head.webp (2x size), so it
-   sits exactly in the head box. The bloom never scales (a scale would pull it off the eyes);
+   satan-eyes.webp (and jesus-eyes.webp) were painted by the owner on the "Eye glow painter" page;
+   each fills the figure's head box (meta.head, same size), so it sits exactly on the eyes. The bloom never scales (a scale would pull it off the eyes);
    it grows by blur instead, and it breathes by brightness so the hover fade stays smooth. */
 .menu-fig-satan .fig-eyes {
   filter: drop-shadow(0 0 1px rgba(255, 70, 40, 0.95)) drop-shadow(0 0 3px rgba(220, 20, 10, 0.55)) !important;
@@ -13502,6 +13557,31 @@ body.native-ios.native-arcade #app .shop-panel .shop-slots {
   padding: 6px 10px 12px !important;
   gap: 5px !important;
 }
+/* iPhone: the full-screen pages (Collection, Jesus' Gifts) keep their buttons, counters and cards clear of the Dynamic
+   Island and the home indicator; their dark background still fills the screen */
+body.native-ios .collection-screen {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body.native-ios .gifts-screen .gifts-back {
+  left: calc(clamp(14px, 3vw, 40px) + env(safe-area-inset-left));
+}
+/* Jesus moves in with the Back button, so it keeps the dark space above his head it has on Android */
+body.native-ios .gifts-screen .gifts-jesus {
+  left: calc(-9vh + env(safe-area-inset-left));
+}
+body.native-ios .gifts-screen .gifts-karma {
+  right: calc(clamp(14px, 4vw, 60px) + env(safe-area-inset-right));
+}
+/* the title steps left so the moved-in KARMA counter does not run into it */
+body.native-ios .gifts-screen .gifts-title {
+  right: calc(3% + env(safe-area-inset-right) + 100px);
+}
+body.native-ios.native-arcade .gifts-screen .gifts-cards {
+  right: calc(10px + env(safe-area-inset-right));
+}
+
 body.native-ios.native-arcade #app .shop-panel .shop-slots .item-card {
   height: auto !important;
   min-height: 0 !important;

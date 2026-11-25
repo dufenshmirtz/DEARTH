@@ -41,6 +41,7 @@ const SOURCE_FILES = [
   "09-codex.js",
   "09-slot-missions.js",
   "09-credits.js",
+  "09-keyboard-nav.js",
   "10-events-bootstrap.js",
 ];
 

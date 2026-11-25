@@ -70,7 +70,7 @@ function renderCreditsMenu() {
         ${sections}
         <p class="credits-closing">${escapeHtml(t(CREDITS_CLOSING_LINE))}</p>
       </div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options" data-nav-back>${t("Back")}</button>
     </div>
   `;
 }

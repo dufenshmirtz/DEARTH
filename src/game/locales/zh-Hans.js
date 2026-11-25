@@ -1402,6 +1402,7 @@ LOCALES["zh-Hans"] = {
   "settings.animSpeed.value": "x{value}",
   "settings.animSpeedNote": "加快印记触发和“就绪”后的揭示。",
   "settings.controlsHtml": "<b>Enter</b> 猜测、就绪、下一回合 &nbsp;·&nbsp; <b>Esc</b> 暂停 &nbsp;·&nbsp; <b>Shift</b> 查看提示详情",
+  "settings.menuKeysHtml": "菜单中 <b>方向键</b> 移动，<b>Enter</b> 选择，<b>Esc</b> 返回",
   "settings.effects": "音效",
   "settings.flashes": "闪光",
   "settings.flashes.1": "完整",
