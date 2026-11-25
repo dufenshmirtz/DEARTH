@@ -29,9 +29,9 @@ const LOCALE_KEYWORDS = {};
 const LANGUAGES = [
   { code: "en", name: "English", htmlLang: "en", ready: true },
   { code: "el", name: "Ελληνικά", htmlLang: "el", ready: true },
-  { code: "de", name: "Deutsch", htmlLang: "de", ready: false },
-  { code: "es", name: "Español", htmlLang: "es", ready: false },
-  { code: "zh-Hans", name: "简体中文", htmlLang: "zh-Hans", ready: false }
+  { code: "de", name: "Deutsch", htmlLang: "de", ready: true },
+  { code: "es", name: "Español", htmlLang: "es", ready: true },
+  { code: "zh-Hans", name: "简体中文", htmlLang: "zh-Hans", ready: true }
 ];
 const PSEUDO_LANGUAGE = { code: "pseudo", name: "Pseudo (testing)", htmlLang: "en", ready: false };
 const LANGUAGE_STORAGE_KEY = "dearthLanguageV1";
