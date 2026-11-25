@@ -1760,10 +1760,11 @@ function introFinish() {
 // Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
 const MENU_FIGURE_HIT = {
   jesus: [
-    [414, 500], [374, 543], [378, 558], [371, 545], [359, 541], [321, 527], [292, 498], [283, 437], [273, 429], [285, 437],
-    [282, 447], [280, 452], [272, 459], [263, 476], [259, 498], [269, 495], [267, 503], [253, 507], [243, 515], [241, 522],
-    [240, 523], [296, 495], [281, 494], [277, 494], [289, 499], [360, 500], [352, 502], [338, 506], [320, 511], [213, 461],
-    [210, 560], [209, 560], [180, 560], [174, 560], [180, 560], [180, 560], [178, 560], [169, 560], 0
+    [445, 588], [415, 661], [391, 689], [373, 665], [227, 654], [194, 656], [182, 633], [167, 632], [150, 632], [130, 614],
+    [115, 498], [101, 515], [84, 540], [65, 541], [36, 539], [36, 531], [35, 532], [37, 535], [38, 539], [41, 542],
+    [36, 558], [36, 574], [42, 588], [42, 600], [40, 612], [43, 631], [65, 648], [59, 671], [57, 701], [43, 715],
+    [13, 710], [15, 703], [21, 676], [56, 662], [111, 536], [129, 530], [251, 524], [238, 510], [227, 504], [215, 499],
+    [202, 495], [188, 495], [172, 508], [154, 538], [145, 581], [126, 668], [122, 666], [148, 312], [175, 311], 0
   ],
   satan: [
     [708, 712], [687, 711], [673, 701], [663, 701], [655, 700], [377, 702], [367, 702], [361, 980], [358, 978], [359, 959],
@@ -1856,8 +1857,9 @@ function triggerMenuJesus() {
   const eye = fig.querySelector(".fig-eyes");
   const eyeRect = eye ? eye.getBoundingClientRect() : fig.getBoundingClientRect();
   const meta = MENU_FIGURES.jesus.meta;
-  const ex = eye ? eyeRect.left + (eyeRect.width * 138) / meta.head.w : eyeRect.left + eyeRect.width / 2;
-  const ey = eye ? eyeRect.top + (eyeRect.height * 107) / meta.head.h : eyeRect.top + eyeRect.height * 0.1;
+  const [eyeX, eyeY] = meta.eyesMid || [138, 107];
+  const ex = eye ? eyeRect.left + (eyeRect.width * eyeX) / meta.head.w : eyeRect.left + eyeRect.width / 2;
+  const ey = eye ? eyeRect.top + (eyeRect.height * eyeY) / meta.head.h : eyeRect.top + eyeRect.height * 0.1;
   const flash = document.createElement("div");
   flash.className = "menu-jesus-flash";
   flash.style.setProperty("--flash-x", `${Math.round(ex)}px`);

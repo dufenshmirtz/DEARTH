@@ -3035,7 +3035,7 @@ function renderOverlay() {
   return `
     <div class="overlay visible game-over-overlay">
       <img class="end-figure end-figure-left end-figure-satan" src="${FINAL_BOSS_SATAN_SRC}" alt="" />
-      <img class="end-figure end-figure-right" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
+      <img class="end-figure end-figure-right end-figure-jesus" src="${FINAL_BOSS_JESUS_SRC}" alt="" />
       <section class="end-card game-over-card">
         <h1 class="end-title">${t("Game Over")}</h1>
         <p class="end-copy">${t("Welcome to Hell...")}</p>
@@ -3611,11 +3611,13 @@ function menuLogoGlitchBurst() {
 const MENU_FIGURES = {
   jesus: {
     side: "left",
-    stage: { left: -34, top: 62, width: 836, srcW: 866 },
-    files: ["base", "cloth", "head", "crown"],
-    meta: {"W": 898, "H": 1229, "pad": 16, "head": {"x": 343, "y": 16, "w": 228, "h": 214}, "head_pivot": [425, 190], "eyes": [[462, 113, 16, 8]], "crown_y": 88, "crown": {"x": 364, "y": 16, "w": 205, "h": 88}},
+    // the artist's ink Jesus (Nov 2026): one drawing, no cut-out head and no cloth drift. head is only the box his
+    // glowing eye sits in (jesus-eyes.webp, same size), eyesMid the point of the eye; crown is the shimmer layer
+    stage: { left: 40, top: 62, width: 527, srcW: 704 },
+    files: ["base"],
+    meta: {"W": 728, "H": 1560, "pad": 12, "head": {"x": 500, "y": 100, "w": 140, "h": 100}, "head_pivot": [546, 168], "eyesMid": [59, 53], "crown": {"x": 360, "y": 8, "w": 368, "h": 122}},
     leanDeg: 0.4,
-    feet: [420, 1150],
+    feet: [300, 1520],
     clothAmp: 1.3,
   },
   satan: {

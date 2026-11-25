@@ -7948,8 +7948,9 @@ body .sound-slider:focus-visible {
   animation-delay: 120ms;
 }
 
-/* Satan stands a little higher than Jesus so his hooves show whole */
-#app .game-over-overlay .end-figure-satan {
+/* both ink figures stand a little higher so their hooves and feet show whole */
+#app .game-over-overlay .end-figure-satan,
+#app .game-over-overlay .end-figure-jesus {
   bottom: 3vh;
 }
 
@@ -9961,7 +9962,7 @@ body.mobile-arcade .intro-satan {
   right: max(0.5vw, 4px);
   bottom: 0;
   height: min(94vh, 1216px);
-  aspect-ratio: 886 / 1216;
+  aspect-ratio: 728 / 1560;
   max-width: 24vw;
   pointer-events: none;
   animation: intro-satan-in 2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
@@ -16200,7 +16201,7 @@ body.hide-guide-text #app .guide-text {
   transition: opacity 0.75s ease, transform 0.95s cubic-bezier(0.25, 0.6, 0.3, 1), filter 0.75s ease;
 }
 
-.finale-figure-jesus { aspect-ratio: 886 / 1216; }
+.finale-figure-jesus { aspect-ratio: 728 / 1560; }
 .finale-figure-satan { aspect-ratio: 2146 / 3122; }
 
 /* the same pool of darkness Satan stands in, so the table does not show through */
