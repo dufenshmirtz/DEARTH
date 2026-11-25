@@ -9,14 +9,16 @@
     "build:game": "node scripts/build-game.js",
     "playtest:zip": "node scripts/build-playtest-zip.js",
     "audio:levels": "node scripts/measure-audio.js && node scripts/build-game.js",
-    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js && node --check scripts/build-desktop.js && node --check desktop/main.cjs && node --check desktop/preload.cjs && node --check scripts/build-playtest-zip.js",
+    "check": "node scripts/build-game.js --verify && node --check main.js && node --check controller.js && node --check controller-i18n.js && node --check server.js && node --check scripts/build-game.js && node --check scripts/build-mobile.js && node --check scripts/measure-audio.js && node --check scripts/build-desktop.js && node --check desktop/main.cjs && node --check desktop/preload.cjs && node --check scripts/build-playtest-zip.js",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "pnpm run mobile:build && cap sync",
     "mobile:android": "pnpm run mobile:build && cap sync android",
     "mobile:ios": "pnpm run mobile:build && cap sync ios",
     "desktop": "electron desktop/main.cjs",
     "desktop:build": "node scripts/build-desktop.js",
-    "desktop:dist": "node scripts/build-desktop.js && electron-builder --win"
+    "desktop:dist": "node scripts/build-desktop.js && electron-builder --win",
+    "text:check": "node scripts/text-snapshot.js",
+    "text:update": "node scripts/text-snapshot.js --update"
   },
   "engines": {
     "node": ">=18"

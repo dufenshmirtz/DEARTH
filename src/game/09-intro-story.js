@@ -405,7 +405,8 @@ function introPlaySoundMarks(from, to) {
   });
 }
 
-const INTRO_PUNCTUATION = new Set([".", ",", "!", "?"]);
+// Chinese ends its parts with its own full-width marks
+const INTRO_PUNCTUATION = new Set([".", ",", "!", "?", "。", "，", "！", "？"]);
 
 // a chunk ends after a run of . , ! ? (so "??", "!!" and "..." stay together); not inside numbers like 0.8
 function introChunkEnds(glyphs) {
@@ -459,7 +460,9 @@ function introSetWaiting(waiting) {
 }
 
 function introShowLine(index) {
-  const [speaker, text] = introState.lines[index];
+  const [speaker, englishText] = introState.lines[index];
+  // the line in the player's language (a translation keeps the sound marks of INTRO_MARKS where they belong)
+  const text = t(englishText);
   introState.lineIndex = index;
   introState.glyphs = introGlyphs(text);
   introState.ends = introChunkEnds(introState.glyphs);
@@ -602,7 +605,7 @@ function introBoxHtml(kind) {
     <div class="intro-box intro-box-${kind}" role="dialog" aria-live="polite">
       <div class="intro-text"></div>
       <span class="intro-next" aria-hidden="true"></span>
-      <button class="intro-skip" type="button" aria-label="Skip the conversation">skip</button>
+      <button class="intro-skip" type="button" aria-label="${t("Skip the conversation")}">${t("skip")}</button>
     </div>`;
 }
 
@@ -1438,8 +1441,8 @@ function satanTightwadAsk() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">Yes</button>
-    <button class="intro-choice-button" type="button" data-choice="no">No</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${t("Yes")}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${t("No")}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");
@@ -1757,16 +1760,23 @@ function introFinish() {
 // Silhouettes for hit testing: one [left, right] span per 32 px row of the figure's frame (0 = none).
 const MENU_FIGURE_HIT = {
   jesus: [
-    [414, 500], [374, 543], [378, 558], [371, 545], [359, 541], [321, 527], [292, 498], [283, 437], [273, 429], [285, 437],
-    [282, 447], [280, 452], [272, 459], [263, 476], [259, 498], [269, 495], [267, 503], [253, 507], [243, 515], [241, 522],
-    [240, 523], [296, 495], [281, 494], [277, 494], [289, 499], [360, 500], [352, 502], [338, 506], [320, 511], [213, 461],
-    [210, 560], [209, 560], [180, 560], [174, 560], [180, 560], [180, 560], [178, 560], [169, 560], 0
+    [445, 588], [415, 661], [391, 689], [373, 665], [227, 654], [194, 656], [182, 633], [167, 632], [150, 632], [130, 614],
+    [115, 498], [101, 515], [84, 540], [65, 541], [36, 539], [36, 531], [35, 532], [37, 535], [38, 539], [41, 542],
+    [36, 558], [36, 574], [42, 588], [42, 600], [40, 612], [43, 631], [65, 648], [59, 671], [57, 701], [43, 715],
+    [13, 710], [15, 703], [21, 676], [56, 662], [111, 536], [129, 530], [251, 524], [238, 510], [227, 504], [215, 499],
+    [202, 495], [188, 495], [172, 508], [154, 538], [145, 581], [126, 668], [122, 666], [148, 312], [175, 311], 0
   ],
   satan: [
-    [260, 360], [278, 390], [222, 447], [232, 469], [268, 484], [275, 510], [304, 534], [381, 563], [381, 598], [380, 603],
-    [276, 598], [288, 591], [301, 587], [313, 583], [325, 578], [335, 587], [321, 603], [318, 638], [318, 651], [315, 639],
-    [312, 624], [306, 465], [304, 466], [298, 466], [294, 466], [309, 468], [320, 482], [327, 496], [322, 508], [323, 524],
-    [323, 503], [344, 493], [171, 604], [150, 650], [150, 650], [150, 650], [222, 650], 0
+    [708, 712], [687, 711], [673, 701], [663, 701], [655, 700], [377, 702], [367, 702], [361, 980], [358, 978], [359, 959],
+    [361, 933], [369, 926], [381, 918], [396, 918], [424, 919], [469, 1452], [548, 1500], [501, 1521], [501, 1546], [559, 1576],
+    [561, 1588], [564, 1613], [565, 1636], [567, 1656], [609, 1667], [609, 1696], [608, 1714], [607, 1721], [180, 1731], [44, 1745],
+    [34, 1756], [35, 1769], [52, 1781], [25, 1794], [25, 1805], [38, 1821], [49, 1832], [39, 1843], [48, 1870], [89, 1876],
+    [153, 1880], [193, 1880], [228, 1880], [253, 1878], [252, 1875], [268, 1871], [312, 1868], [326, 1871], [341, 1872], [354, 1875],
+    [371, 1875], [393, 1874], [429, 1877], [449, 1876], [979, 1896], [970, 1910], [938, 1911], [928, 1921], [909, 1936], [888, 1944],
+    [867, 1950], [855, 1963], [823, 1991], [793, 2009], [783, 2066], [760, 2074], [571, 2083], [536, 2086], [518, 2090], [507, 2127],
+    [503, 2121], [504, 2118], [507, 1940], [512, 1938], [524, 1924], [551, 1912], [582, 1918], [650, 1924], [642, 1924], [619, 1928],
+    [587, 1929], [577, 1941], [546, 1943], [525, 1944], [499, 1952], [478, 1951], [442, 1950], [419, 1954], [402, 1943], [392, 1950],
+    [388, 1953], [376, 1949], [364, 1956], [343, 1956], [333, 1953], [333, 625], [378, 579], 0, 0
   ]
 };
 const MENU_FIGURE_HIT_CELL = 32;
@@ -1847,8 +1857,9 @@ function triggerMenuJesus() {
   const eye = fig.querySelector(".fig-eyes");
   const eyeRect = eye ? eye.getBoundingClientRect() : fig.getBoundingClientRect();
   const meta = MENU_FIGURES.jesus.meta;
-  const ex = eye ? eyeRect.left + (eyeRect.width * 138) / meta.head.w : eyeRect.left + eyeRect.width / 2;
-  const ey = eye ? eyeRect.top + (eyeRect.height * 107) / meta.head.h : eyeRect.top + eyeRect.height * 0.1;
+  const [eyeX, eyeY] = meta.eyesMid || [138, 107];
+  const ex = eye ? eyeRect.left + (eyeRect.width * eyeX) / meta.head.w : eyeRect.left + eyeRect.width / 2;
+  const ey = eye ? eyeRect.top + (eyeRect.height * eyeY) / meta.head.h : eyeRect.top + eyeRect.height * 0.1;
   const flash = document.createElement("div");
   flash.className = "menu-jesus-flash";
   flash.style.setProperty("--flash-x", `${Math.round(ex)}px`);

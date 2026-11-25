@@ -52,15 +52,10 @@ const PVP_SUMMARY_AUTO_DELAY = 10000;
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
-const OUTLINE_BOIL_LABELS = ["Off", "Slow", "Normal", "Fast"];
 const OUTLINE_BOIL_DURATIONS_MS = [0, 750, 375, 250];
 // Settings that are a choice between a few values (Settings > Display / Gameplay)
 const ANIM_SPEED_VALUES = [1, 2, 4];
-const SCREEN_SHAKE_LABELS = ["Off", "Low", "Full"];
-const FLASH_LABELS = ["Reduced", "Full"];
-const TEXT_SIZE_LABELS = ["Normal", "Large"];
-const GUIDE_TEXT_LABELS = ["Hidden", "Shown"];
-const SLOT_MACHINE_LOOK_LABELS = ["Default", "Fancy"];
+// their names on screen are the settings.* keys in locales/en.js
 const ARCADE_RUN_STORAGE_KEY = "dearthArcadeRunSaveV1";
 const ARCADE_RUN_SLOTS_STORAGE_KEY = "dearthArcadeRunSlotsV1";
 const ARCADE_RECORDS_STORAGE_KEY = "dearthArcadeRecordsV1";
@@ -580,7 +575,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Vual",
     price: 10,
-    description: "Whenever a revealed DAMNED takes damage, it takes 7 extra damage. ELITE multiplies the extra damage by x1.5 each level, rounded up."
+    description: "15% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead. ELITE redirects +5% more each level."
   },
   p64: {
     id: "p64",
@@ -595,7 +590,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Naberius",
     price: 10,
-    description: "If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take damage equal to half their guess. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "At end of round, a revealed DAMNED with the same guess as you takes 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -617,7 +612,7 @@ const ITEMS = {
     name: "Seal of Vapula",
     price: 13,
     description:
-      "At end of round, every DAMNED with more than 8 MEMORY takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes 10 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p69: {
     id: "p69",
@@ -840,7 +835,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Kalha",
     price: 16,
-    description: "Every PENTAKILL gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
+    description: "Every MASSACRE gives a random SEAL you own an ELITE upgrade. Cannot be upgraded."
   },
   p123: {
     id: "p123",
@@ -889,14 +884,14 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Gusion",
     price: 14,
-    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 30 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    description: "BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p130: {
     id: "p130",
     type: "passive",
     name: "Seal of Valac",
     price: 15,
-    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes PENTAKILLS give +2 SIN each level."
+    description: "If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. ELITE makes MASSACRES give +2 SIN each level."
   },
   // the Trinity SEALS: sold apart, but every one you own shares a single SEAL slot (see TRINITY_SEAL_IDS)
   p131: {
@@ -1060,7 +1055,7 @@ const ITEMS = {
     type: "passive",
     name: "Seal of Raphael",
     price: 15,
-    description: "Whenever you make a PENTAKILL, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
+    description: "Whenever you make a MASSACRE, this SEAL gains +20 damage, then its current damage is dealt to all DAMNED at the next end of round. Cannot be upgraded."
   },
   p102: {
     id: "p102",
@@ -1305,7 +1300,7 @@ const ITEMS = {
     type: "active",
     name: "Mummified Lamb",
     price: 2,
-    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY."
+    description: "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS."
   },
   a26: {
     id: "a26",
@@ -1534,7 +1529,7 @@ const SELF_STACKING_SEAL_SPECS = {
   p98: { key: "critical", label: "Player CRITICAL", increment: 3 },
   p99: { key: "memoryOverTen", label: "Non-boss MEMORY over 10", increment: 2 },
   p100: { key: "bountySum", label: "Regular BOUNTY sum over 40", increment: 1 },
-  p101: { key: "pentakill", label: "PENTAKILL", increment: 20 },
+  p101: { key: "pentakill", label: "MASSACRE", increment: 20 },
   p102: { key: "revealedDeath", label: "Revealed death", increment: 1 },
   p103: { key: "artifactThreshold", label: "20 ARTIFACT uses", increment: 1 },
   p109: { key: "stubbornDeath", label: "STUBBORN death", increment: 1 }
@@ -2305,6 +2300,12 @@ const state = {
   satanTightwadAbove: false,
   satanTightwadOffers: 0,
   satanRerollToll: false,
+  // run state that is set up by startGame; it must be listed here, or loadArcadeRun skips it and Continue
+  // brings back a fresh one (a signed DEAL came back unused, FAVOR and a spin's queued DAMAGE were lost)
+  pact: null, // Satan's Pact (09-satan-pact.js)
+  missions: null, // Satan's bets and the slot machine's FAVOR (09-slot-missions.js)
+  slotFreeRerolls: 0,
+  slotPendingDamage: [],
   paleHorseBoostArmed: false,
   // Trinity SEALS: free rerolls left (Seal of the Son), and what the Holy Spirit's wheel queued for the next offerings
   freeRerolls: 0,

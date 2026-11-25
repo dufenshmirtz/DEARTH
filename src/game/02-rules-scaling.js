@@ -1116,15 +1116,31 @@ function fullHealthExtraDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
 
-function revealedExtraDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 7);
+// Seal of Vual: the share (in %) of a revealed DAMNED's damage that goes to the others; ELITE +5% each level
+function vualRedirectPercent(idOrItem) {
+  const stack = simpleStackCount(idOrItem);
+  return stack ? 15 + 5 * Math.max(0, stack - 1) : 0;
+}
+
+// Seal of Vual: where the damage goes: every BOSS at the table (revealed or not; a BOSS's own damage goes to the
+// other BOSSES, or nowhere), otherwise the DAMNED that are not revealed
+function vualRedirectTargets(bot) {
+  const living = activeBots();
+  const others = living.filter((other) => other.id !== bot.id);
+  if (living.some((other) => other.isBoss)) return others.filter((other) => other.isBoss);
+  return others.filter((other) => !other.revealedByPassive);
+}
+
+// Seal of Naberius: a revealed DAMNED with your guess takes this at end of round
+function naberiusSameGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 20);
 }
 
 function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
 }
 
-// Seal of Vapula: end-of-round damage to every DAMNED with more than 8 MEMORY
+// Seal of Vapula: end-of-round damage to every non-BOSS DAMNED with more than 8 MEMORY
 function vapulaMemoryDamage(idOrItem) {
   return flatDamageValue(idOrItem, 10);
 }
@@ -1449,17 +1465,13 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
   };
 
   if (bot) {
-    orderedPassiveEffectEntries(["p62", "p63"]).forEach((entry) => {
+    orderedPassiveEffectEntries("p62").forEach((entry) => {
       if (entry.id === "p62" && bot.hp >= bot.maxHp && !state.roundState?.belethTriggeredBotIds?.has(bot.id)) {
         applyFlatBonus(fullHealthExtraDamage(entry), ITEMS.p62?.name || "Seal of Beleth", entry);
         state.roundState?.belethTriggeredBotIds?.add(bot.id);
         return;
       }
 
-      if (entry.id === "p63" && bot.revealedByPassive) {
-        applyFlatBonus(revealedExtraDamage(entry) * revealMultiplicity(bot), ITEMS.p63?.name || "Seal of Vual", entry);
-        return;
-      }
     });
 
     if (state.roundState?.padmaVulnerableBotIds?.has(bot.id)) {
@@ -1516,12 +1528,64 @@ function scaledBotDamageDetails(bot, amount, playerDealt = true, options = {}) {
     applyMultiplier(2, ITEMS.p131.name, trinityEntry("p131"));
   }
 
+  // Seal of Vual: after every bonus and multiplier, part of what a revealed DAMNED takes goes to the others
+  // (damage that arrives through Vual is not passed on again)
+  let redirectedAway = 0;
+  if (bot && bot.revealedByPassive && vualRedirectDepth === 0) {
+    orderedPassiveEffectEntries("p63").forEach((entry) => {
+      if (roundedDamage <= 0) return;
+      const targets = vualRedirectTargets(bot);
+      if (!targets.length) return;
+      const percent = Math.min(100, vualRedirectPercent(entry) * revealMultiplicity(bot));
+      const total = Math.min(roundedDamage, Math.round((roundedDamage * percent) / 100));
+      if (total <= 0) return;
+      const share = Math.floor(total / targets.length);
+      let remainder = total - share * targets.length;
+      targets.forEach((target) => {
+        const amount = share + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder -= 1;
+        if (amount > 0) redirectEntries.push({ targetBotId: target.id, amount, source: ITEMS.p63.name, kind: "redirect", vual: true });
+      });
+      roundedDamage -= total;
+      exactDamage = roundedDamage;
+      redirectedAway += total;
+      markPassiveEntryTriggered(entry);
+    });
+  }
+
   return {
     damage: roundedDamage,
     baseDamage: damage,
     modifierEntries,
-    redirectEntries
+    redirectEntries,
+    redirectedAway
   };
+}
+
+let vualRedirectDepth = 0;
+
+// damage the Seal of Vual passes on is not passed on again by the DAMNED that receives it
+function withVualRedirect(entry, apply) {
+  if (!entry?.vual) return apply();
+  vualRedirectDepth += 1;
+  try {
+    return apply();
+  } finally {
+    vualRedirectDepth -= 1;
+  }
+}
+
+// takes damage that was redirected away off the first source entries, so the sources add up to what was taken
+function trimSourceEntries(entries, away) {
+  let left = Math.max(0, Math.ceil(away || 0));
+  return entries
+    .map((entry) => {
+      if (left <= 0) return entry;
+      const cut = Math.min(left, Math.max(0, Math.ceil(entry.amount || 0)));
+      left -= cut;
+      return { ...entry, amount: Math.max(0, Math.ceil(entry.amount || 0)) - cut };
+    })
+    .filter((entry) => entry.amount > 0);
 }
 
 function blackHorseRedirectBoss(sourceBot) {
@@ -1536,7 +1600,7 @@ function applyPendingRedirectDamage(entries, botDamages, botDamageSources) {
   (entries || []).forEach((entry) => {
     const target = state.bots.find((bot) => bot.id === entry.targetBotId);
     if (!target || target.eliminated) return;
-    addPendingBotDamage(botDamages, botDamageSources, target, entry.amount, entry.source || "Redirected damage");
+    withVualRedirect(entry, () => addPendingBotDamage(botDamages, botDamageSources, target, entry.amount, entry.source || "Redirected damage"));
   });
 }
 
@@ -1546,7 +1610,7 @@ function applyDirectRedirectDamage(entries) {
     const damage = Math.max(0, Math.ceil(entry.amount || 0));
     if (!target || target.eliminated || damage <= 0) return;
     const source = entry.source || "Redirected damage";
-    damageBot(target, damage, `${source} redirected ${damage} damage to ${target.name}.`, source);
+    withVualRedirect(entry, () => damageBot(target, damage, `${source} redirected ${damage} damage to ${target.name}.`, source));
   });
 }
 
@@ -1558,7 +1622,7 @@ function scaledBotDamageSourceEntries(details, source) {
     const amount = Math.max(0, Math.ceil(entry.amount || 0));
     if (amount > 0) entries.push({ amount, source: entry.source || "Damage modifier", kind: entry.kind || "bonus" });
   });
-  return entries;
+  return trimSourceEntries(entries, details?.redirectedAway);
 }
 
 function recordScaledBotDamageSources(bot, details, source) {

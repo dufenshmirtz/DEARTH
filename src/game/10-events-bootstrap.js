@@ -498,6 +498,11 @@ desktopApp()?.onFullscreenChange?.(() => {
   updateFullscreenLayoutClass();
 });
 
+loadLanguageSetting();
+// text fitted before the fonts arrived is measured again once they have, and after the window changes size
+document.fonts?.ready?.then(() => fitTextsToBoxes(document));
+document.fonts?.addEventListener?.("loadingdone", () => fitTextsToBoxes(document));
+window.addEventListener("resize", () => { clearTimeout(window.__fitTextTimer); window.__fitTextTimer = setTimeout(() => fitTextsToBoxes(document), 150); });
 loadSoundSettings();
 loadDisplaySettings();
 installAnimationSpeed();

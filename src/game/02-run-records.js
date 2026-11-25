@@ -258,7 +258,7 @@ const NEW_RECORD_LABELS = {
   mostBossEliminations: "Most BOSS kills",
   mostOverallDamage: "Most damage dealt",
   mostSingleRoundDamage: "Most damage in one round",
-  mostPentakills: "Most PENTAKILLS",
+  mostPentakills: "Most MASSACRES",
   mostRoundEliminations: "Most KOs in one round",
   mostOverallSealDamage: "Most damage by one SEAL",
   mostRoundSealDamage: "Most SEAL damage in one round",
@@ -268,10 +268,10 @@ const NEW_RECORD_LABELS = {
 // a record's value as the player reads it
 function recordValueDisplay(key, record) {
   const value = Math.max(0, Math.ceil(Number(record?.value) || 0));
-  if (value <= 0) return "None";
+  if (value <= 0) return t("None");
   if (key === "deepestDescent") return deepestDescentText(record);
   if (key === "highestEliteLevel") return eliteLevelText(value);
-  if (key === "fastestWin") return `Round ${formatNumber(value)}`;
+  if (key === "fastestWin") return t("Round {round}", { round: formatNumber(value) });
   return formatNumber(value);
 }
 
@@ -279,8 +279,8 @@ function recordValueDisplay(key, record) {
 function deepestDescentText(record) {
   const depth = Math.max(0, Math.floor(Number(record?.depth) || 0));
   const demons = Math.max(0, Math.floor(Number(record?.demons) || 0));
-  if (demons > 0) return `Demon ${formatNumber(demons)}`;
-  return `${formatNumber(Math.min(depth, UNIQUE_BOSS_KEYS.length))} of ${UNIQUE_BOSS_KEYS.length} BOSSES`;
+  if (demons > 0) return t("Demon {count}", { count: formatNumber(demons) });
+  return t("{depth} of {total} BOSSES", { depth: formatNumber(Math.min(depth, UNIQUE_BOSS_KEYS.length)), total: UNIQUE_BOSS_KEYS.length });
 }
 
 // records this run beat. A record that was still 0 before the run (a first run) does not count;

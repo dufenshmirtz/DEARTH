@@ -45,7 +45,7 @@ function slotSfx(key) {
 }
 
 // FAVOR: what Satan owes you for doing his work (the run state keeps its old name, state.missions.doubloons)
-const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`;
+const FAVOR_MARK = `<span class="favor-mark" role="img" aria-label="FAVOR"></span>`; // built once at load, before the language is known: stays English (screen readers only)
 
 /* ---- the missions ("Satan's Bets"): 23 worth 1 FAVOR, 23 worth 2, 22 worth 3 or more (3, 4, 6 or 8) ----
    The owner's list of Nov 17 2026, texts as he wrote them (Guess 0 and Guess 100 raised to 6 later that day). Each round MISSION_TIER_ODDS decides how much the mission
@@ -378,7 +378,7 @@ const MISSIONS = [
   // only while the run's one deal is still to be made
   { id: "deal", value: 6, when: "event", text: "Complete a Deal", can: () => typeof satanPactAvailable === "function" && satanPactAvailable(), check: (f) => f.dealSigned },
   // all five DAMNED in one round (checkRoundPentakillBonus)
-  { id: "pentakill", value: 8, when: "resolve", text: "Get a pentakill", check: (f) => f.pentakill }
+  { id: "pentakill", value: 8, when: "resolve", text: "Get a massacre", check: (f) => f.pentakill }
 ];
 
 const MISSION_BY_ID = Object.fromEntries(MISSIONS.map((mission) => [mission.id, mission]));
@@ -949,17 +949,17 @@ function slotGlyphHtml(key) {
 }
 
 function slotIconHtml(key) {
-  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
+  return `<span class="slot-icon slot-icon-${key}" role="img" aria-label="${escapeAttr(t(slotIconLabel(key)))}"><span class="slot-glyph">${slotGlyphHtml(key)}</span></span>`;
 }
 
 // the slot machine's description: each symbol with what 1, 2 or 3 of it pay
 function slotPaytableHtml() {
-  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(slotIconLabel(key))}">${slotGlyphHtml(key)}</span>`;
+  const symbol = (key) => `<span class="slot-pay-glyph slot-icon-${key}" role="img" aria-label="${escapeAttr(t(slotIconLabel(key)))}">${slotGlyphHtml(key)}</span>`;
   const row = (key, one, two, three) =>
-    `<div class="slot-pay-row">${symbol(key)}<span>${one}</span><span>${two}</span><span>${three}</span></div>`;
+    `<div class="slot-pay-row">${symbol(key)}<span>${t(one)}</span><span>${t(two)}</span><span>${t(three)}</span></div>`;
   return `
     <div class="slot-paytable">
-      <div class="slot-pay-title">Slot machine · ${SLOT_SPIN_COST}${FAVOR_MARK} a spin</div>
+      <div class="slot-pay-title">${t("Slot machine · {cost} a spin", { cost: `${SLOT_SPIN_COST}${FAVOR_MARK}` })}</div>
       <div class="slot-pay-row slot-pay-head"><span></span><span>×1</span><span>×2</span><span>×3</span></div>
       ${row("sin", `+5${SIN_MARK}`, `+18${SIN_MARK}`, `+150${SIN_MARK}`)}
       ${row("soul", "+1 SOUL", "+4 SOUL", "+20 SOUL")}
@@ -967,7 +967,7 @@ function slotPaytableHtml() {
       ${row("elite", "–", "–", "ELITE on every SEAL")}
       ${row("karma", "3 ARTIFACTS", `+1${KARMA_MARK}`, `+10${KARMA_MARK}`)}
       ${row("reroll", "2 rerolls", "8 rerolls", "30 rerolls")}
-      <div class="slot-pay-note">Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR${FAVOR_MARK}.</div>
+      <div class="slot-pay-note">${t("Each symbol pays for how many of it came up. DAMAGE is % of max SOUL to every DAMNED, dealt at the end of the next round. SOUL can't be blocked. Three ELITES give every SEAL of yours an ELITE level. Free rerolls are kept until used. Satan's bets pay FAVOR{favor}.", { favor: FAVOR_MARK })}</div>
     </div>
   `;
 }
@@ -1005,15 +1005,15 @@ function slotMachineHtml() {
   const disabled = slotCanSpin() ? "" : "disabled";
   const tooltip = `${slotPaytableHtml()}`;
   const tripleClass = triple && missions.lastText ? " slot-triple" : "";
-  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(result || "Satan's bets pay FAVOR.")}</div>`;
+  const resultHtml = `<div class="slot-result${result ? "" : " guide-text"}">${escapeHtml(t(result || "Satan's bets pay FAVOR."))}</div>`;
   // Settings > Display > Slot machine: Default (the framed box with SPIN) or Fancy (the old machine below)
   if (!slotMachineFancy()) {
     return `
     <div class="slot-machine${tripleClass}" data-tooltip-html="${escapeAttr(tooltip)}">
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
-        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>Spin <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
-        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
+        <button type="button" id="slotSpin" class="slot-spin" ${disabled}>${t("Spin")} <span class="slot-cost">${SLOT_SPIN_COST}${FAVOR_MARK}</span></button>
+        <span class="slot-favor" aria-label="${t("You have {count} FAVOR", { count: missions.doubloons })}">${formatNumber(missions.doubloons)}${FAVOR_MARK}</span>
       </div>
       ${resultHtml}
     </div>
@@ -1033,10 +1033,10 @@ function slotMachineHtml() {
       ${rivets}
       <div class="slot-reels">${reels}</div>
       <div class="slot-side">
-        <span class="slot-favor" aria-label="You have ${missions.doubloons} FAVOR"><span class="slot-counter" aria-hidden="true">${favorDigits}</span>${FAVOR_MARK}</span>
+        <span class="slot-favor" aria-label="${t("You have {count} FAVOR", { count: missions.doubloons })}"><span class="slot-counter" aria-hidden="true">${favorDigits}</span>${FAVOR_MARK}</span>
       </div>
       ${resultHtml}
-      <button type="button" id="slotSpin" class="slot-lever${pulling ? " pulling" : ""}" aria-label="Pull the lever: spin for ${SLOT_SPIN_COST} FAVOR" ${disabled}><span class="slot-lever-hub"></span><span class="slot-lever-rod"></span><span class="slot-lever-knob"></span></button>
+      <button type="button" id="slotSpin" class="slot-lever${pulling ? " pulling" : ""}" aria-label="${t("Pull the lever: spin for {cost} FAVOR", { cost: SLOT_SPIN_COST })}" ${disabled}><span class="slot-lever-hub"></span><span class="slot-lever-rod"></span><span class="slot-lever-knob"></span></button>
     </div>
   `;
 }
@@ -1056,13 +1056,13 @@ function missionBoxHtml() {
   else if (mission.when === "leave") status = "At NEXT ROUND";
   const statusClass = current.done ? "done" : status === "Lost" ? "missed" : "";
   return `
-    <div class="mission-box ${statusClass}" data-tooltip="Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine (${SLOT_SPIN_COST} a spin).">
+    <div class="mission-box ${statusClass}" data-tooltip="${t("Satan bets you can't do this. A new bet every round; win it to earn FAVOR for the slot machine ({cost} a spin).", { cost: SLOT_SPIN_COST })}">
       <div class="mission-head">
-        <span class="mission-title">Satan's Bet</span>
-        ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(status)}</span>` : ""}
+        <span class="mission-title">${t("Satan's Bet")}</span>
+        ${status ? `<span class="mission-status ${statusClass}">${escapeHtml(t(status))}</span>` : ""}
         <span class="mission-reward">+${current.value}${FAVOR_MARK}</span>
       </div>
-      <div class="mission-text">${escapeHtml(missionText(mission, current.param))}</div>
+      <div class="mission-text">${escapeHtml(t(missionText(mission, current.param)))}</div>
     </div>
   `;
 }
@@ -1070,7 +1070,7 @@ function missionBoxHtml() {
 // the phone app: a rail on the left of the DAMNED, under the TARGET box (slot machine on top, mission under it)
 function nativeSlotBandHtml() {
   if (!missionsEnabled()) return "";
-  return `<section class="native-slot-band" aria-label="Slot machine and Satan's bet">${slotMachineHtml()}${missionBoxHtml()}</section>`;
+  return `<section class="native-slot-band" aria-label="${t("Slot machine and Satan's bet")}">${slotMachineHtml()}${missionBoxHtml()}</section>`;
 }
 
 /* ---- lining up with the DAMNED ----

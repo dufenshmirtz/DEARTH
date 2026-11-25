@@ -10,8 +10,16 @@ const outputFile = path.join(root, "main.js");
 const indexFile = path.join(root, "index.html");
 const demoFile = path.join(root, "demo.html");
 const PLAYTEST_FLAG_SCRIPT = "<script>window.DEARTH_PLAYTEST_BUILD = true;</script>";
+// the phone controller (controller.html) gets the translation layer and the language files as their own file
+const controllerI18nFile = path.join(root, "controller-i18n.js");
 
 const SOURCE_FILES = [
+  "00-i18n.js",
+  "locales/en.js",
+  "locales/el.js",
+  "locales/de.js",
+  "locales/es.js",
+  "locales/zh-Hans.js",
   "00-audio-loudness.js",
   "00-audio-sfx-config.js",
   "00-config-data-state.js",
@@ -47,10 +55,18 @@ function readDemoHtml() {
   return index.replace(mainScript, `${PLAYTEST_FLAG_SCRIPT}\r\n    ${mainScript}`);
 }
 
+// 00-i18n.js and locales/*.js: the files of SOURCE_FILES that come before the game itself
+const CONTROLLER_I18N_FILES = SOURCE_FILES.filter((file) => file === "00-i18n.js" || file.startsWith("locales/"));
+
+function readControllerI18n() {
+  return CONTROLLER_I18N_FILES.map((file) => fs.readFileSync(path.join(sourceDir, file), "utf8")).join("");
+}
+
 function writeGameBundle({ quiet = false } = {}) {
   const bundle = readGameBundle();
   fs.writeFileSync(outputFile, bundle);
   fs.writeFileSync(demoFile, readDemoHtml());
+  fs.writeFileSync(controllerI18nFile, readControllerI18n());
   if (!quiet) {
     console.log(`Built ${path.relative(root, outputFile)} from ${path.relative(root, sourceDir)}`);
   }
@@ -67,6 +83,11 @@ function verifyGameBundle() {
   const demo = fs.existsSync(demoFile) ? fs.readFileSync(demoFile, "utf8") : "";
   if (demo !== readDemoHtml()) {
     console.error(`${path.relative(root, demoFile)} is stale. Run "pnpm run build:game".`);
+    return false;
+  }
+  const controllerActual = fs.existsSync(controllerI18nFile) ? fs.readFileSync(controllerI18nFile, "utf8") : "";
+  if (controllerActual !== readControllerI18n()) {
+    console.error(`${path.relative(root, controllerI18nFile)} is stale. Run "pnpm run build:game".`);
     return false;
   }
   return true;

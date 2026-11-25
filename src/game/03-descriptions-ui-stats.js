@@ -49,10 +49,10 @@ function artifactDescription(item) {
   if (item.id === "a23") return `Double the ELITE chance for the Seal slot for the next ${SATANIC_BIBLE_ROLLS} Devil's Offerings rolls. Every cast doubles it again and counts its own ${SATANIC_BIBLE_ROLLS} rolls, up to ${Math.round(SHOP_ELITE_CHANCE_MAX * 100)}%.`;
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
-    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY.";
+    if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS.";
     const levels = passiveEntryEliteLevels(lamb);
     const flat = levels ? ` +${5 * levels}` : "";
-    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can't reveal a BOSS. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
   }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
@@ -143,8 +143,8 @@ function itemDescription(item) {
   if (item.id === "p139") {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
   }
-  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 30)} damage.`;
-  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. PENTAKILLS give +${2 * Math.max(0, stack - 1)} SIN.`;
+  if (item.id === "p129") return `BOSSES can have their guesses revealed. Whenever a BOSS's guess is revealed, all revealed DAMNED take ${flatDamageValue(item, 20)} damage.`;
+  if (item.id === "p130") return `If 4 DAMNED are eliminated in a round and the only living DAMNED is not a BOSS, it is eliminated too. MASSACRES give +${2 * Math.max(0, stack - 1)} SIN.`;
   if (item.id === "p1") {
     return `New non-boss DAMNED arrive with 3 MEMORY. The first time a non-boss DAMNED goes above 6 MEMORY, at end of round it deals ${vassagoBurstDamage(item)} damage to every other DAMNED.`;
   }
@@ -253,16 +253,16 @@ function itemDescription(item) {
   }
   if (item.id === "p62") return `The first time each full-SOUL DAMNED takes damage in a round, it takes ${fullHealthExtraDamage(item)} extra damage.`;
   if (item.id === "p63") {
-    return `Revealed DAMNED take ${revealedExtraDamage(item)} extra damage whenever they take damage.`;
+    return `${vualRedirectPercent(item)}% of the damage a revealed DAMNED takes is redirected to the DAMNED that are not revealed, split equally. If a BOSS is active, revealed or not, it takes all of it instead.`;
   }
   if (item.id === "p64") {
     return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `If a revealed DAMNED died last round, reveal one extra DAMNED. At end of round, revealed DAMNED take ${flatDamagePower(item)}x half their guess as damage.`;
+  if (item.id === "p65") return `At end of round, a revealed DAMNED with the same guess as you takes ${naberiusSameGuessDamage(item)} damage.`;
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
-    return `At end of round, every DAMNED with more than 8 MEMORY takes ${vapulaMemoryDamage(item)} damage.`;
+    return `At end of round, every non-BOSS DAMNED with more than 8 MEMORY gains +1 BOUNTY and takes ${vapulaMemoryDamage(item)} damage.`;
   }
   if (item.id === "p128") {
     return `Whenever a DAMNED hits CRITICAL, gain ${scaledPassiveValueForItem(item, 1)} SIN. When you hit CRITICAL, other CRITICALS can't hurt you that round.`;
@@ -683,7 +683,7 @@ const ARCHANGEL_ABILITY_TEXT = {
   michael: "At end of round, if the average MEMORY of the non-boss DAMNED is more than 3, this BOSS gains +2 damage, then deals its current damage to you.",
   gabriel: "Whenever you or a DAMNED hits CRITICAL, this BOSS gains +3 damage, then deals its current damage to you.",
   samael: "At end of round, if two DAMNED share a personality, this BOSS gains +2 damage, then deals its current damage to you.",
-  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A PENTAKILL spares you.",
+  raphael: "At end of round, this BOSS gains +1 damage for every elimination short of 5 that round (none: +5), then deals its current damage to you. A MASSACRE spares you.",
   sachiel: "At end of round, if the regular BOUNTY of all DAMNED adds up to more than 4, this BOSS gains +2 damage, then deals its current damage to you.",
   anael: "Whenever you use an ARTIFACT, this BOSS gains +2 damage, then deals its current damage to you.",
   cassiel: "Whenever a revealed DAMNED takes more than 10 damage at once, this BOSS gains +2 damage, then deals its current damage to you."
@@ -802,9 +802,41 @@ function htmlWithLineBreaks(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+// the game's keywords in another language: their translations (t("SIN")...) plus the extra forms its locale file
+// lists in LOCALE_KEYWORDS (Greek cases, German plurals...). Letters of any alphabet count as a word's edge;
+// Chinese has no spaces, so there a keyword is found anywhere.
+const TOOLTIP_KEYWORDS = ["SIN", "DAMNED", "ARTIFACTS", "ARTIFACT", "SEALS", "SEAL", "BOSSES", "BOSS", "ELITE", "CRITICAL", "TARGET", "KOS", "KO", "SOUL", "MEMORY", "BOUNTY", "POISON"];
+const translatedKeywordPatterns = {};
+
+function translatedKeywordPattern() {
+  const code = currentLang();
+  if (translatedKeywordPatterns[code]) return translatedKeywordPatterns[code];
+  const forms = Array.from(new Set([...TOOLTIP_KEYWORDS.map((keyword) => t(keyword)), ...(LOCALE_KEYWORDS[code] || [])]))
+    .filter((form) => form && /\p{L}/u.test(form))
+    .sort((a, b) => b.length - a.length)
+    .map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!forms.length) forms.push("(?!)");
+  const pattern = code === "zh-Hans"
+    ? new RegExp(`(${forms.join("|")})`, "gu")
+    : new RegExp(`(?<![\\p{L}\\p{N}])(${forms.join("|")})(?![\\p{L}\\p{N}])`, "gu"); // capitals only, as in English: a plain "Seele" or "alma" in a sentence stays plain
+  translatedKeywordPatterns[code] = pattern;
+  return pattern;
+}
+
+// a keyword in capitals; Greek capitals carry no accents
+function keywordCaps(word) {
+  const code = currentLang();
+  if (code === "zh-Hans") return word;
+  const caps = word.toLocaleUpperCase(code === "pseudo" ? "en" : code);
+  return code === "el" ? caps.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC") : caps;
+}
+
+// text shown on screen: in the player's language (t() translates English the code built, see 00-i18n.js),
+// then the keywords in the game's style
 function descriptionHtml(value) {
   const protectedPhrases = [];
-  const plainTargetText = normalizeGameText(value);
+  const plainTargetText = t(normalizeGameText(value));
+  if (currentLang() !== "en") return htmlWithLineBreaks(plainTargetText).replace(translatedKeywordPattern(), (keyword) => `<span class="tooltip-keyword">${keywordCaps(keyword)}</span>`);
   const protectedText = [
     /\bpick a target\b/gi,
     /\beach target\b/gi,
@@ -857,9 +889,9 @@ function renderSealTooltipHtml(item, displayName, description, disabledNotice, s
   const bodyText = `${disabledNotice || ""}${mainDescription}`;
   return `
     <div class="tooltip-heading">
-      <div class="tooltip-title">${escapeHtml(displayName)}</div>
-      <div class="tooltip-shift-hint seal-shift-hint">press shift for more</div>
-      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">More</span><span class="less-label">Less</span></button>
+      <div class="tooltip-title">${escapeHtml(t(displayName))}</div>
+      <div class="tooltip-shift-hint seal-shift-hint">${t("press shift for more")}</div>
+      <button type="button" class="tooltip-more-button" data-tooltip-more><span class="more-label">${t("More")}</span><span class="less-label">${t("Less")}</span></button>
     </div>
     <div class="tooltip-body">${descriptionHtml(bodyText)}</div>
     ${eliteDescription ? `<div class="tooltip-elite-line">${descriptionHtml(eliteDescription)}</div>` : ""}
@@ -888,7 +920,7 @@ function renderSealSigil(item, extraClass = "") {
     extraClass
   ].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Seal" : item?.name || "Seal";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} sigil`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} sigil", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function passiveName(id, fallback = "Seal") {
@@ -906,7 +938,7 @@ function renderArtifactIcon(item, extraClass = "") {
   if (!src) return "";
   const className = ["artifact-icon", extraClass].filter(Boolean).join(" ");
   const name = typeof item === "string" ? ITEMS[item]?.name || "Artifact" : item?.name || "Artifact";
-  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(`${name} icon`)}" loading="lazy" />`;
+  return `<img class="${className}" src="${escapeAttr(src)}" alt="${escapeAttr(t("{name} icon", { name: t(name) }))}" loading="lazy" />`;
 }
 
 function formatNumber(value) {
@@ -1105,7 +1137,7 @@ function applyPendingSelfStackingPentakillDamage() {
   damageBots(
     targets,
     damage,
-    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued PENTAKILL damage to ${bot.name}.`,
+    (bot, dealt) => `${ITEMS.p101.name} dealt ${dealt} queued MASSACRE damage to ${bot.name}.`,
     ITEMS.p101.name
   );
 }

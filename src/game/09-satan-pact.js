@@ -407,7 +407,162 @@ function satanPactDemonForSeal(id) {
 const SATAN_PACT_STOP_WORDS = new Set(["seal", "seals", "of", "the", "a", "an", "i", "want", "give", "me", "my", "your", "please", "some", "for", "to", "and", "dr", "dee", "dees", "with", "can", "get", "have", "need", "would", "like", "on", "x", "more", "copies", "copy"]);
 const SATAN_PACT_NUMBER_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, couple: 2, pair: 2 };
 
+/* ---- what Satan understands in the other languages ----
+   Words as satanPactNormalize leaves them: lower case, no accents (Greek final ς as σ, German ß as ss).
+   A word ending in * matches every word that starts with it (Greek and German change their endings).
+   Chinese has no spaces: its words are found anywhere in the request. English is always understood too,
+   and Latin and Mephistopheles work in every language. intents: what the request is for (satanPactParse);
+   numbers / stop: the number words and the words that name nothing; tricks: extra words of SATAN_TRICKS. */
+const SATAN_PACT_WORDS = {
+  el: {
+    intents: {
+      karma: ["καρμα", "σμυρνα", "λιβανι", "λιβανιου", "δωρο", "δωρα", "δωρων"],
+      favor: ["χαρη", "χαρες", "ευνοια", "ευνοιες", "χατιρι", "χατιρια"],
+      satanSeal: ["σφραγιδα του σατανα", "σφραγιδα σου", "δικη σου σφραγιδα", "τη σφραγιδα σου", "εωσφορ*"],
+      elite: ["ελιτ", "αναβαθμ*", "δυνατοτερ*", "ανεβασε επιπεδο", "επομενο επιπεδο"],
+      cheatDeath: ["ξεγελασε τον θανατο", "νικησε τον θανατο", "αναστ*", "δευτερη ζωη", "αλλη μια ζωη", "αλλη ζωη", "επιπλεον ζωη", "αθανατ*", "μη με αφησεις να πεθανω", "να μην πεθανω"],
+      kill: ["σκοτω*", "σκοτωσ*", "εξοντω*", "εξολοθρ*", "καταστρεψ*", "εκτελεσ*", "φονευσ*", "φονεψ*"],
+      uses: ["χρηση", "χρησεις", "κινηση", "κινησεις", "ενεργεια", "ενεργειες"],
+      heal: ["θεραπ*", "γιατρ*", "ιασ*", "ψυχη", "ψυχης", "ζωη", "ζωης", "υγει*"],
+      sin: ["αμαρτι*", "λεφτα", "χρημα*", "χρυσ*", "νομισμα*", "πλουτ*"]
+    },
+    numbers: { ενα: 1, ενας: 1, μια: 1, μιας: 1, δυο: 2, τρια: 3, τρεις: 3, τεσσερα: 4, τεσσερις: 4, πεντε: 5, εξι: 6, επτα: 7, εφτα: 7, οκτω: 8, οχτω: 8, εννεα: 9, εννια: 9, δεκα: 10, ζευγαρι: 2 },
+    stop: ["σφραγιδα", "σφραγιδες", "του", "της", "το", "τα", "τη", "την", "των", "τον", "ο", "η", "οι", "θελω", "δωσε", "δωσ", "μου", "σου", "μας", "λιγο", "λιγες", "λιγα", "για", "να", "και", "με", "μπορεις", "παρε", "εχω", "χρειαζομαι", "θα", "ηθελα", "αλλο", "αλλα", "περισσοτερα", "περισσοτερες", "αντιγραφα"],
+    tricks: {
+      silver: ["αυγερινε", "αυγερινος", "εωσφορε", "αρχοντα μου", "κυριε μου", "βασιλια μου", "αφεντη μου", "αφεντικο", "σκοτεινε αρχοντα", "αρχοντα του σκοτους", "πριγκιπα του σκοτους", "πριγκιπα της κολασης", "βασιλια της κολασης", "αρχοντα της κολασης", "αρχοντα των μυγων", "μεγαλειοτατε", "υψηλοτατε", "εξοχοτατε", "μεγαλε"],
+      clerk: ["δια του παροντος", "δια της παρουσης", "δεσμευτικο", "νομικα δεσμευτικο", "μαρτυρας", "μαρτυρες", "ενωπιον μαρτυρων", "ρητρα", "ρητρες", "οροι", "ορους", "οροι και προυποθεσεις", "συμβολαιογραφος", "συμβολαιογραφικα", "ενορκα", "υπο ορκο", "συμφωνα με", "επι τη βασει"],
+      name: ["μεφιστοφελης", "μεφιστοφελη", "μεφιστο"],
+      blood: ["με αιμα", "με το αιμα μου", "στο αιμα μου", "ορκος αιματος", "συμφωνια αιματος", "υπογραφω με αιμα", "υπογεγραμμενο με αιμα", "γραμμενο με αιμα"],
+      holy: ["θεος", "θεε", "θεου", "θεο", "ιησου", "ιησους", "χριστε", "χριστος", "χριστου", "αγιος", "αγια", "αγιο", "ουρανος", "ουρανου", "αμην", "προσευχη", "προσευχομαι", "αγγελος", "αγγελοι", "ευλογια", "ευλογημενος", "αλληλουια", "μεσσιας", "αμνος του θεου", "παναγια", "κυριε ελεησον"],
+      soul: ["παρε την ψυχη μου", "την ψυχη μου για", "για την ψυχη μου", "πουλαω την ψυχη μου", "σου πουλαω την ψυχη μου", "σου δινω την ψυχη μου", "προσφερω την ψυχη μου", "η ψυχη μου ειναι δικη σου", "σε ανταλλαγμα για την ψυχη μου"],
+      please: ["σε παρακαλω", "παρακαλω", "σε ικετευω", "ικετευω", "ευχαριστω", "σευχαριστω", "ευχαριστω πολυ", "ευγενικα"]
+    }
+  },
+  de: {
+    intents: {
+      karma: ["karma", "myrrhe", "weihrauch", "geschenk", "geschenke", "gabe", "gaben"],
+      favor: ["gunst", "gunsten", "gefallen"],
+      satanSeal: ["siegel satans", "satans siegel", "dein siegel", "deinen siegel", "dein eigenes siegel", "luzifer"],
+      elite: ["elite", "aufwert*", "werte", "upgrade*", "starker", "verbesser*", "aufleveln", "level up"],
+      cheatDeath: ["dem tod entkommen", "den tod betrugen", "wiederbele*", "auferste*", "zweites leben", "extra leben", "noch ein leben", "weiteres leben", "unsterblich*", "lass mich nicht sterben"],
+      kill: ["toten", "tote", "ermord*", "morde", "morden", "erschlag*", "eliminier*", "vernicht*", "zerstor*", "hinricht*", "richte hin"],
+      uses: ["einsatz", "einsatze", "aktion", "aktionen", "nutzung", "nutzungen"],
+      heal: ["heil*", "seele", "seelen", "leben", "lebenspunkte", "gesundheit", "kurier*", "flick*"],
+      sin: ["sunde", "sunden", "geld", "gold", "munze*", "reichtum*", "bargeld", "kohle"]
+    },
+    numbers: { ein: 1, eine: 1, einen: 1, eins: 1, zwei: 2, drei: 3, vier: 4, funf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, paar: 2 },
+    stop: ["siegel", "des", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ich", "will", "mochte", "gib", "mir", "mein", "meine", "dein", "deine", "bitte", "etwas", "fur", "zu", "und", "mit", "kann", "bekommen", "habe", "brauche", "wurde", "gern", "gerne", "mehr", "kopie", "kopien", "von"],
+    tricks: {
+      silver: ["morgenstern", "sohn der morgenrote", "lichtbringer", "bringer des lichts", "mein herr", "mein konig", "mein gebieter", "mein meister", "meister", "dunkler herr", "furst der finsternis", "furst der holle", "konig der holle", "herr der holle", "herr der fliegen", "eure majestat", "eure hoheit", "eure exzellenz", "euer gnaden", "eure gnaden"],
+      clerk: ["hiermit", "hierdurch", "hierin", "gemass", "bindend", "rechtlich bindend", "verbindlich", "zeuge", "zeugen", "bezeugt", "klausel", "bedingungen", "allgemeine geschaftsbedingungen", "notariell", "notar", "beglaubigt", "unter eid", "vereidigt", "im einklang mit", "vorbehaltlich"],
+      blood: ["mit blut", "mit meinem blut", "in blut", "blutschwur", "blutpakt", "mit blut unterschreiben", "mit blut unterschrieben", "in blut geschrieben", "mit blut besiegelt"],
+      holy: ["gott", "gottes", "herrgott", "jesus", "christus", "heilig", "heilige", "himmel", "himmlisch", "amen", "beten", "gebet", "engel", "segen", "segne", "gesegnet", "halleluja", "messias", "lamm gottes"],
+      soul: ["nimm meine seele", "meine seele fur", "fur meine seele", "verkaufe meine seele", "verkaufe dir meine seele", "biete meine seele", "biete dir meine seele", "gebe dir meine seele", "tausche meine seele", "meine seele gehort dir", "im tausch fur meine seele"],
+      please: ["bitte bitte", "bitte", "ich flehe dich an", "flehe", "danke schon", "danke", "vielen dank", "freundlicherweise"]
+    }
+  },
+  es: {
+    intents: {
+      karma: ["karma", "mirra", "incienso", "regalo", "regalos"],
+      favor: ["favor", "favores"],
+      satanSeal: ["sello de satanas", "tu sello", "tu propio sello", "lucifer"],
+      elite: ["elite", "mejora", "mejorar", "mejoralo", "subir de nivel", "sube de nivel", "mas fuerte"],
+      cheatDeath: ["enganar a la muerte", "burlar a la muerte", "revivir", "revive", "resucit*", "resurreccion", "segunda vida", "vida extra", "otra vida", "inmortal", "no me dejes morir"],
+      kill: ["matar", "mata", "asesin*", "eliminar", "elimina", "destruir", "destruye", "ejecutar", "ejecuta", "aniquil*"],
+      uses: ["uso", "usos", "accion", "acciones"],
+      heal: ["curar", "cura", "curame", "sanar", "sana", "alma", "vida", "salud", "puntos de vida", "parche"],
+      sin: ["pecado", "pecados", "dinero", "oro", "monedas", "riqueza", "riquezas", "plata", "efectivo"]
+    },
+    numbers: { uno: 1, una: 1, un: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, par: 2 },
+    stop: ["sello", "sellos", "de", "del", "el", "la", "los", "las", "un", "una", "unos", "unas", "yo", "quiero", "dame", "me", "mi", "mis", "tu", "tus", "por", "para", "y", "con", "puedo", "puedes", "tener", "tengo", "necesito", "quisiera", "gustaria", "mas", "copia", "copias"],
+    tricks: {
+      silver: ["lucero del alba", "estrella de la manana", "hijo de la manana", "portador de luz", "mi senor", "mi rey", "mi amo", "mi maestro", "maestro", "amo", "senor oscuro", "senor de las tinieblas", "principe de las tinieblas", "principe del infierno", "rey del infierno", "senor del infierno", "senor de las moscas", "su majestad", "vuestra majestad", "su alteza", "su excelencia", "su gracia", "gran senor"],
+      clerk: ["por la presente", "por medio de la presente", "en virtud de", "vinculante", "legalmente vinculante", "testigo", "testigos", "ante testigos", "clausula", "terminos", "terminos y condiciones", "notarial", "notario", "notariado", "bajo juramento", "de conformidad con", "estipulado", "estipular"],
+      blood: ["con sangre", "con mi sangre", "en sangre", "juramento de sangre", "pacto de sangre", "firmado con sangre", "firmo con sangre", "escrito con sangre", "escrito en sangre"],
+      holy: ["dios", "senor dios", "jesus", "cristo", "santo", "santa", "sagrado", "cielo", "cielos", "celestial", "amen", "rezar", "rezo", "oracion", "angel", "angeles", "bendicion", "bendito", "bendiga", "aleluya", "mesias", "cordero de dios"],
+      soul: ["toma mi alma", "mi alma por", "por mi alma", "vendo mi alma", "te vendo mi alma", "ofrezco mi alma", "te ofrezco mi alma", "te doy mi alma", "cambio mi alma", "mi alma es tuya", "a cambio de mi alma"],
+      please: ["por favor", "porfa", "te lo ruego", "te suplico", "suplico", "ruego", "muchas gracias", "gracias", "amablemente"]
+    }
+  },
+  "zh-Hans": {
+    intents: {
+      karma: ["业力", "因果", "没药", "乳香", "礼物", "恩赐"],
+      favor: ["恩宠", "青睐", "恩惠", "宠爱"],
+      satanSeal: ["撒旦之印", "撒旦的印", "你的印", "你自己的印", "路西法"],
+      elite: ["精英", "升级", "更强", "强化"],
+      cheatDeath: ["骗过死亡", "逃过死亡", "欺骗死亡", "复活", "重生", "第二条命", "额外的命", "再来一条命", "不死", "永生", "别让我死", "不要让我死"],
+      kill: ["杀", "谋杀", "消灭", "摧毁", "处决", "干掉"],
+      uses: ["使用次数", "次数", "行动", "动作"],
+      heal: ["治疗", "治愈", "恢复", "灵魂", "生命", "医治", "回血", "血"],
+      sin: ["罪孽", "罪", "金钱", "钱", "金币", "黄金", "财富"]
+    },
+    numbers: { "一对": 2, 一: 1, 两: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 },
+    stop: [],
+    tricks: {
+      silver: ["晨星", "光明使者", "我的主人", "我的王", "主人", "黑暗之王", "黑暗王子", "地狱之王", "地狱之主", "蝇王", "陛下", "殿下", "阁下", "大人"],
+      clerk: ["特此", "兹此", "据此", "具有约束力", "法律约束力", "见证人", "见证", "证人", "条款和条件", "条款", "公证", "宣誓", "依照"],
+      name: ["梅菲斯托费勒斯", "梅菲斯特", "靡菲斯特", "梅菲斯托"],
+      blood: ["用我的血", "以血签署", "用血签名", "血之契约", "用血", "以血", "血誓", "血契", "血书"],
+      holy: ["上帝", "天主", "耶稣", "基督", "神圣", "天堂", "阿门", "祈祷", "天使", "祝福", "哈利路亚", "弥赛亚", "神的羔羊", "主啊"],
+      soul: ["拿走我的灵魂", "我的灵魂换", "用我的灵魂", "出卖我的灵魂", "把灵魂卖给你", "献上我的灵魂", "给你我的灵魂", "我的灵魂是你的", "以我的灵魂交换"],
+      please: ["求求你", "求你", "拜托", "谢谢", "多谢", "恳求", "请"]
+    }
+  }
+};
+
+// the player's language's words, normalized as requests are (so accents and the final ς in the lists don't matter)
+const satanPactLexiconCache = {};
+function satanPactLexicon() {
+  const code = typeof currentLang === "function" ? currentLang() : "en";
+  const words = SATAN_PACT_WORDS[code];
+  if (!words) return null;
+  if (satanPactLexiconCache[code]) return satanPactLexiconCache[code];
+  const clean = (word) => {
+    const star = word.endsWith("*");
+    const normal = String(word).toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ς/g, "σ");
+    return star && !normal.endsWith("*") ? `${normal}*` : normal;
+  };
+  const map = (object, fn) => Object.fromEntries(Object.entries(object).map(([key, value]) => [fn(key), value]));
+  const lexicon = {
+    intents: map(words.intents, (key) => key),
+    numbers: map(words.numbers, clean),
+    stop: words.stop.map(clean),
+    tricks: map(words.tricks, (key) => key)
+  };
+  Object.keys(lexicon.intents).forEach((key) => (lexicon.intents[key] = lexicon.intents[key].map(clean)));
+  Object.keys(lexicon.tricks).forEach((key) => (lexicon.tricks[key] = lexicon.tricks[key].map(clean)));
+  satanPactLexiconCache[code] = lexicon;
+  return lexicon;
+}
+
+// a word or phrase of a lexicon in a normalized request (see the rules at the top of SATAN_PACT_WORDS)
+function satanPactHeard(normalized, words) {
+  if (!words || !words.length) return false;
+  if (currentLang() === "zh-Hans") return words.some((word) => normalized.includes(word));
+  const padded = ` ${normalized} `;
+  const tokens = normalized.split(" ");
+  return words.some((word) => (word.endsWith("*") ? tokens.some((token) => token.startsWith(word.slice(0, -1))) : padded.includes(` ${word} `)));
+}
+
+function satanPactSays(normalized, intent) {
+  const lexicon = satanPactLexicon();
+  return Boolean(lexicon && satanPactHeard(normalized, lexicon.intents[intent]));
+}
+
 function satanPactNormalize(text) {
+  // another language: letters of every alphabet stay (Greek final sigma as σ, German ß as ss); English as before
+  if (satanPactLexicon()) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/ß/g, "ss")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/ς/g, "σ")
+      .replace(/['’]/g, "")
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
   return String(text || "")
     .toLowerCase()
     .normalize("NFD")
@@ -419,9 +574,17 @@ function satanPactNormalize(text) {
 }
 
 function satanPactNumber(normalized) {
-  const digits = normalized.match(/\b(\d{1,4})\b/);
+  // Chinese writes numbers right against the words ("给我3个"), so there any run of digits counts
+  const digits = normalized.match(currentLang() === "zh-Hans" ? /(?<!\d)(\d{1,4})(?!\d)/ : /\b(\d{1,4})\b/);
   if (digits) return Number(digits[1]);
   for (const word of normalized.split(" ")) if (SATAN_PACT_NUMBER_WORDS[word]) return SATAN_PACT_NUMBER_WORDS[word];
+  const numbers = satanPactLexicon()?.numbers;
+  if (numbers && currentLang() === "zh-Hans") {
+    const found = Object.keys(numbers).find((word) => normalized.includes(word));
+    if (found) return numbers[found];
+  } else if (numbers) {
+    for (const word of normalized.split(" ")) if (numbers[word]) return numbers[word];
+  }
   return null;
 }
 
@@ -446,15 +609,36 @@ function satanPactSimilarity(a, b) {
 }
 
 function satanPactWords(normalized) {
-  return normalized.split(" ").filter((word) => word.length >= 3 && !SATAN_PACT_STOP_WORDS.has(word) && !SATAN_PACT_NUMBER_WORDS[word] && !/^\d+$/.test(word));
+  const lexicon = satanPactLexicon();
+  return normalized
+    .split(" ")
+    .filter((word) => word.length >= (currentLang() === "zh-Hans" ? 2 : 3) && !SATAN_PACT_STOP_WORDS.has(word) && !SATAN_PACT_NUMBER_WORDS[word] && !/^\d+$/.test(word))
+    .filter((word) => !lexicon || (!lexicon.stop.includes(word) && !lexicon.numbers[word]));
 }
 
 // best name match among ids; returns { id, score } or null
 function satanPactMatchName(normalized, ids, nameOf = (id) => ITEMS[id]?.name || "") {
   const queryWords = satanPactWords(normalized);
   let best = null;
+  const consider = (id, score) => {
+    if (score >= 50 && (!best || score > best.score)) best = { id, score };
+  };
   ids.forEach((id) => {
-    const full = satanPactNormalize(nameOf(id));
+    // in another language the name can also be asked for as that language writes it
+    const english = nameOf(id);
+    const translated = satanPactLexicon() && english ? t(english) : "";
+    if (translated && translated !== english) {
+      const full = satanPactNormalize(translated);
+      if (currentLang() === "zh-Hans" && full) {
+        // no spaces: the whole name, or the part before 之 ("巴力" for "巴力之印")
+        const head = full.split("之")[0];
+        if (normalized.includes(full)) consider(id, 100);
+        else if (head.length >= 2 && head !== full && normalized.includes(head)) consider(id, 80);
+      } else if (full) {
+        consider(id, satanPactNameScore(normalized, queryWords, full));
+      }
+    }
+    const full = satanPactNormalize(english);
     if (!full) return;
     const keyWords = satanPactWords(full);
     if (!keyWords.length) return;
@@ -474,9 +658,27 @@ function satanPactMatchName(normalized, ids, nameOf = (id) => ITEMS[id]?.name ||
       });
       if (hits) score = 50 * top + 25 * (hits / keyWords.length);
     }
-    if (score >= 50 && (!best || score > best.score)) best = { id, score };
+    consider(id, score);
   });
   return best;
+}
+
+// how well a request names one name, for a name written in another language (same rules as satanPactMatchName)
+function satanPactNameScore(normalized, queryWords, full) {
+  const keyWords = satanPactWords(full);
+  if (!keyWords.length) return 0;
+  if (normalized.includes(full) || (keyWords.length > 1 && normalized.includes(keyWords.join(" ")))) return 100;
+  let hits = 0;
+  let top = 0;
+  keyWords.forEach((keyWord) => {
+    const sim = queryWords.reduce((max, word) => Math.max(max, satanPactSimilarity(keyWord, word)), 0);
+    const needed = keyWord.length <= 4 ? 1 : 0.75;
+    if (sim >= needed) {
+      hits += 1;
+      top = Math.max(top, sim);
+    }
+  });
+  return hits ? 50 * top + 25 * (hits / keyWords.length) : 0;
 }
 
 function satanPactRequestableArtifactIds() {
@@ -506,29 +708,35 @@ function satanPactParse(text) {
   const normalized = satanPactNormalize(text);
   const number = satanPactNumber(normalized);
   if (!normalized) return { intent: "gibberish" };
-  if (/\b(karma|karmas|myrrh|frankincense|gift|gifts)\b/.test(normalized)) return { intent: "karma" };
-  if (/\b(favor|favors|favour|favours)\b/.test(normalized)) return { intent: "favor", n: number };
-  if (/\b(seal of satan|satans seal|your own seal|your seal|lucifer)\b/.test(normalized)) return { intent: "satanSeal" };
+  if (/\b(karma|karmas|myrrh|frankincense|gift|gifts)\b/.test(normalized) || satanPactSays(normalized, "karma")) return { intent: "karma" };
+  if (/\b(favor|favors|favour|favours)\b/.test(normalized) || satanPactSays(normalized, "favor")) return { intent: "favor", n: number };
+  if (/\b(seal of satan|satans seal|your own seal|your seal|lucifer)\b/.test(normalized) || satanPactSays(normalized, "satanSeal")) return { intent: "satanSeal" };
   const sealMatch = satanPactMatchName(normalized, satanPactNamedSealIds());
-  if (/\b(elite|upgrade|stronger|level up)\b/.test(normalized)) {
+  if (/\b(elite|upgrade|stronger|level up)\b/.test(normalized) || satanPactSays(normalized, "elite")) {
     const owned = satanPactOwnedSeals().map((item) => item.id);
     const ownedMatch = satanPactMatchName(normalized, owned);
     return { intent: "elite", sealId: ownedMatch?.id || sealMatch?.id || null };
   }
-  if (/\b(cheat death|revive|resurrect|second life|extra life|another life|undying|immortal|dont let me die|resurrection)\b/.test(normalized)) return { intent: "cheatDeath" };
-  if (/\b(kill|murder|slay|eliminate|destroy|execute)\b/.test(normalized)) {
+  if (/\b(cheat death|revive|resurrect|second life|extra life|another life|undying|immortal|dont let me die|resurrection)\b/.test(normalized) || satanPactSays(normalized, "cheatDeath")) return { intent: "cheatDeath" };
+  if (/\b(kill|murder|slay|eliminate|destroy|execute)\b/.test(normalized) || satanPactSays(normalized, "kill")) {
     const living = state.bots.filter((bot) => bot.hp > 0 && !bot.eliminated);
     const named = satanPactMatchName(normalized, living.map((bot) => bot.id), (id) => living.find((bot) => bot.id === id)?.name || "");
     return { intent: "kill", botId: named ? named.id : null };
   }
   const artifactMatch = satanPactMatchName(normalized, satanPactRequestableArtifactIds());
+  // another language: a plain word for SOUL, SIN or uses wins over a name only half heard
+  // ("Seele" is SOUL in German, not the Seal of Seere)
+  const plainIntent = satanPactLexicon() && ["uses", "heal", "sin"].find((intent) => satanPactSays(normalized, intent));
+  if (plainIntent && !(artifactMatch?.score >= 100) && !(sealMatch?.score >= 100)) {
+    return plainIntent === "uses" ? { intent: "uses", n: number || 1 } : { intent: plainIntent, n: number };
+  }
   if (artifactMatch && (!sealMatch || artifactMatch.score >= sealMatch.score)) {
     return { intent: "artifact", id: artifactMatch.id, count: number && number > 1 ? number : 1 };
   }
   if (sealMatch) return { intent: "seal", id: sealMatch.id };
-  if (/\b(use|uses|action|actions)\b/.test(normalized)) return { intent: "uses", n: number || 1 };
-  if (/\b(heal|healing|health|soul|hp|cure|life|patch)\b/.test(normalized)) return { intent: "heal", n: number };
-  if (/\b(sin|sins|money|cash|gold|coins|riches|wealth)\b/.test(normalized)) return { intent: "sin", n: number };
+  if (/\b(use|uses|action|actions)\b/.test(normalized) || satanPactSays(normalized, "uses")) return { intent: "uses", n: number || 1 };
+  if (/\b(heal|healing|health|soul|hp|cure|life|patch)\b/.test(normalized) || satanPactSays(normalized, "heal")) return { intent: "heal", n: number };
+  if (/\b(sin|sins|money|cash|gold|coins|riches|wealth)\b/.test(normalized) || satanPactSays(normalized, "sin")) return { intent: "sin", n: number };
   return { intent: "gibberish" };
 }
 
@@ -581,6 +789,8 @@ function satanPactHearTricks(text) {
   let padded = ` ${satanPactNormalize(text)} `;
   const found = [];
   const words = {};
+  const lexicon = satanPactLexicon();
+  const chinese = currentLang() === "zh-Hans";
   Object.entries(SATAN_TRICKS).forEach(([id, spec]) => {
     let hit = null;
     [...spec.words]
@@ -590,11 +800,20 @@ function satanPactHearTricks(text) {
         if (!hit) hit = phrase;
         if (!spec.keep) while (padded.includes(` ${phrase} `)) padded = padded.replace(` ${phrase} `, " ");
       });
+    // the same families in the player's language (Chinese words are found anywhere: no spaces there)
+    [...(lexicon?.tricks[id] || [])]
+      .sort((a, b) => b.length - a.length)
+      .forEach((phrase) => {
+        const found = chinese ? padded.includes(phrase) : padded.includes(` ${phrase} `);
+        if (!found) return;
+        if (!hit) hit = phrase;
+        if (!spec.keep) padded = chinese ? padded.split(phrase).join(" ") : padded.split(` ${phrase} `).join(" ");
+      });
     if (!hit && spec.fuzzy) {
       const word = padded
         .trim()
         .split(" ")
-        .find((entry) => entry.length >= 6 && (spec.fuzzyStart.test(entry) || satanPactSimilarity(entry, spec.fuzzy) >= 0.75));
+        .find((entry) => entry.length >= 6 && (spec.fuzzyStart.test(entry) || /^μεφιστ/.test(entry) || satanPactSimilarity(entry, spec.fuzzy) >= 0.75));
       if (word) {
         hit = word;
         padded = padded.replace(` ${word} `, " ");
@@ -733,15 +952,30 @@ function satanPactApplyTricks(answer, t) {
 }
 
 /* ---- prices ---- */
+// one of his lines with its {VALUES} filled in, in the player's language: the line, and the names put into it
 function satanPactFill(text, vars = {}) {
-  return String(text).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? String(vars[key]) : whole));
+  return String(t(text)).replace(/\{([A-Z]+)\}/g, (whole, key) => (key === "SIN" ? whole : vars[key] !== undefined ? satanPactFillValue(vars[key]) : whole));
+}
+
+function satanPactFillValue(value) {
+  return typeof value === "string" && /[A-Za-z]/.test(value) ? t(value) : String(value);
+}
+
+// price words in the player's language ("t" is the price table inside the functions below), and a list of them
+function satanPactText(text) {
+  return t(text);
+}
+
+function satanPactJoin(texts) {
+  if (texts.length <= 1) return texts[0] || "";
+  return t("{list} and {last}", { list: texts.slice(0, -1).join(t(", ")), last: texts[texts.length - 1] });
 }
 
 // the words of one price part (a list: the SIN deal's BOSS SOUL also takes its BOSS BOUNTY as a part of its own)
 function satanPactPartTexts(part, t = SATAN_DEAL_PRICE_TEXT) {
   if (part.type === "bossHealth") {
     const health = satanPactFill(t.bossHealth, { N: part.pct });
-    return part.zeroBounty ? [health, t.bossBounty] : [health];
+    return part.zeroBounty ? [health, satanPactText(t.bossBounty)] : [health];
   }
   return [satanPactPartText(part, t)];
 }
@@ -757,15 +991,15 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
     case "shopClosed":
       return satanPactFill(t.shopClosed, { M: part.rounds });
     case "bossHealth":
-      return satanPactPartTexts(part, t).join(" and ");
+      return satanPactJoin(satanPactPartTexts(part, t));
     case "loseSeal":
       return satanPactFill(t.loseSeal, { SEAL: ITEMS[part.id]?.name || "SEAL" });
     case "damageTaken":
       return satanPactFill(t.damageTaken, { N: part.pct, M: part.rounds });
     case "noArtifacts":
-      return t.noArtifacts;
+      return satanPactText(t.noArtifacts);
     case "keepBounty":
-      return t.keepBounty;
+      return satanPactText(t.keepBounty);
     default:
       return "";
   }
@@ -775,9 +1009,8 @@ function satanPactPartText(part, t = SATAN_DEAL_PRICE_TEXT) {
 function satanPactPriceText(parts, lineKey = null) {
   const t = { ...SATAN_DEAL_PRICE_TEXT, ...(SATAN_DEAL_PRICE_TEXT_FOR[lineKey] || {}) };
   const texts = parts.flatMap((part) => satanPactPartTexts(part, t)).filter(Boolean);
-  if (!texts.length) return t.nothing;
-  if (texts.length === 1) return texts[0];
-  return `${texts.slice(0, -1).join(", ")} and ${texts[texts.length - 1]}`;
+  if (!texts.length) return satanPactText(t.nothing);
+  return satanPactJoin(texts);
 }
 
 function satanPactRandomOf(options) {
@@ -1046,7 +1279,7 @@ function satanPactAnswerLines(answer) {
   vars.PRICE = satanPactPriceText(answer.price, satanPactLineKey(answer.lines));
   const lines = [...reactions, ...answer.lines.map(([speaker, text]) => [speaker, satanPactFill(text, vars)])];
   // the question goes on the same line as the price, so YES / NO sit right under it
-  const question = SATAN_DEAL_LINES.question.map(([, text]) => text).join(" ");
+  const question = SATAN_DEAL_LINES.question.map(([, text]) => t(text)).join(" ");
   const last = lines[lines.length - 1];
   lines[lines.length - 1] = [last[0], `${last[1]} ${question}`];
   return lines;
@@ -1267,11 +1500,11 @@ function satanDealShowAsk() {
   form.className = "intro-choice pact-ask";
   form.setAttribute("autocomplete", "off");
   form.innerHTML = `
-    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="What do you want from Satan?" />
-    <button class="intro-choice-button" type="submit">${escapeHtml(SATAN_DEAL_BUTTONS.ask)}</button>
-    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(SATAN_DEAL_BUTTONS.leave)}</button>`;
+    <input class="pact-ask-input" type="text" maxlength="80" spellcheck="false" aria-label="${t("What do you want from Satan?")}" />
+    <button class="intro-choice-button" type="submit">${escapeHtml(t(SATAN_DEAL_BUTTONS.ask))}</button>
+    <button class="intro-choice-button pact-ask-leave" type="button">${escapeHtml(t(SATAN_DEAL_BUTTONS.leave))}</button>`;
   const input = form.querySelector("input");
-  input.placeholder = SATAN_DEAL_LINES.askPlaceholder;
+  input.placeholder = t(SATAN_DEAL_LINES.askPlaceholder);
   form.addEventListener("click", (event) => event.stopPropagation());
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1313,8 +1546,8 @@ function satanDealShowChoice() {
   const choice = document.createElement("div");
   choice.className = "intro-choice";
   choice.innerHTML = `
-    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(SATAN_DEAL_BUTTONS.yes)}</button>
-    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(SATAN_DEAL_BUTTONS.no)}</button>`;
+    <button class="intro-choice-button" type="button" data-choice="yes">${escapeHtml(t(SATAN_DEAL_BUTTONS.yes))}</button>
+    <button class="intro-choice-button" type="button" data-choice="no">${escapeHtml(t(SATAN_DEAL_BUTTONS.no))}</button>`;
   choice.addEventListener("click", (event) => {
     event.stopPropagation();
     const button = event.target.closest("[data-choice]");
@@ -1403,7 +1636,7 @@ function satanDealButtonHtml() {
   const pact = satanPact();
   let tooltip = "Make a deal with Satan. Once per run.";
   if (pact.used) {
-    tooltip = pact.outcome === "signed" ? `Deal signed: ${pact.request}.` : "You refused Satan. He shall not offer a deal again this run.";
+    tooltip = pact.outcome === "signed" ? t("Deal signed: {request}.", { request: t(pact.request) }) : "You refused Satan. He shall not offer a deal again this run.";
   } else if (satanPactLocked()) {
     tooltip = "Satan is busy. Kill another BOSS.";
   } else if (!satanPactCanOpenNow()) {
@@ -1417,7 +1650,7 @@ function satanDealButtonHtml() {
   const phase = pulse ? ` style="animation-delay: -${Date.now() % period}ms"` : "";
   // the button is the contract itself; once signed, the signature stays on it
   const signed = pact.used && pact.outcome === "signed" ? " deal-signed" : "";
-  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="Make a deal with Satan" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
+  return `<button class="pause-button deal-button deal-contract${signed} ${pulse}" id="dealButton" aria-label="${t("Make a deal with Satan")}" data-tooltip="${escapeAttr(tooltip)}"${phase} ${disabled}>${dealContractSvg()}</button>`;
 }
 
 /* ---- DEAL drawn as a contract (picked on the "DEARTH Deal Button" page) ----
@@ -1426,6 +1659,12 @@ function satanDealButtonHtml() {
    phone app has only a button's height for it, so it gets the same contract drawn as a long strip: folded corner,
    DEAL on the left, the X, the line and the signature on the right. The lines tremble with the outlines setting
    (three rough filters swapped by CSS, like the frames' boil). */
+// the word on the contract: a word longer than DEAL (ΣΥΜΦΩΝΙΑ) gets smaller text, the paper keeps its size
+function dealWordFit() {
+  const length = Array.from(t("DEAL")).length;
+  return length > 5 ? ` style="--deal-word-scale: ${(5 / length).toFixed(3)}"` : "";
+}
+
 function dealContractSvg() {
   const rough = [3, 11, 19]
     .map(
@@ -1452,7 +1691,7 @@ function dealContractSvg() {
       <path d="M110 25 l6 6 M116 25 l-6 6"/>
     </g>
     <path class="deal-sign" d="M122 30 c3-6 5 2 8-1 s3-5 5-1 4 2 6-2 3-1 5 1 4 1 6-2"/>`;
-    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29">DEAL</text></svg>`;
+    return `<svg class="deal-paper deal-strip" viewBox="0 0 180 40" aria-hidden="true"><defs>${rough}</defs>${strip}<text class="deal-word" x="62" y="29"${dealWordFit()}>${t("DEAL")}</text></svg>`;
   }
-  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41">DEAL</text></svg>`;
+  return `<svg class="deal-paper" viewBox="0 0 120 72" aria-hidden="true"><defs>${rough}</defs>${sheet}<text class="deal-word" x="56" y="41"${dealWordFit()}>${t("DEAL")}</text></svg>`;
 }

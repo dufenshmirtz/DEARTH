@@ -1208,7 +1208,8 @@ function applyPendingNextRoundLambReveals() {
       state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
       return;
     }
-    revealBotGuess(bot, source, null, { allowBoss: true });
+    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY)
+    if (!bot.isBoss) revealBotGuess(bot, source);
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
     const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));
@@ -1826,14 +1827,12 @@ function applyGuessReveals() {
 
 // SEALS that add one extra reveal each round (Goetic reveal SEALS and the Seal of Cassiel (p102); other special
 // SEALS do not add reveals). Amon always does; the others only when their condition holds:
-// Vine on a 50% roll (rolled once per round), Naberius if a revealed DAMNED died last round, the Seal of
-// Cassiel (p102) if any DAMNED died last round. (Seal of Vepar reveals from revealBotGuess, on an edge reveal.)
+// Vine on a 50% roll (rolled once per round), the Seal of Cassiel (p102) if any DAMNED died last round. (Seal of Vepar reveals from revealBotGuess, on an edge reveal.)
 function extraRevealEntries() {
-  return orderedPassiveEffectEntries(["p59", "p64", "p65", "p102"]).filter((entry) => {
+  return orderedPassiveEffectEntries(["p59", "p64", "p102"]).filter((entry) => {
     if (entry.id === "p59") return true;
     let active = false;
     if (entry.id === "p64") active = vineRevealRoll(entry);
-    if (entry.id === "p65") active = (state.previousRoundRevealedEliminations || 0) > 0;
     if (entry.id === "p102") active = (state.previousRoundEliminationsForMartyrs || 0) > 0;
     if (active) markExtraRevealTriggered(entry);
     return active;

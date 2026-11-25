@@ -1,6 +1,7 @@
 // ---------- Credits (main menu: Options > Credits) ----------
 // Everything the screen lists. Each section has a heading and its lines; a line is either plain text
-// or { name, note } (name in the display face, note under it in the book face).
+// or { name, note } (name in the display face, note under it in the book face). Headings, notes and the
+// closing line are translated by their English text (t()); people's names are not.
 // Before release: replace the placeholder soundtrack line with the composer, and add any asset the
 // third-party audit turns up (every Pixabay sound that needs a name, art, etc.).
 const CREDITS_SECTIONS = [
@@ -43,7 +44,10 @@ const CREDITS_SECTIONS = [
     heading: "Fonts",
     lines: [
       { name: "Razor Keen", note: "Ray Larabie, Typodermic Fonts · CC0" },
-      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" }
+      { name: "Alegreya", note: "The Alegreya Project Authors, Huerta Tipográfica · SIL Open Font License 1.1" },
+      { name: "Mansalva", note: "The Mansalva Project Authors · SIL Open Font License 1.1" },
+      { name: "Long Cang", note: "The Long Cang Project Authors · SIL Open Font License 1.1" },
+      { name: "Noto Serif SC", note: "Google · SIL Open Font License 1.1" }
     ]
   }
 ];
@@ -52,21 +56,21 @@ const CREDITS_CLOSING_LINE = "Thank you for playing, sinner.";
 
 function renderCreditsMenu() {
   const line = (entry) => typeof entry === "string"
-    ? `<li class="credits-line"><span class="credits-note">${escapeHtml(entry)}</span></li>`
-    : `<li class="credits-line"><span class="credits-name">${escapeHtml(entry.name)}</span>${entry.note ? `<span class="credits-note">${escapeHtml(entry.note)}</span>` : ""}</li>`;
+    ? `<li class="credits-line"><span class="credits-note">${escapeHtml(t(entry))}</span></li>`
+    : `<li class="credits-line"><span class="credits-name">${escapeHtml(entry.name === "Additional sound effects" ? t(entry.name) : entry.name)}</span>${entry.note ? `<span class="credits-note">${escapeHtml(t(entry.note))}</span>` : ""}</li>`;
   const sections = CREDITS_SECTIONS.map((section) => `
       <section class="credits-section${section.team ? " credits-team" : ""}">
-        <h3 class="credits-heading">${escapeHtml(section.heading)}</h3>
+        <h3 class="credits-heading">${escapeHtml(t(section.heading))}</h3>
         <ul class="credits-lines">${section.lines.map(line).join("")}</ul>
       </section>`).join("");
   return `
     <div class="records-menu credits-menu">
-      <h2 class="records-title credits-title">Credits</h2>
+      <h2 class="records-title credits-title">${t("Credits")}</h2>
       <div class="credits-scroll">
         ${sections}
-        <p class="credits-closing">${escapeHtml(CREDITS_CLOSING_LINE)}</p>
+        <p class="credits-closing">${escapeHtml(t(CREDITS_CLOSING_LINE))}</p>
       </div>
-      <button class="menu-button secondary-menu-button" data-menu-action="options">Back</button>
+      <button class="menu-button secondary-menu-button" data-menu-action="options">${t("Back")}</button>
     </div>
   `;
 }

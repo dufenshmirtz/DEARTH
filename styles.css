@@ -7325,6 +7325,67 @@ body.outline-boil::after {
   font-display: swap;
 }
 
+/* Letters Razor Keen and Alegreya don't have (made by scripts/subset-fonts.py). Same family names, so every
+   rule asking for Razor Keen or Alegreya gets them too: Greek labels in Mansalva and Greek text in Alegreya's
+   own Greek; Chinese labels in Long Cang and Chinese text in Noto Serif SC. unicode-range keeps the English
+   in the original faces. */
+@font-face {
+  font-family: "Razor Keen";
+  src: url("fonts/i18n/mansalva-greek.woff2") format("woff2");
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  size-adjust: 88%;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Razor Keen";
+  src: url("fonts/i18n/longcang-zh.woff2") format("woff2");
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/alegreya-greek-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("fonts/i18n/notoserifsc-zh.woff2") format("woff2");
+  font-weight: 400;
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+FF00-FFEF;
+  font-display: swap;
+}
+/* Chinese reads badly with the wide letter-spacing of the English labels */
+:lang(zh-Hans) body * {
+  letter-spacing: 0 !important;
+}
+
 :root {
   --font-display: "Razor Keen", "Alegreya", Georgia, serif;
   --font-book: "Alegreya", Georgia, "Times New Roman", serif;
@@ -7887,9 +7948,15 @@ body .sound-slider:focus-visible {
   animation-delay: 120ms;
 }
 
+/* both ink figures stand a little higher so their hooves and feet show whole */
+#app .game-over-overlay .end-figure-satan,
+#app .game-over-overlay .end-figure-jesus {
+  bottom: 3vh;
+}
+
 #app .game-over-card {
-  width: min(560px, 92vw) !important;
-  padding: 34px 40px 30px !important;
+  width: min(480px, 92vw) !important;
+  padding: 34px 30px 30px !important;
   background: rgba(0, 0, 0, 0.82) !important;
 }
 
@@ -7948,13 +8015,13 @@ body .sound-slider:focus-visible {
 #app .game-over-card .end-actions {
   margin-top: 22px !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 
 /* Inspect, Main Menu and Restart share one row, so they are smaller than the usual primary button */
 #app .game-over-card .end-actions .primary-button {
   min-height: 38px;
-  padding: 6px 10px !important;
+  padding: 6px 6px !important;
   font-size: 14px !important;
   white-space: nowrap;
 }
@@ -8024,7 +8091,7 @@ body.mobile-arcade #app .end-stat span {
 }
 
 /* ==========================================================================
-   Big moments: CRITICAL, boss arrival, PENTAKILL, the final bosses
+   Big moments: CRITICAL, boss arrival, MASSACRE, the final bosses
    A full-screen beat over everything; never blocks input.
    ========================================================================== */
 #app .moment-card {
@@ -9787,7 +9854,7 @@ body.mobile-arcade .intro-choice {
   right: max(0.5vw, 4px);
   bottom: 0;
   height: min(96vh, 1195px);
-  aspect-ratio: 768 / 1195;
+  aspect-ratio: 2146 / 3122;
   max-width: 34vw;
   pointer-events: none;
   animation: intro-satan-in 2.2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
@@ -9900,7 +9967,7 @@ body.mobile-arcade .intro-satan {
   right: max(0.5vw, 4px);
   bottom: 0;
   height: min(94vh, 1216px);
-  aspect-ratio: 886 / 1216;
+  aspect-ratio: 728 / 1560;
   max-width: 24vw;
   pointer-events: none;
   animation: intro-satan-in 2s cubic-bezier(0.25, 0.6, 0.3, 1) both;
@@ -13514,7 +13581,7 @@ body.native-arcade #app .active-panel .active-list::-webkit-scrollbar {
 /* Phone (web and app): the death screen box is narrower and Jesus and Satan stand further out, so
    both figures show clearly beside it. The text inside keeps its size. */
 body.mobile-arcade #app .game-over-card {
-  width: min(450px, 58vw) !important;
+  width: min(400px, 52vw) !important;
 }
 body.mobile-arcade #app .game-over-overlay .end-figure-left {
   left: -10vw;
@@ -16027,7 +16094,7 @@ body.outline-boil #app .deal-ink {
 #app .deal-word {
   fill: currentColor;
   font-family: var(--font-display);
-  font-size: 29px;
+  font-size: calc(29px * var(--deal-word-scale, 1)); /* --deal-word-scale: a long translated word (dealWordFit) */
   letter-spacing: 1px;
   text-anchor: middle;
 }
@@ -16113,7 +16180,7 @@ body.native-arcade #app .deal-button.deal-contract .deal-ink path {
 }
 
 body.native-arcade #app .deal-button.deal-contract .deal-word {
-  font-size: 25px;
+  font-size: calc(25px * var(--deal-word-scale, 1));
 }
 
 /* Settings > Display > Guide text: Hidden takes the guide lines off the game screen (the "Pick a number" hint,
@@ -16139,8 +16206,8 @@ body.hide-guide-text #app .guide-text {
   transition: opacity 0.75s ease, transform 0.95s cubic-bezier(0.25, 0.6, 0.3, 1), filter 0.75s ease;
 }
 
-.finale-figure-jesus { aspect-ratio: 886 / 1216; }
-.finale-figure-satan { aspect-ratio: 768 / 1195; }
+.finale-figure-jesus { aspect-ratio: 728 / 1560; }
+.finale-figure-satan { aspect-ratio: 2146 / 3122; }
 
 /* the same pool of darkness Satan stands in, so the table does not show through */
 .finale-figure::before {
