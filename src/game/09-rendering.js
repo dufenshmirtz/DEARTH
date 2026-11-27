@@ -1340,37 +1340,66 @@ function renderSelfStackingDevPanel() {
 
 // ---------- PvP host screen (desktop): same look as the arcade table ----------
 // Players join and play from their phones; the host screen only shows the table and runs the flow.
-const PVP_PHASE_NAMES = { lobby: "Lobby", guess: "Guess", active: "Artifacts", summary: "Results", ended: "Winner" };
+const PVP_PHASE_NAMES = { lobby: "Lobby", guess: "Guess", active: "Artifacts", reveal: "Reveal", summary: "Results", ended: "Winner" };
 
 function renderPvpApp() {
+  const reveal = state.pvp.stage === "reveal" ? state.pvp.reveal : null;
   return `
     <main class="arena pvp-arena pvp-stage-${escapeAttr(state.pvp.stage)} ${state.pvp.slots.length > 6 ? "pvp-many" : ""}">
       <header class="pvp-top">
         ${renderPvpTargetPanel()}
         ${renderPvpTopbar()}
-        ${renderPauseButton()}
+        <div class="pvp-top-buttons">
+          ${renderPauseButton()}
+          <button class="small-button pvp-rules-button" data-pvp-rules="open">${t("Rules")}</button>
+        </div>
       </header>
       ${renderPvpSlots()}
       ${renderPvpConsole()}
+      ${reveal?.criticalIds?.length ? `<div class="pvp-moment" aria-live="polite"><strong>${t("CRITICAL")}</strong></div>` : ""}
+      ${state.pvp.rulesOpen ? renderPvpRules() : ""}
       ${renderPauseMenu()}
     </main>
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
 
+// The rules as two tablets of commandments
+function renderPvpRules() {
+  const lines = PVP_COMMANDMENTS.map(
+    (line, index) => `<li><span class="pvp-commandment-number">${pvpRoman(index + 1)}</span><span class="pvp-commandment-text">${descriptionHtml(line)}</span></li>`
+  );
+  const half = Math.ceil(lines.length / 2);
+  return `
+    <div class="pvp-rules-layer" data-nav-modal="2">
+      <section class="pvp-rules" role="dialog" aria-label="${t("The Commandments of the Table")}">
+        <h2 class="pvp-rules-title">${t("The Commandments of the Table")}</h2>
+        <div class="pvp-tablets">
+          <ol class="pvp-tablet">${lines.slice(0, half).join("")}</ol>
+          <ol class="pvp-tablet">${lines.slice(half).join("")}</ol>
+        </div>
+        <button class="pvp-rules-close" data-pvp-rules="close" data-nav-back data-nav-enter>${t("Close")}</button>
+      </section>
+    </div>
+  `;
+}
+
 function renderPvpTopbar() {
   const pvp = state.pvp;
-  const alive = pvpAliveParticipants().length;
   const seats = pvp.slots.length;
   const lobby = pvp.stage === "lobby";
   const joined = pvp.slots.filter(Boolean).length;
+  // during the reveal nobody has fallen yet on screen
+  const alive = pvpRevealHidesDamage()
+    ? pvp.slots.filter((participant) => participant?.aliveAtRoundStart).length
+    : pvpAliveParticipants().length;
   return `
     <div class="stat-card pvp-stat">
       <span class="stat-label">${t("Round")}</span>
       <span class="stat-value">${pvp.round || "-"}</span>
     </div>
     <div class="stat-card pvp-stat">
-      <span class="stat-label">${lobby ? "Joined" : "Alive"}</span>
+      <span class="stat-label">${t(lobby ? "Joined" : "Alive")}</span>
       <span class="stat-value">${lobby ? `${joined}/${seats}` : `${alive}/${seats}`}</span>
     </div>
     <div class="stat-card pvp-stat pvp-phase-stat">
@@ -1382,16 +1411,20 @@ function renderPvpTopbar() {
 
 function renderPvpTargetPanel() {
   const pvp = state.pvp;
-  const shown = pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
+  const reveal = pvp.stage === "reveal" ? pvp.reveal : null;
+  const shown = reveal ? reveal.shownTarget : pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
   const known = shown !== null && shown !== undefined;
-  const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
-  const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
+  const average = reveal ? pvp.tableAverage : pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
+  const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${t(label)}</span><strong>${value}</strong></div>`;
+  const delta = reveal?.targetDelta
+    ? `<span class="pvp-target-delta" style="--pop-key: ${reveal.index}">${reveal.targetDelta > 0 ? "+" : "&minus;"}${Math.abs(reveal.targetDelta)}</span>`
+    : "";
   return `
     <section class="target-panel pvp-target" aria-label="${t("Target")}">
       <span class="stat-label pvp-target-head">${t("Target")}</span>
-      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"}">${known ? formatNumber(shown) : "?"}</strong>
+      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"} ${reveal?.targetDelta ? "pvp-target-moved" : ""}" ${reveal ? `data-reveal-step="${reveal.index}"` : ""}>${known ? formatNumber(shown) : "?"}${delta}</strong>
       <div class="pvp-target-side">
-        ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
+        ${line("Previous", Number.isFinite(pvp.lastRoundTarget) ? formatNumber(pvp.lastRoundTarget) : "?")}
         ${line("Modifier", formatModifier(pvp.modifier))}
         ${average !== null && average !== undefined ? line("Average", formatNumber(average)) : ""}
       </div>
@@ -1413,8 +1446,15 @@ function renderPvpSlots() {
   `;
 }
 
+// the wins of this session: the BOSS pentagram and the count
+function renderPvpWins(count, extraClass = "") {
+  if (!(count > 0)) return "";
+  return `<span class="pvp-wins ${extraClass}" data-tooltip="${escapeAttr(t("Wins tonight: {count}", { count }))}">${BOSS_GLYPH_SVG}<span>${count}</span></span>`;
+}
+
 function renderPvpSlot(participant, slot) {
-  const lobby = state.pvp.stage === "lobby";
+  const pvp = state.pvp;
+  const lobby = pvp.stage === "lobby";
   if (!participant) {
     return `
       <article class="bot-card pvp-slot empty-pvp-slot">
@@ -1428,50 +1468,67 @@ function renderPvpSlot(participant, slot) {
     `;
   }
   const kickButton = lobby
-    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="Remove ${escapeAttr(participant.name)}">${t("Remove")}</button>`
+    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="${escapeAttr(t("Remove {name}", { name: participant.name }))}">${t("Remove")}</button>`
     : "";
-  const downClass = participant.eliminated ? "eliminated" : "";
+  const reveal = pvp.stage === "reveal" ? pvp.reveal : null;
+  const hideDamage = pvpRevealHidesDamage();
+  const shownHp = hideDamage ? reveal.hpBefore[participant.id] ?? participant.hp : participant.hp;
+  const isDown = hideDamage ? participant.eliminated && participant.fellRound !== pvp.round : participant.eliminated || participant.hp <= 0;
+  const downClass = isDown ? "eliminated" : "";
   const damageTooltip = sourceTooltip(participant.damageSources, "damage");
   const damageBadge =
-    participant.lastDamage > 0
+    !hideDamage && participant.lastDamage > 0
       ? `<div class="damage-badge pvp-damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${participant.lastDamage}</div>`
       : "";
-  const isGuessPhase = state.pvp.stage === "guess";
-  const isDown = participant.eliminated || participant.hp <= 0;
-  const allActivesReady = state.pvp.stage !== "active" || pvpAllActivesReady();
+  const isGuessPhase = pvp.stage === "guess";
+  const allActivesReady = pvp.stage !== "active" || pvpAllActivesReady();
   const hasGuess = Number.isFinite(participant.guess);
   const guessText = isDown ? "X" : lobby ? "--" : isGuessPhase ? (hasGuess ? t("Ready") : "...") : hasGuess ? participant.guess : "--";
   const guessLabel = isGuessPhase ? t("Status") : t("Guess");
-  const pvpTargetForColor = state.pvp.finalTarget !== null ? state.pvp.finalTarget : state.pvp.baseTarget;
+  const targetForColor = reveal ? reveal.shownTarget : pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
   const guessForColor = !isGuessPhase && !isDown && hasGuess ? participant.guess : null;
-  const guessCloseness = guessClosenessAttrs(guessForColor, pvpTargetForColor, participant.critical);
-  const criticalClass = participant.critical ? "critical-guess" : "";
+  const critical = reveal ? reveal.criticalIds.includes(participant.id) || (participant.critical && pvp.criticalHitIds.has(participant.id)) : participant.critical;
+  const guessCloseness = guessClosenessAttrs(guessForColor, targetForColor, critical);
+  const criticalClass = critical ? "critical-guess" : "";
   const guessClass = [criticalClass, guessCloseness.className, isGuessPhase && hasGuess ? "pvp-ready" : ""].filter(Boolean).join(" ");
   const active = participant.activeChoiceId ? pvpActiveById(participant.activeChoiceId) : null;
-  const activeHidden = state.pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
-  const activeResultVisible = participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
-  const activeClass = !activeResultVisible
+  const activeHidden = pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
+  const artifactShown = pvpRevealShowsArtifact(participant);
+  const activeResultVisible = artifactShown && participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
+  const activeClass = !active || activeHidden || isDown
     ? ""
-    : participant.activeCast
-      ? "cast-active pvp-artifact-hit"
-      : participant.activeCast === false
-        ? "pvp-artifact-failed"
-        : "";
+    : !artifactShown
+      ? "pvp-artifact-pending"
+      : !activeResultVisible
+        ? ""
+        : participant.activeCast
+          ? "cast-active pvp-artifact-hit"
+          : "pvp-artifact-failed";
   const activeText = isDown
     ? "X"
     : activeHidden
-      ? "Ready"
+      ? t("Ready")
       : active
-        ? active.name
-        : participant.activeGuaranteeThisRound && state.pvp.stage === "active"
-          ? "Guaranteed"
+        ? active.skip
+          ? t(participant.activeTimedOut ? "Too slow" : "Skip")
+          : escapeHtml(t(active.name))
+        : participant.activeGuaranteeThisRound && pvp.stage === "active"
+          ? t("Guaranteed")
           : "--";
   const faceInner = isDown
     ? `<span class="ko-x">X</span>`
     : `<img class="bot-image" src="${escapeAttr(botImagePath(participant))}" alt="" loading="lazy" />`;
-  const hpPercent = clamp((participant.hp / Math.max(1, participant.maxHp)) * 100, 0, 100);
+  const hpPercent = clamp((shownHp / Math.max(1, participant.maxHp)) * 100, 0, 100);
+  const focus = reveal?.focusId === participant.id ? "pvp-reveal-focus" : "";
+  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "pvp-critical-flash" : "";
+  const connection = participant.remoteId
+    ? `<span class="pvp-connection ${participant.connected ? "on" : "off"}" data-tooltip="${escapeAttr(t(participant.connected ? "Phone connected" : "Phone lost: reopen the link"))}"></span>`
+    : "";
+  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "pvp-winner-seat" : "";
   return `
-    <article class="bot-card pvp-slot ${downClass}" style="--bot-color: ${participant.color || "var(--cyan)"}">
+    <article class="bot-card pvp-slot ${downClass} ${focus} ${criticalFlash} ${winner}" style="--bot-color: ${participant.color || "var(--cyan)"}">
+      ${connection}
+      ${renderPvpWins(pvpWins(participant), "pvp-seat-wins")}
       <div class="bot-face">${faceInner}</div>
       <div class="bot-title">
         <div class="bot-name" title="${escapeAttr(participant.name)}">${escapeHtml(participant.name)}</div>
@@ -1488,8 +1545,9 @@ function renderPvpSlot(participant, slot) {
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}
-          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: participant.hp, max: participant.maxHp })}</span></div>
+          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: shownHp, max: participant.maxHp })}</span></div>
           <div class="health-bar">
+            ${healthGhostHtml(`pvp:${participant.id}`, hpPercent)}
             <div class="health-fill" style="width: ${hpPercent}%"></div>
           </div>
         </div>
@@ -1504,17 +1562,19 @@ function renderPvpConsole() {
   if (pvp.stage === "lobby") return renderPvpLobbyConsole();
   if (pvp.stage === "guess") return renderPvpGuessConsole();
   if (pvp.stage === "active") return renderPvpActiveConsole();
+  if (pvp.stage === "reveal") return renderPvpRevealConsole();
   if (pvp.stage === "summary") return renderPvpSummaryConsole();
   return renderPvpEndedConsole();
 }
 
+// title and subtitle arrive translated
 function renderPvpConsoleFrame(title, subtitle, actions, body) {
   return `
     <section class="pvp-console">
       <div class="panel-header pvp-console-head">
         <div class="pvp-console-heading">
-          <div class="panel-title">${t(title)}</div>
-          ${subtitle ? `<div class="panel-subtitle">${t(subtitle)}</div>` : ""}
+          <div class="panel-title">${title}</div>
+          ${subtitle ? `<div class="panel-subtitle">${subtitle}</div>` : ""}
         </div>
         ${actions ? `<div class="pvp-console-actions">${actions}</div>` : ""}
       </div>
@@ -1523,30 +1583,67 @@ function renderPvpConsoleFrame(title, subtitle, actions, body) {
   `;
 }
 
+// the phase clock; pvpClockTick updates the number in place every second
+function renderPvpClock() {
+  if (!pvpClockRunning()) return "";
+  const left = pvpClockSecondsLeft();
+  return `<div class="pvp-clock ${left <= PVP_TIMER_TICK_SECONDS ? "pvp-clock-low" : ""}" data-tooltip="${escapeAttr(t("When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost."))}"><span class="pvp-clock-label">${t("Clock")}</span><strong data-pvp-clock>${left}</strong></div>`;
+}
+
 function renderPvpLobbyConsole() {
+  const pvp = state.pvp;
   const joinUrl = pvpJoinUrl();
-  const seats = state.pvp.slots.length;
-  const joined = state.pvp.slots.filter(Boolean).length;
+  const seats = pvp.slots.length;
+  const joined = pvp.slots.filter(Boolean).length;
   const canAdd = seats < PVP_MAX_SLOT_COUNT;
-  const canRemove = seats > 2 && state.pvp.slots.some((participant) => !participant);
-  const body = `
-    <div class="pvp-lobby">
+  const canRemove = seats > 2 && pvp.slots.some((participant) => !participant);
+  const timer = pvp.session.timerSeconds;
+  const others = pvp.joinInfo?.others || [];
+  const serverMissing = !pvpServerEnabled() || pvp.serverDown;
+  const join = serverMissing
+    ? `
       <div class="pvp-join">
         <span class="pvp-join-label">${t("Join from your phone")}</span>
-        <strong class="pvp-join-url">${escapeHtml(joinUrl)}</strong>
-        <span class="pvp-join-note">${t("Same Wi-Fi as this screen. Open the link and enter a name.")}</span>
+        <span class="pvp-join-warning">${t("The phone server is not running. Start DEARTH with START PVP SERVER, or play against the DAMNED only.")}</span>
       </div>
-      <div class="pvp-seats" aria-label="${t("Seats")}">
-        <span class="pvp-seats-label">${t("Seats")}</span>
-        <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="${t("One seat less")}" ${canRemove ? "" : "disabled"}>&minus;</button>
-        <strong class="pvp-seats-count">${seats}</strong>
-        <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="${t("One seat more")}" ${canAdd ? "" : "disabled"}>+</button>
+    `
+    : `
+      ${joinUrl ? `<div class="pvp-qr-frame">${pvpQrSvg(joinUrl)}</div>` : ""}
+      <div class="pvp-join">
+        <span class="pvp-join-label">${t("Join from your phone")}</span>
+        <strong class="pvp-join-url">${escapeHtml(joinUrl || "…")}</strong>
+        <span class="pvp-join-note">${t("Scan the code or open the link. Same Wi-Fi as this screen.")}</span>
+        <span class="pvp-join-note pvp-join-help">${
+          others.length
+            ? escapeHtml(t("Not working? Try {urls}, and allow DEARTH through the firewall.", { urls: others.join(" · ") }))
+            : t("Not working? Allow DEARTH through the firewall. Guest Wi-Fi often blocks phones.")
+        }</span>
+      </div>
+    `;
+  const damnedWins = pvp.session.damnedWins
+    ? `<div class="pvp-damned-wins">${renderPvpWins(pvp.session.damnedWins)}<span>${t("The DAMNED tonight")}</span></div>`
+    : "";
+  const body = `
+    <div class="pvp-lobby ${serverMissing ? "" : "pvp-lobby-qr"}">
+      ${join}
+      <div class="pvp-lobby-settings">
+        <div class="pvp-seats" aria-label="${t("Seats")}">
+          <span class="pvp-seats-label">${t("Seats")}</span>
+          <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="${t("One seat less")}" ${canRemove ? "" : "disabled"}>&minus;</button>
+          <strong class="pvp-seats-count">${seats}</strong>
+          <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="${t("One seat more")}" ${canAdd ? "" : "disabled"}>+</button>
+        </div>
+        <div class="pvp-seats pvp-timer-setting">
+          <span class="pvp-seats-label">${t("Clock")}</span>
+          <button class="small-button pvp-timer-button" id="pvpTimer" data-tooltip="${escapeAttr(t("Time for each guess and each ARTIFACT choice"))}">${timer ? t("{seconds} s", { seconds: timer }) : t("Off")}</button>
+        </div>
+        ${damnedWins}
       </div>
     </div>
   `;
   return renderPvpConsoleFrame(
-    "Lobby",
-    `${joined} of ${seats} seats taken. Open seats are played by the DAMNED.`,
+    t("Lobby"),
+    t("{joined} of {seats} seats taken. Open seats are played by the DAMNED.", { joined, seats }),
     `<button class="primary-button" id="pvpReadyLobby" data-nav-enter>${t("Start")}</button>`,
     body
   );
@@ -1569,54 +1666,99 @@ function renderPvpPlayerChips(isReady, readyText, waitingText) {
 
 function renderPvpGuessConsole() {
   const alive = pvpAliveParticipants();
-  const readyCount = alive.filter((participant) => Number.isFinite(participant.guess)).length;
+  const ready = alive.filter((participant) => Number.isFinite(participant.guess)).length;
   return renderPvpConsoleFrame(
-    "Guess",
-    `${readyCount} of ${alive.length} have guessed. The TARGET is revealed when everyone is in.`,
-    "",
+    t("Guess"),
+    t("{ready} of {total} have guessed. The TARGET is revealed when everyone is in.", { ready, total: alive.length }),
+    renderPvpClock(),
     renderPvpPlayerChips((participant) => Number.isFinite(participant.guess), "Ready", "Guessing")
   );
 }
 
 function renderPvpActiveConsole() {
   const alive = pvpAliveParticipants();
-  const readyCount = alive.filter((participant) => Boolean(participant.activeChoiceId)).length;
-  const allReady = readyCount === alive.length;
+  const ready = alive.filter((participant) => Boolean(participant.activeChoiceId)).length;
+  const allReady = ready === alive.length;
   return renderPvpConsoleFrame(
-    "Artifacts",
-    allReady ? "Everyone has chosen." : `${readyCount} of ${alive.length} have chosen an ARTIFACT.`,
-    "",
+    t("Artifacts"),
+    allReady ? t("Everyone has chosen.") : t("{ready} of {total} have chosen an ARTIFACT.", { ready, total: alive.length }),
+    renderPvpClock(),
     renderPvpPlayerChips((participant) => Boolean(participant.activeChoiceId), allReady ? "Chosen" : "Ready", "Choosing")
   );
 }
 
+// the reveal: one line per ARTIFACT already answered
+function renderPvpRevealConsole() {
+  const pvp = state.pvp;
+  const reveal = pvp.reveal;
+  const lines = (reveal?.steps || [])
+    .slice(0, reveal?.index || 0)
+    .filter((step) => step.kind === "artifact")
+    .map((step) => {
+      const participant = pvp.slots.find((candidate) => candidate?.id === step.id);
+      const active = pvpActiveById(step.activeId);
+      const moved = step.to !== step.from ? ` (${t("TARGET")} ${step.from} → ${step.to})` : "";
+      const text = step.cast
+        ? t("{name}: {artifact} cast", { name: participant?.name || "", artifact: t(active.name) })
+        : t("{name}: {artifact} failed", { name: participant?.name || "", artifact: t(active.name) });
+      return `<span class="${step.cast ? "cast" : "failed"}">${escapeHtml(text)}${escapeHtml(moved)}</span>`;
+    })
+    .join("");
+  return renderPvpConsoleFrame(t("Reveal"), t("The ARTIFACTS answer one by one."), "", lines ? `<div class="pvp-reveal-lines">${lines}</div>` : "");
+}
+
 function renderPvpSummaryConsole() {
   return renderPvpConsoleFrame(
-    `Round ${state.pvp.round}`,
-    `Final TARGET ${formatNumber(state.pvp.finalTarget)}. The next round starts on its own.`,
-    `<button class="primary-button" id="pvpNextRound">${t("Next Round")}</button>`,
-    `${renderPvpResults()}`
+    t("Round {round}", { round: state.pvp.round }),
+    t("Final TARGET {target}. The next round starts on its own.", { target: formatNumber(state.pvp.finalTarget) }),
+    `<button class="primary-button" id="pvpNextRound" data-nav-enter>${t("Next Round")}</button>`,
+    renderPvpResults()
   );
 }
 
 function renderPvpEndedConsole() {
+  const pvp = state.pvp;
+  const winners = new Set(pvp.winners || []);
+  const standings = pvpStandings()
+    .map((participant, index) => {
+      const place = winners.has(participant.id) ? 1 : index + 1;
+      const fate = winners.has(participant.id)
+        ? t("Winner")
+        : participant.eliminated
+          ? t("Fell in round {round}", { round: participant.fellRound })
+          : "";
+      return `
+        <li class="pvp-standing ${winners.has(participant.id) ? "won" : ""}">
+          <span class="pvp-standing-place">${place}</span>
+          <span class="pvp-standing-name"><span class="pvp-standing-text">${escapeHtml(participant.name)}</span>${renderPvpWins(pvpWins(participant))}</span>
+          <span class="pvp-standing-fate">${fate}</span>
+        </li>
+      `;
+    })
+    .join("");
+  const damned = pvp.session.damnedWins
+    ? `<div class="pvp-damned-wins">${renderPvpWins(pvp.session.damnedWins)}<span>${t("The DAMNED tonight")}</span></div>`
+    : "";
   return renderPvpConsoleFrame(
-    "Winner",
+    t("Winner"),
     "",
-    `<button class="primary-button" id="pvpRestart">${t("Play Again")}</button>`,
-    `<div class="pvp-winner">${escapeHtml(state.pvp.winner || t("No one"))}</div>${renderPvpResults()}`
+    `<button class="primary-button" id="pvpRematch" data-nav-enter>${t("Play Again")}</button><button class="small-button pvp-new-table" id="pvpNewTable">${t("New Table")}</button>`,
+    `
+      <div class="pvp-ending">
+        <div class="pvp-winner-block">
+          <div class="pvp-winner">${escapeHtml(pvp.winner || t("No one"))}</div>
+          <div class="pvp-win-reason">${escapeHtml(pvpWinReasonText())}</div>
+        </div>
+        <ol class="pvp-standings">${standings}</ol>
+        ${damned}
+      </div>
+    `
   );
 }
 
 function renderPvpResults() {
   if (!state.pvp.activeResults.length) return "";
   return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(t(normalizeGameText(result)))}</div>`).join("")}</div>`;
-}
-
-function renderPvpLog(limit = 8) {
-  const entries = state.pvp.log.slice(0, limit);
-  if (!entries.length) return "";
-  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(t(normalizeGameText(entry)))}</div>`).join("")}</div>`;
 }
 
 // ---------- HUD change tracking: animate only when a value actually changes ----------
@@ -3092,6 +3234,7 @@ function showMainMenu(screen = "main") {
   saveArcadeRun();
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  pvpStopClockTicker();
   clearNativeArcadeResumeOnForeground();
   state.mode = "menu";
   state.menuScreen = screen;
@@ -3336,7 +3479,8 @@ function handlePauseAction(action) {
     return;
   }
   if (action === "restart") {
-    if (state.mode === "pvp") restartPvpMode();
+    // in PvP: the same table starts a new game (the phones stay)
+    if (state.mode === "pvp") pvpRematch();
     else startGame();
     return;
   }

@@ -138,7 +138,11 @@ const GAME_SFX = {
   // (its toast); the book itself arrives with the pact sound (karmaUnlock)
   codexPage: { srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`), tier: "ui", pitch: 0.1 },
   codexNewPage: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
-  menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
+  menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 },
+  // PvP (08-pvp.js): an ARTIFACT that failed to cast fizzles out (the ghostly breath, a bit lower);
+  // the winner gets the pact sound, deeper
+  pvpFizzle: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "item", rate: 0.9 },
+  pvpWinner: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger", rate: 0.92, duck: 3000 }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)

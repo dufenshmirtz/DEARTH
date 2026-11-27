@@ -2,6 +2,7 @@ const { app, BrowserWindow, protocol, net, Menu, ipcMain } = require('electron')
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { startPvpServer } = require('../server.js');
 
 // The installed app serves the built desktop-www folder (pnpm run desktop:dist).
 // `pnpm run desktop` serves the repo root directly, so no build step is needed while testing.
@@ -11,6 +12,39 @@ const ROOT = app.isPackaged ? path.join(__dirname, '..', 'desktop-www') : path.j
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ]);
+
+// Local PvP: the phones need a real web server on the network, so the app starts the game's own
+// (server.js, serving the same files) the first time the page asks for /api/... (PvP opened).
+// The page keeps talking to app://dearth/api/..., which is passed on to it, so its saves stay on app://.
+let pvpServerStart = null;
+
+function pvpServer() {
+  if (!pvpServerStart) {
+    pvpServerStart = startPvpServer({ root: ROOT }).catch((error) => {
+      pvpServerStart = null;
+      throw error;
+    });
+  }
+  return pvpServerStart;
+}
+
+async function forwardToPvpServer(request, url) {
+  try {
+    const { port } = await pvpServer();
+    const init = { method: request.method, headers: { 'Content-Type': request.headers.get('content-type') || 'application/json' } };
+    if (request.method !== 'GET' && request.method !== 'HEAD') init.body = Buffer.from(await request.arrayBuffer());
+    const response = await fetch(`http://127.0.0.1:${port}${url.pathname}${url.search}`, init);
+    return new Response(await response.arrayBuffer(), {
+      status: response.status,
+      headers: { 'Content-Type': response.headers.get('content-type') || 'application/json', 'Cache-Control': 'no-store' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ ok: false, error: 'PvP server could not start' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
 
 // Let music start without a click.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
@@ -90,7 +124,9 @@ ipcMain.on('dearth:set-fullscreen', (event, on) => {
 
 app.whenReady().then(() => {
   protocol.handle('app', (request) => {
-    const { pathname } = new URL(request.url);
+    const url = new URL(request.url);
+    const { pathname } = url;
+    if (pathname.startsWith('/api/')) return forwardToPvpServer(request, url);
     const filePath = path.join(ROOT, decodeURIComponent(pathname));
     if (!filePath.startsWith(ROOT)) return new Response('Not found', { status: 404 });
     return net.fetch(pathToFileURL(filePath).toString());
@@ -100,3 +136,6 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => app.quit());
+app.on('will-quit', () => {
+  if (pvpServerStart) pvpServerStart.then((server) => server.close()).catch(() => {});
+});

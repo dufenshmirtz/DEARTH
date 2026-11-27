@@ -49,6 +49,31 @@ const PVP_MODIFIERS = [0.7, 0.8, 0.9, 1, 1.1, 1.2];
 const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
+// phase clock, picked in the lobby (seconds; 0 = no clock). When it runs out a missing guess becomes
+// PVP_TIMEOUT_GUESS and a missing ARTIFACT is lost (no Skip bonus).
+const PVP_TIMER_OPTIONS = [0, 30, 60];
+const PVP_DEFAULT_TIMER = 30;
+const PVP_TIMEOUT_GUESS = 50;
+const PVP_TIMER_TICK_SECONDS = 5; // the clock ticks out loud for the last seconds
+// wins of the session: each one buys a face reroll (a random Goetic BOSS); this many wins open the Archangels
+const PVP_ARCHANGEL_WINS = 8;
+// the reveal after the ARTIFACTS (ms, before animation speed): each ARTIFACT, the final TARGET, a CRITICAL, the damage
+const PVP_REVEAL_TIMING = { start: 700, artifact: 1150, target: 1100, critical: 1300, damage: 1500 };
+// arcade ARTIFACT sounds for the PvP ARTIFACTS (ARTIFACT_SFX ids); Demon Bowl borrows the chalice
+const PVP_ARTIFACT_SFX = { pulse: "a22", rise: "a6", sink: "a14", shield: "a12", markBest: "a15", jam: "a9" };
+// The PvP rules, as commandments (Rules button on the host and the phones). Translated where shown.
+const PVP_COMMANDMENTS = [
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.",
+  "The TARGET is the average of all guesses, times the MODIFIER.",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS. Each one casts only half of the time.",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.",
+  "The last soul standing wins, and every win buys a new face from the demons. Eight wins open the angels.",
+  "If the last ones fall together, whoever began that round with the least SOUL wins. If equal, the closest guess. If still equal, they share it."
+];
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
@@ -106,7 +131,7 @@ const PVP_ACTIVES = [
     id: "markBest",
     name: "Sacrificial Dagger",
     icon: "assets/artifacts/occult-items-17/01 SACRIFICIAL DAGGER.png",
-    description: "Deal 5 damage to every player tied closest to the first TARGET.",
+    description: "Deal 5 damage to every player tied closest to the first TARGET, including you.",
     needsTarget: false
   },
   {
@@ -2329,6 +2354,8 @@ const state = {
 
 let pvpPollTimer = null;
 let pvpAutoTimer = null;
+let pvpClockTimer = null; // the PvP phase clock's ticker (08-pvp.js)
+let pvpLastClockSecond = null;
 let soundtrackAudio = null;
 let sealPurchaseSfx = null;
 let guessSfx = null;

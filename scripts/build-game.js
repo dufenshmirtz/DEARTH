@@ -16,6 +16,7 @@ const SOURCE_FILES = [
   "locales/de.js",
   "locales/es.js",
   "locales/zh-Hans.js",
+  "00-vendor-qrcode.js",
   "00-audio-loudness.js",
   "00-audio-sfx-config.js",
   "00-config-data-state.js",

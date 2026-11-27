@@ -37,6 +37,8 @@ fs.mkdirSync(outDir, { recursive: true });
 copyFile(path.join(root, "index.html"), path.join(outDir, "index.html"));
 copyFile(path.join(root, "main.js"), path.join(outDir, "main.js"));
 copyFile(path.join(root, "styles.css"), path.join(outDir, "styles.css"));
+// local PvP: the phones open the controller from the app's own server (server.js, started by desktop/main.cjs)
+["controller.html", "controller.js", "controller-i18n.js"].forEach((file) => copyFile(path.join(root, file), path.join(outDir, file)));
 copyDir(path.join(root, "assets"), path.join(outDir, "assets"));
 copyDir(path.join(root, "fonts"), path.join(outDir, "fonts"));
 

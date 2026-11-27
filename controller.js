@@ -82,6 +82,7 @@ function playClockTickSfx() {
   playClonedOneShot(clockTickSfx[tickIndex], CLOCK_TICK_SFX_VOLUME);
 }
 
+
 const controllerState = {
   player: localStorage.getItem(STORAGE_ID)
     ? {
@@ -90,14 +91,19 @@ const controllerState = {
       }
     : null,
   room: null,
+  // the server's clock when the room arrived, and ours then: the host's clock deadline is in the server's time
+  serverNow: null,
+  receivedAt: 0,
   message: "",
   draftName: "",
   draftGuess: "",
   draftActiveTargets: {},
   lastRound: null,
   lastStage: null,
+  lastGame: null,
   renderedKey: "",
-  lastCastSignal: null
+  lastCastSignal: null,
+  rulesOpen: false
 };
 
 function escapeHtml(value) {
@@ -107,6 +113,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
 }
 
 function normalizeGameText(value) {
@@ -174,18 +184,38 @@ function playerActiveName(player) {
   return player.activeOptions?.find((active) => active.id === player.activeChoiceId)?.name || player.activeChoiceId;
 }
 
+// this phone already sent its guess / ARTIFACT for this round of this game
+function guessSent(host = hostState(), remote = remotePlayer()) {
+  return Boolean(host && remote && remote.guessGame === host.game && remote.guessRound === host.round && Number.isFinite(remote.guess));
+}
+
+function activeSent(host = hostState(), remote = remotePlayer()) {
+  return Boolean(host && remote && remote.activeGame === host.game && remote.activeRound === host.round && remote.activeChoiceId);
+}
+
 function myGuess() {
   const host = hostState();
   const remote = remotePlayer();
   if (!host || host.stage === "lobby") return null;
-  if (remote && remote.guessRound === host.round && Number.isFinite(remote.guess)) return remote.guess;
+  if (guessSent(host, remote)) return remote.guess;
   const player = hostPlayer();
   return Number.isFinite(player?.guess) ? player.guess : null;
+}
+
+// seconds left on the host's clock, or null when there is none
+function clockSecondsLeft() {
+  const host = hostState();
+  if (!host || (host.stage !== "guess" && host.stage !== "active")) return null;
+  if (Number.isFinite(host.phaseRemaining)) return Math.ceil(host.phaseRemaining / 1000);
+  if (!Number.isFinite(host.phaseDeadline) || !Number.isFinite(controllerState.serverNow)) return null;
+  const serverNow = controllerState.serverNow + (Date.now() - controllerState.receivedAt);
+  return Math.max(0, Math.ceil((host.phaseDeadline - serverNow) / 1000));
 }
 
 function renderCastBanner(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
   if (player.activeChoiceId === "skip") {
+    if (player.activeTimedOut) return `<div class="cast-banner cast-banner-skip"><strong>${t("TOO SLOW")}</strong><span>${t("No ARTIFACT this round.")}</span></div>`;
     return `<div class="cast-banner cast-banner-skip"><strong>${t("ARTIFACT SKIPPED")}</strong><span>${t("Your next ARTIFACT casts for sure.")}</span></div>`;
   }
   const name = escapeHtml(t(playerActiveName(player)));
@@ -199,17 +229,21 @@ function maybeVibrateCastResult() {
   const player = hostPlayer();
   const host = hostState();
   if (!player?.activeResolved || !player.activeChoiceId || player.activeChoiceId === "skip" || !host) return;
-  const key = `${host.round}:${player.activeCast ? "cast" : "fail"}`;
+  const key = `${host.game}:${host.round}:${player.activeCast ? "cast" : "fail"}`;
   if (controllerState.lastCastSignal === key) return;
   controllerState.lastCastSignal = key;
+  vibrate(player.activeCast ? [80, 60, 80] : 250);
+}
+
+function vibrate(pattern) {
   try {
-    if (navigator.vibrate) navigator.vibrate(player.activeCast ? [80, 60, 80] : 250);
+    if (navigator.vibrate) navigator.vibrate(pattern);
   } catch (error) {}
 }
 
 function activeCastText(player) {
   if (!player?.activeResolved || !player.activeChoiceId) return "";
-  if (player.activeChoiceId === "skip") return t("skipped ARTIFACT use");
+  if (player.activeChoiceId === "skip") return t(player.activeTimedOut ? "ran out of time" : "skipped ARTIFACT use");
   return player.activeCast ? t("{name} cast", { name: t(playerActiveName(player)) }) : t("{name} failed", { name: t(playerActiveName(player)) });
 }
 
@@ -241,35 +275,41 @@ function allActivesSubmitted(host) {
 
 async function pollRoom() {
   try {
-    const response = await fetch("/api/room", { cache: "no-store" });
+    const id = controllerState.player?.id;
+    const response = await fetch(`/api/room${id ? `?id=${encodeURIComponent(id)}` : ""}`, { cache: "no-store" });
     controllerState.room = await response.json();
+    controllerState.serverNow = Number(controllerState.room?.serverNow) || null;
+    controllerState.receivedAt = Date.now();
     // the phone shows its text in the host's language (controller-i18n.js)
     const hostLanguage = controllerState.room?.hostState?.lang;
     if (hostLanguage && typeof setLanguage === "function" && hostLanguage !== currentLang()) setLanguage(hostLanguage);
     if (controllerState.player && !remotePlayer()) {
       localStorage.removeItem(STORAGE_ID);
       localStorage.removeItem(STORAGE_NAME);
-      controllerState.message = "The host reset the room. Join again.";
+      controllerState.message = "The table was reset. Join again.";
       controllerState.player = null;
     }
     const host = hostState();
     if (host) {
-      const roundChanged = controllerState.lastRound !== host.round;
+      const roundChanged = controllerState.lastRound !== host.round || controllerState.lastGame !== host.game;
       const stageChanged = controllerState.lastStage !== host.stage;
       if ((roundChanged || stageChanged) && controllerState.lastRound !== null) {
         controllerState.message = "";
+        // a short buzz when it is this phone's turn to guess
+        if (host.stage === "guess" && hostPlayer() && !hostPlayer().eliminated) vibrate(40);
       }
       if (roundChanged) {
         controllerState.draftGuess = "";
         controllerState.draftActiveTargets = {};
       }
       controllerState.lastRound = host.round;
+      controllerState.lastGame = host.game;
       controllerState.lastStage = host.stage;
     }
     maybeVibrateCastResult();
     render();
   } catch {
-    controllerState.message = "Cannot reach the host.";
+    controllerState.message = "Cannot reach the host. Same Wi-Fi?";
     render(true);
   }
 }
@@ -281,7 +321,7 @@ async function joinRoom() {
     controllerState.player = data.player;
     localStorage.setItem(STORAGE_ID, data.player.id);
     localStorage.setItem(STORAGE_NAME, data.player.name);
-    controllerState.message = "Joined. Wait for the host.";
+    controllerState.message = "";
     await pollRoom();
   } catch (error) {
     controllerState.message = error.message;
@@ -304,9 +344,10 @@ async function submitGuess() {
     await postJson("/api/player", {
       id: controllerState.player.id,
       guess,
+      guessGame: host.game,
       guessRound: host.round
     });
-    controllerState.message = "Guess sent. You are ready.";
+    controllerState.message = "";
     controllerState.draftGuess = "";
     await pollRoom();
   } catch (error) {
@@ -331,15 +372,35 @@ async function submitActive(activeId) {
       id: controllerState.player.id,
       activeChoiceId: activeId,
       activeTargetId: targetId,
+      activeGame: host.game,
       activeRound: host.round
     });
-    controllerState.message = `${active?.name || "ARTIFACT"} sent.`;
+    controllerState.message = "";
     await pollRoom();
   } catch (error) {
     controllerState.message = error.message;
     render(true);
   }
 }
+
+// every win buys a face: a random Goetic BOSS, or an Archangel after enough wins
+async function rerollFace(kind) {
+  const remote = remotePlayer();
+  if (!remote) return;
+  try {
+    await postJson("/api/player", {
+      id: controllerState.player.id,
+      rerollSeq: (remote.rerollSeq || 0) + 1,
+      rerollKind: kind
+    });
+    await pollRoom();
+  } catch (error) {
+    controllerState.message = error.message;
+    render(true);
+  }
+}
+
+const WINS_MARK = `<svg class="wins-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12.4" r="9.6"/><path d="M12 21.9 6.4 4.7 20.9 15.3H3.1L17.6 4.7Z"/></svg>`;
 
 function renderHeader() {
   const host = hostState();
@@ -350,21 +411,31 @@ function renderHeader() {
     player?.lastDamage > 0
       ? `<span class="phone-damage-badge" title="${escapeAttr(damageTooltip)}">-${player.lastDamage}</span>`
       : "";
+  const clock = clockSecondsLeft();
+  const face = player?.image ? `<img class="phone-face" src="${escapeAttr(encodeURI(player.image))}" alt="" />` : "";
+  const wins = player?.wins ? `<span class="phone-wins">${WINS_MARK}${player.wins}</span>` : "";
   return `
     <section class="panel">
-      <h1>${t("DEARTH PvP")}</h1>
-      <p class="muted">${escapeHtml(controllerState.player?.name || "Phone controller")}</p>
+      <div class="phone-title-row">
+        ${face}
+        <div class="phone-title">
+          <h1>${escapeHtml(controllerState.player?.name || t("DEARTH PvP"))}</h1>
+          ${wins}
+        </div>
+        <button class="rules-link" data-rules="open">${t("Rules")}</button>
+      </div>
       <div class="stat-row">
         <div class="stat"><span>${t("Previous")}</span><strong>${host?.previousTarget ?? "?"}</strong></div>
         <div class="stat health-stat">${damageBadge}<span>${t("SOUL")}</span><strong>${player ? player.hp : "-"}</strong></div>
         <div class="stat"><span>${t("Modifier")}</span><strong>${host ? Number(host.modifier).toFixed(1) : "-"}</strong></div>
         <div class="stat"><span>${t("TARGET")}</span><strong>${host?.finalTarget ?? host?.baseTarget ?? "?"}</strong></div>
         <div class="stat guess-stat"><span>${t("Your Guess")}</span><strong>${guess ?? "-"}</strong></div>
+        ${clock !== null ? `<div class="stat clock-stat ${clock <= 5 ? "clock-low" : ""}"><span>${t("Clock")}</span><strong data-phone-clock>${clock}</strong></div>` : ""}
       </div>
-      ${renderCastBanner(player)}
+      ${host?.stage === "ended" ? "" : renderCastBanner(player)}
       ${host?.waitForHost ? `<p class="warning">${t("The host paused the game.")}</p>` : ""}
-      ${player?.activeGuaranteeThisRound ? `<p class="cast">${t("Skip bonus ready: your ARTIFACT will cast for sure.")}</p>` : ""}
-      ${player?.activeGuaranteeNextRound ? `<p class="cast">${t("Skip bonus armed for next round.")}</p>` : ""}
+      ${player?.activeGuaranteeThisRound && host?.stage === "active" ? `<p class="cast">${t("Skip bonus ready: your ARTIFACT will cast for sure.")}</p>` : ""}
+      ${player?.activeGuaranteeNextRound && host?.stage !== "ended" ? `<p class="cast">${t("Skip bonus armed for next round.")}</p>` : ""}
       ${controllerState.message ? `<p class="cast">${escapeHtml(t(normalizeGameText(controllerState.message)))}</p>` : ""}
     </section>
   `;
@@ -374,10 +445,27 @@ function renderJoin() {
   return `
     <section class="panel">
       <h1>${t("DEARTH PvP")}</h1>
-      <p class="muted">${t("Enter your name to take a table slot.")}</p>
+      <p class="muted">${t("Enter your name to take a seat at the table.")}</p>
       <input id="joinName" type="text" maxlength="16" placeholder="${t("Your name")}" value="${escapeAttr(controllerState.draftName)}" />
       <button id="joinButton">${t("Join")}</button>
-      ${controllerState.message ? `<p class="warning">${escapeHtml(controllerState.message)}</p>` : ""}
+      ${controllerState.message ? `<p class="warning">${escapeHtml(t(controllerState.message))}</p>` : ""}
+    </section>
+    <section class="panel"><button class="secondary" data-rules="open">${t("Rules")}</button></section>
+  `;
+}
+
+// faces bought with wins: shown between games and between rounds
+function renderFacePanel() {
+  const host = hostState();
+  const player = hostPlayer();
+  if (!host || !player || !(player.rerolls > 0)) return "";
+  const archangel = player.wins >= (host.archangelWins || 8);
+  return `
+    <section class="panel">
+      <h2>${t("A new face")}</h2>
+      <p class="muted">${t("Every win buys a reroll of your face. Rerolls left: {count}", { count: player.rerolls })}</p>
+      <button class="reroll-button" data-reroll="goetic">${t("Roll a demon")}</button>
+      ${archangel ? `<button class="reroll-button" data-reroll="archangel">${t("Roll an Archangel")}</button>` : `<p class="muted">${t("{count} wins open the Archangels.", { count: host.archangelWins || 8 })}</p>`}
     </section>
   `;
 }
@@ -388,24 +476,22 @@ function renderLobby() {
     ${renderHeader()}
     <section class="panel">
       <h2>${t("Lobby")}</h2>
-      <p class="muted">${t(player ? "You have a slot. Wait for the host to press Ready." : "Waiting for the host to import your phone slot.")}</p>
+      <p class="muted">${t(player ? "You have a seat. The game begins when the host presses Start." : "Taking your seat at the table...")}</p>
     </section>
+    ${renderFacePanel()}
   `;
 }
 
 function renderGuess() {
   const host = hostState();
-  const remote = remotePlayer();
-  const submitted = remote?.guessRound === host.round && Number.isFinite(remote.guess);
-  const readyText = host.waitForHost
-    ? t("Ready.")
-    : t("Ready. Guesses reveal automatically when everyone is ready.");
+  const submitted = guessSent(host);
+  const readyText = host.waitForHost ? t("Ready.") : t("Ready. Guesses reveal automatically when everyone is ready.");
   return `
     ${renderHeader()}
     <section class="panel">
       <h2>${t("Guess Phase")}</h2>
       <p class="muted">${submitted ? readyText : t("Submit a whole number from 0 to 100.")}</p>
-      <input id="guessValue" type="number" min="0" max="100" value="${submitted ? "" : escapeAttr(controllerState.draftGuess)}" ${submitted ? "disabled" : ""} />
+      <input id="guessValue" type="number" inputmode="numeric" min="0" max="100" value="${submitted ? "" : escapeAttr(controllerState.draftGuess)}" ${submitted ? "disabled" : ""} />
       <button id="guessButton" ${submitted ? "disabled" : ""}>${t(submitted ? "Ready" : "Send Guess")}</button>
     </section>
   `;
@@ -445,15 +531,10 @@ function renderActiveChoice(active, submitted) {
   `;
 }
 
-function escapeAttr(value) {
-  return escapeHtml(value);
-}
-
 function renderActive() {
   const host = hostState();
   const player = hostPlayer();
-  const remote = remotePlayer();
-  const submitted = remote?.activeRound === host.round && Boolean(remote.activeChoiceId);
+  const submitted = activeSent(host);
   const allReady = allActivesSubmitted(host);
   if (!player) return renderLobby();
   if (submitted && !allReady) {
@@ -477,34 +558,85 @@ function renderActive() {
   `;
 }
 
+function renderReveal() {
+  return `
+    ${renderHeader()}
+    <section class="panel">
+      <h2>${t("Reveal")}</h2>
+      <p class="muted">${t("The ARTIFACTS answer one by one. Watch the table.")}</p>
+    </section>
+  `;
+}
+
 function renderResults() {
   const host = hostState();
   const results = host?.activeResults || [];
+  const ended = host?.stage === "ended";
   const castRows = (host?.players || [])
     .filter((player) => player?.activeResolved && player.activeChoiceId)
     .map((player) => `<div class="${player.activeCast ? "active-cast" : ""}">${escapeHtml(player.name)}: ${escapeHtml(activeCastText(player))}</div>`)
     .join("");
+  const won = ended && (host.winners || []).includes(controllerState.player?.id);
+  const winner = ended
+    ? `
+      <div class="winner-block ${won ? "you-won" : ""}">
+        <strong>${escapeHtml(won ? t("You won") : t("Winner: {name}", { name: host.winner }))}</strong>
+        ${host.winReason?.text ? `<span>${escapeHtml(t(host.winReason.text, host.winReason.params || {}))}</span>` : ""}
+      </div>
+    `
+    : `<p class="muted">${t(host?.waitForHost ? "Waiting for the next round." : "Next round starts automatically after 10 seconds.")}</p>`;
   return `
     ${renderHeader()}
     <section class="panel">
-      <h2>${t(host?.stage === "ended" ? "Game Over" : "Round Summary")}</h2>
-      ${host?.winner ? `<p class="cast">${escapeHtml(t("Winner: {name}", { name: host.winner }))}</p>` : `<p class="muted">${t(host?.waitForHost ? "Waiting for the next round." : "Next round starts automatically after 10 seconds.")}</p>`}
+      <h2>${t(ended ? "Game Over" : "Round Summary")}</h2>
+      ${winner}
+      ${ended ? `<p class="muted">${t("The host can start the next game with Play Again.")}</p>` : ""}
       <div class="results">
         ${castRows}
-        ${results.map((result) => `<div>${escapeHtml(normalizeGameText(result))}</div>`).join("")}
+        ${results.map((result) => `<div>${escapeHtml(t(normalizeGameText(result)))}</div>`).join("")}
+      </div>
+    </section>
+    ${renderFacePanel()}
+  `;
+}
+
+function renderEliminated() {
+  const host = hostState();
+  if (host?.stage === "ended") return renderResults();
+  return `
+    ${renderHeader()}
+    <section class="panel">
+      <h2>${t("Eliminated")}</h2>
+      <p class="muted">${t("You are out. Watch the table: the last soul standing wins.")}</p>
+    </section>
+  `;
+}
+
+// the commandments, on one tablet
+function renderRules() {
+  const rules = hostState()?.rules || [];
+  const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+  return `
+    <section class="rules-layer">
+      <div class="tablet">
+        <h2>${t("The Commandments of the Table")}</h2>
+        ${rules.length ? `<ol>${rules.map((line, index) => `<li><span class="numeral">${numerals[index] || index + 1}</span><span>${escapeHtml(t(normalizeGameText(line)))}</span></li>`).join("")}</ol>` : `<p class="muted">${t("Waiting for the host...")}</p>`}
+        <button data-rules="close">${t("Close")}</button>
       </div>
     </section>
   `;
 }
 
 function renderMain() {
+  if (controllerState.rulesOpen) return renderRules();
   if (!controllerState.player) return renderJoin();
   const host = hostState();
   if (!host || !hostPlayer()) return renderLobby();
-  if (hostPlayer()?.eliminated) return `${renderHeader()}<section class="panel"><h2>${t("Eliminated")}</h2><p class="muted">${t("You are out. Last player standing wins.")}</p></section>`;
+  if (hostPlayer()?.eliminated) return renderEliminated();
   if (host.stage === "lobby") return renderLobby();
   if (host.stage === "guess") return renderGuess();
   if (host.stage === "active") return renderActive();
+  if (host.stage === "reveal") return renderReveal();
   return renderResults();
 }
 
@@ -531,48 +663,75 @@ function bindEvents() {
   document.querySelectorAll(".activeButton").forEach((button) => {
     button.addEventListener("click", () => submitActive(button.dataset.activeId));
   });
+  document.querySelectorAll("[data-reroll]").forEach((button) => {
+    button.addEventListener("click", () => rerollFace(button.dataset.reroll));
+  });
+  document.querySelectorAll("[data-rules]").forEach((button) => {
+    button.addEventListener("click", () => {
+      controllerState.rulesOpen = button.dataset.rules === "open";
+      render(true);
+    });
+  });
 }
 
 function render(force = false) {
   const nextKey = renderKey();
-  if (!force && controllerState.renderedKey === nextKey && isTypingDraft()) return;
+  // nothing shown changed: keep the page (and the keyboard, while typing) as it is
+  if (!force && controllerState.renderedKey === nextKey) return;
+  const focusedId = document.activeElement?.id;
   document.querySelector("#controller").innerHTML = renderMain();
   controllerState.renderedKey = nextKey;
   bindEvents();
+  if (focusedId === "guessValue" || focusedId === "joinName") {
+    const input = document.getElementById(focusedId);
+    if (input && !input.disabled) {
+      input.focus();
+      try {
+        input.setSelectionRange(input.value.length, input.value.length);
+      } catch (error) {}
+    }
+  }
 }
 
+// the screen is rebuilt only when something shown on it changed (keeps the keyboard up while typing)
 function renderKey() {
   const host = hostState();
-  const hostPlayerState = hostPlayer();
+  const player = hostPlayer();
   const remote = remotePlayer();
-  const submittedGuess = host?.stage === "guess" && remote?.guessRound === host.round && Number.isFinite(remote.guess);
-  const submittedActive = host?.stage === "active" && remote?.activeRound === host.round && Boolean(remote.activeChoiceId);
-  return [
+  return JSON.stringify([
     controllerState.player?.id || "join",
+    controllerState.rulesOpen,
+    controllerState.message,
+    host?.lang,
+    host?.game,
     host?.stage || "offline",
     host?.round || 0,
-    hostPlayerState?.hp ?? "-",
-    hostPlayerState?.lastDamage || 0,
-    hostPlayerState?.damageSources?.map((entry) => `${entry.amount}:${entry.source}`).join(",") || "",
-    hostPlayerState?.eliminated ? "out" : "in",
-    hostPlayerState?.activeGuaranteeThisRound ? "guaranteed-now" : "normal-cast",
-    hostPlayerState?.activeGuaranteeNextRound ? "guaranteed-next" : "no-next-guarantee",
-    submittedGuess ? "guess-ready" : "guess-open",
-    submittedActive ? "active-ready" : "active-open",
-    allActivesSubmitted(host) ? "all-active-ready" : "active-waiting",
-    hostPlayerState?.activeCast === true ? "cast" : hostPlayerState?.activeCast === false ? "failed" : "pending",
-    hostPlayerState?.activeResolved ? "resolved" : "unresolved",
-    myGuess() ?? "no-guess",
-    host?.waitForHost ? "wait" : "auto",
-    host?.players?.filter(Boolean).length || 0,
-    hostPlayerState?.activeOptions?.map((active) => active.id).join(",") || "",
-    controllerState.message
-  ].join("|");
+    host?.waitForHost,
+    host?.previousTarget,
+    host?.modifier,
+    host?.baseTarget,
+    host?.finalTarget,
+    host?.winner,
+    host?.winReason,
+    Boolean(host?.phaseDeadline || host?.phaseRemaining),
+    host?.rules?.length || 0,
+    host?.activeResults?.length || 0,
+    host?.players?.filter(Boolean).map((other) => [other.id, other.eliminated, other.activeResolved, other.activeCast, other.guess]),
+    player,
+    guessSent(host, remote),
+    activeSent(host, remote),
+    allActivesSubmitted(host)
+  ]);
 }
 
-function isTypingDraft() {
-  const id = document.activeElement?.id;
-  return id === "joinName" || id === "guessValue" || id?.startsWith("target-");
+// the clock counts down between polls without rebuilding the screen
+function tickPhoneClock() {
+  const left = clockSecondsLeft();
+  document.querySelectorAll("[data-phone-clock]").forEach((element) => {
+    if (left === null) return;
+    element.textContent = String(left);
+    element.closest(".clock-stat")?.classList.toggle("clock-low", left <= 5);
+  });
 }
 
 document.addEventListener(
@@ -588,3 +747,4 @@ document.addEventListener(
 render(true);
 pollRoom();
 setInterval(pollRoom, 800);
+setInterval(tickPhoneClock, 250);

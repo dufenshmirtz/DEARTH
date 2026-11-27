@@ -1983,7 +1983,108 @@ LOCALES["el"] = {
   "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
   "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δεμένος. Από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
   "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run ξεκινάς με τη {seal}, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
-  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του."
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Δέσε τον, και από το επόμενο run η {seal} δεν κοστίζει τίποτα στις Προσφορές του Διαβόλου, και θα αντιμετωπίσεις τον εαυτό σου στη θέση του.",
+
+  // PvP for release (Nov 27 2026): lobby, clock, reveal, winner, rules (commandments), faces, the phone
+  // texts with {params} and two sentences are looked up whole
+  "{joined} of {seats} seats taken. Open seats are played by the DAMNED.": "{joined} από {seats} θέσεις πιασμένες. Τις ελεύθερες θέσεις τις παίζουν οι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ.",
+  "{ready} of {total} have guessed. The TARGET is revealed when everyone is in.": "{ready} από {total} έχουν μαντέψει. Ο ΣΤΟΧΟΣ αποκαλύπτεται όταν μπουν όλοι.",
+  "Final TARGET {target}. The next round starts on its own.": "Τελικός ΣΤΟΧΟΣ {target}. Ο επόμενος γύρος ξεκινά μόνος του.",
+  "Every win buys a reroll of your face. Rerolls left: {count}": "Κάθε νίκη αγοράζει ένα reroll του προσώπου σου. Reroll που μένουν: {count}",
+  "Everyone fell in round {round}. {name} began it with the least SOUL ({soul}).": "Όλοι έπεσαν στον γύρο {round}. {name}: τον ξεκίνησε με τη λιγότερη ΨΥΧΗ ({soul}).",
+  "Everyone fell in round {round}, even in SOUL. {name} was closest to the TARGET.": "Όλοι έπεσαν στον γύρο {round}, ίσοι σε ΨΥΧΗ. {name}: ήταν πιο κοντά στον ΣΤΟΧΟ.",
+  "Everyone fell in round {round}, even in SOUL and guess. The win is shared.": "Όλοι έπεσαν στον γύρο {round}, ίσοι σε ΨΥΧΗ και μαντεψιά. Η νίκη μοιράζεται.",
+  "Not working? Try {urls}, and allow DEARTH through the firewall.": "Δεν δουλεύει; Δοκίμασε {urls}, και επίτρεψε το DEARTH στο τείχος προστασίας.",
+  "Rules": "Κανόνες",
+  "The Commandments of the Table": "Οι Εντολές του Τραπεζιού",
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.": "Θα μαντέψεις έναν ακέραιο από 0 έως 100 και δεν θα τον πεις σε κανέναν.",
+  "The TARGET is the average of all guesses, times the MODIFIER.": "Ο ΣΤΟΧΟΣ είναι ο μέσος όρος όλων των μαντεψιών, επί τον ΣΥΝΤΕΛΕΣΤΗ.",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.": "Για κάθε βήμα που απέχεις από τον τελικό ΣΤΟΧΟ, θα χάνεις 1 ΨΥΧΗ.",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.": "Πέτυχε τον ΣΤΟΧΟ ακριβώς και κάθε άλλος παίκτης χάνει 5 ΨΥΧΗ: μία φορά για τον πρώτο ΣΤΟΧΟ, και άλλη μία για τον τελικό.",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS.": "Όταν φανεί ο πρώτος ΣΤΟΧΟΣ, θα διαλέξεις ένα από δύο ΚΕΙΜΗΛΙΑ.",
+  "Each one casts only half of the time.": "Το καθένα πιάνει μόνο τις μισές φορές.",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.": "Όποιος παραλείψει ένα ΚΕΙΜΗΛΙΟ, το επόμενό του θα πιάσει σίγουρα.",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.": "Ο ΣΥΝΤΕΛΕΣΤΗΣ αλλάζει κάθε 3 γύρους, και όποτε ο ΣΤΟΧΟΣ φτάσει το 100.",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.": "Όταν τελειώσει ο χρόνος, μια μαντεψιά που λείπει γίνεται 50 και ένα ΚΕΙΜΗΛΙΟ που λείπει χάνεται.",
+  "The last soul standing wins, and every win buys a new face from the demons.": "Κερδίζει η τελευταία ΨΥΧΗ που μένει όρθια, και κάθε νίκη αγοράζει ένα νέο πρόσωπο από τους δαίμονες.",
+  "Eight wins open the angels.": "Οκτώ νίκες ανοίγουν τους αγγέλους.",
+  "If the last ones fall together, whoever began that round with the least SOUL wins.": "Αν οι τελευταίοι πέσουν μαζί, κερδίζει όποιος ξεκίνησε εκείνο τον γύρο με τη λιγότερη ΨΥΧΗ.",
+  "If equal, the closest guess.": "Αν είναι ίσοι, η πιο κοντινή μαντεψιά.",
+  "If still equal, they share it.": "Αν είναι πάλι ίσοι, τη μοιράζονται.",
+  "Joined": "Μέσα",
+  "Alive": "Ζωντανοί",
+  "Artifacts": "Κειμήλια",
+  "Winner": "Νικητής",
+  "Wins tonight: {count}": "Νίκες απόψε: {count}",
+  "Remove {name}": "Αφαίρεση: {name}",
+  "Too slow": "Πολύ αργός",
+  "Skip": "Παράλειψη",
+  "Guaranteed": "Σίγουρο",
+  "Phone connected": "Το κινητό είναι συνδεδεμένο",
+  "Phone lost: reopen the link": "Το κινητό χάθηκε: άνοιξε ξανά τον σύνδεσμο",
+  "Clock": "Χρόνος",
+  "The phone server is not running.": "Ο διακομιστής για τα κινητά δεν τρέχει.",
+  "Start DEARTH with START PVP SERVER, or play against the DAMNED only.": "Ξεκίνα το DEARTH με το START PVP SERVER, ή παίξε μόνο με τους ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ.",
+  "Scan the code or open the link.": "Σκάναρε τον κωδικό ή άνοιξε τον σύνδεσμο.",
+  "Same Wi-Fi as this screen.": "Ίδιο Wi-Fi με αυτή την οθόνη.",
+  "Not working?": "Δεν δουλεύει;",
+  "Try {urls}, and allow DEARTH through the firewall.": "Δοκίμασε {urls}, και επίτρεψε το DEARTH στο τείχος προστασίας.",
+  "Allow DEARTH through the firewall.": "Επίτρεψε το DEARTH στο τείχος προστασίας.",
+  "Guest Wi-Fi often blocks phones.": "Τα Wi-Fi επισκεπτών συχνά μπλοκάρουν τα κινητά.",
+  "The DAMNED tonight": "Οι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ απόψε",
+  "Time for each guess and each ARTIFACT choice": "Χρόνος για κάθε μαντεψιά και κάθε επιλογή ΚΕΙΜΗΛΙΟΥ",
+  "{seconds} s": "{seconds} δ",
+  "Off": "Όχι",
+  "{joined} of {seats} seats taken.": "{joined} από {seats} θέσεις πιασμένες.",
+  "Open seats are played by the DAMNED.": "Τις ελεύθερες θέσεις τις παίζουν οι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ.",
+  "{ready} of {total} have guessed.": "{ready} από {total} έχουν μαντέψει.",
+  "The TARGET is revealed when everyone is in.": "Ο ΣΤΟΧΟΣ αποκαλύπτεται όταν μπουν όλοι.",
+  "Everyone has chosen.": "Διάλεξαν όλοι.",
+  "{ready} of {total} have chosen an ARTIFACT.": "{ready} από {total} έχουν διαλέξει ΚΕΙΜΗΛΙΟ.",
+  "The ARTIFACTS answer one by one.": "Τα ΚΕΙΜΗΛΙΑ απαντούν ένα ένα.",
+  "{name}: {artifact} cast": "{name}: {artifact}, έπιασε",
+  "{name}: {artifact} failed": "{name}: {artifact}, απέτυχε",
+  "Final TARGET {target}.": "Τελικός ΣΤΟΧΟΣ {target}.",
+  "The next round starts on its own.": "Ο επόμενος γύρος ξεκινά μόνος του.",
+  "Fell in round {round}": "Έπεσε στον γύρο {round}",
+  "New Table": "Νέο Τραπέζι",
+  "Last soul standing.": "Η τελευταία ΨΥΧΗ που έμεινε όρθια.",
+  "Everyone fell in round {round}.": "Όλοι έπεσαν στον γύρο {round}.",
+  "{name} began it with the least SOUL ({soul}).": "{name}: τον ξεκίνησε με τη λιγότερη ΨΥΧΗ ({soul}).",
+  "Everyone fell in round {round}, even in SOUL.": "Όλοι έπεσαν στον γύρο {round}, ίσοι σε ΨΥΧΗ.",
+  "{name} was closest to the TARGET.": "{name}: ήταν πιο κοντά στον ΣΤΟΧΟ.",
+  "Everyone fell in round {round}, even in SOUL and guess.": "Όλοι έπεσαν στον γύρο {round}, ίσοι σε ΨΥΧΗ και μαντεψιά.",
+  "The win is shared.": "Η νίκη μοιράζεται.",
+  "No soul is left.": "Δεν έμεινε καμία ΨΥΧΗ.",
+  "{name} ran out of time and used no ARTIFACT.": "{name}: ξέμεινε από χρόνο και δεν χρησιμοποίησε ΚΕΙΜΗΛΙΟ.",
+  "Deal 5 damage to every player tied closest to the first TARGET, including you.": "Κάνε 5 ζημιά σε κάθε παίκτη που ισοβαθμεί πιο κοντά στον πρώτο ΣΤΟΧΟ, και σε σένα.",
+  "Enter your name to take a seat at the table.": "Γράψε το όνομά σου για να πάρεις θέση στο τραπέζι.",
+  "TOO SLOW": "ΠΟΛΥ ΑΡΓΑ",
+  "No ARTIFACT this round.": "Κανένα ΚΕΙΜΗΛΙΟ αυτόν τον γύρο.",
+  "ran out of time": "ξέμεινε από χρόνο",
+  "Cannot reach the host.": "Δεν βρίσκω τον οικοδεσπότη.",
+  "Same Wi-Fi?": "Ίδιο Wi-Fi;",
+  "The table was reset.": "Το τραπέζι ξεκίνησε από την αρχή.",
+  "Join again.": "Μπες ξανά.",
+  "Room is full": "Το τραπέζι είναι γεμάτο",
+  "Player not found": "Ο παίκτης δεν βρέθηκε",
+  "Enter a number from 0 to 100.": "Γράψε έναν αριθμό από 0 έως 100.",
+  "Choose a target first.": "Διάλεξε πρώτα στόχο.",
+  "A new face": "Ένα νέο πρόσωπο",
+  "Every win buys a reroll of your face.": "Κάθε νίκη αγοράζει ένα reroll του προσώπου σου.",
+  "Rerolls left: {count}": "Reroll που μένουν: {count}",
+  "Roll a demon": "Τράβα έναν δαίμονα",
+  "Roll an Archangel": "Τράβα έναν Αρχάγγελο",
+  "{count} wins open the Archangels.": "{count} νίκες ανοίγουν τους Αρχαγγέλους.",
+  "You have a seat.": "Έχεις θέση.",
+  "The game begins when the host presses Start.": "Το παιχνίδι ξεκινά όταν ο οικοδεσπότης πατήσει Έναρξη.",
+  "Taking your seat at the table...": "Παίρνεις θέση στο τραπέζι...",
+  "Watch the table.": "Κοίτα το τραπέζι.",
+  "You won": "Κέρδισες",
+  "The host can start the next game with Play Again.": "Ο οικοδεσπότης μπορεί να ξεκινήσει το επόμενο παιχνίδι με το Ξαναπαίξε.",
+  "You are out.": "Είσαι εκτός.",
+  "Watch the table: the last soul standing wins.": "Κοίτα το τραπέζι: κερδίζει η τελευταία ΨΥΧΗ που μένει όρθια.",
+  "Waiting for the host...": "Περιμένουμε τον οικοδεσπότη..."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩΝ", "ΨΥΧΗΣ", "ΨΥΧΕΣ", "ΨΥΧΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟ", "ΚΑΤΑΔΙΚΑΣΜΕΝΩΝ", "ΚΑΤΑΔΙΚΑΣΜΕΝΟΥΣ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗ", "ΚΑΤΑΔΙΚΑΣΜΕΝΗΣ", "ΣΦΡΑΓΙΔΑΣ", "ΣΦΡΑΓΙΔΩΝ", "ΚΕΙΜΗΛΙΟΥ", "ΚΕΙΜΗΛΙΩΝ", "ΣΤΟΧΟΥ", "ΣΤΟΧΟ", "ΜΝΗΜΗΣ", "ΜΝΗΜΕΣ", "ΦΟΡΤΙΟΥ", "ΦΟΡΤΙΑ", "ΦΟΡΤΙΩΝ", "ΔΗΛΗΤΗΡΙΟΥ", "ΔΗΛΗΤΗΡΙΑ", "ΕΥΝΟΙΑΣ", "ΜΑΚΕΛΕΙΟΥ", "ΜΑΚΕΛΕΙΑ"];
@@ -3593,7 +3694,108 @@ LOCALES["de"] = {
   "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Gebunden. Ab deinem nächsten Run beginnst du mit {seal}, und an seiner Stelle trittst du dir selbst gegenüber.",
   "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Gebunden. Ab deinem nächsten Run kostet {seal} in den Teufelsgaben nichts, und an seiner Stelle trittst du dir selbst gegenüber.",
   "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Binde ihn, und ab deinem nächsten Run beginnst du mit {seal}, und an seiner Stelle trittst du dir selbst gegenüber.",
-  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Binde ihn, und ab deinem nächsten Run kostet {seal} in den Teufelsgaben nichts, und an seiner Stelle trittst du dir selbst gegenüber."
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Binde ihn, und ab deinem nächsten Run kostet {seal} in den Teufelsgaben nichts, und an seiner Stelle trittst du dir selbst gegenüber.",
+
+  // PvP for release (Nov 27 2026): lobby, clock, reveal, winner, rules (commandments), faces, the phone
+  // texts with {params} and two sentences are looked up whole
+  "{joined} of {seats} seats taken. Open seats are played by the DAMNED.": "{joined} von {seats} Plätzen besetzt. Freie Plätze spielen die VERURTEILTEN.",
+  "{ready} of {total} have guessed. The TARGET is revealed when everyone is in.": "{ready} von {total} haben getippt. Das ZIEL wird enthüllt, wenn alle dabei sind.",
+  "Final TARGET {target}. The next round starts on its own.": "Endgültiges ZIEL {target}. Die nächste Runde beginnt von selbst.",
+  "Every win buys a reroll of your face. Rerolls left: {count}": "Jeder Sieg kauft dir einen Neuwurf deines Gesichts. Übrige Neuwürfe: {count}",
+  "Everyone fell in round {round}. {name} began it with the least SOUL ({soul}).": "Alle fielen in Runde {round}. {name} begann sie mit der wenigsten SEELE ({soul}).",
+  "Everyone fell in round {round}, even in SOUL. {name} was closest to the TARGET.": "Alle fielen in Runde {round}, gleich an SEELE. {name} war dem ZIEL am nächsten.",
+  "Everyone fell in round {round}, even in SOUL and guess. The win is shared.": "Alle fielen in Runde {round}, gleich an SEELE und Tipp. Der Sieg wird geteilt.",
+  "Not working? Try {urls}, and allow DEARTH through the firewall.": "Klappt es nicht? Versuche {urls} und lass DEARTH durch die Firewall.",
+  "Rules": "Regeln",
+  "The Commandments of the Table": "Die Gebote des Tisches",
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.": "Du sollst eine ganze Zahl von 0 bis 100 tippen und sie niemandem verraten.",
+  "The TARGET is the average of all guesses, times the MODIFIER.": "Das ZIEL ist der Durchschnitt aller Tipps, mal den MODIFIKATOR.",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.": "Für jeden Schritt, den du vom endgültigen ZIEL entfernt bist, sollst du 1 SEELE verlieren.",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.": "Triffst du das ZIEL genau, verliert jeder andere Spieler 5 SEELE: einmal für das erste ZIEL, noch einmal für das endgültige.",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS.": "Wenn das erste ZIEL erscheint, sollst du eines von zwei ARTEFAKTEN wählen.",
+  "Each one casts only half of the time.": "Jedes wirkt nur in der Hälfte der Fälle.",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.": "Wer ein ARTEFAKT überspringt, dessen nächstes wirkt gewiss.",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.": "Der MODIFIKATOR wechselt alle 3 Runden und immer dann, wenn das ZIEL 100 erreicht.",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.": "Läuft die Uhr ab, wird ein fehlender Tipp zu 50 und ein fehlendes ARTEFAKT ist verloren.",
+  "The last soul standing wins, and every win buys a new face from the demons.": "Die letzte SEELE, die noch steht, gewinnt, und jeder Sieg kauft ein neues Gesicht von den Dämonen.",
+  "Eight wins open the angels.": "Acht Siege öffnen die Engel.",
+  "If the last ones fall together, whoever began that round with the least SOUL wins.": "Fallen die Letzten zusammen, gewinnt, wer die Runde mit der wenigsten SEELE begann.",
+  "If equal, the closest guess.": "Bei Gleichstand der nächste Tipp.",
+  "If still equal, they share it.": "Steht es dann noch gleich, teilen sie ihn.",
+  "Joined": "Beigetreten",
+  "Alive": "Am Leben",
+  "Artifacts": "Artefakte",
+  "Winner": "Gewinner",
+  "Wins tonight: {count}": "Siege heute Abend: {count}",
+  "Remove {name}": "{name} entfernen",
+  "Too slow": "Zu langsam",
+  "Skip": "Überspringen",
+  "Guaranteed": "Sicher",
+  "Phone connected": "Handy verbunden",
+  "Phone lost: reopen the link": "Handy getrennt: öffne den Link erneut",
+  "Clock": "Uhr",
+  "The phone server is not running.": "Der Handy-Server läuft nicht.",
+  "Start DEARTH with START PVP SERVER, or play against the DAMNED only.": "Starte DEARTH mit START PVP SERVER oder spiele nur gegen die VERURTEILTEN.",
+  "Scan the code or open the link.": "Scanne den Code oder öffne den Link.",
+  "Same Wi-Fi as this screen.": "Dasselbe WLAN wie dieser Bildschirm.",
+  "Not working?": "Klappt es nicht?",
+  "Try {urls}, and allow DEARTH through the firewall.": "Versuche {urls} und lass DEARTH durch die Firewall.",
+  "Allow DEARTH through the firewall.": "Lass DEARTH durch die Firewall.",
+  "Guest Wi-Fi often blocks phones.": "Gäste-WLANs blockieren Handys oft.",
+  "The DAMNED tonight": "Die VERURTEILTEN heute Abend",
+  "Time for each guess and each ARTIFACT choice": "Zeit für jeden Tipp und jede ARTEFAKT-Wahl",
+  "{seconds} s": "{seconds} s",
+  "Off": "Aus",
+  "{joined} of {seats} seats taken.": "{joined} von {seats} Plätzen besetzt.",
+  "Open seats are played by the DAMNED.": "Freie Plätze spielen die VERURTEILTEN.",
+  "{ready} of {total} have guessed.": "{ready} von {total} haben getippt.",
+  "The TARGET is revealed when everyone is in.": "Das ZIEL wird enthüllt, wenn alle dabei sind.",
+  "Everyone has chosen.": "Alle haben gewählt.",
+  "{ready} of {total} have chosen an ARTIFACT.": "{ready} von {total} haben ein ARTEFAKT gewählt.",
+  "The ARTIFACTS answer one by one.": "Die ARTEFAKTE antworten eines nach dem anderen.",
+  "{name}: {artifact} cast": "{name}: {artifact} wirkt",
+  "{name}: {artifact} failed": "{name}: {artifact} versagt",
+  "Final TARGET {target}.": "Endgültiges ZIEL {target}.",
+  "The next round starts on its own.": "Die nächste Runde beginnt von selbst.",
+  "Fell in round {round}": "Gefallen in Runde {round}",
+  "New Table": "Neuer Tisch",
+  "Last soul standing.": "Die letzte SEELE, die noch steht.",
+  "Everyone fell in round {round}.": "Alle fielen in Runde {round}.",
+  "{name} began it with the least SOUL ({soul}).": "{name} begann sie mit der wenigsten SEELE ({soul}).",
+  "Everyone fell in round {round}, even in SOUL.": "Alle fielen in Runde {round}, gleich an SEELE.",
+  "{name} was closest to the TARGET.": "{name} war dem ZIEL am nächsten.",
+  "Everyone fell in round {round}, even in SOUL and guess.": "Alle fielen in Runde {round}, gleich an SEELE und Tipp.",
+  "The win is shared.": "Der Sieg wird geteilt.",
+  "No soul is left.": "Keine SEELE ist übrig.",
+  "{name} ran out of time and used no ARTIFACT.": "{name} war zu langsam und nutzte kein ARTEFAKT.",
+  "Deal 5 damage to every player tied closest to the first TARGET, including you.": "Füge jedem Spieler, der gleichauf am nächsten am ersten ZIEL liegt, 5 Schaden zu, auch dir.",
+  "Enter your name to take a seat at the table.": "Gib deinen Namen ein, um am Tisch Platz zu nehmen.",
+  "TOO SLOW": "ZU LANGSAM",
+  "No ARTIFACT this round.": "Kein ARTEFAKT in dieser Runde.",
+  "ran out of time": "zu langsam",
+  "Cannot reach the host.": "Der Gastgeber ist nicht erreichbar.",
+  "Same Wi-Fi?": "Dasselbe WLAN?",
+  "The table was reset.": "Der Tisch wurde neu gestartet.",
+  "Join again.": "Tritt erneut bei.",
+  "Room is full": "Der Tisch ist voll",
+  "Player not found": "Spieler nicht gefunden",
+  "Enter a number from 0 to 100.": "Gib eine Zahl von 0 bis 100 ein.",
+  "Choose a target first.": "Wähle zuerst ein Ziel.",
+  "A new face": "Ein neues Gesicht",
+  "Every win buys a reroll of your face.": "Jeder Sieg kauft dir einen Neuwurf deines Gesichts.",
+  "Rerolls left: {count}": "Übrige Neuwürfe: {count}",
+  "Roll a demon": "Einen Dämon würfeln",
+  "Roll an Archangel": "Einen Erzengel würfeln",
+  "{count} wins open the Archangels.": "{count} Siege öffnen die Erzengel.",
+  "You have a seat.": "Du hast einen Platz.",
+  "The game begins when the host presses Start.": "Das Spiel beginnt, wenn der Gastgeber auf Start drückt.",
+  "Taking your seat at the table...": "Du nimmst am Tisch Platz...",
+  "Watch the table.": "Sieh auf den Tisch.",
+  "You won": "Du hast gewonnen",
+  "The host can start the next game with Play Again.": "Der Gastgeber kann mit Nochmal spielen das nächste Spiel starten.",
+  "You are out.": "Du bist raus.",
+  "Watch the table: the last soul standing wins.": "Sieh auf den Tisch: die letzte SEELE, die noch steht, gewinnt.",
+  "Waiting for the host...": "Warte auf den Gastgeber..."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["de"] = ["SÜNDEN", "SEELEN", "VERURTEILTEN", "VERURTEILTER", "VERURTEILTEM", "SIEGELS", "ARTEFAKTEN", "ARTEFAKTS", "BOSSEN", "BOSSES", "ZIELS", "ZIELE", "LADUNGEN", "GIFTS", "STURE", "STUREN", "STURER", "STUREM"];
@@ -5204,7 +5406,108 @@ LOCALES["es"] = {
   "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "Atado. Desde tu próxima partida empiezas con {seal}, y te enfrentarás a ti mismo en su lugar.",
   "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Atado. Desde tu próxima partida {seal} no cuesta nada en las Ofrendas del Diablo, y te enfrentarás a ti mismo en su lugar.",
   "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "Átalo, y desde tu próxima partida empiezas con {seal}, y te enfrentarás a ti mismo en su lugar.",
-  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Átalo, y desde tu próxima partida {seal} no cuesta nada en las Ofrendas del Diablo, y te enfrentarás a ti mismo en su lugar."
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "Átalo, y desde tu próxima partida {seal} no cuesta nada en las Ofrendas del Diablo, y te enfrentarás a ti mismo en su lugar.",
+
+  // PvP for release (Nov 27 2026): lobby, clock, reveal, winner, rules (commandments), faces, the phone
+  // texts with {params} and two sentences are looked up whole
+  "{joined} of {seats} seats taken. Open seats are played by the DAMNED.": "{joined} de {seats} asientos ocupados. Los asientos libres los juegan los CONDENADOS.",
+  "{ready} of {total} have guessed. The TARGET is revealed when everyone is in.": "{ready} de {total} han elegido. El OBJETIVO se revela cuando todos han elegido.",
+  "Final TARGET {target}. The next round starts on its own.": "OBJETIVO final {target}. La siguiente ronda empieza sola.",
+  "Every win buys a reroll of your face. Rerolls left: {count}": "Cada victoria compra una renovación de tu rostro. Renovaciones restantes: {count}",
+  "Everyone fell in round {round}. {name} began it with the least SOUL ({soul}).": "Todos cayeron en la ronda {round}. {name} la empezó con menos ALMA ({soul}).",
+  "Everyone fell in round {round}, even in SOUL. {name} was closest to the TARGET.": "Todos cayeron en la ronda {round}, igualados en ALMA. {name} estuvo más cerca del OBJETIVO.",
+  "Everyone fell in round {round}, even in SOUL and guess. The win is shared.": "Todos cayeron en la ronda {round}, igualados en ALMA e intento. La victoria se comparte.",
+  "Not working? Try {urls}, and allow DEARTH through the firewall.": "¿No funciona? Prueba {urls} y permite DEARTH en el cortafuegos.",
+  "Rules": "Reglas",
+  "The Commandments of the Table": "Los Mandamientos de la Mesa",
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.": "Elegirás un número entero del 0 al 100 y no se lo dirás a nadie.",
+  "The TARGET is the average of all guesses, times the MODIFIER.": "El OBJETIVO es la media de todos los intentos, por el MODIFICADOR.",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.": "Por cada paso que estés del OBJETIVO final, perderás 1 ALMA.",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.": "Acierta el OBJETIVO exacto y cada otro jugador pierde 5 ALMA: una vez por el primer OBJETIVO y otra más por el final.",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS.": "Cuando se muestre el primer OBJETIVO, elegirás uno de dos ARTEFACTOS.",
+  "Each one casts only half of the time.": "Cada uno solo funciona la mitad de las veces.",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.": "Quien se salte un ARTEFACTO, el siguiente le funcionará con certeza.",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.": "El MODIFICADOR cambia cada 3 rondas, y siempre que el OBJETIVO llega a 100.",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.": "Cuando se acaba el reloj, un intento que falte pasa a ser 50 y un ARTEFACTO que falte se pierde.",
+  "The last soul standing wins, and every win buys a new face from the demons.": "Gana la última ALMA en pie, y cada victoria compra un rostro nuevo a los demonios.",
+  "Eight wins open the angels.": "Ocho victorias abren los ángeles.",
+  "If the last ones fall together, whoever began that round with the least SOUL wins.": "Si los últimos caen juntos, gana quien empezó esa ronda con menos ALMA.",
+  "If equal, the closest guess.": "Si hay empate, el intento más cercano.",
+  "If still equal, they share it.": "Si siguen empatados, la comparten.",
+  "Joined": "Unidos",
+  "Alive": "Vivos",
+  "Artifacts": "Artefactos",
+  "Winner": "Ganador",
+  "Wins tonight: {count}": "Victorias esta noche: {count}",
+  "Remove {name}": "Quitar a {name}",
+  "Too slow": "Demasiado lento",
+  "Skip": "Saltar",
+  "Guaranteed": "Asegurado",
+  "Phone connected": "Móvil conectado",
+  "Phone lost: reopen the link": "Móvil perdido: vuelve a abrir el enlace",
+  "Clock": "Reloj",
+  "The phone server is not running.": "El servidor para móviles no está en marcha.",
+  "Start DEARTH with START PVP SERVER, or play against the DAMNED only.": "Inicia DEARTH con START PVP SERVER, o juega solo contra los CONDENADOS.",
+  "Scan the code or open the link.": "Escanea el código o abre el enlace.",
+  "Same Wi-Fi as this screen.": "La misma Wi-Fi que esta pantalla.",
+  "Not working?": "¿No funciona?",
+  "Try {urls}, and allow DEARTH through the firewall.": "Prueba {urls} y permite DEARTH en el cortafuegos.",
+  "Allow DEARTH through the firewall.": "Permite DEARTH en el cortafuegos.",
+  "Guest Wi-Fi often blocks phones.": "Las Wi-Fi de invitados suelen bloquear los móviles.",
+  "The DAMNED tonight": "Los CONDENADOS esta noche",
+  "Time for each guess and each ARTIFACT choice": "Tiempo para cada intento y cada elección de ARTEFACTO",
+  "{seconds} s": "{seconds} s",
+  "Off": "No",
+  "{joined} of {seats} seats taken.": "{joined} de {seats} asientos ocupados.",
+  "Open seats are played by the DAMNED.": "Los asientos libres los juegan los CONDENADOS.",
+  "{ready} of {total} have guessed.": "{ready} de {total} han elegido.",
+  "The TARGET is revealed when everyone is in.": "El OBJETIVO se revela cuando todos han elegido.",
+  "Everyone has chosen.": "Todos han elegido.",
+  "{ready} of {total} have chosen an ARTIFACT.": "{ready} de {total} han elegido un ARTEFACTO.",
+  "The ARTIFACTS answer one by one.": "Los ARTEFACTOS responden uno a uno.",
+  "{name}: {artifact} cast": "{name}: {artifact} funcionó",
+  "{name}: {artifact} failed": "{name}: {artifact} falló",
+  "Final TARGET {target}.": "OBJETIVO final {target}.",
+  "The next round starts on its own.": "La siguiente ronda empieza sola.",
+  "Fell in round {round}": "Cayó en la ronda {round}",
+  "New Table": "Mesa Nueva",
+  "Last soul standing.": "La última ALMA en pie.",
+  "Everyone fell in round {round}.": "Todos cayeron en la ronda {round}.",
+  "{name} began it with the least SOUL ({soul}).": "{name} la empezó con menos ALMA ({soul}).",
+  "Everyone fell in round {round}, even in SOUL.": "Todos cayeron en la ronda {round}, igualados en ALMA.",
+  "{name} was closest to the TARGET.": "{name} estuvo más cerca del OBJETIVO.",
+  "Everyone fell in round {round}, even in SOUL and guess.": "Todos cayeron en la ronda {round}, igualados en ALMA e intento.",
+  "The win is shared.": "La victoria se comparte.",
+  "No soul is left.": "No queda ninguna ALMA.",
+  "{name} ran out of time and used no ARTIFACT.": "A {name} se le acabó el tiempo y no usó ningún ARTEFACTO.",
+  "Deal 5 damage to every player tied closest to the first TARGET, including you.": "Inflige 5 de daño a cada jugador empatado como el más cercano al primer OBJETIVO, tú incluido.",
+  "Enter your name to take a seat at the table.": "Escribe tu nombre para sentarte a la mesa.",
+  "TOO SLOW": "DEMASIADO LENTO",
+  "No ARTIFACT this round.": "Ningún ARTEFACTO esta ronda.",
+  "ran out of time": "se quedó sin tiempo",
+  "Cannot reach the host.": "No se encuentra al anfitrión.",
+  "Same Wi-Fi?": "¿La misma Wi-Fi?",
+  "The table was reset.": "La mesa se reinició.",
+  "Join again.": "Únete de nuevo.",
+  "Room is full": "La mesa está llena",
+  "Player not found": "Jugador no encontrado",
+  "Enter a number from 0 to 100.": "Escribe un número del 0 al 100.",
+  "Choose a target first.": "Elige primero un objetivo.",
+  "A new face": "Un rostro nuevo",
+  "Every win buys a reroll of your face.": "Cada victoria compra una renovación de tu rostro.",
+  "Rerolls left: {count}": "Renovaciones restantes: {count}",
+  "Roll a demon": "Sacar un demonio",
+  "Roll an Archangel": "Sacar un arcángel",
+  "{count} wins open the Archangels.": "{count} victorias abren los arcángeles.",
+  "You have a seat.": "Tienes asiento.",
+  "The game begins when the host presses Start.": "La partida empieza cuando el anfitrión pulse Empezar.",
+  "Taking your seat at the table...": "Ocupando tu asiento en la mesa...",
+  "Watch the table.": "Mira la mesa.",
+  "You won": "Has ganado",
+  "The host can start the next game with Play Again.": "El anfitrión puede empezar la siguiente partida con Jugar otra vez.",
+  "You are out.": "Estás fuera.",
+  "Watch the table: the last soul standing wins.": "Mira la mesa: gana la última ALMA en pie.",
+  "Waiting for the host...": "Esperando al anfitrión..."
 };
 // other forms of the terms, styled as keywords in texts (descriptionHtml)
 LOCALE_KEYWORDS["es"] = ["PECADOS", "ALMAS", "CONDENADO", "CONDENADA", "CONDENADAS", "OBJETIVOS", "MEMORIAS", "CARGAS", "VENENOS", "MASACRES", "TERCOS", "TERCA", "TERCAS"];
@@ -6908,8 +7211,2398 @@ LOCALES["zh-Hans"] = {
   "Bound. From your next run, you start with {seal}, and you will face yourself in its place.": "已束缚。从下一局起你开局就带着{seal}，并将在它的位置面对你自己。",
   "Bound. From your next run, {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "已束缚。从下一局起{seal}在恶魔献礼中免费，并且你将在它的位置面对你自己。",
   "Bind it, and from your next run you start with {seal}, and you will face yourself in its place.": "束缚它，从下一局起你开局就带着{seal}，并将在它的位置面对你自己。",
-  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "束缚它，从下一局起{seal}在恶魔献礼中免费，并且你将在它的位置面对你自己。"
+  "Bind it, and from your next run {seal} costs nothing in Devil's Offerings, and you will face yourself in its place.": "束缚它，从下一局起{seal}在恶魔献礼中免费，并且你将在它的位置面对你自己。",
+
+  // PvP for release (Nov 27 2026): lobby, clock, reveal, winner, rules (commandments), faces, the phone
+  // texts with {params} and two sentences are looked up whole
+  "{joined} of {seats} seats taken. Open seats are played by the DAMNED.": "{seats}个座位已坐{joined}个。空座位由罪人来坐。",
+  "{ready} of {total} have guessed. The TARGET is revealed when everyone is in.": "{total}人中已有{ready}人猜完。所有人提交后揭晓目标。",
+  "Final TARGET {target}. The next round starts on its own.": "最终目标{target}。下一回合会自动开始。",
+  "Every win buys a reroll of your face. Rerolls left: {count}": "每场胜利可刷新一次你的面孔。剩余刷新次数：{count}",
+  "Everyone fell in round {round}. {name} began it with the least SOUL ({soul}).": "所有人都在第{round}回合倒下。{name}在该回合开始时灵魂最少（{soul}）。",
+  "Everyone fell in round {round}, even in SOUL. {name} was closest to the TARGET.": "所有人都在第{round}回合倒下，灵魂相同。{name}最接近目标。",
+  "Everyone fell in round {round}, even in SOUL and guess. The win is shared.": "所有人都在第{round}回合倒下，灵魂与猜测都相同。胜利由他们共享。",
+  "Not working? Try {urls}, and allow DEARTH through the firewall.": "连不上？试试{urls}，并允许DEARTH通过防火墙。",
+  "Rules": "规则",
+  "The Commandments of the Table": "牌桌诫命",
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.": "汝当猜一个0到100的整数，且不可告诉任何人。",
+  "The TARGET is the average of all guesses, times the MODIFIER.": "目标是所有猜测的平均值乘以修正值。",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.": "汝离最终目标每差一步，便失去1点灵魂。",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.": "正中目标，其他每位玩家失去5点灵魂：首个目标一次，最终目标再一次。",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS.": "首个目标揭晓后，汝当从两件法器中选一件。",
+  "Each one casts only half of the time.": "每件法器只有一半的机会生效。",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.": "跳过一次法器者，下一件必定生效。",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.": "修正值每3回合变化一次，目标达到100时也会变化。",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.": "时间耗尽时，未提交的猜测记为50，未选择的法器作废。",
+  "The last soul standing wins, and every win buys a new face from the demons.": "最后存活的灵魂获胜，每场胜利都能向恶魔换来一张新面孔。",
+  "Eight wins open the angels.": "八场胜利开启天使。",
+  "If the last ones fall together, whoever began that round with the least SOUL wins.": "若最后几人同时倒下，该回合开始时灵魂最少者获胜。",
+  "If equal, the closest guess.": "若相同，猜得最接近者胜。",
+  "If still equal, they share it.": "若仍相同，则共享胜利。",
+  "Joined": "已加入",
+  "Alive": "存活",
+  "Artifacts": "法器",
+  "Winner": "胜者",
+  "Wins tonight: {count}": "今晚胜场：{count}",
+  "Remove {name}": "移除{name}",
+  "Too slow": "太慢了",
+  "Skip": "跳过",
+  "Guaranteed": "必定生效",
+  "Phone connected": "手机已连接",
+  "Phone lost: reopen the link": "手机已断开：请重新打开链接",
+  "Clock": "计时",
+  "The phone server is not running.": "手机服务器未运行。",
+  "Start DEARTH with START PVP SERVER, or play against the DAMNED only.": "请用START PVP SERVER启动DEARTH，或只与罪人对战。",
+  "Scan the code or open the link.": "扫描二维码或打开链接。",
+  "Same Wi-Fi as this screen.": "与此屏幕连接同一Wi-Fi。",
+  "Not working?": "连不上？",
+  "Try {urls}, and allow DEARTH through the firewall.": "试试{urls}，并允许DEARTH通过防火墙。",
+  "Allow DEARTH through the firewall.": "允许DEARTH通过防火墙。",
+  "Guest Wi-Fi often blocks phones.": "访客Wi-Fi常会屏蔽手机。",
+  "The DAMNED tonight": "今晚的罪人",
+  "Time for each guess and each ARTIFACT choice": "每次猜测和每次选择法器的时间",
+  "{seconds} s": "{seconds}秒",
+  "Off": "关",
+  "{joined} of {seats} seats taken.": "{seats}个座位已坐{joined}个。",
+  "Open seats are played by the DAMNED.": "空座位由罪人来坐。",
+  "{ready} of {total} have guessed.": "{total}人中已有{ready}人猜完。",
+  "The TARGET is revealed when everyone is in.": "所有人提交后揭晓目标。",
+  "Everyone has chosen.": "所有人都已选择。",
+  "{ready} of {total} have chosen an ARTIFACT.": "{total}人中已有{ready}人选好法器。",
+  "The ARTIFACTS answer one by one.": "法器逐一回应。",
+  "{name}: {artifact} cast": "{name}：{artifact}生效",
+  "{name}: {artifact} failed": "{name}：{artifact}失败",
+  "Final TARGET {target}.": "最终目标{target}。",
+  "The next round starts on its own.": "下一回合会自动开始。",
+  "Fell in round {round}": "第{round}回合倒下",
+  "New Table": "新牌桌",
+  "Last soul standing.": "最后存活的灵魂。",
+  "Everyone fell in round {round}.": "所有人都在第{round}回合倒下。",
+  "{name} began it with the least SOUL ({soul}).": "{name}在该回合开始时灵魂最少（{soul}）。",
+  "Everyone fell in round {round}, even in SOUL.": "所有人都在第{round}回合倒下，灵魂相同。",
+  "{name} was closest to the TARGET.": "{name}最接近目标。",
+  "Everyone fell in round {round}, even in SOUL and guess.": "所有人都在第{round}回合倒下，灵魂与猜测都相同。",
+  "The win is shared.": "胜利由他们共享。",
+  "No soul is left.": "没有灵魂留下。",
+  "{name} ran out of time and used no ARTIFACT.": "{name}超时，未使用法器。",
+  "Deal 5 damage to every player tied closest to the first TARGET, including you.": "对所有并列最接近首个目标的玩家造成5点伤害，包括你自己。",
+  "Enter your name to take a seat at the table.": "输入你的名字入座。",
+  "TOO SLOW": "太慢了",
+  "No ARTIFACT this round.": "本回合没有法器。",
+  "ran out of time": "超时",
+  "Cannot reach the host.": "无法连接主机。",
+  "Same Wi-Fi?": "同一Wi-Fi吗？",
+  "The table was reset.": "牌桌已重置。",
+  "Join again.": "请重新加入。",
+  "Room is full": "牌桌已满",
+  "Player not found": "找不到玩家",
+  "Enter a number from 0 to 100.": "请输入0到100之间的数字。",
+  "Choose a target first.": "请先选择目标。",
+  "A new face": "新面孔",
+  "Every win buys a reroll of your face.": "每场胜利可刷新一次你的面孔。",
+  "Rerolls left: {count}": "剩余刷新次数：{count}",
+  "Roll a demon": "抽一个恶魔",
+  "Roll an Archangel": "抽一位天使长",
+  "{count} wins open the Archangels.": "{count}场胜利开启天使长。",
+  "You have a seat.": "你已入座。",
+  "The game begins when the host presses Start.": "主机按下开始后游戏开始。",
+  "Taking your seat at the table...": "正在入座...",
+  "Watch the table.": "请看牌桌。",
+  "You won": "你赢了",
+  "The host can start the next game with Play Again.": "主机可用“再玩一次”开始下一局。",
+  "You are out.": "你出局了。",
+  "Watch the table: the last soul standing wins.": "请看牌桌：最后存活的灵魂获胜。",
+  "Waiting for the host...": "等待主机..."
 };
+// Vendored: qrcode-generator 2.0.4 (npm), MIT license, Copyright (c) 2009 Kazuhiko Arase. Only the global
+// `qrcode` is used (the PvP lobby's join code, pvpQrSvg in 08-pvp.js); the module wrapper at the end was left out.
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
 "use strict";
 
 // GENERATED by scripts/measure-audio.js. Do not edit by hand: run `pnpm run audio:levels`.
@@ -7125,7 +9818,11 @@ const GAME_SFX = {
   // (its toast); the book itself arrives with the pact sound (karmaUnlock)
   codexPage: { srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`), tier: "ui", pitch: 0.1 },
   codexNewPage: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
-  menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 }
+  menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 },
+  // PvP (08-pvp.js): an ARTIFACT that failed to cast fizzles out (the ghostly breath, a bit lower);
+  // the winner gets the pact sound, deeper
+  pvpFizzle: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "item", rate: 0.9 },
+  pvpWinner: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger", rate: 0.92, duck: 3000 }
 };
 
 // tiers -> volumes (see SFX_LEVELS at the top)
@@ -7183,6 +9880,31 @@ const PVP_MODIFIERS = [0.7, 0.8, 0.9, 1, 1.1, 1.2];
 const PVP_MODIFIER_INTERVAL = 3;
 const PVP_PHASE_AUTO_DELAY = 450;
 const PVP_SUMMARY_AUTO_DELAY = 10000;
+// phase clock, picked in the lobby (seconds; 0 = no clock). When it runs out a missing guess becomes
+// PVP_TIMEOUT_GUESS and a missing ARTIFACT is lost (no Skip bonus).
+const PVP_TIMER_OPTIONS = [0, 30, 60];
+const PVP_DEFAULT_TIMER = 30;
+const PVP_TIMEOUT_GUESS = 50;
+const PVP_TIMER_TICK_SECONDS = 5; // the clock ticks out loud for the last seconds
+// wins of the session: each one buys a face reroll (a random Goetic BOSS); this many wins open the Archangels
+const PVP_ARCHANGEL_WINS = 8;
+// the reveal after the ARTIFACTS (ms, before animation speed): each ARTIFACT, the final TARGET, a CRITICAL, the damage
+const PVP_REVEAL_TIMING = { start: 700, artifact: 1150, target: 1100, critical: 1300, damage: 1500 };
+// arcade ARTIFACT sounds for the PvP ARTIFACTS (ARTIFACT_SFX ids); Demon Bowl borrows the chalice
+const PVP_ARTIFACT_SFX = { pulse: "a22", rise: "a6", sink: "a14", shield: "a12", markBest: "a15", jam: "a9" };
+// The PvP rules, as commandments (Rules button on the host and the phones). Translated where shown.
+const PVP_COMMANDMENTS = [
+  "Thou shalt guess a whole number from 0 to 100, and tell no one.",
+  "The TARGET is the average of all guesses, times the MODIFIER.",
+  "For every step thou art from the final TARGET, thou shalt lose 1 SOUL.",
+  "Strike the TARGET exactly and every other player loses 5 SOUL: once for the first TARGET, once more for the final.",
+  "When the first TARGET is shown, thou shalt choose one of two ARTIFACTS. Each one casts only half of the time.",
+  "Whoso skips an ARTIFACT, his next one shall cast for certain.",
+  "The MODIFIER changes every 3 rounds, and whenever the TARGET reaches 100.",
+  "When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost.",
+  "The last soul standing wins, and every win buys a new face from the demons. Eight wins open the angels.",
+  "If the last ones fall together, whoever began that round with the least SOUL wins. If equal, the closest guess. If still equal, they share it."
+];
 const SOUND_SETTINGS_STORAGE_KEY = "dearthSoundSettings";
 const DISPLAY_SETTINGS_STORAGE_KEY = "dearthDisplaySettings";
 // Trembling outlines: 0 = off, 1 = slow (4 drawings/s), 2 = normal (8/s), 3 = fast (12/s)
@@ -7240,7 +9962,7 @@ const PVP_ACTIVES = [
     id: "markBest",
     name: "Sacrificial Dagger",
     icon: "assets/artifacts/occult-items-17/01 SACRIFICIAL DAGGER.png",
-    description: "Deal 5 damage to every player tied closest to the first TARGET.",
+    description: "Deal 5 damage to every player tied closest to the first TARGET, including you.",
     needsTarget: false
   },
   {
@@ -9463,6 +12185,8 @@ const state = {
 
 let pvpPollTimer = null;
 let pvpAutoTimer = null;
+let pvpClockTimer = null; // the PvP phase clock's ticker (08-pvp.js)
+let pvpLastClockSecond = null;
 let soundtrackAudio = null;
 let sealPurchaseSfx = null;
 let guessSfx = null;
@@ -21104,13 +23828,34 @@ function resolveBloodVial(bot) {
   }
 }
 
-function pvpInitialState() {
+// ---------- Local PvP (host side) ----------
+// The host screen runs the table; players join from their phones (controller.html) through the local
+// server (server.js; the desktop app starts its own, see desktop/main.cjs). Empty seats are played by DAMNED.
+// A session lasts while the host stays in PvP: Play Again keeps the table (same phones, same seats) and the
+// wins; New Table starts over. Every win buys a face reroll (a random Goetic BOSS), PVP_ARCHANGEL_WINS wins
+// open the Archangels.
+
+function pvpNewSession() {
+  return {
+    game: 0,
+    // per human player (phone id): { wins, rerolls, image, rerollSeqSeen }
+    players: {},
+    damnedWins: 0,
+    timerSeconds: PVP_DEFAULT_TIMER,
+    removedRemoteIds: new Set()
+  };
+}
+
+function pvpInitialState(session = pvpNewSession(), seatCount = PVP_SLOT_COUNT) {
   return {
     stage: "lobby",
+    session,
+    game: session.game,
     round: 0,
-    slots: Array.from({ length: PVP_SLOT_COUNT }, (_, slot) => null),
+    slots: Array.from({ length: seatCount }, () => null),
     modifier: pvpRollModifier(),
     previousTarget: null,
+    lastRoundTarget: null,
     previousAverage: null,
     previousModifier: null,
     baseTarget: null,
@@ -21124,33 +23869,50 @@ function pvpInitialState() {
     activeResults: [],
     log: [],
     winner: null,
+    winners: [],
+    winReason: null,
+    reveal: null,
     forceModifierNextRound: false,
     modifierRoundsSinceChange: 0,
     waitForHost: false,
     autoKey: null,
     autoDueAt: null,
-    onlineRoom: null,
-    removedRemoteIds: new Set()
+    phaseDeadline: null,
+    phaseRemaining: null,
+    joinInfo: null,
+    rulesOpen: false
   };
 }
 
+function pvpSessionEntry(participant) {
+  if (!state.pvp || !participant?.human) return null;
+  const key = participant.remoteId || participant.id;
+  const players = state.pvp.session.players;
+  if (!players[key]) players[key] = { wins: 0, rerolls: 0, image: null, rerollSeqSeen: 0 };
+  return players[key];
+}
+
 function pvpParticipant(slot, name, human = true, remoteId = null) {
-  return {
+  const participant = {
     id: remoteId || `local-${slot}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     slot,
     name: name || `Player ${slot + 1}`,
     human,
     remoteId,
+    connected: true,
     color: randomFrom(BOT_ARCHETYPES).color,
     image: randomBotImage(),
     hp: PVP_MAX_HP,
     maxHp: PVP_MAX_HP,
     eliminated: false,
+    fellRound: null,
     guess: null,
+    autoGuess: false,
     firstPhaseGuess: null,
     activeOptions: [],
     activeChoiceId: null,
     activeTargetId: null,
+    activeTimedOut: false,
     activeCast: null,
     activeResolved: false,
     activeGuaranteeThisRound: false,
@@ -21162,6 +23924,13 @@ function pvpParticipant(slot, name, human = true, remoteId = null) {
     damageSources: [],
     critical: false
   };
+  // a phone keeps its face (and its rerolled faces) for the whole session
+  const entry = human && state.pvp ? pvpSessionEntry(participant) : null;
+  if (entry) {
+    if (entry.image) participant.image = entry.image;
+    else entry.image = participant.image;
+  }
+  return participant;
 }
 
 function pvpBot(slot) {
@@ -21197,6 +23966,14 @@ function pvpAddLog(message) {
   state.pvp.log = state.pvp.log.slice(0, 8);
 }
 
+// sounds never stop the game (no audio in tests, blocked autoplay...)
+function pvpSfx(play) {
+  try {
+    play();
+  } catch (error) {}
+}
+
+// ---------- automatic flow ----------
 function pvpClearAutoTimer() {
   if (pvpAutoTimer) clearTimeout(pvpAutoTimer);
   pvpAutoTimer = null;
@@ -21228,20 +24005,154 @@ function pvpMaybeAutoAdvance() {
     return;
   }
   if (pvp.stage === "guess" && pvpAllGuessesReady()) {
-    pvpScheduleAuto(`guess-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpPrepareActivePhase);
+    pvpScheduleAuto(`guess-${pvp.game}-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpPrepareActivePhase);
     return;
   }
   if (pvp.stage === "active" && pvpAllActivesReady()) {
-    pvpScheduleAuto(`active-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpResolveActives);
+    pvpScheduleAuto(`active-${pvp.game}-${pvp.round}`, PVP_PHASE_AUTO_DELAY, pvpResolveActives);
+    return;
+  }
+  if (pvp.stage === "reveal" && pvp.reveal) {
+    const step = pvp.reveal.steps[pvp.reveal.index];
+    const shownKind = pvp.reveal.steps[pvp.reveal.index - 1]?.kind;
+    // big tables answer their ARTIFACTS faster, so a round's reveal stays short
+    const artifactSteps = pvp.reveal.steps.filter((entry) => entry.kind === "artifact").length;
+    const artifactDelay = clamp(Math.round((PVP_REVEAL_TIMING.artifact * 5) / Math.max(5, artifactSteps)), 550, PVP_REVEAL_TIMING.artifact);
+    const delay = pvp.reveal.index === 0 ? PVP_REVEAL_TIMING.start : shownKind === "artifact" ? artifactDelay : PVP_REVEAL_TIMING[shownKind] || 900;
+    pvpScheduleAuto(`reveal-${pvp.game}-${pvp.round}-${pvp.reveal.index}`, pvpMs(delay), step ? pvpAdvanceReveal : pvpFinishRound);
     return;
   }
   if (pvp.stage === "summary") {
-    pvpScheduleAuto(`summary-${pvp.round}`, PVP_SUMMARY_AUTO_DELAY, pvpNextRound);
+    pvpScheduleAuto(`summary-${pvp.game}-${pvp.round}`, PVP_SUMMARY_AUTO_DELAY, pvpNextRound);
     return;
   }
   pvpClearAutoTimer();
 }
 
+// reveal timings follow Settings > Gameplay > animation speed
+function pvpMs(ms) {
+  return typeof gameMs === "function" ? gameMs(ms) : ms;
+}
+
+// ---------- the phase clock ----------
+function pvpClockRunning() {
+  const pvp = state.pvp;
+  return Boolean(pvp && (pvp.stage === "guess" || pvp.stage === "active") && Number.isFinite(pvp.phaseDeadline));
+}
+
+function pvpStartPhaseClock() {
+  const pvp = state.pvp;
+  pvp.phaseRemaining = null;
+  pvp.phaseDeadline = pvp.session.timerSeconds > 0 ? Date.now() + pvp.session.timerSeconds * 1000 : null;
+  pvpEnsureClockTicker();
+}
+
+function pvpStopPhaseClock() {
+  if (!state.pvp) return;
+  state.pvp.phaseDeadline = null;
+  state.pvp.phaseRemaining = null;
+}
+
+function pvpClockSecondsLeft() {
+  const pvp = state.pvp;
+  if (!pvp) return null;
+  if (Number.isFinite(pvp.phaseRemaining)) return Math.ceil(pvp.phaseRemaining / 1000);
+  if (!Number.isFinite(pvp.phaseDeadline)) return null;
+  return Math.max(0, Math.ceil((pvp.phaseDeadline - Date.now()) / 1000));
+}
+
+function pvpEnsureClockTicker() {
+  if (pvpClockTimer || typeof setInterval !== "function") return;
+  pvpClockTimer = setInterval(pvpClockTick, 250);
+}
+
+function pvpStopClockTicker() {
+  if (pvpClockTimer) clearInterval(pvpClockTimer);
+  pvpClockTimer = null;
+  pvpLastClockSecond = null;
+}
+
+// updates the countdown on screen without a full render, ticks out loud at the end, and runs out
+function pvpClockTick() {
+  const pvp = state.pvp;
+  if (!pvp || state.mode !== "pvp") {
+    pvpStopClockTicker();
+    return;
+  }
+  if (!pvpClockRunning() || pvp.waitForHost) return;
+  const left = pvpClockSecondsLeft();
+  if (typeof document !== "undefined") {
+    document.querySelectorAll("[data-pvp-clock]").forEach((element) => {
+      element.textContent = String(left);
+      element.closest(".pvp-clock")?.classList.toggle("pvp-clock-low", left <= PVP_TIMER_TICK_SECONDS);
+    });
+  }
+  if (left !== pvpLastClockSecond) {
+    pvpLastClockSecond = left;
+    if (left > 0 && left <= PVP_TIMER_TICK_SECONDS) pvpSfx(playClockTickSfx);
+  }
+  if (Date.now() >= pvp.phaseDeadline) pvpTimerExpired();
+}
+
+function pvpTimerExpired() {
+  const pvp = state.pvp;
+  if (!pvp) return;
+  const missing = pvpAliveParticipants();
+  if (pvp.stage === "guess") {
+    missing
+      .filter((participant) => !Number.isFinite(participant.guess))
+      .forEach((participant) => {
+        participant.guess = PVP_TIMEOUT_GUESS;
+        participant.autoGuess = true;
+        pvpAddLog(`${participant.name} ran out of time: guess ${PVP_TIMEOUT_GUESS}.`);
+      });
+    pvpStopPhaseClock();
+    pvpPrepareActivePhase();
+    return;
+  }
+  if (pvp.stage === "active") {
+    missing
+      .filter((participant) => !participant.activeChoiceId)
+      .forEach((participant) => {
+        participant.activeChoiceId = PVP_SKIP_ACTIVE.id;
+        participant.activeTimedOut = true;
+        participant.activeTargetId = null;
+      });
+    pvpStopPhaseClock();
+    pvpResolveActives();
+  }
+}
+
+// The host's Pause holds the automatic flow and the clock; phones are told the game is paused.
+function pvpSetHostPaused(paused) {
+  const pvp = state.pvp;
+  if (!pvp) return;
+  pvp.waitForHost = Boolean(paused);
+  if (paused) {
+    pvpClearAutoTimer();
+    if (Number.isFinite(pvp.phaseDeadline)) {
+      pvp.phaseRemaining = Math.max(0, pvp.phaseDeadline - Date.now());
+    }
+  } else {
+    if (Number.isFinite(pvp.phaseRemaining) && Number.isFinite(pvp.phaseDeadline)) {
+      pvp.phaseDeadline = Date.now() + pvp.phaseRemaining;
+    }
+    pvp.phaseRemaining = null;
+    pvpMaybeAutoAdvance();
+  }
+  pvpPostHostState();
+}
+
+function pvpCycleTimer() {
+  const pvp = state.pvp;
+  if (!pvp || pvp.stage !== "lobby") return;
+  const index = PVP_TIMER_OPTIONS.indexOf(pvp.session.timerSeconds);
+  pvp.session.timerSeconds = PVP_TIMER_OPTIONS[(index + 1) % PVP_TIMER_OPTIONS.length];
+  pvpPostHostState();
+  render();
+}
+
+// ---------- entering, leaving, rematch ----------
 function startPvpMode() {
   if (isNativeArcadeApp()) {
     showMainMenu();
@@ -21254,7 +24165,9 @@ function startPvpMode() {
   state.pvp = pvpInitialState();
   pvpAddLog("The lobby is open.");
   pvpHostResetRoom();
+  pvpFetchJoinInfo();
   pvpStartHostPolling();
+  pvpEnsureClockTicker();
   render();
 }
 
@@ -21285,23 +24198,49 @@ async function requestPvpMode() {
   }
   if (await pvpOpenServedHostIfAvailable()) return;
   startPvpMode();
-  if (!pvpServerEnabled()) pvpAddLog("Phone server is not running. Browser security cannot start it from a local file.");
 }
 
+// New Table: everyone leaves, the wins of the session are forgotten
 function restartPvpMode() {
   resumeSoundtrack();
   pvpClearAutoTimer();
   state.pauseOpen = false;
+  const joinInfo = state.pvp?.joinInfo || null;
   state.pvp = pvpInitialState();
-  pvpAddLog("PvP restarted.");
+  state.pvp.joinInfo = joinInfo;
+  pvpAddLog("New table.");
   pvpHostResetRoom();
+  if (!joinInfo) pvpFetchJoinInfo();
   pvpStartHostPolling();
+  render();
+}
+
+// Play Again: same table, same phones in the same seats, the session's wins kept; the DAMNED leave
+// (fresh ones take the open seats at Start)
+function pvpRematch() {
+  const old = state.pvp;
+  if (!old) return;
+  resumeSoundtrack();
+  pvpClearAutoTimer();
+  state.pauseOpen = false;
+  const next = pvpInitialState(old.session, old.slots.length);
+  next.joinInfo = old.joinInfo;
+  state.pvp = next;
+  old.slots.forEach((participant, slot) => {
+    if (!participant?.human) return;
+    const seated = pvpParticipant(slot, participant.name, true, participant.remoteId);
+    seated.connected = participant.connected;
+    next.slots[slot] = seated;
+  });
+  pvpAddLog("Same table, new game.");
+  pvpPostHostState();
   render();
 }
 
 function switchToArcadeMode() {
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  pvpStopClockTicker();
   state.pauseOpen = false;
   state.pvp = null;
   startGame();
@@ -21317,12 +24256,10 @@ function pvpNormalizeSlots() {
 function pvpAddEmptySlot() {
   if (!state.pvp || state.pvp.stage !== "lobby") return;
   if (state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) {
-    pvpAddLog(`The table seats up to ${PVP_MAX_SLOT_COUNT}.`);
     render();
     return;
   }
   state.pvp.slots.push(null);
-  pvpAddLog(`Seat ${state.pvp.slots.length} added.`);
   pvpPostHostState();
   render();
 }
@@ -21346,26 +24283,16 @@ function pvpRemoveEmptySlot() {
   }
 }
 
-// The host's Pause holds the automatic flow; phones are told the game is paused.
-function pvpSetHostPaused(paused) {
-  if (!state.pvp) return;
-  state.pvp.waitForHost = Boolean(paused);
-  if (paused) pvpClearAutoTimer();
-  else pvpMaybeAutoAdvance();
-  pvpPostHostState();
-}
-
 function pvpRemoveLobbySlot(slot) {
   if (!state.pvp || state.pvp.stage !== "lobby") return;
   if (slot < 0 || slot >= state.pvp.slots.length) return;
   if (state.pvp.slots.length <= 2) {
-    pvpAddLog("The table needs at least two seats.");
     render();
     return;
   }
   const [removed] = state.pvp.slots.splice(slot, 1);
   if (removed?.remoteId) {
-    state.pvp.removedRemoteIds.add(removed.remoteId);
+    state.pvp.session.removedRemoteIds.add(removed.remoteId);
     pvpRemoveRemotePlayer(removed.remoteId);
   }
   pvpNormalizeSlots();
@@ -21375,23 +24302,25 @@ function pvpRemoveLobbySlot(slot) {
 }
 
 function pvpFillBotsAndStart() {
-  if (state.pvp.slots.length < 2) {
-    pvpAddLog("The table needs at least two seats.");
-    render();
-    return;
-  }
-  state.pvp.slots = state.pvp.slots.map((participant, slot) => participant || pvpBot(slot));
+  const pvp = state.pvp;
+  if (!pvp || pvp.stage !== "lobby" || pvp.slots.length < 2) return;
+  pvp.slots = pvp.slots.map((participant, slot) => participant || pvpBot(slot));
   pvpNormalizeSlots();
-  pvpAddLog("The DAMNED took the open seats.");
+  pvp.session.game += 1;
+  pvp.game = pvp.session.game;
   pvpStartRound();
 }
 
+// ---------- a round ----------
 function pvpStartRound() {
   const pvp = state.pvp;
   pvpClearAutoTimer();
   pvp.round += 1;
   pvp.stage = "guess";
+  // "Previous" on the screens: the final TARGET of the round before
+  pvp.lastRoundTarget = pvp.previousTarget;
   pvp.log = [];
+  pvp.reveal = null;
   const forcedModifierChange = pvp.forceModifierNextRound;
   const roundsSinceModifierChange = Number.isFinite(pvp.modifierRoundsSinceChange) ? pvp.modifierRoundsSinceChange : 0;
   const scheduledModifierChange = pvp.round === 1 || roundsSinceModifierChange >= PVP_MODIFIER_INTERVAL;
@@ -21399,11 +24328,6 @@ function pvpStartRound() {
     pvp.modifier = pvpRollModifier(pvp.round === 1 ? null : pvp.modifier);
     pvp.forceModifierNextRound = false;
     pvp.modifierRoundsSinceChange = 1;
-    pvpAddLog(
-      forcedModifierChange
-        ? `Target reached 100. Modifier changed to ${pvp.modifier.toFixed(1)}.`
-        : `Modifier set to ${pvp.modifier.toFixed(1)}.`
-    );
   } else {
     pvp.modifierRoundsSinceChange = roundsSinceModifierChange + 1;
   }
@@ -21427,10 +24351,12 @@ function pvpStartRound() {
     participant.activeGuaranteeThisRound = Boolean(participant.activeGuaranteeNextRound);
     participant.activeGuaranteeNextRound = false;
     participant.guess = participant.human ? null : pvpBotGuess(participant);
+    participant.autoGuess = false;
     participant.firstPhaseGuess = null;
     participant.activeOptions = [];
     participant.activeChoiceId = null;
     participant.activeTargetId = null;
+    participant.activeTimedOut = false;
     participant.activeCast = null;
     participant.activeResolved = false;
     participant.damageReduction = 0;
@@ -21438,7 +24364,8 @@ function pvpStartRound() {
     participant.damageSources = [];
     participant.critical = false;
   });
-  pvpAddLog(`Round ${pvp.round} guess phase.`);
+  if (pvp.round > 1) pvpSfx(playNextRoundSfx);
+  pvpStartPhaseClock();
   pvpMaybeAutoAdvance();
   pvpPostHostState();
   render();
@@ -21469,19 +24396,17 @@ function pvpAllGuessesReady() {
 
 function pvpPrepareActivePhase() {
   pvpClearAutoTimer();
+  if (!state.pvp || state.pvp.stage !== "guess") return;
   if (!pvpAllGuessesReady()) {
-    pvpAddLog("Waiting for every living player to guess.");
     render();
     return;
   }
   const pvp = state.pvp;
+  pvpStopPhaseClock();
   const alive = pvpAliveParticipants();
   pvp.tableAverage = average(alive.map((participant) => participant.guess));
   pvp.baseTarget = Math.ceil(pvp.tableAverage * pvp.modifier);
   pvp.finalTarget = pvp.baseTarget;
-  pvp.previousTarget = pvp.baseTarget;
-  pvp.previousAverage = pvp.tableAverage;
-  pvp.previousModifier = pvp.modifier;
   pvp.criticalHitIds = new Set(
     alive.filter((participant) => participant.guess === pvp.baseTarget).map((participant) => participant.id)
   );
@@ -21491,12 +24416,14 @@ function pvpPrepareActivePhase() {
     participant.activeOptions = shuffled(PVP_ACTIVES).slice(0, 2);
     participant.activeChoiceId = null;
     participant.activeTargetId = null;
+    participant.activeTimedOut = false;
     participant.activeCast = null;
     participant.activeResolved = false;
     if (!participant.human) pvpChooseBotActive(participant);
   });
   pvp.stage = "active";
-  pvpAddLog(`First target ${pvp.baseTarget}. Choose one Artifact.`);
+  pvpSfx(() => playGameSfx("targetLand"));
+  pvpStartPhaseClock();
   pvpMaybeAutoAdvance();
   pvpPostHostState();
   render();
@@ -21535,19 +24462,27 @@ function pvpDamageParticipant(participant, amount, reason, source = undefined) {
   }
   if (participant.hp <= 0) {
     participant.eliminated = true;
+    participant.fellRound = state.pvp.round;
     state.pvp.activeResults.push(`${participant.name} was eliminated.`);
   }
   return damage;
 }
 
-function pvpNoSurvivorWinner() {
-  const candidates = state.pvp.slots.filter(
-    (participant) => participant?.aliveAtRoundStart && Number.isFinite(participant.roundStartHp)
-  );
-  if (!candidates.length) return null;
-  return candidates
-    .slice()
-    .sort((left, right) => left.roundStartHp - right.roundStartHp || left.slot - right.slot)[0];
+// Everyone left fell in the same round: the one who started it with the least SOUL wins; if equal, the
+// guess closest to the final TARGET; if still equal, the win is shared.
+function pvpNoSurvivorWinners() {
+  const pvp = state.pvp;
+  const candidates = pvp.slots.filter((participant) => participant?.aliveAtRoundStart && Number.isFinite(participant.roundStartHp));
+  if (!candidates.length) return { winners: [], reason: { kind: "none", round: pvp.round } };
+  const leastSoul = Math.min(...candidates.map((participant) => participant.roundStartHp));
+  const bySoul = candidates.filter((participant) => participant.roundStartHp === leastSoul);
+  if (bySoul.length === 1) return { winners: bySoul, reason: { kind: "lowestSoul", round: pvp.round, soul: leastSoul } };
+  const distance = (participant) =>
+    Number.isFinite(participant.guess) && Number.isFinite(pvp.finalTarget) ? Math.abs(participant.guess - pvp.finalTarget) : Infinity;
+  const closest = Math.min(...bySoul.map(distance));
+  const byGuess = bySoul.filter((participant) => distance(participant) === closest);
+  if (byGuess.length === 1) return { winners: byGuess, reason: { kind: "closest", round: pvp.round, soul: leastSoul } };
+  return { winners: byGuess, reason: { kind: "shared", round: pvp.round, soul: leastSoul } };
 }
 
 function pvpBestGuessParticipants() {
@@ -21573,8 +24508,10 @@ function pvpResolveActiveCast(participant) {
     participant.activeCast = null;
     participant.activeResolved = true;
     participant.activeGuaranteeThisRound = false;
-    participant.activeGuaranteeNextRound = true;
-    pvp.activeResults.push(`${participant.name} skipped Artifact use. Next round their Artifact will cast for sure.`);
+    // running out of time is not a Skip: no sure cast next round
+    participant.activeGuaranteeNextRound = !participant.activeTimedOut;
+    if (participant.activeTimedOut) pvp.activeResults.push(`${participant.name} ran out of time and used no ARTIFACT.`);
+    else pvp.activeResults.push(`${participant.name} skipped Artifact use. Next round their Artifact will cast for sure.`);
     return;
   }
   const guaranteed = Boolean(participant.activeGuaranteeThisRound);
@@ -21614,7 +24551,7 @@ function pvpApplyActiveEffect(participant) {
     );
   } else if (active.id === "jam") {
     const target = pvp.slots.find((candidate) => candidate?.id === participant.activeTargetId);
-    if (target && !target.eliminated) {
+    if (target && target.aliveAtRoundStart) {
       pvp.removedIds.add(target.id);
       pvp.activeResults.push(`${participant.name} used Inverted Cross on ${target.name}; ${target.name}'s guess no longer counts.`);
     }
@@ -21626,38 +24563,63 @@ function pvpResolveActiveChoice(participant) {
   pvpApplyActiveEffect(participant);
 }
 
+// the TARGET with the ARTIFACTS applied so far: every player alive when the ARTIFACTS resolve counts
+// (one knocked out by an ARTIFACT or a CRITICAL keeps their guess in), minus the Inverted Crosses
+function pvpTargetFrom(counted) {
+  const pvp = state.pvp;
+  const kept = counted.filter((participant) => !pvp.removedIds.has(participant.id));
+  const averageGuess = kept.length ? average(kept.map((participant) => participant.guess)) : 0;
+  return { average: averageGuess, target: Math.ceil(averageGuess * pvp.modifier + pvp.targetOffset) };
+}
+
+// Works out the whole round at once, then plays it back step by step (stage "reveal"): every ARTIFACT
+// cast or failed and what it did to the TARGET, the final TARGET, the CRITICALS, then the damage.
 function pvpResolveActives() {
   pvpClearAutoTimer();
+  const pvp = state.pvp;
+  if (!pvp || pvp.stage !== "active") return;
   if (!pvpAllActivesReady()) {
-    pvpAddLog("Waiting for every living player to choose an Artifact.");
     render();
     return;
   }
-  const pvp = state.pvp;
+  pvpStopPhaseClock();
   pvp.activeResults = [];
   pvp.removedIds = new Set();
   pvp.targetOffset = 0;
 
   const resolvingParticipants = pvpAliveParticipants();
+  const hpBefore = {};
   resolvingParticipants.forEach((participant) => {
     participant.damageReduction = 0;
+    hpBefore[participant.id] = participant.hp;
   });
   resolvingParticipants.forEach((participant) => pvpResolveActiveCast(participant));
-  resolvingParticipants.forEach((participant) => pvpApplyActiveEffect(participant));
+
+  const steps = [];
+  resolvingParticipants.forEach((participant) => {
+    const before = pvpTargetFrom(resolvingParticipants).target;
+    pvpApplyActiveEffect(participant);
+    const active = pvpActiveById(participant.activeChoiceId);
+    if (active.skip) return;
+    const after = pvpTargetFrom(resolvingParticipants).target;
+    steps.push({ kind: "artifact", id: participant.id, activeId: active.id, cast: Boolean(participant.activeCast), from: before, to: after });
+  });
 
   const criticalHitters = pvp.slots.filter((participant) => participant && pvp.criticalHitIds.has(participant.id));
+  if (criticalHitters.length) steps.push({ kind: "critical", ids: criticalHitters.map((participant) => participant.id), first: true });
   criticalHitters.forEach((hitter) => {
     pvpAliveParticipants()
       .filter((target) => target.id !== hitter.id)
       .forEach((target) => pvpDamageParticipant(target, 5, `${hitter.name} hit CRITICAL: ${target.name} took 5.`, `CRITICAL from ${hitter.name}`));
   });
 
-  const finalParticipants = pvpAliveParticipants().filter((participant) => !pvp.removedIds.has(participant.id));
-  pvp.finalAverage = finalParticipants.length ? average(finalParticipants.map((participant) => participant.guess)) : 0;
-  pvp.finalTarget = Math.ceil(pvp.finalAverage * pvp.modifier + pvp.targetOffset);
+  const final = pvpTargetFrom(resolvingParticipants);
+  pvp.finalAverage = final.average;
+  pvp.finalTarget = final.target;
   pvp.previousTarget = pvp.finalTarget;
   pvp.previousAverage = pvp.finalAverage;
   pvp.previousModifier = pvp.modifier;
+  steps.push({ kind: "target", to: pvp.finalTarget });
   if (pvp.finalTarget >= 100) {
     pvp.forceModifierNextRound = true;
     pvp.activeResults.push("Final target reached 100. Multiplier will change next round.");
@@ -21665,6 +24627,7 @@ function pvpResolveActives() {
 
   const finalCriticalHitters = pvpAliveParticipants().filter((participant) => participant.guess === pvp.finalTarget);
   pvp.finalCriticalHitIds = new Set(finalCriticalHitters.map((participant) => participant.id));
+  if (finalCriticalHitters.length) steps.push({ kind: "critical", ids: finalCriticalHitters.map((participant) => participant.id), first: false });
   finalCriticalHitters.forEach((hitter) => {
     hitter.critical = true;
     pvpAliveParticipants()
@@ -21678,24 +24641,113 @@ function pvpResolveActives() {
     const damage = Math.ceil(Math.abs(participant.guess - pvp.finalTarget));
     pvpDamageParticipant(participant, damage, `${participant.name} took ${damage} target damage.`, "Target difference");
   });
+  steps.push({ kind: "damage" });
 
+  pvp.reveal = {
+    steps,
+    index: 0,
+    hpBefore,
+    shownTarget: pvp.baseTarget,
+    targetDelta: 0,
+    focusId: null,
+    criticalIds: [],
+    damageShown: false
+  };
+  pvp.stage = "reveal";
+  pvpMaybeAutoAdvance();
+  pvpPostHostState();
+  render();
+}
+
+function pvpRevealHidesDamage() {
+  return Boolean(state.pvp?.stage === "reveal" && state.pvp.reveal && !state.pvp.reveal.damageShown);
+}
+
+// the ARTIFACT step of this player has been shown (always true outside the reveal)
+function pvpRevealShowsArtifact(participant) {
+  const reveal = state.pvp?.reveal;
+  if (state.pvp?.stage !== "reveal" || !reveal) return true;
+  const stepIndex = reveal.steps.findIndex((step) => step.kind === "artifact" && step.id === participant.id);
+  return stepIndex < 0 || stepIndex < reveal.index;
+}
+
+function pvpAdvanceReveal() {
+  const pvp = state.pvp;
+  const reveal = pvp?.reveal;
+  if (!reveal || pvp.stage !== "reveal") return;
+  const step = reveal.steps[reveal.index];
+  if (!step) {
+    pvpFinishRound();
+    return;
+  }
+  reveal.index += 1;
+  reveal.focusId = null;
+  reveal.criticalIds = [];
+  reveal.targetDelta = 0;
+  if (step.kind === "artifact") {
+    reveal.focusId = step.id;
+    if (step.cast) pvpSfx(() => playArtifactSfx(PVP_ARTIFACT_SFX[step.activeId]));
+    else pvpSfx(() => playGameSfx("pvpFizzle"));
+    if (step.to !== step.from) {
+      reveal.targetDelta = step.to - step.from;
+      reveal.shownTarget = step.to;
+    }
+  } else if (step.kind === "target") {
+    reveal.targetDelta = step.to - reveal.shownTarget;
+    reveal.shownTarget = step.to;
+    pvpSfx(() => playGameSfx("targetLand"));
+  } else if (step.kind === "critical") {
+    reveal.criticalIds = step.ids;
+    pvpSfx(() => playGameSfx("critical"));
+  } else if (step.kind === "damage") {
+    reveal.damageShown = true;
+    const hits = pvp.slots.filter((participant) => participant?.lastDamage > 0);
+    const biggest = Math.max(0, ...hits.map((participant) => participant.lastDamage / Math.max(1, participant.maxHp)));
+    const knockedOut = pvp.slots.some((participant) => participant?.eliminated && participant.fellRound === pvp.round);
+    if (knockedOut) pvpSfx(() => playGameSfx("ko"));
+    else if (biggest > 0) pvpSfx(() => playGameSfx(biggest >= 0.2 ? "hitBig" : biggest >= 0.08 ? "hitMid" : "hitSmall"));
+  }
+  pvpMaybeAutoAdvance();
+  pvpPostHostState();
+  render();
+}
+
+function pvpFinishRound() {
+  pvpClearAutoTimer();
+  const pvp = state.pvp;
+  if (!pvp || pvp.stage !== "reveal") return;
+  pvp.reveal = null;
   const alive = pvpAliveParticipants();
   if (alive.length <= 1) {
-    pvp.stage = "ended";
-    const tiebreakWinner = alive.length ? null : pvpNoSurvivorWinner();
-    pvp.winner = alive[0]?.name || tiebreakWinner?.name || "No one";
-    pvpAddLog(
-      tiebreakWinner
-        ? `${pvp.winner} wins PvP by lowest starting SOUL (${tiebreakWinner.roundStartHp}).`
-        : `${pvp.winner} wins PvP.`
-    );
+    const decided = alive.length ? { winners: alive, reason: { kind: "last", round: pvp.round } } : pvpNoSurvivorWinners();
+    pvpEndGame(decided.winners, decided.reason);
   } else {
     pvp.stage = "summary";
-    pvpAddLog(`Round ${pvp.round} resolved.`);
     pvpMaybeAutoAdvance();
   }
   pvpPostHostState();
   render();
+}
+
+function pvpEndGame(winners, reason) {
+  const pvp = state.pvp;
+  pvp.stage = "ended";
+  pvp.winners = winners.map((participant) => participant.id);
+  pvp.winner = winners.length ? winners.map((participant) => participant.name).join(" & ") : "No one";
+  pvp.winReason = reason;
+  // the session's tally: a shared win counts for each; DAMNED wins count together
+  let damnedWon = false;
+  winners.forEach((participant) => {
+    const entry = pvpSessionEntry(participant);
+    if (entry) {
+      entry.wins += 1;
+      entry.rerolls += 1;
+    } else {
+      damnedWon = true;
+    }
+  });
+  if (damnedWon) pvp.session.damnedWins += 1;
+  pvpSfx(() => playGameSfx("pvpWinner"));
 }
 
 function pvpNextRound() {
@@ -21704,62 +24756,148 @@ function pvpNextRound() {
   pvpStartRound();
 }
 
+// winners first, then whoever lasted longer, then more SOUL at the start of the round they fell in
+function pvpStandings() {
+  const pvp = state.pvp;
+  const winners = new Set(pvp.winners || []);
+  return pvp.slots
+    .filter(Boolean)
+    .slice()
+    .sort((left, right) => {
+      const winDiff = Number(winners.has(right.id)) - Number(winners.has(left.id));
+      if (winDiff) return winDiff;
+      const fell = (participant) => (participant.eliminated ? participant.fellRound || 0 : Infinity);
+      if (fell(right) !== fell(left)) return fell(right) - fell(left);
+      return (right.roundStartHp || 0) - (left.roundStartHp || 0) || left.slot - right.slot;
+    });
+}
+
+function pvpWins(participant) {
+  if (!participant?.human || !state.pvp) return 0;
+  return state.pvp.session.players[participant.remoteId || participant.id]?.wins || 0;
+}
+
+// ---------- faces: every win buys a reroll ----------
+function pvpFaceChoices(kind) {
+  if (kind === "archangel") return ARCHANGEL_BOSS_SPECS.map((spec) => `${ARCHANGEL_BOSS_IMAGE_ROOT}/${spec.image}`);
+  return GOETIC_BOSS_SPECS.map((spec) => `${GOETIC_BOSS_IMAGE_ROOT}/${spec.image}`);
+}
+
+function pvpRerollFace(participant, kind = "goetic") {
+  const entry = pvpSessionEntry(participant);
+  if (!entry || entry.rerolls <= 0) return false;
+  if (kind === "archangel" && entry.wins < PVP_ARCHANGEL_WINS) return false;
+  const choices = pvpFaceChoices(kind).filter((image) => image !== participant.image);
+  if (!choices.length) return false;
+  entry.rerolls -= 1;
+  entry.image = randomFrom(choices);
+  participant.image = entry.image;
+  pvpSfx(() => playGameSfx("reroll"));
+  return true;
+}
+
+// ---------- what the phones see ----------
 function pvpJoinUrl() {
-  if (typeof location === "undefined" || !location.origin || location.protocol === "file:") {
-    return "Run start_pvp_server.bat, then open the shown phone URL.";
+  const info = state.pvp?.joinInfo;
+  if (info?.url) return info.url;
+  if (typeof location !== "undefined" && /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(location.hostname)) {
+    return `${location.origin}/controller.html`;
   }
-  return `${location.origin}/controller.html`;
+  return "";
+}
+
+// The commandments' Roman numbers
+function pvpRoman(number) {
+  return ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][number - 1] || String(number);
 }
 
 function pvpPublicState() {
-  if (!state.pvp) return null;
-  const revealActiveChoices = state.pvp.stage !== "active" || pvpAllActivesReady();
+  const pvp = state.pvp;
+  if (!pvp) return null;
+  const revealActiveChoices = pvp.stage !== "active" || pvpAllActivesReady();
+  const hideDamage = pvpRevealHidesDamage();
+  const shownTarget = pvp.stage === "reveal" && pvp.reveal ? pvp.reveal.shownTarget : pvp.finalTarget ?? pvp.baseTarget;
   return {
     // the phones show their text in the host's language
     lang: currentLang(),
-    stage: state.pvp.stage,
-    round: state.pvp.round,
-    modifier: state.pvp.modifier,
-    previousTarget: state.pvp.previousTarget,
-    baseTarget: state.pvp.baseTarget,
-    finalTarget: state.pvp.finalTarget,
-    waitForHost: state.pvp.waitForHost,
-    autoDueAt: state.pvp.autoDueAt,
-    players: state.pvp.slots.map((participant) =>
-      participant
-        ? {
-            id: participant.id,
-            slot: participant.slot,
-            name: participant.name,
-            hp: participant.hp,
-            eliminated: participant.eliminated,
-            lastDamage: participant.lastDamage,
-            damageSources: mergeSourceEntries(participant.damageSources),
-            guessSubmitted: Number.isFinite(participant.guess),
-            activeOptions: pvpSelectableActives(participant).map((active) => ({
-              id: active.id,
-              name: active.name,
-              icon: active.icon || null,
-              description: normalizeGameText(active.description),
-              needsTarget: active.needsTarget
-            })),
-            activeSubmitted: Boolean(participant.activeChoiceId),
-            activeChoiceId: revealActiveChoices ? participant.activeChoiceId : null,
-            activeTargetId: revealActiveChoices ? participant.activeTargetId : null,
-            activeCast: participant.activeCast,
-            activeResolved: participant.activeResolved,
-            activeGuaranteeThisRound: participant.activeGuaranteeThisRound,
-            activeGuaranteeNextRound: participant.activeGuaranteeNextRound,
-            roundStartHp: participant.roundStartHp,
-            guess: state.pvp.stage === "guess" ? null : participant.guess
-          }
-        : null
-    ),
-    activeResults: state.pvp.activeResults.map((result) => normalizeGameText(result)),
-    winner: state.pvp.winner
+    game: pvp.game,
+    stage: pvp.stage,
+    round: pvp.round,
+    modifier: pvp.modifier,
+    previousTarget: Number.isFinite(pvp.lastRoundTarget) ? pvp.lastRoundTarget : null,
+    baseTarget: pvp.baseTarget,
+    finalTarget: pvp.stage === "reveal" ? shownTarget : pvp.finalTarget,
+    waitForHost: pvp.waitForHost,
+    autoDueAt: pvp.autoDueAt,
+    // the clock: the host's time, compared on the phone with the server's (same computer)
+    phaseDeadline: pvp.waitForHost ? null : pvp.phaseDeadline,
+    phaseRemaining: pvp.waitForHost && Number.isFinite(pvp.phaseRemaining) ? pvp.phaseRemaining : null,
+    timerSeconds: pvp.session.timerSeconds,
+    archangelWins: PVP_ARCHANGEL_WINS,
+    rules: PVP_COMMANDMENTS,
+    players: pvp.slots.map((participant) => {
+      if (!participant) return null;
+      const artifactShown = pvpRevealShowsArtifact(participant);
+      const entry = participant.human ? pvp.session.players[participant.remoteId || participant.id] : null;
+      return {
+        id: participant.id,
+        slot: participant.slot,
+        name: participant.name,
+        image: participant.image,
+        wins: entry?.wins || 0,
+        rerolls: entry?.rerolls || 0,
+        hp: hideDamage ? pvp.reveal.hpBefore[participant.id] ?? participant.hp : participant.hp,
+        eliminated: hideDamage ? participant.eliminated && participant.fellRound !== pvp.round : participant.eliminated,
+        lastDamage: hideDamage ? 0 : participant.lastDamage,
+        damageSources: hideDamage ? [] : mergeSourceEntries(participant.damageSources),
+        guessSubmitted: Number.isFinite(participant.guess),
+        autoGuess: participant.autoGuess,
+        activeOptions: pvpSelectableActives(participant).map((active) => ({
+          id: active.id,
+          name: active.name,
+          icon: active.icon || null,
+          description: normalizeGameText(active.description),
+          needsTarget: active.needsTarget
+        })),
+        activeSubmitted: Boolean(participant.activeChoiceId),
+        activeChoiceId: revealActiveChoices ? participant.activeChoiceId : null,
+        activeTargetId: revealActiveChoices ? participant.activeTargetId : null,
+        activeTimedOut: participant.activeTimedOut,
+        activeCast: artifactShown ? participant.activeCast : null,
+        activeResolved: artifactShown ? participant.activeResolved : false,
+        activeGuaranteeThisRound: participant.activeGuaranteeThisRound,
+        activeGuaranteeNextRound: artifactShown ? participant.activeGuaranteeNextRound : false,
+        roundStartHp: participant.roundStartHp,
+        guess: pvp.stage === "guess" ? null : participant.guess
+      };
+    }),
+    activeResults: pvp.stage === "reveal" ? [] : pvp.activeResults.map((result) => normalizeGameText(result)),
+    winner: pvp.stage === "ended" ? pvp.winner : null,
+    winners: pvp.stage === "ended" ? pvp.winners : [],
+    winReason: pvp.stage === "ended" ? pvpWinReason() : null
   };
 }
 
+// one line under the winner's name: why they won. { text, params }: English with placeholders, translated
+// where shown (host: t(text, params); the phones get both and do the same)
+function pvpWinReason() {
+  const pvp = state.pvp;
+  const reason = pvp?.winReason;
+  if (!reason) return { text: "", params: {} };
+  const name = (pvp.winners || []).map((id) => pvp.slots.find((participant) => participant?.id === id)?.name).filter(Boolean)[0] || "";
+  if (reason.kind === "last") return { text: "Last soul standing.", params: {} };
+  if (reason.kind === "lowestSoul") return { text: "Everyone fell in round {round}. {name} began it with the least SOUL ({soul}).", params: { round: reason.round, name, soul: reason.soul } };
+  if (reason.kind === "closest") return { text: "Everyone fell in round {round}, even in SOUL. {name} was closest to the TARGET.", params: { round: reason.round, name } };
+  if (reason.kind === "shared") return { text: "Everyone fell in round {round}, even in SOUL and guess. The win is shared.", params: { round: reason.round } };
+  return { text: "No soul is left.", params: {} };
+}
+
+function pvpWinReasonText() {
+  const reason = pvpWinReason();
+  return reason.text ? t(reason.text, reason.params) : "";
+}
+
+// ---------- the local server ----------
 function pvpServerEnabled() {
   return typeof location !== "undefined" && location.protocol !== "file:" && typeof fetch === "function";
 }
@@ -21768,7 +24906,21 @@ function pvpHostResetRoom() {
   if (!pvpServerEnabled()) return;
   fetch("/api/reset", { method: "POST" })
     .then(() => pvpPostHostState())
-    .catch(() => pvpAddLog("Phone server not available."));
+    .catch(() => {});
+}
+
+// the address the phones open: the server knows the computer's Wi-Fi address (not localhost)
+function pvpFetchJoinInfo() {
+  if (!pvpServerEnabled()) return;
+  fetch("/api/info", { cache: "no-store" })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((info) => {
+      if (!state.pvp || !info) return;
+      const urls = Array.isArray(info.controllerUrls) ? info.controllerUrls : [];
+      state.pvp.joinInfo = { url: urls[0] || "", others: urls.slice(1, 3) };
+      render();
+    })
+    .catch(() => {});
 }
 
 function pvpPostHostState() {
@@ -21795,19 +24947,31 @@ function pvpStopHostPolling() {
 async function pvpPollRoom() {
   if (!pvpServerEnabled() || !state.pvp) return;
   try {
-    const response = await fetch("/api/room");
+    const response = await fetch("/api/room", { cache: "no-store" });
     if (!response.ok) return;
     const room = await response.json();
+    if (!state.pvp) return;
+    const players = room.players || [];
     let changed = false;
-    changed = pvpImportRemotePlayers(room.players || []) || changed;
-    changed = pvpImportRemoteInputs(room.players || []) || changed;
+    changed = pvpImportRemotePlayers(players) || changed;
+    changed = pvpImportConnections(players) || changed;
+    changed = pvpImportRerolls(players) || changed;
+    changed = pvpImportRemoteInputs(players) || changed;
+    if (state.pvp.serverDown) {
+      state.pvp.serverDown = false;
+      changed = true;
+    }
     if (changed) {
       pvpMaybeAutoAdvance();
       pvpPostHostState();
       render();
     }
   } catch {
-    // Phone play is optional; local PvP keeps working if the bridge is not running.
+    // phone play is optional; the table keeps working with the DAMNED if the server is gone
+    if (state.pvp && !state.pvp.serverDown) {
+      state.pvp.serverDown = true;
+      render();
+    }
   }
 }
 
@@ -21816,37 +24980,66 @@ function pvpImportRemotePlayers(players) {
   let changed = false;
   players.forEach((player) => {
     if (!player?.id) return;
-    if (state.pvp.removedRemoteIds?.has(player.id)) return;
+    if (state.pvp.session.removedRemoteIds.has(player.id)) return;
     if (state.pvp.slots.some((slot) => slot?.remoteId === player.id)) return;
     const slotIndex = state.pvp.slots.findIndex((slot) => !slot);
     if (slotIndex < 0 && state.pvp.slots.length >= PVP_MAX_SLOT_COUNT) return;
     const targetSlot = slotIndex >= 0 ? slotIndex : state.pvp.slots.length;
     state.pvp.slots[targetSlot] = pvpParticipant(targetSlot, player.name, true, player.id);
-    pvpAddLog(`${player.name} took seat ${targetSlot + 1}.`);
+    pvpSfx(() => playGameSfx("artifactBuy"));
     changed = true;
   });
   if (changed) pvpNormalizeSlots();
   return changed;
 }
 
+// a phone that stopped asking for the room shows a red dot on its seat
+function pvpImportConnections(players) {
+  let changed = false;
+  state.pvp.slots.forEach((participant) => {
+    if (!participant?.remoteId) return;
+    const player = players.find((candidate) => candidate?.id === participant.remoteId);
+    const connected = Boolean(player?.connected);
+    if (participant.connected !== connected) {
+      participant.connected = connected;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function pvpImportRerolls(players) {
+  let changed = false;
+  players.forEach((player) => {
+    if (!player?.id || !Number.isFinite(player.rerollSeq)) return;
+    const participant = state.pvp.slots.find((slot) => slot?.remoteId === player.id);
+    const entry = participant ? pvpSessionEntry(participant) : null;
+    if (!entry || player.rerollSeq <= entry.rerollSeqSeen) return;
+    entry.rerollSeqSeen = player.rerollSeq;
+    if (pvpRerollFace(participant, player.rerollKind)) changed = true;
+    else changed = true; // the phone still needs to hear that nothing changed
+  });
+  return changed;
+}
+
 function pvpImportRemoteInputs(players) {
-  if (!state.pvp || state.pvp.stage === "lobby") return false;
+  const pvp = state.pvp;
+  if (!pvp || (pvp.stage !== "guess" && pvp.stage !== "active")) return false;
   let changed = false;
   players.forEach((player) => {
     if (!player?.id) return;
-    const participant = state.pvp.slots.find((slot) => slot?.remoteId === player.id);
+    const participant = pvp.slots.find((slot) => slot?.remoteId === player.id);
     if (!participant || participant.eliminated) return;
 
-    if (state.pvp.stage === "guess" && player.guessRound === state.pvp.round && Number.isFinite(player.guess)) {
+    if (pvp.stage === "guess" && player.guessGame === pvp.game && player.guessRound === pvp.round && Number.isFinite(player.guess)) {
       const guess = Math.ceil(clamp(player.guess, 0, 100));
       if (participant.guess !== guess) {
         participant.guess = guess;
-        pvpAddLog(`${participant.name} sent a phone guess.`);
         changed = true;
       }
     }
 
-    if (state.pvp.stage === "active" && player.activeRound === state.pvp.round && player.activeChoiceId) {
+    if (pvp.stage === "active" && player.activeGame === pvp.game && player.activeRound === pvp.round && player.activeChoiceId) {
       const active = pvpSelectableActives(participant).find((option) => option.id === player.activeChoiceId);
       if (!active) return;
       const targetId = player.activeTargetId || null;
@@ -21854,12 +25047,34 @@ function pvpImportRemoteInputs(players) {
       if (participant.activeChoiceId !== player.activeChoiceId || participant.activeTargetId !== targetId) {
         participant.activeChoiceId = player.activeChoiceId;
         participant.activeTargetId = targetId;
-        pvpAddLog(`${participant.name} is ready.`);
         changed = true;
       }
     }
   });
   return changed;
+}
+
+// ---------- the join code ----------
+// A QR code of the phone address (vendored qrcode-generator, 00-vendor-qrcode.js), dark on bone
+function pvpQrSvg(text) {
+  if (!text || typeof qrcode !== "function") return "";
+  try {
+    const code = qrcode(0, "M");
+    code.addData(text);
+    code.make();
+    const count = code.getModuleCount();
+    const margin = 2;
+    const size = count + margin * 2;
+    let path = "";
+    for (let row = 0; row < count; row += 1) {
+      for (let col = 0; col < count; col += 1) {
+        if (code.isDark(row, col)) path += `M${col + margin},${row + margin}h1v1h-1z`;
+      }
+    }
+    return `<svg class="pvp-qr" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${size}" height="${size}" fill="#e9e3d6"/><path d="${path}" fill="#000"/></svg>`;
+  } catch (error) {
+    return "";
+  }
 }
 
 function isFullscreenLayoutMode() {
@@ -21873,7 +25088,6 @@ function isFullscreenLayoutMode() {
 function updateFullscreenLayoutClass() {
   document.body.classList.toggle("fullscreen-layout", isFullscreenLayoutMode());
 }
-
 /* ---------- In-place screen updates ----------
    During a run the screen is patched instead of rebuilt: elements that did not
    change stay in the page (no image re-decode, no layout from scratch, running
@@ -23216,37 +26430,66 @@ function renderSelfStackingDevPanel() {
 
 // ---------- PvP host screen (desktop): same look as the arcade table ----------
 // Players join and play from their phones; the host screen only shows the table and runs the flow.
-const PVP_PHASE_NAMES = { lobby: "Lobby", guess: "Guess", active: "Artifacts", summary: "Results", ended: "Winner" };
+const PVP_PHASE_NAMES = { lobby: "Lobby", guess: "Guess", active: "Artifacts", reveal: "Reveal", summary: "Results", ended: "Winner" };
 
 function renderPvpApp() {
+  const reveal = state.pvp.stage === "reveal" ? state.pvp.reveal : null;
   return `
     <main class="arena pvp-arena pvp-stage-${escapeAttr(state.pvp.stage)} ${state.pvp.slots.length > 6 ? "pvp-many" : ""}">
       <header class="pvp-top">
         ${renderPvpTargetPanel()}
         ${renderPvpTopbar()}
-        ${renderPauseButton()}
+        <div class="pvp-top-buttons">
+          ${renderPauseButton()}
+          <button class="small-button pvp-rules-button" data-pvp-rules="open">${t("Rules")}</button>
+        </div>
       </header>
       ${renderPvpSlots()}
       ${renderPvpConsole()}
+      ${reveal?.criticalIds?.length ? `<div class="pvp-moment" aria-live="polite"><strong>${t("CRITICAL")}</strong></div>` : ""}
+      ${state.pvp.rulesOpen ? renderPvpRules() : ""}
       ${renderPauseMenu()}
     </main>
     <div id="floatingTooltip" class="floating-tooltip" role="tooltip"></div>
   `;
 }
 
+// The rules as two tablets of commandments
+function renderPvpRules() {
+  const lines = PVP_COMMANDMENTS.map(
+    (line, index) => `<li><span class="pvp-commandment-number">${pvpRoman(index + 1)}</span><span class="pvp-commandment-text">${descriptionHtml(line)}</span></li>`
+  );
+  const half = Math.ceil(lines.length / 2);
+  return `
+    <div class="pvp-rules-layer" data-nav-modal="2">
+      <section class="pvp-rules" role="dialog" aria-label="${t("The Commandments of the Table")}">
+        <h2 class="pvp-rules-title">${t("The Commandments of the Table")}</h2>
+        <div class="pvp-tablets">
+          <ol class="pvp-tablet">${lines.slice(0, half).join("")}</ol>
+          <ol class="pvp-tablet">${lines.slice(half).join("")}</ol>
+        </div>
+        <button class="pvp-rules-close" data-pvp-rules="close" data-nav-back data-nav-enter>${t("Close")}</button>
+      </section>
+    </div>
+  `;
+}
+
 function renderPvpTopbar() {
   const pvp = state.pvp;
-  const alive = pvpAliveParticipants().length;
   const seats = pvp.slots.length;
   const lobby = pvp.stage === "lobby";
   const joined = pvp.slots.filter(Boolean).length;
+  // during the reveal nobody has fallen yet on screen
+  const alive = pvpRevealHidesDamage()
+    ? pvp.slots.filter((participant) => participant?.aliveAtRoundStart).length
+    : pvpAliveParticipants().length;
   return `
     <div class="stat-card pvp-stat">
       <span class="stat-label">${t("Round")}</span>
       <span class="stat-value">${pvp.round || "-"}</span>
     </div>
     <div class="stat-card pvp-stat">
-      <span class="stat-label">${lobby ? "Joined" : "Alive"}</span>
+      <span class="stat-label">${t(lobby ? "Joined" : "Alive")}</span>
       <span class="stat-value">${lobby ? `${joined}/${seats}` : `${alive}/${seats}`}</span>
     </div>
     <div class="stat-card pvp-stat pvp-phase-stat">
@@ -23258,16 +26501,20 @@ function renderPvpTopbar() {
 
 function renderPvpTargetPanel() {
   const pvp = state.pvp;
-  const shown = pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
+  const reveal = pvp.stage === "reveal" ? pvp.reveal : null;
+  const shown = reveal ? reveal.shownTarget : pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
   const known = shown !== null && shown !== undefined;
-  const average = pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
-  const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${label}</span><strong>${value}</strong></div>`;
+  const average = reveal ? pvp.tableAverage : pvp.finalAverage !== null && pvp.finalAverage !== undefined ? pvp.finalAverage : pvp.tableAverage;
+  const line = (label, value, extra = "") => `<div class="pvp-target-line ${extra}"><span>${t(label)}</span><strong>${value}</strong></div>`;
+  const delta = reveal?.targetDelta
+    ? `<span class="pvp-target-delta" style="--pop-key: ${reveal.index}">${reveal.targetDelta > 0 ? "+" : "&minus;"}${Math.abs(reveal.targetDelta)}</span>`
+    : "";
   return `
     <section class="target-panel pvp-target" aria-label="${t("Target")}">
       <span class="stat-label pvp-target-head">${t("Target")}</span>
-      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"}">${known ? formatNumber(shown) : "?"}</strong>
+      <strong class="pvp-target-number ${known ? "" : "pvp-target-unknown"} ${reveal?.targetDelta ? "pvp-target-moved" : ""}" ${reveal ? `data-reveal-step="${reveal.index}"` : ""}>${known ? formatNumber(shown) : "?"}${delta}</strong>
       <div class="pvp-target-side">
-        ${line("Previous", pvp.previousTarget !== null ? formatNumber(pvp.previousTarget) : "?")}
+        ${line("Previous", Number.isFinite(pvp.lastRoundTarget) ? formatNumber(pvp.lastRoundTarget) : "?")}
         ${line("Modifier", formatModifier(pvp.modifier))}
         ${average !== null && average !== undefined ? line("Average", formatNumber(average)) : ""}
       </div>
@@ -23289,8 +26536,15 @@ function renderPvpSlots() {
   `;
 }
 
+// the wins of this session: the BOSS pentagram and the count
+function renderPvpWins(count, extraClass = "") {
+  if (!(count > 0)) return "";
+  return `<span class="pvp-wins ${extraClass}" data-tooltip="${escapeAttr(t("Wins tonight: {count}", { count }))}">${BOSS_GLYPH_SVG}<span>${count}</span></span>`;
+}
+
 function renderPvpSlot(participant, slot) {
-  const lobby = state.pvp.stage === "lobby";
+  const pvp = state.pvp;
+  const lobby = pvp.stage === "lobby";
   if (!participant) {
     return `
       <article class="bot-card pvp-slot empty-pvp-slot">
@@ -23304,50 +26558,67 @@ function renderPvpSlot(participant, slot) {
     `;
   }
   const kickButton = lobby
-    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="Remove ${escapeAttr(participant.name)}">${t("Remove")}</button>`
+    ? `<button class="small-button pvp-slot-remove" data-pvp-remove-slot="${slot}" aria-label="${escapeAttr(t("Remove {name}", { name: participant.name }))}">${t("Remove")}</button>`
     : "";
-  const downClass = participant.eliminated ? "eliminated" : "";
+  const reveal = pvp.stage === "reveal" ? pvp.reveal : null;
+  const hideDamage = pvpRevealHidesDamage();
+  const shownHp = hideDamage ? reveal.hpBefore[participant.id] ?? participant.hp : participant.hp;
+  const isDown = hideDamage ? participant.eliminated && participant.fellRound !== pvp.round : participant.eliminated || participant.hp <= 0;
+  const downClass = isDown ? "eliminated" : "";
   const damageTooltip = sourceTooltip(participant.damageSources, "damage");
   const damageBadge =
-    participant.lastDamage > 0
+    !hideDamage && participant.lastDamage > 0
       ? `<div class="damage-badge pvp-damage-badge" ${damageTooltip ? `data-tooltip="${escapeAttr(damageTooltip)}"` : ""}>-${participant.lastDamage}</div>`
       : "";
-  const isGuessPhase = state.pvp.stage === "guess";
-  const isDown = participant.eliminated || participant.hp <= 0;
-  const allActivesReady = state.pvp.stage !== "active" || pvpAllActivesReady();
+  const isGuessPhase = pvp.stage === "guess";
+  const allActivesReady = pvp.stage !== "active" || pvpAllActivesReady();
   const hasGuess = Number.isFinite(participant.guess);
   const guessText = isDown ? "X" : lobby ? "--" : isGuessPhase ? (hasGuess ? t("Ready") : "...") : hasGuess ? participant.guess : "--";
   const guessLabel = isGuessPhase ? t("Status") : t("Guess");
-  const pvpTargetForColor = state.pvp.finalTarget !== null ? state.pvp.finalTarget : state.pvp.baseTarget;
+  const targetForColor = reveal ? reveal.shownTarget : pvp.finalTarget !== null ? pvp.finalTarget : pvp.baseTarget;
   const guessForColor = !isGuessPhase && !isDown && hasGuess ? participant.guess : null;
-  const guessCloseness = guessClosenessAttrs(guessForColor, pvpTargetForColor, participant.critical);
-  const criticalClass = participant.critical ? "critical-guess" : "";
+  const critical = reveal ? reveal.criticalIds.includes(participant.id) || (participant.critical && pvp.criticalHitIds.has(participant.id)) : participant.critical;
+  const guessCloseness = guessClosenessAttrs(guessForColor, targetForColor, critical);
+  const criticalClass = critical ? "critical-guess" : "";
   const guessClass = [criticalClass, guessCloseness.className, isGuessPhase && hasGuess ? "pvp-ready" : ""].filter(Boolean).join(" ");
   const active = participant.activeChoiceId ? pvpActiveById(participant.activeChoiceId) : null;
-  const activeHidden = state.pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
-  const activeResultVisible = participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
-  const activeClass = !activeResultVisible
+  const activeHidden = pvp.stage === "active" && participant.activeChoiceId && !allActivesReady;
+  const artifactShown = pvpRevealShowsArtifact(participant);
+  const activeResultVisible = artifactShown && participant.activeResolved && !activeHidden && !isDown && active && !active.skip;
+  const activeClass = !active || activeHidden || isDown
     ? ""
-    : participant.activeCast
-      ? "cast-active pvp-artifact-hit"
-      : participant.activeCast === false
-        ? "pvp-artifact-failed"
-        : "";
+    : !artifactShown
+      ? "pvp-artifact-pending"
+      : !activeResultVisible
+        ? ""
+        : participant.activeCast
+          ? "cast-active pvp-artifact-hit"
+          : "pvp-artifact-failed";
   const activeText = isDown
     ? "X"
     : activeHidden
-      ? "Ready"
+      ? t("Ready")
       : active
-        ? active.name
-        : participant.activeGuaranteeThisRound && state.pvp.stage === "active"
-          ? "Guaranteed"
+        ? active.skip
+          ? t(participant.activeTimedOut ? "Too slow" : "Skip")
+          : escapeHtml(t(active.name))
+        : participant.activeGuaranteeThisRound && pvp.stage === "active"
+          ? t("Guaranteed")
           : "--";
   const faceInner = isDown
     ? `<span class="ko-x">X</span>`
     : `<img class="bot-image" src="${escapeAttr(botImagePath(participant))}" alt="" loading="lazy" />`;
-  const hpPercent = clamp((participant.hp / Math.max(1, participant.maxHp)) * 100, 0, 100);
+  const hpPercent = clamp((shownHp / Math.max(1, participant.maxHp)) * 100, 0, 100);
+  const focus = reveal?.focusId === participant.id ? "pvp-reveal-focus" : "";
+  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "pvp-critical-flash" : "";
+  const connection = participant.remoteId
+    ? `<span class="pvp-connection ${participant.connected ? "on" : "off"}" data-tooltip="${escapeAttr(t(participant.connected ? "Phone connected" : "Phone lost: reopen the link"))}"></span>`
+    : "";
+  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "pvp-winner-seat" : "";
   return `
-    <article class="bot-card pvp-slot ${downClass}" style="--bot-color: ${participant.color || "var(--cyan)"}">
+    <article class="bot-card pvp-slot ${downClass} ${focus} ${criticalFlash} ${winner}" style="--bot-color: ${participant.color || "var(--cyan)"}">
+      ${connection}
+      ${renderPvpWins(pvpWins(participant), "pvp-seat-wins")}
       <div class="bot-face">${faceInner}</div>
       <div class="bot-title">
         <div class="bot-name" title="${escapeAttr(participant.name)}">${escapeHtml(participant.name)}</div>
@@ -23364,8 +26635,9 @@ function renderPvpSlot(participant, slot) {
         </div>
         <div class="mini-stat bot-health">
           ${damageBadge}
-          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: participant.hp, max: participant.maxHp })}</span></div>
+          <div class="bot-health-heading"><span>${t("SOUL {hp}/{max}", { hp: shownHp, max: participant.maxHp })}</span></div>
           <div class="health-bar">
+            ${healthGhostHtml(`pvp:${participant.id}`, hpPercent)}
             <div class="health-fill" style="width: ${hpPercent}%"></div>
           </div>
         </div>
@@ -23380,17 +26652,19 @@ function renderPvpConsole() {
   if (pvp.stage === "lobby") return renderPvpLobbyConsole();
   if (pvp.stage === "guess") return renderPvpGuessConsole();
   if (pvp.stage === "active") return renderPvpActiveConsole();
+  if (pvp.stage === "reveal") return renderPvpRevealConsole();
   if (pvp.stage === "summary") return renderPvpSummaryConsole();
   return renderPvpEndedConsole();
 }
 
+// title and subtitle arrive translated
 function renderPvpConsoleFrame(title, subtitle, actions, body) {
   return `
     <section class="pvp-console">
       <div class="panel-header pvp-console-head">
         <div class="pvp-console-heading">
-          <div class="panel-title">${t(title)}</div>
-          ${subtitle ? `<div class="panel-subtitle">${t(subtitle)}</div>` : ""}
+          <div class="panel-title">${title}</div>
+          ${subtitle ? `<div class="panel-subtitle">${subtitle}</div>` : ""}
         </div>
         ${actions ? `<div class="pvp-console-actions">${actions}</div>` : ""}
       </div>
@@ -23399,30 +26673,67 @@ function renderPvpConsoleFrame(title, subtitle, actions, body) {
   `;
 }
 
+// the phase clock; pvpClockTick updates the number in place every second
+function renderPvpClock() {
+  if (!pvpClockRunning()) return "";
+  const left = pvpClockSecondsLeft();
+  return `<div class="pvp-clock ${left <= PVP_TIMER_TICK_SECONDS ? "pvp-clock-low" : ""}" data-tooltip="${escapeAttr(t("When the clock runs out, a missing guess becomes 50 and a missing ARTIFACT is lost."))}"><span class="pvp-clock-label">${t("Clock")}</span><strong data-pvp-clock>${left}</strong></div>`;
+}
+
 function renderPvpLobbyConsole() {
+  const pvp = state.pvp;
   const joinUrl = pvpJoinUrl();
-  const seats = state.pvp.slots.length;
-  const joined = state.pvp.slots.filter(Boolean).length;
+  const seats = pvp.slots.length;
+  const joined = pvp.slots.filter(Boolean).length;
   const canAdd = seats < PVP_MAX_SLOT_COUNT;
-  const canRemove = seats > 2 && state.pvp.slots.some((participant) => !participant);
-  const body = `
-    <div class="pvp-lobby">
+  const canRemove = seats > 2 && pvp.slots.some((participant) => !participant);
+  const timer = pvp.session.timerSeconds;
+  const others = pvp.joinInfo?.others || [];
+  const serverMissing = !pvpServerEnabled() || pvp.serverDown;
+  const join = serverMissing
+    ? `
       <div class="pvp-join">
         <span class="pvp-join-label">${t("Join from your phone")}</span>
-        <strong class="pvp-join-url">${escapeHtml(joinUrl)}</strong>
-        <span class="pvp-join-note">${t("Same Wi-Fi as this screen. Open the link and enter a name.")}</span>
+        <span class="pvp-join-warning">${t("The phone server is not running. Start DEARTH with START PVP SERVER, or play against the DAMNED only.")}</span>
       </div>
-      <div class="pvp-seats" aria-label="${t("Seats")}">
-        <span class="pvp-seats-label">${t("Seats")}</span>
-        <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="${t("One seat less")}" ${canRemove ? "" : "disabled"}>&minus;</button>
-        <strong class="pvp-seats-count">${seats}</strong>
-        <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="${t("One seat more")}" ${canAdd ? "" : "disabled"}>+</button>
+    `
+    : `
+      ${joinUrl ? `<div class="pvp-qr-frame">${pvpQrSvg(joinUrl)}</div>` : ""}
+      <div class="pvp-join">
+        <span class="pvp-join-label">${t("Join from your phone")}</span>
+        <strong class="pvp-join-url">${escapeHtml(joinUrl || "…")}</strong>
+        <span class="pvp-join-note">${t("Scan the code or open the link. Same Wi-Fi as this screen.")}</span>
+        <span class="pvp-join-note pvp-join-help">${
+          others.length
+            ? escapeHtml(t("Not working? Try {urls}, and allow DEARTH through the firewall.", { urls: others.join(" · ") }))
+            : t("Not working? Allow DEARTH through the firewall. Guest Wi-Fi often blocks phones.")
+        }</span>
+      </div>
+    `;
+  const damnedWins = pvp.session.damnedWins
+    ? `<div class="pvp-damned-wins">${renderPvpWins(pvp.session.damnedWins)}<span>${t("The DAMNED tonight")}</span></div>`
+    : "";
+  const body = `
+    <div class="pvp-lobby ${serverMissing ? "" : "pvp-lobby-qr"}">
+      ${join}
+      <div class="pvp-lobby-settings">
+        <div class="pvp-seats" aria-label="${t("Seats")}">
+          <span class="pvp-seats-label">${t("Seats")}</span>
+          <button class="small-button pvp-seat-button" id="pvpRemoveSlot" aria-label="${t("One seat less")}" ${canRemove ? "" : "disabled"}>&minus;</button>
+          <strong class="pvp-seats-count">${seats}</strong>
+          <button class="small-button pvp-seat-button" id="pvpAddSlot" aria-label="${t("One seat more")}" ${canAdd ? "" : "disabled"}>+</button>
+        </div>
+        <div class="pvp-seats pvp-timer-setting">
+          <span class="pvp-seats-label">${t("Clock")}</span>
+          <button class="small-button pvp-timer-button" id="pvpTimer" data-tooltip="${escapeAttr(t("Time for each guess and each ARTIFACT choice"))}">${timer ? t("{seconds} s", { seconds: timer }) : t("Off")}</button>
+        </div>
+        ${damnedWins}
       </div>
     </div>
   `;
   return renderPvpConsoleFrame(
-    "Lobby",
-    `${joined} of ${seats} seats taken. Open seats are played by the DAMNED.`,
+    t("Lobby"),
+    t("{joined} of {seats} seats taken. Open seats are played by the DAMNED.", { joined, seats }),
     `<button class="primary-button" id="pvpReadyLobby" data-nav-enter>${t("Start")}</button>`,
     body
   );
@@ -23445,54 +26756,99 @@ function renderPvpPlayerChips(isReady, readyText, waitingText) {
 
 function renderPvpGuessConsole() {
   const alive = pvpAliveParticipants();
-  const readyCount = alive.filter((participant) => Number.isFinite(participant.guess)).length;
+  const ready = alive.filter((participant) => Number.isFinite(participant.guess)).length;
   return renderPvpConsoleFrame(
-    "Guess",
-    `${readyCount} of ${alive.length} have guessed. The TARGET is revealed when everyone is in.`,
-    "",
+    t("Guess"),
+    t("{ready} of {total} have guessed. The TARGET is revealed when everyone is in.", { ready, total: alive.length }),
+    renderPvpClock(),
     renderPvpPlayerChips((participant) => Number.isFinite(participant.guess), "Ready", "Guessing")
   );
 }
 
 function renderPvpActiveConsole() {
   const alive = pvpAliveParticipants();
-  const readyCount = alive.filter((participant) => Boolean(participant.activeChoiceId)).length;
-  const allReady = readyCount === alive.length;
+  const ready = alive.filter((participant) => Boolean(participant.activeChoiceId)).length;
+  const allReady = ready === alive.length;
   return renderPvpConsoleFrame(
-    "Artifacts",
-    allReady ? "Everyone has chosen." : `${readyCount} of ${alive.length} have chosen an ARTIFACT.`,
-    "",
+    t("Artifacts"),
+    allReady ? t("Everyone has chosen.") : t("{ready} of {total} have chosen an ARTIFACT.", { ready, total: alive.length }),
+    renderPvpClock(),
     renderPvpPlayerChips((participant) => Boolean(participant.activeChoiceId), allReady ? "Chosen" : "Ready", "Choosing")
   );
 }
 
+// the reveal: one line per ARTIFACT already answered
+function renderPvpRevealConsole() {
+  const pvp = state.pvp;
+  const reveal = pvp.reveal;
+  const lines = (reveal?.steps || [])
+    .slice(0, reveal?.index || 0)
+    .filter((step) => step.kind === "artifact")
+    .map((step) => {
+      const participant = pvp.slots.find((candidate) => candidate?.id === step.id);
+      const active = pvpActiveById(step.activeId);
+      const moved = step.to !== step.from ? ` (${t("TARGET")} ${step.from} → ${step.to})` : "";
+      const text = step.cast
+        ? t("{name}: {artifact} cast", { name: participant?.name || "", artifact: t(active.name) })
+        : t("{name}: {artifact} failed", { name: participant?.name || "", artifact: t(active.name) });
+      return `<span class="${step.cast ? "cast" : "failed"}">${escapeHtml(text)}${escapeHtml(moved)}</span>`;
+    })
+    .join("");
+  return renderPvpConsoleFrame(t("Reveal"), t("The ARTIFACTS answer one by one."), "", lines ? `<div class="pvp-reveal-lines">${lines}</div>` : "");
+}
+
 function renderPvpSummaryConsole() {
   return renderPvpConsoleFrame(
-    `Round ${state.pvp.round}`,
-    `Final TARGET ${formatNumber(state.pvp.finalTarget)}. The next round starts on its own.`,
-    `<button class="primary-button" id="pvpNextRound">${t("Next Round")}</button>`,
-    `${renderPvpResults()}`
+    t("Round {round}", { round: state.pvp.round }),
+    t("Final TARGET {target}. The next round starts on its own.", { target: formatNumber(state.pvp.finalTarget) }),
+    `<button class="primary-button" id="pvpNextRound" data-nav-enter>${t("Next Round")}</button>`,
+    renderPvpResults()
   );
 }
 
 function renderPvpEndedConsole() {
+  const pvp = state.pvp;
+  const winners = new Set(pvp.winners || []);
+  const standings = pvpStandings()
+    .map((participant, index) => {
+      const place = winners.has(participant.id) ? 1 : index + 1;
+      const fate = winners.has(participant.id)
+        ? t("Winner")
+        : participant.eliminated
+          ? t("Fell in round {round}", { round: participant.fellRound })
+          : "";
+      return `
+        <li class="pvp-standing ${winners.has(participant.id) ? "won" : ""}">
+          <span class="pvp-standing-place">${place}</span>
+          <span class="pvp-standing-name"><span class="pvp-standing-text">${escapeHtml(participant.name)}</span>${renderPvpWins(pvpWins(participant))}</span>
+          <span class="pvp-standing-fate">${fate}</span>
+        </li>
+      `;
+    })
+    .join("");
+  const damned = pvp.session.damnedWins
+    ? `<div class="pvp-damned-wins">${renderPvpWins(pvp.session.damnedWins)}<span>${t("The DAMNED tonight")}</span></div>`
+    : "";
   return renderPvpConsoleFrame(
-    "Winner",
+    t("Winner"),
     "",
-    `<button class="primary-button" id="pvpRestart">${t("Play Again")}</button>`,
-    `<div class="pvp-winner">${escapeHtml(state.pvp.winner || t("No one"))}</div>${renderPvpResults()}`
+    `<button class="primary-button" id="pvpRematch" data-nav-enter>${t("Play Again")}</button><button class="small-button pvp-new-table" id="pvpNewTable">${t("New Table")}</button>`,
+    `
+      <div class="pvp-ending">
+        <div class="pvp-winner-block">
+          <div class="pvp-winner">${escapeHtml(pvp.winner || t("No one"))}</div>
+          <div class="pvp-win-reason">${escapeHtml(pvpWinReasonText())}</div>
+        </div>
+        <ol class="pvp-standings">${standings}</ol>
+        ${damned}
+      </div>
+    `
   );
 }
 
 function renderPvpResults() {
   if (!state.pvp.activeResults.length) return "";
   return `<div class="pvp-results">${state.pvp.activeResults.map((result) => `<div>${escapeHtml(t(normalizeGameText(result)))}</div>`).join("")}</div>`;
-}
-
-function renderPvpLog(limit = 8) {
-  const entries = state.pvp.log.slice(0, limit);
-  if (!entries.length) return "";
-  return `<div class="pvp-log">${entries.map((entry) => `<div>${escapeHtml(t(normalizeGameText(entry)))}</div>`).join("")}</div>`;
 }
 
 // ---------- HUD change tracking: animate only when a value actually changes ----------
@@ -24968,6 +28324,7 @@ function showMainMenu(screen = "main") {
   saveArcadeRun();
   pvpClearAutoTimer();
   pvpStopHostPolling();
+  pvpStopClockTicker();
   clearNativeArcadeResumeOnForeground();
   state.mode = "menu";
   state.menuScreen = screen;
@@ -25212,7 +28569,8 @@ function handlePauseAction(action) {
     return;
   }
   if (action === "restart") {
-    if (state.mode === "pvp") restartPvpMode();
+    // in PvP: the same table starts a new game (the phones stay)
+    if (state.mode === "pvp") pvpRematch();
     else startGame();
     return;
   }
@@ -33373,15 +36731,23 @@ function bindPvpEvents() {
   });
 
   const nextRound = document.querySelector("#pvpNextRound");
-  if (nextRound) {
-    bindOn(nextRound, "click", () => {
-      playNextRoundSfx();
-      pvpNextRound();
-    });
-  }
+  if (nextRound) bindOn(nextRound, "click", pvpNextRound);
 
-  const restart = document.querySelector("#pvpRestart");
-  if (restart) bindOn(restart, "click", restartPvpMode);
+  // Play Again keeps the table and the wins; New Table starts the session over
+  const rematch = document.querySelector("#pvpRematch");
+  if (rematch) bindOn(rematch, "click", pvpRematch);
+  const newTable = document.querySelector("#pvpNewTable");
+  if (newTable) bindOn(newTable, "click", restartPvpMode);
+
+  const timer = document.querySelector("#pvpTimer");
+  if (timer) bindOn(timer, "click", pvpCycleTimer);
+
+  document.querySelectorAll("[data-pvp-rules]").forEach((button) => {
+    bindOn(button, "click", () => {
+      state.pvp.rulesOpen = button.dataset.pvpRules === "open";
+      render();
+    });
+  });
 }
 
 // Pause > DEV SEAL search: suggestions update in place while typing (no full render, so the box keeps focus).
@@ -33767,6 +37133,12 @@ function installPauseEscapeShortcut() {
     }
     if (state.pauseOpen) {
       handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
+      return;
+    }
+    // PvP: Esc closes the commandments first
+    if (state.mode === "pvp" && state.pvp?.rulesOpen) {
+      state.pvp.rulesOpen = false;
+      render();
       return;
     }
     if (state.pendingActive) {

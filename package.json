@@ -41,6 +41,7 @@
     "files": [
       "desktop/main.cjs",
       "desktop/preload.cjs",
+      "server.js",
       "desktop-www/**/*",
       "!**/node_modules/**/*"
     ],

@@ -15,15 +15,23 @@ function bindPvpEvents() {
   });
 
   const nextRound = document.querySelector("#pvpNextRound");
-  if (nextRound) {
-    bindOn(nextRound, "click", () => {
-      playNextRoundSfx();
-      pvpNextRound();
-    });
-  }
+  if (nextRound) bindOn(nextRound, "click", pvpNextRound);
 
-  const restart = document.querySelector("#pvpRestart");
-  if (restart) bindOn(restart, "click", restartPvpMode);
+  // Play Again keeps the table and the wins; New Table starts the session over
+  const rematch = document.querySelector("#pvpRematch");
+  if (rematch) bindOn(rematch, "click", pvpRematch);
+  const newTable = document.querySelector("#pvpNewTable");
+  if (newTable) bindOn(newTable, "click", restartPvpMode);
+
+  const timer = document.querySelector("#pvpTimer");
+  if (timer) bindOn(timer, "click", pvpCycleTimer);
+
+  document.querySelectorAll("[data-pvp-rules]").forEach((button) => {
+    bindOn(button, "click", () => {
+      state.pvp.rulesOpen = button.dataset.pvpRules === "open";
+      render();
+    });
+  });
 }
 
 // Pause > DEV SEAL search: suggestions update in place while typing (no full render, so the box keeps focus).
@@ -409,6 +417,12 @@ function installPauseEscapeShortcut() {
     }
     if (state.pauseOpen) {
       handlePauseAction(state.pauseScreen && state.pauseScreen !== "main" ? "back" : "resume");
+      return;
+    }
+    // PvP: Esc closes the commandments first
+    if (state.mode === "pvp" && state.pvp?.rulesOpen) {
+      state.pvp.rulesOpen = false;
+      render();
       return;
     }
     if (state.pendingActive) {
