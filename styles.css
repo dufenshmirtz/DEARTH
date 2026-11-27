@@ -11666,7 +11666,7 @@ body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-n
    each fills the figure's head box (meta.head, same size), so it sits exactly on the eyes. The bloom never scales (a scale would pull it off the eyes);
    it grows by blur instead, and it breathes by brightness so the hover fade stays smooth. */
 .menu-fig-satan .fig-eyes {
-  filter: drop-shadow(0 0 1px rgba(255, 70, 40, 0.95)) drop-shadow(0 0 3px rgba(220, 20, 10, 0.55)) !important;
+  filter: drop-shadow(0 0 1px rgba(255, 30, 20, 0.95)) drop-shadow(0 0 3px rgba(210, 10, 5, 0.6)) !important;
   transition: opacity 0.5s ease-out, filter 0.45s ease;
 }
 
@@ -11695,7 +11695,7 @@ body:is(.mobile-arcade, .native-arcade) .collection-screen .codex-cover .codex-n
 
 .menu-fig-satan.eyes-flare .fig-eyes {
   opacity: 1;
-  filter: brightness(1.35) drop-shadow(0 0 2px #ff9a80) drop-shadow(0 0 5px rgba(255, 40, 20, 0.8)) !important;
+  filter: brightness(1.35) drop-shadow(0 0 2px #ff4a3a) drop-shadow(0 0 5px rgba(255, 40, 20, 0.8)) !important;
 }
 
 .menu-fig-satan.eyes-flare .fig-eyes-bloom {
