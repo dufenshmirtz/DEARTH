@@ -50,9 +50,7 @@ function artifactDescription(item) {
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
     if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS.";
-    const levels = passiveEntryEliteLevels(lamb);
-    const flat = levels ? ` +${5 * levels}` : "";
-    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can't reveal a BOSS. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can reveal a BOSS.`;
   }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
@@ -138,7 +136,7 @@ function itemDescription(item) {
     return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
-    return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
+    return `Mummified Lamb can reveal BOSSES, and gives its DAMNED +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p139") {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
@@ -214,7 +212,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead, or ${barbatosRevealedYourGuessDamage(item)} if it is revealed; a DAMNED takes only the biggest of these.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes it too.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -258,7 +256,9 @@ function itemDescription(item) {
   if (item.id === "p64") {
     return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `At end of round, a revealed DAMNED with the same guess as you takes ${naberiusSameGuessDamage(item)} damage.`;
+  if (item.id === "p65") {
+    return `At end of round, each revealed DAMNED with a guess lower than yours takes ${naberiusLowerGuessDamage(item)} damage, and each with a guess higher than yours gives you ${NABERIUS_HIGHER_GUESS_SIN} SIN.`;
+  }
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {

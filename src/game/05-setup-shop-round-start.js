@@ -1190,6 +1190,8 @@ function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25"), seal
     bounty: 3,
     // 5th Pentacle of the Moon ELITE: extra BOUNTY, counted for that SEAL
     sealBounty: Math.max(0, Math.ceil(sealBounty || 0)),
+    // 5th Pentacle of the Moon: the Lamb may reveal a BOSS (decided when it is cast, like the BOUNTY)
+    revealBoss: Boolean(artifactSealEntry("a25")),
     source
   });
   state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
@@ -1206,8 +1208,12 @@ function applyPendingNextRoundLambReveals() {
       state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
       return;
     }
-    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY)
+    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY), unless the 5th Pentacle of the Moon was held
     if (!bot.isBoss) revealBotGuess(bot, source);
+    else if (effect.revealBoss && revealBotGuess(bot, source, null, { allowBoss: true })) {
+      const lambEntry = artifactSealEntry("a25");
+      if (lambEntry) markPassiveEntryTriggered(lambEntry);
+    }
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
     const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));

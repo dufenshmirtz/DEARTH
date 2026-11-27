@@ -450,7 +450,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes it too. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -589,8 +589,9 @@ const ITEMS = {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
-    price: 10,
-    description: "At end of round, a revealed DAMNED with the same guess as you takes 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    price: 12,
+    description:
+      "At end of round, each revealed DAMNED with a guess lower than yours takes 15 damage, and each with a guess higher than yours gives you 2 SIN. ELITE multiplies only the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -954,7 +955,7 @@ const ITEMS = {
     name: "5th Pentacle of the Moon",
     price: 12,
     description:
-      "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level."
+      "Mummified Lamb can reveal BOSSES. Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +3 BOUNTY to the Lamb each level."
   },
   p139: {
     id: "p139",

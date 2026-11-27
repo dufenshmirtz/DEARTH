@@ -920,26 +920,21 @@ function chooseBot(botId) {
   }
 
   if (id === "a25") {
-    // 5th Pentacle of the Moon: a DAMNED revealed this round also takes 30% max SOUL (15% for BOSSES)
+    // 5th Pentacle of the Moon: the Lamb can reveal a BOSS; ELITE adds BOUNTY
     const lambEntry = artifactSealEntry("a25");
     const sealBounty = moonLambBountyBonus(lambEntry);
-    const lambDamage = lambEntry && bot.revealedByPassive ? moonLambDamage(bot, lambEntry) : 0;
     queueMummifiedLambNextRoundReveal(bot, itemName, sealBounty);
     applyTargetedItemSinGain(item, [bot]);
     const uid = pending.uid;
     finishActiveResolution(
       index,
-      bot.isBoss
+      bot.isBoss && !lambEntry
         ? `${itemName} marked ${bot.name}. Next round, it gains +${3 + sealBounty} BOUNTY (a BOSS's guess stays hidden).`
         : `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
       uid,
       false
     );
-    if (lambEntry && (lambDamage > 0 || sealBounty > 0)) markPassiveEntryTriggered(lambEntry);
-    if (lambDamage > 0) {
-      const name = ITEMS.p138.name;
-      damageBot(bot, lambDamage, `${name} dealt ${lambDamage} damage to revealed ${bot.name}.`, name);
-    }
+    if (lambEntry && sealBounty > 0) markPassiveEntryTriggered(lambEntry);
     if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;

@@ -194,9 +194,8 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
-// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED on your guess takes
-// the bigger "your guess" damage instead (25 hidden, 15 revealed, the revealed one once per reveal stack). A DAMNED
-// only ever takes one of them: the biggest that applies.
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's, or yours, takes the damage (once, even
+// when both apply)
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
@@ -219,18 +218,9 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
     let triggered = false;
+    const damage = barbatosDamage(entry);
+    if (damage <= 0) return;
     hit.forEach((bot) => {
-      const options = [];
-      if (shares(bot)) options.push(barbatosDamage(entry));
-      if (matchesYou(bot)) {
-        options.push(
-          bot.revealedByPassive
-            ? barbatosRevealedYourGuessDamage(entry) * Math.max(1, revealMultiplicity(bot))
-            : barbatosYourGuessDamage(entry)
-        );
-      }
-      const damage = Math.max(0, ...options);
-      if (damage <= 0) return;
       triggered = true;
       addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
     });
@@ -1797,21 +1787,31 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
-    // Seal of Naberius: a revealed DAMNED with the same guess as you takes damage
+    // Seal of Naberius: a revealed DAMNED below your guess takes damage, one above it pays you SIN (once per reveal
+    // stack, like every effect on revealed DAMNED); one on your guess does nothing
     if (entry.id === "p65") {
       const round = state.roundState;
       const playerGuess = round?.playerEffectiveGuess;
       if (!Number.isFinite(playerGuess)) return;
-      const targets = activeBots().filter((bot) => bot.revealedByPassive && round.botEffectiveGuesses.get(bot.id) === playerGuess);
-      if (!targets.length) return;
+      const revealed = activeBots().filter((bot) => bot.revealedByPassive && Number.isFinite(round.botEffectiveGuesses.get(bot.id)));
+      const lower = revealed.filter((bot) => round.botEffectiveGuesses.get(bot.id) < playerGuess);
+      const higher = revealed.filter((bot) => round.botEffectiveGuesses.get(bot.id) > playerGuess);
+      if (!lower.length && !higher.length) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p65.name;
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, 20) * revealMultiplicity(bot),
-        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for sharing your guess.`,
-        name
-      );
+      if (higher.length) {
+        const sin = higher.reduce((sum, bot) => sum + NABERIUS_HIGHER_GUESS_SIN * revealMultiplicity(bot), 0);
+        const gained = gainCredits(sin, false, name);
+        round.roundEvents.push(`${name} paid ${gained} SIN for ${higher.length} revealed DAMNED above your guess.`);
+      }
+      if (lower.length) {
+        damageBots(
+          lower,
+          (bot) => naberiusLowerGuessDamage(entry) * revealMultiplicity(bot),
+          (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for guessing below you.`,
+          name
+        );
+      }
       return;
     }
 

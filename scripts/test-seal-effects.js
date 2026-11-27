@@ -1786,32 +1786,48 @@ test("Vine has a 50% chance to reveal one extra DAMNED, rolled once per round", 
   `);
 });
 
-test("Naberius: a revealed DAMNED with your guess takes 20 damage at end of round (ELITE x1.5); it adds no reveals", () => {
-  for (const [stack, damage] of [[1, 20], [2, 30]]) {
+test("Naberius: revealed DAMNED below your guess take 15 (ELITE x1.5), above it pay you 2 SIN (no ELITE); it adds no reveals", () => {
+  for (const [stack, damage] of [[1, 15], [2, 23], [3, 35]]) {
     game()(`
       state.previousRoundRevealedEliminations = 1;
       fixture([["p65", ${stack}]], [10, 20, 30, 40, 50]);
       assert.equal(revealedDamnedCount(), 1);
       const round = state.roundState;
-      const [a, b, c] = state.bots;
+      const [low, high, same, hiddenLow, high2] = state.bots;
       state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
-      a.revealedByPassive = true;
-      b.revealedByPassive = true;
+      [low, high, same, high2].forEach(bot => { bot.revealedByPassive = true; });
       round.playerEffectiveGuess = 30;
-      round.botEffectiveGuesses.set(a.id, 30);
-      round.botEffectiveGuesses.set(b.id, 31);
-      round.botEffectiveGuesses.set(c.id, 30);
+      round.botEffectiveGuesses.set(low.id, 12);
+      round.botEffectiveGuesses.set(high.id, 31);
+      round.botEffectiveGuesses.set(same.id, 30);
+      round.botEffectiveGuesses.set(hiddenLow.id, 5);
+      round.botEffectiveGuesses.set(high2.id, 90);
+      const sinBefore = state.player.credits;
       applyEndOfRoundPassiveDamageInOrder();
-      assert.equal(a.lastDamage, ${damage});
-      assert.equal(b.lastDamage || 0, 0, "a different guess is safe");
-      assert.equal(c.lastDamage || 0, 0, "a hidden DAMNED on your guess is safe");
+      assert.equal(low.lastDamage, ${damage});
+      assert.equal(high.lastDamage || 0, 0, "a higher guess is not hurt");
+      assert.equal(same.lastDamage || 0, 0, "your own guess does nothing");
+      assert.equal(hiddenLow.lastDamage || 0, 0, "a hidden DAMNED is safe");
+      assert.equal(state.player.credits - sinBefore, 4, "2 SIN for each revealed DAMNED above you, ELITE or not");
+      assert.equal(sealStatsFor("p65").credits, 4);
       assert.ok(round.triggeredPassiveIds.has("p65"));
     `);
   }
+  game()(`
+    fixture([["p65"]], [10, 20, 30, 40, 50]);
+    const round = state.roundState;
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
+    state.bots[0].revealedByPassive = true;
+    round.playerEffectiveGuess = 30;
+    round.botEffectiveGuesses.set(state.bots[0].id, 30);
+    applyEndOfRoundPassiveDamageInOrder();
+    assert.ok(!round.triggeredPassiveIds.has("p65"), "only a revealed DAMNED on your guess: nothing happens");
+  `);
   const run = game();
+  assert.equal(run("ITEMS.p65.price"), 12);
   assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p65.description")));
-  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 1, description: "Old description" })`).includes("same guess as you takes 20 damage"));
-  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 2 })`).includes("takes 30 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 1, description: "Old description" })`).includes("lower than yours takes 15 damage"));
+  assert.ok(run(`itemDescription({ ...ITEMS.p65, stack: 2 })`).includes("takes 23 damage, and each with a guess higher than yours gives you 2 SIN"));
 });
 
 test("Seal of Cassiel (p102) reveals one extra DAMNED only if a DAMNED died last round", () => {
@@ -3336,38 +3352,61 @@ test("4th Pentacle of the Moon: every Cursed Chalice adds +12 damage to your CRI
   `);
 });
 
-test("5th Pentacle of the Moon: Mummified Lamb hits a revealed DAMNED for 30% (BOSSES 15%), ELITE +5 damage and +3 BOUNTY", () => {
+test("5th Pentacle of the Moon: Mummified Lamb can reveal a BOSS and deals no damage; ELITE +3 BOUNTY", () => {
   game()(`
     ${ARTIFACT_TEST_STUBS}
     fixture([["p138"]], [50, 50, 50]);
     state.stage = "active";
-    const revealed = state.bots.find((bot) => bot.revealedByPassive);
-    const hidden = state.bots.find((bot) => !bot.revealedByPassive);
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
+    const [damned, boss] = state.bots;
+    boss.isBoss = true;
     state.player.actives = [itemCopy("a25"), itemCopy("a25")];
     useActive(0);
-    chooseBot(revealed.id);
+    chooseBot(damned.id);
     useActive(0);
-    chooseBot(hidden.id);
-    assert.equal(revealed.lastDamage, 300);
-    assert.equal(hidden.lastDamage, 0);
+    chooseBot(boss.id);
+    assert.equal(damned.lastDamage || 0, 0, "the Lamb no longer hurts");
+    assert.equal(boss.lastDamage || 0, 0);
     assert.equal(state.pendingNextRoundLambReveals.length, 2);
+    const bossBounty = botRegularBounty(boss);
+    applyPendingNextRoundLambReveals();
+    assert.equal(damned.revealedByPassive, true);
+    assert.equal(boss.revealedByPassive, true, "the BOSS's guess is revealed");
+    assert.equal(botRegularBounty(boss) - bossBounty, 3);
     assert.ok(state.roundState.triggeredPassiveIds.has("p138"));
   `);
   game()(`
     ${ARTIFACT_TEST_STUBS}
     fixture([["p138", 3]], [50, 50, 50]);
     state.stage = "active";
-    const boss = state.bots.find((bot) => bot.revealedByPassive);
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; bot.lastDamage = 0; });
+    const boss = state.bots[0];
     boss.isBoss = true;
     state.player.actives = [itemCopy("a25")];
     useActive(0);
     chooseBot(boss.id);
-    assert.equal(boss.lastDamage, 150 + 10);
     assert.equal(state.pendingNextRoundLambReveals[0].sealBounty, 6);
     const before = botRegularBounty(boss);
     applyPendingNextRoundLambReveals();
+    assert.equal(boss.revealedByPassive, true);
     assert.equal(botRegularBounty(boss) - before, 9);
   `);
+  // without the Pentacle the Lamb still leaves a BOSS hidden
+  game()(`
+    ${ARTIFACT_TEST_STUBS}
+    fixture([], [50, 50, 50]);
+    state.stage = "active";
+    state.bots.forEach(bot => { bot.revealedByPassive = false; bot.revealStacks = 0; });
+    const boss = state.bots[0];
+    boss.isBoss = true;
+    state.player.actives = [itemCopy("a25")];
+    useActive(0);
+    chooseBot(boss.id);
+    applyPendingNextRoundLambReveals();
+    assert.equal(boss.revealedByPassive, false);
+  `);
+  const run = game();
+  assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p138.description")));
 });
 
 test("6th Pentacle of the Moon: Vial of Blood eliminates the first DAMNED; the second overheals by its SOUL and turns STUBBORN (ELITE +5 BOUNTY)", () => {
@@ -3912,7 +3951,7 @@ test("Seal of Vassago: a non-boss DAMNED above 6 MEMORY deals 10 damage to every
   `);
 });
 
-test("Seal of Barbatos: DAMNED that share a guess take 20; a DAMNED on your guess takes 25 instead, 15 if revealed", () => {
+test("Seal of Barbatos: DAMNED that share a guess, with each other or with you, take 20 (once)", () => {
   const damageWith = (passives, guesses, playerGuess, extra = "") => {
     const run = game();
     run(`
@@ -3931,29 +3970,24 @@ test("Seal of Barbatos: DAMNED that share a guess take 20; a DAMNED on your gues
   let guesses = [10, 10, 30, 30, 55];
   assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 70), damageWith("[]", guesses, 70)), [20, 20, 20, 20, 0]);
   assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 70), damageWith("[]", guesses, 70)), [30, 30, 30, 30, 0]);
-  // a pair of DAMNED on your guess: 25 each, not 20 + 25
+  // a pair of DAMNED on your guess: 20 each, not 20 + 20
   guesses = [10, 10, 30, 55, 80];
-  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10), damageWith("[]", guesses, 10)), [25, 25, 0, 0, 0]);
-  // TARGET 60: you and the first DAMNED both hit CRITICAL with 60
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10), damageWith("[]", guesses, 10)), [20, 20, 0, 0, 0]);
+  // TARGET 60: you and the first DAMNED both hit CRITICAL with 60; that DAMNED shares only your guess
   guesses = [60, 50, 40, 70, 80];
   const plain = damageWith("[]", guesses, 60);
   const sealed = damageWith(`[["p46"]]`, guesses, 60);
   assert.equal(plain.crits, 2);
   assert.ok(plain.player > 0, "without Barbatos the DAMNED's CRITICAL hurts you");
-  assert.equal(sealed.player, plain.player, "Barbatos no longer blocks the hidden DAMNED's CRITICAL");
-  assert.deepEqual(diff(sealed, plain), [25, 0, 0, 0, 0]);
-  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [38, 0, 0, 0, 0]);
-  // a revealed DAMNED on your guess: 15 (23 with one ELITE level), and its CRITICAL still hits you
+  assert.equal(sealed.player, plain.player, "Barbatos does not block the DAMNED's CRITICAL");
+  assert.deepEqual(diff(sealed, plain), [20, 0, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60), plain), [30, 0, 0, 0, 0]);
+  // revealed or not makes no difference now
   const reveal = "state.bots[0].revealedByPassive = true;";
-  const revealedPlain = damageWith("[]", guesses, 60, reveal);
-  const revealed = damageWith(`[["p46"]]`, guesses, 60, reveal);
-  assert.equal(revealed.player, plain.player);
-  assert.deepEqual(diff(revealed, revealedPlain), [15, 0, 0, 0, 0]);
-  assert.deepEqual(diff(damageWith(`[["p46", 2]]`, guesses, 60, reveal), revealedPlain), [23, 0, 0, 0, 0]);
-  // a revealed DAMNED on your guess that also shares it with another DAMNED takes the bigger: 20, not 15 + 20
-  guesses = [10, 10, 30, 55, 80];
-  const pairReveal = "state.bots[0].revealedByPassive = true; state.bots[1].revealedByPassive = true;";
-  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 10, pairReveal), damageWith("[]", guesses, 10, pairReveal)), [20, 20, 0, 0, 0]);
+  assert.deepEqual(diff(damageWith(`[["p46"]]`, guesses, 60, reveal), damageWith("[]", guesses, 60, reveal)), [20, 0, 0, 0, 0]);
+  const run = game();
+  assert.ok(fs.readFileSync(path.join(root, "ITEMS.txt"), "utf8").includes(run("ITEMS.p46.description")));
+  assert.ok(run(`itemDescription({ ...ITEMS.p46, stack: 2 })`).includes("each of them takes 30 damage. A DAMNED with the same guess as you takes it too."));
 });
 
 test("Seal of Orias: +1 CRITICAL range (+1 per ELITE level) only after a round without your CRITICAL", () => {

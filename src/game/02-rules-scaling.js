@@ -1097,19 +1097,9 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
-// Seal of Barbatos: damage to each DAMNED that shares its guess
+// Seal of Barbatos: damage to each DAMNED that shares its guess with another DAMNED or with you
 function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 20);
-}
-
-// Seal of Barbatos: a hidden DAMNED on your guess takes this instead
-function barbatosYourGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 25);
-}
-
-// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
-function barbatosRevealedYourGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 15);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -1131,10 +1121,13 @@ function vualRedirectTargets(bot) {
   return others.filter((other) => !other.revealedByPassive);
 }
 
-// Seal of Naberius: a revealed DAMNED with your guess takes this at end of round
-function naberiusSameGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+// Seal of Naberius: a revealed DAMNED whose guess is lower than yours takes this at end of round (ELITE x1.5)
+function naberiusLowerGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
 }
+
+// Seal of Naberius: SIN you gain from each revealed DAMNED whose guess is higher than yours (ELITE leaves it alone)
+const NABERIUS_HIGHER_GUESS_SIN = 2;
 
 function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
@@ -1209,13 +1202,7 @@ function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
   return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
-// 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
-function moonLambDamage(bot, entry = artifactSealEntry("a25")) {
-  if (!entry || !bot) return 0;
-  const percent = bot.isBoss ? 15 : 30;
-  return Math.ceil(((bot.maxHp || 0) * percent) / 100) + 5 * passiveEntryEliteLevels(entry);
-}
-
+// 5th Pentacle of the Moon: Mummified Lamb can reveal BOSSES; ELITE adds +3 BOUNTY to the Lamb each level
 function moonLambBountyBonus(entry = artifactSealEntry("a25")) {
   return entry ? 3 * passiveEntryEliteLevels(entry) : 0;
 }

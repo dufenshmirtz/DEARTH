@@ -288,11 +288,16 @@ LOCALES.en = {
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["el"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
-  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Στο τέλος του γύρου, ένας αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα δέχεται {n1} ζημιά.",
   "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Στο τέλος του γύρου, κάθε ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που δεν είναι BOSS και έχει περισσότερη από {n1} ΜΝΗΜΗ κερδίζει +{n2} ΦΟΡΤΙΟ και δέχεται {n3} ζημιά.",
   "ELITE redirects +{n1}% more each level.": "Το ΕΛΙΤ μεταφέρει +{n1}% περισσότερο ανά επίπεδο.",
   "If a BOSS is active, revealed or not, it takes all of it instead.": "Αν υπάρχει ενεργό BOSS, αποκαλυμμένο ή όχι, τη δέχεται όλη εκείνο.",
   "It can't reveal a BOSS.": "Δεν μπορεί να αποκαλύψει BOSS.",
+  "A DAMNED with the same guess as you takes it too.": "Ένας ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα τη δέχεται κι αυτός.",
+  "At end of round, each revealed DAMNED with a guess lower than yours takes {n1} damage, and each with a guess higher than yours gives you {n2} SIN.": "Στο τέλος του γύρου, κάθε αποκαλυμμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με μαντεψιά μικρότερη από τη δική σου δέχεται {n1} ζημιά, και κάθε ένας με μεγαλύτερη σου δίνει {n2} ΑΜΑΡΤΙΑ.",
+  "Mummified Lamb can reveal BOSSES.": "Ο Μουμιοποιημένος Αμνός μπορεί να αποκαλύψει BOSS.",
+  "ELITE adds +{n1} BOUNTY to the Lamb each level.": "Το ΕΛΙΤ προσθέτει +{n1} ΦΟΡΤΙΟ στον Αμνό, ανά επίπεδο.",
+  "Mummified Lamb can reveal BOSSES, and gives its DAMNED +{n1} BOUNTY.": "Ο Μουμιοποιημένος Αμνός μπορεί να αποκαλύψει BOSS και δίνει στον ΚΑΤΑΔΙΚΑΣΜΕΝΟ του +{n1} ΦΟΡΤΙΟ.",
+  "It can reveal a BOSS.": "Μπορεί να αποκαλύψει BOSS.",
   "SIN": "ΑΜΑΡΤΙΑ",
   "SOUL": "ΨΥΧΗ",
   "DAMNED": "ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ",
@@ -450,7 +455,6 @@ LOCALES["el"] = {
   "7th Pentacle of Mars": "7ο Πεντάκλο του Άρη",
   "A CRITICAL.": "Ένα CRITICAL.",
   "A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY.": "Ένας ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια ΠΡΟΣΩΠΙΚΟΤΗΤΑ δύο φορές επηρεάζεται δύο φορές από τα εφέ που στοχεύουν αυτή την ΠΡΟΣΩΠΙΚΟΤΗΤΑ.",
-  "A DAMNED with the same guess as you takes {n1} damage instead, or {n2} if it is revealed; a DAMNED takes only the biggest of these.": "Ένας ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ με την ίδια μαντεψιά με σένα δέχεται αντί γι' αυτό {n1} ζημιά, ή {n2} αν είναι αποκαλυμμένος· ένας ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ δέχεται μόνο τη μεγαλύτερη από αυτές.",
   "A discount, for the poet.": "Έκπτωση, για τον ποιητή.",
   "A fine fetish.": "Ωραίο φετίχ.",
   "A game by": "Ένα παιχνίδι των",
@@ -692,7 +696,6 @@ LOCALES["el"] = {
   "ELITE adds +{n1} CRITICAL damage.": "Το ΕΛΙΤ προσθέτει +{n1} ζημιά CRITICAL.",
   "ELITE adds +{n1} MEMORY each round per level.": "Το ΕΛΙΤ προσθέτει +{n1} ΜΝΗΜΗ κάθε γύρο ανά επίπεδο.",
   "ELITE adds +{n1} POISON to each DAMNED on your CRITICAL each level.": "Το ΕΛΙΤ προσθέτει +{n1} ΔΗΛΗΤΗΡΙΟ σε κάθε ΚΑΤΑΔΙΚΑΣΜΕΝΟ στο CRITICAL σου, ανά επίπεδο.",
-  "ELITE adds +{n1} damage and +{n2} BOUNTY to the Lamb each level.": "Το ΕΛΙΤ προσθέτει +{n1} ζημιά και +{n2} ΦΟΡΤΙΟ στον Αμνό, ανά επίπεδο.",
   "ELITE adds +{n1} to both end-of-round gains.": "Το ΕΛΙΤ προσθέτει +{n1} και στα δύο κέρδη του τέλους του γύρου.",
   "ELITE adds +{n1} to the multiplier.": "Το ΕΛΙΤ προσθέτει +{n1} στον πολλαπλασιαστή.",
   "ELITE adds +{n1}% chance and multiplies the BOSS damage by x{n2} each level, rounded up.": "Το ΕΛΙΤ προσθέτει +{n1}% πιθανότητα και πολλαπλασιάζει τη ζημιά στα BOSS επί x{n2} ανά επίπεδο, στρογγυλεμένα προς τα πάνω.",
@@ -999,8 +1002,6 @@ LOCALES["el"] = {
   "If no DAMNED has POISON, two random DAMNED get {n1} POISON instead.": "Αν κανένας ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ δεν έχει ΔΗΛΗΤΗΡΙΟ, δύο τυχαίοι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ παίρνουν αντί γι' αυτό {n1} ΔΗΛΗΤΗΡΙΟ.",
   "If no SEAL is available, it waits for the next SEAL you buy.": "Αν δεν υπάρχει διαθέσιμη ΣΦΡΑΓΙΔΑ, περιμένει την επόμενη ΣΦΡΑΓΙΔΑ που θα αγοράσεις.",
   "If that damage eliminates them, gain {n1} SIN.": "Αν αυτή η ζημιά τον εξοντώσει, κέρδισε {n1} ΑΜΑΡΤΙΑ.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES) +{n3}, and the Lamb gives it +{n4} BOUNTY.": "Αν ο ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που διαλέγεις με τον Μουμιοποιημένο Αμνό αποκαλυφθεί αυτόν τον γύρο, δέχεται επίσης ζημιά {n1}% της μέγιστης ΨΥΧΗΣ ({n2}% για τα BOSS) +{n3}, και ο Αμνός του δίνει +{n4} ΦΟΡΤΙΟ.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES).": "Αν ο ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ που διαλέγεις με τον Μουμιοποιημένο Αμνό αποκαλυφθεί αυτόν τον γύρο, δέχεται επίσης ζημιά {n1}% της μέγιστης ΨΥΧΗΣ ({n2}% για τα BOSS).",
   "If the marked DAMNED dies, its BOUNTY payout becomes double BOUNTY or {n1} SIN, whichever is greater, and you gain {n2} SIN.": "Αν ο σημαδεμένος ΚΑΤΑΔΙΚΑΣΜΕΝΟΣ πεθάνει, η πληρωμή του ΦΟΡΤΙΟΥ του γίνεται το διπλό ΦΟΡΤΙΟ ή {n1} ΑΜΑΡΤΙΑ, όποιο είναι μεγαλύτερο, και εσύ κερδίζεις {n2} ΑΜΑΡΤΙΑ.",
   "If the rounded TARGET is a multiple of {n1}, all DAMNED take {n2} extra damage.": "Αν ο στρογγυλεμένος ΣΤΟΧΟΣ είναι πολλαπλάσιο του {n1}, όλοι οι ΚΑΤΑΔΙΚΑΣΜΕΝΟΙ δέχονται {n2} επιπλέον ζημιά.",
   "If the rounded TARGET is a multiple of {n1}, gain SIN equal to your current SIN.": "Αν ο στρογγυλεμένος ΣΤΟΧΟΣ είναι πολλαπλάσιο του {n1}, κέρδισε ΑΜΑΡΤΙΑ ίση με την ΑΜΑΡΤΙΑ που έχεις τώρα.",
@@ -1990,11 +1991,16 @@ LOCALE_KEYWORDS["el"] = ["ΑΜΑΡΤΙΑΣ", "ΑΜΑΡΤΙΕΣ", "ΑΜΑΡΤΙΩ
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["de"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
-  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Am Ende der Runde erleidet ein aufgedeckter VERURTEILTER mit demselben Tipp wie du {n1} Schaden.",
   "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Am Ende der Runde erhält jeder VERURTEILTE, der kein BOSS ist und mehr als {n1} GEDÄCHTNIS hat, +{n2} LADUNG und erleidet {n3} Schaden.",
   "ELITE redirects +{n1}% more each level.": "ELITE leitet pro Stufe +{n1}% mehr um.",
   "If a BOSS is active, revealed or not, it takes all of it instead.": "Ist ein BOSS aktiv, aufgedeckt oder nicht, erleidet stattdessen er alles.",
   "It can't reveal a BOSS.": "Kann keinen BOSS aufdecken.",
+  "A DAMNED with the same guess as you takes it too.": "Ein VERURTEILTER mit demselben Tipp wie du erleidet ihn ebenfalls.",
+  "At end of round, each revealed DAMNED with a guess lower than yours takes {n1} damage, and each with a guess higher than yours gives you {n2} SIN.": "Am Ende der Runde erleidet jeder aufgedeckte VERURTEILTE mit einem niedrigeren Tipp als deinem {n1} Schaden, und jeder mit einem höheren Tipp gibt dir {n2} SÜNDE.",
+  "Mummified Lamb can reveal BOSSES.": "Das Mumifizierte Lamm kann auch einen BOSS aufdecken.",
+  "ELITE adds +{n1} BOUNTY to the Lamb each level.": "ELITE fügt dem Lamm pro Stufe +{n1} LADUNG hinzu.",
+  "Mummified Lamb can reveal BOSSES, and gives its DAMNED +{n1} BOUNTY.": "Das Mumifizierte Lamm kann auch einen BOSS aufdecken und gibt seinem VERURTEILTEN +{n1} LADUNG.",
+  "It can reveal a BOSS.": "Kann einen BOSS aufdecken.",
   "SIN": "SÜNDE",
   "SOUL": "SEELE",
   "DAMNED": "VERURTEILTE",
@@ -2059,7 +2065,6 @@ LOCALES["de"] = {
   "7th Pentacle of Mars": "7. Pentakel des Mars",
   "A CRITICAL.": "Ein CRITICAL.",
   "A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY.": "Ein VERURTEILTER mit derselben PERSÖNLICHKEIT doppelt wird von Effekten, die diese PERSÖNLICHKEIT treffen, doppelt getroffen.",
-  "A DAMNED with the same guess as you takes {n1} damage instead, or {n2} if it is revealed; a DAMNED takes only the biggest of these.": "Ein VERURTEILTER mit demselben Tipp wie du erleidet stattdessen {n1} Schaden, oder {n2}, wenn er aufgedeckt ist; ein VERURTEILTER erleidet nur den höchsten dieser Werte.",
   "A discount, for the poet.": "Ein Rabatt, für den Poeten.",
   "A fine fetish.": "Ein feiner Fetisch.",
   "A game by": "Ein Spiel von",
@@ -2301,7 +2306,6 @@ LOCALES["de"] = {
   "ELITE adds +{n1} CRITICAL damage.": "ELITE fügt +{n1} CRITICAL-Schaden hinzu.",
   "ELITE adds +{n1} MEMORY each round per level.": "ELITE fügt pro Stufe jede Runde +{n1} GEDÄCHTNIS hinzu.",
   "ELITE adds +{n1} POISON to each DAMNED on your CRITICAL each level.": "ELITE fügt jedem VERURTEILTEN bei deinem CRITICAL pro Stufe +{n1} GIFT hinzu.",
-  "ELITE adds +{n1} damage and +{n2} BOUNTY to the Lamb each level.": "ELITE fügt dem Lamm pro Stufe +{n1} Schaden und +{n2} LADUNG hinzu.",
   "ELITE adds +{n1} to both end-of-round gains.": "ELITE fügt beiden Gewinnen am Rundenende +{n1} hinzu.",
   "ELITE adds +{n1} to the multiplier.": "ELITE fügt dem Multiplikator +{n1} hinzu.",
   "ELITE adds +{n1}% chance and multiplies the BOSS damage by x{n2} each level, rounded up.": "ELITE fügt pro Stufe +{n1}% Chance hinzu und multipliziert den BOSS-Schaden mit x{n2}, aufgerundet.",
@@ -2608,8 +2612,6 @@ LOCALES["de"] = {
   "If no DAMNED has POISON, two random DAMNED get {n1} POISON instead.": "Hat kein VERURTEILTER GIFT, erhalten stattdessen zwei zufällige VERURTEILTE {n1} GIFT.",
   "If no SEAL is available, it waits for the next SEAL you buy.": "Ist kein SIEGEL verfügbar, wartet es auf das nächste SIEGEL, das du kaufst.",
   "If that damage eliminates them, gain {n1} SIN.": "Eliminiert sie dieser Schaden, erhältst du {n1} SÜNDE.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES) +{n3}, and the Lamb gives it +{n4} BOUNTY.": "Wird der VERURTEILTE, den du mit dem Mumifizierten Lamm wählst, diese Runde aufgedeckt, erleidet er zusätzlich {n1}% seiner maximalen SEELE als Schaden ({n2}% bei BOSSEN) +{n3}, und das Lamm gibt ihm +{n4} LADUNG.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES).": "Wird der VERURTEILTE, den du mit dem Mumifizierten Lamm wählst, diese Runde aufgedeckt, erleidet er zusätzlich {n1}% seiner maximalen SEELE als Schaden ({n2}% bei BOSSEN).",
   "If the marked DAMNED dies, its BOUNTY payout becomes double BOUNTY or {n1} SIN, whichever is greater, and you gain {n2} SIN.": "Stirbt der markierte VERURTEILTE, beträgt seine LADUNGS-Auszahlung die doppelte LADUNG oder {n1} SÜNDE, je nachdem, was höher ist, und du erhältst {n2} SÜNDE.",
   "If the rounded TARGET is a multiple of {n1}, all DAMNED take {n2} extra damage.": "Ist das gerundete ZIEL ein Vielfaches von {n1}, erleiden alle VERURTEILTEN {n2} zusätzlichen Schaden.",
   "If the rounded TARGET is a multiple of {n1}, gain SIN equal to your current SIN.": "Ist das gerundete ZIEL ein Vielfaches von {n1}, erhältst du so viel SÜNDE, wie du gerade hast.",
@@ -3599,11 +3601,16 @@ LOCALE_KEYWORDS["de"] = ["SÜNDEN", "SEELEN", "VERURTEILTEN", "VERURTEILTER", "V
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["es"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
-  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "Al final de la ronda, un CONDENADO revelado con el mismo intento que tú recibe {n1} de daño.",
   "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "Al final de la ronda, cada CONDENADO que no sea BOSS y tenga más de {n1} de MEMORIA gana +{n2} de CARGA y recibe {n3} de daño.",
   "ELITE redirects +{n1}% more each level.": "ÉLITE redirige un +{n1}% más por nivel.",
   "If a BOSS is active, revealed or not, it takes all of it instead.": "Si hay un BOSS activo, revelado o no, lo recibe todo él en su lugar.",
   "It can't reveal a BOSS.": "No puede revelar a un BOSS.",
+  "A DAMNED with the same guess as you takes it too.": "Un CONDENADO con el mismo intento que tú también lo recibe.",
+  "At end of round, each revealed DAMNED with a guess lower than yours takes {n1} damage, and each with a guess higher than yours gives you {n2} SIN.": "Al final de la ronda, cada CONDENADO revelado con un intento menor que el tuyo recibe {n1} de daño, y cada uno con un intento mayor te da {n2} de PECADO.",
+  "Mummified Lamb can reveal BOSSES.": "El Cordero Momificado puede revelar a los BOSS.",
+  "ELITE adds +{n1} BOUNTY to the Lamb each level.": "ÉLITE añade +{n1} de CARGA al Cordero por nivel.",
+  "Mummified Lamb can reveal BOSSES, and gives its DAMNED +{n1} BOUNTY.": "El Cordero Momificado puede revelar a los BOSS y da a su CONDENADO +{n1} de CARGA.",
+  "It can reveal a BOSS.": "Puede revelar a un BOSS.",
   "SIN": "PECADO",
   "SOUL": "ALMA",
   "DAMNED": "CONDENADOS",
@@ -3669,7 +3676,6 @@ LOCALES["es"] = {
   "7th Pentacle of Mars": "7.º Pentáculo de Marte",
   "A CRITICAL.": "Un CRITICAL.",
   "A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY.": "Un CONDENADO con la misma PERSONALIDAD dos veces se ve afectado dos veces por los efectos que apuntan a esa PERSONALIDAD.",
-  "A DAMNED with the same guess as you takes {n1} damage instead, or {n2} if it is revealed; a DAMNED takes only the biggest of these.": "Un CONDENADO con el mismo intento que tú recibe {n1} de daño en su lugar, o {n2} si está revelado; un CONDENADO solo recibe el mayor de ellos.",
   "A discount, for the poet.": "Un descuento, para el poeta.",
   "A fine fetish.": "Un fetiche fino.",
   "A game by": "Un juego de",
@@ -3911,7 +3917,6 @@ LOCALES["es"] = {
   "ELITE adds +{n1} CRITICAL damage.": "ÉLITE añade +{n1} de daño CRITICAL.",
   "ELITE adds +{n1} MEMORY each round per level.": "ÉLITE añade +{n1} de MEMORIA cada ronda por nivel.",
   "ELITE adds +{n1} POISON to each DAMNED on your CRITICAL each level.": "ÉLITE añade +{n1} de VENENO a cada CONDENADO en tu CRITICAL por nivel.",
-  "ELITE adds +{n1} damage and +{n2} BOUNTY to the Lamb each level.": "ÉLITE añade +{n1} de daño y +{n2} de CARGA al Cordero por nivel.",
   "ELITE adds +{n1} to both end-of-round gains.": "ÉLITE añade +{n1} a ambas ganancias de final de ronda.",
   "ELITE adds +{n1} to the multiplier.": "ÉLITE añade +{n1} al multiplicador.",
   "ELITE adds +{n1}% chance and multiplies the BOSS damage by x{n2} each level, rounded up.": "ÉLITE añade +{n1}% de probabilidad y multiplica el daño a BOSS por x{n2} por nivel, redondeado hacia arriba.",
@@ -4218,8 +4223,6 @@ LOCALES["es"] = {
   "If no DAMNED has POISON, two random DAMNED get {n1} POISON instead.": "Si ningún CONDENADO tiene VENENO, dos CONDENADOS al azar reciben {n1} de VENENO en su lugar.",
   "If no SEAL is available, it waits for the next SEAL you buy.": "Si no hay ningún SELLO disponible, espera al siguiente SELLO que compres.",
   "If that damage eliminates them, gain {n1} SIN.": "Si ese daño los elimina, gana {n1} de PECADO.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES) +{n3}, and the Lamb gives it +{n4} BOUNTY.": "Si el CONDENADO que eliges con el Cordero Momificado es revelado esta ronda, también recibe un {n1}% de su ALMA máxima como daño ({n2}% para BOSS) +{n3}, y el Cordero le da +{n4} de CARGA.",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES).": "Si el CONDENADO que eliges con el Cordero Momificado es revelado esta ronda, también recibe un {n1}% de su ALMA máxima como daño ({n2}% para BOSS).",
   "If the marked DAMNED dies, its BOUNTY payout becomes double BOUNTY or {n1} SIN, whichever is greater, and you gain {n2} SIN.": "Si el CONDENADO marcado muere, su pago de CARGA pasa a ser el doble de CARGA o {n1} de PECADO, lo que sea mayor, y tú ganas {n2} de PECADO.",
   "If the rounded TARGET is a multiple of {n1}, all DAMNED take {n2} extra damage.": "Si el OBJETIVO redondeado es múltiplo de {n1}, todos los CONDENADOS reciben {n2} de daño extra.",
   "If the rounded TARGET is a multiple of {n1}, gain SIN equal to your current SIN.": "Si el OBJETIVO redondeado es múltiplo de {n1}, gana tanto PECADO como el que tienes ahora.",
@@ -5209,11 +5212,16 @@ LOCALE_KEYWORDS["es"] = ["PECADOS", "ALMAS", "CONDENADO", "CONDENADA", "CONDENAD
    Turn the language on for players with ready: true in LANGUAGES (00-i18n.js) once it is complete and checked. */
 LOCALES["zh-Hans"] = {
   // the game's terms: see locales/GLOSSARY.md before changing one
-  "At end of round, a revealed DAMNED with the same guess as you takes {n1} damage.": "回合结束时，与你猜测相同的已揭示罪人受到{n1}点伤害。",
   "At end of round, every non-BOSS DAMNED with more than {n1} MEMORY gains +{n2} BOUNTY and takes {n3} damage.": "回合结束时，每名记忆超过{n1}的非BOSS罪人获得+{n2}负担，并受到{n3}点伤害。",
   "ELITE redirects +{n1}% more each level.": "精英每级多转+{n1}%。",
   "If a BOSS is active, revealed or not, it takes all of it instead.": "若有BOSS在场，无论是否已揭示，改为全部由它承受。",
   "It can't reveal a BOSS.": "无法揭示BOSS。",
+  "A DAMNED with the same guess as you takes it too.": "与你猜测相同的罪人也会受到该伤害。",
+  "At end of round, each revealed DAMNED with a guess lower than yours takes {n1} damage, and each with a guess higher than yours gives you {n2} SIN.": "回合结束时，猜测低于你的每个已揭示罪人受到{n1}点伤害，猜测高于你的每个已揭示罪人给你{n2}罪孽。",
+  "Mummified Lamb can reveal BOSSES.": "木乃伊羔羊可以揭示BOSS。",
+  "ELITE adds +{n1} BOUNTY to the Lamb each level.": "精英每级使羔羊+{n1}负担。",
+  "Mummified Lamb can reveal BOSSES, and gives its DAMNED +{n1} BOUNTY.": "木乃伊羔羊可以揭示BOSS，并使其罪人+{n1}负担。",
+  "It can reveal a BOSS.": "可以揭示BOSS。",
   "SIN": "罪孽",
   "SOUL": "灵魂",
   "DAMNED": "罪人",
@@ -5371,7 +5379,6 @@ LOCALES["zh-Hans"] = {
   "7th Pentacle of Mars": "火星第7五芒符",
   "A CRITICAL.": "一次CRITICAL。",
   "A DAMNED with the same PERSONALITY twice is affected twice by effects that target that PERSONALITY.": "同一性格出现两次的罪人，会被针对该性格的效果作用两次。",
-  "A DAMNED with the same guess as you takes {n1} damage instead, or {n2} if it is revealed; a DAMNED takes only the biggest of these.": "与你猜测相同的罪人改为受到{n1}点伤害，若已被揭示则为{n2}点；每个罪人只承受其中最大的一项。",
   "A discount, for the poet.": "打个折，送给诗人。",
   "A fine fetish.": "好一个癖好。",
   "A game by": "游戏制作",
@@ -5613,7 +5620,6 @@ LOCALES["zh-Hans"] = {
   "ELITE adds +{n1} CRITICAL damage.": "精英使CRITICAL伤害+{n1}。",
   "ELITE adds +{n1} MEMORY each round per level.": "精英每级每回合+{n1}记忆。",
   "ELITE adds +{n1} POISON to each DAMNED on your CRITICAL each level.": "精英每级在你CRITICAL时给每个罪人+{n1}毒素。",
-  "ELITE adds +{n1} damage and +{n2} BOUNTY to the Lamb each level.": "精英每级使羔羊+{n1}伤害和+{n2}负担。",
   "ELITE adds +{n1} to both end-of-round gains.": "精英使两项回合结束收益都+{n1}。",
   "ELITE adds +{n1} to the multiplier.": "精英使倍率+{n1}。",
   "ELITE adds +{n1}% chance and multiplies the BOSS damage by x{n2} each level, rounded up.": "精英每级+{n1}%概率，并使对BOSS的伤害x{n2}，向上取整。",
@@ -5920,8 +5926,6 @@ LOCALES["zh-Hans"] = {
   "If no DAMNED has POISON, two random DAMNED get {n1} POISON instead.": "若没有罪人身中毒素，改为两名随机罪人获得{n1}毒素。",
   "If no SEAL is available, it waits for the next SEAL you buy.": "若没有可用的印记，它会等你购买的下一个印记。",
   "If that damage eliminates them, gain {n1} SIN.": "若该伤害将其淘汰，获得{n1}罪孽。",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES) +{n3}, and the Lamb gives it +{n4} BOUNTY.": "若你用木乃伊羔羊选中的罪人本回合被揭示，他还会受到其最大灵魂{n1}%的伤害（BOSS为{n2}%）+{n3}，且羔羊给他+{n4}负担。",
-  "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes {n1}% max-SOUL damage ({n2}% for BOSSES).": "若你用木乃伊羔羊选中的罪人本回合被揭示，他还会受到其最大灵魂{n1}%的伤害（BOSS为{n2}%）。",
   "If the marked DAMNED dies, its BOUNTY payout becomes double BOUNTY or {n1} SIN, whichever is greater, and you gain {n2} SIN.": "若被标记的罪人死亡，其负担支付变为双倍负担或{n1}罪孽中较高者，且你获得{n2}罪孽。",
   "If the rounded TARGET is a multiple of {n1}, all DAMNED take {n2} extra damage.": "若取整后的目标是{n1}的倍数，所有罪人额外受到{n2}点伤害。",
   "If the rounded TARGET is a multiple of {n1}, gain SIN equal to your current SIN.": "若取整后的目标是{n1}的倍数，获得与你当前罪孽等量的罪孽。",
@@ -7580,7 +7584,7 @@ const ITEMS = {
     name: "Seal of Barbatos",
     price: 12,
     description:
-      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes 25 damage instead, or 15 if it is revealed; a DAMNED takes only the biggest of these. ELITE multiplies the damage by x1.5 each level, rounded up."
+      "When 2 or more DAMNED have the same guess, each of them takes 20 damage. A DAMNED with the same guess as you takes it too. ELITE multiplies the damage by x1.5 each level, rounded up."
   },
   p47: {
     id: "p47",
@@ -7719,8 +7723,9 @@ const ITEMS = {
     id: "p65",
     type: "passive",
     name: "Seal of Naberius",
-    price: 10,
-    description: "At end of round, a revealed DAMNED with the same guess as you takes 20 damage. ELITE multiplies the damage by x1.5 each level, rounded up."
+    price: 12,
+    description:
+      "At end of round, each revealed DAMNED with a guess lower than yours takes 15 damage, and each with a guess higher than yours gives you 2 SIN. ELITE multiplies only the damage by x1.5 each level, rounded up."
   },
   p66: {
     id: "p66",
@@ -8084,7 +8089,7 @@ const ITEMS = {
     name: "5th Pentacle of the Moon",
     price: 12,
     description:
-      "If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES). Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +5 damage and +3 BOUNTY to the Lamb each level."
+      "Mummified Lamb can reveal BOSSES. Mummified Lamb appears twice as often in Devil's Offerings. ELITE adds +3 BOUNTY to the Lamb each level."
   },
   p139: {
     id: "p139",
@@ -12329,19 +12334,9 @@ function shaxRerollDamage(entry, spent) {
   return passiveEntryFlatDamage(entry, Math.max(0, Math.ceil(spent || 0)) * 2);
 }
 
-// Seal of Barbatos: damage to each DAMNED that shares its guess
+// Seal of Barbatos: damage to each DAMNED that shares its guess with another DAMNED or with you
 function barbatosDamage(idOrItem) {
   return flatDamageValue(idOrItem, 20);
-}
-
-// Seal of Barbatos: a hidden DAMNED on your guess takes this instead
-function barbatosYourGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 25);
-}
-
-// Seal of Barbatos: a revealed DAMNED on your guess takes this (once per reveal stack, like every effect on revealed DAMNED)
-function barbatosRevealedYourGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 15);
 }
 
 function fullHealthExtraDamage(idOrItem) {
@@ -12363,10 +12358,13 @@ function vualRedirectTargets(bot) {
   return others.filter((other) => !other.revealedByPassive);
 }
 
-// Seal of Naberius: a revealed DAMNED with your guess takes this at end of round
-function naberiusSameGuessDamage(idOrItem) {
-  return flatDamageValue(idOrItem, 20);
+// Seal of Naberius: a revealed DAMNED whose guess is lower than yours takes this at end of round (ELITE x1.5)
+function naberiusLowerGuessDamage(idOrItem) {
+  return flatDamageValue(idOrItem, 15);
 }
+
+// Seal of Naberius: SIN you gain from each revealed DAMNED whose guess is higher than yours (ELITE leaves it alone)
+const NABERIUS_HIGHER_GUESS_SIN = 2;
 
 function aimBossDamage(idOrItem) {
   return flatDamageValue(idOrItem, 30);
@@ -12441,13 +12439,7 @@ function moonChaliceCriticalDamage(entry = artifactSealEntry("a22")) {
   return entry ? passiveEntryFlatDamage(entry, 12) : 0;
 }
 
-// 5th Pentacle of the Moon: Mummified Lamb on a revealed DAMNED (30% max SOUL, 15% for BOSSES, ELITE +5 each level)
-function moonLambDamage(bot, entry = artifactSealEntry("a25")) {
-  if (!entry || !bot) return 0;
-  const percent = bot.isBoss ? 15 : 30;
-  return Math.ceil(((bot.maxHp || 0) * percent) / 100) + 5 * passiveEntryEliteLevels(entry);
-}
-
+// 5th Pentacle of the Moon: Mummified Lamb can reveal BOSSES; ELITE adds +3 BOUNTY to the Lamb each level
 function moonLambBountyBonus(entry = artifactSealEntry("a25")) {
   return entry ? 3 * passiveEntryEliteLevels(entry) : 0;
 }
@@ -12939,9 +12931,7 @@ function artifactDescription(item) {
   if (item.id === "a25") {
     const lamb = artifactSealEntry("a25");
     if (!lamb) return "Pick a DAMNED. Next round, reveal its guess and give it +3 BOUNTY. It can't reveal a BOSS.";
-    const levels = passiveEntryEliteLevels(lamb);
-    const flat = levels ? ` +${5 * levels}` : "";
-    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can't reveal a BOSS. If it is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES)${flat} (${ITEMS.p138.name}).`;
+    return `Pick a DAMNED. Next round, reveal its guess and give it +${3 + moonLambBountyBonus(lamb)} BOUNTY. It can reveal a BOSS.`;
   }
   if (item.id === "a26") {
     return "Reserved for a future ARTIFACT.";
@@ -13027,7 +13017,7 @@ function itemDescription(item) {
     return `Every Cursed Chalice you use also makes your CRITICAL deal +${flatDamageValue(item, 12)} damage this round, and Cursed Chalice appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p138") {
-    return `If the DAMNED you pick with Mummified Lamb is revealed this round, it also takes 30% max-SOUL damage (15% for BOSSES) +${5 * eliteLevelCount}, and the Lamb gives it +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
+    return `Mummified Lamb can reveal BOSSES, and gives its DAMNED +${3 + 3 * eliteLevelCount} BOUNTY. Mummified Lamb appears twice as often in Devil's Offerings.`;
   }
   if (item.id === "p139") {
     return `Vial of Blood eliminates the first DAMNED instead, and the second overheals by the SOUL the first had left, becomes STUBBORN instead of copying its PERSONALITY, and gains ${5 * eliteLevelCount} BOUNTY. Vial of Blood appears twice as often in Devil's Offerings.`;
@@ -13103,7 +13093,7 @@ function itemDescription(item) {
   if (item.id === "p44") return `At end of round, non-boss DAMNED with ${andromaliusBountyLimit(item)} or less BOUNTY are eliminated. Their SIN goes to the living DAMNED with the highest BOUNTY.`;
   if (item.id === "p45") return `DAMNED with 3 or less BOUNTY pay ${Math.round(200 * passivePower(item))}% BOUNTY SIN when eliminated.`;
   if (item.id === "p46") {
-    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes ${barbatosYourGuessDamage(item)} damage instead, or ${barbatosRevealedYourGuessDamage(item)} if it is revealed; a DAMNED takes only the biggest of these.`;
+    return `When 2 or more DAMNED have the same guess, each of them takes ${barbatosDamage(item)} damage. A DAMNED with the same guess as you takes it too.`;
   }
   if (item.id === "p47") return `At end of round, ${stack} DAMNED lose half their BOUNTY and you gain double the SIN removed.`;
   if (item.id === "p48") return `At start of round, double ${stack} random DAMNED ${stack === 1 ? "BOUNTY" : "BOUNTIES"} for 1 round.`;
@@ -13147,7 +13137,9 @@ function itemDescription(item) {
   if (item.id === "p64") {
     return `Each round, 50% chance to reveal one extra DAMNED. Revealed DAMNED pay ${revealedBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   }
-  if (item.id === "p65") return `At end of round, a revealed DAMNED with the same guess as you takes ${naberiusSameGuessDamage(item)} damage.`;
+  if (item.id === "p65") {
+    return `At end of round, each revealed DAMNED with a guess lower than yours takes ${naberiusLowerGuessDamage(item)} damage, and each with a guess higher than yours gives you ${NABERIUS_HIGHER_GUESS_SIN} SIN.`;
+  }
   if (item.id === "p66") return `When the TARGET is a multiple of 5, eliminate one random non-boss DAMNED. If BOSSES are active, each active BOSS takes ${aimBossDamage(item)} damage.`;
   if (item.id === "p67") return `DAMNED with 8 or more MEMORY pay ${memoryBountyMultiplier(item).toFixed(1)}x BOUNTY SIN when eliminated.`;
   if (item.id === "p68") {
@@ -16620,6 +16612,8 @@ function queueMummifiedLambNextRoundReveal(bot, source = activeName("a25"), seal
     bounty: 3,
     // 5th Pentacle of the Moon ELITE: extra BOUNTY, counted for that SEAL
     sealBounty: Math.max(0, Math.ceil(sealBounty || 0)),
+    // 5th Pentacle of the Moon: the Lamb may reveal a BOSS (decided when it is cast, like the BOUNTY)
+    revealBoss: Boolean(artifactSealEntry("a25")),
     source
   });
   state.roundState?.roundEvents.push(`${source} marked ${bot.name} for next-round reveal and BOUNTY.`);
@@ -16636,8 +16630,12 @@ function applyPendingNextRoundLambReveals() {
       state.roundState.roundEvents.push(`${source} found no living target for ${effect.botName || "the marked DAMNED"}.`);
       return;
     }
-    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY)
+    // the Lamb never reveals a BOSS's guess (it still gives the BOUNTY), unless the 5th Pentacle of the Moon was held
     if (!bot.isBoss) revealBotGuess(bot, source);
+    else if (effect.revealBoss && revealBotGuess(bot, source, null, { allowBoss: true })) {
+      const lambEntry = artifactSealEntry("a25");
+      if (lambEntry) markPassiveEntryTriggered(lambEntry);
+    }
     const bounty = Math.max(0, Math.ceil(effect.bounty || 0));
     const result = changeBotSin(bot, bounty, "", { source, triggerLossDamage: false });
     const sealBounty = Math.max(0, Math.ceil(effect.sealBounty || 0));
@@ -18046,9 +18044,8 @@ function applyBaelRepeatedGuessDamage(activeBotList, botDamages, botDamageSource
   });
 }
 
-// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's takes damage; a DAMNED on your guess takes
-// the bigger "your guess" damage instead (25 hidden, 15 revealed, the revealed one once per reveal stack). A DAMNED
-// only ever takes one of them: the biggest that applies.
+// Seal of Barbatos: every DAMNED whose final guess matches another DAMNED's, or yours, takes the damage (once, even
+// when both apply)
 function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSources) {
   const entries = orderedPassiveEffectEntries("p46");
   const round = state.roundState;
@@ -18071,18 +18068,9 @@ function applyBarbatosSharedGuessDamage(activeBotList, botDamages, botDamageSour
   const name = ITEMS.p46.name;
   entries.forEach((entry) => {
     let triggered = false;
+    const damage = barbatosDamage(entry);
+    if (damage <= 0) return;
     hit.forEach((bot) => {
-      const options = [];
-      if (shares(bot)) options.push(barbatosDamage(entry));
-      if (matchesYou(bot)) {
-        options.push(
-          bot.revealedByPassive
-            ? barbatosRevealedYourGuessDamage(entry) * Math.max(1, revealMultiplicity(bot))
-            : barbatosYourGuessDamage(entry)
-        );
-      }
-      const damage = Math.max(0, ...options);
-      if (damage <= 0) return;
       triggered = true;
       addPendingBotDamage(botDamages, botDamageSources, bot, damage, name);
     });
@@ -19649,21 +19637,31 @@ function applyEndOfRoundPassiveDamageInOrder() {
       return;
     }
 
-    // Seal of Naberius: a revealed DAMNED with the same guess as you takes damage
+    // Seal of Naberius: a revealed DAMNED below your guess takes damage, one above it pays you SIN (once per reveal
+    // stack, like every effect on revealed DAMNED); one on your guess does nothing
     if (entry.id === "p65") {
       const round = state.roundState;
       const playerGuess = round?.playerEffectiveGuess;
       if (!Number.isFinite(playerGuess)) return;
-      const targets = activeBots().filter((bot) => bot.revealedByPassive && round.botEffectiveGuesses.get(bot.id) === playerGuess);
-      if (!targets.length) return;
+      const revealed = activeBots().filter((bot) => bot.revealedByPassive && Number.isFinite(round.botEffectiveGuesses.get(bot.id)));
+      const lower = revealed.filter((bot) => round.botEffectiveGuesses.get(bot.id) < playerGuess);
+      const higher = revealed.filter((bot) => round.botEffectiveGuesses.get(bot.id) > playerGuess);
+      if (!lower.length && !higher.length) return;
       markPassiveEntryTriggered(entry);
       const name = ITEMS.p65.name;
-      damageBots(
-        targets,
-        (bot) => passiveEntryFlatDamage(entry, 20) * revealMultiplicity(bot),
-        (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for sharing your guess.`,
-        name
-      );
+      if (higher.length) {
+        const sin = higher.reduce((sum, bot) => sum + NABERIUS_HIGHER_GUESS_SIN * revealMultiplicity(bot), 0);
+        const gained = gainCredits(sin, false, name);
+        round.roundEvents.push(`${name} paid ${gained} SIN for ${higher.length} revealed DAMNED above your guess.`);
+      }
+      if (lower.length) {
+        damageBots(
+          lower,
+          (bot) => naberiusLowerGuessDamage(entry) * revealMultiplicity(bot),
+          (bot, dealt) => `${name} dealt ${dealt} damage to ${bot.name} for guessing below you.`,
+          name
+        );
+      }
       return;
     }
 
@@ -20952,26 +20950,21 @@ function chooseBot(botId) {
   }
 
   if (id === "a25") {
-    // 5th Pentacle of the Moon: a DAMNED revealed this round also takes 30% max SOUL (15% for BOSSES)
+    // 5th Pentacle of the Moon: the Lamb can reveal a BOSS; ELITE adds BOUNTY
     const lambEntry = artifactSealEntry("a25");
     const sealBounty = moonLambBountyBonus(lambEntry);
-    const lambDamage = lambEntry && bot.revealedByPassive ? moonLambDamage(bot, lambEntry) : 0;
     queueMummifiedLambNextRoundReveal(bot, itemName, sealBounty);
     applyTargetedItemSinGain(item, [bot]);
     const uid = pending.uid;
     finishActiveResolution(
       index,
-      bot.isBoss
+      bot.isBoss && !lambEntry
         ? `${itemName} marked ${bot.name}. Next round, it gains +${3 + sealBounty} BOUNTY (a BOSS's guess stays hidden).`
         : `${itemName} marked ${bot.name}. Next round, its guess is revealed and it gains +${3 + sealBounty} BOUNTY.`,
       uid,
       false
     );
-    if (lambEntry && (lambDamage > 0 || sealBounty > 0)) markPassiveEntryTriggered(lambEntry);
-    if (lambDamage > 0) {
-      const name = ITEMS.p138.name;
-      damageBot(bot, lambDamage, `${name} dealt ${lambDamage} damage to revealed ${bot.name}.`, name);
-    }
+    if (lambEntry && sealBounty > 0) markPassiveEntryTriggered(lambEntry);
     if (state.player.hp <= 0) finishGameOverRound();
     render();
     return;
