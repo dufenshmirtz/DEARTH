@@ -16731,9 +16731,6 @@ body.native-arcade #app .credits-team .credits-name {
   100% { transform: scale(1); }
 }
 
-#app .arena.pvp-arena .pvp-slot.pvp-critical-flash {
-  box-shadow: 0 0 0 2px var(--blood-bright), 0 0 26px rgba(220, 42, 47, 0.55) !important;
-}
 
 #app .arena.pvp-arena .pvp-moment {
   position: fixed;
@@ -16879,9 +16876,6 @@ body.reduce-flashes #app .arena.pvp-arena .pvp-moment strong {
   grid-column: 2;
 }
 
-#app .arena.pvp-arena .pvp-slot.pvp-winner-seat {
-  box-shadow: 0 0 0 2px var(--blood-bright), 0 0 30px rgba(220, 42, 47, 0.4) !important;
-}
 
 #app .arena.pvp-arena .pvp-new-table {
   min-height: 0;

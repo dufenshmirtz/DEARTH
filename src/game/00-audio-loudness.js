@@ -40,6 +40,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/music/hell-is-round-the-corner-placeholder.mp3": { m: -11.1, i: -15 },
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
+  "assets/audio/sfx/artifact-fizzle.mp3": { m: -18.6, i: -21 },
   "assets/audio/sfx/boss-arrive.mp3": { m: -15.7, i: -18.1 },
   "assets/audio/sfx/bounty-down.mp3": { m: -21, i: -24.1 },
   "assets/audio/sfx/bounty-up.mp3": { m: -21, i: -23.5 },

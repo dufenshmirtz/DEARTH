@@ -9645,6 +9645,7 @@ const AUDIO_LOUDNESS = {
   "assets/audio/music/hell-is-round-the-corner-placeholder.mp3": { m: -11.1, i: -15 },
   "assets/audio/nextroundSound.mp3": { m: -5.1, i: -7.2 },
   "assets/audio/sfx/artifact-buy.mp3": { m: -17, i: -19.9 },
+  "assets/audio/sfx/artifact-fizzle.mp3": { m: -18.6, i: -21 },
   "assets/audio/sfx/boss-arrive.mp3": { m: -15.7, i: -18.1 },
   "assets/audio/sfx/bounty-down.mp3": { m: -21, i: -24.1 },
   "assets/audio/sfx/bounty-up.mp3": { m: -21, i: -23.5 },
@@ -9819,9 +9820,9 @@ const GAME_SFX = {
   codexPage: { srcs: [1, 2, 3, 4, 5].map((n) => `assets/audio/intro/intro-pencil-${n}.mp3`), tier: "ui", pitch: 0.1 },
   codexNewPage: { srcs: ["assets/audio/intro/intro-burn.mp3"], tier: "accent" },
   menuSatanOpen: { srcs: [SEAL_PURCHASE_SFX_SRC], tier: "quiet", rate: 0.8 },
-  // PvP (08-pvp.js): an ARTIFACT that failed to cast fizzles out (the ghostly breath, a bit lower);
-  // the winner gets the pact sound, deeper
-  pvpFizzle: { srcs: ["assets/audio/sfx/seal-sell-ghost.mp3"], tier: "item", rate: 0.9 },
+  // PvP (08-pvp.js): an ARTIFACT that failed to cast fizzles out (a soft, short falling tone; synthesised
+  // placeholder, Nov 27 2026); the winner gets the pact sound, deeper
+  pvpFizzle: { srcs: ["assets/audio/sfx/artifact-fizzle.mp3"], tier: "effect", pitch: 0.04 },
   pvpWinner: { srcs: ["assets/audio/intro/intro-evil.mp3"], tier: "stinger", rate: 0.92, duck: 3000 }
 };
 
@@ -26610,11 +26611,12 @@ function renderPvpSlot(participant, slot) {
     : `<img class="bot-image" src="${escapeAttr(botImagePath(participant))}" alt="" loading="lazy" />`;
   const hpPercent = clamp((shownHp / Math.max(1, participant.maxHp)) * 100, 0, 100);
   const focus = reveal?.focusId === participant.id ? "pvp-reveal-focus" : "";
-  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "pvp-critical-flash" : "";
+  // a CRITICAL (while the reveal shows it) and the winner: the card turns red like a BOSS card
+  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "boss pvp-critical-flash" : "";
   const connection = participant.remoteId
     ? `<span class="pvp-connection ${participant.connected ? "on" : "off"}" data-tooltip="${escapeAttr(t(participant.connected ? "Phone connected" : "Phone lost: reopen the link"))}"></span>`
     : "";
-  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "pvp-winner-seat" : "";
+  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "boss pvp-winner-seat" : "";
   return `
     <article class="bot-card pvp-slot ${downClass} ${focus} ${criticalFlash} ${winner}" style="--bot-color: ${participant.color || "var(--cyan)"}">
       ${connection}

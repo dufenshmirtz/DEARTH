@@ -1520,11 +1520,12 @@ function renderPvpSlot(participant, slot) {
     : `<img class="bot-image" src="${escapeAttr(botImagePath(participant))}" alt="" loading="lazy" />`;
   const hpPercent = clamp((shownHp / Math.max(1, participant.maxHp)) * 100, 0, 100);
   const focus = reveal?.focusId === participant.id ? "pvp-reveal-focus" : "";
-  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "pvp-critical-flash" : "";
+  // a CRITICAL (while the reveal shows it) and the winner: the card turns red like a BOSS card
+  const criticalFlash = reveal?.criticalIds?.includes(participant.id) ? "boss pvp-critical-flash" : "";
   const connection = participant.remoteId
     ? `<span class="pvp-connection ${participant.connected ? "on" : "off"}" data-tooltip="${escapeAttr(t(participant.connected ? "Phone connected" : "Phone lost: reopen the link"))}"></span>`
     : "";
-  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "pvp-winner-seat" : "";
+  const winner = pvp.stage === "ended" && (pvp.winners || []).includes(participant.id) ? "boss pvp-winner-seat" : "";
   return `
     <article class="bot-card pvp-slot ${downClass} ${focus} ${criticalFlash} ${winner}" style="--bot-color: ${participant.color || "var(--cyan)"}">
       ${connection}

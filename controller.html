@@ -468,6 +468,156 @@
         font-size: 18px;
         text-align: right;
       }
+
+      /* ---------- the game's look: hand-drawn frames that tremble (line boil), as on the big screen ----------
+         Boxes get the frantic frame (three drawings swapped in steps, out of step with each other),
+         buttons and fields the sketched button frame; pressed buttons turn blood red. */
+      @keyframes outline-boil {
+        0% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-0.png"); }
+        33.333% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-1.png"); }
+        66.666% { border-image-source: url("assets/occult-ui-border-kit/assets/boil/frantic-2.png"); }
+      }
+
+      .panel,
+      .stat,
+      .choice,
+      .cast-banner,
+      .winner-block {
+        position: relative;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .panel { padding: 22px 20px; }
+      .stat { padding: 12px 14px; }
+      .choice { padding: 16px 16px 14px; }
+      .cast-banner,
+      .winner-block { padding: 18px 16px; }
+
+      .panel::after,
+      .stat::after,
+      .choice::after,
+      .cast-banner::after,
+      .winner-block::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        box-sizing: border-box;
+        border: 22px solid transparent;
+        border-image: url("assets/occult-ui-border-kit/assets/border-frantic-sharp.png") 15% / 22px stretch;
+        opacity: 0.9;
+        animation: outline-boil 375ms steps(1) infinite;
+      }
+
+      .stat::after,
+      .choice::after {
+        border-width: 14px;
+        border-image-width: 14px;
+        opacity: 0.75;
+      }
+
+      .stat:nth-child(3n + 2)::after,
+      .choice:nth-child(3n + 2)::after,
+      .phone-shell > .panel:nth-child(2n)::after {
+        animation-delay: -125ms;
+      }
+
+      .stat:nth-child(3n)::after,
+      .choice:nth-child(3n)::after,
+      .cast-banner::after {
+        animation-delay: -250ms;
+      }
+
+      .panel > *,
+      .stat > *:not(.phone-damage-badge),
+      .choice > *,
+      .cast-banner > *,
+      .winner-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* the red ones: a failed ARTIFACT, your win */
+      .cast-banner-fail::after,
+      .winner-block.you-won::after {
+        filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+        opacity: 1;
+      }
+
+      .cast-banner-success::after {
+        filter: brightness(0) saturate(100%) invert(72%) sepia(19%) saturate(780%) hue-rotate(68deg) brightness(92%);
+        opacity: 1;
+      }
+
+      .cast-banner-fail,
+      .cast-banner-success {
+        background: transparent !important;
+      }
+
+      .choice.selected-choice::after,
+      .choice.active-cast::after {
+        opacity: 1;
+        border-width: 18px;
+        border-image-width: 18px;
+      }
+
+      /* buttons and fields: the sketched button frame */
+      button,
+      input,
+      select {
+        border: 10px solid transparent !important;
+        border-radius: 0 !important;
+        border-image: url("assets/occult-ui-border-kit/assets/button-frame-sharp.png") 60 150 / 10px 20px stretch !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      input,
+      select {
+        background: #000 !important;
+        padding: 0 10px;
+      }
+
+      button:active:not(:disabled) {
+        filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+      }
+
+      @media (hover: hover) {
+        button:hover:not(:disabled) {
+          filter: brightness(0) saturate(100%) invert(14%) sepia(87%) saturate(5200%) hue-rotate(353deg) brightness(95%);
+        }
+      }
+
+      button:disabled {
+        opacity: 0.45;
+      }
+
+      .rules-link {
+        border-width: 8px !important;
+        border-image-width: 8px 16px !important;
+      }
+
+      /* the damage bubble keeps its own round outline */
+      .phone-damage-badge {
+        position: absolute !important;
+        z-index: 2 !important;
+        background: #000 !important;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .panel::after,
+        .stat::after,
+        .choice::after,
+        .cast-banner::after,
+        .winner-block::after {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body>
